@@ -1,0 +1,53 @@
+:root {
+
+  /* ===== FONT ===== */
+  --font-main: "Nunito", sans-serif;
+
+  /* ===== BACKGROUND ===== */
+  --bg-main: #F5F7FF;
+  --bg-card: #FFFFFF;
+
+  /* ===== ROLE COLORS ===== */
+
+  /* Student */
+  --student-color: #8FB3FF;
+
+  /* Parent */
+  --parent-color: #D8C8FF;
+
+  /* Teacher */
+  --teacher-color: #4FD1C5;
+
+  /* Admin */
+  --admin-color: #1E2F5A;
+
+  /* ===== TEXT ===== */
+
+  --text-main: #1F2937;
+  --text-secondary: #6B7280;
+  --text-light: #FFFFFF;
+
+  /* ===== BORDER ===== */
+
+  --border-color: #E5E7EB;
+
+  /* ===== SHADOW ===== */
+
+  --shadow-sm: 0 2px 6px rgba(0,0,0,0.05);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
+
+  /* ===== RADIUS ===== */
+
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+
+  /* ===== SPACING ===== */
+
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 16px;
+  --space-lg: 24px;
+  --space-xl: 32px;
+
+}

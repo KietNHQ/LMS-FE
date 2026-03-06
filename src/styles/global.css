@@ -1,0 +1,49 @@
+/* ===== RESET CSS ===== */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+/* ===== GLOBAL FONT ===== */
+
+html,
+body {
+  height: 100%;
+  font-family: "Nunito", sans-serif;
+  background-color: var(--bg-color);
+  color: var(--text-color);
+}
+
+/* ROOT */
+
+#root {
+  height: 100%;
+}
+
+/* LINKS */
+
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+/* BUTTON */
+
+button {
+  font-family: inherit;
+  border: none;
+  cursor: pointer;
+  background: none;
+}
+
+/* INPUT */
+
+input,
+textarea,
+select {
+  font-family: inherit;
+}
