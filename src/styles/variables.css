@@ -1,53 +1,78 @@
 :root {
-
-  /* ===== FONT ===== */
+  /* Font */
   --font-main: "Nunito", sans-serif;
 
-  /* ===== BACKGROUND ===== */
-  --bg-main: #F5F7FF;
-  --bg-card: #FFFFFF;
+  /* Role colors */
+  --student-color: #8fb3ff;
+  --parent-color: #d8c8ff;
+  --teacher-color: #4fd1c5;
+  --admin-color: #1e2f5a;
 
-  /* ===== ROLE COLORS ===== */
+  /* Shared colors */
+  --primary-color: var(--admin-color);
+  --primary-light: var(--student-color);
+  --secondary-color: var(--teacher-color);
+  --accent-color: var(--parent-color);
 
-  /* Student */
-  --student-color: #8FB3FF;
+  /* Backgrounds */
+  --bg-main: #f5f7ff;
+  --bg-card: #ffffff;
+  --bg-soft: #eef4ff;
+  --bg-overlay: rgba(255, 255, 255, 0.12);
+  --bg-glass: rgba(255, 255, 255, 0.16);
 
-  /* Parent */
-  --parent-color: #D8C8FF;
+  /* Text */
+  --text-main: #1f2937;
+  --text-heading: #1e2f5a;
+  --text-secondary: #6b7280;
+  --text-light: #ffffff;
 
-  /* Teacher */
-  --teacher-color: #4FD1C5;
+  /* Border */
+  --border-color: #e5e7eb;
+  --border-input: #d7dce5;
+  --border-focus: #8fb3ff;
 
-  /* Admin */
-  --admin-color: #1E2F5A;
+  /* Status */
+  --success-color: #15803d;
+  --error-color: #dc2626;
+  --warning-color: #f59e0b;
+  --info-color: #0ea5e9;
 
-  /* ===== TEXT ===== */
-
-  --text-main: #1F2937;
-  --text-secondary: #6B7280;
-  --text-light: #FFFFFF;
-
-  /* ===== BORDER ===== */
-
-  --border-color: #E5E7EB;
-
-  /* ===== SHADOW ===== */
-
-  --shadow-sm: 0 2px 6px rgba(0,0,0,0.05);
-  --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
-
-  /* ===== RADIUS ===== */
-
+  /* Radius */
   --radius-sm: 6px;
   --radius-md: 10px;
   --radius-lg: 16px;
+  --radius-xl: 24px;
+  --radius-pill: 999px;
 
-  /* ===== SPACING ===== */
+  /* Shadow */
+  --shadow-sm: 0 2px 6px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 8px 18px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 18px 40px rgba(30, 47, 90, 0.18);
 
+  /* Spacing */
   --space-xs: 4px;
   --space-sm: 8px;
   --space-md: 16px;
   --space-lg: 24px;
   --space-xl: 32px;
+  --space-2xl: 40px;
+  --space-3xl: 48px;
 
+  /* Layout */
+  --container-auth: 1180px;
+  --form-width: 420px;
+
+  /* Transition */
+  --transition-fast: 0.2s ease;
+  --transition-medium: 0.3s ease;
+
+  /* Gradient */
+  --auth-gradient: linear-gradient(
+          135deg,
+          #26e4d2 0%,
+          #d8c8ff 35%,
+          #96b8ff 65%,
+          #314884 100%
+  );
 }
