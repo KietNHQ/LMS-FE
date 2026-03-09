@@ -24,6 +24,9 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  --cover-color: #2563eb;
+  --accent-color: #60a5fa;
+  --text-color: #1e40af;
 }
 
 .book-loader.size-sm {
