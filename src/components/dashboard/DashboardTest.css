@@ -1,0 +1,68 @@
+.dashboard-test-page {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    padding: 24px;
+    min-height: 100vh;
+    background: var(--bg-main);
+    box-sizing: border-box;
+}
+
+.dashboard-test-stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+}
+
+.dashboard-test-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+    align-items: start;
+}
+
+.test-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.test-list-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #fafafa;
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    padding: 14px 16px;
+}
+
+.student-name {
+    color: var(--text-heading);
+    font-weight: 600;
+}
+
+.student-class {
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+@media (max-width: 992px) {
+    .dashboard-test-stats {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .dashboard-test-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 576px) {
+    .dashboard-test-page {
+        padding: 16px;
+    }
+
+    .dashboard-test-stats {
+        grid-template-columns: 1fr;
+    }
+}
