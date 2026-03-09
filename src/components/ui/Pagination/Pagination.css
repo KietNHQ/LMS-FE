@@ -1,0 +1,12 @@
+.pagination{
+  display:flex;
+  gap:6px;
+}
+.pagination button{
+  padding:6px 10px;
+  border:1px solid #ddd;
+  border-radius:4px;
+}
+.pagination .active{
+  font-weight:bold;
+}
