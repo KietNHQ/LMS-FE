@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { FiEye, FiEyeOff } from "react-icons/fi";
-import AuthLayout from "./AuthLayout";
+import AuthLayout from "../../layouts/auth/AuthLayout.jsx";
 import "./ResetPassword.css";
 
 function ResetPassword() {

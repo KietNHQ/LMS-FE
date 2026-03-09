@@ -1,0 +1,51 @@
+.common-status-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 30px;
+  padding: 6px 12px;
+  border-radius: var(--radius-pill);
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1;
+  text-transform: capitalize;
+  border: 1px solid transparent;
+}
+
+.common-status-badge.status-active,
+.common-status-badge.status-success,
+.common-status-badge.status-completed {
+  color: #166534;
+  background: #ecfdf3;
+  border-color: #bbf7d0;
+}
+
+.common-status-badge.status-pending,
+.common-status-badge.status-warning,
+.common-status-badge.status-draft {
+  color: #92400e;
+  background: #fffbeb;
+  border-color: #fde68a;
+}
+
+.common-status-badge.status-inactive,
+.common-status-badge.status-error,
+.common-status-badge.status-rejected {
+  color: #991b1b;
+  background: #fef2f2;
+  border-color: #fecaca;
+}
+
+.common-status-badge.status-info,
+.common-status-badge.status-progress,
+.common-status-badge.status-published {
+  color: #1d4ed8;
+  background: #eff6ff;
+  border-color: #bfdbfe;
+}
+
+.common-status-badge.status-default {
+  color: var(--text-secondary);
+  background: #f8fafc;
+  border-color: var(--border-color);
+}
