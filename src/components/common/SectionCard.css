@@ -1,0 +1,37 @@
+.common-section-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+
+.common-section-card__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 18px 20px;
+  border-bottom: 1px solid var(--border-color);
+  flex-wrap: wrap;
+}
+
+.common-section-card__header h2 {
+  font-size: 18px;
+  color: var(--text-heading);
+  margin-bottom: 4px;
+}
+
+.common-section-card__header p {
+  color: var(--text-secondary);
+  font-size: 14px;
+}
+
+.common-section-card__actions,
+.common-section-card__body {
+  padding: 20px;
+}
+
+.common-section-card__body {
+  padding-top: 18px;
+}

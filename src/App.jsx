@@ -5,6 +5,7 @@ import Login from "./pages/auth/Login";
 import ForgotPassword from "./pages/auth/ForgotPassword";
 import ResetPassword from "./pages/auth/ResetPassword";
 import UITestPage from "./components/ui/UITestPage.jsx";
+import CommonTestPage from "./components/common/CommonTestPage.jsx";
 
 import "./styles/variables.css";
 import "./styles/global.css";
@@ -20,6 +21,7 @@ function App() {
 
                 --test components--
                 <Route path="/ui-test" element={<UITestPage />} />
+                <Route path="/common-test" element={<CommonTestPage />} />
             </Routes>
         </BrowserRouter>
     );
