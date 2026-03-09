@@ -1,7 +1,7 @@
 import { Routes, Route } from "react-router-dom";
 import LoginPage from "../pages/auth/LoginPage";
 import Dashboard from "../pages/admin/Dashboard";
-import UITestPage from "../pages/ui-test/UITestPage";
+import UITestPage from "../components/ui/UITestPage.jsx";
 
 export default function AppRoutes() {
   return (
