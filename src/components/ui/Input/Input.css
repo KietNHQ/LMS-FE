@@ -1,0 +1,10 @@
+.input-group{
+  display:flex;
+  flex-direction:column;
+  gap:4px;
+}
+.input-group input{
+  padding:8px;
+  border:1px solid #ddd;
+  border-radius:6px;
+}
