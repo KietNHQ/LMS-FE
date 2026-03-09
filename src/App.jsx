@@ -4,7 +4,7 @@ import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import Login from "./pages/auth/Login";
 import ForgotPassword from "./pages/auth/ForgotPassword";
 import ResetPassword from "./pages/auth/ResetPassword";
-import UITestPage from "./pages/ui-test/UITestPage"; // thêm dòng này
+import UITestPage from "./components/ui/UITestPage.jsx";
 
 import "./styles/variables.css";
 import "./styles/global.css";
@@ -18,7 +18,7 @@ function App() {
                 <Route path="/login/forgotpass" element={<ForgotPassword />} />
                 <Route path="/login/resetpass" element={<ResetPassword />} />
 
-                {/* route test UI */}
+                --test components--
                 <Route path="/ui-test" element={<UITestPage />} />
             </Routes>
         </BrowserRouter>

@@ -9,7 +9,7 @@ import {
   Select,
   Alert,
   Pagination
-} from "../../components/ui";
+} from "./index.js";
 
 export default function UITestPage() {
 
