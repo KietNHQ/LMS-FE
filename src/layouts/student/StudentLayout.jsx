@@ -1,13 +1,24 @@
-import React from "react";
+import React, { useState } from "react";
 import { Outlet } from "react-router-dom";
-import Sidebar from "../../components/sidebar/Sidebar.jsx";
+import Sidebar from "../../components/sidebar/Sidebar";
+import "./StudentLayout.css";
 
 export default function StudentLayout() {
+    const [isCollapsed, setIsCollapsed] = useState(false);
+
     return (
-        <div style={{ minHeight: "100vh", background: "#d9dfe9" }}>
-            <Sidebar role="student" userName="Student User" />
-            <main style={{ marginLeft: "clamp(16rem, 20vw, 20rem)", padding: "24px", minHeight: "100vh" }}>
-                <Outlet />
+        <div className={`student-layout ${isCollapsed ? "collapsed" : ""}`}>
+            <Sidebar
+                role="student"
+                userName="Student User"
+                isCollapsed={isCollapsed}
+                setIsCollapsed={setIsCollapsed}
+            />
+
+            <main className="student-layout__main">
+                <div className="student-layout__content">
+                    <Outlet />
+                </div>
             </main>
         </div>
     );
