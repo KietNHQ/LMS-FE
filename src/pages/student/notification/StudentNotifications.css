@@ -1,0 +1,96 @@
+.notification-page{
+  padding:30px;
+  background:#f4f6fb;
+  min-height:100vh;
+}
+
+/* HEADER */
+
+.notification-header h1{
+  font-size:26px;
+  margin-bottom:5px;
+}
+
+.notification-header span{
+  font-size:14px;
+  color:#777;
+}
+
+/* LIST */
+
+.notification-list{
+  margin-top:20px;
+  display:flex;
+  flex-direction:column;
+  gap:15px;
+}
+
+/* CARD */
+
+.notification-card{
+  display:flex;
+  gap:15px;
+  background:white;
+  border-radius:14px;
+  padding:18px;
+  border:1px solid #dbe7ff;
+  box-shadow:0 2px 5px rgba(0,0,0,0.03);
+  transition:all 0.2s ease;
+}
+
+.notification-card:hover{
+  transform:translateY(-2px);
+  box-shadow:0 4px 10px rgba(0,0,0,0.05);
+}
+
+/* ICON */
+
+.notification-icon{
+  width:45px;
+  height:45px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:#e8f0ff;
+  border-radius:12px;
+  font-size:18px;
+}
+
+/* CONTENT */
+
+.notification-content{
+  flex:1;
+}
+
+.notification-title{
+  font-weight:600;
+  font-size:16px;
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+
+/* UNREAD DOT */
+
+.unread-dot{
+  width:8px;
+  height:8px;
+  background:#2f80ff;
+  border-radius:50%;
+}
+
+/* TEXT */
+
+.notification-text{
+  margin-top:6px;
+  color:#555;
+  font-size:14px;
+}
+
+/* DATE */
+
+.notification-date{
+  margin-top:8px;
+  font-size:13px;
+  color:#999;
+}
