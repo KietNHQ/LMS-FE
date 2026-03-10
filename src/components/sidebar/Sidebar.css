@@ -1,18 +1,21 @@
 .sidebar {
   --sidebar-pad-x: 1.125rem;
-  width: clamp(16rem, 20vw, 20rem);
+  --sidebar-width: var(--sidebar-expanded, clamp(16rem, 20vw, 20rem));
+  --sidebar-border-w: 0.0625rem;
+  --toggle-size: 3rem;
+  width: var(--sidebar-width);
   height: 100vh;
   display: flex;
   flex-direction: column;
   padding: 1.5rem var(--sidebar-pad-x);
   color: #ffffff;
-  border-right: 0.0625rem solid rgba(255, 255, 255, 0.08);
+  border-right: var(--sidebar-border-w) solid rgba(255, 255, 255, 0.08);
   position: fixed;
   top: 0;
   left: 0;
   overflow: visible;
   transition: width 0.3s ease, padding 0.3s ease;
-  z-index: 100;
+  z-index: 140;
 }
 
 .sidebar-scroll {
@@ -26,7 +29,9 @@
 
 .sidebar.collapsed {
   --sidebar-pad-x: 0.5rem;
-  width: 5rem;
+  --sidebar-width: var(--sidebar-collapsed, 5rem);
+  --toggle-size: 2rem;
+  width: var(--sidebar-width);
   padding: 1.5rem var(--sidebar-pad-x);
 }
 
@@ -93,7 +98,7 @@
   width: 2.25rem;
   height: 2.25rem;
   right: -1.125rem;
-  top: 6rem;
+  top: 5.2rem;
 }
 
 .sidebar.collapsed .sidebar-toggle-btn:hover {
@@ -342,7 +347,8 @@
 @media (max-width: 1280px) {
   .sidebar {
     --sidebar-pad-x: 0.875rem;
-    width: clamp(14rem, 18vw, 16rem);
+    --sidebar-width: clamp(14rem, 18vw, 16rem);
+    width: var(--sidebar-width);
     padding: 1.25rem var(--sidebar-pad-x);
   }
 
@@ -352,6 +358,7 @@
 
   .sidebar.collapsed {
     --sidebar-pad-x: 0.5rem;
+    --sidebar-width: var(--sidebar-collapsed, 5rem);
   }
 
   .sidebar-brand-badge {
@@ -374,10 +381,15 @@
   }
 }
 
+.sidebar.collapsed .sidebar-toggle-btn {
+    top: 5.2em;
+}
+
 @media (max-width: 1024px) {
   .sidebar {
     --sidebar-pad-x: 0.75rem;
-    width: clamp(12rem, 16vw, 14rem);
+    --sidebar-width: clamp(12rem, 16vw, 14rem);
+    width: var(--sidebar-width);
     padding: 1.125rem var(--sidebar-pad-x);
   }
 
@@ -387,6 +399,7 @@
 
   .sidebar.collapsed {
     --sidebar-pad-x: 0.5rem;
+    --sidebar-width: var(--sidebar-collapsed, 5rem);
   }
 
   .sidebar-brand {
@@ -454,10 +467,15 @@
   }
 }
 
+.sidebar.collapsed .sidebar-toggle-btn {
+  top: 4.8em;
+}
+
 @media (max-width: 768px) {
   .sidebar {
     --sidebar-pad-x: 0.5rem;
-    width: clamp(4rem, 10vw, 5rem);
+    --sidebar-width: clamp(4rem, 10vw, 5rem);
+    width: var(--sidebar-width);
     padding: 1rem var(--sidebar-pad-x);
   }
 

@@ -6,11 +6,15 @@ import { FiLogOut, FiChevronLeft } from "react-icons/fi";
 import { useNavigate, NavLink } from "react-router-dom";
 
 export default function Sidebar({
-                                  role = "student",
-                                  systemName = "LMS System",
-                                  userName = "User Name"
-                                }) {
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  role = "student",
+  systemName = "LMS System",
+  userName = "User Name",
+  isCollapsed: controlledCollapsed,
+  setIsCollapsed: setControlledCollapsed
+}) {
+  const [internalCollapsed, setInternalCollapsed] = useState(false);
+  const isControlled = typeof controlledCollapsed === "boolean";
+  const isCollapsed = isControlled ? controlledCollapsed : internalCollapsed;
 
   const items = sidebarConfig[role] || sidebarConfig.student;
   const theme = roleTheme[role] || roleTheme.student;
@@ -24,7 +28,11 @@ export default function Sidebar({
   };
 
   const toggleSidebar = () => {
-    setIsCollapsed((prev) => !prev);
+    if (isControlled && typeof setControlledCollapsed === "function") {
+      setControlledCollapsed((prev) => !prev);
+      return;
+    }
+    setInternalCollapsed((prev) => !prev);
   };
 
   const menuItems = items.filter((item) => item.label !== "Profile");
