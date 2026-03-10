@@ -1,22 +1,17 @@
+import React from "react";
 import { NavLink } from "react-router-dom";
 import "./SidebarItem.css";
 
 export default function SidebarItem({ item }) {
-
-  const Icon = item.icon;
+  const Icon = item?.icon;
 
   return (
     <NavLink
       to={item.path}
-      className={({isActive}) =>
-        isActive ? "sidebar-item active" : "sidebar-item"
-      }
+      className={({ isActive }) => `sidebar-item ${isActive ? "active" : ""}`}
     >
-
-      <Icon size={18} />
-
-      <span>{item.name}</span>
-
+      <span className="sidebar-item-icon">{Icon ? <Icon /> : null}</span>
+      <span className="sidebar-item-label">{item.label}</span>
     </NavLink>
   );
 }
