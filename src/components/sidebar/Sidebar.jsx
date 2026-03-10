@@ -1,4 +1,4 @@
-import { sidebarLayoutConfig } from "./SidebarLayoutConfig";
+import { sidebarLayoutConfig } from "../../layouts/sidebar/SidebarLayoutConfig";
 import SidebarItem from "./SidebarItem";
 import "./Sidebar.css";
 

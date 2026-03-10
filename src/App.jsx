@@ -8,11 +8,11 @@ import UITestPage from "./components/ui/UITestPage.jsx";
 import CommonTestPage from "./components/common/CommonTestPage.jsx";
 import DashboardTest from "./components/dashboard/DashboardTest.jsx";
 
-import ParentLayout from "./components/sidebar/SidebarLayout.jsx";
-import AdminDashboard from "./pages/admin/AdminDashboard.jsx";
-import TeacherDashboard from "./pages/teacher/TeacherDashboard.jsx";
-import StudentDashboard from "./pages/student/StudentDashboard.jsx";
-import ParentDashboard from "./pages/parent/ParentDashboard.jsx";
+import SidebarLayout from "./layouts/sidebar/SidebarLayout.jsx";
+import AdminDashboard from "./components/dashboard/admin/AdminDashboard.jsx";
+import TeacherDashboard from "./components/dashboard/teacher/TeacherDashboard.jsx";
+import StudentDashboard from "./components/dashboard/student/StudentDashboard.jsx";
+import ParentDashboard from "./components/dashboard/parent/ParentDashboard.jsx";
 
 import "./styles/variables.css";
 import "./styles/global.css";
@@ -31,24 +31,24 @@ function App() {
                 <Route path="/common-test" element={<CommonTestPage />} />
                 <Route path="/dashboard-test" element={<DashboardTest />} />
 
-                <Route path="/admin" element={<ParentLayout role="admin">
+                <Route path="/admin" element={<SidebarLayout role="admin">
                     <AdminDashboard />
-                    </ParentLayout>
+                    </SidebarLayout>
                     }
                 />
-                <Route path="/teacher" element={<ParentLayout role="teacher">
+                <Route path="/teacher" element={<SidebarLayout role="teacher">
                     <TeacherDashboard />
-                    </ParentLayout>
+                    </SidebarLayout>
                     }
                 />
-                <Route path="/student" element={<ParentLayout role="student">
+                <Route path="/student" element={<SidebarLayout role="student">
                     <StudentDashboard />
-                    </ParentLayout>
+                    </SidebarLayout>
                     }
                 />
-                <Route path="/parent" element={<ParentLayout role="parent">
+                <Route path="/parent" element={<SidebarLayout role="parent">
                     <ParentDashboard />
-                    </ParentLayout>
+                    </SidebarLayout>
                     }
                 />
             </Routes>

@@ -1,4 +1,4 @@
-import Sidebar from "./Sidebar";
+import Sidebar from "../../components/sidebar/Sidebar";
 import "./SidebarLayout.css";
 
 export default function SidebarLayout({ role, children }) {
