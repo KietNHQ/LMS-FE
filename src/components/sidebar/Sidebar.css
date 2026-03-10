@@ -1,0 +1,82 @@
+.sidebar {
+  width: 260px;
+  height: 100vh;
+
+  display: flex;
+  flex-direction: column;
+
+  padding: 16px 12px;
+  box-sizing: border-box;
+
+  color: white;
+}
+
+/* header */
+
+.sidebar-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  margin-bottom: 24px;
+}
+
+.logo-icon {
+  width: 36px;
+  height: 36px;
+
+  border-radius: 10px;
+
+  background: rgba(255,255,255,0.2);
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  font-weight: bold;
+}
+
+.logo-title {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.logo-role {
+  font-size: 12px;
+  opacity: 0.8;
+}
+
+/* menu */
+
+.sidebar-menu {
+  flex: 1;
+  overflow-y: auto;
+}
+
+/* footer */
+
+.sidebar-footer {
+  margin-top: 20px;
+}
+
+.logout-btn {
+  width: 100%;
+
+  padding: 10px;
+
+  border: none;
+  border-radius: 8px;
+
+  background: rgba(255,255,255,0.15);
+  color: white;
+
+  cursor: pointer;
+
+  font-size: 14px;
+}
+
+.logout-btn:hover {
+  background: rgba(255,255,255,0.25);
+}
+
+
