@@ -118,6 +118,12 @@
     border-radius: 10px;
     font-size: 15px;
     cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.grades-tabs button:hover {
+    border-color: #2563ff;
+    color: #2563ff;
 }
 
 .grades-tabs button.active {
@@ -220,7 +226,7 @@
     align-items: center;
     justify-content: center;
     width: fit-content;
-    min-width: 80px;
+    min-width: 90px;
     height: 30px;
     padding: 0 12px;
     border-radius: 10px;
@@ -249,13 +255,31 @@
 }
 
 .detail-toggle {
-    width: 34px;
-    height: 34px;
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
     border: none;
-    background: transparent;
-    font-size: 18px;
+    background: #f1f5ff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     cursor: pointer;
-    color: #16233b;
+    color: #2563ff;
+    font-size: 18px;
+    transition: all 0.2s ease;
+}
+
+.detail-toggle:hover {
+    background: #2563ff;
+    color: #ffffff;
+}
+
+.detail-toggle svg {
+    transition: transform 0.25s ease;
+}
+
+.detail-toggle.open svg {
+    transform: rotate(180deg);
 }
 
 .table-detail-row {

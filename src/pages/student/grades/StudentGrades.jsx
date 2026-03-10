@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from "react";
+import { FiChevronDown } from "react-icons/fi";
 import "./StudentGrades.css";
 
 /* =========================
@@ -37,7 +38,14 @@ function getTrend(hk1Avg, hk2Avg) {
     return "same";
 }
 
-function getConductColor(rank) {
+function getRankColorClass(rank) {
+    if (rank === "Tốt") return "rank-good";
+    if (rank === "Khá") return "rank-fair";
+    if (rank === "Trung bình") return "rank-average";
+    return "rank-weak";
+}
+
+function getSummaryColorClass(rank) {
     if (rank === "Tốt") return "green";
     if (rank === "Khá") return "orange";
     if (rank === "Trung bình") return "blue";
@@ -398,7 +406,7 @@ function buildComputedData(rawData) {
         });
 
         const classAverage =
-            computedSubjects.reduce((sum, s) => sum + s.yearAvg, 0) /
+            computedSubjects.reduce((sum, item) => sum + item.yearAvg, 0) /
             computedSubjects.length;
 
         const roundedClassAverage = round2(classAverage);
@@ -440,10 +448,13 @@ export default function StudentGrades() {
 
             <div className="grades-note">
                 <p>
-                    Công thức tính: <strong>TBHK = (Miệng1 + Miệng2 + 15p1 + 15p2 + GK×2 + CK×3) / 9</strong>
+                    Công thức tính TBHK:{" "}
+                    <strong>
+                        (Miệng 1 + Miệng 2 + 15p 1 + 15p 2 + Giữa kỳ × 2 + Cuối kỳ × 3) / 9
+                    </strong>
                 </p>
                 <p>
-                    <strong>TBCN = (TBHK1 + TBHK2×2) / 3</strong>
+                    Công thức tính TBCN: <strong>(TBHK1 + TBHK2 × 2) / 3</strong>
                 </p>
             </div>
 
@@ -472,7 +483,7 @@ export default function StudentGrades() {
                 </div>
 
                 <div className="grades-card">
-                    <h2 className={getConductColor(currentData.conduct)}>
+                    <h2 className={getSummaryColorClass(currentData.conduct)}>
                         {currentData.conduct}
                     </h2>
                     <p>Học lực</p>
@@ -552,26 +563,17 @@ export default function StudentGrades() {
                         : "→"}
               </span>
 
-                            <span
-                                className={`rank ${
-                                    subject.rank === "Tốt"
-                                        ? "rank-good"
-                                        : subject.rank === "Khá"
-                                            ? "rank-fair"
-                                            : subject.rank === "Trung bình"
-                                                ? "rank-average"
-                                                : "rank-weak"
-                                }`}
-                            >
+                            <span className={`rank ${getRankColorClass(subject.rank)}`}>
                 {subject.rank}
               </span>
 
                             <button
-                                className="detail-toggle"
+                                className={`detail-toggle ${openRowId === subject.id ? "open" : ""}`}
                                 onClick={() => toggleRow(subject.id)}
                                 type="button"
+                                aria-label="Xem chi tiết"
                             >
-                                {openRowId === subject.id ? "⌃" : "⌄"}
+                                <FiChevronDown />
                             </button>
                         </div>
 
@@ -666,13 +668,15 @@ export default function StudentGrades() {
                                         <span>Điểm cả năm</span>
                                         <strong>{subject.yearAvg.toFixed(2)}</strong>
                                     </div>
+
                                     <div className="year-summary-item">
                                         <span>Học lực</span>
                                         <strong>{subject.rank}</strong>
                                     </div>
+
                                     <div className="year-summary-item">
                                         <span>Công thức</span>
-                                        <strong>(TBHK1 + TBHK2×2) / 3</strong>
+                                        <strong>(TBHK1 + TBHK2 × 2) / 3</strong>
                                     </div>
                                 </div>
                             </div>
