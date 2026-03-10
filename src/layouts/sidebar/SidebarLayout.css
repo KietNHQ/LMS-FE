@@ -1,0 +1,32 @@
+.sidebar-layout {
+  display: flex;
+}
+
+/* sidebar color theo role */
+
+.layout-teacher .sidebar {
+  background: #1f7a6d;
+}
+
+.layout-admin .sidebar {
+  background: #2f3e64;
+}
+
+.layout-student .sidebar {
+  background: #4b77d1;
+}
+
+.layout-parent .sidebar {
+  background: #7c5cc4;
+}
+
+/* main content */
+
+.sidebar-content {
+  flex: 1;
+  background: #f4f6fb;
+  min-height: 100vh;
+  padding: 24px;
+  box-sizing: border-box;
+}
+

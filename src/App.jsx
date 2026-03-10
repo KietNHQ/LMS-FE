@@ -8,6 +8,12 @@ import UITestPage from "./components/ui/UITestPage.jsx";
 import CommonTestPage from "./components/common/CommonTestPage.jsx";
 import DashboardTest from "./components/dashboard/DashboardTest.jsx";
 
+import SidebarLayout from "./layouts/sidebar/SidebarLayout.jsx";
+import AdminDashboard from "./components/dashboard/admin/AdminDashboard.jsx";
+import TeacherDashboard from "./components/dashboard/teacher/TeacherDashboard.jsx";
+import StudentDashboard from "./components/dashboard/student/StudentDashboard.jsx";
+import ParentDashboard from "./components/dashboard/parent/ParentDashboard.jsx";
+
 import "./styles/variables.css";
 import "./styles/global.css";
 
@@ -24,6 +30,27 @@ function App() {
                 <Route path="/ui-test" element={<UITestPage />} />
                 <Route path="/common-test" element={<CommonTestPage />} />
                 <Route path="/dashboard-test" element={<DashboardTest />} />
+
+                <Route path="/admin" element={<SidebarLayout role="admin">
+                    <AdminDashboard />
+                    </SidebarLayout>
+                    }
+                />
+                <Route path="/teacher" element={<SidebarLayout role="teacher">
+                    <TeacherDashboard />
+                    </SidebarLayout>
+                    }
+                />
+                <Route path="/student" element={<SidebarLayout role="student">
+                    <StudentDashboard />
+                    </SidebarLayout>
+                    }
+                />
+                <Route path="/parent" element={<SidebarLayout role="parent">
+                    <ParentDashboard />
+                    </SidebarLayout>
+                    }
+                />
             </Routes>
         </BrowserRouter>
     );
