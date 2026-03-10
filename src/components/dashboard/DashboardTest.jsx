@@ -18,7 +18,8 @@ import RadarChart from "./components/RadarChart/RadarChart";
 import YearProgress from "./components/YearProgress/YearProgress";
 
 export default function DashboardTest() {
-    const role = localStorage.getItem("role") || "admin";
+    const role = localStorage.getItem("role") || "admin" +
+        "";
 
     const notifications = [
         { type: "warning", text: "Midterm schedule updated" },
