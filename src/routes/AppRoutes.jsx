@@ -17,6 +17,20 @@ import StudentSchedule from "../pages/student/schedule/StudentSchedule";
 import StudentSupport from "../pages/student/support/StudentSupport";
 import StudentProfile from "../pages/student/profile/StudentProfile";
 
+/* TEACHER PAGES */
+import TeacherLayout from "../layouts/teacher/TeacherLayout";
+import TeacherDashboard from "../pages/teacher/dashboard/TeacherDashboard";
+import TeacherGrades from "../pages/teacher/grades/TeacherGrades";
+import TeacherHomeroom from "../pages/teacher/homeroom/TeacherHomeroom";
+import TeacherLessons from "../pages/teacher/lessons/TeacherLessons";
+import TeacherQuiz from "../pages/teacher/quiz/TeacherQuiz";
+import TeacherRequest from "../pages/teacher/request/TeacherRequest";
+import TeacherSchedule from "../pages/teacher/schedule/TeacherSchedule";
+import TeacherSupport from "../pages/teacher/support/TeacherSupport";
+import TeacherTeachingClasses from "../pages/teacher/teachingClasses/TeacherTeachingClasses";
+import TeacherNotifications from "../pages/teacher/notifications/TeacherNotifications";
+import TeacherProfile from "../pages/teacher/profile/TeacherProfile";
+
 export default function AppRoutes() {
   return (
     <Routes>
@@ -40,6 +54,22 @@ export default function AppRoutes() {
         <Route path="schedule" element={<StudentSchedule />} />
         <Route path="support" element={<StudentSupport />} />
         <Route path="profile" element={<StudentProfile />} />
+      </Route>
+
+      {/* TEACHER */}
+      <Route path="/teacher" element={<TeacherLayout />}>
+        <Route index element={<Navigate to="dashboard" replace />} />
+        <Route path="dashboard"        element={<TeacherDashboard />} />
+        <Route path="teaching-classes" element={<TeacherTeachingClasses />} />
+        <Route path="homeroom"         element={<TeacherHomeroom />} />
+        <Route path="lessons"          element={<TeacherLessons />} />
+        <Route path="grades"           element={<TeacherGrades />} />
+        <Route path="quiz"             element={<TeacherQuiz />} />
+        <Route path="schedule"         element={<TeacherSchedule />} />
+        <Route path="request"          element={<TeacherRequest />} />
+        <Route path="notifications"    element={<TeacherNotifications />} />
+        <Route path="support"          element={<TeacherSupport />} />
+        <Route path="profile"          element={<TeacherProfile />} />
       </Route>
     </Routes>
   );

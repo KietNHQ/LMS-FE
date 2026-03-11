@@ -118,18 +118,25 @@
 
 
 
-.schedule-board {
+.schedule-board-wrapper {
     width: 100%;
+    overflow-x: auto;
+    border-radius: 22px;
+    box-shadow: 0 4px 16px rgba(31, 45, 61, 0.04);
+    -webkit-overflow-scrolling: touch;
+}
+
+.schedule-board {
+    min-width: 860px;
     background: #ffffff;
     border: 1px solid #e8ebf1;
     border-radius: 22px;
-    box-shadow: 0 4px 16px rgba(31, 45, 61, 0.04);
     overflow: visible;
 }
 
 .schedule-grid {
     display: grid;
-    grid-template-columns: 120px repeat(5, minmax(0, 1fr));
+    grid-template-columns: 130px repeat(5, minmax(120px, 1fr));
     align-items: stretch;
 }
 
@@ -376,12 +383,8 @@
 }
 
 @media (max-width: 1200px) {
-    .schedule-board {
-        overflow-x: auto;
-    }
-
     .schedule-grid {
-        min-width: 980px;
+        grid-template-columns: 120px repeat(5, minmax(110px, 1fr));
     }
 }
 

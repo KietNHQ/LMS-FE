@@ -1,0 +1,34 @@
+.teacher-layout {
+    --sidebar-expanded: 300px;
+    --sidebar-collapsed: 96px;
+    --content-max: 1220px;
+    --content-max-collapsed: 1288px;
+
+    min-height: 100vh;
+    background: #e8f4f0;
+}
+
+.teacher-layout__main {
+    min-height: 100vh;
+    margin-left: var(--sidebar-expanded);
+    padding: 28px 32px;
+    box-sizing: border-box;
+    transition: margin-left 0.35s ease, padding 0.35s ease;
+}
+
+.teacher-layout.collapsed .teacher-layout__main {
+    margin-left: var(--sidebar-collapsed);
+}
+
+.teacher-layout__content {
+    width: 100%;
+    max-width: var(--content-max);
+    margin: 0 auto;
+    transition: max-width 0.35s ease, transform 0.35s ease;
+}
+
+.teacher-layout.collapsed .teacher-layout__content {
+    max-width: var(--content-max-collapsed);
+    transform: translateX(-8px);
+}
+
