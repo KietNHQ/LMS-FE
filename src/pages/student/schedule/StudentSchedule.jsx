@@ -276,11 +276,8 @@ export default function StudentSchedule() {
                 </div>
             </div>
 
-            <div className="schedule-week-note">
-                <strong>{weekTemplate.title}</strong>
-                <span>{weekTemplate.summary}</span>
-            </div>
 
+            <div className="schedule-board-wrapper">
             <div className="schedule-board">
                 <div className="schedule-grid schedule-grid-header">
                     <div className="grid-head time-head">PERIOD / DAY</div>
@@ -345,6 +342,7 @@ export default function StudentSchedule() {
                         })}
                     </div>
                 ))}
+            </div>
             </div>
         </div>
     );
