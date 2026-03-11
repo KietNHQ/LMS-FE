@@ -1,82 +1,175 @@
-.profile-page{
-  padding:40px;
-  background:#f4f7fb;
-  min-height:100vh;
-  max-width:1200px;
-  margin:auto;
-  border-radius: 20px;
-}
-
-/* CARD STYLE */
-
-.card{
-  background:white;
-  padding:30px;
-  border-radius:20px;
-  box-shadow:0 8px 20px rgba(0,0,0,0.06);
-}
-
-/* PROFILE TOP */
-
-.profile-top{
+.dialog-overlay{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,0.4);
   display:flex;
-  gap:30px;
+  justify-content:center;
   align-items:center;
-  margin-bottom:30px;
+  z-index:1000;
 }
 
-.profile-avatar{
-  width:150px;
-  height:150px;
-  border-radius:10px;
+.dialog{
+  background:white;
+  border-radius:16px;
+  padding:32px;
+  width:750px;
+  max-width:90%;
+  position:relative;
+}
+
+.close-btn{
+  position:absolute;
+  top:16px;
+  right:20px;
+  border:none;
+  background:none;
+  font-size:22px;
+  cursor:pointer;
+}
+
+.student-card{
+  display:flex;
+  gap:32px;
+  align-items:flex-start;
+}
+
+/* LEFT SECTION */
+
+.avatar-section{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  width:170px;
+}
+
+.avatar-wrapper{
+  position:relative;
+  width:160px;
+  height:160px;
+}
+
+.avatar{
+  width:100%;
+  height:100%;
+  border-radius:50%;
   object-fit:cover;
+  border:4px solid #6092e6;
 }
 
-.profile-info h2{
-  font-size:34px;
+.avatar-overlay{
+  position:absolute;
+  inset:0;
+  background:rgba(0,0,0,0.45);
+  color:white;
+  font-size:28px;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  border-radius:50%;
+  opacity:0;
+  cursor:pointer;
+  transition:0.25s;
+}
+
+.avatar-wrapper:hover .avatar-overlay{
+  opacity:1;
+}
+
+/* ACHIEVEMENT */
+
+.achievement-box{
+  margin-top:18px;
+  width:100%;
+  /* background:#f4f7fb; */
+  /* border-radius:12px; */
+  /* padding:14px; */
+}
+
+.achievement-box h3{
+  margin-bottom:10px;
   color:#e74c3c;
+  font-size:16px;
 }
 
-.profile-role{
-  font-size:18px;
-  color:#444;
-  margin:10px 0;
+.achievement-box ul{
+  padding-left:18px;
+  margin:0;
 }
 
-.profile-desc{
+.achievement-box li{
+  font-size:14px;
+  margin-bottom:5px;
+}
+
+/* RIGHT SIDE */
+
+.student-info h2{
+  color:#6092e6;
+  margin-bottom:4px;
+  font-size:28px;
+}
+
+.student-role{
   color:#555;
-  line-height:1.6;
+  margin-bottom:20px;
+  font-size:16px;
 }
 
-/* BOTTOM CARDS */
-
-.profile-bottom{
+.info-grid{
   display:grid;
-  grid-template-columns:repeat(3,1fr);
-  gap:25px;
+  grid-template-columns:1fr 1fr;
+  column-gap:50px;
+  row-gap:12px;
+  margin:20px 0;
 }
 
-/* SECTION TITLE */
+.info-grid p{
+  margin:0;
+  line-height:1.45;
+  font-size:16px;
+}
 
-.card h3{
+/* .parent-box{
+  padding:20px;
+  border-radius:12px;
+} */
+
+.parent-box h3{
   margin-bottom:15px;
-  font-size:20px;
-  border-bottom:3px solid #e74c3c;
-  padding-bottom:8px;
+  color:#6092e6;
 }
 
-/* TEXT */
-
-.card p{
-  margin:8px 0;
+.parent-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:20px;
 }
 
-/* LIST */
-
-.card ul{
-  padding-left:20px;
+.parent-card{
+  background:white;
+  /* padding:14px; */
+  /* border-radius:10px; */
+  /* border:1px solid #eee; */
 }
 
-.card li{
+.parent-card p{
   margin:6px 0;
+}
+
+@media (max-width:700px){
+
+  .student-card{
+    flex-direction:column;
+    align-items:center;
+    text-align:center;
+  }
+
+  .info-grid{
+    grid-template-columns:1fr;
+  }
+
+  .parent-grid{
+    grid-template-columns:1fr;
+  }
+
 }
