@@ -23,11 +23,10 @@
 .student-layout__content {
     width: 100%;
     max-width: var(--content-max);
-    margin: 0 auto;
-    transition: max-width 0.35s ease, transform 0.35s ease;
+    margin: 0;
+    transition: max-width 0.35s ease;
 }
 
 .student-layout.collapsed .student-layout__content {
     max-width: var(--content-max-collapsed);
-    transform: translateX(-8px);
 }
