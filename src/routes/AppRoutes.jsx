@@ -31,6 +31,16 @@ import TeacherTeachingClasses from "../pages/teacher/teachingClasses/TeacherTeac
 import TeacherNotifications from "../pages/teacher/notifications/TeacherNotifications";
 import TeacherProfile from "../pages/teacher/profile/TeacherProfile";
 
+/* PARENT PAGES */
+import ParentLayout from "../layouts/parent/ParentLayout";
+import ParentDashboard from "../pages/parent/dashboard/ParentDashboard";
+import ParentChildrenOverview from "../pages/parent/children-overview/ParentChildrenOverview";
+import ParentNotifications from "../pages/parent/notifications/ParentNotifications";
+import ParentMessages from "../pages/parent/messages/ParentMessages";
+import ParentPayments from "../pages/parent/payments/ParentPayments";
+import ParentSupport from "../pages/parent/support/ParentSupport";
+
+
 export default function AppRoutes() {
   return (
     <Routes>
@@ -71,6 +81,18 @@ export default function AppRoutes() {
         <Route path="support"          element={<TeacherSupport />} />
         <Route path="profile"          element={<TeacherProfile />} />
       </Route>
+
+        {/* PARENT */}
+        <Route path="/parent" element={<ParentLayout />}>
+            <Route index element={<Navigate to="dashboard" replace />} />
+            <Route path="dashboard" element={<ParentDashboard />} />
+            <Route path="children-overview" element={<ParentChildrenOverview />} />
+            <Route path="notifications" element={<ParentNotifications />} />
+            <Route path="messages" element={<ParentMessages />} />
+            <Route path="payments" element={<ParentPayments />} />
+            <Route path="support" element={<ParentSupport />} />
+        </Route>
+
     </Routes>
   );
 }
