@@ -22,7 +22,8 @@ export default function Sidebar({
   const navigate = useNavigate();
 
   const profileItem = items.find((item) => item.label === "Profile");
-  const profilePath = profileItem?.path || `/${role}/profile`;
+  const dashboardItem = items.find((item) => item.label === "Dashboard");
+  const profilePath = profileItem?.path || dashboardItem?.path || `/${role}`;
 
   const handleLogout = () => {
     navigate("/login", { replace: true });
