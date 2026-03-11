@@ -3,17 +3,26 @@
     background: transparent;
 }
 
+.student-dashboard-header {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    flex-wrap: nowrap;
+}
+
 .student-dashboard-header h1 {
     margin: 0;
     font-size: 28px;
     font-weight: 700;
     color: #16233b;
+    white-space: nowrap;
 }
 
 .student-dashboard-header p {
-    margin: 6px 0 0;
+    margin: 0;
     font-size: 16px;
     color: #6f7c91;
+    white-space: nowrap;
 }
 
 .student-stats-grid {
