@@ -1,0 +1,229 @@
+.student-classes-page {
+  padding: 28px 24px;
+}
+
+.student-classes-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.student-classes-header h1 {
+  margin: 0;
+  font-size: 28px;
+  color: #16233b;
+}
+
+.student-classes-header p {
+  margin: 6px 0 0;
+  color: #6f7c91;
+}
+
+.student-classes-primary-btn,
+.student-class-secondary-btn {
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  font-weight: 600;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.student-classes-primary-btn {
+  background: #7ea1ff;
+  color: #fff;
+  padding: 11px 16px;
+}
+
+.student-classes-primary-btn:hover {
+  background: #6f94f5;
+}
+
+.student-classes-stats {
+  margin-top: 18px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+}
+
+.student-classes-stat-card {
+  background: #fff;
+  border-radius: 18px;
+  box-shadow: 0 2px 10px rgba(20, 32, 70, 0.08);
+  padding: 18px;
+}
+
+.student-classes-stat-card p {
+  margin: 0;
+  color: #6f7c91;
+}
+
+.student-classes-stat-card strong {
+  display: block;
+  margin-top: 8px;
+  font-size: 26px;
+  color: #16233b;
+}
+
+.student-classes-layout {
+  margin-top: 18px;
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 16px;
+}
+
+.student-classes-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+}
+
+.student-class-card {
+  background: #fff;
+  border-radius: 20px;
+  box-shadow: 0 2px 10px rgba(20, 32, 70, 0.08);
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.student-class-card-top {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.student-class-tag {
+  display: inline-block;
+  padding: 5px 10px;
+  background: #eef4ff;
+  color: #4a6ecf;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.student-class-card h3 {
+  margin: 10px 0 4px;
+  font-size: 20px;
+  color: #16233b;
+}
+
+.student-class-code {
+  margin: 0;
+  color: #8d99ad;
+  font-size: 13px;
+}
+
+.student-class-pending {
+  font-size: 13px;
+  color: #d35454;
+  white-space: nowrap;
+}
+
+.student-class-info-list {
+  margin: 0;
+  padding-left: 18px;
+  color: #4f607b;
+  display: grid;
+  gap: 6px;
+}
+
+.student-class-progress-label {
+  display: flex;
+  justify-content: space-between;
+  color: #4f607b;
+  font-size: 14px;
+  margin-bottom: 6px;
+}
+
+.student-class-progress-track {
+  height: 10px;
+  border-radius: 999px;
+  background: #eef1f7;
+  overflow: hidden;
+}
+
+.student-class-progress-track div {
+  height: 100%;
+  background: #7ea1ff;
+}
+
+.student-class-secondary-btn {
+  margin-top: auto;
+  background: #eef4ff;
+  color: #3458c4;
+  padding: 10px 12px;
+}
+
+.student-class-secondary-btn:hover {
+  background: #e3ecff;
+}
+
+.student-classes-side-panel {
+  background: #fff;
+  border-radius: 20px;
+  box-shadow: 0 2px 10px rgba(20, 32, 70, 0.08);
+  padding: 18px;
+  height: fit-content;
+}
+
+.student-classes-side-panel h2 {
+  margin: 0 0 12px;
+  font-size: 19px;
+  color: #16233b;
+}
+
+.student-task-item {
+  background: #f7f9fe;
+  border-radius: 14px;
+  padding: 12px;
+  margin-bottom: 10px;
+}
+
+.student-task-title {
+  margin: 0;
+  font-weight: 600;
+  color: #16233b;
+}
+
+.student-task-meta {
+  margin: 4px 0;
+  color: #6f7c91;
+  font-size: 14px;
+}
+
+.student-task-due {
+  color: #d35454;
+  font-size: 13px;
+}
+
+@media (max-width: 1200px) {
+  .student-classes-stats,
+  .student-classes-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .student-classes-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .student-classes-page {
+    padding: 18px;
+  }
+
+  .student-classes-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .student-classes-primary-btn {
+    width: 100%;
+  }
+}
