@@ -455,6 +455,25 @@ export default function StudentGrades() {
 
     const currentData = useMemo(() => gradeData[selectedClass], [selectedClass]);
 
+    const summaryAverage = useMemo(() => {
+        if (!currentData?.subjects?.length) return 0;
+
+        const total = currentData.subjects.reduce((sum, subject) => {
+            if (activeTab === "hk1") return sum + subject.hk1Avg;
+            if (activeTab === "hk2") return sum + subject.hk2Avg;
+            return sum + subject.yearAvg;
+        }, 0);
+
+        return round2(total / currentData.subjects.length);
+    }, [currentData, activeTab]);
+
+    const summaryAverageLabel =
+        activeTab === "hk1"
+            ? "Semester 1 Average"
+            : activeTab === "hk2"
+              ? "Semester 2 Average"
+              : "Year Average";
+
     const toggleRow = (id) => {
         setOpenRowId((prev) => (prev === id ? null : id));
     };
@@ -517,8 +536,8 @@ export default function StudentGrades() {
 
             <div className="grades-stats">
                 <div className="grades-card">
-                    <h2 className="blue">{currentData.average.toFixed(2)}</h2>
-                    <p>Year Average</p>
+                    <h2 className="blue">{summaryAverage.toFixed(2)}</h2>
+                    <p>{summaryAverageLabel}</p>
                 </div>
 
                 <div className="grades-card">
@@ -689,11 +708,6 @@ export default function StudentGrades() {
                                     <div className="year-summary-item">
                                         <span>Academic Rank</span>
                                         <strong>{subject.rank}</strong>
-                                    </div>
-
-                                    <div className="year-summary-item">
-                                        <span>Formula</span>
-                                        <strong>(S1 Avg + S2 Avg × 2) / 3</strong>
                                     </div>
                                 </div>
                             </div>

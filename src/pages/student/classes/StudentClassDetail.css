@@ -39,16 +39,6 @@
   color: #6f7c91;
 }
 
-.student-class-detail-primary-btn {
-  border: none;
-  border-radius: 12px;
-  background: #7ea1ff;
-  color: #fff;
-  font-weight: 600;
-  padding: 11px 16px;
-  cursor: pointer;
-}
-
 .student-class-detail-stats {
   margin-top: 18px;
   display: grid;
@@ -200,12 +190,7 @@
     align-items: stretch;
   }
 
-  .student-class-detail-primary-btn {
-    width: 100%;
-  }
-
   .student-class-detail-stats {
     grid-template-columns: 1fr;
   }
 }
-

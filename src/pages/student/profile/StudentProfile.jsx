@@ -19,118 +19,86 @@ export default function StudentProfile() {
   return (
     <div className="profile-page">
 
-      <div className="profile-container">
+      {/* CARD TRÊN */}
 
-        {/* LEFT SIDE */}
+      <div className="card profile-top">
 
-        <div className="profile-left">
+        <img
+          src={student.avatar}
+          alt="avatar"
+          className="profile-avatar"
+        />
 
-          <div className="profile-card">
+        <div className="profile-info">
 
-            <div className="profile-banner">
-              <img src={student.avatar} alt="" className="profile-avatar"/>
-            </div>
+          <h2>{student.name}</h2>
 
-             <h3>{student.name}</h3>
-             <p className="role">{student.role}</p>
+          <p className="profile-role">
+            {student.role} - Lớp {student.class}
+          </p>
 
-          </div>
+          <hr />
+
+          <p className="profile-desc">
+            Học sinh tại {student.school}. Có tinh thần học tập tốt,
+            tích cực tham gia các hoạt động học thuật và ngoại khóa.
+            Luôn cố gắng phát triển kỹ năng tư duy và làm việc nhóm.
+          </p>
+
+        </div>
+
+      </div>
 
 
-          {/* PERSONAL INFO */}
+      {/* 3 CARD DƯỚI */}
 
-          <div className="personal-card">
+      <div className="profile-bottom">
 
-            <h4>Thông tin cá nhân</h4>
+        {/* THÔNG TIN */}
 
-            <div className="personal-info">
-              <p><b>Mã học sinh:</b> {student.studentId}</p>
-              <p><b>Lớp:</b> {student.class}</p>
-              <p><b>Trường:</b> {student.school}</p>
-              <p><b>Ngày sinh:</b> {student.dob}</p>
-              <p><b>Giới tính:</b> {student.gender}</p>
-              <p><b>SĐT:</b> {student.phone}</p>
-              <p><b>Email:</b> {student.email}</p>
-              <p><b>Địa chỉ:</b> {student.address}</p>
-            </div>
+        <div className="card">
 
-          </div>
+          <h3>THÔNG TIN CÁ NHÂN</h3>
+
+          <p><b>Mã học sinh:</b> {student.studentId}</p>
+          <p><b>Ngày sinh:</b> {student.dob}</p>
+          <p><b>Giới tính:</b> {student.gender}</p>
+          <p><b>SĐT:</b> {student.phone}</p>
+          <p><b>Email:</b> {student.email}</p>
+          <p><b>Địa chỉ:</b> {student.address}</p>
 
         </div>
 
 
-        {/* RIGHT SIDE */}
+        {/* HỌC TẬP */}
 
-        <div className="profile-right">
+        <div className="card">
 
-          <div className="profile-details">
+          <h3>HỌC TẬP</h3>
 
-            <h2>Profile Details</h2>
+          <p><b>{student.school}</b></p>
+          <p>Lớp {student.class}</p>
 
-            <p className="sub-text">
-              Bạn có thể chỉnh sửa thông tin cá nhân tại đây.
-            </p>
+          <ul>
+            <li>Học lực: Giỏi</li>
+            <li>Hạnh kiểm: Tốt</li>
+            <li>Tham gia CLB Tin học</li>
+          </ul>
 
-
-            {/* AVATAR */}
-
-            <div className="avatar-section">
-
-              <div>
-                <h4>Your avatar</h4>
-                <p className="small-text">
-                  PNG hoặc JPG tối đa 800px
-                </p>
-              </div>
-
-            </div>
+        </div>
 
 
-            {/* FORM */}
+        {/* THÀNH TÍCH */}
 
-            <div className="profile-form">
+        <div className="card">
 
-              <div className="form-grid">
+          <h3>THÀNH TÍCH</h3>
 
-                <div className="form-group">
-                  <label>Username</label>
-                  <input type="text" value="minhtuan10a1"/>
-                </div>
+          <p><b>2024</b></p>
+          <p>Học sinh giỏi cấp trường môn Tin học</p>
 
-                <div className="form-group">
-                  <label>Full Name</label>
-                  <input type="text" value={student.name}/>
-                </div>
-
-                <div className="form-group">
-                  <label>Phone</label>
-                  <input type="text" value={student.phone}/>
-                </div>
-
-                <div className="form-group">
-                  <label>Email</label>
-                  <input type="text" value={student.email}/>
-                </div>
-
-              </div>
-
-
-              <div className="form-group">
-                <label>Địa chỉ</label>
-                <input type="text" value={student.address}/>
-              </div>
-
-
-              <div className="form-buttons">
-                <button className="password-btn">
-                  Change Password
-                </button>
-
-              </div>
-
-            </div>
-
-          </div>
+          <p><b>2023</b></p>
+          <p>Tham gia cuộc thi STEM cấp trường</p>
 
         </div>
 

@@ -73,13 +73,58 @@
     outline: none;
 }
 
+.schedule-week-controls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.schedule-week-controls button {
+    height: 40px;
+    border: 1px solid #d8dfeb;
+    border-radius: 10px;
+    background: #ffffff;
+    color: #32455f;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 0 10px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+}
+
+.schedule-week-controls button:hover {
+    border-color: #b9c9e8;
+    background: #f3f7ff;
+}
+
+.schedule-week-note {
+    margin: -6px 0 14px;
+    padding: 10px 14px;
+    border-radius: 12px;
+    border: 1px solid #dbe5fb;
+    background: #f7faff;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #4d5d78;
+    font-size: 13px;
+}
+
+.schedule-week-note strong {
+    color: #345bc1;
+}
+
+
+
 .schedule-board {
     width: 100%;
     background: #ffffff;
     border: 1px solid #e8ebf1;
     border-radius: 22px;
     box-shadow: 0 4px 16px rgba(31, 45, 61, 0.04);
-    overflow: hidden;
+    overflow: visible;
 }
 
 .schedule-grid {
@@ -133,6 +178,12 @@
     color: #6f798b;
 }
 
+.period-session {
+    font-size: 12px;
+    color: #8a94a6;
+    margin-top: 3px;
+}
+
 .lesson-cell {
     padding: 10px 8px;
     display: flex;
@@ -166,6 +217,7 @@
     gap: 3px;
     border-left: 3px solid transparent;
     transition: transform 0.2s ease, box-shadow 0.2s ease;
+    position: relative;
 }
 
 .lesson-pill:hover {
@@ -173,11 +225,127 @@
     box-shadow: 0 6px 16px rgba(66, 84, 102, 0.08);
 }
 
+.lesson-tooltip {
+    position: absolute;
+    left: 50%;
+    bottom: calc(100% + 8px);
+    transform: translateX(-50%) translateY(-4px);
+    width: max-content;
+    max-width: 220px;
+    background: #16233b;
+    color: #eef3ff;
+    border-radius: 12px;
+    padding: 10px 12px;
+    font-size: 12px;
+    line-height: 1.35;
+    box-shadow: 0 8px 18px rgba(22, 35, 59, 0.22);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.18s ease, transform 0.18s ease;
+    z-index: 30;
+}
+
+.lesson-tooltip p {
+    margin: 0 0 4px;
+}
+
+.lesson-tooltip p:last-child {
+    margin-bottom: 0;
+}
+
+.lesson-tooltip strong {
+    color: #b7ccff;
+}
+
+.lesson-pill:hover .lesson-tooltip {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+}
+
+/* subject colors */
+.lesson-pill.mathematics {
+    background: #edf4ff;
+    border-left-color: #6c97ff;
+}
+
+.lesson-pill.physics {
+    background: #eafaf7;
+    border-left-color: #2fc7b6;
+}
+
+.lesson-pill.chemistry {
+    background: #fff7e8;
+    border-left-color: #f2b94f;
+}
+
+.lesson-pill.literature {
+    background: #feeff4;
+    border-left-color: #ff7b9e;
+}
+
+.lesson-pill.english {
+    background: #eef7ee;
+    border-left-color: #78caa0;
+}
+
+.lesson-pill.art {
+    background: #fff5e8;
+    border-left-color: #e8a659;
+}
+
+.lesson-pill.pe {
+    background: #f0f7f2;
+    border-left-color: #56c596;
+}
+
+.lesson-pill.music {
+    background: #fef0f7;
+    border-left-color: #e86ba1;
+}
+
+.lesson-pill.informatics {
+    background: #eff8fc;
+    border-left-color: #4a9fd8;
+}
+
+.lesson-pill.biology {
+    background: #f5fbf0;
+    border-left-color: #5fb878;
+}
+
+.lesson-pill.history {
+    background: #fef4f0;
+    border-left-color: #d87f5f;
+}
+
+.lesson-pill.geography {
+    background: #f0f9fd;
+    border-left-color: #4db3d4;
+}
+
+.lesson-pill.civic {
+    background: #fdf7f0;
+    border-left-color: #d9975e;
+}
+
 .lesson-subject {
     font-size: 15px;
     font-weight: 800;
     color: #253044;
     line-height: 1.2;
+}
+
+.lesson-header {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    justify-content: space-between;
+}
+
+.assessment-icon {
+    font-size: 16px !important;
+    color: #e74c3c;
+    flex-shrink: 0;
 }
 
 .lesson-room {
@@ -207,32 +375,6 @@
     flex-shrink: 0;
 }
 
-/* subject colors giống tinh thần ảnh 1 */
-.lesson-pill.math {
-    background: #eef4ff;
-    border-left-color: #82a8ff;
-}
-
-.lesson-pill.physics {
-    background: #e8f8f7;
-    border-left-color: #45d3c6;
-}
-
-.lesson-pill.chemistry {
-    background: #fbf4e5;
-    border-left-color: #f2c767;
-}
-
-.lesson-pill.literature {
-    background: #fdebf0;
-    border-left-color: #ff8ea8;
-}
-
-.lesson-pill.english {
-    background: #eef8f5;
-    border-left-color: #9fe0c0;
-}
-
 @media (max-width: 1200px) {
     .schedule-board {
         overflow-x: auto;
@@ -260,9 +402,22 @@
     .schedule-week-picker {
         width: 100%;
         justify-content: space-between;
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .schedule-week-controls {
+        width: 100%;
+        flex-wrap: wrap;
+    }
+
+    .schedule-week-controls button {
+        flex: 1;
+        min-width: 130px;
+        justify-content: center;
     }
 
     .schedule-week-picker input[type="week"] {
-        width: 180px;
+        width: 100%;
     }
 }
