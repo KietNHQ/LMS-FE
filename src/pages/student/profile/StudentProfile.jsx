@@ -1,104 +1,178 @@
+import { useState } from "react";
 import "./StudentProfile.css";
 
 export default function StudentProfile() {
 
-  const student = {
+  const [showDialog, setShowDialog] = useState(true);
+
+  const [student, setStudent] = useState({
     name: "Nguyễn Minh Tuấn",
-    avatar: "https://i.pravatar.cc/150?img=12",
+    avatar: "https://i.pravatar.cc/300?img=12",
     role: "Học sinh",
     studentId: "HS1024",
     class: "10A1",
     school: "THPT EduVN",
+    year: "2025-2026",
     dob: "12/03/2008",
     gender: "Nam",
     phone: "0988888888",
     email: "tuan.nguyen@student.edu.vn",
-    address: "Quận 7, TP.HCM"
+    address: "505/66, Quốc lộ 13, Quận 7, TP.HCM",
+
+    achievements: [
+      "- Học sinh giỏi năm 2024 - 2025",
+      "- Giải Nhất Toán cấp trường",
+      "-Top 5 Olympic Tin học",
+      "- Danh hiệu Học sinh tiêu biểu"
+    ],
+
+    parents: [
+      {
+        name: "Nguyễn Văn A",
+        relation: "Cha",
+        contacts: [
+          { type: "Điện thoại", value: "0909999999" },
+          { type: "Email", value: "vana@gmail.com" }
+        ]
+      },
+      {
+        name: "Trần Thị B",
+        relation: "Mẹ",
+        contacts: [
+          { type: "Điện thoại", value: "0911111111" },
+          { type: "Email", value: "thib@gmail.com" }
+        ]
+      }
+    ]
+  });
+
+  const changeAvatar = (e) => {
+    const file = e.target.files[0];
+
+    if (file) {
+      const url = URL.createObjectURL(file);
+
+      setStudent({
+        ...student,
+        avatar: url
+      });
+    }
   };
 
+  if (!showDialog) return null;
+
   return (
-    <div className="profile-page">
+    <div className="dialog-overlay">
 
-      {/* CARD TRÊN */}
+      <div className="dialog">
 
-      <div className="card profile-top">
+        <button
+          className="close-btn"
+          onClick={() => setShowDialog(false)}
+        >
+          ✕
+        </button>
 
-        <img
-          src={student.avatar}
-          alt="avatar"
-          className="profile-avatar"
-        />
+        <div className="student-card">
 
-        <div className="profile-info">
+          {/* LEFT SIDE */}
 
-          <h2>{student.name}</h2>
+          <div className="avatar-section">
 
-          <p className="profile-role">
-            {student.role} - Lớp {student.class}
-          </p>
+            <div className="avatar-wrapper">
 
-          <hr />
+              <img
+                src={student.avatar}
+                alt="avatar"
+                className="avatar"
+              />
 
-          <p className="profile-desc">
-            Học sinh tại {student.school}. Có tinh thần học tập tốt,
-            tích cực tham gia các hoạt động học thuật và ngoại khóa.
-            Luôn cố gắng phát triển kỹ năng tư duy và làm việc nhóm.
-          </p>
+              <label className="avatar-overlay">
+                📷
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={changeAvatar}
+                  hidden
+                />
+              </label>
 
-        </div>
+            </div>
 
-      </div>
+            {/* ACHIEVEMENTS */}
 
+            <div className="achievement-box">
 
-      {/* 3 CARD DƯỚI */}
+              <h3>🏆 Thành tích</h3>
 
-      <div className="profile-bottom">
+              <ul>
+                {student.achievements.map((item, index) => (
+                  <li key={index}>{item}</li>
+                ))}
+              </ul>
 
-        {/* THÔNG TIN */}
+            </div>
 
-        <div className="card">
-
-          <h3>THÔNG TIN CÁ NHÂN</h3>
-
-          <p><b>Mã học sinh:</b> {student.studentId}</p>
-          <p><b>Ngày sinh:</b> {student.dob}</p>
-          <p><b>Giới tính:</b> {student.gender}</p>
-          <p><b>SĐT:</b> {student.phone}</p>
-          <p><b>Email:</b> {student.email}</p>
-          <p><b>Địa chỉ:</b> {student.address}</p>
-
-        </div>
-
-
-        {/* HỌC TẬP */}
-
-        <div className="card">
-
-          <h3>HỌC TẬP</h3>
-
-          <p><b>{student.school}</b></p>
-          <p>Lớp {student.class}</p>
-
-          <ul>
-            <li>Học lực: Giỏi</li>
-            <li>Hạnh kiểm: Tốt</li>
-            <li>Tham gia CLB Tin học</li>
-          </ul>
-
-        </div>
+          </div>
 
 
-        {/* THÀNH TÍCH */}
+          {/* RIGHT SIDE */}
 
-        <div className="card">
+          <div className="student-info">
 
-          <h3>THÀNH TÍCH</h3>
+            <h2>{student.name}</h2>
 
-          <p><b>2024</b></p>
-          <p>Học sinh giỏi cấp trường môn Tin học</p>
+            <p className="student-role">
+              {student.role} - Lớp {student.class}
+            </p>
 
-          <p><b>2023</b></p>
-          <p>Tham gia cuộc thi STEM cấp trường</p>
+            <div className="info-grid">
+
+              <p><b>Mã HS:</b> {student.studentId}</p>
+              <p><b>Năm học:</b> {student.year}</p>
+
+              <p><b>Ngày sinh:</b> {student.dob}</p>
+              <p><b>Giới tính:</b> {student.gender}</p>
+
+              <p><b>SĐT:</b> {student.phone}</p>
+              <p><b>Email:</b> {student.email}</p>
+
+              <p><b>Địa chỉ:</b> {student.address}</p>
+
+            </div>
+
+
+            {/* PARENT */}
+
+            <div className="parent-box">
+
+              <h3>Phụ huynh</h3>
+
+              <div className="parent-grid">
+
+                {student.parents.map((parent, index) => (
+
+                  <div className="parent-card" key={index}>
+
+                    <p>
+                      <b>{parent.relation}:</b> {parent.name}
+                    </p>
+
+                    {parent.contacts.map((contact, i) => (
+                      <p key={i}>
+                        <b>{contact.type}:</b> {contact.value}
+                      </p>
+                    ))}
+
+                  </div>
+
+                ))}
+
+              </div>
+
+            </div>
+
+          </div>
 
         </div>
 
