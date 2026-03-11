@@ -8,24 +8,20 @@ export default function StudentClasses() {
 		<section className="student-classes-page">
 			<header className="student-classes-header">
 				<div>
-					<h1>Lop hoc cua em</h1>
-					<p>Theo doi tien do, lich hoc va bai tap sap den han.</p>
+					<div className="student-classes-title-row">
+						<h1>My Classes</h1>
+ 					</div>
+					<p>Track your learning progress, schedule, and upcoming assignments.</p>
 				</div>
-				<Link
-					to={`/student/classes/${classList[0].id}`}
-					className="student-classes-primary-btn"
-				>
-					Vao lop gan nhat
-				</Link>
 			</header>
 
 			<div className="student-classes-stats">
 				<article className="student-classes-stat-card">
-					<p>So lop dang hoc</p>
+					<p>Active Classes</p>
 					<strong>{classList.length}</strong>
 				</article>
 				<article className="student-classes-stat-card">
-					<p>Bai tap chua hoan thanh</p>
+					<p>Pending Assignments</p>
 					<strong>
 						{classList.reduce(
 							(sum, item) => sum + item.assignmentsPending,
@@ -34,7 +30,7 @@ export default function StudentClasses() {
 					</strong>
 				</article>
 				<article className="student-classes-stat-card">
-					<p>Tien do trung binh</p>
+					<p>Average Progress</p>
 					<strong>
 						{Math.round(
 							classList.reduce((sum, item) => sum + item.progress, 0) /
@@ -46,56 +42,69 @@ export default function StudentClasses() {
 			</div>
 
 			<div className="student-classes-layout">
-				<div className="student-classes-grid">
-					{classList.map((item) => (
-						<article key={item.id} className="student-class-card">
-							<div className="student-class-card-top">
-								<div>
-									<span className="student-class-tag">{item.className}</span>
-									<h3>{item.title}</h3>
-									<p className="student-class-code">{item.code}</p>
-								</div>
-								<span className="student-class-pending">
-									{item.assignmentsPending} bai cho nop
-								</span>
-							</div>
-
-							<ul className="student-class-info-list">
-								<li>Giao vien: {item.teacher}</li>
-								<li>Lich hoc: {item.schedule}</li>
-								<li>
-									Da hoc: {item.completedLessons}/{item.totalLessons} buoi
-								</li>
-							</ul>
-
-							<div className="student-class-progress-wrap">
-								<div className="student-class-progress-label">
-									<span>Tien do khoa hoc</span>
-									<strong>{item.progress}%</strong>
-								</div>
-								<div className="student-class-progress-track">
-									<div style={{ width: `${item.progress}%` }} />
-								</div>
-							</div>
-
+				<section className="student-classes-main">
+					<div className="student-classes-main-head">
+						<h2>Class List</h2>
+						<div className="student-classes-main-actions">
+							<span>{classList.length} classes</span>
 							<Link
-								to={`/student/classes/${item.id}`}
-								className="student-class-secondary-btn"
+								to={`/student/classes/${classList[0].id}`}
+								className="student-classes-primary-btn"
 							>
-								Xem chi tiet lop
+								Go to Latest Class
 							</Link>
-						</article>
-					))}
-				</div>
+						</div>
+					</div>
+					<div className="student-classes-grid">
+						{classList.map((item) => (
+							<article key={item.id} className="student-class-card">
+								<div className="student-class-card-top">
+									<div>
+										<span className="student-class-tag">{item.className}</span>
+										<h3>{item.title}</h3>
+									</div>
+									<span className="student-class-pending">
+										{item.assignmentsPending} pending
+									</span>
+								</div>
+
+								<ul className="student-class-info-list">
+									<li>Teacher: {item.teacher}</li>
+									<li>Schedule: {item.schedule}</li>
+									<li>
+										Completed: {item.completedLessons}/{item.totalLessons} sessions
+									</li>
+								</ul>
+
+								<div className="student-class-progress-wrap">
+									<div className="student-class-progress-label">
+										<span>Course Progress</span>
+										<strong>{item.progress}%</strong>
+									</div>
+									<div className="student-class-progress-track">
+										<div style={{ width: `${item.progress}%` }} />
+									</div>
+								</div>
+
+								<Link
+									to={`/student/classes/${item.id}`}
+									className="student-class-secondary-btn"
+								>
+									View Class Details
+								</Link>
+							</article>
+						))}
+					</div>
+				</section>
 
 				<aside className="student-classes-side-panel">
-					<h2>Viec can lam</h2>
+					<h2>To-Do</h2>
 					{upcomingTasks.map((task) => (
 						<div key={task.id} className="student-task-item">
 							<p className="student-task-title">{task.title}</p>
 							<p className="student-task-meta">{task.subject}</p>
 							<span className="student-task-due">
-								Han nop: {task.due}
+								Due: {task.due}
 							</span>
 						</div>
 					))}

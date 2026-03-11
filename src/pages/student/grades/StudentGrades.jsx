@@ -1,9 +1,18 @@
 import React, { useMemo, useState } from "react";
 import { FiChevronDown } from "react-icons/fi";
+import { BiTrendingUp, BiTrendingDown, BiMinus } from "react-icons/bi";
+import {
+    FaSquareRootAlt,
+    FaAtom,
+    FaFlask,
+    FaBookOpen,
+    FaLanguage,
+    FaGraduationCap,
+} from "react-icons/fa";
 import "./StudentGrades.css";
 
 /* =========================
-   HÀM TÍNH ĐIỂM CHUẨN
+   GRADE CALCULATION HELPERS
 ========================= */
 function round2(num) {
     return Number(num.toFixed(2));
@@ -26,10 +35,10 @@ function calculateYearAverage(hk1Avg, hk2Avg) {
 }
 
 function getAcademicRank(avg) {
-    if (avg >= 8) return "Tốt";
-    if (avg >= 6.5) return "Khá";
-    if (avg >= 5) return "Trung bình";
-    return "Yếu";
+    if (avg >= 8) return "Excellent";
+    if (avg >= 6.5) return "Good";
+    if (avg >= 5) return "Average";
+    return "Weak";
 }
 
 function getTrend(hk1Avg, hk2Avg) {
@@ -39,28 +48,42 @@ function getTrend(hk1Avg, hk2Avg) {
 }
 
 function getRankColorClass(rank) {
-    if (rank === "Tốt") return "rank-good";
-    if (rank === "Khá") return "rank-fair";
-    if (rank === "Trung bình") return "rank-average";
+    if (rank === "Excellent") return "rank-good";
+    if (rank === "Good") return "rank-fair";
+    if (rank === "Average") return "rank-average";
     return "rank-weak";
 }
 
 function getSummaryColorClass(rank) {
-    if (rank === "Tốt") return "green";
-    if (rank === "Khá") return "orange";
-    if (rank === "Trung bình") return "blue";
+    if (rank === "Excellent") return "green";
+    if (rank === "Good") return "orange";
+    if (rank === "Average") return "blue";
     return "red";
 }
 
+const subjectIconMap = {
+    mathematics: FaSquareRootAlt,
+    math: FaSquareRootAlt,
+    physics: FaAtom,
+    chemistry: FaFlask,
+    literature: FaBookOpen,
+    english: FaLanguage,
+};
+
+function getSubjectIcon(subjectName) {
+    const normalizedName = subjectName.trim().toLowerCase();
+    return subjectIconMap[normalizedName] || FaGraduationCap;
+}
+
 /* =========================
-   DỮ LIỆU GỐC
+   RAW DATA
 ========================= */
 const rawGradeData = {
-    "10A1 - Năm học 2024-2025": [
+    "10A1 - School Year 2024-2025": [
         {
             id: 1,
-            name: "Toán",
-            className: "Lớp 10A1",
+            name: "Mathematics",
+            className: "Class 10A1",
             hk1: {
                 oral1: 8,
                 oral2: 9,
@@ -80,8 +103,8 @@ const rawGradeData = {
         },
         {
             id: 2,
-            name: "Vật lý",
-            className: "Lớp 10A1",
+            name: "Physics",
+            className: "Class 10A1",
             hk1: {
                 oral1: 7,
                 oral2: 8,
@@ -101,8 +124,8 @@ const rawGradeData = {
         },
         {
             id: 3,
-            name: "Hóa học",
-            className: "Lớp 10A1",
+            name: "Chemistry",
+            className: "Class 10A1",
             hk1: {
                 oral1: 6,
                 oral2: 7,
@@ -122,8 +145,8 @@ const rawGradeData = {
         },
         {
             id: 4,
-            name: "Ngữ văn",
-            className: "Lớp 10A1",
+            name: "Literature",
+            className: "Class 10A1",
             hk1: {
                 oral1: 7,
                 oral2: 7,
@@ -143,8 +166,8 @@ const rawGradeData = {
         },
         {
             id: 5,
-            name: "Tiếng Anh",
-            className: "Lớp 10A1",
+            name: "English",
+            className: "Class 10A1",
             hk1: {
                 oral1: 8,
                 oral2: 9,
@@ -164,11 +187,11 @@ const rawGradeData = {
         },
     ],
 
-    "11A1 - Năm học 2025-2026": [
+    "11A1 - School Year 2025-2026": [
         {
             id: 1,
-            name: "Toán",
-            className: "Lớp 11A1",
+            name: "Mathematics",
+            className: "Class 11A1",
             hk1: {
                 oral1: 8,
                 oral2: 8,
@@ -188,8 +211,8 @@ const rawGradeData = {
         },
         {
             id: 2,
-            name: "Vật lý",
-            className: "Lớp 11A1",
+            name: "Physics",
+            className: "Class 11A1",
             hk1: {
                 oral1: 8,
                 oral2: 8,
@@ -209,8 +232,8 @@ const rawGradeData = {
         },
         {
             id: 3,
-            name: "Hóa học",
-            className: "Lớp 11A1",
+            name: "Chemistry",
+            className: "Class 11A1",
             hk1: {
                 oral1: 7,
                 oral2: 8,
@@ -230,8 +253,8 @@ const rawGradeData = {
         },
         {
             id: 4,
-            name: "Ngữ văn",
-            className: "Lớp 11A1",
+            name: "Literature",
+            className: "Class 11A1",
             hk1: {
                 oral1: 7,
                 oral2: 8,
@@ -251,8 +274,8 @@ const rawGradeData = {
         },
         {
             id: 5,
-            name: "Tiếng Anh",
-            className: "Lớp 11A1",
+            name: "English",
+            className: "Class 11A1",
             hk1: {
                 oral1: 9,
                 oral2: 9,
@@ -272,11 +295,11 @@ const rawGradeData = {
         },
     ],
 
-    "12A1 - Năm học 2026-2027": [
+    "12A1 - School Year 2026-2027": [
         {
             id: 1,
-            name: "Toán",
-            className: "Lớp 12A1",
+            name: "Mathematics",
+            className: "Class 12A1",
             hk1: {
                 oral1: 9,
                 oral2: 9,
@@ -296,8 +319,8 @@ const rawGradeData = {
         },
         {
             id: 2,
-            name: "Vật lý",
-            className: "Lớp 12A1",
+            name: "Physics",
+            className: "Class 12A1",
             hk1: {
                 oral1: 8,
                 oral2: 9,
@@ -317,8 +340,8 @@ const rawGradeData = {
         },
         {
             id: 3,
-            name: "Hóa học",
-            className: "Lớp 12A1",
+            name: "Chemistry",
+            className: "Class 12A1",
             hk1: {
                 oral1: 8,
                 oral2: 8,
@@ -338,8 +361,8 @@ const rawGradeData = {
         },
         {
             id: 4,
-            name: "Ngữ văn",
-            className: "Lớp 12A1",
+            name: "Literature",
+            className: "Class 12A1",
             hk1: {
                 oral1: 8,
                 oral2: 8,
@@ -359,8 +382,8 @@ const rawGradeData = {
         },
         {
             id: 5,
-            name: "Tiếng Anh",
-            className: "Lớp 12A1",
+            name: "English",
+            className: "Class 12A1",
             hk1: {
                 oral1: 9,
                 oral2: 9,
@@ -382,7 +405,7 @@ const rawGradeData = {
 };
 
 /* =========================
-   CHUẨN HÓA DỮ LIỆU
+   COMPUTED DATA
 ========================= */
 function buildComputedData(rawData) {
     const result = {};
@@ -432,6 +455,25 @@ export default function StudentGrades() {
 
     const currentData = useMemo(() => gradeData[selectedClass], [selectedClass]);
 
+    const summaryAverage = useMemo(() => {
+        if (!currentData?.subjects?.length) return 0;
+
+        const total = currentData.subjects.reduce((sum, subject) => {
+            if (activeTab === "hk1") return sum + subject.hk1Avg;
+            if (activeTab === "hk2") return sum + subject.hk2Avg;
+            return sum + subject.yearAvg;
+        }, 0);
+
+        return round2(total / currentData.subjects.length);
+    }, [currentData, activeTab]);
+
+    const summaryAverageLabel =
+        activeTab === "hk1"
+            ? "Semester 1 Average"
+            : activeTab === "hk2"
+              ? "Semester 2 Average"
+              : "Year Average";
+
     const toggleRow = (id) => {
         setOpenRowId((prev) => (prev === id ? null : id));
     };
@@ -444,99 +486,91 @@ export default function StudentGrades() {
 
     return (
         <div className="grades-page">
-            <h1 className="grades-title">Kết quả học tập</h1>
+            <h1 className="grades-title">Academic Results</h1>
 
-            <div className="grades-note">
-                <p>
-                    Công thức tính TBHK:{" "}
-                    <strong>
-                        (Miệng 1 + Miệng 2 + 15p 1 + 15p 2 + Giữa kỳ × 2 + Cuối kỳ × 3) / 9
-                    </strong>
-                </p>
-                <p>
-                    Công thức tính TBCN: <strong>(TBHK1 + TBHK2 × 2) / 3</strong>
-                </p>
-            </div>
+            <div className="grades-toolbar">
+                <div className="grades-filter">
+                    <label htmlFor="classSelect">Select Class:</label>
+                    <select
+                        id="classSelect"
+                        value={selectedClass}
+                        onChange={(e) => {
+                            setSelectedClass(e.target.value);
+                            setOpenRowId(1);
+                        }}
+                    >
+                        {classOptions.map((item) => (
+                            <option key={item} value={item}>
+                                {item}
+                            </option>
+                        ))}
+                    </select>
+                </div>
 
-            <div className="grades-filter">
-                <label htmlFor="classSelect">Chọn lớp:</label>
-                <select
-                    id="classSelect"
-                    value={selectedClass}
-                    onChange={(e) => {
-                        setSelectedClass(e.target.value);
-                        setOpenRowId(1);
-                    }}
-                >
-                    {classOptions.map((item) => (
-                        <option key={item} value={item}>
-                            {item}
-                        </option>
-                    ))}
-                </select>
+                <div className="grades-tabs">
+                    <button
+                        className={activeTab === "hk1" ? "active" : ""}
+                        onClick={() => setActiveTab("hk1")}
+                        type="button"
+                    >
+                        Semester 1
+                    </button>
+
+                    <button
+                        className={activeTab === "hk2" ? "active" : ""}
+                        onClick={() => setActiveTab("hk2")}
+                        type="button"
+                    >
+                        Semester 2
+                    </button>
+
+                    <button
+                        className={activeTab === "year" ? "active" : ""}
+                        onClick={() => setActiveTab("year")}
+                        type="button"
+                    >
+                        Full Year
+                    </button>
+                </div>
             </div>
 
             <div className="grades-stats">
                 <div className="grades-card">
-                    <h2 className="blue">{currentData.average.toFixed(2)}</h2>
-                    <p>Điểm trung bình cả năm</p>
+                    <h2 className="blue">{summaryAverage.toFixed(2)}</h2>
+                    <p>{summaryAverageLabel}</p>
                 </div>
 
                 <div className="grades-card">
                     <h2 className={getSummaryColorClass(currentData.conduct)}>
                         {currentData.conduct}
                     </h2>
-                    <p>Học lực</p>
+                    <p>Academic Rank</p>
                 </div>
 
                 <div className="grades-card">
                     <h2 className="green">{currentData.subjectCount}</h2>
-                    <p>Môn học</p>
+                    <p>Subjects</p>
                 </div>
-            </div>
-
-            <div className="grades-tabs">
-                <button
-                    className={activeTab === "hk1" ? "active" : ""}
-                    onClick={() => setActiveTab("hk1")}
-                    type="button"
-                >
-                    Học kỳ 1
-                </button>
-
-                <button
-                    className={activeTab === "hk2" ? "active" : ""}
-                    onClick={() => setActiveTab("hk2")}
-                    type="button"
-                >
-                    Học kỳ 2
-                </button>
-
-                <button
-                    className={activeTab === "year" ? "active" : ""}
-                    onClick={() => setActiveTab("year")}
-                    type="button"
-                >
-                    Cả năm
-                </button>
             </div>
 
             <div className="grades-table">
                 <div className="table-header">
-                    <span>Môn học</span>
-                    <span>TBHK1</span>
-                    <span>TBHK2</span>
-                    <span>{activeTab === "year" ? "TBCN" : "Hiển thị"}</span>
-                    <span>Tiến độ</span>
-                    <span>Học lực</span>
-                    <span>Chi tiết</span>
+                    <span>Subject</span>
+                    <span>S1 Avg</span>
+                    <span>S2 Avg</span>
+                    <span>{activeTab === "year" ? "Year Avg" : "Displayed"}</span>
+                    <span className="progress-header">Progress</span>
+                    <span>Rank</span>
+                    <span>Details</span>
                 </div>
 
                 {currentData.subjects.map((subject) => (
                     <React.Fragment key={`${selectedClass}-${subject.id}`}>
                         <div className="table-row">
                             <div className="subject">
-                                <div className="subject-icon">{subject.name[0]}</div>
+                                <div className="subject-icon">
+                                    {React.createElement(getSubjectIcon(subject.name))}
+                                </div>
                                 <div>
                                     <b>{subject.name}</b>
                                     <p>{subject.className}</p>
@@ -548,30 +582,32 @@ export default function StudentGrades() {
                             <span className="total">{getDisplayedValue(subject)}</span>
 
                             <span
-                                className={
+                                className={`trend-cell ${
                                     subject.trend === "up"
                                         ? "up"
                                         : subject.trend === "down"
                                             ? "down"
                                             : "same"
-                                }
+                                }`}
                             >
-                {subject.trend === "up"
-                    ? "↗"
-                    : subject.trend === "down"
-                        ? "↘"
-                        : "→"}
-              </span>
+                                {subject.trend === "up" ? (
+                                    <BiTrendingUp />
+                                ) : subject.trend === "down" ? (
+                                    <BiTrendingDown />
+                                ) : (
+                                    <BiMinus />
+                                )}
+                            </span>
 
                             <span className={`rank ${getRankColorClass(subject.rank)}`}>
-                {subject.rank}
-              </span>
+                                {subject.rank}
+                            </span>
 
                             <button
                                 className={`detail-toggle ${openRowId === subject.id ? "open" : ""}`}
                                 onClick={() => toggleRow(subject.id)}
                                 type="button"
-                                aria-label="Xem chi tiết"
+                                aria-label="View details"
                             >
                                 <FiChevronDown />
                             </button>
@@ -581,83 +617,83 @@ export default function StudentGrades() {
                             <div className="table-detail-row">
                                 <div className="detail-panels">
                                     <div className="detail-card">
-                                        <h3>Học kỳ 1</h3>
+                                        <h3>Semester 1</h3>
 
                                         <div className="detail-item">
-                                            <span>Miệng 1</span>
+                                            <span>Oral Test 1</span>
                                             <strong>{subject.hk1.oral1}</strong>
                                         </div>
 
                                         <div className="detail-item">
-                                            <span>Miệng 2</span>
+                                            <span>Oral Test 2</span>
                                             <strong>{subject.hk1.oral2}</strong>
                                         </div>
 
                                         <div className="detail-item">
-                                            <span>15 phút 1</span>
+                                            <span>15-min Test 1</span>
                                             <strong>{subject.hk1.test15_1}</strong>
                                         </div>
 
                                         <div className="detail-item">
-                                            <span>15 phút 2</span>
+                                            <span>15-min Test 2</span>
                                             <strong>{subject.hk1.test15_2}</strong>
                                         </div>
 
                                         <div className="detail-item">
-                                            <span>Giữa kỳ 1</span>
+                                            <span>Midterm</span>
                                             <strong>{subject.hk1.midterm}</strong>
                                         </div>
 
                                         <div className="detail-item">
-                                            <span>Cuối kỳ 1</span>
+                                            <span>Final Exam</span>
                                             <strong>{subject.hk1.final}</strong>
                                         </div>
 
                                         <div className="detail-divider" />
 
                                         <div className="detail-item detail-average">
-                                            <span>TBHK1</span>
+                                            <span>Semester 1 Average</span>
                                             <strong>{subject.hk1Avg.toFixed(2)}</strong>
                                         </div>
                                     </div>
 
                                     <div className="detail-card">
-                                        <h3>Học kỳ 2</h3>
+                                        <h3>Semester 2</h3>
 
                                         <div className="detail-item">
-                                            <span>Miệng 1</span>
+                                            <span>Oral Test 1</span>
                                             <strong>{subject.hk2.oral1}</strong>
                                         </div>
 
                                         <div className="detail-item">
-                                            <span>Miệng 2</span>
+                                            <span>Oral Test 2</span>
                                             <strong>{subject.hk2.oral2}</strong>
                                         </div>
 
                                         <div className="detail-item">
-                                            <span>15 phút 1</span>
+                                            <span>15-min Test 1</span>
                                             <strong>{subject.hk2.test15_1}</strong>
                                         </div>
 
                                         <div className="detail-item">
-                                            <span>15 phút 2</span>
+                                            <span>15-min Test 2</span>
                                             <strong>{subject.hk2.test15_2}</strong>
                                         </div>
 
                                         <div className="detail-item">
-                                            <span>Giữa kỳ 2</span>
+                                            <span>Midterm</span>
                                             <strong>{subject.hk2.midterm}</strong>
                                         </div>
 
                                         <div className="detail-item">
-                                            <span>Cuối kỳ 2</span>
+                                            <span>Final Exam</span>
                                             <strong>{subject.hk2.final}</strong>
                                         </div>
 
                                         <div className="detail-divider" />
 
                                         <div className="detail-item detail-average">
-                                            <span>TBHK2</span>
+                                            <span>Semester 2 Average</span>
                                             <strong>{subject.hk2Avg.toFixed(2)}</strong>
                                         </div>
                                     </div>
@@ -665,18 +701,13 @@ export default function StudentGrades() {
 
                                 <div className="year-summary-card">
                                     <div className="year-summary-item">
-                                        <span>Điểm cả năm</span>
+                                        <span>Full-Year Average</span>
                                         <strong>{subject.yearAvg.toFixed(2)}</strong>
                                     </div>
 
                                     <div className="year-summary-item">
-                                        <span>Học lực</span>
+                                        <span>Academic Rank</span>
                                         <strong>{subject.rank}</strong>
-                                    </div>
-
-                                    <div className="year-summary-item">
-                                        <span>Công thức</span>
-                                        <strong>(TBHK1 + TBHK2 × 2) / 3</strong>
                                     </div>
                                 </div>
                             </div>

@@ -1,7 +1,50 @@
 import React from "react";
 import { Link, useParams } from "react-router-dom";
-import "./StudentClassDetail.css";
+import {
+  Box,
+  Button,
+  Card,
+  CardContent,
+  Chip,
+  Container,
+  List,
+  ListItem,
+  ListItemIcon,
+  ListItemText,
+  Stack,
+  Typography,
+} from "@mui/material";
+import ArrowBackRoundedIcon from "@mui/icons-material/ArrowBackRounded";
+import PersonRoundedIcon from "@mui/icons-material/PersonRounded";
+import EmailRoundedIcon from "@mui/icons-material/EmailRounded";
+import MeetingRoomRoundedIcon from "@mui/icons-material/MeetingRoomRounded";
+import CalendarMonthRoundedIcon from "@mui/icons-material/CalendarMonthRounded";
+import MenuBookRoundedIcon from "@mui/icons-material/MenuBookRounded";
 import { classList } from "./classesData";
+
+const ui = {
+  heading: "#22324a",
+  text: "#5f6f89",
+  muted: "#7a879d",
+  border: "#e6ecf7",
+  softBorder: "#edf2fb",
+  softBg: "#fafcff",
+  primaryBg: "#f1f5ff",
+  primaryText: "#5877c8",
+  primary: "#8aa7f2",
+};
+
+function getAssignmentChipSx(status) {
+  if (status === "In Progress") {
+    return { bgcolor: "#fff8ee", color: "#b98432", border: "1px solid #f7e7ca" };
+  }
+
+  if (status === "Not Started") {
+    return { bgcolor: ui.primaryBg, color: ui.primaryText, border: `1px solid ${ui.border}` };
+  }
+
+  return { bgcolor: "#eef8f2", color: "#3d8a62", border: "1px solid #d5eddc" };
+}
 
 export default function StudentClassDetail() {
   const { classId } = useParams();
@@ -9,107 +52,236 @@ export default function StudentClassDetail() {
 
   if (!classInfo) {
     return (
-      <section className="student-class-detail-page">
-        <div className="student-class-detail-empty">
-          <h1>Khong tim thay lop hoc</h1>
-          <p>Lop hoc nay co the da duoc cap nhat hoac khong ton tai.</p>
-          <Link to="/student/classes" className="student-class-detail-back-btn">
-            Quay lai danh sach lop
-          </Link>
-        </div>
-      </section>
+      <Container maxWidth="lg" sx={{ py: 4 }}>
+        <Card elevation={0} sx={{ borderRadius: 3, border: "1px solid #e5eaf3" }}>
+          <CardContent sx={{ p: 3 }}>
+            <Typography variant="h5" sx={{ fontWeight: 600, mb: 1, color: ui.heading }}>
+              Class Not Found
+            </Typography>
+            <Typography color="text.secondary" sx={{ mb: 3 }}>
+              This class may have been updated or is no longer available.
+            </Typography>
+            <Button
+              component={Link}
+              to="/student/classes"
+              variant="outlined"
+              startIcon={<ArrowBackRoundedIcon />}
+              sx={{
+                textTransform: "none",
+                fontWeight: 500,
+                borderColor: ui.border,
+                color: ui.primaryText,
+                borderRadius: 2,
+                bgcolor: ui.softBg,
+                px: 1.5,
+                py: 0.65,
+                minHeight: 34,
+                "&:hover": {
+                  borderColor: "#c8d6f0",
+                  bgcolor: ui.primaryBg,
+                },
+              }}
+            >
+              Back to Class List
+            </Button>
+          </CardContent>
+        </Card>
+      </Container>
     );
   }
 
   return (
-    <section className="student-class-detail-page">
-      <Link to="/student/classes" className="student-class-detail-back-link">
-        ← Quay lai lop hoc
-      </Link>
+    <Container maxWidth="xl" sx={{ py: 3.5 }}>
+      <Button
+        component={Link}
+        to="/student/classes"
+        variant="outlined"
+        startIcon={<ArrowBackRoundedIcon />}
+        sx={{
+          mb: 2,
+          textTransform: "none",
+          fontWeight: 500,
+          fontSize: 14,
+          borderColor: ui.border,
+          color: ui.primaryText,
+          borderRadius: 2,
+          bgcolor: ui.softBg,
+          px: 1.4,
+          py: 0.55,
+          minHeight: 34,
+          "&:hover": {
+            borderColor: "#c8d6f0",
+            bgcolor: ui.primaryBg,
+          },
+        }}
+      >
+        Back to Classes
+      </Button>
 
-      <header className="student-class-detail-header">
-        <div>
-          <span className="student-class-detail-tag">{classInfo.className}</span>
-          <h1>{classInfo.title}</h1>
-          <p>
-            {classInfo.code} • {classInfo.room}
-          </p>
-        </div>
-        <button type="button" className="student-class-detail-primary-btn">
-          Vao lop hoc truc tuyen
-        </button>
-      </header>
+      <Card elevation={0} sx={{ borderRadius: 3, border: `1px solid ${ui.border}`, mb: 2 }}>
+        <CardContent sx={{ p: 2.5 }}>
+          <Stack spacing={1.25}>
+            <Chip
+              label={classInfo.className}
+              sx={{
+                width: "fit-content",
+                bgcolor: ui.primaryBg,
+                color: ui.primaryText,
+                border: `1px solid ${ui.border}`,
+                fontWeight: 600,
+              }}
+            />
+            <Typography
+              variant="h5"
+              sx={{ fontWeight: 500, color: ui.heading, letterSpacing: "0.1px" }}
+            >
+              {classInfo.title}
+            </Typography>
+            <Stack direction="row" spacing={1} alignItems="center" sx={{ color: ui.muted }}>
+              <MeetingRoomRoundedIcon sx={{ fontSize: 18 }} />
+              <Typography>Room {classInfo.room}</Typography>
+            </Stack>
+          </Stack>
+        </CardContent>
+      </Card>
 
-      <div className="student-class-detail-stats">
-        <article>
-          <p>Tien do</p>
-          <strong>{classInfo.progress}%</strong>
-        </article>
-        <article>
-          <p>Ty le chuyen can</p>
-          <strong>{classInfo.attendance}%</strong>
-        </article>
-        <article>
-          <p>Buoi da hoc</p>
-          <strong>
-            {classInfo.completedLessons}/{classInfo.totalLessons}
-          </strong>
-        </article>
-        <article>
-          <p>Bai tap cho nop</p>
-          <strong>{classInfo.assignmentsPending}</strong>
-        </article>
-      </div>
+      <Box
+        sx={{
+          display: "grid",
+          gridTemplateColumns: { xs: "1fr", sm: "repeat(2, minmax(0, 1fr))", lg: "repeat(4, minmax(0, 1fr))" },
+          gap: 1.5,
+          mb: 2,
+        }}
+      >
+        {[
+          { label: "Progress", value: `${classInfo.progress}%` },
+          { label: "Attendance Rate", value: `${classInfo.attendance}%` },
+          { label: "Completed Sessions", value: `${classInfo.completedLessons}/${classInfo.totalLessons}` },
+          { label: "Pending Assignments", value: classInfo.assignmentsPending },
+        ].map((stat) => (
+          <Card key={stat.label} elevation={0} sx={{ borderRadius: 3, border: `1px solid ${ui.border}` }}>
+            <CardContent sx={{ p: 2 }}>
+              <Typography variant="body2" sx={{ color: ui.muted }}>
+                {stat.label}
+              </Typography>
+              <Typography variant="h6" sx={{ fontWeight: 500, mt: 0.5, color: ui.heading }}>
+                {stat.value}
+              </Typography>
+            </CardContent>
+          </Card>
+        ))}
+      </Box>
 
-      <div className="student-class-detail-layout">
-        <div className="student-class-detail-main">
-          <section className="student-class-detail-card">
-            <h2>Tong quan lop hoc</h2>
-            <p className="student-class-detail-desc">{classInfo.description}</p>
-            <ul>
-              <li>Giao vien: {classInfo.teacher}</li>
-              <li>Email: {classInfo.teacherEmail}</li>
-              <li>Lich hoc: {classInfo.schedule}</li>
-              <li>Buoi tiep theo: {classInfo.nextClass}</li>
-            </ul>
-          </section>
+      <Box
+        sx={{
+          display: "grid",
+          gridTemplateColumns: { xs: "1fr", lg: "minmax(0, 2fr) minmax(280px, 1fr)" },
+          gap: 2,
+        }}
+      >
+        <Stack spacing={2}>
+          <Card elevation={0} sx={{ borderRadius: 3, border: `1px solid ${ui.border}` }}>
+            <CardContent sx={{ p: 2.5 }}>
+              <Typography variant="h6" sx={{ fontWeight: 500, mb: 1.5, color: ui.heading }}>
+                Class Overview
+              </Typography>
+              <Typography sx={{ color: ui.text, mb: 2 }}>
+                {classInfo.description}
+              </Typography>
+              <List disablePadding>
+                <ListItem disablePadding sx={{ mb: 0.75 }}>
+                  <ListItemIcon sx={{ minWidth: 32 }}>
+                    <PersonRoundedIcon fontSize="small" />
+                  </ListItemIcon>
+                  <ListItemText primary={`Teacher: ${classInfo.teacher}`} />
+                </ListItem>
+                <ListItem disablePadding>
+                  <ListItemIcon sx={{ minWidth: 32 }}>
+                    <EmailRoundedIcon fontSize="small" />
+                  </ListItemIcon>
+                  <ListItemText primary={`Email: ${classInfo.teacherEmail}`} />
+                </ListItem>
+              </List>
+            </CardContent>
+          </Card>
 
-          <section className="student-class-detail-card">
-            <h2>Bai tap sap den han</h2>
-            {classInfo.assignments.map((assignment) => (
-              <article key={assignment.id} className="student-class-detail-item">
-                <div>
-                  <h3>{assignment.title}</h3>
-                  <p>Han nop: {assignment.due}</p>
-                </div>
-                <span>{assignment.status}</span>
-              </article>
-            ))}
-          </section>
-        </div>
+          <Card elevation={0} sx={{ borderRadius: 3, border: `1px solid ${ui.border}` }}>
+            <CardContent sx={{ p: 2.5 }}>
+              <Typography variant="h6" sx={{ fontWeight: 500, mb: 1.5, color: ui.heading }}>
+                Upcoming Assignments
+              </Typography>
+              <Stack spacing={1.2}>
+                {classInfo.assignments.map((assignment) => (
+                  <Box
+                    key={assignment.id}
+                    sx={{
+                      p: 1.5,
+                      borderRadius: 2,
+                      border: `1px solid ${ui.softBorder}`,
+                      bgcolor: ui.softBg,
+                      display: "flex",
+                      justifyContent: "space-between",
+                      gap: 1,
+                      alignItems: "center",
+                    }}
+                  >
+                    <Box>
+                      <Typography sx={{ fontWeight: 500, color: ui.heading }}>{assignment.title}</Typography>
+                      <Typography variant="body2" sx={{ color: ui.muted }}>
+                        Due: {assignment.due}
+                      </Typography>
+                    </Box>
+                    <Chip
+                      size="small"
+                      label={assignment.status}
+                      sx={getAssignmentChipSx(assignment.status)}
+                    />
+                  </Box>
+                ))}
+              </Stack>
+            </CardContent>
+          </Card>
+        </Stack>
 
-        <aside className="student-class-detail-side">
-          <section className="student-class-detail-card">
-            <h2>Lich hoc gan day</h2>
-            {classInfo.lessons.map((lesson) => (
-              <div key={lesson.id} className="student-class-detail-side-item">
-                <p>{lesson.title}</p>
-                <span>{lesson.time}</span>
-              </div>
-            ))}
-          </section>
+        <Stack spacing={2}>
+          <Card elevation={0} sx={{ borderRadius: 3, border: `1px solid ${ui.border}` }}>
+            <CardContent sx={{ p: 2.5 }}>
+              <Typography variant="h6" sx={{ fontWeight: 500, mb: 1.5, color: ui.heading }}>
+                Upcoming Schedule
+              </Typography>
+              <Stack spacing={1.2}>
+                {classInfo.lessons.map((lesson) => (
+                  <Box key={lesson.id} sx={{ borderLeft: `3px solid ${ui.primary}`, pl: 1.2 }}>
+                    <Typography sx={{ fontWeight: 500, color: ui.heading }}>{lesson.title}</Typography>
+                    <Stack direction="row" spacing={0.75} alignItems="center">
+                      <CalendarMonthRoundedIcon sx={{ fontSize: 16, color: ui.muted }} />
+                      <Typography variant="body2" sx={{ color: ui.muted }}>
+                        {lesson.time}
+                      </Typography>
+                    </Stack>
+                  </Box>
+                ))}
+              </Stack>
+            </CardContent>
+          </Card>
 
-          <section className="student-class-detail-card">
-            <h2>Tai lieu nhanh</h2>
-            <ul className="student-class-detail-resource-list">
-              {classInfo.resources.map((resource) => (
-                <li key={resource}>{resource}</li>
-              ))}
-            </ul>
-          </section>
-        </aside>
-      </div>
-    </section>
+          <Card elevation={0} sx={{ borderRadius: 3, border: `1px solid ${ui.border}` }}>
+            <CardContent sx={{ p: 2.5 }}>
+              <Typography variant="h6" sx={{ fontWeight: 500, mb: 1.5, color: ui.heading }}>
+                Quick Resources
+              </Typography>
+              <Stack spacing={1}>
+                {classInfo.resources.map((resource) => (
+                  <Stack key={resource} direction="row" spacing={1} alignItems="center">
+                    <MenuBookRoundedIcon sx={{ fontSize: 18, color: ui.primaryText }} />
+                    <Typography variant="body2" sx={{ color: ui.text }}>{resource}</Typography>
+                  </Stack>
+                ))}
+              </Stack>
+            </CardContent>
+          </Card>
+        </Stack>
+      </Box>
+    </Container>
   );
 }
-
