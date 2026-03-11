@@ -52,14 +52,17 @@ export const sidebarConfig = {
     ],
 
     teacher: [
-        { label: "Dashboard", icon: FiGrid, path: "/teacher/dashboard" },
-        { label: "My Classes", icon: FiBookOpen, path: "/teacher/classes" },
-        { label: "Lessons", icon: FiClipboard, path: "/teacher/lessons" },
-        { label: "Quiz", icon: FiFileText, path: "/teacher/quiz" },
-        { label: "Students", icon: FiUsers, path: "/teacher/students" },
-        { label: "Schedule", icon: FiCalendar, path: "/teacher/schedule" },
-        { label: "Notifications", icon: FiBell, path: "/teacher/notifications" },
-        { label: "Profile", icon: FiUser, path: "/teacher/profile" }
+        { label: "Dashboard",        icon: FiGrid,        path: "/teacher/dashboard" },
+        { label: "Teaching Classes", icon: FiBookOpen,    path: "/teacher/teaching-classes" },
+        { label: "Homeroom",         icon: FiHome,        path: "/teacher/homeroom" },
+        { label: "Lessons",          icon: FiClipboard,   path: "/teacher/lessons" },
+        { label: "Grades",           icon: FiAward,       path: "/teacher/grades" },
+        { label: "Quiz",             icon: FiFileText,    path: "/teacher/quiz" },
+        { label: "Schedule",         icon: FiCalendar,    path: "/teacher/schedule" },
+        { label: "Request",          icon: FiMessageSquare, path: "/teacher/request" },
+        { label: "Notifications",    icon: FiBell,        path: "/teacher/notifications" },
+        { label: "Support",          icon: FiHelpCircle,  path: "/teacher/support" },
+        { label: "Profile",          icon: FiUser,        path: "/teacher/profile" }
     ],
 
     student: [

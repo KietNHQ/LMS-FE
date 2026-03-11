@@ -6,13 +6,14 @@ import { FiLogOut, FiChevronLeft } from "react-icons/fi";
 import { useNavigate, NavLink } from "react-router-dom";
 
 export default function Sidebar({
-  role = "student",
-  systemName = "LMS System",
-  userName = "User Name",
-  isCollapsed: controlledCollapsed,
-  setIsCollapsed: setControlledCollapsed
-}) {
+                                  role = "student",
+                                  systemName = "LMS System",
+                                  userName = "User Name",
+                                  isCollapsed: controlledCollapsed,
+                                  setIsCollapsed: setControlledCollapsed
+                                }) {
   const [internalCollapsed, setInternalCollapsed] = useState(false);
+
   const isControlled = typeof controlledCollapsed === "boolean";
   const isCollapsed = isControlled ? controlledCollapsed : internalCollapsed;
 
@@ -50,50 +51,54 @@ export default function Sidebar({
           <FiChevronLeft />
         </button>
 
-        <div className="sidebar-scroll">
-          <div className="sidebar-top-section">
-            <div className="sidebar-brand">
-              <div className="sidebar-brand-badge">{theme.shortLabel}</div>
+        <div className="sidebar-top-section">
+          <div className="sidebar-brand">
+            <div className="sidebar-brand-badge">{theme.shortLabel}</div>
 
-              <div className="sidebar-brand-text">
-                <h2>{systemName}</h2>
-                <span>{theme.label}</span>
-              </div>
+            <div className="sidebar-brand-text">
+              <h2>{systemName}</h2>
+              <span>{theme.label}</span>
             </div>
-
-            <NavLink
-                to={profilePath}
-                className={({ isActive }) =>
-                    `sidebar-user-card sidebar-user-card-top sidebar-user-card-link ${
-                        isActive ? "active" : ""
-                    }`
-                }
-            >
-              <div className="sidebar-user-avatar">{theme.shortLabel}</div>
-
-              <div className="sidebar-user-info">
-                <p className="sidebar-user-name">{userName}</p>
-                <span className="sidebar-user-role">{theme.label}</span>
-              </div>
-            </NavLink>
           </div>
 
+          <NavLink
+              to={profilePath}
+              className={({ isActive }) =>
+                  `sidebar-user-card sidebar-user-card-top sidebar-user-card-link ${
+                      isActive ? "active" : ""
+                  }`
+              }
+          >
+            <div className="sidebar-user-avatar">{theme.shortLabel}</div>
+
+            <div className="sidebar-user-info">
+              <p className="sidebar-user-name">{userName}</p>
+              <span className="sidebar-user-role">{theme.label}</span>
+            </div>
+          </NavLink>
+        </div>
+
+        <div className="sidebar-menu-wrapper">
           <nav className="sidebar-nav">
             {menuItems.map((item) => (
-                <SidebarItem key={item.path} item={item} />
+                <SidebarItem
+                    key={item.path}
+                    item={item}
+                    isCollapsed={isCollapsed}
+                />
             ))}
           </nav>
+        </div>
 
-          <div className="sidebar-footer">
-            <button
-                type="button"
-                className="sidebar-logout-btn"
-                onClick={handleLogout}
-            >
-              <FiLogOut />
-              <span>Log Out</span>
-            </button>
-          </div>
+        <div className="sidebar-footer">
+          <button
+              type="button"
+              className="sidebar-logout-btn"
+              onClick={handleLogout}
+          >
+            <FiLogOut />
+            <span>Log Out</span>
+          </button>
         </div>
       </aside>
   );

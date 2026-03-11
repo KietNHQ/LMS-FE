@@ -1,0 +1,26 @@
+import React, { useState } from "react";
+import { Outlet } from "react-router-dom";
+import Sidebar from "../../components/sidebar/Sidebar";
+import "./TeacherLayout.css";
+
+export default function TeacherLayout() {
+    const [isCollapsed, setIsCollapsed] = useState(false);
+
+    return (
+        <div className={`teacher-layout ${isCollapsed ? "collapsed" : ""}`}>
+            <Sidebar
+                role="teacher"
+                userName="Teacher User"
+                isCollapsed={isCollapsed}
+                setIsCollapsed={setIsCollapsed}
+            />
+
+            <main className="teacher-layout__main">
+                <div className="teacher-layout__content">
+                    <Outlet />
+                </div>
+            </main>
+        </div>
+    );
+}
+
