@@ -17,30 +17,28 @@ import StudentSupport from "../pages/student/support/StudentSupport";
 import StudentProfile from "../pages/student/profile/StudentProfile";
 
 export default function AppRoutes() {
-    return (
-        <Routes>
+  return (
+    <Routes>
+      {/* DEFAULT */}
+      <Route path="/" element={<Navigate to="/login" replace />} />
 
-            {/* DEFAULT */}
-            <Route path="/" element={<Navigate to="/login" replace />} />
+      {/* AUTH */}
+      <Route path="/login" element={<Login />} />
+      <Route path="/login/forgotpass" element={<ForgotPassword />} />
+      <Route path="/login/resetpass" element={<ResetPassword />} />
 
-            {/* AUTH */}
-            <Route path="/login" element={<Login />} />
-            <Route path="/login/forgotpass" element={<ForgotPassword />} />
-            <Route path="/login/resetpass" element={<ResetPassword />} />
-
-            {/* STUDENT */}
-            <Route path="/student" element={<StudentLayout />}>
-                <Route index element={<Navigate to="dashboard" replace />} />
-                <Route path="dashboard" element={<StudentDashboard />} />
-                <Route path="classes" element={<StudentClasses />} />
-                <Route path="grades" element={<StudentGrades />} />
-                <Route path="quiz" element={<StudentQuiz />} />
-                <Route path="notifications" element={<StudentNotifications />} />
-                <Route path="schedule" element={<StudentSchedule />} />
-                <Route path="support" element={<StudentSupport />} />
-                <Route path="profile" element={<StudentProfile />} />
-            </Route>
-
-        </Routes>
-    );
+      {/* STUDENT */}
+      <Route path="/student" element={<StudentLayout />}>
+        <Route index element={<Navigate to="dashboard" replace />} />
+        <Route path="dashboard" element={<StudentDashboard />} />
+        <Route path="classes" element={<StudentClasses />} />
+        <Route path="grades" element={<StudentGrades />} />
+        <Route path="quiz" element={<StudentQuiz />} />
+        <Route path="notifications" element={<StudentNotifications />} />
+        <Route path="schedule" element={<StudentSchedule />} />
+        <Route path="support" element={<StudentSupport />} />
+        <Route path="profile" element={<StudentProfile />} />
+      </Route>
+    </Routes>
+  );
 }
