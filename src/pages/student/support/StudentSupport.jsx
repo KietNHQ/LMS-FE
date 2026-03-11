@@ -1,5 +1,13 @@
 import "./StudentSupport.css";
 import { useState } from "react";
+import {
+  FaQuestionCircle,
+  FaRobot,
+  FaEnvelope,
+  FaPhone,
+  FaClock,
+  FaPaperPlane
+} from "react-icons/fa";
 
 export default function StudentSupport() {
 
@@ -7,54 +15,29 @@ export default function StudentSupport() {
 
   const faqs = [
     {
-      category: "Tài khoản",
-      question: "Làm sao để đổi mật khẩu?",
-      answer: "Bạn vào phần Cài đặt tài khoản và chọn Đổi mật khẩu."
-    },
-    {
-      category: "Tài khoản",
-      question: "Tôi quên mật khẩu thì phải làm sao?",
-      answer: "Sử dụng chức năng Quên mật khẩu tại trang đăng nhập."
-    },
-    {
-      category: "Điểm số",
-      question: "Làm thế nào để xem điểm số?",
-      answer: "Truy cập mục Xem điểm trên sidebar."
-    },
-    {
-      category: "Học tập",
-      question: "Thời khóa biểu ở đâu?",
-      answer: "Bạn có thể xem trong mục Thời khóa biểu."
-    },
-    {
       category: "Học tập",
       question: "Làm sao để nộp bài tập?",
-      answer: "Truy cập bài học và chọn Nộp bài."
+      answer: "Truy cập lớp học và chọn bài tập cần nộp."
     },
     {
       category: "Tài chính",
       question: "Học phí được thanh toán như thế nào?",
-      answer: "Thanh toán qua cổng thanh toán online hoặc tại phòng tài vụ."
+      answer: "Thanh toán online hoặc tại phòng tài vụ."
     },
     {
       category: "Liên hệ",
       question: "Làm sao để liên hệ với giáo viên?",
-      answer: "Bạn có thể gửi tin nhắn qua hệ thống hoặc email."
+      answer: "Bạn có thể gửi tin nhắn qua hệ thống LMS."
     },
     {
       category: "Điểm danh",
       question: "Điểm danh được ghi nhận khi nào?",
-      answer: "Sau khi giáo viên xác nhận điểm danh."
+      answer: "Sau khi giáo viên xác nhận."
     },
     {
       category: "Giảng dạy",
       question: "Làm thế nào để tạo quiz?",
       answer: "Chức năng này dành cho giáo viên."
-    },
-    {
-      category: "Thông báo",
-      question: "Thông báo từ trường được gửi như thế nào?",
-      answer: "Thông báo hiển thị trong mục Thông báo."
     }
   ];
 
@@ -69,55 +52,53 @@ export default function StudentSupport() {
 
       <h1>Trung tâm hỗ trợ</h1>
 
-      {/* SEARCH */}
-      <div className="support-search">
-        <span className="search-icon">🔍</span>
-        <input placeholder="Tìm kiếm câu hỏi..." />
-      </div>
-
       <div className="support-container">
 
         {/* FAQ */}
         <div className="support-faq">
 
           <div className="faq-title">
-            <span className="faq-icon">❓</span>
+            <FaQuestionCircle className="faq-icon"/>
             <h3>Câu hỏi thường gặp</h3>
           </div>
 
-          {Object.keys(groupedFaqs).map((category, cIndex) => (
-            <div key={cIndex} className="faq-category">
+          <div className="faq-list">
 
-              <h4>{category}</h4>
+            {Object.keys(groupedFaqs).map((category, cIndex) => (
+              <div key={cIndex} className="faq-category">
 
-              {groupedFaqs[category].map((faq, index) => {
+                <h4>{category}</h4>
 
-                const id = `${cIndex}-${index}`;
+                {groupedFaqs[category].map((faq, index) => {
 
-                return (
-                  <div
-                    key={id}
-                    className="faq-item"
-                    onClick={() => setOpen(open === id ? null : id)}
-                  >
+                  const id = `${cIndex}-${index}`;
 
-                    <div className="faq-question">
-                      {faq.question}
-                      <span>{open === id ? "▲" : "▼"}</span>
-                    </div>
+                  return (
+                    <div
+                      key={id}
+                      className="faq-item"
+                      onClick={() => setOpen(open === id ? null : id)}
+                    >
 
-                    {open === id && (
-                      <div className="faq-answer">
-                        {faq.answer}
+                      <div className="faq-question">
+                        {faq.question}
+                        <span>{open === id ? "▲" : "▼"}</span>
                       </div>
-                    )}
 
-                  </div>
-                );
-              })}
+                      {open === id && (
+                        <div className="faq-answer">
+                          {faq.answer}
+                        </div>
+                      )}
 
-            </div>
-          ))}
+                    </div>
+                  );
+                })}
+
+              </div>
+            ))}
+
+          </div>
 
         </div>
 
@@ -125,17 +106,18 @@ export default function StudentSupport() {
         <div className="support-chat">
 
           <div className="chat-header">
-            <h4>🤖 Trợ lý ảo LMS</h4>
-            <span>Luôn sẵn sàng hỗ trợ</span>
+            <h4>
+              <FaRobot/> Trợ lý LMS
+            </h4>
           </div>
 
           <div className="chat-body">
 
             <div className="chat-message">
-              <div className="chat-role">Trợ lý</div>
+              <div className="chat-role">Bot</div>
 
-              Xin chào! Tôi là trợ lý ảo của hệ thống LMS.
-              Bạn có câu hỏi gì cần hỗ trợ không?
+              Xin chào! Tôi là trợ lý LMS.  
+              Bạn cần hỗ trợ gì?
 
               <div className="chat-time">14:48</div>
             </div>
@@ -143,12 +125,10 @@ export default function StudentSupport() {
           </div>
 
           <div className="chat-input">
-            <input placeholder="Nhập câu hỏi của bạn..." />
-            <button>➤</button>
-          </div>
-
-          <div className="chat-note">
-            Nếu bot không trả lời được, câu hỏi sẽ gửi đến Admin
+            <input placeholder="Nhập câu hỏi..." />
+            <button>
+              <FaPaperPlane/>
+            </button>
           </div>
 
         </div>
@@ -163,7 +143,7 @@ export default function StudentSupport() {
         <div className="contact-grid">
 
           <div className="contact-card">
-            <div className="contact-icon email">📧</div>
+            <FaEnvelope className="contact-icon"/>
             <div>
               <strong>Email hỗ trợ</strong>
               <p>support@school.edu.vn</p>
@@ -171,7 +151,7 @@ export default function StudentSupport() {
           </div>
 
           <div className="contact-card">
-            <div className="contact-icon phone">📞</div>
+            <FaPhone className="contact-icon"/>
             <div>
               <strong>Hotline</strong>
               <p>1900-xxxx</p>
@@ -179,7 +159,7 @@ export default function StudentSupport() {
           </div>
 
           <div className="contact-card">
-            <div className="contact-icon time">🕒</div>
+            <FaClock className="contact-icon"/>
             <div>
               <strong>Giờ làm việc</strong>
               <p>T2-T6: 7:00 - 17:00</p>
