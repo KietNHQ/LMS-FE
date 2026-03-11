@@ -10,6 +10,7 @@ import ResetPassword from "./pages/auth/ResetPassword";
 import StudentLayout from "./layouts/student/StudentLayout";
 import StudentDashboard from "./pages/student/dashboard/StudentDashboard";
 import StudentClasses from "./pages/student/classes/StudentClasses";
+import StudentClassDetail from "./pages/student/classes/StudentClassDetail";
 import StudentGrades from "./pages/student/grades/StudentGrades";
 import StudentQuiz from "./pages/student/quiz/StudentQuiz";
 import StudentNotifications from "./pages/student/notification/StudentNotifications";
@@ -39,6 +40,7 @@ function App() {
                     <Route index element={<Navigate to="dashboard" replace />} />
                     <Route path="dashboard" element={<StudentDashboard />} />
                     <Route path="classes" element={<StudentClasses />} />
+                    <Route path="classes/:classId" element={<StudentClassDetail />} />
                     <Route path="grades" element={<StudentGrades />} />
                     <Route path="quiz" element={<StudentQuiz />} />
                     <Route path="notifications" element={<StudentNotifications />} />

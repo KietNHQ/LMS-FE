@@ -110,7 +110,7 @@ export default function StudentDashboard() {
                     <h3>Tiến độ qua các năm học</h3>
 
                     <div className="student-year-row">
-                        <span>Lớp 8</span>
+                        <span>Lớp 10</span>
                         <div className="student-progress-bar">
                             <div style={{ width: "78%" }} />
                         </div>
@@ -118,7 +118,7 @@ export default function StudentDashboard() {
                     </div>
 
                     <div className="student-year-row">
-                        <span>Lớp 9</span>
+                        <span>Lớp 11</span>
                         <div className="student-progress-bar">
                             <div style={{ width: "82%" }} />
                         </div>
@@ -126,7 +126,7 @@ export default function StudentDashboard() {
                     </div>
 
                     <div className="student-year-row">
-                        <span>Lớp 10</span>
+                        <span>Lớp 12</span>
                         <div className="student-progress-bar">
                             <div style={{ width: "86.7%" }} />
                         </div>
