@@ -19,15 +19,19 @@ function round2(num) {
 }
 
 function calculateSemesterAverage(semester) {
+    const midtermScore = semester.midterm ?? 0;
+    const test45Score = semester.test45 ?? midtermScore;
+
     const total =
         semester.oral1 +
         semester.oral2 +
         semester.test15_1 +
         semester.test15_2 +
-        semester.midterm * 2 +
+        test45Score +
+        midtermScore * 2 +
         semester.final * 3;
 
-    return round2(total / 9);
+    return round2(total / 10);
 }
 
 function calculateYearAverage(hk1Avg, hk2Avg) {
@@ -640,6 +644,11 @@ export default function StudentGrades() {
                                         </div>
 
                                         <div className="detail-item">
+                                            <span>45-min Test</span>
+                                            <strong>{subject.hk1.test45 ?? subject.hk1.midterm}</strong>
+                                        </div>
+
+                                        <div className="detail-item">
                                             <span>Midterm</span>
                                             <strong>{subject.hk1.midterm}</strong>
                                         </div>
@@ -678,6 +687,11 @@ export default function StudentGrades() {
                                         <div className="detail-item">
                                             <span>15-min Test 2</span>
                                             <strong>{subject.hk2.test15_2}</strong>
+                                        </div>
+
+                                        <div className="detail-item">
+                                            <span>45-min Test</span>
+                                            <strong>{subject.hk2.test45 ?? subject.hk2.midterm}</strong>
                                         </div>
 
                                         <div className="detail-item">

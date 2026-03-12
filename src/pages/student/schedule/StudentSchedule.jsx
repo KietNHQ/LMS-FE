@@ -1,11 +1,11 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import "./StudentSchedule.css";
 import CalendarMonthRoundedIcon from "@mui/icons-material/CalendarMonthRounded";
 import AccessTimeRoundedIcon from "@mui/icons-material/AccessTimeRounded";
-import ChevronLeftRoundedIcon from "@mui/icons-material/ChevronLeftRounded";
-import ChevronRightRoundedIcon from "@mui/icons-material/ChevronRightRounded";
 import SchoolRoundedIcon from "@mui/icons-material/SchoolRounded";
 import AssignmentRoundedIcon from "@mui/icons-material/AssignmentRounded";
+import { FiChevronLeft, FiChevronRight } from "react-icons/fi";
+import { MdChevronLeft, MdChevronRight } from "react-icons/md";
 
 const days = [
     { key: "Monday", label: "MON" },
@@ -157,21 +157,6 @@ function getStartOfIsoWeek(date) {
     return result;
 }
 
-function parseWeekInput(weekValue) {
-    if (!weekValue) return getStartOfIsoWeek(new Date());
-    const [yearText, weekText] = weekValue.split("-W");
-    const year = Number(yearText);
-    const week = Number(weekText);
-    if (!year || !week) return getStartOfIsoWeek(new Date());
-
-    const january4 = new Date(year, 0, 4);
-    const firstIsoMonday = getStartOfIsoWeek(january4);
-    const monday = new Date(firstIsoMonday);
-    monday.setDate(firstIsoMonday.getDate() + (week - 1) * 7);
-    monday.setHours(0, 0, 0, 0);
-    return monday;
-}
-
 function toWeekInputValue(mondayDate) {
     const date = getStartOfIsoWeek(mondayDate);
     const thursday = new Date(date);
@@ -189,6 +174,21 @@ function formatDate(date) {
     return date.toLocaleDateString("en-GB");
 }
 
+function getMonthLabel(mondayDate, fridayDate) {
+    const startMonth = mondayDate.toLocaleString("en-US", { month: "long" });
+    const endMonth = fridayDate.toLocaleString("en-US", { month: "long" });
+    const startYear = mondayDate.getFullYear();
+    const endYear = fridayDate.getFullYear();
+
+    if (startMonth === endMonth && startYear === endYear) {
+        return `${startMonth} ${startYear}`;
+    }
+    if (startYear === endYear) {
+        return `${startMonth} – ${endMonth} ${startYear}`;
+    }
+    return `${startMonth} ${startYear} – ${endMonth} ${endYear}`;
+}
+
 function getTemplateForWeek(weekValue) {
     const weekNumber = Number(weekValue.split("-W")[1]);
     const index = Number.isNaN(weekNumber)
@@ -198,8 +198,33 @@ function getTemplateForWeek(weekValue) {
     return weekTemplates[index];
 }
 
+function getWeeksForMonth(year, month) {
+    const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month + 1, 0);
+    let monday = getStartOfIsoWeek(firstDay);
+    const weeks = [];
+    while (monday <= lastDay) {
+        weeks.push(new Date(monday));
+        monday = new Date(monday);
+        monday.setDate(monday.getDate() + 7);
+    }
+    return weeks;
+}
+
+function shouldShowAssessmentAlert(assessment) {
+    const normalized = (assessment || "").trim().toLowerCase();
+
+    return (
+        normalized === "45-minute test" ||
+        normalized === "45-min test" ||
+        normalized === "one-period test" ||
+        normalized === "midterm" ||
+        normalized === "final exam"
+    );
+}
+
 function getAssessmentIcon(assessment) {
-    if (assessment === "No assessment") {
+    if (!shouldShowAssessmentAlert(assessment)) {
         return null;
     }
     return <AssignmentRoundedIcon className="assessment-icon" />;
@@ -209,20 +234,53 @@ export default function StudentSchedule() {
     const [selectedWeekStart, setSelectedWeekStart] = useState(
         () => getStartOfIsoWeek(new Date())
     );
+    const [pickerOpen, setPickerOpen] = useState(false);
+    const [viewMonth, setViewMonth] = useState(() => {
+        const now = getStartOfIsoWeek(new Date());
+        return new Date(now.getFullYear(), now.getMonth(), 1);
+    });
+    const pickerWrapperRef = useRef(null);
+
+    // Close picker when clicking outside
+    useEffect(() => {
+        if (!pickerOpen) return;
+        const handler = (e) => {
+            if (pickerWrapperRef.current && !pickerWrapperRef.current.contains(e.target)) {
+                setPickerOpen(false);
+            }
+        };
+        document.addEventListener("mousedown", handler);
+        return () => document.removeEventListener("mousedown", handler);
+    }, [pickerOpen]);
+
+    // Sync viewMonth when navigating with Prev/Next buttons
+    useEffect(() => {
+        const next = new Date(selectedWeekStart.getFullYear(), selectedWeekStart.getMonth(), 1);
+        setViewMonth(next);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [selectedWeekStart.getFullYear(), selectedWeekStart.getMonth()]);
+
+    const changeViewMonth = (offset) => {
+        setViewMonth(prev => new Date(prev.getFullYear(), prev.getMonth() + offset, 1));
+    };
 
     const selectedWeek = useMemo(
         () => toWeekInputValue(selectedWeekStart),
         [selectedWeekStart]
     );
 
-    const { monday, friday } = useMemo(() => {
+    const { monday, friday, monthLabel, weekNumber } = useMemo(() => {
         const mondayDate = getStartOfIsoWeek(selectedWeekStart);
         const fridayDate = new Date(mondayDate);
         fridayDate.setDate(mondayDate.getDate() + 4);
 
+        const wn = Number(toWeekInputValue(mondayDate).split("-W")[1]);
+
         return {
             monday: formatDate(mondayDate),
             friday: formatDate(fridayDate),
+            monthLabel: getMonthLabel(mondayDate, fridayDate),
+            weekNumber: wn,
         };
     }, [selectedWeekStart]);
 
@@ -252,25 +310,107 @@ export default function StudentSchedule() {
             <div className="schedule-week-bar">
                 <div className="schedule-week-info">
                     <CalendarMonthRoundedIcon className="week-icon" />
-                    <span>
-                        Week: {monday} - {friday} • Grade 10A1
-                    </span>
+                    <div className="week-info-text">
+                        <span className="week-month-label">{monthLabel}</span>
+                        <span className="week-date-range">
+                            {monday} – {friday} • Grade 10A1
+                        </span>
+                    </div>
                 </div>
 
                 <div className="schedule-week-picker">
                     <label htmlFor="weekPicker">Select week</label>
                     <div className="schedule-week-controls">
                         <button type="button" onClick={() => changeWeek(-1)}>
-                            <ChevronLeftRoundedIcon /> Previous
+                            <FiChevronLeft /> Previous
                         </button>
-                        <input
-                            id="weekPicker"
-                            type="week"
-                            value={selectedWeek}
-                            onChange={(e) => setSelectedWeekStart(parseWeekInput(e.target.value))}
-                        />
+
+                        <div
+                            className={`week-input-wrapper${pickerOpen ? " open" : ""}`}
+                            ref={pickerWrapperRef}
+                            onClick={() => setPickerOpen(prev => !prev)}
+                        >
+                            <CalendarMonthRoundedIcon className="week-input-cal-icon" />
+                            <span className="week-input-week">Week {weekNumber}</span>
+                            <span className="week-input-sep">·</span>
+                            <span className="week-input-month">{monthLabel}</span>
+
+                            {pickerOpen && (
+                                <div className="week-picker-popup" onClick={e => e.stopPropagation()}>
+                                    <div className="week-picker-header">
+                                        <button type="button" className="week-picker-nav" aria-label="Previous month" onClick={() => changeViewMonth(-1)}>
+                                            <MdChevronLeft />
+                                        </button>
+                                        <span className="week-picker-title">
+                                            {viewMonth.toLocaleString("en-US", { month: "long" })} {viewMonth.getFullYear()}
+                                        </span>
+                                        <button type="button" className="week-picker-nav" aria-label="Next month" onClick={() => changeViewMonth(1)}>
+                                            <MdChevronRight />
+                                        </button>
+                                    </div>
+
+                                    <div className="week-picker-day-names">
+                                        <span>Wk</span>
+                                        {["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"].map(d => (
+                                            <span key={d}>{d}</span>
+                                        ))}
+                                    </div>
+
+                                    {getWeeksForMonth(viewMonth.getFullYear(), viewMonth.getMonth()).map((weekMon) => {
+                                        const weekDays = Array.from({ length: 7 }, (_, i) => {
+                                            const d = new Date(weekMon);
+                                            d.setDate(weekMon.getDate() + i);
+                                            return d;
+                                        });
+                                        const wn = Number(toWeekInputValue(weekMon).split("-W")[1]);
+                                        const isSelected = weekMon.getTime() === getStartOfIsoWeek(selectedWeekStart).getTime();
+                                        const todayStr = new Date().toDateString();
+
+                                        return (
+                                            <div
+                                                key={weekMon.toISOString()}
+                                                className={`week-picker-row${isSelected ? " selected" : ""}`}
+                                                onClick={() => {
+                                                    setSelectedWeekStart(new Date(weekMon));
+                                                    setPickerOpen(false);
+                                                }}
+                                            >
+                                                <span className="week-picker-wn">{wn}</span>
+                                                {weekDays.map((d, i) => (
+                                                    <span
+                                                        key={i}
+                                                        className={[
+                                                            "week-picker-day-num",
+                                                            d.getMonth() !== viewMonth.getMonth() ? "other" : "",
+                                                            d.toDateString() === todayStr ? "today" : "",
+                                                        ].filter(Boolean).join(" ")}
+                                                    >
+                                                        {d.getDate()}
+                                                    </span>
+                                                ))}
+                                            </div>
+                                        );
+                                    })}
+
+                                    <div className="week-picker-footer">
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                const now = getStartOfIsoWeek(new Date());
+                                                setSelectedWeekStart(now);
+                                                setViewMonth(new Date(now.getFullYear(), now.getMonth(), 1));
+                                                setPickerOpen(false);
+                                            }}
+                                        >
+                                            This week
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+
                         <button type="button" onClick={() => changeWeek(1)}>
-                            Next <ChevronRightRoundedIcon />
+                            Next <FiChevronRight />
                         </button>
                     </div>
                 </div>
@@ -278,6 +418,7 @@ export default function StudentSchedule() {
 
 
             <div className="schedule-board-wrapper">
+            <div className="schedule-board-scroller">
             <div className="schedule-board">
                 <div className="schedule-grid schedule-grid-header">
                     <div className="grid-head time-head">PERIOD / DAY</div>
@@ -342,6 +483,7 @@ export default function StudentSchedule() {
                         })}
                     </div>
                 ))}
+            </div>
             </div>
             </div>
         </div>

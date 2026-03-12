@@ -28,10 +28,10 @@
     align-items: center;
     justify-content: space-between;
     gap: 16px;
-    background: #f4f8ff;
-    border: 1px solid #cfe0ff;
-    border-radius: 18px;
-    padding: 12px 16px;
+    background: #f0f6ff;
+    border: 1px solid #c5d9ff;
+    border-radius: 16px;
+    padding: 10px 14px;
     margin-bottom: 18px;
     flex-wrap: wrap;
 }
@@ -40,20 +40,44 @@
     display: flex;
     align-items: center;
     gap: 10px;
-    color: #365fc9;
+    flex: 1 1 auto;
+    min-width: 240px;
+    color: #1558d6;
     font-size: 14px;
     font-weight: 600;
+}
+
+.week-info-text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.week-month-label {
+    font-size: 17px;
+    font-weight: 800;
+    color: #0c53d5;
+    line-height: 1.2;
+}
+
+.week-date-range {
+    font-size: 12px;
+    font-weight: 500;
+    color: #6092e6;
+    line-height: 1.2;
 }
 
 .week-icon {
     font-size: 18px;
     flex-shrink: 0;
+    color: #1558d6;
 }
 
 .schedule-week-picker {
     display: flex;
     align-items: center;
     gap: 10px;
+    margin-left: auto;
 }
 
 .schedule-week-picker label {
@@ -64,13 +88,233 @@
 
 .schedule-week-picker input[type="week"] {
     height: 40px;
-    border: 1px solid #d8dfeb;
+    border: 1px solid #c5d9ff;
     border-radius: 10px;
     padding: 0 12px;
     font-size: 14px;
     background: #fff;
     color: #1c2434;
     outline: none;
+}
+
+/* Custom week + month display */
+.week-input-wrapper {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 40px;
+    padding: 0 14px;
+    border: 1.5px solid #c5d9ff;
+    border-radius: 10px;
+    background: #fff;
+    cursor: pointer;
+    user-select: none;
+    transition: border-color 0.15s, background 0.15s, box-shadow 0.15s;
+    white-space: nowrap;
+}
+
+.week-input-wrapper:hover,
+.week-input-wrapper.open {
+    border-color: #1558d6;
+    background: #eef5ff;
+    box-shadow: 0 2px 8px rgba(21, 88, 214, 0.12);
+}
+
+.week-input-cal-icon {
+    font-size: 17px !important;
+    color: #1558d6;
+    flex-shrink: 0;
+}
+
+.week-input-week {
+    font-size: 13px;
+    font-weight: 700;
+    color: #172033;
+}
+
+.week-input-sep {
+    font-size: 13px;
+    color: #aab4c8;
+    font-weight: 400;
+}
+
+.week-input-month {
+    font-size: 13px;
+    font-weight: 700;
+    color: #0c53d5;
+}
+
+/* ── Custom popup ── */
+.week-picker-popup {
+    position: absolute;
+    top: calc(100% + 10px);
+    right: 0;
+    z-index: 300;
+    background: #fff;
+    border: 1.5px solid #c5d9ff;
+    border-radius: 18px;
+    box-shadow: 0 12px 40px rgba(12, 83, 213, 0.14);
+    padding: 18px 16px 14px;
+    min-width: 290px;
+    user-select: none;
+}
+
+.week-picker-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 14px;
+}
+
+.week-picker-title {
+    font-size: 15px;
+    font-weight: 800;
+    color: #172033;
+    letter-spacing: 0.01em;
+}
+
+.week-picker-nav {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 46px;
+    height: 46px;
+    border: none;
+    border-radius: 50%;
+    background: transparent;
+    color: #0c53d5;
+    cursor: pointer;
+    appearance: none;
+    -webkit-appearance: none;
+    transition: background 0.15s, transform 0.15s, box-shadow 0.15s;
+}
+
+.week-picker-nav:hover {
+    background: rgba(12, 83, 213, 0.08);
+    transform: scale(1.05);
+}
+
+.week-picker-nav:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(96, 146, 230, 0.28);
+}
+
+.week-picker-nav svg {
+    width: 42px;
+    height: 42px;
+}
+
+.week-picker-day-names {
+    display: grid;
+    grid-template-columns: 34px repeat(7, 1fr);
+    margin-bottom: 4px;
+}
+
+.week-picker-day-names span {
+    text-align: center;
+    font-size: 11px;
+    font-weight: 700;
+    color: #8a94a8;
+    text-transform: uppercase;
+    padding: 3px 0 5px;
+}
+
+.week-picker-day-names span:first-child {
+    color: #b0bace;
+}
+
+.week-picker-row {
+    display: grid;
+    grid-template-columns: 34px repeat(7, 1fr);
+    border-radius: 10px;
+    cursor: pointer;
+    transition: background 0.12s;
+    margin-bottom: 1px;
+}
+
+.week-picker-row:hover {
+    background: #eef5ff;
+}
+
+.week-picker-row.selected {
+    background: linear-gradient(90deg, #6092e6 0%, #0c53d5 100%);
+}
+
+.week-picker-wn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    font-weight: 700;
+    color: #b0bace;
+    padding: 9px 0;
+}
+
+.week-picker-row.selected .week-picker-wn {
+    color: rgba(255, 255, 255, 0.6);
+}
+
+.week-picker-day-num {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 500;
+    color: #253044;
+    padding: 9px 0;
+    border-radius: 6px;
+}
+
+.week-picker-day-num.other {
+    color: #c5cdd9;
+}
+
+.week-picker-day-num.today {
+    font-weight: 800;
+    color: #0c53d5;
+    background: rgba(12, 83, 213, 0.1);
+    border-radius: 50%;
+    width: 28px;
+    height: 28px;
+    margin: auto;
+}
+
+.week-picker-row.selected .week-picker-day-num {
+    color: #fff;
+}
+
+.week-picker-row.selected .week-picker-day-num.today {
+    background: rgba(255, 255, 255, 0.25);
+    color: #fff;
+}
+
+.week-picker-row.selected .week-picker-day-num.other {
+    color: rgba(255, 255, 255, 0.55);
+}
+
+.week-picker-footer {
+    border-top: 1px solid #e8f0fe;
+    margin-top: 10px;
+    padding-top: 10px;
+    display: flex;
+    justify-content: flex-end;
+}
+
+.week-picker-footer button {
+    background: linear-gradient(90deg, #6092e6 0%, #0c53d5 100%);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 7px 18px;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: opacity 0.15s;
+}
+
+.week-picker-footer button:hover {
+    opacity: 0.88;
 }
 
 .schedule-week-controls {
@@ -81,22 +325,23 @@
 
 .schedule-week-controls button {
     height: 40px;
-    border: 1px solid #d8dfeb;
+    border: 1.5px solid #c5d9ff;
     border-radius: 10px;
     background: #ffffff;
-    color: #32455f;
+    color: #1558d6;
     font-size: 13px;
     font-weight: 600;
-    padding: 0 10px;
+    padding: 0 12px;
     display: inline-flex;
     align-items: center;
     gap: 6px;
     cursor: pointer;
+    transition: background 0.15s, border-color 0.15s;
 }
 
 .schedule-week-controls button:hover {
-    border-color: #b9c9e8;
-    background: #f3f7ff;
+    border-color: #1558d6;
+    background: #eef5ff;
 }
 
 .schedule-week-note {
@@ -120,33 +365,42 @@
 
 .schedule-board-wrapper {
     width: 100%;
-    overflow-x: auto;
+    overflow: visible;
+}
+
+.schedule-board-scroller {
+    width: 100%;
+    overflow: visible;
     border-radius: 22px;
     box-shadow: 0 4px 16px rgba(31, 45, 61, 0.04);
-    -webkit-overflow-scrolling: touch;
 }
 
 .schedule-board {
-    min-width: 860px;
+    width: 100%;
     background: #ffffff;
     border: 1px solid #e8ebf1;
-    border-radius: 22px;
+    border-radius: 20px;
+    position: relative;
+    z-index: 1;
     overflow: visible;
 }
 
 .schedule-grid {
     display: grid;
-    grid-template-columns: 130px repeat(5, minmax(120px, 1fr));
+    grid-template-columns: 120px repeat(5, 1fr);
     align-items: stretch;
 }
 
 .schedule-grid-header {
     background: #ffffff;
     border-bottom: 1px solid #edf0f5;
+    border-top-left-radius: 20px;
+    border-top-right-radius: 20px;
+    overflow: hidden;
 }
 
 .grid-head {
-    padding: 16px 14px;
+    padding: 13px 12px;
     font-size: 13px;
     font-weight: 800;
     color: #6a7383;
@@ -154,7 +408,15 @@
 }
 
 .time-head {
-    padding-left: 18px;
+    padding-left: 14px;
+}
+
+.schedule-grid-header .grid-head:first-child {
+    border-top-left-radius: 20px;
+}
+
+.schedule-grid-header .grid-head:last-child {
+    border-top-right-radius: 20px;
 }
 
 .schedule-grid-row {
@@ -166,7 +428,7 @@
 }
 
 .time-cell {
-    padding: 18px 14px 18px 18px;
+    padding: 9px 7px 9px 10px;
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -174,68 +436,72 @@
 }
 
 .period-label {
-    font-size: 15px;
+    font-size: 12px;
     font-weight: 700;
     color: #5d687b;
     margin-bottom: 2px;
 }
 
 .period-time {
-    font-size: 14px;
+    font-size: 11px;
     color: #6f798b;
 }
 
 .period-session {
-    font-size: 12px;
+    font-size: 11px;
     color: #8a94a6;
-    margin-top: 3px;
+    margin-top: 2px;
 }
 
 .lesson-cell {
-    padding: 10px 8px;
+    padding: 2px;
     display: flex;
     align-items: center;
     justify-content: center;
     min-height: 92px;
     box-sizing: border-box;
+    position: relative;
+    overflow: visible;
 }
 
 .lesson-empty {
     width: 100%;
-    height: 60px;
-    border-radius: 16px;
+    height: 84px;
+    border-radius: 14px;
     background: #f7f8fa;
     color: #c7ccd5;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 20px;
+    font-size: 18px;
 }
 
 .lesson-pill {
     width: 100%;
-    min-height: 60px;
-    border-radius: 18px;
-    padding: 12px 14px 10px;
+    min-height: 84px;
+    border-radius: 14px;
+    padding: 9px 10px;
     box-sizing: border-box;
     display: flex;
     flex-direction: column;
     justify-content: center;
-    gap: 3px;
+    gap: 4px;
     border-left: 3px solid transparent;
     transition: transform 0.2s ease, box-shadow 0.2s ease;
     position: relative;
+    z-index: 1;
 }
 
 .lesson-pill:hover {
     transform: translateY(-1px);
     box-shadow: 0 6px 16px rgba(66, 84, 102, 0.08);
+    z-index: 40;
 }
 
 .lesson-tooltip {
     position: absolute;
     left: 50%;
-    bottom: calc(100% + 8px);
+    top: calc(100% + 8px);
     transform: translateX(-50%) translateY(-4px);
     width: max-content;
     max-width: 220px;
@@ -249,7 +515,7 @@
     opacity: 0;
     pointer-events: none;
     transition: opacity 0.18s ease, transform 0.18s ease;
-    z-index: 30;
+    z-index: 120;
 }
 
 .lesson-tooltip p {
@@ -336,7 +602,7 @@
 }
 
 .lesson-subject {
-    font-size: 15px;
+    font-size: 14px;
     font-weight: 800;
     color: #253044;
     line-height: 1.2;
@@ -356,13 +622,13 @@
 }
 
 .lesson-room {
-    font-size: 13px;
+    font-size: 12px;
     color: #6f7a8a;
     line-height: 1.2;
 }
 
 .lesson-extra {
-    margin-top: 4px;
+    margin-top: 2px;
     display: flex;
     flex-direction: column;
     gap: 2px;
@@ -382,11 +648,6 @@
     flex-shrink: 0;
 }
 
-@media (max-width: 1200px) {
-    .schedule-grid {
-        grid-template-columns: 120px repeat(5, minmax(110px, 1fr));
-    }
-}
 
 @media (max-width: 768px) {
     .student-schedule-page {
