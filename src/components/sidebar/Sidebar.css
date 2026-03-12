@@ -8,7 +8,7 @@
   height: 100vh;
   display: flex;
   flex-direction: column;
-  padding: 1.5rem var(--sidebar-pad-x);
+  padding: 1.125rem var(--sidebar-pad-x);
   color: #ffffff;
   border-right: var(--sidebar-border-w) solid rgba(255, 255, 255, 0.08);
   position: fixed;
@@ -25,7 +25,7 @@
   --sidebar-width: var(--sidebar-collapsed, 5rem);
   --toggle-size: 2rem;
   width: var(--sidebar-width);
-  padding: 1.5rem var(--sidebar-pad-x);
+  padding: 1.125rem var(--sidebar-pad-x);
 }
 
 
@@ -46,7 +46,7 @@
   overflow-y: auto;
   overflow-x: hidden;
   padding-right: 0.25rem;
-  margin-top: 0.5rem;
+  margin-top: 0.25rem;
 
   scrollbar-width: thin; /* Firefox */
   scrollbar-color: rgba(255, 255, 255, 0.28) transparent;
@@ -178,14 +178,14 @@
   display: flex;
   align-items: center;
   gap: 0.875rem;
-  padding: 0.25rem 0.5rem 1.5rem;
+  padding: 0.2rem 0.45rem 1rem;
   border-bottom: 0.0625rem solid rgba(255, 255, 255, 0.08);
   transition: all 0.3s ease;
 }
 
 .sidebar.collapsed .sidebar-brand {
   justify-content: center;
-  padding: 0.25rem 0.25rem 1.5rem;
+  padding: 0.2rem 0.25rem 1rem;
 }
 
 .sidebar.collapsed .sidebar-brand-text {
@@ -222,7 +222,7 @@
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  padding: 0.75rem;
+  padding: 0.625rem;
   border-radius: 1rem;
   background: rgba(255, 255, 255, 0.08);
   text-decoration: none;
@@ -232,7 +232,7 @@
 
 .sidebar.collapsed .sidebar-user-card {
   justify-content: center;
-  padding: 0.75rem 0.5rem;
+  padding: 0.625rem 0.45rem;
   gap: 0;
 }
 
@@ -241,7 +241,7 @@
 }
 
 .sidebar-user-card-top {
-  margin-top: 0.875rem;
+  margin-top: 0.625rem;
 }
 
 .sidebar-user-card-link:hover {
@@ -286,16 +286,16 @@
 .sidebar-nav {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
-  padding: 1rem 0 1rem;
+  gap: 0.35rem;
+  padding: 0.75rem 0;
 }
 
 .sidebar-item {
   width: 100%;
   display: flex;
   align-items: center;
-  gap: 0.875rem;
-  padding: 0.875rem 1rem;
+  gap: 0.75rem;
+  padding: 0.72rem 0.88rem;
   border-radius: 1rem;
   color: rgba(255, 255, 255, 0.84);
   transition: all 0.25s ease;
@@ -306,7 +306,7 @@
 
 .sidebar.collapsed .sidebar-item {
   justify-content: center;
-  padding: 0.875rem 0.5rem;
+  padding: 0.72rem 0.45rem;
   gap: 0;
 }
 
@@ -351,7 +351,7 @@
 .sidebar-footer {
   flex: 0 0 auto;
   margin-top: auto;
-  padding-top: 0.75rem;
+  padding-top: 0.55rem;
   border-top: 0.0625rem solid rgba(255, 255, 255, 0.08);
 }
 
