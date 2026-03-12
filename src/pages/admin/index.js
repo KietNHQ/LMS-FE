@@ -1,0 +1,11 @@
+export { default as AdminDashboard } from "./dashboard/AdminDashboard";
+export { default as AdminUsers } from "./users/AdminUsers";
+export { default as AdminStudents } from "./students/AdminStudents";
+export { default as AdminTeachers } from "./teachers/AdminTeachers";
+export { default as AdminParents } from "./parents/AdminParents";
+export { default as AdminCourses } from "./courses/AdminCourses";
+export { default as AdminClasses } from "./classes/AdminClasses";
+export { default as AdminTimetable } from "./timetable/AdminTimetable";
+export { default as AdminAttendance } from "./attendance/AdminAttendance";
+export { default as AdminReports } from "./reports/AdminReports";
+export { default as AdminNotifications } from "./notifications/AdminNotifications";
