@@ -1,6 +1,9 @@
 import { useState } from "react";
 import "./StudentNotifications.css";
 
+import { FiBell, FiStar } from "react-icons/fi";
+import { FaStar } from "react-icons/fa";
+
 export default function Notification() {
 
   const [notifications, setNotifications] = useState([
@@ -11,7 +14,8 @@ export default function Notification() {
         "Nhà trường thông báo lịch thi học kỳ 2 năm học 2024-2025. Thi bắt đầu từ ngày 20/05/2025.",
       date: "2025-01-15",
       unread: true,
-      important: false
+      important: false,
+      priority: 0
     },
     {
       id: 2,
@@ -20,7 +24,8 @@ export default function Notification() {
         "Điểm học kỳ 1 đã được cập nhật. Học sinh có thể xem điểm trên hệ thống.",
       date: "2025-01-08",
       unread: true,
-      important: false
+      important: false,
+      priority: 0
     },
     {
       id: 3,
@@ -29,7 +34,8 @@ export default function Notification() {
         "Hệ thống sẽ bảo trì từ 22:00 ngày 20/01/2025 đến 6:00 ngày 21/01/2025.",
       date: "2025-01-18",
       unread: true,
-      important: false
+      important: false,
+      priority: 0
     },
     {
       id: 4,
@@ -38,12 +44,167 @@ export default function Notification() {
         "Sinh viên cần hoàn thành đóng học phí trước ngày 10/02/2025.",
       date: "2025-01-20",
       unread: true,
-      important: false
-    }
+      important: false,
+      priority: 0
+    },
+    {
+      id: 5,
+      title: "Hoạt động ngoại khóa",
+      content:
+        "Nhà trường tổ chức hoạt động ngoại khóa vào cuối tuần này.",
+      date: "2025-01-21",
+      unread: true,
+      important: false,
+      priority: 0
+    },
+    {
+      id: 6,
+      title: "Cập nhật lịch học",
+      content:
+        "Một số lớp học được thay đổi lịch học trong tuần tới.",
+      date: "2025-01-22",
+      unread: true,
+      important: false,
+      priority: 0
+    },
+    {
+      id: 7,
+      title: "Lịch thi HK2 2024-2025",
+      content:
+        "Nhà trường thông báo lịch thi học kỳ 2 năm học 2024-2025. Thi bắt đầu từ ngày 20/05/2025.",
+      date: "2025-01-15",
+      unread: true,
+      important: false,
+      priority: 0
+    },
+     {
+      id: 8,
+      title: "Lịch thi HK2 2024-2025",
+      content:
+        "Nhà trường thông báo lịch thi học kỳ 2 năm học 2024-2025. Thi bắt đầu từ ngày 20/05/2025.",
+      date: "2025-01-15",
+      unread: true,
+      important: false,
+      priority: 0
+    },
+     {
+      id: 9,
+      title: "Lịch thi HK2 2024-2025",
+      content:
+        "Nhà trường thông báo lịch thi học kỳ 2 năm học 2024-2025. Thi bắt đầu từ ngày 20/05/2025.",
+      date: "2025-01-15",
+      unread: true,
+      important: false,
+      priority: 0
+    },
+     {
+      id: 10,
+      title: "Lịch thi HK2 2024-2025",
+      content:
+        "Nhà trường thông báo lịch thi học kỳ 2 năm học 2024-2025. Thi bắt đầu từ ngày 20/05/2025.",
+      date: "2025-01-15",
+      unread: true,
+      important: false,
+      priority: 0
+    },
+     {
+      id: 11,
+      title: "Lịch thi HK2 2024-2025",
+      content:
+        "Nhà trường thông báo lịch thi học kỳ 2 năm học 2024-2025. Thi bắt đầu từ ngày 20/05/2025.",
+      date: "2025-01-15",
+      unread: true,
+      important: false,
+      priority: 0
+    },
+     {
+      id: 12,
+      title: "Lịch thi HK2 2024-2025",
+      content:
+        "Nhà trường thông báo lịch thi học kỳ 2 năm học 2024-2025. Thi bắt đầu từ ngày 20/05/2025.",
+      date: "2025-01-15",
+      unread: true,
+      important: false,
+      priority: 0
+    }, {
+      id: 13,
+      title: "Lịch thi HK2 2024-2025",
+      content:
+        "Nhà trường thông báo lịch thi học kỳ 2 năm học 2024-2025. Thi bắt đầu từ ngày 20/05/2025.",
+      date: "2025-01-15",
+      unread: true,
+      important: false,
+      priority: 0
+    }, {
+      id: 14,
+      title: "Lịch thi HK2 2024-2025",
+      content:
+        "Nhà trường thông báo lịch thi học kỳ 2 năm học 2024-2025. Thi bắt đầu từ ngày 20/05/2025.",
+      date: "2025-01-15",
+      unread: true,
+      important: false,
+      priority: 0
+    }, {
+      id: 15,
+      title: "Lịch thi HK2 2024-2025",
+      content:
+        "Nhà trường thông báo lịch thi học kỳ 2 năm học 2024-2025. Thi bắt đầu từ ngày 20/05/2025.",
+      date: "2025-01-15",
+      unread: true,
+      important: false,
+      priority: 0
+    }, {
+      id: 16,
+      title: "Lịch thi HK2 2024-2025",
+      content:
+        "Nhà trường thông báo lịch thi học kỳ 2 năm học 2024-2025. Thi bắt đầu từ ngày 20/05/2025.",
+      date: "2025-01-15",
+      unread: true,
+      important: false,
+      priority: 0
+    }, {
+      id: 17,
+      title: "Lịch thi HK2 2024-2025",
+      content:
+        "Nhà trường thông báo lịch thi học kỳ 2 năm học 2024-2025. Thi bắt đầu từ ngày 20/05/2025.",
+      date: "2025-01-15",
+      unread: true,
+      important: false,
+      priority: 0
+    }, {
+      id: 18,
+      title: "Lịch thi HK2 2024-2025",
+      content:
+        "Nhà trường thông báo lịch thi học kỳ 2 năm học 2024-2025. Thi bắt đầu từ ngày 20/05/2025.",
+      date: "2025-01-15",
+      unread: true,
+      important: false,
+      priority: 0
+    },
+     {
+      id: 19,
+      title: "Lịch thi HK2 2024-2025",
+      content:
+        "Nhà trường thông báo lịch thi học kỳ 2 năm học 2024-2025. Thi bắt đầu từ ngày 20/05/2025.",
+      date: "2025-01-15",
+      unread: true,
+      important: false,
+      priority: 0
+    },
+     {
+      id: 20,
+      title: "Lịch thi HK2 2024-2025",
+      content:
+        "Nhà trường thông báo lịch thi học kỳ 2 năm học 2024-2025. Thi bắt đầu từ ngày 20/05/2025.",
+      date: "2025-01-15",
+      unread: true,
+      important: false,
+      priority: 0
+    },
   ]);
 
+  const [priorityCounter, setPriorityCounter] = useState(1);
   const [selected, setSelected] = useState(null);
-  const [showImportant, setShowImportant] = useState(false);
 
   const unreadCount = notifications.filter(n => n.unread).length;
 
@@ -56,10 +217,48 @@ export default function Notification() {
   };
 
   const toggleImportant = (id) => {
-    const updated = notifications.map(n =>
-      n.id === id ? { ...n, important: !n.important } : n
-    );
-    setNotifications(updated);
+
+    let newCounter = priorityCounter;
+
+    const updated = notifications.map(n => {
+
+      if (n.id === id) {
+
+        if (!n.important) {
+          return {
+            ...n,
+            important: true,
+            priority: newCounter++
+          };
+        } else {
+          return {
+            ...n,
+            important: false,
+            priority: 0
+          };
+        }
+
+      }
+
+      return n;
+
+    });
+
+    const sorted = [...updated].sort((a, b) => {
+
+      if (a.important && b.important) {
+        return b.priority - a.priority;
+      }
+
+      if (a.important) return -1;
+      if (b.important) return 1;
+
+      return 0;
+
+    });
+
+    setPriorityCounter(newCounter);
+    setNotifications(sorted);
   };
 
   const openNotification = (item) => {
@@ -76,26 +275,38 @@ export default function Notification() {
     setSelected(null);
   };
 
-  const displayNotifications = showImportant
-    ? notifications.filter(n => n.important)
-    : notifications;
-
   return (
     <div className="notification-page">
 
       <div className="notification-container">
 
         <div className="notification-header">
-          <h1>Thông báo</h1>
-          <span>{unreadCount} thông báo chưa đọc</span>
+
+          <div>
+            <h1>Thông báo</h1>
+            <span>{unreadCount} thông báo chưa đọc</span>
+          </div>
+
+          <div
+            className="notification-bell"
+            onClick={markAllRead}
+          >
+
+            <FiBell className="bell-icon" />
+
+            {unreadCount > 0 && (
+              <span className="bell-badge">
+                {unreadCount > 9 ? "9+" : unreadCount}
+              </span>
+            )}
+
+          </div>
+
         </div>
-
-
-        {/* BOX CHỨA SCROLL */}
 
         <div className="notification-scroll">
 
-          {displayNotifications.map((item) => (
+          {notifications.map((item) => (
 
             <div
               key={item.id}
@@ -135,15 +346,16 @@ export default function Notification() {
 
               </div>
 
-              {/* CHECKBOX QUAN TRỌNG */}
+              <div
+                className="star-box"
+                onClick={() => toggleImportant(item.id)}
+              >
 
-              <div className="important-box">
-
-                <input
-                  type="checkbox"
-                  checked={item.important}
-                  onChange={() => toggleImportant(item.id)}
-                />
+                {item.important ? (
+                  <FaStar className="star-active"/>
+                ) : (
+                  <FiStar className="star"/>
+                )}
 
               </div>
 
@@ -153,35 +365,14 @@ export default function Notification() {
 
         </div>
 
-
-        {/* BUTTONS */}
-
-        <div className="notification-actions">
-
-          <button
-            className="important-btn"
-            onClick={() => setShowImportant(!showImportant)}
-          >
-            Quan trọng
-          </button>
-
-          <button
-            className="mark-read-btn"
-            onClick={markAllRead}
-          >
-            Đọc hết
-          </button>
-
-        </div>
-
       </div>
-
-
-      {/* DIALOG */}
 
       {selected && (
 
-        <div className="dialog-overlay" onClick={closeDialog}>
+        <div
+          className="dialog-overlay"
+          onClick={closeDialog}
+        >
 
           <div
             className="dialog-box"
