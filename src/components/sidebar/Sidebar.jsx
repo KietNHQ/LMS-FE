@@ -1,106 +1,123 @@
 import React, { useState } from "react";
-import { sidebarConfig, roleTheme } from "./sidebar.config";
-import "./Sidebar.css";
+import { sidebarConfig } from "./sidebar.config";
 import SidebarItem from "./SidebarItem";
-import { FiLogOut, FiChevronLeft } from "react-icons/fi";
-import { useNavigate, NavLink } from "react-router-dom";
+import StudentProfile from "../../pages/student/profile/StudentProfile";
+import { FiChevronLeft, FiLogOut } from "react-icons/fi";
+
+import "./Sidebar.css";
 
 export default function Sidebar({
-                                  role = "student",
-                                  systemName = "LMS System",
-                                  userName = "User Name",
-                                  isCollapsed: controlledCollapsed,
-                                  setIsCollapsed: setControlledCollapsed
-                                }) {
-  const [internalCollapsed, setInternalCollapsed] = useState(false);
+  role = "student",
+  isCollapsed,
+  setIsCollapsed
+}) {
 
-  const isControlled = typeof controlledCollapsed === "boolean";
-  const isCollapsed = isControlled ? controlledCollapsed : internalCollapsed;
+  const items = sidebarConfig[role] || [];
+  const [showProfile, setShowProfile] = useState(false);
 
-  const items = sidebarConfig[role] || sidebarConfig.student;
-  const theme = roleTheme[role] || roleTheme.student;
-  const navigate = useNavigate();
-
-  const profileItem = items.find((item) => item.label === "Profile");
-  const dashboardItem = items.find((item) => item.label === "Dashboard");
-  const profilePath = profileItem?.path || dashboardItem?.path || `/${role}`;
-
-  const handleLogout = () => {
-    navigate("/login", { replace: true });
-  };
-
-  const toggleSidebar = () => {
-    if (isControlled && typeof setControlledCollapsed === "function") {
-      setControlledCollapsed((prev) => !prev);
-      return;
+  const handleSidebarAction = (action) => {
+    if (action === "profile") {
+      setShowProfile(true);
     }
-    setInternalCollapsed((prev) => !prev);
   };
-
-  const menuItems = items.filter((item) => item.label !== "Profile");
 
   return (
-      <aside
-          className={`sidebar ${theme.className} ${isCollapsed ? "collapsed" : ""}`}
-      >
+    <>
+      <aside className={`sidebar role-${role} ${isCollapsed ? "collapsed" : ""}`}>
+
+        {/* TOGGLE */}
         <button
-            type="button"
-            className="sidebar-toggle-btn"
-            onClick={toggleSidebar}
-            aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+          className="sidebar-toggle-btn"
+          onClick={() => setIsCollapsed(!isCollapsed)}
         >
           <FiChevronLeft />
         </button>
 
+
+        {/* TOP */}
         <div className="sidebar-top-section">
+
+          {/* BRAND */}
           <div className="sidebar-brand">
-            <div className="sidebar-brand-badge">{theme.shortLabel}</div>
+
+            <div className="sidebar-brand-badge">
+              🎓
+            </div>
 
             <div className="sidebar-brand-text">
-              <h2>{systemName}</h2>
-              <span>{theme.label}</span>
+              <h2>EduVN</h2>
+              <span>Học sinh</span>
             </div>
+
           </div>
 
-          <NavLink
-              to={profilePath}
-              className={({ isActive }) =>
-                  `sidebar-user-card sidebar-user-card-top sidebar-user-card-link ${
-                      isActive ? "active" : ""
-                  }`
-              }
+
+          {/* USER */}
+          <div
+            className="sidebar-user-card sidebar-user-card-top sidebar-user-card-link"
+            onClick={() => setShowProfile(true)}
           >
-            <div className="sidebar-user-avatar">{theme.shortLabel}</div>
+
+            <div className="sidebar-user-avatar">
+              N
+            </div>
 
             <div className="sidebar-user-info">
-              <p className="sidebar-user-name">{userName}</p>
-              <span className="sidebar-user-role">{theme.label}</span>
+              <p className="sidebar-user-name">
+                Nguyễn Minh Tuấn
+              </p>
+
+              <span className="sidebar-user-role">
+                tuan.nguyen@student.edu.vn
+              </span>
             </div>
-          </NavLink>
+
+          </div>
+
         </div>
 
+
+        {/* MENU */}
         <div className="sidebar-menu-wrapper">
+
           <nav className="sidebar-nav">
-            {menuItems.map((item) => (
-                <SidebarItem
-                    key={item.path}
-                    item={item}
-                    isCollapsed={isCollapsed}
-                />
+
+            {items.map((item, index) => (
+              <SidebarItem
+                key={index}
+                item={item}
+                onAction={handleSidebarAction}
+              />
             ))}
+
           </nav>
+
         </div>
 
+
+        {/* FOOTER */}
         <div className="sidebar-footer">
-          <button
-              type="button"
-              className="sidebar-logout-btn"
-              onClick={handleLogout}
-          >
+
+          <button className="sidebar-logout-btn">
+
             <FiLogOut />
-            <span>Log Out</span>
+
+            <span>Đăng xuất</span>
+
           </button>
+
         </div>
+
       </aside>
+
+
+      {/* PROFILE DIALOG */}
+      {showProfile && (
+        <StudentProfile
+          onClose={() => setShowProfile(false)}
+        />
+      )}
+
+    </>
   );
 }

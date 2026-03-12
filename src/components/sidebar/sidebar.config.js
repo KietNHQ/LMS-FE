@@ -74,7 +74,7 @@ export const sidebarConfig = {
         { label: "Notifications", icon: FiBell, path: "/student/notifications" },
         { label: "Schedule", icon: FiCalendar, path: "/student/schedule" },
         { label: "Support", icon: FiHelpCircle, path: "/student/support" },
-        { label: "Profile", icon: FiUser, path: "/student/profile" }
+        // { label: "Profile", icon: FiUser, action: "profile" }
     ],
 
     parent: [
