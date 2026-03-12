@@ -1,5 +1,15 @@
 import { useState } from "react";
 import "./StudentProfile.css";
+import {
+  X,
+  Star,
+  Users,
+  Phone,
+  Mail,
+  MapPin,
+  Calendar,
+  IdCard
+} from "lucide-react";
 
 export default function StudentProfile({ onClose }) {
 
@@ -44,11 +54,14 @@ export default function StudentProfile({ onClose }) {
 
       <div className="profile-dialog">
 
-        <button className="profile-close" onClick={onClose}>✕</button>
+        {/* Close button */}
+        <button className="profile-close" onClick={onClose}>
+          <X size={20} />
+        </button>
 
         <div className="profile-layout">
 
-          {/* LEFT */}
+          {/* LEFT SIDE */}
 
           <div className="profile-left">
 
@@ -60,10 +73,12 @@ export default function StudentProfile({ onClose }) {
 
             <div className="achievement-box">
 
-              <h3>⭐ Thành tích</h3>
+              <h3>
+                <Star size={18} /> Thành tích
+              </h3>
 
               <ul>
-                {student.achievements.map((item,index)=>(
+                {student.achievements.map((item, index) => (
                   <li key={index}>{item}</li>
                 ))}
               </ul>
@@ -73,9 +88,11 @@ export default function StudentProfile({ onClose }) {
           </div>
 
 
-          {/* RIGHT */}
+          {/* RIGHT SIDE */}
 
           <div className="profile-right">
+
+            {/* Header */}
 
             <div className="profile-header">
 
@@ -88,36 +105,67 @@ export default function StudentProfile({ onClose }) {
             </div>
 
 
+            {/* Student info */}
+
             <div className="info-grid">
 
-              <p><b>Mã HS:</b> {student.studentId}</p>
-              <p><b>Năm học:</b> {student.schoolYear}</p>
+              <p>
+                <IdCard size={16} />
+                <b>Mã HS:</b> {student.studentId}
+              </p>
 
-              <p><b>Ngày sinh:</b> {student.dob}</p>
-              <p><b>Giới tính:</b> {student.gender}</p>
+              <p>
+                <Calendar size={16} />
+                <b>Năm học:</b> {student.schoolYear}
+              </p>
 
-              <p><b>SĐT:</b> {student.phone}</p>
-              <p><b>Email:</b> {student.email}</p>
+              <p>
+                <Calendar size={16} />
+                <b>Ngày sinh:</b> {student.dob}
+              </p>
+
+              <p>
+                <b>Giới tính:</b> {student.gender}
+              </p>
+
+              <p>
+                <Phone size={16} />
+                <b>SĐT:</b> {student.phone}
+              </p>
+
+              <p>
+                <Mail size={16} />
+                <b>Email:</b> {student.email}
+              </p>
 
               <p className="address">
+                <MapPin size={16} />
                 <b>Địa chỉ:</b> {student.address}
               </p>
 
             </div>
 
 
+            {/* Parent section */}
+
             <div className="parent-section">
 
-              <h3>👨‍👩‍👧 Phụ huynh</h3>
+              <h3>
+                <Users size={18} /> Phụ huynh
+              </h3>
 
               <div className="parent-grid">
 
-                {student.parents.map((p,index)=>(
+                {student.parents.map((p, index) => (
                   <div className="parent-card" key={index}>
 
                     <p><b>{p.relation}:</b> {p.name}</p>
-                    <p><b>Điện thoại:</b> {p.phone}</p>
-                    <p><b>Email:</b> {p.email}</p>
+                    <p>
+                      <Phone size={14} /> {p.phone}
+                    </p>
+                    <p>
+                      <Mail size={14} /> {p.email}
+                    </p>
 
                   </div>
                 ))}
