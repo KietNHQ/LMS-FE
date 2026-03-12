@@ -1,0 +1,120 @@
+.conversation-wrapper {
+    width: min(22.5rem, 100%);
+    background: #ffffff;
+    border-radius: 1rem;
+    padding: 1.25rem;
+    box-shadow: 0 0.25rem 1.25rem rgba(0, 0, 0, 0.05);
+    min-width: 0;
+}
+
+.conversation-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    color: #333;
+    font-size: clamp(0.9375rem, 0.9rem + 0.2vw, 1rem);
+    line-height: 1.4;
+}
+
+.icon {
+    color: #7c4dff;
+    flex-shrink: 0;
+}
+
+.search-box {
+    position: relative;
+    margin-bottom: 1.25rem;
+}
+
+.search-box input {
+    width: 100%;
+    padding: 0.625rem 0.75rem 0.625rem 2.1875rem;
+    border: none;
+    border-radius: 0.625rem;
+    background: #f3f3f3;
+    font-size: clamp(0.8125rem, 0.78rem + 0.15vw, 0.875rem);
+    line-height: 1.4;
+    outline: none;
+}
+
+.search-box input:focus {
+    background: #ececec;
+}
+
+.search-icon {
+    position: absolute;
+    left: 0.625rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #999;
+}
+
+.conversation-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.conversation-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.625rem;
+    border-radius: 0.625rem;
+    cursor: pointer;
+    transition: background 0.2s ease, transform 0.2s ease;
+    min-width: 0;
+}
+
+.conversation-item:hover {
+    background: #f7f7f7;
+}
+
+.avatar {
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 50%;
+    background: #e3d7ff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    color: #6a35ff;
+    flex-shrink: 0;
+}
+
+.name {
+    font-weight: 500;
+    font-size: clamp(0.875rem, 0.84rem + 0.15vw, 0.9375rem);
+    line-height: 1.4;
+    color: #202636;
+    word-break: break-word;
+}
+
+.child-count {
+    font-size: clamp(0.75rem, 0.72rem + 0.12vw, 0.8125rem);
+    color: #888;
+    line-height: 1.4;
+}
+
+@media (max-width: 48rem) {
+    .conversation-wrapper {
+        width: 100%;
+        padding: 1rem;
+        border-radius: 0.875rem;
+    }
+
+    .conversation-header {
+        margin-bottom: 0.875rem;
+    }
+
+    .search-box {
+        margin-bottom: 1rem;
+    }
+
+    .conversation-item {
+        padding: 0.75rem 0.625rem;
+    }
+}

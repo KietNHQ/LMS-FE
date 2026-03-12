@@ -1,0 +1,124 @@
+.child-header-card {
+    background: #ffffff;
+    border-radius: 1.25rem;
+    padding: 1.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1.25rem;
+    box-shadow: 0 0.25rem 1.125rem rgba(20, 28, 45, 0.06);
+    border: 0.0625rem solid #ececf3;
+}
+
+.child-header-main {
+    display: flex;
+    gap: 1rem;
+    min-width: 0;
+    flex: 1;
+}
+
+.child-avatar {
+    width: 4rem;
+    height: 4rem;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #a67cff, #7c4dff);
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.375rem;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+
+.child-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+    min-width: 0;
+}
+
+.child-info-top {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.child-info-top h2 {
+    margin: 0;
+    font-size: clamp(1.1rem, 1rem + 0.4vw, 1.35rem);
+    color: #202636;
+}
+
+.child-status {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.35rem 0.75rem;
+    border-radius: 999rem;
+    background: #e7f8ee;
+    color: #16a34a;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.child-meta,
+.child-extra {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem 1rem;
+    color: #7c8597;
+    font-size: 0.9rem;
+    line-height: 1.45;
+}
+
+.child-header-stats {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(9.5rem, 1fr));
+    gap: 0.75rem;
+    width: min(100%, 21rem);
+    flex-shrink: 0;
+}
+
+.child-stat-box {
+    background: #f7f8fc;
+    border-radius: 1rem;
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 0.35rem;
+    text-align: center;
+}
+
+.child-stat-box span {
+    color: #8a93a6;
+    font-size: 0.85rem;
+}
+
+.child-stat-box strong {
+    color: #202636;
+    font-size: clamp(1rem, 0.95rem + 0.3vw, 1.15rem);
+}
+
+@media (max-width: 64rem) {
+    .child-header-card {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .child-header-stats {
+        width: 100%;
+    }
+}
+
+@media (max-width: 48rem) {
+    .child-header-card {
+        padding: 1rem;
+        border-radius: 1rem;
+    }
+
+    .child-header-stats {
+        grid-template-columns: 1fr;
+    }
+}

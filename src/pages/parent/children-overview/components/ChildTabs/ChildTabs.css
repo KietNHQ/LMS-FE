@@ -1,0 +1,30 @@
+.child-tabs {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.child-tab-btn {
+    border: none;
+    background: #ffffff;
+    color: #6f7890;
+    padding: 0.8rem 1rem;
+    border-radius: 0.9rem;
+    cursor: pointer;
+    font-size: 0.92rem;
+    font-weight: 600;
+    box-shadow: 0 0.2rem 0.8rem rgba(20, 28, 45, 0.05);
+    border: 0.0625rem solid #ececf3;
+    transition: all 0.2s ease;
+}
+
+.child-tab-btn:hover {
+    background: #f7f5ff;
+    color: #7c4dff;
+}
+
+.child-tab-btn.active {
+    background: linear-gradient(135deg, #a67cff, #7c4dff);
+    color: #ffffff;
+    border-color: transparent;
+}
