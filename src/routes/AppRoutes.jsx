@@ -15,7 +15,7 @@ import StudentQuiz from "../pages/student/quiz/StudentQuiz";
 import StudentNotifications from "../pages/student/notification/StudentNotifications";
 import StudentSchedule from "../pages/student/schedule/StudentSchedule";
 import StudentSupport from "../pages/student/support/StudentSupport";
-import StudentProfile from "../pages/student/profile/StudentProfile";
+// import StudentProfile from "../pages/student/profile/StudentProfile";
 
 /* TEACHER PAGES */
 import TeacherLayout from "../layouts/teacher/TeacherLayout";
@@ -63,7 +63,7 @@ export default function AppRoutes() {
         <Route path="notifications" element={<StudentNotifications />} />
         <Route path="schedule" element={<StudentSchedule />} />
         <Route path="support" element={<StudentSupport />} />
-        <Route path="profile" element={<StudentProfile />} />
+        {/* <Route path="profile" element={<StudentProfile />} /> */}
       </Route>
 
       {/* TEACHER */}
