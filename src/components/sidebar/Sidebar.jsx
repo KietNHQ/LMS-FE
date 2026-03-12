@@ -1,8 +1,8 @@
-import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { sidebarConfig } from "./sidebar.config";
 import SidebarItem from "./SidebarItem";
-import StudentProfile from "../../pages/student/profile/StudentProfile";
 import { FiChevronLeft, FiLogOut } from "react-icons/fi";
+import { FaGraduationCap } from "react-icons/fa";
 
 import "./Sidebar.css";
 
@@ -12,13 +12,16 @@ export default function Sidebar({
   setIsCollapsed
 }) {
 
+  const navigate = useNavigate();
   const items = sidebarConfig[role] || [];
-  const [showProfile, setShowProfile] = useState(false);
 
-  const handleSidebarAction = (action) => {
-    if (action === "profile") {
-      setShowProfile(true);
-    }
+  const handleLogout = () => {
+    // Xóa token từ localStorage
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    
+    // Quay về trang login
+    navigate("/login");
   };
 
   return (
@@ -41,12 +44,12 @@ export default function Sidebar({
           <div className="sidebar-brand">
 
             <div className="sidebar-brand-badge">
-              🎓
+              <FaGraduationCap />
             </div>
 
             <div className="sidebar-brand-text">
               <h2>EduVN</h2>
-              <span>Học sinh</span>
+              <span>Học tập</span>
             </div>
 
           </div>
@@ -55,7 +58,6 @@ export default function Sidebar({
           {/* USER */}
           <div
             className="sidebar-user-card sidebar-user-card-top sidebar-user-card-link"
-            onClick={() => setShowProfile(true)}
           >
 
             <div className="sidebar-user-avatar">
@@ -86,7 +88,6 @@ export default function Sidebar({
               <SidebarItem
                 key={index}
                 item={item}
-                onAction={handleSidebarAction}
               />
             ))}
 
@@ -98,7 +99,7 @@ export default function Sidebar({
         {/* FOOTER */}
         <div className="sidebar-footer">
 
-          <button className="sidebar-logout-btn">
+          <button className="sidebar-logout-btn" onClick={handleLogout}>
 
             <FiLogOut />
 
@@ -109,14 +110,6 @@ export default function Sidebar({
         </div>
 
       </aside>
-
-
-      {/* PROFILE DIALOG */}
-      {showProfile && (
-        <StudentProfile
-          onClose={() => setShowProfile(false)}
-        />
-      )}
 
     </>
   );

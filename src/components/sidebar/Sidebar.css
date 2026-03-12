@@ -88,7 +88,7 @@
 }
 /* ===== ROLE COLORS ===== */
 .sidebar.role-admin {
-  background: linear-gradient(180deg, #1e2f5a 0%, #152340 100%);
+  background: linear-gradient(180deg, #2b3f6f 0%, #152340 100%);
 }
 
 .sidebar.role-teacher {

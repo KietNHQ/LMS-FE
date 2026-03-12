@@ -5,6 +5,20 @@ import Login from "../pages/auth/Login";
 import ForgotPassword from "../pages/auth/ForgotPassword";
 import ResetPassword from "../pages/auth/ResetPassword";
 
+/* ADMIN PAGES */
+import AdminLayout from "../layouts/admin/AdminLayout";
+import AdminDashboard from "../pages/admin/dashboard/AdminDashboard";
+import AdminUsers from "../pages/admin/users/AdminUsers";
+import AdminTeachers from "../pages/admin/teachers/AdminTeachers";
+import AdminStudents from "../pages/admin/students/AdminStudents";
+import AdminParents from "../pages/admin/parents/AdminParents";
+import AdminClasses from "../pages/admin/classes/AdminClasses";
+import AdminCourses from "../pages/admin/courses/AdminCourses";
+import AdminTimetable from "../pages/admin/timetable/AdminTimetable";
+import AdminAttendance from "../pages/admin/attendance/AdminAttendance";
+import AdminNotifications from "../pages/admin/notifications/AdminNotifications";
+import AdminReports from "../pages/admin/reports/AdminReports";
+
 /* STUDENT PAGES */
 import StudentLayout from "../layouts/student/StudentLayout";
 import StudentDashboard from "../pages/student/dashboard/StudentDashboard";
@@ -29,7 +43,6 @@ import TeacherSchedule from "../pages/teacher/schedule/TeacherSchedule";
 import TeacherSupport from "../pages/teacher/support/TeacherSupport";
 import TeacherTeachingClasses from "../pages/teacher/teachingClasses/TeacherTeachingClasses";
 import TeacherNotifications from "../pages/teacher/notifications/TeacherNotifications";
-import TeacherProfile from "../pages/teacher/profile/TeacherProfile";
 
 /* PARENT PAGES */
 import ParentLayout from "../layouts/parent/ParentLayout";
@@ -51,6 +64,22 @@ export default function AppRoutes() {
       <Route path="/login" element={<Login />} />
       <Route path="/login/forgotpass" element={<ForgotPassword />} />
       <Route path="/login/resetpass" element={<ResetPassword />} />
+
+      {/* ADMIN */}
+      <Route path="/admin" element={<AdminLayout />}>
+        <Route index element={<Navigate to="dashboard" replace />} />
+        <Route path="dashboard" element={<AdminDashboard />} />
+        <Route path="users" element={<AdminUsers />} />
+        <Route path="teachers" element={<AdminTeachers />} />
+        <Route path="students" element={<AdminStudents />} />
+        <Route path="parents" element={<AdminParents />} />
+        <Route path="classes" element={<AdminClasses />} />
+        <Route path="courses" element={<AdminCourses />} />
+        <Route path="timetable" element={<AdminTimetable />} />
+        <Route path="attendance" element={<AdminAttendance />} />
+        <Route path="notifications" element={<AdminNotifications />} />
+        <Route path="reports" element={<AdminReports />} />
+      </Route>
 
       {/* STUDENT */}
       <Route path="/student" element={<StudentLayout />}>
@@ -79,7 +108,6 @@ export default function AppRoutes() {
         <Route path="request"          element={<TeacherRequest />} />
         <Route path="notifications"    element={<TeacherNotifications />} />
         <Route path="support"          element={<TeacherSupport />} />
-        <Route path="profile"          element={<TeacherProfile />} />
       </Route>
 
         {/* PARENT */}
