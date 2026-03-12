@@ -35,11 +35,11 @@ const ui = {
 };
 
 function getAssignmentChipSx(status) {
-  if (status === "In Progress") {
+  if (status === "In Progress" || status === "Đang làm") {
     return { bgcolor: "#fff8ee", color: "#b98432", border: "1px solid #f7e7ca" };
   }
 
-  if (status === "Not Started") {
+  if (status === "Not Started" || status === "Chưa bắt đầu") {
     return { bgcolor: ui.primaryBg, color: ui.primaryText, border: `1px solid ${ui.border}` };
   }
 
@@ -56,10 +56,10 @@ export default function StudentClassDetail() {
         <Card elevation={0} sx={{ borderRadius: 3, border: "1px solid #e5eaf3" }}>
           <CardContent sx={{ p: 3 }}>
             <Typography variant="h5" sx={{ fontWeight: 600, mb: 1, color: ui.heading }}>
-              Class Not Found
+              Không tìm thấy lớp học
             </Typography>
             <Typography color="text.secondary" sx={{ mb: 3 }}>
-              This class may have been updated or is no longer available.
+              Lớp học này có thể đã được cập nhật hoặc không còn khả dụng.
             </Typography>
             <Button
               component={Link}
@@ -82,7 +82,7 @@ export default function StudentClassDetail() {
                 },
               }}
             >
-              Back to Class List
+              Quay lại danh sách lớp
             </Button>
           </CardContent>
         </Card>
@@ -115,7 +115,7 @@ export default function StudentClassDetail() {
           },
         }}
       >
-        Back to Classes
+        Quay lại các lớp học
       </Button>
 
       <Card elevation={0} sx={{ borderRadius: 3, border: `1px solid ${ui.border}`, mb: 2 }}>
@@ -139,7 +139,7 @@ export default function StudentClassDetail() {
             </Typography>
             <Stack direction="row" spacing={1} alignItems="center" sx={{ color: ui.muted }}>
               <MeetingRoomRoundedIcon sx={{ fontSize: 18 }} />
-              <Typography>Room {classInfo.room}</Typography>
+              <Typography>Phòng {classInfo.room}</Typography>
             </Stack>
           </Stack>
         </CardContent>
@@ -154,10 +154,10 @@ export default function StudentClassDetail() {
         }}
       >
         {[
-          { label: "Progress", value: `${classInfo.progress}%` },
-          { label: "Attendance Rate", value: `${classInfo.attendance}%` },
-          { label: "Completed Sessions", value: `${classInfo.completedLessons}/${classInfo.totalLessons}` },
-          { label: "Pending Assignments", value: classInfo.assignmentsPending },
+          { label: "Tiến độ", value: `${classInfo.progress}%` },
+          { label: "Chuyên cần", value: `${classInfo.attendance}%` },
+          { label: "Số buổi đã học", value: `${classInfo.completedLessons}/${classInfo.totalLessons}` },
+          { label: "Bài tập chưa hoàn thành", value: classInfo.assignmentsPending },
         ].map((stat) => (
           <Card key={stat.label} elevation={0} sx={{ borderRadius: 3, border: `1px solid ${ui.border}` }}>
             <CardContent sx={{ p: 2 }}>
@@ -183,7 +183,7 @@ export default function StudentClassDetail() {
           <Card elevation={0} sx={{ borderRadius: 3, border: `1px solid ${ui.border}` }}>
             <CardContent sx={{ p: 2.5 }}>
               <Typography variant="h6" sx={{ fontWeight: 500, mb: 1.5, color: ui.heading }}>
-                Class Overview
+                Tổng quan lớp học
               </Typography>
               <Typography sx={{ color: ui.text, mb: 2 }}>
                 {classInfo.description}
@@ -193,7 +193,7 @@ export default function StudentClassDetail() {
                   <ListItemIcon sx={{ minWidth: 32 }}>
                     <PersonRoundedIcon fontSize="small" />
                   </ListItemIcon>
-                  <ListItemText primary={`Teacher: ${classInfo.teacher}`} />
+                  <ListItemText primary={`Giáo viên: ${classInfo.teacher}`} />
                 </ListItem>
                 <ListItem disablePadding>
                   <ListItemIcon sx={{ minWidth: 32 }}>
@@ -208,7 +208,7 @@ export default function StudentClassDetail() {
           <Card elevation={0} sx={{ borderRadius: 3, border: `1px solid ${ui.border}` }}>
             <CardContent sx={{ p: 2.5 }}>
               <Typography variant="h6" sx={{ fontWeight: 500, mb: 1.5, color: ui.heading }}>
-                Upcoming Assignments
+                Bài tập sắp tới
               </Typography>
               <Stack spacing={1.2}>
                 {classInfo.assignments.map((assignment) => (
@@ -228,7 +228,7 @@ export default function StudentClassDetail() {
                     <Box>
                       <Typography sx={{ fontWeight: 500, color: ui.heading }}>{assignment.title}</Typography>
                       <Typography variant="body2" sx={{ color: ui.muted }}>
-                        Due: {assignment.due}
+                        Hạn nộp: {assignment.due}
                       </Typography>
                     </Box>
                     <Chip
@@ -247,7 +247,7 @@ export default function StudentClassDetail() {
           <Card elevation={0} sx={{ borderRadius: 3, border: `1px solid ${ui.border}` }}>
             <CardContent sx={{ p: 2.5 }}>
               <Typography variant="h6" sx={{ fontWeight: 500, mb: 1.5, color: ui.heading }}>
-                Upcoming Schedule
+                Lịch học sắp tới
               </Typography>
               <Stack spacing={1.2}>
                 {classInfo.lessons.map((lesson) => (
@@ -268,7 +268,7 @@ export default function StudentClassDetail() {
           <Card elevation={0} sx={{ borderRadius: 3, border: `1px solid ${ui.border}` }}>
             <CardContent sx={{ p: 2.5 }}>
               <Typography variant="h6" sx={{ fontWeight: 500, mb: 1.5, color: ui.heading }}>
-                Quick Resources
+                Tài liệu
               </Typography>
               <Stack spacing={1}>
                 {classInfo.resources.map((resource) => (

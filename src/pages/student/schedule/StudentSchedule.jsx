@@ -4,6 +4,8 @@ import CalendarMonthRoundedIcon from "@mui/icons-material/CalendarMonthRounded";
 import AccessTimeRoundedIcon from "@mui/icons-material/AccessTimeRounded";
 import SchoolRoundedIcon from "@mui/icons-material/SchoolRounded";
 import AssignmentRoundedIcon from "@mui/icons-material/AssignmentRounded";
+import WbSunnyRoundedIcon from "@mui/icons-material/WbSunnyRounded";
+import WbTwilightRoundedIcon from "@mui/icons-material/WbTwilightRounded";
 import { FiChevronLeft, FiChevronRight } from "react-icons/fi";
 import { MdChevronLeft, MdChevronRight } from "react-icons/md";
 
@@ -303,8 +305,12 @@ export default function StudentSchedule() {
     return (
         <div className="student-schedule-page">
             <div className="schedule-page-header">
-                <h1>Class Schedule</h1>
-                <p>Weekly timetable for Grade 10A1</p>
+                <div className="schedule-title-row">
+                    <h1>Class Schedule</h1>
+                    <p className="schedule-inline-subtitle">
+                        Weekly timetable for <span className="schedule-class-name">Grade 10A1</span>
+                    </p>
+                </div>
             </div>
 
             <div className="schedule-week-bar">
@@ -429,60 +435,93 @@ export default function StudentSchedule() {
                     ))}
                 </div>
 
-                {periods.map((p) => (
-                    <div className="schedule-grid schedule-grid-row" key={p.period}>
-                        <div className="time-cell">
-                            <div className="period-label">Period {p.period}</div>
-                            <div className="period-time">
-                                {p.start} - {p.end}
-                            </div>
-                            <div className="period-session">{p.session}</div>
-                        </div>
+                {periods.map((p, idx) => {
+                    const isFirstMorning =
+                        p.session === "Morning" &&
+                        (idx === 0 || periods[idx - 1].session !== "Morning");
+                    const isFirstAfternoon =
+                        p.session === "Afternoon" &&
+                        (idx === 0 || periods[idx - 1].session === "Morning");
 
-                        {days.map((day) => {
-                            const lesson = getLesson(day.key, p.period);
-
-                            return (
-                                <div className="lesson-cell" key={`${day.key}-${p.period}`}>
-                                    {lesson ? (
-                                        <div className={`lesson-pill ${lesson.color}`}>
-                                            <div className="lesson-header">
-                                                <div className="lesson-subject">{lesson.subject}</div>
-                                                {getAssessmentIcon(lesson.assessment)}
-                                            </div>
-                                            <div className="lesson-room">{lesson.room}</div>
-
-                                            <div className="lesson-extra">
-                                                <span>
-                                                    <SchoolRoundedIcon />
-                                                    {lesson.teacher}
-                                                </span>
-                                                <span>
-                                                    <AccessTimeRoundedIcon />
-                                                    {lesson.start} - {lesson.end}
-                                                </span>
-                                            </div>
-
-                                            <div className="lesson-tooltip">
-                                                <p>
-                                                    <strong>Topic:</strong> {lesson.lessonTopic}
-                                                </p>
-                                                <p>
-                                                    <strong>Class activity:</strong> {lesson.activity}
-                                                </p>
-                                                <p>
-                                                    <strong>Assessment:</strong> {lesson.assessment}
-                                                </p>
-                                            </div>
-                                        </div>
-                                    ) : (
-                                        <div className="lesson-empty">-</div>
-                                    )}
+                    return (
+                        <React.Fragment key={p.period}>
+                            {isFirstMorning && (
+                                <div className="schedule-session-divider morning-divider">
+                                    <div className="session-div-line" />
+                                    <div className="session-div-chip morning-chip">
+                                        <WbSunnyRoundedIcon className="session-div-icon" />
+                                        <span className="session-div-label">Morning</span>
+                                        <span className="session-div-badge">Periods 1–5</span>
+                                    </div>
+                                    <div className="session-div-line" />
                                 </div>
-                            );
-                        })}
-                    </div>
-                ))}
+                            )}
+                            {isFirstAfternoon && (
+                                <div className="schedule-session-divider afternoon-divider">
+                                    <div className="session-div-line afternoon-line" />
+                                    <div className="session-div-chip afternoon-chip">
+                                        <WbTwilightRoundedIcon className="session-div-icon" />
+                                        <span className="session-div-label">Afternoon</span>
+                                        <span className="session-div-badge">Periods 6–10</span>
+                                    </div>
+                                    <div className="session-div-line afternoon-line" />
+                                </div>
+                            )}
+
+                            <div className={`schedule-grid schedule-grid-row ${p.session === "Morning" ? "session-morning" : "session-afternoon"}`}>
+                                <div className="time-cell">
+                                    <div className="period-label">Period {p.period}</div>
+                                    <div className="period-time">
+                                        {p.start} - {p.end}
+                                    </div>
+                                </div>
+
+                                {days.map((day) => {
+                                    const lesson = getLesson(day.key, p.period);
+
+                                    return (
+                                        <div className="lesson-cell" key={`${day.key}-${p.period}`}>
+                                            {lesson ? (
+                                                <div className={`lesson-pill ${lesson.color}`}>
+                                                    <div className="lesson-header">
+                                                        <div className="lesson-subject">{lesson.subject}</div>
+                                                        {getAssessmentIcon(lesson.assessment)}
+                                                    </div>
+                                                    <div className="lesson-room">{lesson.room}</div>
+
+                                                    <div className="lesson-extra">
+                                                        <span>
+                                                            <SchoolRoundedIcon />
+                                                            {lesson.teacher}
+                                                        </span>
+                                                        <span>
+                                                            <AccessTimeRoundedIcon />
+                                                            {lesson.start} - {lesson.end}
+                                                        </span>
+                                                    </div>
+
+                                                    <div className="lesson-tooltip">
+                                                        <p>
+                                                            <strong>Topic:</strong> {lesson.lessonTopic}
+                                                        </p>
+                                                        <p>
+                                                            <strong>Class activity:</strong> {lesson.activity}
+                                                        </p>
+                                                        <p>
+                                                            <strong>Assessment:</strong> {lesson.assessment}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            ) : (
+                                                <div className="lesson-empty">-</div>
+                                            )}
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </React.Fragment>
+                    );
+                })}
             </div>
             </div>
             </div>
