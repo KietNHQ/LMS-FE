@@ -9,19 +9,19 @@ export default function StudentClasses() {
 			<header className="student-classes-header">
 				<div>
 					<div className="student-classes-title-row">
-						<h1>My Classes</h1>
+						<h1>Lớp học của tôi</h1>
  					</div>
-					<p>Track your learning progress, schedule, and upcoming assignments.</p>
+					<p>Theo dõi tiến độ học tập, lịch học và các bài tập sắp tới.</p>
 				</div>
 			</header>
 
 			<div className="student-classes-stats">
 				<article className="student-classes-stat-card">
-					<p>Active Classes</p>
+					<p>Lớp học đang theo học</p>
 					<strong>{classList.length}</strong>
 				</article>
 				<article className="student-classes-stat-card">
-					<p>Pending Assignments</p>
+					<p>Bài tập chưa hoàn thành</p>
 					<strong>
 						{classList.reduce(
 							(sum, item) => sum + item.assignmentsPending,
@@ -30,7 +30,7 @@ export default function StudentClasses() {
 					</strong>
 				</article>
 				<article className="student-classes-stat-card">
-					<p>Average Progress</p>
+					<p>Tiến độ trung bình</p>
 					<strong>
 						{Math.round(
 							classList.reduce((sum, item) => sum + item.progress, 0) /
@@ -44,14 +44,14 @@ export default function StudentClasses() {
 			<div className="student-classes-layout">
 				<section className="student-classes-main">
 					<div className="student-classes-main-head">
-						<h2>Class List</h2>
+						<h2>Danh sách lớp học</h2>
 						<div className="student-classes-main-actions">
-							<span>{classList.length} classes</span>
+							<span>{classList.length} lớp</span>
 							<Link
 								to={`/student/classes/${classList[0].id}`}
 								className="student-classes-primary-btn"
 							>
-								Go to Latest Class
+								Vào lớp gần nhất
 							</Link>
 						</div>
 					</div>
@@ -64,21 +64,21 @@ export default function StudentClasses() {
 										<h3>{item.title}</h3>
 									</div>
 									<span className="student-class-pending">
-										{item.assignmentsPending} pending
+										{item.assignmentsPending} chưa hoàn thành
 									</span>
 								</div>
 
 								<ul className="student-class-info-list">
-									<li>Teacher: {item.teacher}</li>
-									<li>Schedule: {item.schedule}</li>
+									<li>Giáo viên: {item.teacher}</li>
+									<li>Lịch học: {item.schedule}</li>
 									<li>
-										Completed: {item.completedLessons}/{item.totalLessons} sessions
+										Đã học: {item.completedLessons}/{item.totalLessons} buổi
 									</li>
 								</ul>
 
 								<div className="student-class-progress-wrap">
 									<div className="student-class-progress-label">
-										<span>Course Progress</span>
+										<span>Tiến độ môn học</span>
 										<strong>{item.progress}%</strong>
 									</div>
 									<div className="student-class-progress-track">
@@ -90,7 +90,7 @@ export default function StudentClasses() {
 									to={`/student/classes/${item.id}`}
 									className="student-class-secondary-btn"
 								>
-									View Class Details
+									Xem chi tiết lớp học
 								</Link>
 							</article>
 						))}
@@ -98,13 +98,13 @@ export default function StudentClasses() {
 				</section>
 
 				<aside className="student-classes-side-panel">
-					<h2>To-Do</h2>
+					<h2>Việc cần làm</h2>
 					{upcomingTasks.map((task) => (
 						<div key={task.id} className="student-task-item">
 							<p className="student-task-title">{task.title}</p>
 							<p className="student-task-meta">{task.subject}</p>
 							<span className="student-task-due">
-								Due: {task.due}
+								Hạn nộp: {task.due}
 							</span>
 						</div>
 					))}

@@ -34,6 +34,16 @@
     white-space: normal;
 }
 
+.student-header-strong {
+    font-weight: 800;
+    color: #1f3560;
+}
+
+.student-header-separator {
+    color: #8a98b0;
+    font-weight: 600;
+}
+
 .student-stats-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(clamp(12.5rem, 20vw, 15rem), 1fr));
