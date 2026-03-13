@@ -1,0 +1,67 @@
+.parent-payments-page {
+    padding: 1.5rem 1.75rem 2.5rem;
+    min-height: 100vh;
+}
+
+.parent-payments-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+}
+
+.parent-payments-header h1 {
+    margin: 0;
+    font-size: clamp(1.375rem, 1.2rem + 0.6vw, 1.5rem);
+    font-weight: 700;
+    color: #202636;
+    line-height: 1.2;
+}
+
+.parent-payments-header p {
+    margin: 0;
+    font-size: clamp(0.8125rem, 0.76rem + 0.2vw, 0.875rem);
+    color: #7c8597;
+    line-height: 1.4;
+}
+
+.payment-summary-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1.125rem;
+    margin-bottom: 1.375rem;
+}
+
+.payment-table-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1.125rem;
+    margin-bottom: 1.5rem;
+}
+
+@media (max-width: 75rem) {
+    .payment-summary-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 48rem) {
+    .parent-payments-page {
+        padding: 1.125rem;
+    }
+
+    .parent-payments-header {
+        align-items: flex-start;
+        gap: 0.5rem;
+        flex-direction: column;
+    }
+
+    .parent-payments-header h1 {
+        font-size: clamp(1.25rem, 1.1rem + 0.5vw, 1.375rem);
+    }
+
+    .parent-payments-header p {
+        font-size: 0.8125rem;
+    }
+}

@@ -1,0 +1,223 @@
+.attendance-card {
+    background: #ffffff;
+    border-radius: 1.25rem;
+    padding: 1.1rem;
+    box-shadow: 0 0.25rem 1.125rem rgba(20, 28, 45, 0.06);
+    border: 0.0625rem solid #ececf3;
+    display: flex;
+    flex-direction: column;
+    gap: 0.9rem;
+    height: fit-content;
+}
+
+.attendance-card.compact {
+    padding: 1rem;
+    gap: 0.8rem;
+}
+
+.attendance-heading {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 1rem;
+}
+
+.attendance-heading-text {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.attendance-heading h3 {
+    margin: 0;
+    color: #182033;
+    font-size: 1.2rem;
+    font-weight: 800;
+    line-height: 1.3;
+}
+
+.attendance-heading p {
+    margin: 0;
+    color: #5f6b7f;
+    font-size: 0.95rem;
+    font-weight: 500;
+    line-height: 1.45;
+}
+
+.attendance-period-switch {
+    display: inline-flex;
+    background: #f3f6ff;
+    border: 0.0625rem solid #dbe5ff;
+    border-radius: 0.85rem;
+    padding: 0.25rem;
+    gap: 0.25rem;
+    width: fit-content;
+}
+
+.attendance-switch-btn {
+    border: none;
+    background: transparent;
+    color: #51607a;
+    font-size: 0.9rem;
+    font-weight: 700;
+    padding: 0.42rem 0.9rem;
+    border-radius: 0.65rem;
+    cursor: pointer;
+    transition: all 0.18s ease;
+}
+
+.attendance-switch-btn:hover {
+    color: #2a3c66;
+    background: #eaf0ff;
+}
+
+.attendance-switch-btn.active {
+    color: #ffffff;
+    background: linear-gradient(135deg, #6f8dff 0%, #4c6fff 100%);
+    box-shadow: 0 0.25rem 0.75rem rgba(76, 111, 255, 0.28);
+}
+
+.attendance-period-summary {
+    background: #f8faff;
+    border: 0.0625rem solid #e7ecff;
+    border-radius: 0.95rem;
+    padding: 0.75rem 0.9rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.7rem;
+}
+
+.attendance-period-title {
+    color: #202636;
+    font-size: 0.95rem;
+    font-weight: 700;
+}
+
+.attendance-period-text {
+    color: #5f6b7f;
+    font-size: 0.9rem;
+}
+
+.attendance-period-text strong {
+    color: #202636;
+    font-weight: 800;
+}
+
+.attendance-stats {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.75rem;
+}
+
+.attendance-stat {
+    background: #f7f8fc;
+    border-radius: 1rem;
+    padding: 0.9rem 0.75rem;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 0.2rem;
+    min-height: 5.5rem;
+}
+
+.attendance-stat span {
+    color: #5f6b7f;
+    font-size: 0.9rem;
+    font-weight: 600;
+    line-height: 1.4;
+}
+
+.attendance-stat strong {
+    font-size: 1.35rem;
+    font-weight: 800;
+    line-height: 1.2;
+}
+
+.attendance-stat.present strong {
+    color: #16a34a;
+}
+
+.attendance-stat.absent strong {
+    color: #ef4444;
+}
+
+.attendance-stat.late strong {
+    color: #d97706;
+}
+
+.attendance-record-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+}
+
+.attendance-record-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.9rem 1rem;
+    background: #fafbff;
+    border-radius: 0.9rem;
+}
+
+.attendance-record-item span {
+    color: #202636;
+    font-size: 1rem;
+    font-weight: 600;
+    line-height: 1.4;
+}
+
+.attendance-record-item strong {
+    font-size: 0.92rem;
+    font-weight: 700;
+    line-height: 1.4;
+}
+
+.attendance-record-item strong.present,
+.attendance-record-item strong.có-mặt {
+    color: #16a34a;
+}
+
+.attendance-record-item strong.absent,
+.attendance-record-item strong.vắng-mặt {
+    color: #ef4444;
+}
+
+.attendance-record-item strong.late,
+.attendance-record-item strong.đi-muộn {
+    color: #d97706;
+}
+
+.attendance-note {
+    color: #8a93a6;
+    font-size: 0.86rem;
+    line-height: 1.5;
+}
+
+@media (max-width: 48rem) {
+    .attendance-heading {
+        align-items: flex-start;
+    }
+
+    .attendance-heading-text {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 0.35rem;
+    }
+
+    .attendance-period-summary {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .attendance-stats {
+        grid-template-columns: 1fr;
+    }
+
+    .attendance-record-item {
+        padding: 0.8rem 0.9rem;
+    }
+}
