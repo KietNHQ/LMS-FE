@@ -1,32 +1,84 @@
 .student-layout {
-    --sidebar-expanded: clamp(16.5rem, 17.5vw, 17.5rem);
-    --sidebar-collapsed: clamp(4.8rem, 5.4vw, 5.5rem);
-    --content-max: 1220px;
-    --content-max-collapsed: 1288px;
+    --sidebar-expanded: clamp(16rem, 20vw, 20rem);
+    --sidebar-collapsed: 5rem;
+
+    --content-gap-expanded: 0rem;
+    --content-gap-collapsed: 1rem;
+
+    --layout-bg: #dfe5ef;
 
     min-height: 100vh;
-    background: #dfe5ef;
+    background: var(--layout-bg);
 }
 
 .student-layout__main {
     min-height: 100vh;
-    margin-left: var(--sidebar-expanded);
+    margin-left: calc(var(--sidebar-expanded) + var(--content-gap-expanded));
+    width: calc(100% - var(--sidebar-expanded) - var(--content-gap-expanded));
     padding: clamp(1rem, 1.4vw, 1.5rem) clamp(1rem, 1.6vw, 1.6rem);
     box-sizing: border-box;
-    transition: margin-left 0.35s ease, padding 0.35s ease;
+    transition:
+            margin-left 0.35s ease,
+            width 0.35s ease,
+            padding 0.35s ease;
 }
 
 .student-layout.collapsed .student-layout__main {
-    margin-left: var(--sidebar-collapsed);
+    margin-left: calc(var(--sidebar-collapsed) + var(--content-gap-collapsed));
+    width: calc(100% - var(--sidebar-collapsed) - var(--content-gap-collapsed));
 }
 
 .student-layout__content {
     width: 100%;
-    max-width: var(--content-max);
+    max-width: 100%;
+    min-width: 0;
     margin: 0;
-    transition: max-width 0.35s ease;
+    box-sizing: border-box;
 }
 
-.student-layout.collapsed .student-layout__content {
-    max-width: var(--content-max-collapsed);
+/* ===== Large laptop ===== */
+@media (max-width: 1280px) {
+    .student-layout {
+        --sidebar-expanded: clamp(13.5rem, 18vw, 16rem);
+        --sidebar-collapsed: 4.5rem;
+        --content-gap-collapsed: 0.95rem;
+    }
+
+    .student-layout__main {
+        padding: 1rem 1.1rem;
+    }
+}
+
+/* ===== Tablet ===== */
+@media (max-width: 1024px) {
+    .student-layout {
+        --sidebar-expanded: clamp(12.25rem, 17vw, 13.25rem);
+        --sidebar-collapsed: 4rem;
+        --content-gap-collapsed: 0.9rem;
+    }
+
+    .student-layout__main {
+        padding: 0.9rem 1rem;
+    }
+}
+
+/* ===== Mobile / small tablet ===== */
+@media (max-width: 768px) {
+    .student-layout {
+        --sidebar-expanded: 0rem;
+        --sidebar-collapsed: 0rem;
+        --content-gap-expanded: 0rem;
+        --content-gap-collapsed: 0rem;
+    }
+
+    .student-layout__main {
+        margin-left: 0;
+        width: 100%;
+        padding: 5.3rem 0.85rem 0.85rem;
+    }
+
+    .student-layout.collapsed .student-layout__main {
+        margin-left: 0;
+        width: 100%;
+    }
 }
