@@ -1,0 +1,98 @@
+.invoice-history-card {
+    background: #ffffff;
+    border-radius: 1.375rem;
+    padding: 1.375rem;
+    box-shadow: 0 0.25rem 1.125rem rgba(20, 28, 45, 0.06);
+    border: 0.0625rem solid #ececf3;
+}
+
+.invoice-history-header {
+    margin-bottom: 1rem;
+}
+
+.invoice-history-header h3 {
+    margin: 0;
+    font-size: clamp(1rem, 0.95rem + 0.3vw, 1.125rem);
+    font-weight: 700;
+    color: #202636;
+    line-height: 1.3;
+}
+
+.invoice-history-header p {
+    margin: 0.375rem 0 0;
+    color: #7c8597;
+    font-size: clamp(0.8125rem, 0.78rem + 0.15vw, 0.875rem);
+    line-height: 1.4;
+}
+
+.invoice-history-table-wrapper {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.invoice-history-table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 42rem;
+}
+
+.invoice-history-table th,
+.invoice-history-table td {
+    text-align: left;
+    padding: 0.875rem 0.75rem;
+    border-bottom: 0.0625rem solid #edf0f5;
+    font-size: clamp(0.8125rem, 0.78rem + 0.15vw, 0.875rem);
+    line-height: 1.4;
+}
+
+.invoice-history-table th {
+    color: #7c8597;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.invoice-history-table td {
+    color: #2c3448;
+    word-break: break-word;
+}
+
+.invoice-status {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.375rem 0.75rem;
+    border-radius: 62.4375rem;
+    font-size: clamp(0.75rem, 0.72rem + 0.12vw, 0.8125rem);
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.invoice-status.paid {
+    background: #ddf7e4;
+    color: #16a34a;
+}
+
+.invoice-status.pending {
+    background: #fff3c9;
+    color: #c58a11;
+}
+
+@media (max-width: 48rem) {
+    .invoice-history-card {
+        padding: 1rem;
+        border-radius: 1rem;
+    }
+
+    .invoice-history-header {
+        margin-bottom: 0.875rem;
+    }
+
+    .invoice-history-table {
+        min-width: 36rem;
+    }
+
+    .invoice-history-table th,
+    .invoice-history-table td {
+        padding: 0.75rem 0.625rem;
+    }
+}

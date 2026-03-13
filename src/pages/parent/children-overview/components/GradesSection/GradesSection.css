@@ -1,0 +1,168 @@
+.grades-card {
+    background: #ffffff;
+    border-radius: 1.25rem;
+    padding: 1.1rem;
+    box-shadow: 0 0.25rem 1.125rem rgba(20, 28, 45, 0.06);
+    border: 0.0625rem solid #ececf3;
+    display: flex;
+    flex-direction: column;
+    gap: 0.9rem;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    height: fit-content;
+}
+
+.grades-card.compact {
+    padding: 1rem;
+    gap: 0.8rem;
+}
+
+.section-heading {
+    display: flex;
+    justify-content: flex-start;
+    width: 100%;
+}
+
+.section-heading-text {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 0.6rem;
+    flex-wrap: wrap;
+    text-align: left;
+    width: 100%;
+}
+
+.section-heading h3 {
+    margin: 0;
+    color: #202636;
+    font-size: 1.1rem;
+    line-height: 1.3;
+    flex-shrink: 0;
+}
+
+.section-heading p {
+    margin: 0;
+    color: #7c8597;
+    font-size: 0.88rem;
+    line-height: 1.45;
+}
+
+.grades-table-wrapper {
+    width: 100%;
+    overflow-x: auto;
+    border-radius: 1rem;
+    background: #fafbff;
+    border: 0.0625rem solid #eef1f6;
+}
+
+.grades-table {
+    width: 100%;
+    min-width: 42rem;
+    border-collapse: collapse;
+    table-layout: auto;
+}
+
+.grades-table th,
+.grades-table td {
+    text-align: left;
+    padding: 1rem;
+    border-bottom: 0.0625rem solid #edf0f5;
+    font-size: 0.92rem;
+    line-height: 1.4;
+    white-space: nowrap;
+}
+
+.grades-table th {
+    color: #7c8597;
+    font-weight: 600;
+    background: #fafbff;
+}
+
+.grades-table td {
+    color: #202636;
+    background: #ffffff;
+}
+
+.grades-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.grades-table tbody tr:hover td {
+    background: #fcfbff;
+}
+
+.grades-table th:first-child,
+.grades-table td:first-child {
+    padding-left: 1.1rem;
+}
+
+.grades-table th:last-child,
+.grades-table td:last-child {
+    padding-right: 1.1rem;
+}
+
+.grade-status {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.4rem 0.75rem;
+    border-radius: 999rem;
+    font-size: 0.78rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.grade-status.xuất-sắc {
+    background: #efe8ff;
+    color: #7c4dff;
+}
+
+.grade-status.tốt {
+    background: #e8f8ef;
+    color: #16a34a;
+}
+
+.grade-status.khá {
+    background: #e8f1ff;
+    color: #2563eb;
+}
+
+.grade-status.trung-bình {
+    background: #fff4db;
+    color: #d97706;
+}
+
+.grade-status.yếu {
+    background: #ffe6e6;
+    color: #ef4444;
+}
+
+.grades-note {
+    color: #8a93a6;
+    font-size: 0.86rem;
+    line-height: 1.5;
+}
+
+@media (max-width: 48rem) {
+    .grades-card {
+        padding: 1rem;
+    }
+
+    .section-heading-text {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 0.35rem;
+    }
+
+    .grades-table {
+        min-width: 36rem;
+    }
+
+    .grades-table th,
+    .grades-table td {
+        padding: 0.85rem 0.8rem;
+        font-size: 0.88rem;
+    }
+}
