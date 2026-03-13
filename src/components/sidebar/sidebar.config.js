@@ -42,7 +42,7 @@ export const roleTheme = {
 
 export const sidebarConfig = {
     admin: [
-        { label: "Bảng Điều Khiển", icon: FiGrid, path: "/admin/dashboard" },
+        { label: "Trang chủ", icon: FiGrid, path: "/admin/dashboard" },
         { label: "Người Dùng", icon: FiUsers, path: "/admin/users" },
         { label: "Giáo Viên", icon: FiUsers, path: "/admin/teachers" },
         { label: "Học Sinh", icon: FiUsers, path: "/admin/students" },
@@ -56,7 +56,7 @@ export const sidebarConfig = {
     ],
 
     teacher: [
-        { label: "Bảng Điều Khiển", icon: FiGrid, path: "/teacher/dashboard" },
+        { label: "Trang chủ", icon: FiGrid, path: "/teacher/dashboard" },
         { label: "Lớp Giảng Dạy", icon: FiBookOpen, path: "/teacher/teaching-classes" },
         { label: "Lớp Chủ Nhiệm", icon: FiHome, path: "/teacher/homeroom" },
         { label: "Bài Học", icon: FiClipboard, path: "/teacher/lessons" },
@@ -69,7 +69,7 @@ export const sidebarConfig = {
     ],
 
     student: [
-        { label: "Bảng Điều Khiển", icon: FiGrid, path: "/student/dashboard" },
+        { label: "Trang chủ", icon: FiGrid, path: "/student/dashboard" },
         { label: "Lớp Học", icon: FiBookOpen, path: "/student/classes" },
         { label: "Điểm Số", icon: FiAward, path: "/student/grades" },
         { label: "Bài Kiểm Tra", icon: FiFileText, path: "/student/quiz" },
@@ -79,7 +79,7 @@ export const sidebarConfig = {
     ],
 
     parent: [
-        { label: "Bảng Điều Khiển", icon: FiGrid, path: "/parent/dashboard" },
+        { label: "Trang chủ", icon: FiGrid, path: "/parent/dashboard" },
         { label: "Tổng Quan Con Em", icon: FiTrendingUp, path: "/parent/children-overview" },
         { label: "Thông Báo", icon: FiBell, path: "/parent/notifications" },
         { label: "Liên lạc giáo viên chủ nhiệm", icon: FiMessageSquare, path: "/parent/messages" },
