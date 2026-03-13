@@ -416,7 +416,7 @@
 }
 
 .sidebar-mobile-expand-panel {
-  display: contents;
+  display: none;
 }
 
 /* ===== LARGE LAPTOP ===== */
