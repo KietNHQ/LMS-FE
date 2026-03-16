@@ -30,7 +30,9 @@ export default function GradesSection({
     gradesBySemester,
     selectedSemester = "hk1",
     onSemesterChange,
-    compact = false
+    compact = false,
+    semesterNoteText,
+    highlightSemesterNote = false
 }) {
     const validSemester = SEMESTER_OPTIONS.some((item) => item.key === selectedSemester)
         ? selectedSemester
@@ -40,8 +42,11 @@ export default function GradesSection({
         ? gradesBySemester[validSemester] || []
         : grades || []
 
+    // Ở tab Tổng quan (compact), chỉ hiển thị tối đa 5 môn.
+    const displayedGrades = compact ? currentGrades.slice(0, 5) : currentGrades
+
     const currentSemesterLabel = SEMESTER_OPTIONS.find((item) => item.key === validSemester)?.label || "HK I"
-    const numericAverages = currentGrades
+    const numericAverages = displayedGrades
         .map((item) => Number(item.average))
         .filter((value) => Number.isFinite(value))
 
@@ -74,7 +79,9 @@ export default function GradesSection({
                 </div>
             ) : null}
 
-            <p className="grades-semester-note">Đang xem: {currentSemesterLabel}</p>
+                    <p className={`grades-semester-note ${highlightSemesterNote ? "highlight" : ""}`}>
+                        {semesterNoteText || `Đang xem: ${currentSemesterLabel}`}
+                    </p>
 
             <div className="grades-table-wrapper">
                 <table className="grades-table">
@@ -91,7 +98,7 @@ export default function GradesSection({
                     </thead>
 
                     <tbody>
-                    {currentGrades.map((item, index) => {
+                    {displayedGrades.map((item, index) => {
                         const rank = getRank(item.average);
 
                         return (

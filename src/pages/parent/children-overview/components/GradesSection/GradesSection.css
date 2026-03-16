@@ -96,6 +96,21 @@
     font-weight: 600;
 }
 
+.grades-semester-note.highlight {
+    display: inline-flex;
+    align-items: center;
+    width: fit-content;
+    margin-top: 0.05rem;
+    padding: 0.28rem 0.7rem;
+    border-radius: 999rem;
+    border: 0.0625rem solid #d8c6fb;
+    background: #f4edff;
+    font-size: 0.94rem;
+    font-weight: 900;
+    letter-spacing: 0.01em;
+    color: #5f3dc4;
+}
+
 .grades-table-wrapper {
     width: 100%;
     overflow-x: hidden;

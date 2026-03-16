@@ -13,6 +13,11 @@ export default function ParentChildrenOverview() {
     const [selectedSemester, setSelectedSemester] = useState("hk1")
     const [selectedChildId, setSelectedChildId] = useState("child1")
 
+    const getCurrentSemesterKey = () => {
+        const month = new Date().getMonth() + 1
+        return month >= 1 && month <= 6 ? "hk2" : "hk1"
+    }
+
     const buildAttendanceSummary = (label, records) => {
         const base = { present: 0, absent: 0, late: 0 }
         const summary = records.reduce((acc, item) => {
@@ -271,6 +276,9 @@ export default function ParentChildrenOverview() {
         allMonthlyRecords,
         records: weeklyRecords
     }
+    const currentSemesterKey = getCurrentSemesterKey()
+    const overviewCurrentSemesterGrades = gradesBySemester?.[currentSemesterKey] || []
+    const overviewSemesterLabel = currentSemesterKey === "hk2" ? "Học kỳ II" : "Học kỳ I"
 
     const handleOverviewCardClick = (semesterKey) => {
         if (!semesterKey) return
@@ -310,9 +318,10 @@ export default function ParentChildrenOverview() {
                     <div className="overview-top-single">
                         <GradesSection
                             compact
-                            gradesBySemester={gradesBySemester}
-                            selectedSemester={selectedSemester}
-                            onSemesterChange={setSelectedSemester}
+                            grades={overviewCurrentSemesterGrades}
+                            selectedSemester={currentSemesterKey}
+                            semesterNoteText={overviewSemesterLabel}
+                            highlightSemesterNote
                         />
                     </div>
 
