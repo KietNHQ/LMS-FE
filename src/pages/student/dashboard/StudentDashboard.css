@@ -1,17 +1,26 @@
 .student-dashboard-content {
+    --space-2xs: clamp(0.25rem, 0.5vw, 0.375rem);
     --space-xs: clamp(0.375rem, 0.7vw, 0.5rem);
     --space-sm: clamp(0.625rem, 1vw, 0.875rem);
     --space-md: clamp(0.875rem, 1.4vw, 1rem);
     --space-lg: clamp(1rem, 1.8vw, 1.25rem);
     --space-xl: clamp(1.125rem, 2vw, 1.5rem);
+
+    --radius-sm: clamp(0.625rem, 1vw, 0.75rem);
     --radius-md: clamp(0.75rem, 1.2vw, 0.875rem);
     --radius-lg: clamp(0.875rem, 1.6vw, 1.25rem);
+
     --title-size: clamp(1.4rem, 1.2rem + 1vw, 1.75rem);
+    --section-title-size: clamp(1rem, 0.95rem + 0.4vw, 1.125rem);
     --body-size: clamp(0.92rem, 0.86rem + 0.2vw, 1rem);
+
     padding: clamp(1rem, 2vw, 1.75rem) clamp(0.9rem, 2vw, 1.5rem);
     background: transparent;
+    min-width: 0;
+    box-sizing: border-box;
 }
 
+/* HEADER */
 .student-dashboard-header {
     display: flex;
     align-items: baseline;
@@ -24,14 +33,14 @@
     font-size: var(--title-size);
     font-weight: 700;
     color: #16233b;
-    white-space: normal;
+    line-height: 1.2;
 }
 
 .student-dashboard-header p {
     margin: 0;
     font-size: var(--body-size);
     color: #6f7c91;
-    white-space: normal;
+    line-height: 1.5;
 }
 
 .student-header-strong {
@@ -44,11 +53,13 @@
     font-weight: 600;
 }
 
+/* TOP STATS */
 .student-stats-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(clamp(12.5rem, 20vw, 15rem), 1fr));
     gap: var(--space-md);
     margin-top: var(--space-xl);
+    align-items: stretch;
 }
 
 .student-stat-card {
@@ -57,15 +68,40 @@
     align-items: flex-start;
     gap: var(--space-md);
     padding: var(--space-lg);
+    min-height: 10.5rem;
+    height: 100%;
     border-radius: var(--radius-lg);
     background: #ffffff;
     box-shadow: 0 0.125rem 0.625rem rgba(20, 32, 70, 0.08);
+    box-sizing: border-box;
+    transition: transform 0.18s ease, box-shadow 0.2s ease;
+}
+
+.student-stat-card:hover {
+    transform: translateY(-0.125rem);
+    box-shadow: 0 0.75rem 1.8rem rgba(20, 32, 70, 0.12);
+}
+
+.student-stat-body {
+    min-width: 0;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 100%;
 }
 
 .student-stat-title {
     margin: 0;
     font-size: clamp(0.88rem, 0.84rem + 0.2vw, 0.95rem);
     color: #6f7c91;
+    font-weight: 600;
+    line-height: 1.45;
+    word-break: break-word;
+}
+
+.student-stat-title strong {
+    font-weight: 800;
+    color: #1f3560;
 }
 
 .student-stat-value {
@@ -73,11 +109,78 @@
     font-size: clamp(1.25rem, 1.05rem + 0.85vw, 1.5rem);
     font-weight: 700;
     color: #16233b;
+    line-height: 1.2;
+    word-break: break-word;
 }
 
 .student-stat-subtitle {
     font-size: clamp(0.82rem, 0.8rem + 0.15vw, 0.9rem);
     color: #98a3b6;
+    line-height: 1.5;
+    word-break: break-word;
+    margin-top: auto;
+}
+
+.student-rank-strong {
+    font-weight: 800;
+    color: #1f3560;
+}
+
+.student-next-subject-text {
+    display: inline-block;
+    font-size: 0.82rem;
+    color: #8b97ab;
+    line-height: 1.45;
+}
+
+.student-next-subject-text strong {
+    font-weight: 700;
+    color: #44526b;
+}
+
+.student-upcoming-subjects-preview {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    font-size: 0.82rem;
+    color: #8b97ab;
+    line-height: 1.45;
+    word-break: break-word;
+}
+
+.student-stat-progress-wrap {
+    margin-top: 0.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.28rem;
+}
+
+.student-stat-progress {
+    width: 100%;
+    max-width: 16rem;
+    height: 0.42rem;
+    border-radius: 999px;
+    background: #e8edf7;
+    overflow: hidden;
+}
+
+.student-stat-progress-fill {
+    height: 100%;
+    border-radius: 999px;
+    background: linear-gradient(90deg, #7bc7a4 0%, #38b787 100%);
+    transition: width 0.25s ease;
+}
+
+.student-stat-progress-text {
+    font-size: 0.76rem;
+    font-weight: 600;
+    color: #6f7c91;
+}
+
+.student-stat-progress-placeholder {
+    height: 1.4rem;
+    margin-top: 0.5rem;
 }
 
 .student-stat-icon {
@@ -88,43 +191,42 @@
     align-items: center;
     justify-content: center;
     font-size: clamp(1.05rem, 0.92rem + 0.55vw, 1.375rem);
-    color: #1d4ed8;
     flex: 0 0 auto;
-}
-
-.student-stat-icon svg {
-    inline-size: 1em;
-    block-size: 1em;
 }
 
 .student-stat-icon.blue {
     background: #e8f0ff;
+    color: #2563eb;
 }
+
 .student-stat-icon.green {
     background: #dff5ef;
     color: #128a63;
 }
+
 .student-stat-icon.purple {
     background: #efe6ff;
     color: #6941c6;
 }
+
 .student-stat-icon.orange {
     background: #fff0e7;
     color: #c2410c;
 }
 
+/* LOWER 4 CARDS */
 .student-dashboard-grid {
     display: grid;
     gap: var(--space-md);
     margin-top: var(--space-lg);
-    align-items: start;
 }
 
 .student-dashboard-grid-top,
 .student-dashboard-grid-bottom {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: var(--space-md);
+    align-items: start;
 }
 
 .student-dashboard-card {
@@ -132,36 +234,83 @@
     border-radius: var(--radius-lg);
     background: #ffffff;
     box-shadow: 0 0.125rem 0.625rem rgba(20, 32, 70, 0.08);
+    min-width: 0;
+    box-sizing: border-box;
+    overflow: visible;
+}
+
+.student-dashboard-card-equal {
+    min-height: 28rem;
+    display: flex;
+    flex-direction: column;
 }
 
 .student-dashboard-card h3 {
     margin: 0 0 var(--space-md);
-    font-size: clamp(1rem, 0.95rem + 0.4vw, 1.125rem);
+    font-size: var(--section-title-size);
     font-weight: 700;
     color: #16233b;
+    line-height: 1.35;
 }
 
-.student-year-list,
-.student-quiz-list {
+/* SEMESTER CHART */
+.student-semester-chart-wrap {
+    flex: 1;
+    min-height: 20rem;
     display: flex;
-    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+/* RADAR */
+.student-dashboard-card-radar {
+    overflow: hidden;
+}
+
+.student-radar-wrap {
+    flex: 1;
+    min-height: 21rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* YEAR CARD */
+.student-dashboard-card-years {
+    min-height: 28rem;
+    overflow: visible;
+    position: relative;
+    z-index: 3;
+}
+
+.student-year-list {
+    flex: 1;
+    display: grid;
+    grid-template-rows: repeat(3, 1fr);
     gap: var(--space-sm);
+    align-items: stretch;
+    overflow: visible;
 }
 
 .student-year-row {
+    position: relative;
     width: 100%;
+    height: 100%;
+    min-height: 6.25rem;
     border: 0.0625rem solid #e7edf8;
     background: #f7faff;
     border-radius: var(--radius-md);
-    display: grid;
-    grid-template-columns: minmax(4.8rem, 5.8rem) minmax(0, 1fr) minmax(2.8rem, 3.6rem);
-    align-items: center;
-    gap: var(--space-sm);
     padding: var(--space-sm);
     color: #506079;
     cursor: pointer;
     transition: transform 0.15s ease, border-color 0.2s ease, box-shadow 0.2s ease;
     text-align: left;
+    box-sizing: border-box;
+    overflow: visible;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    z-index: 1;
 }
 
 .student-year-row:hover,
@@ -170,28 +319,28 @@
     box-shadow: 0 0.5rem 1.25rem rgba(37, 99, 255, 0.12);
     transform: translateY(-0.0625rem);
     outline: none;
+    z-index: 5;
 }
 
-.student-year-hint {
-    grid-column: 1 / -1;
-    font-size: clamp(0.74rem, 0.72rem + 0.1vw, 0.78rem);
-    color: #4f6285;
-    background: #eef3ff;
-    border: 0.0625rem solid #dbe5ff;
-    border-radius: clamp(0.5rem, 1vw, 0.625rem);
-    padding: 0.44rem 0.625rem;
-    margin-top: 0.25rem;
-    opacity: 0;
-    max-height: 0;
-    overflow: hidden;
-    transition: opacity 0.2s ease, max-height 0.2s ease, padding 0.2s ease;
+.student-year-row-main {
+    display: grid;
+    grid-template-columns: minmax(4.8rem, 5.8rem) minmax(0, 1fr) minmax(3rem, 4rem);
+    align-items: center;
+    gap: var(--space-sm);
+    position: relative;
+    z-index: 2;
 }
 
-.student-year-row:hover .student-year-hint,
-.student-year-row:focus-visible .student-year-hint {
-    opacity: 1;
-    max-height: 2.75rem;
-    padding: 0.44rem 0.625rem;
+.student-year-grade {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #506079;
+}
+
+.student-year-row-main strong {
+    color: #1f3560;
+    font-weight: 800;
+    justify-self: end;
 }
 
 .student-progress-bar {
@@ -205,18 +354,139 @@
 .student-progress-bar div {
     height: 100%;
     border-radius: 999px;
-    background: #7ea1ff;
+    background: linear-gradient(90deg, #8eb0ff 0%, #5f8df9 100%);
 }
 
-.student-hover-hint {
-    font-size: clamp(0.74rem, 0.72rem + 0.1vw, 0.78rem);
-    color: #6f7c91;
+.student-year-hover-buffer {
+    position: absolute;
+    left: 0;
+    right: 0;
+    z-index: 3;
+}
+
+.student-year-row.open-down .student-year-hover-buffer {
+    top: 100%;
+    height: 1.25rem;
+}
+
+.student-year-row.open-up .student-year-hover-buffer {
+    bottom: 100%;
+    height: 1.25rem;
+}
+
+.student-year-row.open-down .student-year-detail-pop {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: calc(100% + 0.35rem);
+    background: #f7faff;
+    border: 0.0625rem solid #c8d8ff;
+    border-radius: var(--radius-md);
+    box-shadow: 0 0.75rem 1.4rem rgba(37, 99, 255, 0.12);
+    padding: 0.75rem;
     opacity: 0;
-    max-height: 0;
-    overflow: hidden;
-    transition: opacity 0.2s ease, max-height 0.2s ease;
+    visibility: hidden;
+    transform: translateY(-0.25rem);
+    transition: opacity 0.2s ease, transform 0.2s ease, visibility 0.2s ease;
+    z-index: 4;
+    pointer-events: none;
 }
 
+.student-year-row.open-up .student-year-detail-pop {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: calc(100% + 0.35rem);
+    background: #f7faff;
+    border: 0.0625rem solid #c8d8ff;
+    border-radius: var(--radius-md);
+    box-shadow: 0 0.75rem 1.4rem rgba(37, 99, 255, 0.12);
+    padding: 0.75rem;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(0.25rem);
+    transition: opacity 0.2s ease, transform 0.2s ease, visibility 0.2s ease;
+    z-index: 4;
+    pointer-events: none;
+}
+
+.student-year-row:hover .student-year-detail-pop,
+.student-year-row:focus-visible .student-year-detail-pop {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+    pointer-events: auto;
+}
+
+.student-year-detail-grid {
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.625rem;
+}
+
+.student-year-detail-item {
+    background: #eef4ff;
+    border: 0.0625rem solid #dbe5ff;
+    border-radius: 0.8rem;
+    padding: 0.65rem 0.5rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.22rem;
+    min-height: 4.2rem;
+}
+
+.student-year-detail-item span {
+    font-size: 0.78rem;
+    color: #73819a;
+}
+
+.student-year-detail-item strong {
+    font-size: 1rem;
+    font-weight: 800;
+    color: #1f3560;
+}
+
+/* QUIZZES */
+.student-dashboard-card-quizzes {
+    min-height: 28rem;
+    position: relative;
+    z-index: 1;
+}
+
+.student-quiz-scroll-area {
+    max-height: 21rem;
+    overflow-y: auto;
+    padding-right: 0.25rem;
+    scrollbar-width: thin;
+    scrollbar-color: #c9d8ff transparent;
+}
+
+.student-quiz-scroll-area::-webkit-scrollbar {
+    width: 0.45rem;
+}
+
+.student-quiz-scroll-area::-webkit-scrollbar-track {
+    background: transparent;
+    border-radius: 999px;
+}
+
+.student-quiz-scroll-area::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, #cddcff 0%, #a9c2ff 100%);
+    border-radius: 999px;
+}
+
+.student-quiz-scroll-area::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, #b7ccff 0%, #8fb0ff 100%);
+}
+
+.student-quiz-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+}
 
 .student-quiz-item {
     width: 100%;
@@ -231,6 +501,7 @@
     cursor: pointer;
     transition: transform 0.15s ease, border-color 0.2s ease, box-shadow 0.2s ease;
     text-align: left;
+    box-sizing: border-box;
 }
 
 .student-quiz-item:hover,
@@ -245,39 +516,91 @@
     font-size: clamp(0.98rem, 0.92rem + 0.35vw, 1.05rem);
     font-weight: 600;
     color: #16233b;
+    line-height: 1.4;
 }
 
 .student-quiz-meta {
     margin-top: 0.25rem;
     font-size: clamp(0.82rem, 0.8rem + 0.15vw, 0.9rem);
     color: #72809a;
+    line-height: 1.45;
 }
 
-.student-quiz-item .student-hover-hint {
+.student-hover-hint {
+    font-size: clamp(0.74rem, 0.72rem + 0.1vw, 0.78rem);
+    color: #6f7c91;
+    opacity: 0;
+    max-height: 0;
+    overflow: hidden;
+    transition: opacity 0.2s ease, max-height 0.2s ease;
+    line-height: 1.45;
     margin-top: 0.375rem;
 }
 
 .student-quiz-item:hover .student-hover-hint,
 .student-quiz-item:focus-visible .student-hover-hint {
     opacity: 1;
-    max-height: 2.75rem;
+    max-height: 3rem;
 }
 
 .student-quiz-right {
     display: flex;
     align-items: center;
     justify-content: flex-end;
+    flex: 0 0 auto;
 }
 
 .student-quiz-deadline {
     font-size: clamp(0.82rem, 0.8rem + 0.15vw, 0.9rem);
     color: #ff4d4f;
     white-space: nowrap;
+    font-weight: 600;
 }
 
+/* RECHARTS */
+.recharts-tooltip-wrapper {
+    outline: none;
+}
+
+.recharts-default-tooltip {
+    border-radius: 0.75rem !important;
+    border: 0.0625rem solid #dbe5ff !important;
+    box-shadow: 0 0.625rem 1.5rem rgba(20, 32, 70, 0.12) !important;
+    background: #ffffff !important;
+}
+
+.recharts-cartesian-axis-tick-value,
+.recharts-polar-angle-axis-tick-value {
+    fill: #6f7c91;
+    font-size: 0.78rem;
+}
+
+/* RESPONSIVE */
 @media (max-width: 1200px) {
     .student-dashboard-content {
         padding-inline: clamp(0.875rem, 1.6vw, 1.25rem);
+    }
+}
+
+@media (max-width: 992px) {
+    .student-stats-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .student-dashboard-grid-top,
+    .student-dashboard-grid-bottom {
+        grid-template-columns: 1fr;
+    }
+
+    .student-dashboard-card-equal,
+    .student-dashboard-card-quizzes,
+    .student-dashboard-card-years {
+        min-height: auto;
+    }
+
+    .student-year-list {
+        display: flex;
+        flex-direction: column;
     }
 }
 
@@ -286,13 +609,43 @@
         padding: 1rem 0.875rem;
     }
 
-    .student-dashboard-grid-top,
-    .student-dashboard-grid-bottom {
-        grid-template-columns: 1fr;
+    .student-stat-card {
+        min-height: auto;
+        padding: 1rem;
     }
 
-    .student-year-row {
-        grid-template-columns: minmax(4.35rem, 5rem) 1fr minmax(2.75rem, 3.25rem);
+    .student-year-row-main {
+        grid-template-columns: 1fr;
+        align-items: start;
+    }
+
+    .student-year-row-main strong {
+        justify-self: start;
+    }
+
+    .student-year-row.open-up .student-year-hover-buffer,
+    .student-year-row.open-down .student-year-hover-buffer {
+        top: 100%;
+        bottom: auto;
+        height: 1rem;
+    }
+
+    .student-year-row.open-up .student-year-detail-pop,
+    .student-year-row.open-down .student-year-detail-pop {
+        left: 0;
+        right: 0;
+        top: calc(100% + 0.35rem);
+        bottom: auto;
+        transform: translateY(-0.2rem);
+    }
+
+    .student-year-row:hover .student-year-detail-pop,
+    .student-year-row:focus-visible .student-year-detail-pop {
+        transform: translateY(0);
+    }
+
+    .student-year-detail-grid {
+        grid-template-columns: 1fr;
     }
 
     .student-quiz-item {
@@ -317,7 +670,12 @@
         grid-template-columns: 1fr;
     }
 
-    .student-year-row {
-        grid-template-columns: 1fr;
+    .student-quiz-deadline {
+        white-space: normal;
+    }
+
+    .student-stat-icon {
+        inline-size: 2.75rem;
+        block-size: 2.75rem;
     }
 }
