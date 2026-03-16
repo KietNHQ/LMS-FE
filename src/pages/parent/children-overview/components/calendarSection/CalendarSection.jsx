@@ -11,7 +11,6 @@ export default function CalendarSection({ schedule, events, compact = false }) {
             <div className="calendar-heading">
                 <div className="calendar-heading-text">
                     <h3>Lịch học & Sự kiện</h3>
-                    <p>Bấm để xem nhanh lịch học hoặc sự kiện của con.</p>
                 </div>
             </div>
 
