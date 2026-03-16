@@ -57,6 +57,10 @@
   padding: 0.625rem;
   border-radius: 1rem;
   background: rgba(255, 255, 255, 0.08);
+  border: 0;
+  width: 100%;
+  text-align: left;
+  appearance: none;
   text-decoration: none;
   color: #ffffff;
   transition: all 0.25s ease;
@@ -100,6 +104,10 @@
 .sidebar-user-info {
   min-width: 0;
   flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  align-items: flex-start;
   overflow: hidden;
 }
 
@@ -107,6 +115,10 @@
   margin: 0;
   font-size: 0.875rem;
   font-weight: 700;
+  line-height: 1.22;
+  letter-spacing: 0;
+  word-spacing: 0;
+  font-kerning: normal;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -115,10 +127,29 @@
 .sidebar-user-role {
   display: block;
   font-size: 0.75rem;
+  line-height: 1.25;
+  letter-spacing: 0;
+  word-spacing: 0;
+  font-kerning: normal;
   opacity: 0.72;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+@media (min-width: 90rem) {
+  .sidebar:not(.mobile-mode) .sidebar-user-card {
+    gap: 0.625rem;
+    padding: 0.6rem;
+  }
+
+  .sidebar:not(.mobile-mode) .sidebar-user-name {
+    font-size: 0.84rem;
+  }
+
+  .sidebar:not(.mobile-mode) .sidebar-user-role {
+    font-size: 0.72rem;
+  }
 }
 
 /* ===== NAV ===== */

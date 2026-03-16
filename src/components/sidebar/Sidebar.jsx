@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { sidebarConfig } from "./sidebar.config";
 import SidebarItem from "./SidebarItem";
+import ProfileDialog from "../common/Dialog/ProfileDialog/ProfileDialog";
 import { FiChevronLeft, FiLogOut, FiMenu, FiX } from "react-icons/fi";
 import { FaGraduationCap } from "react-icons/fa";
 import "./Sidebar.css";
@@ -24,6 +25,7 @@ export default function Sidebar({
   const [isMobile, setIsMobile] = useState(getIsMobile);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [isAtTop, setIsAtTop] = useState(getIsAtTop);
+  const [isProfileDialogOpen, setIsProfileDialogOpen] = useState(false);
 
   const prevIsMobileRef = useRef(isMobile);
 
@@ -117,6 +119,19 @@ export default function Sidebar({
     }
   };
 
+  const handleOpenProfile = () => {
+    setIsProfileDialogOpen(true);
+  };
+
+  const handleCloseProfile = () => {
+    setIsProfileDialogOpen(false);
+  };
+
+  const profileData = useMemo(() => ({
+    name: userName,
+    email: displayEmail
+  }), [userName, displayEmail]);
+
   return (
       <>
         {isMobile && isMobileOpen && (
@@ -159,14 +174,18 @@ export default function Sidebar({
             </div>
 
             <div className="sidebar-mobile-expand-panel">
-              <div className="sidebar-user-card sidebar-user-card-top sidebar-user-card-link">
+              <button
+                type="button"
+                className="sidebar-user-card sidebar-user-card-top sidebar-user-card-link"
+                onClick={handleOpenProfile}
+              >
                 <div className="sidebar-user-avatar">{avatarLetter}</div>
 
                 <div className="sidebar-user-info">
                   <p className="sidebar-user-name">{userName}</p>
                   <span className="sidebar-user-role">{displayEmail}</span>
                 </div>
-              </div>
+              </button>
 
               <div className="sidebar-menu-wrapper">
                 <nav className="sidebar-nav">
@@ -195,14 +214,18 @@ export default function Sidebar({
 
           {!isMobile && (
               <>
-                <div className="sidebar-user-card sidebar-user-card-top sidebar-user-card-link">
+                <button
+                  type="button"
+                  className="sidebar-user-card sidebar-user-card-top sidebar-user-card-link"
+                  onClick={handleOpenProfile}
+                >
                   <div className="sidebar-user-avatar">{avatarLetter}</div>
 
                   <div className="sidebar-user-info">
                     <p className="sidebar-user-name">{userName}</p>
                     <span className="sidebar-user-role">{displayEmail}</span>
                   </div>
-                </div>
+                </button>
 
                 <div className="sidebar-menu-wrapper">
                   <nav className="sidebar-nav">
@@ -228,6 +251,13 @@ export default function Sidebar({
               </>
           )}
         </aside>
+
+        <ProfileDialog
+          open={isProfileDialogOpen}
+          role={role}
+          profile={profileData}
+          onClose={handleCloseProfile}
+        />
       </>
   );
 }

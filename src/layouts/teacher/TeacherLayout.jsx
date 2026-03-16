@@ -10,7 +10,7 @@ export default function TeacherLayout() {
         <div className={`teacher-layout ${isCollapsed ? "collapsed" : ""}`}>
             <Sidebar
                 role="teacher"
-                userName="Teacher User"
+                userName="Lê Minh Hoàng"
                 isCollapsed={isCollapsed}
                 setIsCollapsed={setIsCollapsed}
             />

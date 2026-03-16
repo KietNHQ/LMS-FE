@@ -6,7 +6,7 @@ export default function UpcomingSchedule({ gradesBySemester }) {
 
 const [open,setOpen] = useState(false)
 const [selectedSubject,setSelectedSubject] = useState(null)
-
+const [semester,setSemester] = useState("hk1") 
 const subjects = [
 "Toán học",
 "Tiếng Anh",
@@ -86,6 +86,8 @@ onClick={handleClose}
 
 <GradesSection
 gradesBySemester={filteredGradesBySemester}
+selectedSemester={semester}
+onSemesterChange={setSemester}
 compact
 />
 
