@@ -1,7 +1,13 @@
 import React from "react"
 import "./ChildHeader.css"
 
-export default function ChildHeader({ child }) {
+export default function ChildHeader({ child, onStatClick }) {
+    const averageStats = [
+        { label: "TBHK I", value: child.averageScores?.semester1, semesterKey: "hk1" },
+        { label: "TBHK II", value: child.averageScores?.semester2, semesterKey: "hk2" },
+        { label: "Cả năm", value: child.averageScores?.fullYear, semesterKey: "year" }
+    ]
+
     return (
         <div className="child-header-card">
             <div className="child-header-main">
@@ -28,16 +34,21 @@ export default function ChildHeader({ child }) {
                 </div>
             </div>
 
-            <div className="child-header-stats">
-                <div className="child-stat-box">
-                    <span>GPA</span>
-                    <strong>{child.gpa}</strong>
-                </div>
+            <div className="child-header-stats-panel">
+                <span className="child-header-stats-title">Điểm trung bình</span>
 
-
-                <div className="child-stat-box">
-                    <span>Bài tập</span>
-                    <strong>{child.assignmentsDone}</strong>
+                <div className="child-header-stats">
+                    {averageStats.map((stat) => (
+                        <button
+                            key={stat.label}
+                            type="button"
+                            className="child-stat-box"
+                            onClick={() => onStatClick?.(stat.semesterKey)}
+                        >
+                            <span>{stat.label}</span>
+                            <strong>{stat.value}</strong>
+                        </button>
+                    ))}
                 </div>
             </div>
         </div>
