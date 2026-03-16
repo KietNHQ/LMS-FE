@@ -1,0 +1,60 @@
+.payment-summary{
+width:100%;
+background:linear-gradient(90deg,#7B5FCB,#A897DA);
+border-radius:16px;
+padding:20px 24px;
+display:flex;
+justify-content:space-between;
+align-items:center;
+color:white;
+box-shadow:0 4px 10px rgba(0,0,0,0.05);
+}
+
+.student-info{
+display:flex;
+align-items:center;
+gap:16px;
+}
+
+.avatar{
+width:50px;
+height:50px;
+background:rgba(255,255,255,0.2);
+border-radius:12px;
+display:flex;
+align-items:center;
+justify-content:center;
+font-weight:600;
+font-size:20px;
+}
+
+.info h3{
+margin:0;
+font-size:18px;
+}
+
+.info p{
+margin:2px 0;
+font-size:14px;
+opacity:.9;
+}
+
+.info span{
+font-size:13px;
+opacity:.8;
+}
+
+.gpa{
+text-align:right;
+}
+
+.gpa h2{
+margin:0;
+font-size:28px;
+font-weight:600;
+}
+
+.gpa span{
+font-size:13px;
+opacity:.9;
+}

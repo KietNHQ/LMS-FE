@@ -2,9 +2,10 @@ import { useState } from "react";
 import "./ParentNotifications.css";
 import { FiBell } from "react-icons/fi";
 
-export default function Notification() {
+import NotificationFilter from "./components/NotificationFilter/NotificationFilter";
+import NotificationList from "./components/NotificationList/NotificationList";
 
-  /* ===== dữ liệu phụ huynh ===== */
+export default function Notification() {
 
   const parentName = "Nguyễn Văn A";
 
@@ -12,8 +13,6 @@ export default function Notification() {
     { name: "Nguyễn Văn B", class: "10A1" },
     { name: "Nguyễn Văn C", class: "11A2" }
   ];
-
-  /* ===== lấy danh sách lớp của các con ===== */
 
   const studentClasses = [...new Set(children.map(c => c.class.slice(0,2)))];
 
@@ -58,19 +57,13 @@ export default function Notification() {
 
   const unreadCount = notifications.filter(n=>n.unread).length;
 
-  /* ===== đánh dấu đã đọc ===== */
-
   const markAllRead = ()=>{
-
     const updated = notifications.map(n=>({
       ...n,
       unread:false
     }));
-
     setNotifications(updated);
   };
-
-  /* ===== mở thông báo ===== */
 
   const openNotification = (item)=>{
 
@@ -86,15 +79,11 @@ export default function Notification() {
     setSelected(null);
   };
 
-  /* ===== danh sách lớp hiển thị ===== */
-
   const classList = [...new Set(
     notifications
       .map(n => n.class)
       .filter(c => studentClasses.includes(c) || c === "parent")
   )];
-
-  /* ===== filter notification ===== */
 
   const filteredNotifications = notifications.filter(n => {
 
@@ -105,8 +94,6 @@ export default function Notification() {
     return n.class === filter;
 
   });
-
-  /* ===== label lớp ===== */
 
   const getClassLabel = (c)=>{
 
@@ -130,26 +117,12 @@ export default function Notification() {
 
             <h1>Thông báo</h1>
 
-            <div className="notification-filter">
-
-              <button
-                className={filter==="all"?"active":""}
-                onClick={()=>setFilter("all")}
-              >
-                Tổng
-              </button>
-
-              {classList.map(c=>(
-                <button
-                  key={c}
-                  className={filter===c?"active":""}
-                  onClick={()=>setFilter(c)}
-                >
-                  {getClassLabel(c)}
-                </button>
-              ))}
-
-            </div>
+            <NotificationFilter
+              filter={filter}
+              setFilter={setFilter}
+              classList={classList}
+              getClassLabel={getClassLabel}
+            />
 
           </div>
 
@@ -172,57 +145,11 @@ export default function Notification() {
 
         </div>
 
-        <div className="notification-scroll">
-
-          {filteredNotifications.map(item=>(
-
-            <div
-              key={item.id}
-              className="notification-card"
-            >
-
-              <div
-                className="notification-body"
-                onClick={()=>openNotification(item)}
-              >
-
-                <div className="notification-icon">
-                  🔔
-                </div>
-
-                <div className="notification-content">
-
-                  <div className="notification-title">
-
-                    {item.title}
-
-                    {item.unread &&(
-                      <span className="unread-dot"></span>
-                    )}
-
-                    <span className="class-badge">
-                      {getClassLabel(item.class)}
-                    </span>
-
-                  </div>
-
-                  <p className="notification-text">
-                    {item.content}
-                  </p>
-
-                  <div className="notification-date">
-                    {item.date}
-                  </div>
-
-                </div>
-
-              </div>
-
-            </div>
-
-          ))}
-
-        </div>
+        <NotificationList
+          notifications={filteredNotifications}
+          openNotification={openNotification}
+          getClassLabel={getClassLabel}
+        />
 
       </div>
 

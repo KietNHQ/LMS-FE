@@ -1,0 +1,45 @@
+.child-switcher{
+display:flex;
+align-items:center;
+gap:12px;
+background:#f5f5f7;
+padding:12px 16px;
+border-radius:12px;
+margin-bottom:22px;
+border: 1px solid rgb(225, 225, 225);
+}
+
+.child-label{
+display:flex;
+align-items:center;
+gap:6px;
+font-weight:500;
+color:#555;
+}
+
+.child-icon{
+color:#7c3aed;
+font-size:18px;
+}
+
+.child-switcher button{
+border:none;
+padding:8px 16px;
+border-radius:20px;
+background:#e5e7eb;
+cursor:pointer;
+transition:0.25s;
+}
+
+.child-switcher button:hover{
+background:linear-gradient(135deg, #b68af8, #885def);
+}
+
+.child-switcher .active{
+background:linear-gradient(90deg,#7c3aed,#9333ea);
+color:white;
+}
+
+.child-switcher .active:hover{
+background:linear-gradient(90deg,#b68af8,#885def);
+}

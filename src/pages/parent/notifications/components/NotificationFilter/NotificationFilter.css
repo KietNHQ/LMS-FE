@@ -1,0 +1,24 @@
+.notification-filter{
+  margin-top:8px;
+  display:flex;
+  gap:8px;
+}
+
+.notification-filter button{
+  border:none;
+  padding:6px 14px;
+  border-radius:20px;
+  background:#eef2ff;
+  cursor:pointer;
+  font-size:13px;
+  transition:0.2s;
+}
+
+.notification-filter button:hover{
+  background:linear-gradient(135deg, #b68af8, #885def);
+}
+
+.notification-filter .active{
+  background:linear-gradient(135deg, #a67cff, #7c4dff);
+  color:white;
+}

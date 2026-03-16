@@ -30,13 +30,13 @@
 
 .notification-filter button:hover{
 
-  background:linear-gradient(135deg, #a67cff, #7c4dff);;
+  background:linear-gradient(135deg, #b68af8, #885def);
 
 }
 
 .notification-filter .active{
 
-  background:linear-gradient(135deg, #a67cff, #7c4dff);;
+  background:linear-gradient(135deg, #a67cff, #7c4dff);
 
   color:white;
 

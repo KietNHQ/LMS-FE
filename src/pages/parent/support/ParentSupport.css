@@ -1,17 +1,17 @@
-/* SUPPORT PAGE */
+/* PAGE */
 
-.support-page{
+.parent-support-page{
   padding:30px;
 }
 
-.support-page h1{
+.parent-support-page h1{
   font-size:26px;
   margin-bottom:15px;
 }
 
 /* LAYOUT */
 
-.support-container{
+.parent-support-container{
   display:flex;
   gap:20px;
   align-items:flex-start;
@@ -19,7 +19,7 @@
 
 /* FAQ */
 
-.support-faq{
+.parent-support-faq{
   flex:2;
   background:white;
   padding:20px;
@@ -30,37 +30,36 @@
   border:1px solid #eee;
 }
 
-.faq-title{
+.parent-faq-title{
   display:flex;
   align-items:center;
   gap:8px;
   margin-bottom:12px;
 }
 
-.faq-icon{
-  color: #7c4dff;
-  font-size:18px;
+.parent-faq-icon{
+  color:#7c5cff;
 }
 
-/* SCROLL AREA */
+/* LIST */
 
-.faq-list{
+.parent-faq-list{
   flex:1;
   overflow-y:auto;
   padding-right:5px;
 }
 
-.faq-category{
+.parent-faq-category{
   margin-top:12px;
 }
 
-.faq-category h4{
+.parent-faq-category h4{
   font-size:14px;
   color:#777;
   margin-bottom:6px;
 }
 
-.faq-item{
+.parent-faq-item{
   border:1px solid #eee;
   padding:12px;
   border-radius:8px;
@@ -69,17 +68,17 @@
   transition:0.2s;
 }
 
-.faq-item:hover{
+.parent-faq-item:hover{
   background:#f7f8fc;
 }
 
-.faq-question{
+.parent-faq-question{
   display:flex;
   justify-content:space-between;
   font-weight:500;
 }
 
-.faq-answer{
+.parent-faq-answer{
   margin-top:8px;
   font-size:14px;
   color:#666;
@@ -87,7 +86,7 @@
 
 /* CHAT */
 
-.support-chat{
+.parent-support-chat{
   width:340px;
   height:420px;
   background:white;
@@ -97,15 +96,14 @@
   box-shadow:0 8px 25px rgba(0,0,0,0.15);
 }
 
-.chat-header{
-  background:linear-gradient(90deg,#4f6ef7,#9a4ef7);
+.parent-chat-header{
+  background:linear-gradient(90deg,#5f7cff,#9a4ef7);
   color:white;
   padding:12px 15px;
-  border-top-left-radius:14px;
-  border-top-right-radius:14px;
+  border-radius:14px 14px 0 0;
 }
 
-.chat-header h4{
+.parent-chat-header h4{
   margin:0;
   font-size:14px;
   display:flex;
@@ -113,13 +111,12 @@
   gap:6px;
 }
 
-.chat-body{
+.parent-chat-body{
   flex:1;
   padding:10px;
-  overflow-y:auto;
 }
 
-.chat-message{
+.parent-chat-message{
   background:#f1f3f7;
   padding:8px 10px;
   border-radius:10px;
@@ -127,28 +124,28 @@
   font-size:13px;
 }
 
-.chat-role{
+.parent-chat-role{
   font-size:11px;
   font-weight:600;
   margin-bottom:3px;
 }
 
-.chat-time{
+.parent-chat-time{
   font-size:10px;
   color:#888;
   margin-top:3px;
 }
 
-/* CHAT INPUT */
+/* INPUT */
 
-.chat-input{
+.parent-chat-input{
   display:flex;
   border-top:1px solid #eee;
   padding:6px;
   gap:6px;
 }
 
-.chat-input input{
+.parent-chat-input input{
   flex:1;
   padding:10px;
   border:none;
@@ -158,11 +155,11 @@
   font-size:13px;
 }
 
-.chat-input button{
+.parent-chat-input button{
   width:36px;
   height:36px;
   border:none;
-  background: #7c4dff;
+  background:#7c5cff;
   color:white;
   cursor:pointer;
   border-radius:50%;
@@ -173,16 +170,16 @@
 
 /* CONTACT */
 
-.support-contact{
+.parent-support-contact{
   margin-top:30px;
 }
 
-.contact-grid{
+.parent-contact-grid{
   display:flex;
   gap:20px;
 }
 
-.contact-card{
+.parent-contact-card{
   flex:1;
   background:white;
   padding:15px;
@@ -193,7 +190,6 @@
   align-items:center;
 }
 
-.contact-icon{
-  font-size:20px;
-  color: #7c4dff;
+.parent-contact-icon{
+  color:#7c5cff;
 }
