@@ -24,7 +24,7 @@ return(
 
 <ProgressSnapshot/>
 
-<UpcomingSchedule />
+<UpcomingSchedule  />
 
 <RecentNotifications/>
 

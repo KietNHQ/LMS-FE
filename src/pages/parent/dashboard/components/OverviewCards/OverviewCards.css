@@ -9,38 +9,61 @@ margin-bottom:20px;
 background:white;
 padding:18px;
 border-radius:14px;
+
 display:flex;
 justify-content:space-between;
 align-items:center;
+
 box-shadow:0 2px 6px rgba(0,0,0,0.05);
+
+transition:
+transform 0.2s ease,
+box-shadow 0.2s ease,
+background 0.2s ease;
+}
+
+.card:hover{
+transform:translateY(-4px);
+box-shadow:0 10px 22px rgba(136,93,239,0.18);
+background:#faf8ff;
 }
 
 .icon{
 width:40px;
 height:40px;
+
 display:flex;
 align-items:center;
 justify-content:center;
+
 border-radius:10px;
 font-size:20px;
 }
 
+/* hệ tím chính */
+
 .purple{
-background:#ede9fe;
-color:#7c3aed;
+background:#ece2ff;
+color:#885def;
 }
+
+/* tím nhạt */
 
 .blue{
-background:#e0ecff;
-color:#2563eb;
+background:#f1ebff;
+color:#7d57d8;
 }
+
+/* tím hồng */
 
 .orange{
-background:#fff1e6;
-color:#ea580c;
+background:#f6ecff;
+color:#9f67ff;
 }
 
+/* tím đậm */
+
 .red{
-background:#ffe4e6;
-color:#dc2626;
+background:#e9dcff;
+color:#6d3df0;
 }
