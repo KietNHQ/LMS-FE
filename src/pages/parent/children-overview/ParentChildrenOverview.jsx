@@ -2,7 +2,6 @@ import React, { useState } from "react"
 import "./ParentChildrenOverview.css"
 import ChildHeader from "./components/childHeader/ChildHeader"
 import ChildTabs from "./components/ChildTabs/ChildTabs"
-import ChildOverviewSection from "./components/ChildOverviewSection/ChildOverviewSection"
 import AttendanceSection from "./components/attendanceSection/AttendanceSection"
 import CalendarSection from "./components/calendarSection/CalendarSection"
 import GradesSection from "./components/GradesSection/GradesSection"
@@ -273,12 +272,6 @@ export default function ParentChildrenOverview() {
         records: weeklyRecords
     }
 
-    const overviewCards = [
-        { title: "TBHK I", value: childData.averageScores.semester1, type: "primary", semesterKey: "hk1" },
-        { title: "TBHK II", value: childData.averageScores.semester2, type: "success", semesterKey: "hk2" },
-        { title: "Cả năm", value: childData.averageScores.fullYear, type: "warning", semesterKey: "year" }
-    ]
-
     const handleOverviewCardClick = (semesterKey) => {
         if (!semesterKey) return
         setSelectedSemester(semesterKey)
@@ -314,20 +307,18 @@ export default function ParentChildrenOverview() {
 
             {activeTab === "overview" && (
                 <div className="overview-tab-content">
-                    <ChildOverviewSection cards={overviewCards} onCardClick={handleOverviewCardClick} />
-
-                    <div className="overview-dual-grid">
-                        <AttendanceSection data={attendanceData} compact />
-                        <CalendarSection schedule={scheduleData} events={upcomingEvents} compact />
-                    </div>
-
-                    <div className="overview-bottom-grid">
+                    <div className="overview-top-single">
                         <GradesSection
                             compact
                             gradesBySemester={gradesBySemester}
                             selectedSemester={selectedSemester}
                             onSemesterChange={setSelectedSemester}
                         />
+                    </div>
+
+                    <div className="overview-triple-grid">
+                        <AttendanceSection data={attendanceData} compact />
+                        <CalendarSection schedule={scheduleData} events={upcomingEvents} compact />
                         <LeaveRequestSection requests={leaveRequests.slice(0, 3)} compact />
                     </div>
                 </div>

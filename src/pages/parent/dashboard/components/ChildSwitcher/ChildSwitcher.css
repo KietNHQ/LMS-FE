@@ -26,20 +26,40 @@ font-size:18px;
 border:none;
 padding:8px 16px;
 border-radius:20px;
-background:#e5e7eb;
+
+background:#ffffff;
+color:#4b5a72;
+
 cursor:pointer;
-transition:0.25s;
+font-weight:600;
+
+border:0.0625rem solid #e4ebf8;
+
+box-shadow:0 0.2rem 0.8rem rgba(20,28,45,0.05);
+
+transition:
+transform 0.2s ease,
+box-shadow 0.2s ease,
+background 0.2s ease,
+color 0.2s ease;
 }
 
 .child-switcher button:hover{
-background:linear-gradient(135deg, #b68af8, #885def);
+
+background:#ece2ff;
+color:#7d57d8;
+
+transform:translateY(-0.125rem);
+
+box-shadow:0 0.28rem 0.8rem rgba(136,93,239,0.2);
 }
 
 .child-switcher .active{
-background:linear-gradient(90deg,#7c3aed,#9333ea);
+background:linear-gradient(135deg,#b68af8,#885def);
 color:white;
+border-color:transparent;
 }
 
 .child-switcher .active:hover{
-background:linear-gradient(90deg,#b68af8,#885def);
+transform:translateY(-0.08rem);
 }

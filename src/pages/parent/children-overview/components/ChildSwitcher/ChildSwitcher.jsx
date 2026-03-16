@@ -4,7 +4,6 @@ import "./ChildSwitcher.css"
 export default function ChildSwitcher({ children, selectedId, onSelect }) {
     return (
         <div className="child-switcher">
-            <span className="child-switcher-label">Con em của bạn</span>
             <div className="child-switcher-list">
                 {children.map((child) => (
                     <button
