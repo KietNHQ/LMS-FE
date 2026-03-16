@@ -1,13 +1,13 @@
 import "./ParentSupport.css";
 import { useState } from "react";
 import {
-  FaQuestionCircle,
-  FaRobot,
-  FaEnvelope,
-  FaPhone,
-  FaClock,
-  FaPaperPlane
-} from "react-icons/fa";
+  HelpCircle,
+  Bot,
+  Mail,
+  Phone,
+  Clock,
+  Send
+} from "lucide-react";
 
 export default function ParentSupport() {
 
@@ -16,28 +16,23 @@ export default function ParentSupport() {
   const faqs = [
     {
       category: "Học tập",
-      question: "Làm sao để nộp bài tập?",
-      answer: "Truy cập lớp học và chọn bài tập cần nộp."
+      question: "Làm sao để theo dõi kết quả học của con?",
+      answer: "Bạn có thể xem bảng điểm trong mục Học tập."
     },
     {
       category: "Tài chính",
-      question: "Học phí được thanh toán như thế nào?",
-      answer: "Thanh toán online hoặc tại phòng tài vụ."
+      question: "Thanh toán học phí cho con như thế nào?",
+      answer: "Thanh toán qua chuyển khoản hoặc trực tiếp tại trường."
     },
     {
       category: "Liên hệ",
-      question: "Làm sao để liên hệ với giáo viên?",
+      question: "Làm sao để liên hệ giáo viên chủ nhiệm?",
       answer: "Bạn có thể gửi tin nhắn qua hệ thống LMS."
     },
     {
       category: "Điểm danh",
-      question: "Điểm danh được ghi nhận khi nào?",
-      answer: "Sau khi giáo viên xác nhận."
-    },
-    {
-      category: "Giảng dạy",
-      question: "Làm thế nào để tạo quiz?",
-      answer: "Chức năng này dành cho giáo viên."
+      question: "Phụ huynh có thể xem lịch sử điểm danh không?",
+      answer: "Có, thông tin có trong mục Điểm danh."
     }
   ];
 
@@ -48,24 +43,24 @@ export default function ParentSupport() {
   }, {});
 
   return (
-    <div className="support-page">
+    <div className="parent-support-page">
 
       <h1>Trung tâm hỗ trợ</h1>
 
-      <div className="support-container">
+      <div className="parent-support-container">
 
         {/* FAQ */}
-        <div className="support-faq">
+        <div className="parent-support-faq">
 
-          <div className="faq-title">
-            <FaQuestionCircle className="faq-icon"/>
+          <div className="parent-faq-title">
+            <HelpCircle className="parent-faq-icon"/>
             <h3>Câu hỏi thường gặp</h3>
           </div>
 
-          <div className="faq-list">
+          <div className="parent-faq-list">
 
             {Object.keys(groupedFaqs).map((category, cIndex) => (
-              <div key={cIndex} className="faq-category">
+              <div key={cIndex} className="parent-faq-category">
 
                 <h4>{category}</h4>
 
@@ -76,17 +71,17 @@ export default function ParentSupport() {
                   return (
                     <div
                       key={id}
-                      className="faq-item"
+                      className="parent-faq-item"
                       onClick={() => setOpen(open === id ? null : id)}
                     >
 
-                      <div className="faq-question">
+                      <div className="parent-faq-question">
                         {faq.question}
                         <span>{open === id ? "▲" : "▼"}</span>
                       </div>
 
                       {open === id && (
-                        <div className="faq-answer">
+                        <div className="parent-faq-answer">
                           {faq.answer}
                         </div>
                       )}
@@ -103,31 +98,31 @@ export default function ParentSupport() {
         </div>
 
         {/* CHAT */}
-        <div className="support-chat">
+        <div className="parent-support-chat">
 
-          <div className="chat-header">
+          <div className="parent-chat-header">
             <h4>
-              <FaRobot/> Trợ lý LMS
+              <Bot/> Trợ lý LMS
             </h4>
           </div>
 
-          <div className="chat-body">
+          <div className="parent-chat-body">
 
-            <div className="chat-message">
-              <div className="chat-role">Bot</div>
+            <div className="parent-chat-message">
+              <div className="parent-chat-role">Bot</div>
 
               Xin chào! Tôi là trợ lý LMS.  
               Bạn cần hỗ trợ gì?
 
-              <div className="chat-time">14:48</div>
+              <div className="parent-chat-time">14:48</div>
             </div>
 
           </div>
 
-          <div className="chat-input">
+          <div className="parent-chat-input">
             <input placeholder="Nhập câu hỏi..." />
             <button>
-              <FaPaperPlane/>
+              <Send size={18}/>
             </button>
           </div>
 
@@ -136,30 +131,30 @@ export default function ParentSupport() {
       </div>
 
       {/* CONTACT */}
-      <div className="support-contact">
+      <div className="parent-support-contact">
 
         <h3>Liên hệ trực tiếp</h3>
 
-        <div className="contact-grid">
+        <div className="parent-contact-grid">
 
-          <div className="contact-card">
-            <FaEnvelope className="contact-icon"/>
+          <div className="parent-contact-card">
+            <Mail className="parent-contact-icon"/>
             <div>
               <strong>Email hỗ trợ</strong>
               <p>support@school.edu.vn</p>
             </div>
           </div>
 
-          <div className="contact-card">
-            <FaPhone className="contact-icon"/>
+          <div className="parent-contact-card">
+            <Phone className="parent-contact-icon"/>
             <div>
               <strong>Hotline</strong>
               <p>1900-xxxx</p>
             </div>
           </div>
 
-          <div className="contact-card">
-            <FaClock className="contact-icon"/>
+          <div className="parent-contact-card">
+            <Clock className="parent-contact-icon"/>
             <div>
               <strong>Giờ làm việc</strong>
               <p>T2-T6: 7:00 - 17:00</p>

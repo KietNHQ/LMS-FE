@@ -1,0 +1,68 @@
+.subject-wrapper{
+background:white;
+border-radius:16px;
+padding:20px;
+margin-top:20px;
+box-shadow:0 2px 8px rgba(0,0,0,0.05);
+}
+
+.subject-title{
+font-size:16px;
+font-weight:600;
+margin-bottom:20px;
+}
+
+.subject-grid{
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:16px;
+}
+
+.subject-card{
+display:flex;
+justify-content:space-between;
+align-items:center;
+padding:16px;
+border-radius:12px;
+border:1px solid #eee;
+background:#fafafa;
+}
+
+.subject-left h4{
+margin:0;
+font-size:15px;
+}
+
+.subject-left p{
+margin-top:4px;
+font-size:13px;
+color:#777;
+}
+
+.subject-right{
+text-align:right;
+}
+
+.score{
+font-size:20px;
+font-weight:600;
+color:#3f6ad8;
+}
+
+.badge{
+display:inline-block;
+padding:3px 10px;
+font-size:12px;
+border-radius:8px;
+margin-top:4px;
+}
+
+.badge.good{
+background:#e6f7ef;
+color:#1a8f5b;
+}
+
+.badge.normal{
+background:#e8efff;
+color:#3f6ad8;
+}

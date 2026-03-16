@@ -1,0 +1,7 @@
+.class-badge{
+  font-size:12px;
+  background:linear-gradient(135deg, #a67cff, #7c4dff);
+  color:white;
+  padding:2px 8px;
+  border-radius:10px;
+}
