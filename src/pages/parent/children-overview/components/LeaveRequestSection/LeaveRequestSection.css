@@ -14,6 +14,7 @@
 .section-heading {
     display: flex;
     align-items: center;
+    justify-content: space-between;
     gap: 0.75rem;
     flex-wrap: wrap;
 }
@@ -28,6 +29,23 @@
     margin: 0;
     font-size: 0.88rem;
     color: #7c8597;
+}
+
+.leave-action-btn {
+    border: none;
+    border-radius: 0.65rem;
+    background: #8b5cf6;
+    color: #ffffff;
+    font-size: 0.83rem;
+    font-weight: 600;
+    padding: 0.5rem 0.9rem;
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.leave-action-btn:hover {
+    transform: translateY(-0.0625rem);
+    box-shadow: 0 0.375rem 0.875rem rgba(139, 92, 246, 0.2);
 }
 
 /* list */
@@ -95,5 +113,97 @@
 
 .leave-note {
     font-size: 0.85rem;
-    color: #8a93a6;
+    color: #5b6280;
+    margin: 0;
+}
+
+.leave-dialog-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.38);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 30;
+    padding: 1rem;
+}
+
+.leave-dialog {
+    width: min(32rem, 100%);
+    background: #ffffff;
+    border-radius: 1rem;
+    padding: 1rem;
+    box-shadow: 0 1rem 2.5rem rgba(20, 28, 45, 0.2);
+}
+
+.leave-dialog h4 {
+    margin: 0 0 0.85rem;
+    font-size: 1rem;
+    color: #202636;
+}
+
+.leave-form {
+    display: flex;
+    flex-direction: column;
+    gap: 0.8rem;
+}
+
+.leave-form label {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    font-size: 0.84rem;
+    font-weight: 600;
+    color: #394055;
+}
+
+.leave-form input,
+.leave-form textarea {
+    border: 0.0625rem solid #d9dce8;
+    border-radius: 0.7rem;
+    padding: 0.55rem 0.7rem;
+    font-size: 0.9rem;
+    color: #202636;
+    font-family: inherit;
+}
+
+.leave-form textarea {
+    min-height: 5.5rem;
+    resize: vertical;
+}
+
+.leave-form-row {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.7rem;
+}
+
+.leave-form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.6rem;
+}
+
+.leave-form-actions button {
+    border: none;
+    border-radius: 0.65rem;
+    padding: 0.5rem 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.btn-light {
+    background: #eef1fb;
+    color: #4e5672;
+}
+
+.btn-primary {
+    background: #8b5cf6;
+    color: #ffffff;
+}
+
+@media (max-width: 40rem) {
+    .leave-form-row {
+        grid-template-columns: 1fr;
+    }
 }

@@ -47,8 +47,8 @@
 
 .attendance-period-switch {
     display: inline-flex;
-    background: #f3f6ff;
-    border: 0.0625rem solid #dbe5ff;
+    background: #f2ebff;
+    border: 0.0625rem solid #decdfd;
     border-radius: 0.85rem;
     padding: 0.25rem;
     gap: 0.25rem;
@@ -58,24 +58,30 @@
 .attendance-switch-btn {
     border: none;
     background: transparent;
-    color: #51607a;
+    color: #4b5a72;
     font-size: 0.9rem;
     font-weight: 700;
     padding: 0.42rem 0.9rem;
     border-radius: 0.65rem;
     cursor: pointer;
-    transition: all 0.18s ease;
+    transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease, color 0.18s ease;
 }
 
 .attendance-switch-btn:hover {
-    color: #2a3c66;
-    background: #eaf0ff;
+    color: #7d57d8;
+    background: #ece2ff;
+    transform: translateY(-0.125rem);
+    box-shadow: 0 0.2rem 0.6rem rgba(136, 93, 239, 0.18);
 }
 
 .attendance-switch-btn.active {
     color: #ffffff;
-    background: linear-gradient(135deg, #6f8dff 0%, #4c6fff 100%);
-    box-shadow: 0 0.25rem 0.75rem rgba(76, 111, 255, 0.28);
+    background: linear-gradient(135deg, #b68af8 0%, #885def 100%);
+    box-shadow: 0 0.25rem 0.75rem rgba(136, 93, 239, 0.32);
+}
+
+.attendance-switch-btn.active:hover {
+    transform: translateY(-0.08rem);
 }
 
 .attendance-period-summary {
@@ -197,6 +203,243 @@
     line-height: 1.5;
 }
 
+/* ── Month / Year Picker ── */
+.month-year-picker {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 0.5rem;
+    background: #f8faff;
+    border: 0.0625rem solid #e7ecff;
+    border-radius: 0.95rem;
+    padding: 0.55rem 0.75rem;
+}
+
+.month-nav-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    border: 0.0625rem solid #dbe5ff;
+    border-radius: 0.55rem;
+    background: #ffffff;
+    color: #4c6fff;
+    font-size: 1.3rem;
+    font-weight: 700;
+    line-height: 1;
+    cursor: pointer;
+    transition: background 0.15s ease, border-color 0.15s ease;
+    flex-shrink: 0;
+}
+
+.month-nav-btn:hover {
+    background: #eaf0ff;
+    border-color: #4c6fff;
+}
+
+.month-year-selects {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+.month-select,
+.year-select {
+    appearance: none;
+    -webkit-appearance: none;
+    border: 0.0625rem solid #dbe5ff;
+    border-radius: 0.6rem;
+    background: #ffffff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%234c6fff' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E") no-repeat right 0.55rem center;
+    background-size: 0.75rem;
+    color: #202636;
+    font-size: 0.88rem;
+    font-weight: 700;
+    padding: 0.38rem 1.8rem 0.38rem 0.65rem;
+    cursor: pointer;
+    outline: none;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.month-select:focus,
+.year-select:focus {
+    border-color: #4c6fff;
+    box-shadow: 0 0 0 0.2rem rgba(76, 111, 255, 0.15);
+}
+
+.month-select { min-width: 6.5rem; }
+.year-select  { min-width: 4.5rem; }
+
+.month-year-sep {
+    color: #9ba7bb;
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+/* No-data state */
+.monthly-no-data {
+    text-align: center;
+    color: #9ba7bb;
+    font-size: 0.9rem;
+    padding: 1.5rem 0;
+    margin: 0;
+}
+
+/* ── Monthly Summary Bar ── */
+.monthly-summary-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #f8faff;
+    border: 0.0625rem solid #e7ecff;
+    border-radius: 0.95rem;
+    padding: 0.75rem 1rem;
+}
+
+.monthly-summary-label {
+    color: #5f6b7f;
+    font-size: 0.92rem;
+    font-weight: 600;
+}
+
+.monthly-summary-total {
+    color: #3b5bdb;
+    font-size: 1.15rem;
+    font-weight: 800;
+}
+
+/* ── Monthly Group Cards ── */
+.monthly-groups {
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+}
+
+.monthly-group-card {
+    border-radius: 1rem;
+    overflow: hidden;
+    border: 0.0625rem solid #ececf3;
+    background: #ffffff;
+    transition: box-shadow 0.18s ease;
+}
+
+.monthly-group-card.expanded {
+    box-shadow: 0 0.2rem 0.8rem rgba(20, 28, 45, 0.07);
+}
+
+.monthly-group-card.present { border-left: 0.25rem solid #16a34a; }
+.monthly-group-card.absent  { border-left: 0.25rem solid #ef4444; }
+.monthly-group-card.late    { border-left: 0.25rem solid #d97706; }
+
+.monthly-group-header {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.9rem 1rem;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    gap: 0.75rem;
+    transition: background 0.15s ease;
+}
+
+.monthly-group-header:hover {
+    background: #fafbff;
+}
+
+.monthly-group-left {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+}
+
+.monthly-group-right {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+}
+
+.monthly-group-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    border-radius: 0.6rem;
+    font-size: 0.9rem;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+
+.monthly-group-icon.present { background: #dcfce7; color: #16a34a; }
+.monthly-group-icon.absent  { background: #fee2e2; color: #ef4444; }
+.monthly-group-icon.late    { background: #fef3c7; color: #d97706; }
+
+.monthly-group-label {
+    color: #202636;
+    font-size: 0.95rem;
+    font-weight: 700;
+}
+
+.monthly-group-count {
+    font-size: 0.9rem;
+    font-weight: 800;
+    padding: 0.2rem 0.6rem;
+    border-radius: 0.5rem;
+}
+
+.monthly-group-count.present { background: #dcfce7; color: #16a34a; }
+.monthly-group-count.absent  { background: #fee2e2; color: #ef4444; }
+.monthly-group-count.late    { background: #fef3c7; color: #d97706; }
+
+/* Chevron icon */
+.chevron-icon {
+    color: #9ba7bb;
+    transition: transform 0.2s ease;
+    flex-shrink: 0;
+}
+
+.chevron-icon.open {
+    transform: rotate(180deg);
+    color: #4c6fff;
+}
+
+/* Expanded body */
+.monthly-group-body {
+    border-top: 0.0625rem solid #f0f1f6;
+    padding: 0.8rem 1rem 1rem;
+    background: #fafbff;
+}
+
+.monthly-group-empty {
+    color: #9ba7bb;
+    font-size: 0.88rem;
+    margin: 0;
+    text-align: center;
+    padding: 0.4rem 0;
+}
+
+.monthly-group-dates {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.45rem;
+}
+
+.monthly-date-chip {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.3rem 0.65rem;
+    border-radius: 0.55rem;
+    font-size: 0.82rem;
+    font-weight: 700;
+}
+
+.monthly-date-chip.present { background: #dcfce7; color: #15803d; }
+.monthly-date-chip.absent  { background: #fee2e2; color: #dc2626; }
+.monthly-date-chip.late    { background: #fef3c7; color: #b45309; }
+
+/* ── Responsive ── */
 @media (max-width: 48rem) {
     .attendance-heading {
         align-items: flex-start;
@@ -208,10 +451,6 @@
         gap: 0.35rem;
     }
 
-    .attendance-period-summary {
-        flex-direction: column;
-        align-items: flex-start;
-    }
 
     .attendance-stats {
         grid-template-columns: 1fr;

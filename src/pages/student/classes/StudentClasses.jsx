@@ -11,7 +11,6 @@ export default function StudentClasses() {
 					<div className="student-classes-title-row">
 						<h1>Lớp học của tôi</h1>
  					</div>
-					<p>Theo dõi tiến độ học tập, lịch học và các bài tập sắp tới.</p>
 				</div>
 			</header>
 
