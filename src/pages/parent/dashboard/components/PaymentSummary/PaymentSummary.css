@@ -33,10 +33,11 @@ margin:0;
 font-size:18px;
 }
 
-.info p{
+.payment-summary .info p{
 margin:2px 0;
 font-size:14px;
 opacity:.9;
+color: white ;
 }
 
 .info span{
