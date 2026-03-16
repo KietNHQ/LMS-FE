@@ -1,22 +1,17 @@
 import "./PaymentSummary.css";
+ export default function PaymentSummary() { 
 
-export default function PaymentSummary() {
-  return (
-    <div className="payment-summary">
-      <div className="student-info">
-        <div className="avatar">N</div>
-
+  return ( <div className="payment-summary">
+     <div className="student-info">
+       <div className="avatar">N</div>
         <div className="info">
-          <h3>Nguyễn Minh Tuấn</h3>
-          <p>Lớp 10A1 • GVCN: Trần Thị Hương</p>
+           <h3>Nguyễn Minh Tuấn</h3>
+         <p>Lớp 10A1 • GVCN: Trần Thị Hương</p>
           <span>Năm học 2024-2025 • Mã HS: HS001</span>
-        </div>
-      </div>
-
-      <div className="gpa">
-        <h2>7.60</h2>
-        <span>ĐTB cả năm</span>
-      </div>
-    </div>
-  );
-}
+           </div> </div> <div className="gpa">
+             <h2>7.60</h2>
+              <span>ĐTB cả năm</span>
+               </div>
+                </div>
+                 );
+                 }
