@@ -1,0 +1,114 @@
+.child-switcher {
+    background: #ffffff;
+    border-radius: 1.25rem;
+    border: 0.0625rem solid #ececf3;
+    box-shadow: 0 0.25rem 1rem rgba(20, 28, 45, 0.05);
+    padding: 1rem 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+    flex-wrap: wrap;
+}
+
+.child-switcher-label {
+    color: #5b6475;
+    font-size: 0.88rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.child-switcher-list {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    flex: 1;
+}
+
+.child-switcher-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.65rem 1rem 0.65rem 0.75rem;
+    border-radius: 999rem;
+    border: 0.125rem solid #ebeef6;
+    background: #f7f8fc;
+    cursor: pointer;
+    font: inherit;
+    color: inherit;
+    transition: border-color 0.18s, box-shadow 0.18s, background 0.18s, transform 0.18s;
+    position: relative;
+    text-align: left;
+}
+
+.child-switcher-item:hover {
+    border-color: #d7c5fb;
+    background: #f3eeff;
+    box-shadow: 0 0.25rem 0.75rem rgba(136, 93, 239, 0.12);
+    transform: translateY(-0.1rem);
+}
+
+.child-switcher-item.active {
+    border-color: #885def;
+    background: linear-gradient(135deg, #f5eeff 0%, #ede5ff 100%);
+    box-shadow: 0 0.25rem 0.85rem rgba(136, 93, 239, 0.18);
+}
+
+.child-switcher-avatar {
+    width: 2.4rem;
+    height: 2.4rem;
+    border-radius: 50%;
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+
+.child-switcher-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+    min-width: 0;
+}
+
+.child-switcher-name {
+    font-size: 0.92rem;
+    font-weight: 700;
+    color: #202636;
+    white-space: nowrap;
+}
+
+.child-switcher-class {
+    font-size: 0.8rem;
+    color: #7c8597;
+    white-space: nowrap;
+}
+
+.child-switcher-active-dot {
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 50%;
+    background: #885def;
+    flex-shrink: 0;
+    margin-left: auto;
+}
+
+@media (max-width: 48rem) {
+    .child-switcher {
+        padding: 0.85rem 1rem;
+        gap: 0.75rem;
+    }
+
+    .child-switcher-list {
+        gap: 0.5rem;
+    }
+
+    .child-switcher-item {
+        padding: 0.55rem 0.85rem 0.55rem 0.65rem;
+    }
+}
+
