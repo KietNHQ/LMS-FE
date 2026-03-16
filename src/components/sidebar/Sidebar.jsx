@@ -1,10 +1,12 @@
-import { useEffect, useMemo, useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { sidebarConfig } from "./sidebar.config";
 import SidebarItem from "./SidebarItem";
 import { FiChevronLeft, FiLogOut, FiMenu, FiX } from "react-icons/fi";
 import { FaGraduationCap } from "react-icons/fa";
 import "./Sidebar.css";
+
+const MOBILE_BREAKPOINT = 768;
 
 export default function Sidebar({
                                   role = "student",
@@ -14,13 +16,16 @@ export default function Sidebar({
                                   setIsCollapsed
                                 }) {
   const navigate = useNavigate();
-  const location = useLocation();
   const items = sidebarConfig[role] || [];
 
-  const mobileBreakpoint = 768;
-  const [isMobile, setIsMobile] = useState(window.innerWidth <= mobileBreakpoint);
+  const getIsMobile = () => window.innerWidth <= MOBILE_BREAKPOINT;
+  const getIsAtTop = () => window.scrollY <= 16;
+
+  const [isMobile, setIsMobile] = useState(getIsMobile);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
-  const [isAtTop, setIsAtTop] = useState(true);
+  const [isAtTop, setIsAtTop] = useState(getIsAtTop);
+
+  const prevIsMobileRef = useRef(isMobile);
 
   const roleLabel = useMemo(() => {
     switch (role) {
@@ -61,34 +66,35 @@ export default function Sidebar({
 
   useEffect(() => {
     const handleResize = () => {
-      const mobile = window.innerWidth <= mobileBreakpoint;
-      setIsMobile(mobile);
+      const nextIsMobile = getIsMobile();
+      const prevIsMobile = prevIsMobileRef.current;
 
-      if (mobile) {
-        setIsCollapsed(false);
-      } else {
-        setIsMobileOpen(false);
+      if (nextIsMobile !== prevIsMobile) {
+        setIsMobile(nextIsMobile);
+
+        if (nextIsMobile) {
+          setIsCollapsed(false);
+        } else {
+          setIsMobileOpen(false);
+        }
+
+        prevIsMobileRef.current = nextIsMobile;
       }
     };
 
-    handleResize();
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, [setIsCollapsed]);
 
   useEffect(() => {
     const handleScroll = () => {
-      setIsAtTop(window.scrollY <= 16);
+      const nextIsAtTop = getIsAtTop();
+      setIsAtTop((prev) => (prev === nextIsAtTop ? prev : nextIsAtTop));
     };
 
-    handleScroll();
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
-
-  useEffect(() => {
-    setIsMobileOpen(false);
-  }, [location.pathname]);
 
   const handleLogout = () => {
     localStorage.removeItem("token");
@@ -166,7 +172,7 @@ export default function Sidebar({
                 <nav className="sidebar-nav">
                   {items.map((item, index) => (
                       <SidebarItem
-                          key={`${item.path}-${index}`}
+                          key={`${item.path || item.label}-${index}`}
                           item={item}
                           onClick={handleCloseMobileMenu}
                       />
@@ -202,7 +208,7 @@ export default function Sidebar({
                   <nav className="sidebar-nav">
                     {items.map((item, index) => (
                         <SidebarItem
-                            key={`${item.path}-${index}`}
+                            key={`${item.path || item.label}-${index}`}
                             item={item}
                         />
                     ))}
