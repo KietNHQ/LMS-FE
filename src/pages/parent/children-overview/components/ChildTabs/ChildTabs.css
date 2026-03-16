@@ -5,14 +5,15 @@
 }
 
 .child-tab-btn {
-    border: none;
     background: #ffffff;
     color: #4b5a72;
     padding: 0.8rem 1rem;
     border-radius: 0.9rem;
     cursor: pointer;
-    font-size: 0.92rem;
-    font-weight: 600;
+    font-family: var(--font-main), sans-serif;
+    font-size: 0.93rem;
+    font-weight: 800;
+    letter-spacing: 0;
     box-shadow: 0 0.2rem 0.8rem rgba(20, 28, 45, 0.05);
     border: 0.0625rem solid #e4ebf8;
     transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease, color 0.2s ease;

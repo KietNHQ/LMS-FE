@@ -1,4 +1,42 @@
 .profile-actions-section {
-    padding: 1rem;
+    padding: 0.9rem 1rem 1rem;
+    border-top: 0.0625rem solid #eceff6;
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.6rem;
 }
 
+.profile-change-password-btn,
+.profile-close-btn {
+    border: none;
+    border-radius: 0.65rem;
+    padding: 0.52rem 0.9rem;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.profile-close-btn {
+    background: #eef1f7;
+    color: #4b5563;
+}
+
+.profile-change-password-btn {
+    color: #ffffff;
+    background: #2563eb;
+}
+
+.profile-actions-section.role-student .profile-change-password-btn {
+    background: #2563eb;
+}
+
+.profile-actions-section.role-teacher .profile-change-password-btn {
+    background: #0f766e;
+}
+
+.profile-actions-section.role-parent .profile-change-password-btn {
+    background: #885def;
+}
+
+.profile-actions-section.role-admin .profile-change-password-btn {
+    background: #1e2f5a;
+}

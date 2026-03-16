@@ -96,9 +96,24 @@
     font-weight: 600;
 }
 
+.grades-semester-note.highlight {
+    display: inline-flex;
+    align-items: center;
+    width: fit-content;
+    margin-top: 0.05rem;
+    padding: 0.28rem 0.7rem;
+    border-radius: 999rem;
+    border: 0.0625rem solid #d8c6fb;
+    background: #f4edff;
+    font-size: 0.94rem;
+    font-weight: 900;
+    letter-spacing: 0.01em;
+    color: #5f3dc4;
+}
+
 .grades-table-wrapper {
     width: 100%;
-    overflow-x: auto;
+    overflow-x: hidden;
     border-radius: 1rem;
     background: #fafbff;
     border: 0.0625rem solid #eef1f6;
@@ -106,9 +121,9 @@
 
 .grades-table {
     width: 100%;
-    min-width: 42rem;
+    min-width: 0;
     border-collapse: collapse;
-    table-layout: auto;
+    table-layout: fixed;
 }
 
 .grades-table th,
@@ -118,7 +133,14 @@
     border-bottom: 0.0625rem solid #edf0f5;
     font-size: 0.92rem;
     line-height: 1.4;
-    white-space: nowrap;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+}
+
+.grades-table th:first-child,
+.grades-table td:first-child {
+    width: 22%;
 }
 
 .grades-table th {
@@ -227,13 +249,22 @@
         padding: 0.45rem 0.55rem;
     }
 
-    .grades-table {
-        min-width: 36rem;
-    }
-
     .grades-table th,
     .grades-table td {
-        padding: 0.85rem 0.8rem;
-        font-size: 0.88rem;
+        padding: 0.75rem 0.5rem;
+        font-size: 0.8rem;
+    }
+
+    .grades-table th:first-child,
+    .grades-table td:first-child {
+        width: 30%;
+    }
+
+    /* Ẩn 2 cột phụ ở mobile để không phải scroll ngang */
+    .grades-table th:nth-child(2),
+    .grades-table td:nth-child(2),
+    .grades-table th:nth-child(3),
+    .grades-table td:nth-child(3) {
+        display: none;
     }
 }

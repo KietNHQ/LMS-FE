@@ -10,7 +10,7 @@ export default function ParentLayout() {
         <div className={`parent-layout ${isCollapsed ? "collapsed" : ""}`}>
             <Sidebar
                 role="parent"
-                userName="Parent User"
+                userName="Nguyễn Văn Hùng"
                 isCollapsed={isCollapsed}
                 setIsCollapsed={setIsCollapsed}
             />

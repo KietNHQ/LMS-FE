@@ -11,7 +11,7 @@ export default function ChildHeader({ child, onStatClick }) {
     return (
         <div className="child-header-card">
             <div className="child-header-main">
-                <div className="child-avatar">
+                <div className="child-avatar" style={child.avatarColor ? { background: child.avatarColor } : undefined}>
                     {child.avatarLetter}
                 </div>
 

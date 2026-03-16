@@ -135,14 +135,14 @@
 
 .calendar-list-item:hover,
 .event-item:hover {
-    border-color: #d7e1ff;
-    background: #f5f8ff;
+    border-color: #d9c8ff;
+    background: #f8f3ff;
 }
 
 .calendar-list-item.active,
 .event-item.active {
-    border-color: #b9ccff;
-    background: #eef3ff;
+    border-color: #b68af8;
+    background: #f1e8ff;
     transform: translateY(-0.0625rem);
 }
 

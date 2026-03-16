@@ -10,7 +10,7 @@ export default function AdminLayout() {
         <div className={`admin-layout ${isCollapsed ? "collapsed" : ""}`}>
             <Sidebar
                 role="admin"
-                userName="Admin User"
+                userName="Trần Gia Bảo"
                 isCollapsed={isCollapsed}
                 setIsCollapsed={setIsCollapsed}
             />

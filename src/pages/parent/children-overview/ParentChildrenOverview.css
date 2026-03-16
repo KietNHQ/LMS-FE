@@ -5,6 +5,7 @@
     padding: 0.875rem 1.5rem 1.5rem;
     min-width: 0;
     max-width: 100%;
+    font-family: var(--font-main), sans-serif;
 }
 
 /* ===== PAGE TITLE ===== */
@@ -47,20 +48,30 @@
     min-width: 0;
 }
 
-/* ===== 2 BLOCK GIỮA ===== */
-.overview-dual-grid {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-    gap: 1rem;
-    align-items: start;
+/* Đồng bộ font tiêu đề 4 khối: Điểm số/Điểm danh/Lịch học & Sự kiện/Đơn xin phép */
+.parent-children-overview-page .grades-card .section-heading h3,
+.parent-children-overview-page .attendance-card .section-heading h3,
+.parent-children-overview-page .calendar-card .calendar-heading h3,
+.parent-children-overview-page .leave-card .section-heading h3 {
+    font-family: var(--font-main), sans-serif;
+    font-size: 1.1rem;
+    font-weight: 800;
+    line-height: 1.35;
+    letter-spacing: 0;
+    color: #1e2f5a;
 }
 
-/* ===== 2 BLOCK DƯỚI ===== */
-.overview-bottom-grid {
+/* ===== TOP 1 BLOCK ===== */
+.overview-top-single {
+    min-width: 0;
+}
+
+/* ===== DƯỚI 3 BLOCK ===== */
+.overview-triple-grid {
     display: grid;
-    grid-template-columns: minmax(0, 1.45fr) minmax(0, 0.95fr);
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 1rem;
-    align-items: start;
+    align-items: stretch;
 }
 
 /* ===== UNIFY CARD FEELING ===== */
@@ -70,25 +81,45 @@
 .parent-children-overview-page .calendar-card,
 .parent-children-overview-page .grades-card,
 .parent-children-overview-page .leave-card {
-    box-shadow: 0 0.25rem 1rem rgba(20, 28, 45, 0.05);
+    border: 0.0625rem solid #edf1f7;
+    box-shadow: 0 0.22rem 0.85rem rgba(20, 28, 45, 0.045);
+}
+
+/* Border mềm và đồng bộ hơn cho các item tương tác */
+.parent-children-overview-page .child-tab-btn,
+.parent-children-overview-page .overview-card,
+.parent-children-overview-page .calendar-list-item,
+.parent-children-overview-page .event-item,
+.parent-children-overview-page .leave-item {
+    border-color: #e7ecf5;
+}
+
+.parent-children-overview-page .child-tab-btn:hover,
+.parent-children-overview-page .overview-card.clickable:hover,
+.parent-children-overview-page .calendar-list-item:hover,
+.parent-children-overview-page .event-item:hover,
+.parent-children-overview-page .leave-item:hover {
+    border-color: #c2a3f8;
+    box-shadow: 0 0.28rem 0.85rem rgba(136, 93, 239, 0.14);
 }
 
 /* tabs đỡ bị lẻ khỏi flow */
 .parent-children-overview-page .child-tabs {
-    margin-top: -0.1rem;
-    margin-bottom: 0.1rem;
-}
-
-/* overview cards gần tabs hơn một chút */
-.parent-children-overview-page .child-overview-grid {
-    margin-top: -0.1rem;
+    margin-top: 0;
+    margin-bottom: 0.2rem;
 }
 
 /* làm các cụm trong grid không bị co méo */
-.overview-dual-grid > *,
-.overview-bottom-grid > * {
+.overview-triple-grid > * {
     min-width: 0;
-    height: fit-content;
+    height: 100%;
+}
+
+/* Cân card phía dưới nhìn đều */
+.overview-triple-grid .attendance-card,
+.overview-triple-grid .calendar-card,
+.overview-triple-grid .leave-card {
+    height: 100%;
 }
 
 /* ===== LARGE SCREEN TWEAK ===== */
@@ -97,8 +128,7 @@
         padding: 1rem 1.75rem 1.75rem;
     }
 
-    .overview-dual-grid,
-    .overview-bottom-grid,
+    .overview-triple-grid,
     .overview-tab-content {
         gap: 1.125rem;
     }
@@ -106,8 +136,8 @@
 
 /* ===== TABLET ===== */
 @media (max-width: 75rem) {
-    .overview-bottom-grid {
-        grid-template-columns: 1fr;
+    .overview-triple-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 }
 
@@ -117,13 +147,12 @@
         gap: 0.9rem;
     }
 
-    .overview-dual-grid {
+    .overview-triple-grid {
         grid-template-columns: 1fr;
     }
 
     .overview-tab-content,
-    .overview-dual-grid,
-    .overview-bottom-grid {
+    .overview-triple-grid {
         gap: 0.9rem;
     }
 }
@@ -152,8 +181,7 @@
     }
 
     .overview-tab-content,
-    .overview-dual-grid,
-    .overview-bottom-grid {
+    .overview-triple-grid {
         gap: 0.85rem;
     }
 }
