@@ -1,4 +1,5 @@
 import "./NotificationList.css";
+import { Bell } from "lucide-react";
 
 export default function NotificationList({
   notifications,
@@ -22,7 +23,7 @@ export default function NotificationList({
           >
 
             <div className="notification-icon">
-              🔔
+              <Bell size={18} />
             </div>
 
             <div className="notification-content">
