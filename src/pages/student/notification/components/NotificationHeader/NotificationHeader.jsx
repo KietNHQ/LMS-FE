@@ -1,4 +1,4 @@
-import { FiBell } from "react-icons/fi";
+import { Bell, Star } from "lucide-react";
 import "./NotificationHeader.css";
 
 export default function NotificationHeader({ unreadCount, onMarkAllRead }) {
@@ -10,8 +10,7 @@ export default function NotificationHeader({ unreadCount, onMarkAllRead }) {
             </div>
 
             <div className="notification-bell" onClick={onMarkAllRead} role="button" tabIndex={0}>
-                <FiBell className="bell-icon" />
-
+                <Bell className="bell-icon" size={28} />
                 {unreadCount > 0 && (
                     <span className="bell-badge">{unreadCount > 9 ? "9+" : unreadCount}</span>
                 )}

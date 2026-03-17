@@ -1,12 +1,13 @@
 .notification-card { display: flex; justify-content: space-between; align-items: flex-start; background: #fff; padding: 16px; border-radius: 12px; border: 1px solid #e8ecf5; transition: 0.2s; }
 .notification-card:hover { background: #f8f9ff; transform: translateY(-1px); }
 .notification-body { display: flex; gap: 15px; cursor: pointer; flex: 1; }
-.notification-icon { width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; background: #e8f0ff; border-radius: 10px; font-size: 18px; flex-shrink: 0; }
+.notification-icon-student { width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; background: #e8f0ff; border-radius: 10px; font-size: 18px; flex-shrink: 0; color: #2f80ff; }
+.notification-icon-student:hover { background: rgb(224, 246, 255); transform: translateY(-1px); }
 .notification-content { flex: 1; }
 .notification-title { font-weight: 600; font-size: 16px; display: flex; align-items: center; gap: 8px; }
 .notification-text { margin-top: 6px; color: #555; font-size: 14px; line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .notification-date { margin-top: 8px; font-size: 13px; color: #999; }
-.unread-dot { width: 8px; height: 8px; background: #2f80ff; border-radius: 50%; }
+.unread-dot-student { width: 8px; height: 8px; background: #2f80ff; border-radius: 50%; }
 .star-box { cursor: pointer; font-size: 20px; margin-left: 10px; display: flex; align-items: center; color: #bbb; transition: 0.2s; }
 .star-box:hover { transform: scale(1.1); }
 .star-active { color: #ffc107; transform: scale(1.1); }
