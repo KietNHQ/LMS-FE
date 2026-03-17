@@ -1,13 +1,12 @@
 import "./StudentSupport.css";
 import { useState } from "react";
 import {
-  FaQuestionCircle,
   FaRobot,
-  FaEnvelope,
-  FaPhone,
-  FaClock,
   FaPaperPlane
 } from "react-icons/fa";
+import SupportHeader from "./components/SupportHeader/SupportHeader";
+import FAQList from "./components/FAQList/FAQList";
+import SupportContact from "./components/SupportContact/SupportContact";
 
 export default function StudentSupport() {
 
@@ -50,57 +49,15 @@ export default function StudentSupport() {
   return (
     <div className="support-page">
 
-      <h1>Trung tâm hỗ trợ</h1>
+      <SupportHeader />
 
       <div className="support-container">
 
-        {/* FAQ */}
-        <div className="support-faq">
-
-          <div className="faq-title">
-            <FaQuestionCircle className="faq-icon"/>
-            <h3>Câu hỏi thường gặp</h3>
-          </div>
-
-          <div className="faq-list">
-
-            {Object.keys(groupedFaqs).map((category, cIndex) => (
-              <div key={cIndex} className="faq-category">
-
-                <h4>{category}</h4>
-
-                {groupedFaqs[category].map((faq, index) => {
-
-                  const id = `${cIndex}-${index}`;
-
-                  return (
-                    <div
-                      key={id}
-                      className="faq-item"
-                      onClick={() => setOpen(open === id ? null : id)}
-                    >
-
-                      <div className="faq-question">
-                        {faq.question}
-                        <span>{open === id ? "▲" : "▼"}</span>
-                      </div>
-
-                      {open === id && (
-                        <div className="faq-answer">
-                          {faq.answer}
-                        </div>
-                      )}
-
-                    </div>
-                  );
-                })}
-
-              </div>
-            ))}
-
-          </div>
-
-        </div>
+        <FAQList
+          groupedFaqs={groupedFaqs}
+          open={open}
+          onToggle={(id) => setOpen(open === id ? null : id)}
+        />
 
         {/* CHAT */}
         <div className="support-chat">
@@ -135,40 +92,7 @@ export default function StudentSupport() {
 
       </div>
 
-      {/* CONTACT */}
-      <div className="support-contact">
-
-        <h3>Liên hệ trực tiếp</h3>
-
-        <div className="contact-grid">
-
-          <div className="contact-card">
-            <FaEnvelope className="contact-icon"/>
-            <div>
-              <strong>Email hỗ trợ</strong>
-              <p>support@school.edu.vn</p>
-            </div>
-          </div>
-
-          <div className="contact-card">
-            <FaPhone className="contact-icon"/>
-            <div>
-              <strong>Hotline</strong>
-              <p>1900-xxxx</p>
-            </div>
-          </div>
-
-          <div className="contact-card">
-            <FaClock className="contact-icon"/>
-            <div>
-              <strong>Giờ làm việc</strong>
-              <p>T2-T6: 7:00 - 17:00</p>
-            </div>
-          </div>
-
-        </div>
-
-      </div>
+      <SupportContact />
 
     </div>
   );

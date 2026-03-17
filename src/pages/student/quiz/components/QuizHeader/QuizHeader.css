@@ -1,0 +1,9 @@
+.quiz-list-header { margin-bottom: 24px; }
+.quiz-list-header h1 { margin: 0; font-size: 28px; font-weight: 800; color: #1f2a44; }
+.quiz-list-header p { margin: 8px 0 0; color: #7a8599; font-size: 18px; }
+
+@media (max-width: 768px) {
+  .quiz-list-header h1 { font-size: 24px; }
+  .quiz-list-header p { font-size: 16px; }
+}
+

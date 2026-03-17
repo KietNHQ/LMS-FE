@@ -1,0 +1,5 @@
+.faq-item { border: 1px solid #eee; padding: 12px; border-radius: 8px; margin-top: 8px; cursor: pointer; transition: 0.2s; }
+.faq-item:hover { background: #f7f8fc; }
+.faq-question { display: flex; justify-content: space-between; font-weight: 500; }
+.faq-answer { margin-top: 8px; font-size: 14px; color: #666; }
+

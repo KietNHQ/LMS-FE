@@ -1,10 +1,9 @@
 import { useState } from "react";
 import "./StudentNotifications.css";
+import NotificationHeader from "./components/NotificationHeader/NotificationHeader";
+import NotificationList from "./components/NotificationList/NotificationList";
 
-import { FiBell, FiStar } from "react-icons/fi";
-import { FaStar } from "react-icons/fa";
-
-export default function Notification() {
+export default function StudentNotifications() {
 
   const [notifications, setNotifications] = useState([
     {
@@ -280,90 +279,13 @@ export default function Notification() {
 
       <div className="notification-container">
 
-        <div className="notification-header">
+        <NotificationHeader unreadCount={unreadCount} onMarkAllRead={markAllRead} />
 
-          <div>
-            <h1>Thông báo</h1>
-            <span>{unreadCount} thông báo chưa đọc</span>
-          </div>
-
-          <div
-            className="notification-bell"
-            onClick={markAllRead}
-          >
-
-            <FiBell className="bell-icon" />
-
-            {unreadCount > 0 && (
-              <span className="bell-badge">
-                {unreadCount > 9 ? "9+" : unreadCount}
-              </span>
-            )}
-
-          </div>
-
-        </div>
-
-        <div className="notification-scroll">
-
-          {notifications.map((item) => (
-
-            <div
-              key={item.id}
-              className="notification-card"
-            >
-
-              <div
-                className="notification-body"
-                onClick={() => openNotification(item)}
-              >
-
-                <div className="notification-icon">
-                  🔔
-                </div>
-
-                <div className="notification-content">
-
-                  <div className="notification-title">
-
-                    {item.title}
-
-                    {item.unread && (
-                      <span className="unread-dot"></span>
-                    )}
-
-                  </div>
-
-                  <p className="notification-text">
-                    {item.content}
-                  </p>
-
-                  <div className="notification-date">
-                    {item.date}
-                  </div>
-
-                </div>
-
-              </div>
-
-              <div
-                className="star-box"
-                onClick={() => toggleImportant(item.id)}
-              >
-
-                {item.important ? (
-                  <FaStar className="star-active"/>
-                ) : (
-                  <FiStar className="star"/>
-                )}
-
-              </div>
-
-            </div>
-
-          ))}
-
-        </div>
+        <NotificationList
+          notifications={notifications}
+          onOpen={openNotification}
+          onToggleImportant={toggleImportant}
+        />
 
       </div>
 

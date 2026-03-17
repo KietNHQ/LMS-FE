@@ -1,0 +1,37 @@
+.schedule-board-wrapper { width: 100%; overflow: visible; }
+.schedule-board-scroller { width: 100%; overflow: visible; border-radius: 22px; box-shadow: 0 4px 16px rgba(31, 45, 61, 0.04); }
+.schedule-board { width: 100%; background: #ffffff; border: 1px solid #e8ebf1; border-radius: 20px; position: relative; z-index: 1; overflow: visible; }
+
+.schedule-grid { display: grid; grid-template-columns: 120px repeat(5, 1fr); align-items: stretch; }
+.schedule-grid-header { background: #ffffff; border-bottom: 1px solid #edf0f5; border-top-left-radius: 20px; border-top-right-radius: 20px; overflow: hidden; }
+.grid-head { padding: 13px 12px; font-size: 13px; font-weight: 800; color: #6a7383; text-transform: uppercase; }
+.time-head { padding-left: 14px; }
+.schedule-grid-row { border-bottom: 1px solid #edf0f5; }
+.schedule-grid-row:last-child { border-bottom: none; }
+
+.schedule-grid-row.session-morning .time-cell { border-left: 3px solid #f5bc3d; }
+.schedule-grid-row.session-afternoon .time-cell { border-left: 3px solid #6092e6; }
+
+.schedule-session-divider { display: flex; align-items: center; gap: 12px; padding: 7px 14px; position: relative; overflow: hidden; }
+.morning-divider { background: linear-gradient(90deg, #fffdf5 0%, #fffbec 50%, #fffdf5 100%); border-bottom: 1.5px solid #f0e0b0; }
+.afternoon-divider { background: linear-gradient(90deg, #f5f8ff 0%, #eef4ff 50%, #f5f8ff 100%); border-top: 1.5px solid #d0dff8; border-bottom: 1.5px solid #d0dff8; }
+.session-div-line { flex: 1; height: 1.5px; background: linear-gradient(90deg, transparent, #e8c96080, transparent); border-radius: 2px; }
+.session-div-line.afternoon-line { background: linear-gradient(90deg, transparent, #b8cff580, transparent); }
+.session-div-chip { display: flex; align-items: center; gap: 6px; flex-shrink: 0; border-radius: 20px; padding: 4px 12px 4px 9px; }
+.morning-chip { background: #fff8e1; border: 1.5px solid #e8c960; }
+.afternoon-chip { background: #eef4ff; border: 1.5px solid #b8cff5; }
+.morning-chip .session-div-icon { font-size: 15px !important; color: #d4920a; }
+.afternoon-chip .session-div-icon { font-size: 15px !important; color: #4a80d9; }
+.session-div-label { font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; }
+.morning-chip .session-div-label { color: #a06c00; }
+.afternoon-chip .session-div-label { color: #2a5bbf; }
+.session-div-badge { font-size: 11px; font-weight: 600; padding: 1px 7px; border-radius: 20px; }
+.morning-chip .session-div-badge { background: #ffe9a0; color: #8a5e00; }
+.afternoon-chip .session-div-badge { background: #ddeaff; color: #1e4bb5; }
+
+.time-cell { padding: 9px 7px 9px 10px; display: flex; flex-direction: column; justify-content: center; color: #5c6678; }
+.period-label { font-size: 12px; font-weight: 700; color: #5d687b; margin-bottom: 2px; }
+.period-time { font-size: 11px; color: #6f798b; }
+.lesson-cell { padding: 2px; display: flex; align-items: center; justify-content: center; min-height: 92px; box-sizing: border-box; position: relative; overflow: visible; }
+.lesson-empty { width: 100%; height: 84px; border-radius: 14px; background: #f7f8fa; color: #c7ccd5; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+

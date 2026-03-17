@@ -1,0 +1,9 @@
+.question-card { background: #fff; border-radius: 24px; padding: 28px; box-shadow: 0 2px 10px rgba(22, 34, 51, 0.08); }
+.question-title { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; margin-bottom: 20px; color: #1f2a44; font-size: 18px; line-height: 1.6; }
+.question-title strong { color: #9aa3b5; font-size: 16px; }
+.answer-list { display: flex; flex-direction: column; gap: 14px; }
+
+@media (max-width: 768px) {
+  .question-title { font-size: 16px; }
+}
+
