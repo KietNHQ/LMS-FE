@@ -39,31 +39,3 @@ justify-content:center;
 border-radius:10px;
 font-size:20px;
 }
-
-/* hệ tím chính */
-
-.purple{
-background:#ece2ff;
-color:#885def;
-}
-
-/* tím nhạt */
-
-.blue{
-background:#f1ebff;
-color:#7d57d8;
-}
-
-/* tím hồng */
-
-.orange{
-background:#f6ecff;
-color:#9f67ff;
-}
-
-/* tím đậm */
-
-.red{
-background:#e9dcff;
-color:#6d3df0;
-}
