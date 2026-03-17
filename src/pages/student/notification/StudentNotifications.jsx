@@ -1,7 +1,8 @@
 import { useState } from "react";
 import "./StudentNotifications.css";
 
-import { Bell, Star } from "lucide-react";
+import { FiBell, FiStar } from "react-icons/fi";
+import { FaStar } from "react-icons/fa";
 
 export default function Notification() {
 
@@ -156,7 +157,7 @@ export default function Notification() {
       id: 16,
       title: "Lịch thi HK2 2024-2025",
       content:
-        "Nhà trường thông báo lịch thi học kỳ 2 năm học 2024-2025. Thi bắt đầu từ ngày 20/05/2025,Nhà trường thông báo lịch thi học kỳ 2 năm học 2024-2025. Thi bắt đầu từ ngày 20/05/2025.,Nhà trường thông báo lịch thi học kỳ 2 năm học 2024-2025. Thi bắt đầu từ ngày 20/05/2025.",
+        "Nhà trường thông báo lịch thi học kỳ 2 năm học 2024-2025. Thi bắt đầu từ ngày 20/05/2025.",
       date: "2025-01-15",
       unread: true,
       important: false,
@@ -291,7 +292,8 @@ export default function Notification() {
             onClick={markAllRead}
           >
 
-            <Bell className="bell-icon-student" size={28} />
+            <FiBell className="bell-icon" />
+
             {unreadCount > 0 && (
               <span className="bell-badge">
                 {unreadCount > 9 ? "9+" : unreadCount}
@@ -316,8 +318,8 @@ export default function Notification() {
                 onClick={() => openNotification(item)}
               >
 
-                <div className="notification-icon-student">
-                <Bell size={20}/>
+                <div className="notification-icon">
+                  🔔
                 </div>
 
                 <div className="notification-content">
@@ -327,7 +329,7 @@ export default function Notification() {
                     {item.title}
 
                     {item.unread && (
-                      <span className="unread-dot-student"></span>
+                      <span className="unread-dot"></span>
                     )}
 
                   </div>
@@ -349,10 +351,11 @@ export default function Notification() {
                 onClick={() => toggleImportant(item.id)}
               >
 
-                    <Star
-                    className={item.important ? "star-active" : "star"}
-                    fill={item.important ? "currentColor" : "none"}
-              />
+                {item.important ? (
+                  <FaStar className="star-active"/>
+                ) : (
+                  <FiStar className="star"/>
+                )}
 
               </div>
 
@@ -387,7 +390,7 @@ export default function Notification() {
             </div>
 
             <button
-              className="dialog-close-student"
+              className="dialog-close"
               onClick={closeDialog}
             >
               Đóng
