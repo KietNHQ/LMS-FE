@@ -1,11 +1,13 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import "./StudentQuiz.css";
 import {
     FiClock,
-    FiChevronRight,
-    FiAward,
     FiCheck,
 } from "react-icons/fi";
+import QuizHeader from "./components/QuizHeader/QuizHeader";
+import QuizCard from "./components/QuizCard/QuizCard";
+import QuestionItem from "./components/QuestionItem/QuestionItem";
+import ResultSummary from "./components/ResultSummary/ResultSummary";
 
 const quizListData = [
     {
@@ -162,18 +164,14 @@ export default function StudentQuiz() {
 
     const [submittedResult, setSubmittedResult] = useState(null);
 
-    const [quizResults, setQuizResults] = useState({});
-
-
-    useEffect(() => {
-
-        const saved = localStorage.getItem("quizResults");
-
-        if (saved) {
-            setQuizResults(JSON.parse(saved));
+    const [quizResults, setQuizResults] = useState(() => {
+        try {
+            const saved = localStorage.getItem("quizResults");
+            return saved ? JSON.parse(saved) : {};
+        } catch {
+            return {};
         }
-
-    }, []);
+    });
 
 
     useEffect(() => {
@@ -181,34 +179,6 @@ export default function StudentQuiz() {
         localStorage.setItem("quizResults", JSON.stringify(quizResults));
 
     }, [quizResults]);
-
-
-    useEffect(() => {
-
-        if (view !== "doing" || timeLeft <= 0) return;
-
-        const timer = setInterval(() => {
-
-            setTimeLeft((prev) => {
-
-                if (prev <= 1) {
-
-                    clearInterval(timer);
-
-                    handleSubmitAuto();
-
-                    return 0;
-                }
-
-                return prev - 1;
-
-            });
-
-        }, 1000);
-
-        return () => clearInterval(timer);
-
-    }, [view, timeLeft]);
 
 
     const answeredCount = useMemo(() => {
@@ -299,7 +269,7 @@ export default function StudentQuiz() {
     };
 
 
-    const handleSubmitAuto = () => {
+    const handleSubmitAuto = useCallback(() => {
 
         if (!selectedQuiz) return;
 
@@ -313,7 +283,35 @@ export default function StudentQuiz() {
         setSubmittedResult(result);
 
         setView("result");
-    };
+    }, [answers, selectedQuiz]);
+
+
+    useEffect(() => {
+
+        if (view !== "doing" || timeLeft <= 0) return;
+
+        const timer = setInterval(() => {
+
+            setTimeLeft((prev) => {
+
+                if (prev <= 1) {
+
+                    clearInterval(timer);
+
+                    handleSubmitAuto();
+
+                    return 0;
+                }
+
+                return prev - 1;
+
+            });
+
+        }, 1000);
+
+        return () => clearInterval(timer);
+
+    }, [view, timeLeft, handleSubmitAuto]);
 
 
     const handleBackToList = () => {
@@ -383,13 +381,7 @@ export default function StudentQuiz() {
 
             <div className="student-quiz-page">
 
-                <div className="quiz-list-header">
-
-                    <h1>Danh sách Quiz</h1>
-
-                    <p>Chọn bài kiểm tra để bắt đầu làm</p>
-
-                </div>
+                <QuizHeader title="Danh sách Quiz" subtitle="Chọn bài kiểm tra để bắt đầu làm" />
 
 
                 <div className="quiz-grid">
@@ -405,77 +397,19 @@ export default function StudentQuiz() {
 
                         return (
 
-                            <div className="quiz-card" key={quiz.id}>
-
-                                <div className="quiz-card-top">
-
-                                    <div className="quiz-card-icon">
-                                        <FiAward />
-                                    </div>
-
-                                    <div className="quiz-card-title-wrap">
-
-                                        <h3>{quiz.title}</h3>
-
-                                        <p>
-                                            {quiz.subject} • {quiz.className}
-                                        </p>
-
-                                    </div>
-
-                                </div>
-
-
-                                <div className="quiz-meta">
-
-                                    <span>
-                                        <FiClock /> {quiz.duration} phút
-                                    </span>
-
-                                    <span>{quiz.questionCount} câu hỏi</span>
-
-                                    <span className={`quiz-badge ${quiz.status}`}>
-                                        {getStatusLabel(quiz.status)}
-                                    </span>
-
-                                </div>
-
-
-                                <div className="quiz-deadline">
-                                    Hạn nộp: {quiz.deadline}
-                                </div>
-
-
-                                {hasDone ? (
-
-                                    <button
-                                        className="quiz-main-btn"
-                                        onClick={() => {
-                                            setSubmittedResult(quizResults[quiz.id]);
-                                            setView("result");
-                                        }}
-                                    >
-                                        Review <FiChevronRight />
-                                    </button>
-
-                                ) : canStart ? (
-
-                                    <button
-                                        className="quiz-main-btn"
-                                        onClick={() => handleStartQuiz(quiz)}
-                                    >
-                                        {getButtonText(quiz)} <FiChevronRight />
-                                    </button>
-
-                                ) : (
-
-                                    <button className="quiz-disabled-btn" disabled>
-                                        {getButtonText(quiz)}
-                                    </button>
-
-                                )}
-
-                            </div>
+                            <QuizCard
+                                key={quiz.id}
+                                quiz={quiz}
+                                hasDone={hasDone}
+                                canStart={canStart}
+                                getStatusLabel={getStatusLabel}
+                                getButtonText={getButtonText}
+                                onStart={() => handleStartQuiz(quiz)}
+                                onReview={() => {
+                                    setSubmittedResult(quizResults[quiz.id]);
+                                    setView("result");
+                                }}
+                            />
 
                         );
 
@@ -535,49 +469,14 @@ export default function StudentQuiz() {
 
                     {selectedQuiz.questions.map((question, index) => (
 
-                        <div className="question-card" key={question.id}>
-
-                            <div className="question-title">
-
-                                <span>
-                                    {index + 1}. {question.text}
-                                </span>
-
-                                <strong>({question.point} điểm)</strong>
-
-                            </div>
-
-
-                            <div className="answer-list">
-
-                                {question.options.map((option, optionIndex) => {
-
-                                    const isSelected = answers[question.id] === optionIndex;
-
-                                    return (
-
-                                        <button
-                                            key={optionIndex}
-                                            className={`answer-item ${isSelected ? "selected" : ""}`}
-                                            onClick={() =>
-                                                handleChooseAnswer(question.id, optionIndex)
-                                            }
-                                        >
-
-                                            <span className="answer-letter">
-                                                {letters[optionIndex]}
-                                            </span>
-
-                                            <span className="answer-text">{option}</span>
-
-                                        </button>
-
-                                    );
-                                })}
-
-                            </div>
-
-                        </div>
+                        <QuestionItem
+                            key={question.id}
+                            question={question}
+                            index={index}
+                            answers={answers}
+                            onChooseAnswer={handleChooseAnswer}
+                            letters={letters}
+                        />
 
                     ))}
 
@@ -597,60 +496,7 @@ export default function StudentQuiz() {
 
             <div className="quiz-result-page">
 
-                <div className="quiz-result-summary">
-
-                    <div
-                        className={`result-percent-circle ${
-                            submittedResult.percent >= 50 ? "pass" : "fail"
-                        }`}
-                    >
-                        {submittedResult.percent}%
-                    </div>
-
-                    <h2>{submittedResult.quiz.title}</h2>
-
-                    <p>Bạn đã hoàn thành bài kiểm tra!</p>
-
-
-                    <div className="result-stats">
-
-                        <div className="result-stat-box">
-
-                            <h3>{submittedResult.achievedScore.toFixed(1)}</h3>
-
-                            <span>Điểm đạt</span>
-
-                        </div>
-
-
-                        <div className="result-stat-box">
-
-                            <h3>{submittedResult.totalScore.toFixed(1)}</h3>
-
-                            <span>Tổng điểm</span>
-
-                        </div>
-
-
-                        <div className="result-stat-box">
-
-                            <h3>
-                                {submittedResult.correctCount}/
-                                {submittedResult.totalQuestions}
-                            </h3>
-
-                            <span>Câu đúng</span>
-
-                        </div>
-
-                    </div>
-
-
-                    <button className="back-list-btn" onClick={handleBackToList}>
-                        Quay lại danh sách
-                    </button>
-
-                </div>
+                <ResultSummary submittedResult={submittedResult} onBackToList={handleBackToList} />
 
 
                 <div className="result-detail-section">

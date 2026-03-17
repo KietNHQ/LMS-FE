@@ -1,0 +1,5 @@
+.support-contact { margin-top: 30px; }
+.contact-grid { display: flex; gap: 20px; }
+.contact-card { flex: 1; background: #fff; padding: 15px; border-radius: 10px; border: 1px solid #eee; display: flex; gap: 10px; align-items: center; }
+.contact-icon { font-size: 20px; color: #4f6ef7; }
+

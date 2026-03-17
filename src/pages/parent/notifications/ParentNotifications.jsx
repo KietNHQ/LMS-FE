@@ -7,7 +7,6 @@ import NotificationList from "./components/NotificationList/NotificationList";
 
 export default function Notification() {
 
-  const parentName = "Nguyễn Văn A";
 
   const children = [
     { name: "Nguyễn Văn B", class: "10A1" },

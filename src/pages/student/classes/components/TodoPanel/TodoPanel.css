@@ -1,0 +1,53 @@
+.student-classes-side-panel {
+  background: #ffffff;
+  border-radius: 22px;
+  border: 1px solid #e7edf9;
+  box-shadow: 0 8px 24px rgba(20, 32, 70, 0.05);
+  padding: 18px;
+  height: fit-content;
+  position: sticky;
+  top: 20px;
+}
+
+.student-classes-side-panel h2 {
+  margin: 0 0 14px;
+  font-size: 28px;
+  font-weight: 800;
+  color: #16233b;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #edf2fb;
+}
+
+.student-task-item {
+  position: relative;
+  background: #f5f8ff;
+  border: 1px solid #e2ebff;
+  border-radius: 16px;
+  padding: 14px;
+  margin-bottom: 12px;
+  overflow: hidden;
+  transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
+}
+
+.student-task-item:hover {
+  background: #edf4ff;
+  border-color: #bdd2ff;
+  transform: translateY(-3px);
+  box-shadow: 0 12px 22px rgba(95, 134, 245, 0.12);
+}
+
+.student-task-title { margin: 0; font-weight: 800; color: #16233b; font-size: 18px; }
+.student-task-meta { margin: 6px 0; color: #6f7c91; font-size: 14px; }
+.student-task-due { color: #d35454; font-size: 13px; font-weight: 700; }
+.student-task-hover-detail { margin-top: 10px; max-height: 0; opacity: 0; overflow: hidden; transform: translateY(8px); color: #42557c; font-size: 13px; line-height: 1.5; border-top: 1px dashed transparent; transition: max-height 0.28s ease, opacity 0.28s ease, transform 0.28s ease, margin-top 0.28s ease; }
+.student-task-hover-detail span { font-weight: 800; color: #3458c4; }
+.student-task-item:hover .student-task-hover-detail { max-height: 80px; opacity: 1; transform: translateY(0); margin-top: 12px; border-top-color: #cbd9fb; padding-top: 10px; }
+
+@media (max-width: 1280px) {
+  .student-classes-side-panel { position: static; }
+}
+
+@media (max-width: 768px) {
+  .student-classes-side-panel h2 { font-size: 24px; }
+}
+

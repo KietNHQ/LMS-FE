@@ -1,0 +1,74 @@
+.student-class-card {
+  background: linear-gradient(180deg, #eef3ff 0%, #e5ecfb 100%);
+  border-radius: 22px;
+  border: 1px solid #d8e3fb;
+  box-shadow: 0 6px 16px rgba(20, 32, 70, 0.05);
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  cursor: pointer;
+  transition: border-color 0.24s ease, box-shadow 0.24s ease, transform 0.24s ease, background 0.24s ease;
+  outline: none;
+}
+
+.student-class-card:hover {
+  background: linear-gradient(180deg, #e7f0ff 0%, #d9e7ff 100%);
+  border-color: #93b3ff;
+  box-shadow: 0 18px 34px rgba(59, 104, 227, 0.18);
+  transform: translateY(-6px);
+}
+
+.student-class-card:focus-visible {
+  border-color: #5f86f5;
+  box-shadow: 0 18px 34px rgba(59, 104, 227, 0.18), 0 0 0 4px rgba(95, 134, 245, 0.14);
+}
+
+.student-class-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.student-class-tag {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 11px;
+  background: #f4f7ff;
+  color: #4a6ecf;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  border: 1px solid #dbe6ff;
+}
+
+.student-class-card h3 {
+  margin: 12px 0 4px;
+  font-size: 28px;
+  line-height: 1.2;
+  color: #16233b;
+  font-weight: 800;
+}
+
+.student-class-pending { font-size: 13px; color: #e05a5a; white-space: nowrap; font-weight: 700; }
+.student-class-info-list { margin: 0; padding-left: 18px; color: #4f607b; display: grid; gap: 8px; font-size: 15px; }
+.student-class-progress-wrap { margin-top: 2px; }
+.student-class-progress-label { display: flex; justify-content: space-between; align-items: center; color: #4f607b; font-size: 14px; margin-bottom: 8px; }
+.student-class-progress-label strong { color: #3458c4; font-size: 16px; font-weight: 800; }
+.student-class-progress-track { height: 11px; border-radius: 999px; background: rgba(126, 161, 255, 0.18); overflow: hidden; }
+.student-class-progress-track div { height: 100%; border-radius: inherit; background: linear-gradient(90deg, #7ea1ff 0%, #5a82f3 100%); }
+.student-class-highlight { margin-top: 4px; padding: 14px 14px 12px; border-radius: 16px; background: linear-gradient(135deg, #ffffff 0%, #eef4ff 100%); border: 1px solid #c9d9ff; box-shadow: 0 8px 18px rgba(95, 134, 245, 0.12); }
+.student-class-highlight-label { display: inline-flex; align-items: center; justify-content: center; min-width: 92px; height: 28px; padding: 0 10px; border-radius: 999px; background: linear-gradient(135deg, #7ea1ff 0%, #5f86f5 100%); color: #fff; font-size: 12px; font-weight: 800; }
+.student-class-highlight p { margin: 10px 0 0; color: #294172; font-size: 14px; line-height: 1.55; font-weight: 700; }
+.student-class-card-actions { margin-top: auto; display: flex; }
+.student-class-secondary-btn { width: 100%; min-height: 48px; background: linear-gradient(135deg, #7ea1ff 0%, #5f86f5 100%); color: #fff; padding: 12px 16px; border: none; border-radius: 16px; font-size: 15px; font-weight: 700; cursor: pointer; box-shadow: 0 12px 24px rgba(95, 134, 245, 0.18); transition: transform 0.22s ease, box-shadow 0.22s ease; }
+.student-class-secondary-btn:hover { transform: translateY(-2px); box-shadow: 0 16px 30px rgba(95, 134, 245, 0.26); }
+
+@media (max-width: 768px) {
+  .student-class-card h3 { font-size: 24px; }
+  .student-class-card-actions { flex-direction: column; }
+  .student-class-secondary-btn { width: 100%; }
+}
+

@@ -1,0 +1,7 @@
+.support-faq { flex: 2; background: #fff; padding: 20px; border-radius: 12px; height: 420px; display: flex; flex-direction: column; border: 1px solid #eee; }
+.faq-title { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
+.faq-icon { color: #4f6ef7; font-size: 18px; }
+.faq-list { flex: 1; overflow-y: auto; padding-right: 5px; }
+.faq-category { margin-top: 12px; }
+.faq-category h4 { font-size: 14px; color: #777; margin-bottom: 6px; }
+
