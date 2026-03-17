@@ -1,4 +1,3 @@
-import React from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import {
     FiArrowLeft,
@@ -10,9 +9,9 @@ import {
     FiExternalLink,
     FiBookOpen,
 } from "react-icons/fi";
-import "./StudentClassDetail.css";
-import { classList } from "./classesData";
-import ClassDetailHeader from "./components/ClassDetailHeader/ClassDetailHeader";
+import "./ClassDetailView.css";
+import { classList } from "../../classesData";
+import ClassDetailHeader from "../ClassDetailHeader/ClassDetailHeader";
 
 function getPdfLink(resource, classInfo) {
     if (typeof resource === "object" && resource?.url) return resource.url;
@@ -20,9 +19,9 @@ function getPdfLink(resource, classInfo) {
     const fileName =
         typeof resource === "string"
             ? resource
-            .toLowerCase()
-            .replace(/\s+/g, "-")
-            .replace(/[^\w-]+/g, "") + ".pdf"
+                  .toLowerCase()
+                  .replace(/\s+/g, "-")
+                  .replace(/[^\w-]+/g, "") + ".pdf"
             : "document.pdf";
 
     return `/pdf/${classInfo.id}/${fileName}`;
@@ -45,7 +44,7 @@ function getStatusClass(status) {
     return "status-chip status-chip--done";
 }
 
-export default function StudentClassDetail() {
+export default function ClassDetailView() {
     const navigate = useNavigate();
     const { classId } = useParams();
     const classInfo = classList.find((item) => String(item.id) === String(classId));
@@ -105,18 +104,18 @@ export default function StudentClassDetail() {
                             <div className="student-class-detail-info-item">
                                 <FiUser className="student-class-detail-info-icon" />
                                 <span>
-                  Giáo viên: <strong>{classInfo.teacher}</strong>
-                </span>
+                                    Giáo viên: <strong>{classInfo.teacher}</strong>
+                                </span>
                             </div>
 
                             <div className="student-class-detail-info-item">
                                 <FiMail className="student-class-detail-info-icon" />
                                 <span>
-                  Email:{" "}
+                                    Email:{" "}
                                     <a href={`mailto:${classInfo.teacherEmail}`} className="teacher-mail-link">
-                    {classInfo.teacherEmail}
-                  </a>
-                </span>
+                                        {classInfo.teacherEmail}
+                                    </a>
+                                </span>
                             </div>
                         </div>
                     </section>
@@ -142,8 +141,8 @@ export default function StudentClassDetail() {
                                     </div>
 
                                     <span className={getStatusClass(assignment.status)}>
-                    {assignment.status}
-                  </span>
+                                        {assignment.status}
+                                    </span>
                                 </button>
                             ))}
                         </div>
@@ -157,9 +156,7 @@ export default function StudentClassDetail() {
                         <div className="student-class-detail-side-list">
                             {classInfo.lessons.map((lesson) => (
                                 <div key={lesson.id} className="student-class-detail-side-item">
-                                    <div className="student-class-detail-side-item-title">
-                                        {lesson.title}
-                                    </div>
+                                    <div className="student-class-detail-side-item-title">{lesson.title}</div>
 
                                     <div className="student-class-detail-side-meta">
                                         <div className="student-class-detail-side-meta-row">
