@@ -312,7 +312,7 @@ export default function StudentNotifications() {
             </div>
 
             <button
-              className="dialog-close"
+              className="dialog-close-student"
               onClick={closeDialog}
             >
               Đóng
