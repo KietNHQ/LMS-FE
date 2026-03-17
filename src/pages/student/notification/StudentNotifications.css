@@ -169,7 +169,7 @@
 }
 
 
-.notification-icon{
+.notification-icon-student{
 
   width:40px;
 
@@ -188,9 +188,29 @@
   font-size:18px;
 
   flex-shrink:0;
+  color: #1f6fe0;
+}
+/* Bell shake animation */
+
+@keyframes bellShake{
+
+  0% { transform: rotate(0deg); }
+
+  20% { transform: rotate(-20deg); }
+
+  40% { transform: rotate(15deg); }
+
+  60% { transform: rotate(-12deg); }
+
+  80% { transform: rotate(8deg); }
+
+  100% { transform: rotate(0deg); }
 
 }
 
+.notification-bell:hover .bell-icon-student{
+  animation: bellShake 0.6s ease infinite;
+}
 
 .notification-content{
 
@@ -246,7 +266,7 @@
 }
 
 
-.unread-dot{
+.unread-dot-student{
 
   width:8px;
 
@@ -358,30 +378,28 @@
 
 }
 
-.dialog-close{
-
-  margin-top:15px;
-
+.dialog-close-student{
   background:#2f80ff;
-
   border:none;
-
-  padding:8px 15px;
-
-  border-radius:8px;
-
+  padding:10px 18px;
+  border-radius:10px;
   color:white;
-
   cursor:pointer;
 
-  transition:0.2s;
+  transition: all 0.2s ease;
 
+  box-shadow: 0 4px 10px rgba(47,128,255,0.3);
 }
 
-.dialog-close:hover{
-
+.dialog-close-student:hover{
   background:#1f6fe0;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 14px rgba(47,128,255,0.4);
+}
 
+.dialog-close-student:active{
+  transform: translateY(0);
+  box-shadow: 0 2px 6px rgba(47,128,255,0.3);
 }
 /* Bell notification */
 
@@ -394,8 +412,10 @@
   font-size:34px;
 }
 
-.bell-icon{
-  color:#333;
+.bell-icon-student{
+  color:#1f6fe0;
+   transform-origin: top center;
+  display:inline-block;
 }
 
 .notification-bell .bell-badge{
