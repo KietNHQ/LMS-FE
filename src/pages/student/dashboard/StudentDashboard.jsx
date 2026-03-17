@@ -1,24 +1,18 @@
-import React, { useMemo } from "react";
+import { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import "./StudentDashboard.css";
-import {
-    LineChart,
-    Line,
-    XAxis,
-    YAxis,
-    Tooltip,
-    ResponsiveContainer,
-    RadarChart,
-    Radar,
-    PolarGrid,
-    PolarAngleAxis,
-} from "recharts";
 import {
     HiOutlineTrophy,
     HiOutlineCalendarDays,
     HiOutlineClock,
     HiOutlineClipboardDocumentList,
 } from "react-icons/hi2";
+import WelcomeHeader from "./components/WelcomeHeader/WelcomeHeader";
+import StatsCards from "./components/StatsCards/StatsCards";
+import StudyProgressChart from "./components/StudyProgressChart/StudyProgressChart";
+import SubjectRadar from "./components/SubjectRadar/SubjectRadar";
+import YearProgress from "./components/YearProgress/YearProgress";
+import UpcomingTests from "./components/UpcomingTests/UpcomingTests";
 
 const progressData = [
     { name: "Học kỳ 1", score: 7.29 },
@@ -206,181 +200,29 @@ export default function StudentDashboard() {
 
     return (
         <div className="student-dashboard-content">
-            <div className="student-dashboard-header">
-                <h1>Xin chào, Tuấn!</h1>
-                <p>
-                    Lớp: <span className="student-header-strong">10A1</span>
-                    <span className="student-header-separator"> | </span>
-                    Năm học:{" "}
-                    <span className="student-header-strong">
-            {academicOverview.schoolYear}
-          </span>
-                </p>
-            </div>
+            <WelcomeHeader
+                studentName="Tuấn"
+                classNameLabel="10A1"
+                schoolYear={academicOverview.schoolYear}
+            />
 
-            <div className="student-stats-grid">
-                {statsCards.map((card) => (
-                    <div key={card.id} className="student-stat-card">
-                        <div className="student-stat-body">
-                            <p className="student-stat-title">{card.title}</p>
-                            <h2 className="student-stat-value">{card.value}</h2>
-
-                            {card.subtitle ? (
-                                <div className="student-stat-subtitle">{card.subtitle}</div>
-                            ) : null}
-
-                            {typeof card.progressPercent === "number" ? (
-                                <div className="student-stat-progress-wrap">
-                                    <div className="student-stat-progress">
-                                        <div
-                                            className="student-stat-progress-fill"
-                                            style={{ width: `${card.progressPercent}%` }}
-                                        />
-                                    </div>
-                                    <span className="student-stat-progress-text">
-                    {card.progressPercent}% tiến độ
-                  </span>
-                                </div>
-                            ) : (
-                                <div className="student-stat-progress-placeholder" />
-                            )}
-                        </div>
-
-                        <div className={`student-stat-icon ${card.color}`}>
-                            <card.icon />
-                        </div>
-                    </div>
-                ))}
-            </div>
+            <StatsCards cards={statsCards} />
 
             <div className="student-dashboard-grid student-dashboard-grid-top">
-                <div className="student-dashboard-card student-dashboard-card-equal">
-                    <h3>Tiến độ học tập theo học kỳ</h3>
-
-                    <div className="student-semester-chart-wrap">
-                        <ResponsiveContainer width="100%" height={300}>
-                            <LineChart
-                                data={progressData}
-                                margin={{ top: 24, right: 28, left: 20, bottom: 18 }}
-                            >
-                                <XAxis dataKey="name" />
-                                <YAxis
-                                    domain={[0, 10]}
-                                    ticks={[5, 8, 10]}
-                                    allowDecimals={false}
-                                />
-                                <Tooltip formatter={(value) => [`${value}`, "Điểm"]} />
-                                <Line
-                                    type="monotone"
-                                    dataKey="score"
-                                    stroke="#7ea1ff"
-                                    strokeWidth={3}
-                                    dot={{ r: 5 }}
-                                />
-                            </LineChart>
-                        </ResponsiveContainer>
-                    </div>
-                </div>
-
-                <div className="student-dashboard-card student-dashboard-card-equal student-dashboard-card-radar">
-                    <h3>Điểm theo môn học</h3>
-
-                    <div className="student-radar-wrap">
-                        <ResponsiveContainer width="100%" height={340}>
-                            <RadarChart cx="50%" cy="50%" outerRadius="82%" data={subjectData}>
-                                <PolarGrid />
-                                <PolarAngleAxis dataKey="subject" tick={{ fontSize: 12 }} />
-                                <Radar
-                                    dataKey="score"
-                                    stroke="#7ea1ff"
-                                    fill="#7ea1ff"
-                                    fillOpacity={0.35}
-                                />
-                            </RadarChart>
-                        </ResponsiveContainer>
-                    </div>
-                </div>
+                <StudyProgressChart data={progressData} />
+                <SubjectRadar data={subjectData} />
             </div>
 
             <div className="student-dashboard-grid student-dashboard-grid-bottom">
-                <div className="student-dashboard-card student-dashboard-card-equal student-dashboard-card-years">
-                    <h3>Tiến độ qua các năm học</h3>
+                <YearProgress
+                    items={currentStudentYearProgress}
+                    onOpenGrades={() => navigate("/student/grades")}
+                />
 
-                    <div className="student-year-list">
-                        {currentStudentYearProgress.map((item, index) => {
-                            const isLastRow = index === currentStudentYearProgress.length - 1;
-
-                            return (
-                                <button
-                                    key={item.grade}
-                                    className={`student-year-row ${isLastRow ? "open-up" : "open-down"}`}
-                                    type="button"
-                                    onClick={() => navigate("/student/grades")}
-                                >
-                                    <div className="student-year-row-main">
-                                        <span className="student-year-grade">{item.grade}</span>
-
-                                        <div className="student-progress-bar">
-                                            <div style={{ width: `${item.progressPercent}%` }} />
-                                        </div>
-
-                                        <strong>{item.fullYear.toFixed(2)}</strong>
-                                    </div>
-
-                                    <div className="student-year-hover-buffer" />
-
-                                    <div className="student-year-detail-pop">
-                                        <div className="student-year-detail-grid">
-                                            <div className="student-year-detail-item">
-                                                <span>HK1</span>
-                                                <strong>{item.hk1.toFixed(2)}</strong>
-                                            </div>
-                                            <div className="student-year-detail-item">
-                                                <span>HK2</span>
-                                                <strong>{item.hk2.toFixed(2)}</strong>
-                                            </div>
-                                            <div className="student-year-detail-item">
-                                                <span>Cả năm</span>
-                                                <strong>{item.fullYear.toFixed(2)}</strong>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </button>
-                            );
-                        })}
-                    </div>
-                </div>
-
-                <div className="student-dashboard-card student-dashboard-card-quizzes student-dashboard-card-equal">
-                    <h3>Bài kiểm tra sắp tới</h3>
-
-                    <div className="student-quiz-scroll-area">
-                        <div className="student-quiz-list">
-                            {upcomingQuizzes.map((quiz) => (
-                                <button
-                                    key={quiz.title}
-                                    className="student-quiz-item"
-                                    type="button"
-                                    onClick={() => navigate("/student/quiz")}
-                                >
-                                    <div>
-                                        <div className="student-quiz-title">{quiz.title}</div>
-                                        <div className="student-quiz-meta">
-                                            {quiz.subject} • {quiz.meta}
-                                        </div>
-                                        <div className="student-hover-hint">{quiz.description}</div>
-                                    </div>
-
-                                    <div className="student-quiz-right">
-                                        <div className="student-quiz-deadline">
-                                            Hạn nộp: {quiz.deadline}
-                                        </div>
-                                    </div>
-                                </button>
-                            ))}
-                        </div>
-                    </div>
-                </div>
+                <UpcomingTests
+                    quizzes={upcomingQuizzes}
+                    onOpenQuiz={() => navigate("/student/quiz")}
+                />
             </div>
         </div>
     );

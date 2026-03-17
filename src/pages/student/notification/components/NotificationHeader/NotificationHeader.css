@@ -1,0 +1,7 @@
+.notification-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+.notification-header h1 { margin: 0; font-size: 26px; }
+.notification-header span { font-size: 14px; color: #666; }
+.notification-bell { position: relative; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; font-size: 34px; }
+.bell-icon { color: #333; }
+.notification-bell .bell-badge { position: absolute; top: -8px; right: -10px; min-width: 28px; height: 28px; background: #ff3b30; color: #fff !important; font-size: 12px; font-weight: 700; display: flex; align-items: center; justify-content: center; border-radius: 999px; border: 2px solid #fff; line-height: 1; }
+

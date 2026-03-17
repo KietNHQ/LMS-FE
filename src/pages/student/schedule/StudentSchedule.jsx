@@ -1,13 +1,9 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import "./StudentSchedule.css";
-import CalendarMonthRoundedIcon from "@mui/icons-material/CalendarMonthRounded";
-import AccessTimeRoundedIcon from "@mui/icons-material/AccessTimeRounded";
-import SchoolRoundedIcon from "@mui/icons-material/SchoolRounded";
 import AssignmentRoundedIcon from "@mui/icons-material/AssignmentRounded";
-import WbSunnyRoundedIcon from "@mui/icons-material/WbSunnyRounded";
-import WbTwilightRoundedIcon from "@mui/icons-material/WbTwilightRounded";
-import { FiChevronLeft, FiChevronRight } from "react-icons/fi";
-import { MdChevronLeft, MdChevronRight } from "react-icons/md";
+import ScheduleHeader from "./components/ScheduleHeader/ScheduleHeader";
+import ScheduleToolbar from "./components/ScheduleToolbar/ScheduleToolbar";
+import ScheduleGrid from "./components/ScheduleGrid/ScheduleGrid";
 
 const days = [
     { key: "Monday", label: "MON" },
@@ -271,18 +267,15 @@ export default function StudentSchedule() {
         [selectedWeekStart]
     );
 
-    const { monday, friday, monthLabel, weekNumber } = useMemo(() => {
+    const { monday, friday, monthLabel } = useMemo(() => {
         const mondayDate = getStartOfIsoWeek(selectedWeekStart);
         const fridayDate = new Date(mondayDate);
         fridayDate.setDate(mondayDate.getDate() + 4);
-
-        const wn = Number(toWeekInputValue(mondayDate).split("-W")[1]);
 
         return {
             monday: formatDate(mondayDate),
             friday: formatDate(fridayDate),
             monthLabel: getMonthLabel(mondayDate, fridayDate),
-            weekNumber: wn,
         };
     }, [selectedWeekStart]);
 
@@ -304,227 +297,32 @@ export default function StudentSchedule() {
 
     return (
         <div className="student-schedule-page">
-            <div className="schedule-page-header">
-                <div className="schedule-title-row">
-                    <h1>Class Schedule</h1>
-                    <p className="schedule-inline-subtitle">
-                        Weekly timetable for <span className="schedule-class-name">Grade 10A1</span>
-                    </p>
-                </div>
-            </div>
+            <ScheduleHeader />
 
-            <div className="schedule-week-bar">
-                <div className="schedule-week-info">
-                    <CalendarMonthRoundedIcon className="week-icon" />
-                    <div className="week-info-text">
-                        <span className="week-month-label">{monthLabel}</span>
-                        <span className="week-date-range">
-                            {monday} – {friday} • Grade 10A1
-                        </span>
-                    </div>
-                </div>
+            <ScheduleToolbar
+                monthLabel={monthLabel}
+                monday={monday}
+                friday={friday}
+                pickerOpen={pickerOpen}
+                pickerWrapperRef={pickerWrapperRef}
+                setPickerOpen={setPickerOpen}
+                changeWeek={changeWeek}
+                changeViewMonth={changeViewMonth}
+                viewMonth={viewMonth}
+                selectedWeekStart={selectedWeekStart}
+                getWeeksForMonth={getWeeksForMonth}
+                toWeekInputValue={toWeekInputValue}
+                getStartOfIsoWeek={getStartOfIsoWeek}
+                setSelectedWeekStart={setSelectedWeekStart}
+                setViewMonth={setViewMonth}
+            />
 
-                <div className="schedule-week-picker">
-                    <label htmlFor="weekPicker">Select week</label>
-                    <div className="schedule-week-controls">
-                        <button type="button" onClick={() => changeWeek(-1)}>
-                            <FiChevronLeft /> Previous
-                        </button>
-
-                        <div
-                            className={`week-input-wrapper${pickerOpen ? " open" : ""}`}
-                            ref={pickerWrapperRef}
-                            onClick={() => setPickerOpen(prev => !prev)}
-                        >
-                            <CalendarMonthRoundedIcon className="week-input-cal-icon" />
-                            <span className="week-input-week">Week {weekNumber}</span>
-                            <span className="week-input-sep">·</span>
-                            <span className="week-input-month">{monthLabel}</span>
-
-                            {pickerOpen && (
-                                <div className="week-picker-popup" onClick={e => e.stopPropagation()}>
-                                    <div className="week-picker-header">
-                                        <button type="button" className="week-picker-nav" aria-label="Previous month" onClick={() => changeViewMonth(-1)}>
-                                            <MdChevronLeft />
-                                        </button>
-                                        <span className="week-picker-title">
-                                            {viewMonth.toLocaleString("en-US", { month: "long" })} {viewMonth.getFullYear()}
-                                        </span>
-                                        <button type="button" className="week-picker-nav" aria-label="Next month" onClick={() => changeViewMonth(1)}>
-                                            <MdChevronRight />
-                                        </button>
-                                    </div>
-
-                                    <div className="week-picker-day-names">
-                                        <span>Wk</span>
-                                        {["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"].map(d => (
-                                            <span key={d}>{d}</span>
-                                        ))}
-                                    </div>
-
-                                    {getWeeksForMonth(viewMonth.getFullYear(), viewMonth.getMonth()).map((weekMon) => {
-                                        const weekDays = Array.from({ length: 7 }, (_, i) => {
-                                            const d = new Date(weekMon);
-                                            d.setDate(weekMon.getDate() + i);
-                                            return d;
-                                        });
-                                        const wn = Number(toWeekInputValue(weekMon).split("-W")[1]);
-                                        const isSelected = weekMon.getTime() === getStartOfIsoWeek(selectedWeekStart).getTime();
-                                        const todayStr = new Date().toDateString();
-
-                                        return (
-                                            <div
-                                                key={weekMon.toISOString()}
-                                                className={`week-picker-row${isSelected ? " selected" : ""}`}
-                                                onClick={() => {
-                                                    setSelectedWeekStart(new Date(weekMon));
-                                                    setPickerOpen(false);
-                                                }}
-                                            >
-                                                <span className="week-picker-wn">{wn}</span>
-                                                {weekDays.map((d, i) => (
-                                                    <span
-                                                        key={i}
-                                                        className={[
-                                                            "week-picker-day-num",
-                                                            d.getMonth() !== viewMonth.getMonth() ? "other" : "",
-                                                            d.toDateString() === todayStr ? "today" : "",
-                                                        ].filter(Boolean).join(" ")}
-                                                    >
-                                                        {d.getDate()}
-                                                    </span>
-                                                ))}
-                                            </div>
-                                        );
-                                    })}
-
-                                    <div className="week-picker-footer">
-                                        <button
-                                            type="button"
-                                            onClick={() => {
-                                                const now = getStartOfIsoWeek(new Date());
-                                                setSelectedWeekStart(now);
-                                                setViewMonth(new Date(now.getFullYear(), now.getMonth(), 1));
-                                                setPickerOpen(false);
-                                            }}
-                                        >
-                                            This week
-                                        </button>
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-
-                        <button type="button" onClick={() => changeWeek(1)}>
-                            Next <FiChevronRight />
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-
-            <div className="schedule-board-wrapper">
-            <div className="schedule-board-scroller">
-            <div className="schedule-board">
-                <div className="schedule-grid schedule-grid-header">
-                    <div className="grid-head time-head">PERIOD / DAY</div>
-                    {days.map((day) => (
-                        <div key={day.key} className="grid-head">
-                            {day.label}
-                        </div>
-                    ))}
-                </div>
-
-                {periods.map((p, idx) => {
-                    const isFirstMorning =
-                        p.session === "Morning" &&
-                        (idx === 0 || periods[idx - 1].session !== "Morning");
-                    const isFirstAfternoon =
-                        p.session === "Afternoon" &&
-                        (idx === 0 || periods[idx - 1].session === "Morning");
-
-                    return (
-                        <React.Fragment key={p.period}>
-                            {isFirstMorning && (
-                                <div className="schedule-session-divider morning-divider">
-                                    <div className="session-div-line" />
-                                    <div className="session-div-chip morning-chip">
-                                        <WbSunnyRoundedIcon className="session-div-icon" />
-                                        <span className="session-div-label">Morning</span>
-                                        <span className="session-div-badge">Periods 1–5</span>
-                                    </div>
-                                    <div className="session-div-line" />
-                                </div>
-                            )}
-                            {isFirstAfternoon && (
-                                <div className="schedule-session-divider afternoon-divider">
-                                    <div className="session-div-line afternoon-line" />
-                                    <div className="session-div-chip afternoon-chip">
-                                        <WbTwilightRoundedIcon className="session-div-icon" />
-                                        <span className="session-div-label">Afternoon</span>
-                                        <span className="session-div-badge">Periods 6–10</span>
-                                    </div>
-                                    <div className="session-div-line afternoon-line" />
-                                </div>
-                            )}
-
-                            <div className={`schedule-grid schedule-grid-row ${p.session === "Morning" ? "session-morning" : "session-afternoon"}`}>
-                                <div className="time-cell">
-                                    <div className="period-label">Period {p.period}</div>
-                                    <div className="period-time">
-                                        {p.start} - {p.end}
-                                    </div>
-                                </div>
-
-                                {days.map((day) => {
-                                    const lesson = getLesson(day.key, p.period);
-
-                                    return (
-                                        <div className="lesson-cell" key={`${day.key}-${p.period}`}>
-                                            {lesson ? (
-                                                <div className={`lesson-pill ${lesson.color}`}>
-                                                    <div className="lesson-header">
-                                                        <div className="lesson-subject">{lesson.subject}</div>
-                                                        {getAssessmentIcon(lesson.assessment)}
-                                                    </div>
-                                                    <div className="lesson-room">{lesson.room}</div>
-
-                                                    <div className="lesson-extra">
-                                                        <span>
-                                                            <SchoolRoundedIcon />
-                                                            {lesson.teacher}
-                                                        </span>
-                                                        <span>
-                                                            <AccessTimeRoundedIcon />
-                                                            {lesson.start} - {lesson.end}
-                                                        </span>
-                                                    </div>
-
-                                                    <div className="lesson-tooltip">
-                                                        <p>
-                                                            <strong>Topic:</strong> {lesson.lessonTopic}
-                                                        </p>
-                                                        <p>
-                                                            <strong>Class activity:</strong> {lesson.activity}
-                                                        </p>
-                                                        <p>
-                                                            <strong>Assessment:</strong> {lesson.assessment}
-                                                        </p>
-                                                    </div>
-                                                </div>
-                                            ) : (
-                                                <div className="lesson-empty">-</div>
-                                            )}
-                                        </div>
-                                    );
-                                })}
-                            </div>
-                        </React.Fragment>
-                    );
-                })}
-            </div>
-            </div>
-            </div>
+            <ScheduleGrid
+                days={days}
+                periods={periods}
+                getLesson={getLesson}
+                getAssessmentIcon={getAssessmentIcon}
+            />
         </div>
     );
 }

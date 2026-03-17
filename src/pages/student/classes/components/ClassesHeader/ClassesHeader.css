@@ -1,0 +1,21 @@
+.student-classes-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 16px;
+}
+
+.student-classes-title-wrap h1 {
+    margin: 0;
+    font-size: 30px;
+    font-weight: 800;
+    color: #16233b;
+    line-height: 1.2;
+    letter-spacing: -0.02em;
+}
+
+@media (max-width: 768px) {
+    .student-classes-title-wrap h1 {
+        font-size: 24px;
+    }
+}

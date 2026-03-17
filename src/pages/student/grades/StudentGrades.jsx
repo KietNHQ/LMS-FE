@@ -23,6 +23,7 @@ import {
     FaMicroscope,
 } from "react-icons/fa";
 import "./StudentGrades.css";
+import GradesHeader from "./components/GradesHeader/GradesHeader";
 
 /* =========================
    HÀM HỖ TRỢ TÍNH ĐIỂM
@@ -404,7 +405,7 @@ export default function StudentGrades() {
 
     return (
         <div className="grades-page">
-            <h1 className="grades-title">Kết quả học tập</h1>
+            <GradesHeader title="Kết quả học tập" />
 
             <div className="grades-toolbar">
                 <div className="grades-filter">

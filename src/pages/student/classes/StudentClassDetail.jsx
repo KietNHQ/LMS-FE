@@ -12,6 +12,7 @@ import {
 } from "react-icons/fi";
 import "./StudentClassDetail.css";
 import { classList } from "./classesData";
+import ClassDetailHeader from "./components/ClassDetailHeader/ClassDetailHeader";
 
 function getPdfLink(resource, classInfo) {
     if (typeof resource === "object" && resource?.url) return resource.url;
@@ -72,12 +73,7 @@ export default function StudentClassDetail() {
                 <span>Quay lại trang lớp học</span>
             </Link>
 
-            <div className="student-class-detail-header-card">
-                <div className="student-class-detail-title-row">
-                    <span className="student-class-detail-tag">{classInfo.className}</span>
-                    <h1>{classInfo.title}</h1>
-                </div>
-            </div>
+            <ClassDetailHeader classNameLabel={classInfo.className} title={classInfo.title} />
 
             <div className="student-class-detail-stats">
                 <article>
