@@ -1,41 +1,50 @@
+import React from "react";
+import { BiArrowBack, BiTrophy } from "react-icons/bi";
 import "./ResultSummary.css";
+import QuestionItem from "../QuestionItem/QuestionItem";
 
-export default function ResultSummary({ submittedResult, onBackToList }) {
+export default function ResultSummary({ result, onBack }) {
     return (
-        <div className="quiz-result-summary">
-            <div
-                className={`result-percent-circle ${
-                    submittedResult.percent >= 50 ? "pass" : "fail"
-                }`}
-            >
-                {submittedResult.percent}%
+        <div className="result-summary-page">
+            <div className="result-summary-content">
+                <div className="result-summary-main">
+                    <div className="result-summary-header">
+                        <div className="result-summary-score">
+                            <div className="result-summary-icon">
+                                <BiTrophy />
+                            </div>
+                            <div>
+                                <span>Kết quả bài làm</span>
+                                <h1>{result.score}/10</h1>
+                                <p>
+                                    {result.correctCount}/{result.total} câu đúng · {result.quizTitle}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="result-summary-list">
+                        {result.questions.map((question, index) => (
+                            <QuestionItem
+                                key={question.id}
+                                question={question}
+                                index={index}
+                                selectedAnswer={result.answers[question.id]}
+                                onChoose={() => {}}
+                                disabled
+                                showResult
+                            />
+                        ))}
+                    </div>
+                </div>
+
+                <aside className="result-summary-sticky-actions">
+                    <button className="result-summary-back" onClick={onBack}>
+                        <BiArrowBack />
+                        <span>Quay lại danh sách</span>
+                    </button>
+                </aside>
             </div>
-
-            <h2>{submittedResult.quiz.title}</h2>
-            <p>Bạn đã hoàn thành bài kiểm tra!</p>
-
-            <div className="result-stats">
-                <div className="result-stat-box">
-                    <h3>{submittedResult.achievedScore.toFixed(1)}</h3>
-                    <span>Điểm đạt</span>
-                </div>
-
-                <div className="result-stat-box">
-                    <h3>{submittedResult.totalScore.toFixed(1)}</h3>
-                    <span>Tổng điểm</span>
-                </div>
-
-                <div className="result-stat-box">
-                    <h3>
-                        {submittedResult.correctCount}/{submittedResult.totalQuestions}
-                    </h3>
-                    <span>Câu đúng</span>
-                </div>
-            </div>
-
-            <button className="back-list-btn" onClick={onBackToList} type="button">
-                Quay lại danh sách
-            </button>
         </div>
     );
 }

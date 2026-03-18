@@ -1,14 +1,13 @@
 import "./FAQItem.css";
 
-export default function FAQItem({ id, faq, open, onToggle }) {
+export default function FAQItem({ faq }) {
     return (
-        <div className="faq-item" onClick={() => onToggle(id)}>
+        <article className="faq-item" tabIndex={0}>
             <div className="faq-question">
-                {faq.question}
-                <span>{open === id ? "▲" : "▼"}</span>
+                <span>{faq.question}</span>
+                <span className="faq-caret" aria-hidden="true">?</span>
             </div>
-
-            {open === id && <div className="faq-answer">{faq.answer}</div>}
-        </div>
+            <div className="faq-answer">{faq.answer}</div>
+        </article>
     );
 }

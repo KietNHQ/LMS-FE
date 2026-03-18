@@ -2,34 +2,44 @@ import { FaQuestionCircle } from "react-icons/fa";
 import FAQItem from "../FAQItem/FAQItem";
 import "./FAQList.css";
 
-export default function FAQList({ groupedFaqs, open, onToggle }) {
+export default function FAQList({ groupedFaqs, keyword, onKeywordChange }) {
+    const categories = Object.keys(groupedFaqs);
+
     return (
         <div className="support-faq">
-            <div className="faq-title">
-                <FaQuestionCircle className="faq-icon" />
-                <h3>Câu hỏi thường gặp</h3>
+            <div className="faq-header">
+                <div className="faq-title">
+                    <FaQuestionCircle className="faq-icon" />
+                    <h3>Câu hỏi thường gặp</h3>
+                </div>
+
+                <label className="faq-search" htmlFor="faq-search-input">
+                    <input
+                        id="faq-search-input"
+                        type="text"
+                        value={keyword}
+                        onChange={(event) => onKeywordChange(event.target.value)}
+                        placeholder="Tìm câu hỏi..."
+                    />
+                </label>
             </div>
 
             <div className="faq-list">
-                {Object.keys(groupedFaqs).map((category, cIndex) => (
-                    <div key={cIndex} className="faq-category">
+                {categories.map((category, cIndex) => (
+                    <section key={cIndex} className="faq-category">
                         <h4>{category}</h4>
 
-                        {groupedFaqs[category].map((faq, index) => {
-                            const id = `${cIndex}-${index}`;
-
-                            return (
-                                <FAQItem
-                                    key={id}
-                                    id={id}
-                                    faq={faq}
-                                    open={open}
-                                    onToggle={onToggle}
-                                />
-                            );
-                        })}
-                    </div>
+                        {groupedFaqs[category].map((faq, index) => (
+                            <FAQItem key={`${cIndex}-${index}`} faq={faq} />
+                        ))}
+                    </section>
                 ))}
+
+                {categories.length === 0 && (
+                    <div className="faq-empty">
+                        Không tìm thấy câu hỏi phù hợp. Hãy thử từ khóa khác hoặc liên hệ bộ phận hỗ trợ.
+                    </div>
+                )}
             </div>
         </div>
     );

@@ -7,10 +7,22 @@ import ClassStats from "./components/ClassStats/ClassStats";
 import ClassToolbar from "./components/ClassToolbar/ClassToolbar";
 import ClassList from "./components/ClassList/ClassList";
 import TodoPanel from "./components/TodoPanel/TodoPanel";
+import { Card } from "../../../components/ui";
 
 const ITEMS_PER_PAGE = 4;
 const TOTAL_WEEKS = 15;
 const LAST_VISITED_CLASS_KEY = "student_last_visited_class";
+
+function normalizeSearchText(value) {
+	return String(value ?? "")
+		.normalize("NFD")
+		.replace(/[\u0300-\u036f]/g, "")
+		.replace(/đ/g, "d")
+		.replace(/Đ/g, "D")
+		.toLowerCase()
+		.replace(/\s+/g, " ")
+		.trim();
+}
 
 export default function StudentClasses() {
 	const navigate = useNavigate();
@@ -50,18 +62,18 @@ export default function StudentClasses() {
 	}, []);
 
 	const filteredClasses = useMemo(() => {
-		const keyword = searchValue.trim().toLowerCase();
+		const keyword = normalizeSearchText(searchValue);
 
 		if (!keyword) return classList;
 
+		const keywordTokens = keyword.split(" ").filter(Boolean);
+
 		return classList.filter((item) => {
-			return (
-				item.title.toLowerCase().includes(keyword) ||
-				item.teacher.toLowerCase().includes(keyword) ||
-				item.className.toLowerCase().includes(keyword) ||
-				item.schedule.toLowerCase().includes(keyword) ||
-				item.room.toLowerCase().includes(keyword)
-			);
+			const searchableText = [item.title, item.teacher, item.className, item.room]
+				.map((field) => normalizeSearchText(field))
+				.join(" ");
+
+			return keywordTokens.every((token) => searchableText.includes(token));
 		});
 	}, [searchValue]);
 
@@ -118,7 +130,7 @@ export default function StudentClasses() {
 			/>
 
 			<div className="student-classes-layout">
-				<section className="student-classes-main">
+				<Card className="student-classes-main-card" bodyClassName="student-classes-main-card__body">
 					<ClassToolbar
 						searchValue={searchValue}
 						onSearchChange={handleSearchChange}
@@ -135,7 +147,7 @@ export default function StudentClasses() {
 						onNextPage={goNextPage}
 						onViewClassDetail={handleViewClassDetail}
 					/>
-				</section>
+				</Card>
 
 				<TodoPanel tasks={upcomingTasks} />
 			</div>

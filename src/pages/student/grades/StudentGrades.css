@@ -44,6 +44,51 @@
     padding-left: 4px;
 }
 
+.grades-class-select {
+    min-width: 340px;
+}
+
+.grades-class-select .ui-select__label {
+    font-size: 14px;
+    font-weight: 700;
+    color: #5f6f89;
+    padding-left: 4px;
+}
+
+.grades-class-select__field.ui-select__field {
+    height: 56px;
+    border: 1.5px solid #cfd9ea;
+    border-radius: 18px;
+    padding: 0 46px 0 18px;
+    background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+    font-size: 16px;
+    font-weight: 600;
+    color: #1b2a41;
+    box-shadow: 0 6px 18px rgba(31, 54, 110, 0.06);
+}
+
+.grades-class-select__field.ui-select__field:hover {
+    border-color: #8fb2ff;
+    box-shadow: 0 10px 24px rgba(37, 99, 255, 0.12);
+}
+
+.grades-class-select__field.ui-select__field:focus {
+    border-color: #3b82f6;
+    box-shadow:
+            0 0 0 4px rgba(59, 130, 246, 0.14),
+            0 10px 24px rgba(37, 99, 255, 0.12);
+}
+
+.grades-class-select .ui-select__chevron {
+    right: 16px;
+    font-size: 18px;
+    color: #64748b;
+}
+
+.grades-class-select.is-focused .ui-select__chevron {
+    color: #2563ff;
+}
+
 /* ===== CUSTOM DROPDOWN ===== */
 .custom-dropdown {
     position: relative;
@@ -161,29 +206,29 @@
     border-radius: 18px;
 }
 
-.grades-tabs button {
+.grades-tabs .grades-tab-btn.ui-button {
     height: 42px;
     padding: 0 18px;
-    border: 1px solid transparent;
+    border: none;
     background: transparent;
     color: #4f6079;
     border-radius: 12px;
     font-size: 15px;
     font-weight: 700;
-    cursor: pointer;
-    transition: all 0.24s ease;
+    box-shadow: none;
 }
 
-.grades-tabs button:hover {
+.grades-tabs .grades-tab-btn.ui-button:hover {
     background: #ffffff;
     color: #2563ff;
     box-shadow: 0 8px 18px rgba(37, 99, 255, 0.08);
 }
 
-.grades-tabs button.active {
+.grades-tabs .grades-tab-btn.ui-button.active,
+.grades-tabs .grades-tab-btn.ui-button.is-primary {
     background: linear-gradient(135deg, #2563ff 0%, #4f8cff 100%);
     color: #ffffff;
-    border-color: #2563ff;
+    border: none;
     box-shadow: 0 10px 20px rgba(37, 99, 255, 0.22);
 }
 
@@ -579,7 +624,8 @@
     }
 
     .filter-box,
-    .custom-dropdown {
+    .custom-dropdown,
+    .grades-class-select {
         width: 100%;
         min-width: unset;
     }

@@ -1,20 +1,31 @@
+import React from "react";
 import "./AnswerOption.css";
 
 export default function AnswerOption({
-    option,
-    optionIndex,
-    isSelected,
-    onChoose,
-    letters,
-}) {
+                                         label,
+                                         option,
+                                         selected,
+                                         onSelect,
+                                         disabled = false,
+                                         isCorrect = false,
+                                         isWrong = false,
+                                         showResult = false,
+                                     }) {
     return (
         <button
-            className={`answer-item ${isSelected ? "selected" : ""}`}
-            onClick={onChoose}
             type="button"
+            className={[
+                "answer-option",
+                selected ? "selected" : "",
+                disabled ? "disabled" : "",
+                showResult && isCorrect ? "correct" : "",
+                showResult && isWrong ? "wrong" : "",
+            ].join(" ")}
+            onClick={onSelect}
+            disabled={disabled}
         >
-            <span className="answer-letter">{letters[optionIndex]}</span>
-            <span className="answer-text">{option}</span>
+            <span className="answer-option-label">{label}</span>
+            <span className="answer-option-text">{option}</span>
         </button>
     );
 }

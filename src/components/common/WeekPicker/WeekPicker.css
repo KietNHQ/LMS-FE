@@ -1,0 +1,61 @@
+.common-week-picker {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.common-week-picker__label {
+  color: var(--text-secondary, #667085);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.common-week-picker__controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.common-week-picker__nav {
+  width: 34px;
+  height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  border: 1px solid var(--border-color, #d0d5dd);
+  background: #ffffff;
+  color: #344054;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.common-week-picker__nav:hover:not(:disabled) {
+  border-color: #ab8bfa;
+  color: #6a45e7;
+}
+
+.common-week-picker__nav:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.common-week-picker__select {
+  min-width: 130px;
+  height: 34px;
+  border-radius: 10px;
+  border: 1px solid var(--border-color, #d0d5dd);
+  background: #ffffff;
+  padding: 0 10px;
+  color: #101828;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.common-week-picker__select:focus {
+  outline: none;
+  border-color: #8f6cff;
+  box-shadow: 0 0 0 3px rgba(143, 108, 255, 0.14);
+}
+
