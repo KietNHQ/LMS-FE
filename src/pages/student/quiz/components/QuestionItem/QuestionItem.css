@@ -1,9 +1,34 @@
-.question-card { background: #fff; border-radius: 24px; padding: 28px; box-shadow: 0 2px 10px rgba(22, 34, 51, 0.08); }
-.question-title { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; margin-bottom: 20px; color: #1f2a44; font-size: 18px; line-height: 1.6; }
-.question-title strong { color: #9aa3b5; font-size: 16px; }
-.answer-list { display: flex; flex-direction: column; gap: 14px; }
-
-@media (max-width: 768px) {
-  .question-title { font-size: 16px; }
+.question-item {
+  padding: 1.4rem;
+  border-radius: 1.5rem;
+  background: #ffffff;
+  border: 1px solid #e2e9f7;
+  box-shadow: 0 10px 24px rgba(37, 64, 143, 0.06);
 }
 
+.question-item-header {
+  margin-bottom: 1rem;
+}
+
+.question-item-number {
+  display: inline-flex;
+  padding: 0.4rem 0.75rem;
+  border-radius: 999px;
+  background: #eaf0ff;
+  color: #3559b7;
+  font-size: 0.82rem;
+  font-weight: 800;
+  margin-bottom: 0.7rem;
+}
+
+.question-item-header h3 {
+  margin: 0;
+  color: #17306b;
+  font-size: 1.1rem;
+  line-height: 1.6;
+}
+
+.question-item-options {
+  display: grid;
+  gap: 0.85rem;
+}
