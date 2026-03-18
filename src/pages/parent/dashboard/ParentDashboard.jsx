@@ -6,7 +6,7 @@ import OverviewCards from "./components/OverviewCards/OverviewCards";
 import PaymentSummary from "./components/PaymentSummary/PaymentSummary";
 import ProgressSnapshot from "./components/ProgressSnapshot/ProgressSnapshot";
 import UpcomingSchedule from "./components/UpcomingSchedule/UpcomingSchedule";
-import RecentNotifications from "./components/RecentNotifications/RecentNotifications";
+// import RecentNotifications from "./components/RecentNotifications/RecentNotifications";
 
 // ✅ GIỮ NGUYÊN DATA FULL
 const childrenData = [
@@ -129,7 +129,7 @@ export default function ParentDashboard() {
 
       <UpcomingSchedule gradesBySemester={selectedChild.gradesBySemester} />
 
-      <RecentNotifications />
+      {/* <RecentNotifications /> */}
     </div>
   );
 }
