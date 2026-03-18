@@ -1,35 +1,53 @@
 import React from "react";
+import { Button } from "../../../../../components/ui";
 import {
-    BiCalculator,
-    BiBookOpen,
-    BiAtom,
-    BiRadioCircleMarked,
     BiTimeFive,
     BiCalendar,
     BiUser,
-    BiLockAlt,
     BiPlayCircle,
     BiCheckCircle,
-    BiXCircle,
     BiAlarm,
+    BiBook,
+    BiWorld,
+    BiLeaf,
 } from "react-icons/bi";
+import {
+    FaSquareRootAlt,
+    FaAtom,
+    FaFlask,
+    FaBookOpen,
+    FaLanguage,
+    FaMicroscope,
+    FaLaptopCode,
+    FaGlobeAsia,
+    FaDumbbell,
+    FaPalette,
+    FaMusic,
+    FaGraduationCap,
+} from "react-icons/fa";
+import { FiLock, FiX } from "react-icons/fi";
 import "./QuizCard.css";
 
-function getQuizIcon(icon) {
-    switch (icon) {
-        case "math":
-            return <BiCalculator />;
-        case "english":
-            return <BiBookOpen />;
-        case "science":
-        case "biology":
-        case "physics":
-            return <BiAtom />;
-        case "history":
-            return <BiRadioCircleMarked />;
-        default:
-            return <BiBookOpen />;
-    }
+const subjectIconMap = {
+    toán: FaSquareRootAlt,
+    "vật lý": FaAtom,
+    "hóa học": FaFlask,
+    "ngữ văn": FaBookOpen,
+    "tiếng anh": FaLanguage,
+    "sinh học": FaMicroscope,
+    "lịch sử": BiBook,
+    "địa lý": FaGlobeAsia,
+    "tin học": FaLaptopCode,
+    "giáo dục công dân": BiWorld,
+    "thể dục": FaDumbbell,
+    "mỹ thuật": FaPalette,
+    "âm nhạc": FaMusic,
+    "công nghệ": BiLeaf,
+};
+
+function getSubjectIcon(subjectName) {
+    const normalizedName = subjectName.trim().toLowerCase();
+    return subjectIconMap[normalizedName] || FaGraduationCap;
 }
 
 function getStatusInfo(status) {
@@ -56,13 +74,13 @@ function getStatusInfo(status) {
             return {
                 label: "Đã đóng",
                 className: "closed",
-                icon: <BiLockAlt />,
+                icon: <FiLock />,
             };
         default:
             return {
                 label: "Không xác định",
                 className: "closed",
-                icon: <BiXCircle />,
+                icon: <FiX />,
             };
     }
 }
@@ -74,7 +92,7 @@ export default function QuizCard({ quiz, onStart }) {
         <div className="quiz-card">
             <div className="quiz-card-top">
                 <div className="quiz-card-subject">
-                    <span className="quiz-card-subject-icon">{getQuizIcon(quiz.icon)}</span>
+                    <span className="quiz-card-subject-icon">{React.createElement(getSubjectIcon(quiz.subject))}</span>
                     <span>{quiz.subject}</span>
                 </div>
 
@@ -111,21 +129,21 @@ export default function QuizCard({ quiz, onStart }) {
                 </div>
 
                 {quiz.status === "open" ? (
-                    <button className="quiz-card-btn" onClick={() => onStart(quiz)}>
+                    <Button className="quiz-card-btn" variant="primary" onClick={() => onStart(quiz)}>
                         Vào làm bài
-                    </button>
+                    </Button>
                 ) : quiz.status === "done" ? (
-                    <button className="quiz-card-btn ghost" disabled>
+                    <Button className="quiz-card-btn ghost" variant="secondary" disabled>
                         Đã nộp
-                    </button>
+                    </Button>
                 ) : quiz.status === "upcoming" ? (
-                    <button className="quiz-card-btn ghost" disabled>
+                    <Button className="quiz-card-btn ghost" variant="secondary" disabled>
                         Chưa mở
-                    </button>
+                    </Button>
                 ) : (
-                    <button className="quiz-card-btn ghost closed" disabled>
+                    <Button className="quiz-card-btn ghost closed" variant="secondary" disabled>
                         Đã đóng
-                    </button>
+                    </Button>
                 )}
             </div>
 

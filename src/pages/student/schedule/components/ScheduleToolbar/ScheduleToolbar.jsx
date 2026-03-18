@@ -27,16 +27,16 @@ export default function ScheduleToolbar({
                 <div className="week-info-text">
                     <span className="week-month-label">{monthLabel}</span>
                     <span className="week-date-range">
-                        {monday} – {friday} • Grade 10A1
+                        {monday} – {friday} • Lớp 10A1
                     </span>
                 </div>
             </div>
 
             <div className="schedule-week-picker">
-                <label htmlFor="weekPicker">Select week</label>
+                <label htmlFor="weekPicker">Chọn tuần</label>
                 <div className="schedule-week-controls">
                     <button type="button" onClick={() => changeWeek(-1)}>
-                        <FiChevronLeft /> Previous
+                        <FiChevronLeft /> Tuần trước
                     </button>
 
                     <div
@@ -46,7 +46,7 @@ export default function ScheduleToolbar({
                     >
                         <CalendarMonthRoundedIcon className="week-input-cal-icon" />
                         <span className="week-input-week">
-                            Week {Number(toWeekInputValue(selectedWeekStart).split("-W")[1])}
+                            Tuần {Number(toWeekInputValue(selectedWeekStart).split("-W")[1])}
                         </span>
                         <span className="week-input-sep">·</span>
                         <span className="week-input-month">{monthLabel}</span>
@@ -57,18 +57,18 @@ export default function ScheduleToolbar({
                                     <button
                                         type="button"
                                         className="week-picker-nav"
-                                        aria-label="Previous month"
+                                        aria-label="Tháng trước"
                                         onClick={() => changeViewMonth(-1)}
                                     >
                                         <MdChevronLeft />
                                     </button>
                                     <span className="week-picker-title">
-                                        {viewMonth.toLocaleString("en-US", { month: "long" })} {viewMonth.getFullYear()}
+                                        {viewMonth.toLocaleString("vi-VN", { month: "long" })} {viewMonth.getFullYear()}
                                     </span>
                                     <button
                                         type="button"
                                         className="week-picker-nav"
-                                        aria-label="Next month"
+                                        aria-label="Tháng sau"
                                         onClick={() => changeViewMonth(1)}
                                     >
                                         <MdChevronRight />
@@ -76,8 +76,8 @@ export default function ScheduleToolbar({
                                 </div>
 
                                 <div className="week-picker-day-names">
-                                    <span>Wk</span>
-                                    {["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"].map((d) => (
+                                    <span>Tuần</span>
+                                    {["T2", "T3", "T4", "T5", "T6", "T7", "CN"].map((d) => (
                                         <span key={d}>{d}</span>
                                     ))}
                                 </div>
@@ -131,7 +131,7 @@ export default function ScheduleToolbar({
                                             setPickerOpen(false);
                                         }}
                                     >
-                                        This week
+                                        Tuần này
                                     </button>
                                 </div>
                             </div>
@@ -139,7 +139,7 @@ export default function ScheduleToolbar({
                     </div>
 
                     <button type="button" onClick={() => changeWeek(1)}>
-                        Next <FiChevronRight />
+                        Tuần sau <FiChevronRight />
                     </button>
                 </div>
             </div>

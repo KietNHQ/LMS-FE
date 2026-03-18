@@ -1,4 +1,5 @@
 import { SearchBar } from "../../../../../components/common";
+import { Button } from "../../../../../components/ui";
 import "./ClassToolbar.css";
 
 export default function ClassToolbar({
@@ -24,11 +25,10 @@ export default function ClassToolbar({
                     />
                 </div>
 
-                <button
+                <Button
                     type="button"
-                    className={`student-classes-primary-btn ${
-                        !lastVisitedClass ? "student-classes-primary-btn--disabled" : ""
-                    }`}
+                    variant="primary"
+                    className="student-classes-primary-btn"
                     onClick={onGoToLastVisitedClass}
                     disabled={!lastVisitedClass}
                     title={
@@ -38,7 +38,7 @@ export default function ClassToolbar({
                     }
                 >
                     Vào lớp gần nhất
-                </button>
+                </Button>
             </div>
         </div>
     );

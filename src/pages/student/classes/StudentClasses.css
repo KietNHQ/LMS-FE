@@ -11,11 +11,15 @@
   align-items: start;
 }
 
-.student-classes-main {
+.student-classes-main-card.ui-card {
   background: #ffffff;
   border: 1px solid #e7edf9;
   border-radius: 24px;
   box-shadow: 0 8px 24px rgba(20, 32, 70, 0.05);
+}
+
+.student-classes-main-card .ui-card__body,
+.student-classes-main-card__body {
   padding: 18px;
 }
 

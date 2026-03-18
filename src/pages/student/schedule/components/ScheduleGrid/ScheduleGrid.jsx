@@ -10,7 +10,7 @@ export default function ScheduleGrid({ days, periods, getLesson, getAssessmentIc
             <div className="schedule-board-scroller">
                 <div className="schedule-board">
                     <div className="schedule-grid schedule-grid-header">
-                        <div className="grid-head time-head">PERIOD / DAY</div>
+                        <div className="grid-head time-head">TIẾT / NGÀY</div>
                         {days.map((day) => (
                             <div key={day.key} className="grid-head">
                                 {day.label}
@@ -20,11 +20,11 @@ export default function ScheduleGrid({ days, periods, getLesson, getAssessmentIc
 
                     {periods.map((p, idx) => {
                         const isFirstMorning =
-                            p.session === "Morning" &&
-                            (idx === 0 || periods[idx - 1].session !== "Morning");
+                            p.session === "Sáng" &&
+                            (idx === 0 || periods[idx - 1].session !== "Sáng");
                         const isFirstAfternoon =
-                            p.session === "Afternoon" &&
-                            (idx === 0 || periods[idx - 1].session === "Morning");
+                            p.session === "Chiều" &&
+                            (idx === 0 || periods[idx - 1].session === "Sáng");
 
                         return (
                             <React.Fragment key={p.period}>
@@ -33,8 +33,8 @@ export default function ScheduleGrid({ days, periods, getLesson, getAssessmentIc
                                         <div className="session-div-line" />
                                         <div className="session-div-chip morning-chip">
                                             <WbSunnyRoundedIcon className="session-div-icon" />
-                                            <span className="session-div-label">Morning</span>
-                                            <span className="session-div-badge">Periods 1–5</span>
+                                            <span className="session-div-label">Buổi sáng</span>
+                                            <span className="session-div-badge">Tiết 1–5</span>
                                         </div>
                                         <div className="session-div-line" />
                                     </div>
@@ -44,8 +44,8 @@ export default function ScheduleGrid({ days, periods, getLesson, getAssessmentIc
                                         <div className="session-div-line afternoon-line" />
                                         <div className="session-div-chip afternoon-chip">
                                             <WbTwilightRoundedIcon className="session-div-icon" />
-                                            <span className="session-div-label">Afternoon</span>
-                                            <span className="session-div-badge">Periods 6–10</span>
+                                            <span className="session-div-label">Buổi chiều</span>
+                                            <span className="session-div-badge">Tiết 6–10</span>
                                         </div>
                                         <div className="session-div-line afternoon-line" />
                                     </div>
@@ -53,11 +53,11 @@ export default function ScheduleGrid({ days, periods, getLesson, getAssessmentIc
 
                                 <div
                                     className={`schedule-grid schedule-grid-row ${
-                                        p.session === "Morning" ? "session-morning" : "session-afternoon"
+                                        p.session === "Sáng" ? "session-morning" : "session-afternoon"
                                     }`}
                                 >
                                     <div className="time-cell">
-                                        <div className="period-label">Period {p.period}</div>
+                                        <div className="period-label">Tiết {p.period}</div>
                                         <div className="period-time">
                                             {p.start} - {p.end}
                                         </div>

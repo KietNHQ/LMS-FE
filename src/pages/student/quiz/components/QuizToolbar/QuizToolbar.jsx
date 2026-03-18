@@ -1,5 +1,6 @@
 import React from "react";
-import { BiSearch, BiFilterAlt, BiCategoryAlt } from "react-icons/bi";
+import { SearchBar } from "../../../../../components/common";
+import { Select } from "../../../../../components/ui";
 import "./QuizToolbar.css";
 
 export default function QuizToolbar({
@@ -13,45 +14,41 @@ export default function QuizToolbar({
                                     }) {
     return (
         <div className="quiz-toolbar">
-            <div className="quiz-toolbar-search">
-                <BiSearch />
-                <input
-                    type="text"
-                    placeholder="Tìm theo tên bài, môn học hoặc giáo viên..."
+            <div className="quiz-toolbar-search-wrap">
+                <SearchBar
                     value={search}
                     onChange={(e) => onSearchChange(e.target.value)}
+                    placeholder="Tìm theo tên bài, môn học hoặc giáo viên..."
                 />
             </div>
 
             <div className="quiz-toolbar-filters">
-                <div className="quiz-select-box">
-                    <BiFilterAlt />
-                    <select
-                        value={statusFilter}
-                        onChange={(e) => onStatusChange(e.target.value)}
-                    >
-                        <option value="all">Tất cả trạng thái</option>
-                        <option value="open">Đang mở</option>
-                        <option value="done">Đã hoàn thành</option>
-                        <option value="upcoming">Sắp mở</option>
-                        <option value="closed">Đã đóng</option>
-                    </select>
-                </div>
-
-                <div className="quiz-select-box">
-                    <BiCategoryAlt />
-                    <select
-                        value={subjectFilter}
-                        onChange={(e) => onSubjectChange(e.target.value)}
-                    >
-                        <option value="all">Tất cả môn học</option>
-                        {subjects.map((subject) => (
-                            <option key={subject} value={subject}>
-                                {subject}
-                            </option>
-                        ))}
-                    </select>
-                </div>
+                <Select
+                    variant="custom"
+                    className="quiz-filter-select"
+                    value={statusFilter}
+                    onChange={(e) => onStatusChange(e.target.value)}
+                    options={[
+                        { value: "all", label: "Tất cả trạng thái" },
+                        { value: "open", label: "Đang mở" },
+                        { value: "done", label: "Đã hoàn thành" },
+                        { value: "upcoming", label: "Sắp mở" },
+                        { value: "closed", label: "Đã đóng" },
+                    ]}
+                />
+                <Select
+                    variant="custom"
+                    className="quiz-filter-select"
+                    value={subjectFilter}
+                    onChange={(e) => onSubjectChange(e.target.value)}
+                    options={[
+                        { value: "all", label: "Tất cả môn học" },
+                        ...subjects.map((subject) => ({
+                            value: subject,
+                            label: subject,
+                        })),
+                    ]}
+                />
             </div>
         </div>
     );

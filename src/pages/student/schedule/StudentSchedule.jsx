@@ -6,24 +6,24 @@ import ScheduleToolbar from "./components/ScheduleToolbar/ScheduleToolbar";
 import ScheduleGrid from "./components/ScheduleGrid/ScheduleGrid";
 
 const days = [
-    { key: "Monday", label: "MON" },
-    { key: "Tuesday", label: "TUE" },
-    { key: "Wednesday", label: "WED" },
-    { key: "Thursday", label: "THU" },
-    { key: "Friday", label: "FRI" },
+    { key: "Monday", label: "THỨ 2" },
+    { key: "Tuesday", label: "THỨ 3" },
+    { key: "Wednesday", label: "THỨ 4" },
+    { key: "Thursday", label: "THỨ 5" },
+    { key: "Friday", label: "THỨ 6" },
 ];
 
 const periods = [
-    { period: 1, start: "07:00", end: "07:45", session: "Morning" },
-    { period: 2, start: "07:50", end: "08:35", session: "Morning" },
-    { period: 3, start: "08:45", end: "09:30", session: "Morning" },
-    { period: 4, start: "09:40", end: "10:25", session: "Morning" },
-    { period: 5, start: "10:35", end: "11:20", session: "Morning" },
-    { period: 6, start: "13:00", end: "13:45", session: "Afternoon" },
-    { period: 7, start: "13:50", end: "14:35", session: "Afternoon" },
-    { period: 8, start: "14:45", end: "15:30", session: "Afternoon" },
-    { period: 9, start: "15:40", end: "16:25", session: "Afternoon" },
-    { period: 10, start: "16:35", end: "17:20", session: "Afternoon" },
+    { period: 1, start: "07:00", end: "07:45", session: "Sáng" },
+    { period: 2, start: "07:50", end: "08:35", session: "Sáng" },
+    { period: 3, start: "08:45", end: "09:30", session: "Sáng" },
+    { period: 4, start: "09:40", end: "10:25", session: "Sáng" },
+    { period: 5, start: "10:35", end: "11:20", session: "Sáng" },
+    { period: 6, start: "13:00", end: "13:45", session: "Chiều" },
+    { period: 7, start: "13:50", end: "14:35", session: "Chiều" },
+    { period: 8, start: "14:45", end: "15:30", session: "Chiều" },
+    { period: 9, start: "15:40", end: "16:25", session: "Chiều" },
+    { period: 10, start: "16:35", end: "17:20", session: "Chiều" },
 ];
 
 const periodMap = periods.reduce((map, item) => {
@@ -50,8 +50,8 @@ function makeLesson(day, period, subject, teacher, room, color, lessonTopic, act
 
 const weekTemplates = [
     {
-        title: "Foundation Week",
-        summary: "Focus: New concepts with light oral checks.",
+        title: "Tuần nền tảng",
+        summary: "Trọng tâm: Học kiến thức mới và kiểm tra miệng nhẹ.",
         lessons: [
             makeLesson("Monday", 1, "Mathematics", "Nguyen Van A", "R.101", "mathematics", "Quadratic Function Basics", "Learn a new concept", "Oral check"),
             makeLesson("Monday", 2, "Physics", "Tran Van B", "R.102", "physics", "Newton's Second Law", "Guided practice", "No assessment"),
@@ -78,8 +78,8 @@ const weekTemplates = [
         ],
     },
     {
-        title: "Assessment Week",
-        summary: "Focus: Frequent checks and one-period tests.",
+        title: "Tuần đánh giá",
+        summary: "Trọng tâm: Tăng cường kiểm tra và bài kiểm tra 1 tiết.",
         lessons: [
             makeLesson("Monday", 1, "Mathematics", "Nguyen Van A", "R.101", "mathematics", "Trigonometric Functions", "New lesson + exercises", "15-minute quiz"),
             makeLesson("Monday", 2, "English", "Sarah Johnson", "R.103", "english", "Unit 7 - Reading", "Reading strategies", "Oral check"),
@@ -111,8 +111,8 @@ const weekTemplates = [
         ],
     },
     {
-        title: "Consolidation Week",
-        summary: "Focus: Review sessions and final wrap-up tasks.",
+        title: "Tuần củng cố",
+        summary: "Trọng tâm: Ôn tập tổng hợp và hoàn thành nhiệm vụ cuối kỳ.",
         lessons: [
             makeLesson("Monday", 1, "English", "Sarah Johnson", "R.103", "english", "Unit 7 - Writing", "Guided writing", "No assessment"),
             makeLesson("Monday", 2, "Physics", "Tran Van B", "Lab.2", "physics", "Mixed Problem Solving", "Team challenge", "No assessment"),
@@ -169,12 +169,12 @@ function toWeekInputValue(mondayDate) {
 }
 
 function formatDate(date) {
-    return date.toLocaleDateString("en-GB");
+    return date.toLocaleDateString("vi-VN");
 }
 
 function getMonthLabel(mondayDate, fridayDate) {
-    const startMonth = mondayDate.toLocaleString("en-US", { month: "long" });
-    const endMonth = fridayDate.toLocaleString("en-US", { month: "long" });
+    const startMonth = mondayDate.toLocaleString("vi-VN", { month: "long" });
+    const endMonth = fridayDate.toLocaleString("vi-VN", { month: "long" });
     const startYear = mondayDate.getFullYear();
     const endYear = fridayDate.getFullYear();
 
@@ -216,6 +216,8 @@ function shouldShowAssessmentAlert(assessment) {
         normalized === "45-minute test" ||
         normalized === "45-min test" ||
         normalized === "one-period test" ||
+        normalized === "kiểm tra 45 phút" ||
+        normalized === "kiểm tra 1 tiết" ||
         normalized === "midterm" ||
         normalized === "final exam"
     );

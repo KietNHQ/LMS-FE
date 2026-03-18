@@ -1,5 +1,5 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
-import { FiChevronDown, FiCheck } from "react-icons/fi";
+import React, { useMemo, useState } from "react";
+import { FiChevronDown } from "react-icons/fi";
 import {
     BiTrendingUp,
     BiTrendingDown,
@@ -24,6 +24,7 @@ import {
 } from "react-icons/fa";
 import "./StudentGrades.css";
 import GradesHeader from "./components/GradesHeader/GradesHeader";
+import { Button, Select } from "../../../components/ui";
 
 /* =========================
    HÀM HỖ TRỢ TÍNH ĐIỂM
@@ -349,22 +350,6 @@ export default function StudentGrades() {
     const [selectedClass, setSelectedClass] = useState(classOptions[0]);
     const [openRowId, setOpenRowId] = useState(1);
     const [activeTab, setActiveTab] = useState("hk1");
-    const [classDropdownOpen, setClassDropdownOpen] = useState(false);
-
-    const dropdownRef = useRef(null);
-
-    useEffect(() => {
-        const handleClickOutside = (event) => {
-            if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-                setClassDropdownOpen(false);
-            }
-        };
-
-        document.addEventListener("mousedown", handleClickOutside);
-        return () => {
-            document.removeEventListener("mousedown", handleClickOutside);
-        };
-    }, []);
 
     const currentData = useMemo(() => gradeData[selectedClass], [selectedClass]);
 
@@ -410,63 +395,47 @@ export default function StudentGrades() {
             <div className="grades-toolbar">
                 <div className="grades-filter">
                     <div className="filter-box">
-                        <label>Chọn lớp học</label>
-
-                        <div className="custom-dropdown" ref={dropdownRef}>
-                            <button
-                                type="button"
-                                className={`custom-dropdown-trigger ${classDropdownOpen ? "open" : ""}`}
-                                onClick={() => setClassDropdownOpen((prev) => !prev)}
-                            >
-                                <span>{selectedClass}</span>
-                                <FiChevronDown className="dropdown-arrow" />
-                            </button>
-
-                            <div className={`custom-dropdown-menu ${classDropdownOpen ? "show" : ""}`}>
-                                {classOptions.map((item) => (
-                                    <button
-                                        key={item}
-                                        type="button"
-                                        className={`custom-dropdown-item ${selectedClass === item ? "active" : ""}`}
-                                        onClick={() => {
-                                            setSelectedClass(item);
-                                            setOpenRowId(1);
-                                            setClassDropdownOpen(false);
-                                        }}
-                                    >
-                                        <span>{item}</span>
-                                        {selectedClass === item && <FiCheck />}
-                                    </button>
-                                ))}
-                            </div>
-                        </div>
+                        <Select
+                            variant="custom"
+                            className="grades-class-select"
+                            label="Chọn lớp học"
+                            value={selectedClass}
+                            options={classOptions.map((item) => ({ value: item, label: item }))}
+                            onChange={(event) => {
+                                setSelectedClass(event.target.value);
+                                setOpenRowId(1);
+                            }}
+                        />
                     </div>
                 </div>
 
                 <div className="grades-tabs">
-                    <button
-                        className={activeTab === "hk1" ? "active" : ""}
+                    <Button
+                        variant={activeTab === "hk1" ? "primary" : "secondary"}
+                        className={`grades-tab-btn ${activeTab === "hk1" ? "active" : ""}`}
                         onClick={() => setActiveTab("hk1")}
                         type="button"
                     >
                         Học kỳ 1
-                    </button>
+                    </Button>
 
-                    <button
-                        className={activeTab === "hk2" ? "active" : ""}
+                    <Button
+                        variant={activeTab === "hk2" ? "primary" : "secondary"}
+                        className={`grades-tab-btn ${activeTab === "hk2" ? "active" : ""}`}
                         onClick={() => setActiveTab("hk2")}
                         type="button"
                     >
                         Học kỳ 2
-                    </button>
+                    </Button>
 
-                    <button
-                        className={activeTab === "year" ? "active" : ""}
+                    <Button
+                        variant={activeTab === "year" ? "primary" : "secondary"}
+                        className={`grades-tab-btn ${activeTab === "year" ? "active" : ""}`}
                         onClick={() => setActiveTab("year")}
                         type="button"
                     >
                         Cả năm
-                    </button>
+                    </Button>
                 </div>
             </div>
 

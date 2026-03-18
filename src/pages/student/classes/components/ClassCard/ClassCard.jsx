@@ -1,4 +1,45 @@
+import React from "react";
 import "./ClassCard.css";
+import { Button } from "../../../../../components/ui";
+import {
+  FaSquareRootAlt,
+  FaAtom,
+  FaFlask,
+  FaBookOpen,
+  FaLanguage,
+  FaMicroscope,
+  FaLaptopCode,
+  FaGlobeAsia,
+  FaDumbbell,
+  FaPalette,
+  FaMusic,
+  FaGraduationCap,
+} from "react-icons/fa";
+import { BiBook, BiWorld, BiLeaf } from "react-icons/bi";
+
+const subjectIconMap = {
+  "toán học": FaSquareRootAlt,
+  "vật lý": FaAtom,
+  "hóa học": FaFlask,
+  "ngữ văn": FaBookOpen,
+  "tiếng anh": FaLanguage,
+  "sinh học": FaMicroscope,
+  "lịch sử": BiBook,
+  "địa lý": FaGlobeAsia,
+  "tin học": FaLaptopCode,
+  "giáo dục công dân": BiWorld,
+  "thể dục": FaDumbbell,
+  "mỹ thuật": FaPalette,
+  "âm nhạc": FaMusic,
+  "công nghệ": BiLeaf,
+  // Fallback for single-word subject names (from Grades)
+  "toán": FaSquareRootAlt,
+};
+
+function getSubjectIcon(subjectName) {
+  const normalizedName = subjectName.trim().toLowerCase();
+  return subjectIconMap[normalizedName] || FaGraduationCap;
+}
 
 export default function ClassCard({ item, onViewClassDetail }) {
     const examPreview = item.assignments?.[0]?.title || "Chưa có bài kiểm tra sắp tới";
@@ -19,7 +60,10 @@ export default function ClassCard({ item, onViewClassDetail }) {
             <div className="student-class-card-top">
                 <div>
                     <span className="student-class-tag">{item.className}</span>
-                    <h3>{item.title}</h3>
+                    <div className="student-class-subject">
+                      <span className="student-class-subject-icon">{React.createElement(getSubjectIcon(item.title))}</span>
+                      <h3>{item.title}</h3>
+                    </div>
                 </div>
 
                 <span className="student-class-pending">
@@ -52,8 +96,9 @@ export default function ClassCard({ item, onViewClassDetail }) {
             </div>
 
             <div className="student-class-card-actions">
-                <button
+                <Button
                     type="button"
+                    variant="primary"
                     className="student-class-secondary-btn"
                     onClick={(e) => {
                         e.stopPropagation();
@@ -61,7 +106,7 @@ export default function ClassCard({ item, onViewClassDetail }) {
                     }}
                 >
                     Xem chi tiết lớp học
-                </button>
+                </Button>
             </div>
         </article>
     );
