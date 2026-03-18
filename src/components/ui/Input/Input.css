@@ -1,10 +1,41 @@
-.input-group{
-  display:flex;
-  flex-direction:column;
-  gap:4px;
+.ui-input {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
 }
-.input-group input{
-  padding:8px;
-  border:1px solid #ddd;
-  border-radius:6px;
+
+.ui-input__label {
+  color: #344054;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.ui-input__field {
+  height: 42px;
+  border-radius: 12px;
+  border: 1px solid #d0d5dd;
+  padding: 0 12px;
+  font-size: 14px;
+  color: #101828;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.ui-input__field:focus {
+  outline: none;
+  border-color: #8f6cff;
+  box-shadow: 0 0 0 4px rgba(143, 108, 255, 0.14);
+}
+
+.ui-input__field.is-error {
+  border-color: #f04438;
+}
+
+.ui-input__meta {
+  margin: 0;
+  color: #667085;
+  font-size: 12px;
+}
+
+.ui-input__meta.is-error {
+  color: #b42318;
 }

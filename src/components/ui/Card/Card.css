@@ -1,6 +1,38 @@
-.card{
-  padding:16px;
-  border-radius:8px;
-  border:1px solid #eee;
-  background:white;
+.ui-card {
+  border: 1px solid var(--border-color, #eaecf0);
+  border-radius: 18px;
+  background: #ffffff;
+  box-shadow: 0 8px 20px rgba(16, 24, 40, 0.06);
+}
+
+.ui-card__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px 18px;
+  border-bottom: 1px solid var(--border-color, #eaecf0);
+}
+
+.ui-card__title-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.ui-card__title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  color: #101828;
+}
+
+.ui-card__subtitle {
+  margin: 0;
+  font-size: 13px;
+  color: #667085;
+}
+
+.ui-card__body {
+  padding: 18px;
 }

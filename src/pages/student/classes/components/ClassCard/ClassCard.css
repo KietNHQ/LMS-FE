@@ -31,6 +31,13 @@
   gap: 10px;
 }
 
+.student-class-card-top > div {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
 .student-class-tag {
   display: inline-flex;
   align-items: center;
@@ -42,17 +49,34 @@
   font-size: 12px;
   font-weight: 700;
   border: 1px solid #dbe6ff;
+  width: fit-content;
 }
 
+.student-class-subject {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.student-class-subject-icon {
+  display: grid;
+  place-items: center;
+  font-size: 20px;
+  color: #2563ff;
+  flex-shrink: 0;
+}
+
+
 .student-class-card h3 {
-  margin: 12px 0 4px;
+  margin: 0;
   font-size: 28px;
   line-height: 1.2;
   color: #16233b;
   font-weight: 800;
+  word-break: break-word;
 }
 
-.student-class-pending { font-size: 13px; color: #e05a5a; white-space: nowrap; font-weight: 700; }
+.student-class-pending { font-size: 13px; color: #e05a5a; white-space: nowrap; font-weight: 700; flex-shrink: 0; }
 .student-class-info-list { margin: 0; padding-left: 18px; color: #4f607b; display: grid; gap: 8px; font-size: 15px; }
 .student-class-progress-wrap { margin-top: 2px; }
 .student-class-progress-label { display: flex; justify-content: space-between; align-items: center; color: #4f607b; font-size: 14px; margin-bottom: 8px; }
@@ -63,12 +87,21 @@
 .student-class-highlight-label { display: inline-flex; align-items: center; justify-content: center; min-width: 92px; height: 28px; padding: 0 10px; border-radius: 999px; background: linear-gradient(135deg, #7ea1ff 0%, #5f86f5 100%); color: #fff; font-size: 12px; font-weight: 800; }
 .student-class-highlight p { margin: 10px 0 0; color: #294172; font-size: 14px; line-height: 1.55; font-weight: 700; }
 .student-class-card-actions { margin-top: auto; display: flex; }
-.student-class-secondary-btn { width: 100%; min-height: 48px; background: linear-gradient(135deg, #7ea1ff 0%, #5f86f5 100%); color: #fff; padding: 12px 16px; border: none; border-radius: 16px; font-size: 15px; font-weight: 700; cursor: pointer; box-shadow: 0 12px 24px rgba(95, 134, 245, 0.18); transition: transform 0.22s ease, box-shadow 0.22s ease; }
-.student-class-secondary-btn:hover { transform: translateY(-2px); box-shadow: 0 16px 30px rgba(95, 134, 245, 0.26); }
+.student-class-secondary-btn.ui-button { width: 100%; min-height: 48px; height: 48px; background: linear-gradient(135deg, #7ea1ff 0%, #5f86f5 100%); color: #fff; padding: 12px 16px; border: none; border-radius: 16px; font-size: 15px; font-weight: 700; box-shadow: 0 12px 24px rgba(95, 134, 245, 0.18); transition: transform 0.22s ease, box-shadow 0.22s ease; white-space: nowrap; }
+.student-class-secondary-btn.ui-button:hover { transform: translateY(-2px); box-shadow: 0 16px 30px rgba(95, 134, 245, 0.26); }
 
 @media (max-width: 768px) {
-  .student-class-card h3 { font-size: 24px; }
+  .student-class-card-top {
+    flex-wrap: wrap;
+  }
+
+  .student-class-card h3 { font-size: 28px; }
+
+  .student-class-pending {
+    white-space: normal;
+  }
+
   .student-class-card-actions { flex-direction: column; }
-  .student-class-secondary-btn { width: 100%; }
+  .student-class-secondary-btn.ui-button { width: 100%; }
 }
 

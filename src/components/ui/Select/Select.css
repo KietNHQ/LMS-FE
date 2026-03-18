@@ -1,5 +1,57 @@
-.select{
-  padding:8px;
-  border-radius:6px;
-  border:1px solid #ddd;
+.ui-select {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.ui-select__field-wrap {
+  position: relative;
+}
+
+.ui-select__label {
+  color: #344054;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.ui-select__field {
+  height: 40px;
+  border-radius: 12px;
+  border: 1px solid #d0d5dd;
+  background: #ffffff;
+  padding: 0 38px 0 12px;
+  font-size: 14px;
+  color: #101828;
+  width: 100%;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+}
+
+.ui-select__field:focus {
+  outline: none;
+  border-color: #8f6cff;
+  box-shadow: 0 0 0 4px rgba(143, 108, 255, 0.14);
+}
+
+.ui-select__chevron {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #667085;
+  font-size: 18px;
+  pointer-events: none;
+  transition: transform 0.2s ease, color 0.2s ease;
+}
+
+.ui-select.is-focused .ui-select__chevron {
+  color: #7c4dff;
+  transform: translateY(-50%) rotate(180deg);
+}
+
+.ui-select__error {
+  margin: 0;
+  font-size: 12px;
+  color: #b42318;
 }

@@ -7,9 +7,14 @@ export default function SearchBar({
   onChange,
   onClear,
   placeholder = "Search...",
+  inputTitle,
   rightAddon = null,
 }) {
   const hasValue = typeof value === "string" ? value.length > 0 : Boolean(value);
+  const resolvedTitle =
+    typeof inputTitle === "string" && inputTitle.trim().length > 0
+      ? inputTitle
+      : (hasValue ? String(value) : placeholder);
 
   const handleClear = () => {
     if (typeof onClear === "function") {
@@ -34,6 +39,7 @@ export default function SearchBar({
           value={value}
           onChange={onChange}
           placeholder={placeholder}
+          title={resolvedTitle}
         />
 
         {hasValue && (
