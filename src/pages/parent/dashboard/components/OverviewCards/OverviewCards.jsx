@@ -1,70 +1,59 @@
-import "./OverviewCards.css"
-import { FiAward, FiTrendingUp, FiBell, FiCreditCard } from "react-icons/fi"
+import "./OverviewCards.css";
+import { FiAward, FiTrendingUp, FiBell, FiCreditCard } from "react-icons/fi";
 
-export default function OverviewCards(){
+export default function OverviewCards({ yearAvg, hk1Avg }) {
+  return (
+    <div className="cards">
 
-return(
+      {/* ĐTB CẢ NĂM */}
+      <div className="card">
+        <div>
+          <p>ĐTB cả năm</p>
+          <h3>{yearAvg}</h3>
+        </div>
 
-<div className="cards">
+        <div className="icon purple">
+          <FiAward />
+        </div>
+      </div>
 
-<div className="card">
+      {/* ĐTB HK1 */}
+      <div className="card">
+        <div>
+          <p>ĐTB HK1</p>
+          <h3>{hk1Avg}</h3>
+        </div>
 
-<div>
-<p>ĐTB cả năm</p>
-<h3>7.60</h3>
-</div>
+        <div className="icon blue">
+          <FiTrendingUp />
+        </div>
+      </div>
 
-<div className="icon purple">
-<FiAward/>
-</div>
+      {/* THÔNG BÁO (có thể dynamic sau) */}
+      <div className="card">
+        <div>
+          <p>Thông báo</p>
+          <h3>2</h3>
+          <span>Chưa đọc</span>
+        </div>
 
-</div>
+        <div className="icon orange">
+          <FiBell />
+        </div>
+      </div>
 
+      {/* HỌC PHÍ */}
+      <div className="card">
+        <div>
+          <p>Học phí chưa đóng</p>
+          <h3>5trđ</h3>
+        </div>
 
-<div className="card">
+        <div className="icon red">
+          <FiCreditCard />
+        </div>
+      </div>
 
-<div>
-<p>ĐTB HK1</p>
-<h3>7.29</h3>
-</div>
-
-<div className="icon blue">
-<FiTrendingUp/>
-</div>
-
-</div>
-
-
-<div className="card">
-
-<div>
-<p>Thông báo</p>
-<h3>2</h3>
-<span>Chưa đọc</span>
-</div>
-
-<div className="icon orange">
-<FiBell/>
-</div>
-
-</div>
-
-
-<div className="card">
-
-<div>
-<p>Học phí chưa đóng</p>
-<h3>5trđ</h3>
-</div>
-
-<div className="icon red">
-<FiCreditCard/>
-</div>
-
-</div>
-
-</div>
-
-)
-
+    </div>
+  );
 }

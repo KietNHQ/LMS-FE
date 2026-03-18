@@ -4,101 +4,129 @@ import GradesSection from "../../../children-overview/components/GradesSection/G
 
 export default function UpcomingSchedule({ gradesBySemester }) {
 
-const [open,setOpen] = useState(false)
-const [selectedSubject,setSelectedSubject] = useState(null)
-const [semester,setSemester] = useState("hk1") 
-const subjects = [
-"Toán học",
-"Tiếng Anh",
-"Vật lý",
-"Văn học",
-"Hóa học",
-"Sinh học",
-"Lịch sử",
-"Tin học"
-]
+  const [open, setOpen] = useState(false);
+  const [selectedSubject, setSelectedSubject] = useState(null);
+  const [semester, setSemester] = useState("hk1");
 
-// mở dialog
-const handleOpen = (subject)=>{
-setSelectedSubject(subject)
-setOpen(true)
-}
+  // mở dialog
+  const handleOpen = (subject) => {
+    setSelectedSubject(subject);
+    setOpen(true);
+  };
 
-const handleClose = ()=>{
-setOpen(false)
-}
+  const handleClose = () => {
+    setOpen(false);
+  };
 
-// lọc dữ liệu theo môn
-const filterGrades = (semester)=>{
-return gradesBySemester?.[semester]?.filter(
-g => g.subject === selectedSubject
-) || []
-}
+  // lọc dữ liệu theo môn
+  const filterGrades = (semesterKey) => {
+    return gradesBySemester?.[semesterKey]?.filter(
+      g => g.subject === selectedSubject
+    ) || [];
+  };
 
-const filteredGradesBySemester = {
-hk1: filterGrades("hk1"),
-hk2: filterGrades("hk2"),
-year: filterGrades("year")
-}
+  const filteredGradesBySemester = {
+    hk1: filterGrades("hk1"),
+    hk2: filterGrades("hk2"),
+    year: filterGrades("year")
+  };
 
-return(
+  // lấy label + class
+  const getRankClass = (score) => {
+    if (score >= 8.5) return "good";
+    return "normal";
+  };
 
-<div className="subject-wrapper">
+  const getRankLabel = (score) => {
+    if (score >= 8.5) return "Tốt";
+    if (score >= 6.5) return "Khá";
+    return "Trung bình";
+  };
 
-<div className="subject-title">
-📚 Điểm theo môn học
-</div>
+  return (
 
-<div className="subject-grid">
+    <div className="subject-wrapper">
 
-{subjects.map((name,i)=>(
-<div
-className="subject-card"
-key={i}
-onClick={()=>handleOpen(name)}
->
+      <div className="subject-title">
+        📚 Điểm theo môn học
+      </div>
 
-<div className="subject-left">
-<h4>{name}</h4>
-<p>Xem bảng điểm</p>
-</div>
+      {/* 🔥 GRID HIỂN THỊ ĐÚNG UI */}
+      <div className="subject-grid">
 
-</div>
-))}
+        {gradesBySemester?.year?.map((subject, i) => {
 
-</div>
+          const hk1 = gradesBySemester.hk1.find(
+            s => s.subject === subject.subject
+          );
 
+          const hk2 = gradesBySemester.hk2.find(
+            s => s.subject === subject.subject
+          );
 
-{open && (
+          const avg = subject.average;
 
-<div className="dialog-overlay">
+          return (
+            <div
+              className="subject-card"
+              key={i}
+              onClick={() => handleOpen(subject.subject)}
+            >
 
-<div className="dialog-box">
+              {/* LEFT */}
+              <div className="subject-left">
+                <h4>{subject.subject}</h4>
 
-<button
-className="dialog-close"
-onClick={handleClose}
->
-✕
-</button>
+                <p>
+                  HK1: {hk1?.average ?? "-"} • HK2: {hk2?.average ?? "-"}
+                </p>
+              </div>
 
-<h3>Điểm môn {selectedSubject}</h3>
+              {/* RIGHT */}
+              <div className="subject-right">
+                <div className="score">{avg}</div>
 
-<GradesSection
-gradesBySemester={filteredGradesBySemester}
-selectedSemester={semester}
-onSemesterChange={setSemester}
-compact
-/>
+                <span className={`badge ${getRankClass(avg)}`}>
+                  {getRankLabel(avg)}
+                </span>
+              </div>
 
-</div>
+            </div>
+          );
+        })}
 
-</div>
+      </div>
 
-)}
+      {/* 🔥 DIALOG CHI TIẾT */}
+      {open && (
 
-</div>
+        <div className="dialog-overlay">
 
-)
+          <div className="dialog-box">
 
+            <button
+              className="dialog-close"
+              onClick={handleClose}
+            >
+              ✕
+            </button>
+
+            <h3>Điểm môn {selectedSubject}</h3>
+
+            <GradesSection
+              gradesBySemester={filteredGradesBySemester}
+              selectedSemester={semester}
+              onSemesterChange={setSemester}
+              compact
+            />
+
+          </div>
+
+        </div>
+
+      )}
+
+    </div>
+
+  );
 }

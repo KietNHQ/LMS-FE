@@ -1,27 +1,27 @@
-import "./ChildSwitcher.css"
-import { FiUsers } from "react-icons/fi"
+import "./ChildSwitcher.css";
+import { FiUsers } from "react-icons/fi";
 
-export default function ChildSwitcher(){
+export default function ChildSwitcher({
+  childrenList,
+  selectedChildId,
+  onSelect
+}) {
+  return (
+    <div className="child-switcher">
+      <div className="child-label">
+        <FiUsers className="child-icon" />
+        <span>Chọn con:</span>
+      </div>
 
-return(
-
-<div className="child-switcher">
-
-<div className="child-label">
-<FiUsers className="child-icon"/>
-<span>Chọn con:</span>
-</div>
-
-<button className="active">
-Nguyễn Minh Tuấn
-</button>
-
-<button>
-Trần Thị Bảo Châu
-</button>
-
-</div>
-
-)
-
+      {childrenList.map((child) => (
+        <button
+          key={child.id}
+          className={selectedChildId === child.id ? "active" : ""}
+          onClick={() => onSelect(child.id)}
+        >
+          {child.name}
+        </button>
+      ))}
+    </div>
+  );
 }
