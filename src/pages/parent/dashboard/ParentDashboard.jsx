@@ -111,8 +111,6 @@ export default function ParentDashboard() {
   return (
     <div className="dashboard">
       <h1>Xin chào, Nguyễn Văn Phụ Huynh</h1>
-      <p>Theo dõi kết quả học tập của các con</p>
-
       <ChildSwitcher
         childrenList={childrenData}
         selectedChildId={selectedChildId}
