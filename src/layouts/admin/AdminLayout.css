@@ -1,38 +1,81 @@
 .admin-layout {
-    display: flex;
-    height: 100vh;
-    background-color: #f5f5f5;
-}
+    --sidebar-expanded: clamp(16rem, 20vw, 20rem);
+    --sidebar-collapsed: 5rem;
 
-.admin-layout.collapsed {
-    --sidebar-width: 80px;
+    --content-gap-expanded: 0rem;
+    --content-gap-collapsed: 1rem;
+
+    --layout-bg: #e9edf5;
+
+    min-height: 100vh;
+    background: var(--layout-bg);
 }
 
 .admin-layout__main {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-    margin-left: var(--sidebar-width, 250px);
-    transition: margin-left 0.3s ease;
+    min-height: 100vh;
+    margin-left: calc(var(--sidebar-expanded) + var(--content-gap-expanded));
+    width: calc(100% - var(--sidebar-expanded) - var(--content-gap-expanded));
+    padding: clamp(1rem, 1.4vw, 1.5rem) clamp(1rem, 1.6vw, 1.6rem);
+    box-sizing: border-box;
+    transition:
+            margin-left 0.35s ease,
+            width 0.35s ease,
+            padding 0.35s ease;
+}
+
+.admin-layout.collapsed .admin-layout__main {
+    margin-left: calc(var(--sidebar-collapsed) + var(--content-gap-collapsed));
+    width: calc(100% - var(--sidebar-collapsed) - var(--content-gap-collapsed));
 }
 
 .admin-layout__content {
-    flex: 1;
-    overflow-y: auto;
-    padding: 2rem;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    margin: 0;
+    box-sizing: border-box;
+}
+
+@media (max-width: 1280px) {
+    .admin-layout {
+        --sidebar-expanded: clamp(13.5rem, 18vw, 16rem);
+        --sidebar-collapsed: 4.5rem;
+        --content-gap-collapsed: 0.95rem;
+    }
+
+    .admin-layout__main {
+        padding: 1rem 1.1rem;
+    }
+}
+
+@media (max-width: 1024px) {
+    .admin-layout {
+        --sidebar-expanded: clamp(12.25rem, 17vw, 13.25rem);
+        --sidebar-collapsed: 4rem;
+        --content-gap-collapsed: 0.9rem;
+    }
+
+    .admin-layout__main {
+        padding: 0.9rem 1rem;
+    }
 }
 
 @media (max-width: 768px) {
     .admin-layout {
-        flex-direction: column;
+        --sidebar-expanded: 0rem;
+        --sidebar-collapsed: 0rem;
+        --content-gap-expanded: 0rem;
+        --content-gap-collapsed: 0rem;
     }
 
     .admin-layout__main {
         margin-left: 0;
+        width: 100%;
+        padding: 5.3rem 0.85rem 0.85rem;
     }
 
-    .admin-layout__content {
-        padding: 1rem;
+    .admin-layout.collapsed .admin-layout__main {
+        margin-left: 0;
+        width: 100%;
     }
 }

@@ -1,34 +1,81 @@
 .parent-layout {
-    --sidebar-expanded: 300px;
-    --sidebar-collapsed: 96px;
-    --content-max: 1220px;
-    --content-max-collapsed: 1288px;
+    --sidebar-expanded: clamp(16rem, 20vw, 20rem);
+    --sidebar-collapsed: 5rem;
+
+    --content-gap-expanded: 0rem;
+    --content-gap-collapsed: 1rem;
+
+    --layout-bg: #ebe4ef;
 
     min-height: 100vh;
-    background: #ebe4ef;
+    background: var(--layout-bg);
 }
 
 .parent-layout__main {
     min-height: 100vh;
-    margin-left: var(--sidebar-expanded);
-    padding: 28px 32px;
+    margin-left: calc(var(--sidebar-expanded) + var(--content-gap-expanded));
+    width: calc(100% - var(--sidebar-expanded) - var(--content-gap-expanded));
+    padding: clamp(1rem, 1.4vw, 1.5rem) clamp(1rem, 1.6vw, 1.6rem);
     box-sizing: border-box;
-    transition: margin-left 0.35s ease, padding 0.35s ease;
+    transition:
+            margin-left 0.35s ease,
+            width 0.35s ease,
+            padding 0.35s ease;
 }
 
 .parent-layout.collapsed .parent-layout__main {
-    margin-left: var(--sidebar-collapsed);
+    margin-left: calc(var(--sidebar-collapsed) + var(--content-gap-collapsed));
+    width: calc(100% - var(--sidebar-collapsed) - var(--content-gap-collapsed));
 }
 
 .parent-layout__content {
     width: 100%;
-    max-width: var(--content-max);
-    margin: 0 auto;
-    transition: max-width 0.35s ease, transform 0.35s ease;
+    max-width: 100%;
+    min-width: 0;
+    margin: 0;
+    box-sizing: border-box;
 }
 
-.parent-layout.collapsed .parent-layout__content {
-    max-width: var(--content-max-collapsed);
-    transform: translateX(-8px);
+@media (max-width: 1280px) {
+    .parent-layout {
+        --sidebar-expanded: clamp(13.5rem, 18vw, 16rem);
+        --sidebar-collapsed: 4.5rem;
+        --content-gap-collapsed: 0.95rem;
+    }
+
+    .parent-layout__main {
+        padding: 1rem 1.1rem;
+    }
 }
 
+@media (max-width: 1024px) {
+    .parent-layout {
+        --sidebar-expanded: clamp(12.25rem, 17vw, 13.25rem);
+        --sidebar-collapsed: 4rem;
+        --content-gap-collapsed: 0.9rem;
+    }
+
+    .parent-layout__main {
+        padding: 0.9rem 1rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .parent-layout {
+        --sidebar-expanded: 0rem;
+        --sidebar-collapsed: 0rem;
+        --content-gap-expanded: 0rem;
+        --content-gap-collapsed: 0rem;
+    }
+
+    .parent-layout__main {
+        margin-left: 0;
+        width: 100%;
+        padding: 5.3rem 0.85rem 0.85rem;
+    }
+
+    .parent-layout.collapsed .parent-layout__main {
+        margin-left: 0;
+        width: 100%;
+    }
+}
