@@ -1,122 +1,115 @@
-.notification-page{
+html.notifications-no-browser-scroll,
+body.notifications-no-browser-scroll {
+  overflow: hidden;
+  height: 100%;
+}
 
-  height:100vh;
+.notification-page {
+  height: calc(100dvh - 1.25rem);
+  max-height: calc(100dvh - 1.25rem);
+  min-height: 0;
+  overflow: hidden;
+  padding: 28px 24px;
+  box-sizing: border-box;
+}
 
-  overflow:hidden;
-
-  padding:30px;
-
-  box-sizing:border-box;
-
+.notification-container {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-width: none;
+  margin: 0;
+  padding: 0;
+  border-radius: 0;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  overflow: hidden;
 }
 
 
-.notification-container{
-
-  height:100%;
-
-  display:flex;
-
-  flex-direction:column;
-
-  max-width:900px;
-
-  margin:auto;
-
-  padding:25px;
-
-  border-radius:16px;
-
+.dialog-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(16, 24, 40, 0.45);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
 }
 
 
-.dialog-overlay{
+.dialog-box {
+  background: white;
+  padding: 24px;
+  border-radius: 14px;
+  width: 440px;
+  max-width: 90%;
+  border: 1px solid #dfe7f6;
+  box-shadow: 0 18px 36px rgba(16, 24, 40, 0.22);
+}
 
-  position:fixed;
+.dialog-box h2 {
+  margin: 0 0 10px;
+  color: #1d2f56;
+}
 
-  top:0;
+.dialog-content {
+  margin: 10px 0;
+  color: #4f607b;
+  line-height: 1.65;
+}
 
-  left:0;
-
-  width:100%;
-
-  height:100%;
-
-  background:rgba(0,0,0,0.4);
-
-  display:flex;
-
-  justify-content:center;
-
-  align-items:center;
-
-  z-index:9999;
-
+.dialog-date {
+  font-size: 13px;
+  color: #8a97aa;
+  font-weight: 600;
 }
 
 
-.dialog-box{
-
-  background:white;
-
-  padding:25px;
-
-  border-radius:12px;
-
-  width:420px;
-
-  max-width:90%;
-
-  box-shadow:0 10px 25px rgba(0,0,0,0.2);
-
+.dialog-close-student {
+  margin-top: 15px;
+  background: linear-gradient(135deg, #6f95ff 0%, #4f78eb 100%);
+  border: none;
+  padding: 9px 16px;
+  border-radius: 10px;
+  color: white;
+  font-weight: 700;
+  cursor: pointer;
+  transition: 0.2s;
 }
 
-.dialog-box h2{
-
-  margin-bottom:10px;
-
+.dialog-close-student:hover {
+  filter: brightness(0.96);
 }
 
-.dialog-content{
+@media (max-width: 900px) {
+  .notification-page {
+    height: calc(100dvh - 0.75rem);
+    max-height: calc(100dvh - 0.75rem);
+    padding: 16px 10px;
+  }
 
-  margin:10px 0;
-
-  color:#555;
-
-  line-height:1.6;
-
+  .notification-container {
+    padding: 0;
+    border-radius: 0;
+  }
 }
 
-.dialog-date{
+@media (max-height: 760px) {
+  .notification-page {
+    padding: 12px 10px;
+  }
 
-  font-size:13px;
-
-  color:#999;
-
+  .notification-container {
+    padding: 12px;
+    border-radius: 14px;
+  }
 }
 
-.dialog-close-student{
-
-  margin-top:15px;
-
-  background:#2f80ff;
-
-  border:none;
-
-  padding:8px 15px;
-
-  border-radius:8px;
-
-  color:white;
-
-  cursor:pointer;
-
-  transition:0.2s;
-
-}
-
-.dialog-close:hover{
-
-  background:#1f6fe0;
-
-}

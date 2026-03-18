@@ -1,9 +1,22 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import "./StudentNotifications.css";
 import NotificationHeader from "./components/NotificationHeader/NotificationHeader";
 import NotificationList from "./components/NotificationList/NotificationList";
 
+const LOAD_BATCH_SIZE = 5;
+const STUDENT_UNREAD_COUNT_KEY = "student_unread_notifications_count";
+
 export default function StudentNotifications() {
+
+  useEffect(() => {
+    document.documentElement.classList.add("notifications-no-browser-scroll");
+    document.body.classList.add("notifications-no-browser-scroll");
+
+    return () => {
+      document.documentElement.classList.remove("notifications-no-browser-scroll");
+      document.body.classList.remove("notifications-no-browser-scroll");
+    };
+  }, []);
 
   const [notifications, setNotifications] = useState([
     {
@@ -204,8 +217,55 @@ export default function StudentNotifications() {
 
   const [priorityCounter, setPriorityCounter] = useState(1);
   const [selected, setSelected] = useState(null);
+  const [showOnlyMarked, setShowOnlyMarked] = useState(false);
+  const [visibleCount, setVisibleCount] = useState(LOAD_BATCH_SIZE);
 
   const unreadCount = notifications.filter(n => n.unread).length;
+  const markedCount = useMemo(
+    () => notifications.filter((n) => n.important).length,
+    [notifications]
+  );
+
+  useEffect(() => {
+    localStorage.setItem(STUDENT_UNREAD_COUNT_KEY, String(unreadCount));
+    window.dispatchEvent(
+      new CustomEvent("student-notification-count-updated", {
+        detail: unreadCount,
+      })
+    );
+  }, [unreadCount]);
+
+  const sortedNotifications = useMemo(() => {
+    return [...notifications].sort((a, b) => {
+      const dateDiff = new Date(b.date).getTime() - new Date(a.date).getTime();
+      if (dateDiff !== 0) return dateDiff;
+      return b.id - a.id;
+    });
+  }, [notifications]);
+
+  const filteredNotifications = useMemo(() => {
+    if (!showOnlyMarked) {
+      return sortedNotifications;
+    }
+
+    return sortedNotifications.filter((item) => item.important);
+  }, [sortedNotifications, showOnlyMarked]);
+
+  const visibleNotifications = useMemo(() => {
+    return filteredNotifications.slice(0, visibleCount);
+  }, [filteredNotifications, visibleCount]);
+
+  const hasMore = visibleNotifications.length < filteredNotifications.length;
+
+  useEffect(() => {
+    setVisibleCount(LOAD_BATCH_SIZE);
+  }, [showOnlyMarked]);
+
+  const loadMoreNotifications = () => {
+    if (!hasMore) return;
+
+    setVisibleCount((prev) => Math.min(prev + LOAD_BATCH_SIZE, filteredNotifications.length));
+  };
 
   const markAllRead = () => {
     const updated = notifications.map(n => ({
@@ -243,21 +303,8 @@ export default function StudentNotifications() {
 
     });
 
-    const sorted = [...updated].sort((a, b) => {
-
-      if (a.important && b.important) {
-        return b.priority - a.priority;
-      }
-
-      if (a.important) return -1;
-      if (b.important) return 1;
-
-      return 0;
-
-    });
-
     setPriorityCounter(newCounter);
-    setNotifications(sorted);
+    setNotifications(updated);
   };
 
   const openNotification = (item) => {
@@ -279,12 +326,21 @@ export default function StudentNotifications() {
 
       <div className="notification-container">
 
-        <NotificationHeader unreadCount={unreadCount} onMarkAllRead={markAllRead} />
+        <NotificationHeader
+          unreadCount={unreadCount}
+          onMarkAllRead={markAllRead}
+          showOnlyMarked={showOnlyMarked}
+          onToggleMarkedFilter={() => setShowOnlyMarked((prev) => !prev)}
+          markedCount={markedCount}
+        />
 
         <NotificationList
-          notifications={notifications}
+          notifications={visibleNotifications}
           onOpen={openNotification}
           onToggleImportant={toggleImportant}
+          hasMore={hasMore}
+          onLoadMore={loadMoreNotifications}
+          isFiltered={showOnlyMarked}
         />
 
       </div>
