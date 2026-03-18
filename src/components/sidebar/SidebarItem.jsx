@@ -1,7 +1,7 @@
 import { NavLink } from "react-router-dom";
 import "./SidebarItem.css";
 
-export default function SidebarItem({ item, onAction, onClick }) {
+export default function SidebarItem({ item, onAction, onClick, badgeCount = 0 }) {
   const Icon = item.icon;
 
   if (item.action) {
@@ -15,6 +15,11 @@ export default function SidebarItem({ item, onAction, onClick }) {
         >
         <span className="sidebar-item-icon">
           <Icon />
+          {badgeCount > 0 && (
+            <span className="sidebar-item-badge">
+              {badgeCount > 9 ? "9+" : badgeCount}
+            </span>
+          )}
         </span>
 
           <span className="sidebar-item-label">
@@ -34,6 +39,11 @@ export default function SidebarItem({ item, onAction, onClick }) {
       >
       <span className="sidebar-item-icon">
         <Icon />
+        {badgeCount > 0 && (
+          <span className="sidebar-item-badge">
+            {badgeCount > 9 ? "9+" : badgeCount}
+          </span>
+        )}
       </span>
 
         <span className="sidebar-item-label">

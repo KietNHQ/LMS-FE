@@ -8,6 +8,7 @@ import { FaGraduationCap } from "react-icons/fa";
 import "./Sidebar.css";
 
 const MOBILE_BREAKPOINT = 768;
+const STUDENT_UNREAD_COUNT_KEY = "student_unread_notifications_count";
 
 export default function Sidebar({
                                   role = "student",
@@ -26,6 +27,10 @@ export default function Sidebar({
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [isAtTop, setIsAtTop] = useState(getIsAtTop);
   const [isProfileDialogOpen, setIsProfileDialogOpen] = useState(false);
+  const [studentUnreadCount, setStudentUnreadCount] = useState(() => {
+    const saved = Number(localStorage.getItem(STUDENT_UNREAD_COUNT_KEY));
+    return Number.isFinite(saved) ? saved : 0;
+  });
 
   const prevIsMobileRef = useRef(isMobile);
 
@@ -96,6 +101,27 @@ export default function Sidebar({
 
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  useEffect(() => {
+    const handleStorage = (event) => {
+      if (event.key && event.key !== STUDENT_UNREAD_COUNT_KEY) return;
+      const next = Number(localStorage.getItem(STUDENT_UNREAD_COUNT_KEY));
+      setStudentUnreadCount(Number.isFinite(next) ? next : 0);
+    };
+
+    const handleCustomUpdate = (event) => {
+      const next = Number(event?.detail);
+      setStudentUnreadCount(Number.isFinite(next) ? next : 0);
+    };
+
+    window.addEventListener("storage", handleStorage);
+    window.addEventListener("student-notification-count-updated", handleCustomUpdate);
+
+    return () => {
+      window.removeEventListener("storage", handleStorage);
+      window.removeEventListener("student-notification-count-updated", handleCustomUpdate);
+    };
   }, []);
 
   const handleLogout = () => {
@@ -193,6 +219,11 @@ export default function Sidebar({
                       <SidebarItem
                           key={`${item.path || item.label}-${index}`}
                           item={item}
+                          badgeCount={
+                            role === "student" && item.path === "/student/notifications"
+                              ? studentUnreadCount
+                              : 0
+                          }
                           onClick={handleCloseMobileMenu}
                       />
                   ))}
@@ -233,6 +264,11 @@ export default function Sidebar({
                         <SidebarItem
                             key={`${item.path || item.label}-${index}`}
                             item={item}
+                            badgeCount={
+                              role === "student" && item.path === "/student/notifications"
+                                ? studentUnreadCount
+                                : 0
+                            }
                         />
                     ))}
                   </nav>

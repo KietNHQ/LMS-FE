@@ -4,28 +4,34 @@ import "./SupportContact.css";
 export default function SupportContact() {
     return (
         <div className="support-contact">
-            <h3>Liên hệ trực tiếp</h3>
+            <h3>Kênh liên hệ nhanh</h3>
 
             <div className="contact-grid">
                 <div className="contact-card">
-                    <FaEnvelope className="contact-icon" />
-                    <div>
+                    <span className="contact-icon-wrap">
+                        <FaEnvelope className="contact-icon" />
+                    </span>
+                    <div className="contact-content">
                         <strong>Email hỗ trợ</strong>
                         <p>support@school.edu.vn</p>
                     </div>
                 </div>
 
                 <div className="contact-card">
-                    <FaPhone className="contact-icon" />
-                    <div>
+                    <span className="contact-icon-wrap">
+                        <FaPhone className="contact-icon" />
+                    </span>
+                    <div className="contact-content">
                         <strong>Hotline</strong>
                         <p>1900-xxxx</p>
                     </div>
                 </div>
 
                 <div className="contact-card">
-                    <FaClock className="contact-icon" />
-                    <div>
+                    <span className="contact-icon-wrap">
+                        <FaClock className="contact-icon" />
+                    </span>
+                    <div className="contact-content">
                         <strong>Giờ làm việc</strong>
                         <p>T2-T6: 7:00 - 17:00</p>
                     </div>
