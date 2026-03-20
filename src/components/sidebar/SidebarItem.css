@@ -30,6 +30,10 @@
   transform-origin: center;
 }
 
+.sidebar.role-parent .sidebar-item-badge {
+  border-color: rgba(255, 255, 255, 0.92);
+}
+
 .sidebar.collapsed .sidebar-item-badge {
   top: -0.4rem;
   right: -0.5rem;

@@ -1,0 +1,71 @@
+.parent-support-contact h3 {
+  margin: 0 0 10px;
+  font-size: 18px;
+  font-weight: 800;
+  color: #311f5a;
+}
+
+.parent-contact-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.parent-contact-card {
+  background: #ffffff;
+  border: 1px solid #e7dcfb;
+  border-radius: 16px;
+  padding: 12px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.parent-contact-card:hover {
+  border-color: #c9b2f7;
+  box-shadow: 0 10px 20px rgba(97, 58, 173, 0.12);
+  transform: translateY(-2px);
+}
+
+.parent-contact-icon-wrap {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  background: #f0e7ff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.parent-contact-icon {
+  font-size: 18px;
+  color: #7549d1;
+}
+
+.parent-contact-content {
+  min-width: 0;
+}
+
+.parent-contact-content strong {
+  display: block;
+  margin-bottom: 3px;
+  font-size: 14px;
+  font-weight: 700;
+  color: #3a2963;
+}
+
+.parent-contact-content p {
+  margin: 0;
+  font-size: 13px;
+  color: #735f99;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 1080px) {
+  .parent-contact-grid {
+    grid-template-columns: 1fr;
+  }
+}
+

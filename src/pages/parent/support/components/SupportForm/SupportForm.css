@@ -1,5 +1,5 @@
-.chat-container{
-  width:35%;
+.parent-support-form-container{
+  width:100%;
   background:white;
   border-radius:12px;
   display:flex;
@@ -7,7 +7,7 @@
   height:420px;
 }
 
-.chat-header{
+.parent-support-form-header{
   padding:12px;
 
   display:flex;
@@ -22,13 +22,13 @@
   background:linear-gradient(90deg,#5b7cff,#9b59ff);
 }
 
-.chat-body{
+.parent-support-form-body{
   flex:1;
   padding:12px;
   overflow-y:auto;
 }
 
-.chat-message{
+.parent-support-form-message{
   background:#f1f1f1;
   padding:8px 10px;
   border-radius:8px;
@@ -36,28 +36,28 @@
   max-width:80%;
 }
 
-.chat-message.user{
+.parent-support-form-message.user{
   margin-left:auto;
   background:#e5e0ff;
 }
 
-.chat-message span{
+.parent-support-form-message span{
   font-size:11px;
   color:#777;
 }
 
-.chat-input{
+.parent-support-form-input{
   display:flex;
   border-top:1px solid #eee;
 }
 
-.chat-input input{
+.parent-support-form-input input{
   flex:1;
   border:none;
   padding:10px;
 }
 
-.chat-input button{
+.parent-support-form-input button{
   border:none;
   background:#7c5cff;
   color:white;

@@ -1,11 +1,11 @@
-.faq-container{
+.parent-faq-section-container{
   background:white;
   padding:20px;
   border-radius:12px;
-  width:65%;
+  width:100%;
 }
 
-.faq-title{
+.parent-faq-section-title{
   display:flex;
   align-items:center;
   gap:8px;
@@ -14,21 +14,21 @@
   margin-bottom:15px;
 }
 
-.faq-icon{
+.parent-faq-section-icon{
   color:#7c5cff;
 }
 
-.faq-item{
+.parent-faq-section-item{
   margin-bottom:16px;
 }
 
-.faq-category{
+.parent-faq-section-category{
   font-size:13px;
   color:#777;
   margin-bottom:5px;
 }
 
-.faq-question{
+.parent-faq-section-question{
   border:1px solid #e5e7eb;
   padding:12px;
   border-radius:8px;
@@ -40,7 +40,7 @@
   cursor:pointer;
 }
 
-.faq-answer{
+.parent-faq-section-answer{
   padding:10px;
   font-size:14px;
   color:#555;

@@ -1,12 +1,12 @@
 /* src/pages/parent/notifications/components/NotificationFilter/NotificationFilter.css */
-.notification-filter {
+.parent-notification-filter {
   margin-top: 12px;
   display: flex;
   gap: 10px;
   flex-wrap: wrap;
 }
 
-.notification-filter button {
+.parent-notification-filter button {
   border: none;
   padding: 10px 18px;
   min-height: 44px;
@@ -26,7 +26,7 @@
           border-color 0.2s ease;
 }
 
-.notification-filter button:hover {
+.parent-notification-filter button:hover {
   background: #ece2ff;
   color: #7d57d8;
   border-color: #d6bfff;
@@ -34,23 +34,23 @@
   box-shadow: 0 8px 18px rgba(136, 93, 239, 0.14);
 }
 
-.notification-filter .active {
+.parent-notification-filter .active {
   background: linear-gradient(135deg, #b68af8, #885def);
   color: #ffffff;
   border-color: transparent;
 }
 
-.notification-filter .active:hover {
+.parent-notification-filter .active:hover {
   transform: translateY(-1px);
 }
 
 @media (max-width: 768px) {
-  .notification-filter {
+  .parent-notification-filter {
     margin-top: 10px;
     gap: 8px;
   }
 
-  .notification-filter button {
+  .parent-notification-filter button {
     min-height: 40px;
     padding: 8px 15px;
     font-size: 14px;
@@ -58,7 +58,7 @@
 }
 
 @media (max-width: 480px) {
-  .notification-filter button {
+  .parent-notification-filter button {
     min-height: 38px;
     padding: 8px 14px;
     font-size: 13px;
