@@ -9,6 +9,9 @@ import "./Sidebar.css";
 
 const MOBILE_BREAKPOINT = 768;
 const STUDENT_UNREAD_COUNT_KEY = "student_unread_notifications_count";
+const PARENT_UNREAD_COUNT_KEY = "parent_unread_notifications_count";
+const STUDENT_UNREAD_COUNT_EVENT = "student-notification-count-updated";
+const PARENT_UNREAD_COUNT_EVENT = "parent-notification-count-updated";
 
 export default function Sidebar({
                                   role = "student",
@@ -29,6 +32,10 @@ export default function Sidebar({
   const [isProfileDialogOpen, setIsProfileDialogOpen] = useState(false);
   const [studentUnreadCount, setStudentUnreadCount] = useState(() => {
     const saved = Number(localStorage.getItem(STUDENT_UNREAD_COUNT_KEY));
+    return Number.isFinite(saved) ? saved : 0;
+  });
+  const [parentUnreadCount, setParentUnreadCount] = useState(() => {
+    const saved = Number(localStorage.getItem(PARENT_UNREAD_COUNT_KEY));
     return Number.isFinite(saved) ? saved : 0;
   });
 
@@ -105,24 +112,53 @@ export default function Sidebar({
 
   useEffect(() => {
     const handleStorage = (event) => {
-      if (event.key && event.key !== STUDENT_UNREAD_COUNT_KEY) return;
-      const next = Number(localStorage.getItem(STUDENT_UNREAD_COUNT_KEY));
-      setStudentUnreadCount(Number.isFinite(next) ? next : 0);
+      if (
+        event.key &&
+        event.key !== STUDENT_UNREAD_COUNT_KEY &&
+        event.key !== PARENT_UNREAD_COUNT_KEY
+      ) {
+        return;
+      }
+
+      const nextStudent = Number(localStorage.getItem(STUDENT_UNREAD_COUNT_KEY));
+      setStudentUnreadCount(Number.isFinite(nextStudent) ? nextStudent : 0);
+
+      const nextParent = Number(localStorage.getItem(PARENT_UNREAD_COUNT_KEY));
+      setParentUnreadCount(Number.isFinite(nextParent) ? nextParent : 0);
     };
 
-    const handleCustomUpdate = (event) => {
+    const handleStudentCustomUpdate = (event) => {
       const next = Number(event?.detail);
       setStudentUnreadCount(Number.isFinite(next) ? next : 0);
     };
 
+    const handleParentCustomUpdate = (event) => {
+      const next = Number(event?.detail);
+      setParentUnreadCount(Number.isFinite(next) ? next : 0);
+    };
+
     window.addEventListener("storage", handleStorage);
-    window.addEventListener("student-notification-count-updated", handleCustomUpdate);
+    window.addEventListener(STUDENT_UNREAD_COUNT_EVENT, handleStudentCustomUpdate);
+    window.addEventListener(PARENT_UNREAD_COUNT_EVENT, handleParentCustomUpdate);
 
     return () => {
       window.removeEventListener("storage", handleStorage);
-      window.removeEventListener("student-notification-count-updated", handleCustomUpdate);
+      window.removeEventListener(STUDENT_UNREAD_COUNT_EVENT, handleStudentCustomUpdate);
+      window.removeEventListener(PARENT_UNREAD_COUNT_EVENT, handleParentCustomUpdate);
     };
   }, []);
+
+  const getNotificationBadgeCount = (itemPath) => {
+    if (role === "student" && itemPath === "/student/notifications") {
+      return studentUnreadCount;
+    }
+
+    if (role === "parent" && itemPath === "/parent/notifications") {
+      return parentUnreadCount;
+    }
+
+    return 0;
+  };
 
   const handleLogout = () => {
     localStorage.removeItem("token");
@@ -219,11 +255,7 @@ export default function Sidebar({
                       <SidebarItem
                           key={`${item.path || item.label}-${index}`}
                           item={item}
-                          badgeCount={
-                            role === "student" && item.path === "/student/notifications"
-                              ? studentUnreadCount
-                              : 0
-                          }
+                          badgeCount={getNotificationBadgeCount(item.path)}
                           onClick={handleCloseMobileMenu}
                       />
                   ))}
@@ -264,11 +296,7 @@ export default function Sidebar({
                         <SidebarItem
                             key={`${item.path || item.label}-${index}`}
                             item={item}
-                            badgeCount={
-                              role === "student" && item.path === "/student/notifications"
-                                ? studentUnreadCount
-                                : 0
-                            }
+                            badgeCount={getNotificationBadgeCount(item.path)}
                         />
                     ))}
                   </nav>

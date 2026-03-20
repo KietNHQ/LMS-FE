@@ -2,16 +2,16 @@ import React, { useMemo, useState } from "react";
 import "./ConversationList.css";
 import { FiSearch, FiUsers } from "react-icons/fi";
 
-const parents = [
+const teachers = [
     {
         id: 1,
-        name: "Nguyễn Văn Phụ Huynh",
-        children: 2
+        name: "Cô Trần Thị Lan Anh",
+        className: "10A1"
     },
     {
         id: 2,
-        name: "Trần Thị Lan Anh",
-        children: 2
+        name: "Thầy Lê Minh Hoàng",
+        className: "11A2"
     }
 ];
 
@@ -24,15 +24,16 @@ const normalizeText = (value) =>
 export default function ConversationList({ onSelect }) {
     const [searchQuery, setSearchQuery] = useState("");
 
-    const filteredParents = useMemo(() => {
+    const filteredTeachers = useMemo(() => {
         const query = normalizeText(searchQuery.trim());
 
         if (!query) {
-            return parents;
+            return teachers;
         }
 
-        return parents.filter((parent) =>
-            normalizeText(parent.name).includes(query)
+        return teachers.filter((teacher) =>
+            normalizeText(teacher.name).includes(query) ||
+            normalizeText(teacher.className).includes(query)
         );
     }, [searchQuery]);
 
@@ -41,40 +42,40 @@ export default function ConversationList({ onSelect }) {
 
             <div className="conversation-header">
                 <FiUsers className="icon" />
-                <span>Danh sách phụ huynh</span>
+                <span>Giáo viên chủ nhiệm</span>
             </div>
 
             <div className="search-box">
                 <FiSearch className="search-icon"/>
                 <input
-                    placeholder="Tìm kiếm..."
+                    placeholder="Tìm giáo viên hoặc lớp..."
                     value={searchQuery}
                     onChange={(event) => setSearchQuery(event.target.value)}
                 />
             </div>
 
             <div className="conversation-list">
-                {filteredParents.map((p) => (
+                {filteredTeachers.map((teacher) => (
                     <div
-                        key={p.id}
+                        key={teacher.id}
                         className="conversation-item"
-                        onClick={() => onSelect(p)}
+                        onClick={() => onSelect(teacher)}
                     >
 
                         <div className="avatar">
-                            {p.name.charAt(0)}
+                            {teacher.name.charAt(0)}
                         </div>
 
                         <div className="conversation-info">
-                            <div className="name">{p.name}</div>
-                            <div className="child-count">{p.children} con</div>
+                            <div className="name">{teacher.name}</div>
+                            <div className="child-count">Lớp chủ nhiệm: {teacher.className}</div>
                         </div>
 
                     </div>
                 ))}
 
-                {filteredParents.length === 0 && (
-                    <div className="child-count">Không tìm thấy phụ huynh phù hợp</div>
+                {filteredTeachers.length === 0 && (
+                    <div className="child-count">Không tìm thấy giáo viên phù hợp</div>
                 )}
             </div>
 

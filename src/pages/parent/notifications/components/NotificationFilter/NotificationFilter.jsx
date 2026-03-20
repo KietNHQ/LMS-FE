@@ -8,7 +8,7 @@ export default function NotificationFilter({
 }) {
 
   return (
-    <div className="notification-filter">
+    <div className="parent-notification-filter">
 
       <button
         className={filter === "all" ? "active" : ""}

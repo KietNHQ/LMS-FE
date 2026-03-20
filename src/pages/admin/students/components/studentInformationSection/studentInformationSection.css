@@ -1,0 +1,217 @@
+.student-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(24, 31, 42, 0.45);
+    backdrop-filter: blur(2px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1.25rem;
+    z-index: 999;
+}
+
+.student-modal {
+    width: 100%;
+    max-width: 34rem;
+    background: #ffffff;
+    border-radius: 1.5rem;
+    padding: 1.6rem 1.45rem;
+    box-shadow: 0 24px 60px rgba(15, 23, 42, 0.24);
+}
+
+.student-modal-view {
+    max-width: 35rem;
+}
+
+.student-modal h2 {
+    margin: 0 0 1.2rem;
+    font-size: 1.5rem;
+    color: #273142;
+    font-weight: 800;
+}
+
+.student-view-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding-bottom: 1.15rem;
+    margin-bottom: 0.2rem;
+}
+
+.student-view-avatar {
+    width: 4.1rem;
+    height: 4.1rem;
+    border-radius: 1.05rem;
+    background: #dbe7fb;
+    color: #2d62ea;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.8rem;
+    font-weight: 800;
+    flex-shrink: 0;
+}
+
+.student-view-title-wrap h3 {
+    margin: 0;
+    font-size: 2rem;
+    line-height: 1.15;
+    color: #273142;
+    font-weight: 800;
+}
+
+.student-view-title-wrap p {
+    margin: 0.35rem 0 0;
+    color: #6f7c90;
+    font-size: 1.32rem;
+    font-weight: 500;
+}
+
+.student-modal-form {
+    display: flex;
+    flex-direction: column;
+    gap: 0.95rem;
+}
+
+.student-form-grid.two-cols {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.8rem;
+}
+
+.student-form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.42rem;
+}
+
+.student-form-group.full {
+    width: 100%;
+}
+
+.student-form-group label {
+    font-size: 0.95rem;
+    color: #3b4657;
+    font-weight: 700;
+}
+
+.student-form-group input,
+.student-form-group select {
+    width: 100%;
+    height: 3rem;
+    border: 1px solid var(--border-input, #d7dbe5);
+    border-radius: 0.95rem;
+    padding: 0 0.9rem;
+    outline: none;
+    font-size: 0.95rem;
+    color: #2b3445;
+    background: #ffffff;
+    font-family: inherit;
+    box-sizing: border-box;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.student-form-group input:focus,
+.student-form-group select:focus {
+    border-color: var(--border-focus, #8fb3ff);
+    box-shadow: 0 0 0 3px rgba(143, 179, 255, 0.2);
+}
+
+.student-form-group input::placeholder {
+    color: #9ba4b4;
+}
+
+.student-view-list {
+    display: flex;
+    flex-direction: column;
+}
+
+.student-view-row {
+    min-height: 3.35rem;
+    display: grid;
+    grid-template-columns: 10.3rem 1fr;
+    align-items: center;
+    gap: 0.9rem;
+    border-bottom: 1px solid #eef1f6;
+}
+
+.student-view-row span {
+    color: #6f7c90;
+    font-size: 0.95rem;
+    font-weight: 500;
+}
+
+.student-view-row strong {
+    color: #26334d;
+    font-size: 1rem;
+    font-weight: 700;
+    word-break: break-word;
+}
+
+.student-modal-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+    margin-top: 1rem;
+}
+
+.student-modal-actions.single {
+    grid-template-columns: 1fr;
+}
+
+.student-cancel-btn,
+.student-submit-btn {
+    height: 3.05rem;
+    border-radius: 0.95rem;
+    font-size: 0.95rem;
+    font-weight: 700;
+    font-family: inherit;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.student-cancel-btn {
+    border: 1px solid #d7dbe5;
+    background: #ffffff;
+    color: #445065;
+}
+
+.student-cancel-btn:hover {
+    background: #f7f8fb;
+}
+
+.student-submit-btn {
+    border: none;
+    background: #23386f;
+    color: #ffffff;
+}
+
+.student-submit-btn:hover {
+    background: #1d2f5f;
+}
+
+@media (max-width: 768px) {
+    .student-modal {
+        padding: 1.2rem;
+    }
+
+    .student-form-grid.two-cols,
+    .student-modal-actions {
+        grid-template-columns: 1fr;
+    }
+
+    .student-view-title-wrap h3 {
+        font-size: 1.45rem;
+    }
+
+    .student-view-title-wrap p {
+        font-size: 1rem;
+    }
+
+    .student-view-row {
+        grid-template-columns: 1fr;
+        padding: 0.7rem 0;
+        gap: 0.25rem;
+        min-height: unset;
+    }
+}

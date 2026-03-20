@@ -1,0 +1,121 @@
+import React from "react";
+import { FiEdit2, FiEye, FiTrash2 } from "react-icons/fi";
+import "./studentListSection.css";
+
+function formatDate(dateString) {
+    if (!dateString) return "";
+    return dateString;
+}
+
+function getAvatarLetter(name) {
+    if (!name) return "A";
+    return name.trim().charAt(0).toUpperCase();
+}
+
+export default function StudentListSection({
+                                               students,
+                                               onView,
+                                               onEdit,
+                                               onDelete,
+                                           }) {
+    return (
+        <section className="student-list-card">
+            <div className="student-list-table-wrap">
+                <table className="student-list-table">
+                    <thead>
+                    <tr>
+                        <th>HỌC SINH</th>
+                        <th>LỚP</th>
+                        <th>GVCN</th>
+                        <th>PHỤ HUYNH</th>
+                        <th>TRẠNG THÁI</th>
+                        <th className="student-actions-col">THAO TÁC</th>
+                    </tr>
+                    </thead>
+
+                    <tbody>
+                    {students.length === 0 ? (
+                        <tr>
+                            <td colSpan="6" className="student-empty-row">
+                                Không tìm thấy học sinh phù hợp.
+                            </td>
+                        </tr>
+                    ) : (
+                        students.map((student) => (
+                            <tr key={student.id}>
+                                <td>
+                                    <div className="student-main-info">
+                                        <div className="student-avatar">
+                                            {getAvatarLetter(student.name)}
+                                        </div>
+
+                                        <div className="student-name-wrap">
+                                            <h4>{student.name}</h4>
+                                            <p>
+                                                {student.gender} • {formatDate(student.dob)}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </td>
+
+                                <td>
+                                    <span className="student-class-badge">{student.className}</span>
+                                </td>
+
+                                <td>
+                                    <span className="student-teacher-text">{student.teacher}</span>
+                                </td>
+
+                                <td>
+                                    <div className="student-parent-wrap">
+                                        <h5>{student.parentName}</h5>
+                                        <span>{student.parentPhone}</span>
+                                    </div>
+                                </td>
+
+                                <td>
+                                    <span className="student-status-badge">{student.status}</span>
+                                </td>
+
+                                <td>
+                                    <div className="student-row-actions">
+                                        <button
+                                            type="button"
+                                            className="student-icon-btn"
+                                            onClick={() => onView(student)}
+                                            aria-label="Xem"
+                                            title="Xem"
+                                        >
+                                            <FiEye />
+                                        </button>
+
+                                        <button
+                                            type="button"
+                                            className="student-icon-btn"
+                                            onClick={() => onEdit(student)}
+                                            aria-label="Sửa"
+                                            title="Sửa"
+                                        >
+                                            <FiEdit2 />
+                                        </button>
+
+                                        <button
+                                            type="button"
+                                            className="student-icon-btn"
+                                            onClick={() => onDelete(student.id)}
+                                            aria-label="Xóa"
+                                            title="Xóa"
+                                        >
+                                            <FiTrash2 />
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        ))
+                    )}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    );
+}

@@ -16,8 +16,8 @@ export default function ChatWindow({
             <div className="parent-chat-window parent-chat-empty">
                 <FiUsers className="parent-chat-empty-icon" />
 
-                <h3>Chọn phụ huynh để bắt đầu trò chuyện</h3>
-                <p>Kết nối và chia sẻ kinh nghiệm nuôi dạy con cái</p>
+                <h3>Chọn giáo viên để bắt đầu trò chuyện</h3>
+                <p>Trao đổi với giáo viên chủ nhiệm về tình hình học tập của con.</p>
             </div>
         );
     }

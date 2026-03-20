@@ -113,23 +113,67 @@
     width: 100%;
     min-height: 3.55rem;
     border-radius: 1.05rem;
-    border: 1px solid #dbe1ea;
+    border: 1px solid var(--border-input, #d7deeb);
     background: #ffffff;
     padding: 0 1rem;
     font-size: 1rem;
     font-weight: 500;
     color: #26334d;
     outline: none;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.create-user-account-field input:hover,
+.create-user-account-field select:hover {
+    border-color: #b9c8e1;
+}
+
+.create-user-account-field input:focus,
+.create-user-account-field select:focus {
+    border-color: var(--border-focus, #8fb3ff);
+    box-shadow: 0 0 0 3px rgba(143, 179, 255, 0.2);
+}
+
+.create-user-account-field select {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    padding-right: 2.85rem;
+    line-height: 1.35;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%232f3d5a' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 1rem center;
+    background-size: 0.95rem;
+}
+
+.create-user-account-field select::-ms-expand {
+    display: none;
+}
+
+.create-user-account-field select option {
+    color: #1f2a44;
+    background: #ffffff;
+    font-weight: 600;
 }
 
 .create-user-account-email-group {
     display: flex;
     align-items: center;
-    border: 1px solid #dbe1ea;
+    border: 1px solid var(--border-input, #d7deeb);
     border-radius: 1.05rem;
     min-height: 3.55rem;
     background: #ffffff;
     overflow: hidden;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.create-user-account-email-group:hover {
+    border-color: #b9c8e1;
+}
+
+.create-user-account-email-group:focus-within {
+    border-color: var(--border-focus, #8fb3ff);
+    box-shadow: 0 0 0 3px rgba(143, 179, 255, 0.2);
 }
 
 .create-user-account-email-group input {

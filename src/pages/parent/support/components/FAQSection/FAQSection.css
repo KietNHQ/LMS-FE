@@ -1,47 +1,78 @@
-.faq-container{
-  background:white;
-  padding:20px;
-  border-radius:12px;
-  width:65%;
+.parent-faq-section-container {
+  min-height: 0;
+  height: 100%;
+  background: #ffffff;
+  border: 1px solid #eadffd;
+  border-radius: 24px;
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 8px 24px rgba(78, 33, 140, 0.08);
 }
 
-.faq-title{
-  display:flex;
-  align-items:center;
-  gap:8px;
-
-  font-size:18px;
-  margin-bottom:15px;
+.parent-faq-section-title {
+  margin: 0 0 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 20px;
+  font-weight: 800;
+  color: #1b2f53;
 }
 
-.faq-icon{
-  color:#7c5cff;
+.parent-faq-section-icon {
+  color: #7c5cff;
 }
 
-.faq-item{
-  margin-bottom:16px;
+.parent-faq-section-list {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding-right: 4px;
 }
 
-.faq-category{
-  font-size:13px;
-  color:#777;
-  margin-bottom:5px;
+.parent-faq-section-item {
+  margin-bottom: 12px;
 }
 
-.faq-question{
-  border:1px solid #e5e7eb;
-  padding:12px;
-  border-radius:8px;
-
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-
-  cursor:pointer;
+.parent-faq-section-category {
+  margin: 0 0 6px;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #7e6aa7;
 }
 
-.faq-answer{
-  padding:10px;
-  font-size:14px;
-  color:#555;
+.parent-faq-section-question {
+  border: 1px solid #e7dcfb;
+  background: #ffffff;
+  padding: 13px 14px;
+  border-radius: 14px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  color: #37255e;
+  font-size: 14px;
+  font-weight: 700;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.parent-faq-section-question:hover {
+  border-color: #c9b2f7;
+  box-shadow: 0 8px 16px rgba(97, 58, 173, 0.12);
+  transform: translateY(-1px);
+}
+
+.parent-faq-section-answer {
+  margin-top: 8px;
+  border: 1px solid #efe5ff;
+  background: #faf7ff;
+  border-radius: 12px;
+  padding: 10px 12px;
+  font-size: 14px;
+  line-height: 1.6;
+  color: #69588e;
 }
