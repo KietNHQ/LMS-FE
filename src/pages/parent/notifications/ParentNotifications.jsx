@@ -79,15 +79,15 @@ export default function Notification() {
   };
 
   const classList = [...new Set(
-    notifications
-      .map(n => n.class)
-      .filter(c => studentClasses.includes(c) || c === "parent")
+      notifications
+          .map(n => n.class)
+          .filter(c => studentClasses.includes(c) || c === "parent" || c === "12")
   )];
 
   const filteredNotifications = notifications.filter(n => {
 
     if(filter === "all"){
-      return studentClasses.includes(n.class) || n.class === "parent";
+      return studentClasses.includes(n.class) || n.class === "parent" || n.class === "12";
     }
 
     return n.class === filter;
@@ -112,22 +112,22 @@ export default function Notification() {
 
         <div className="notification-header">
 
-          <div>
+          <div className="notification-header-left">
 
             <h1>Thông báo</h1>
 
             <NotificationFilter
-              filter={filter}
-              setFilter={setFilter}
-              classList={classList}
-              getClassLabel={getClassLabel}
+                filter={filter}
+                setFilter={setFilter}
+                classList={classList}
+                getClassLabel={getClassLabel}
             />
 
           </div>
 
           <div
-            className="notification-bell"
-            onClick={markAllRead}
+              className="notification-bell"
+              onClick={markAllRead}
           >
 
             <FiBell className="bell-icon"/>
