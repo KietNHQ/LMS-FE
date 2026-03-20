@@ -1,0 +1,21 @@
+.row-item {
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-top:12px;
+}
+
+.avatar {
+  background:#6366f1;
+  color:white;
+  padding:6px 10px;
+  border-radius:50%;
+}
+
+.status {
+  background:#dcfce7;
+  color:#16a34a;
+  padding:4px 10px;
+  border-radius:999px;
+  font-size:12px;
+}
