@@ -1,0 +1,87 @@
+.accounts-overview-section {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.accounts-overview-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.75rem;
+}
+
+.accounts-overview-title-row {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.accounts-overview-left h1 {
+    margin: 0;
+    font-size: 2.6rem;
+    line-height: 1.15;
+    font-weight: 800;
+    color: var(--text-heading, #1e2f5a);
+}
+
+.accounts-overview-total-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    color: #5d6b84;
+    font-size: 1.02rem;
+    font-weight: 700;
+}
+
+.accounts-overview-total-number {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 1.9rem;
+    height: 1.9rem;
+    border-radius: 0.55rem;
+    padding: 0 0.38rem;
+    background: var(--admin-color, #1e2f5a);
+    color: #ffffff;
+    font-size: 0.95rem;
+    font-weight: 800;
+    line-height: 1;
+}
+
+.accounts-overview-total-label {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #5d6b84;
+}
+
+.accounts-overview-add-btn {
+    border: none;
+    outline: none;
+    cursor: pointer;
+    min-height: 3.5rem;
+    padding: 0 1.5rem;
+    border-radius: 1.1rem;
+    background: var(--admin-color, #1e2f5a);
+    color: #ffffff;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.7rem;
+    font-size: 1rem;
+    font-weight: 700;
+    box-shadow: 0 6px 16px rgba(30, 47, 90, 0.12);
+    transition: 0.2s ease;
+}
+
+
+.accounts-overview-add-btn:hover {
+    transform: translateY(-1px);
+    background: #1a2a52;
+}
+
+.accounts-overview-add-btn svg {
+    font-size: 1.1rem;
+}

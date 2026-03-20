@@ -1,0 +1,188 @@
+.create-user-account-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.32);
+    backdrop-filter: blur(3px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1.25rem;
+    z-index: 999;
+}
+
+.create-user-account-modal {
+    width: min(100%, 34rem);
+    background: #ffffff;
+    border-radius: 1.8rem;
+    padding: 2rem 1.75rem 1.75rem;
+    box-shadow: 0 24px 60px rgba(15, 23, 42, 0.22);
+}
+
+.create-user-account-modal h2 {
+    margin: 0 0 1.5rem;
+    color: #1f2a44;
+    font-size: 1.75rem;
+    font-weight: 800;
+}
+
+.create-user-account-excel-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+}
+
+.create-user-account-excel-btn {
+    min-height: 3.2rem;
+    border-radius: 1rem;
+    border: 1px solid #ccd4e2;
+    background: #ffffff;
+    color: #20366d;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.6rem;
+    font-size: 0.95rem;
+    font-weight: 700;
+    transition: 0.2s ease;
+}
+
+.create-user-account-excel-btn:hover {
+    background: #f7f9fc;
+    border-color: #b8c4d9;
+}
+
+.create-user-account-excel-btn input {
+    display: none;
+}
+
+.create-user-account-import-feedback {
+    margin: 0 0 1rem;
+    border-radius: 0.9rem;
+    padding: 0.72rem 0.9rem;
+    font-size: 0.92rem;
+    font-weight: 600;
+    border: 1px solid transparent;
+}
+
+.create-user-account-import-feedback.info {
+    background: #f5f8ff;
+    border-color: #d2ddff;
+    color: #2547a8;
+}
+
+.create-user-account-import-feedback.success {
+    background: #edfdf3;
+    border-color: #b7ebca;
+    color: #17633f;
+}
+
+.create-user-account-import-feedback.warning {
+    background: #fffaeb;
+    border-color: #f8e5ad;
+    color: #8a5a00;
+}
+
+.create-user-account-import-feedback.error {
+    background: #fff1f3;
+    border-color: #ffc9d0;
+    color: #a21932;
+}
+
+.create-user-account-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.create-user-account-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+}
+
+.create-user-account-field label {
+    color: #344054;
+    font-size: 1rem;
+    font-weight: 700;
+}
+
+.create-user-account-field input,
+.create-user-account-field select {
+    width: 100%;
+    min-height: 3.55rem;
+    border-radius: 1.05rem;
+    border: 1px solid #dbe1ea;
+    background: #ffffff;
+    padding: 0 1rem;
+    font-size: 1rem;
+    font-weight: 500;
+    color: #26334d;
+    outline: none;
+}
+
+.create-user-account-email-group {
+    display: flex;
+    align-items: center;
+    border: 1px solid #dbe1ea;
+    border-radius: 1.05rem;
+    min-height: 3.55rem;
+    background: #ffffff;
+    overflow: hidden;
+}
+
+.create-user-account-email-group input {
+    border: none;
+    min-height: 3.55rem;
+    border-radius: 0;
+    flex: 1;
+}
+
+.create-user-account-email-group input:focus {
+    box-shadow: none;
+}
+
+.create-user-account-email-domain {
+    padding: 0 1rem;
+    color: #4b5a78;
+    font-size: 0.95rem;
+    font-weight: 700;
+    border-left: 1px solid #e3e8f1;
+    background: #f8faff;
+    min-height: 3.55rem;
+    display: inline-flex;
+    align-items: center;
+}
+
+.create-user-account-field input::placeholder {
+    color: #9aa3b2;
+}
+
+.create-user-account-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.85rem;
+    margin-top: 0.5rem;
+}
+
+.create-user-account-btn {
+    min-height: 3.5rem;
+    border-radius: 1rem;
+    border: none;
+    outline: none;
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: 800;
+}
+
+.create-user-account-btn.cancel {
+    background: #ffffff;
+    border: 1px solid #dbe1ea;
+    color: #4a5568;
+}
+
+.create-user-account-btn.primary {
+    background: #20366d;
+    color: #ffffff;
+}

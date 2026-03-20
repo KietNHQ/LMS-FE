@@ -41,7 +41,7 @@ export default function UpcomingSchedule({ gradesBySemester }) {
 
       {/* ===== TITLE ===== */}
       <div className="subject-title">
-        📚 Điểm theo môn học
+        Điểm theo môn học
       </div>
 
       {/* ===== GRID (GIỮ NGUYÊN UI CỦA BẠN) ===== */}
@@ -95,7 +95,7 @@ export default function UpcomingSchedule({ gradesBySemester }) {
 
             {/* HEADER */}
             <div className="dialog-header">
-              <h3>📊 Điểm môn {selectedSubject}</h3>
+              <h3>Điểm môn {selectedSubject}</h3>
 
               {/* ❗ FIX NÚT X */}
               <button

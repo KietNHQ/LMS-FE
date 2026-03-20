@@ -28,7 +28,7 @@ export default function ProgressSnapshot({ chartData }) {
 
           <Line
             type="monotone"
-            dataKey="value"   // 🔥 đổi từ score → value
+            dataKey="value"
             stroke="#7c3aed"
             strokeWidth={3}
             dot={{r:6}}
