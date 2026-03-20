@@ -40,6 +40,114 @@
     margin-bottom: 1.5rem;
 }
 
+.payment-qr-modal {
+    width: min(640px, 100%);
+}
+
+.parent-payment-dialog-content {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.dialog-helper-text {
+    margin: 0;
+    color: #6b7280;
+    font-size: 14px;
+}
+
+.dialog-text-input {
+    width: 100%;
+    height: 44px;
+    border: 1px solid #d8c8f5;
+    border-radius: 12px;
+    padding: 0 12px;
+    font-size: 14px;
+    outline: none;
+}
+
+.dialog-text-input:focus {
+    border-color: #885def;
+    box-shadow: 0 0 0 3px rgba(136, 93, 239, 0.12);
+}
+
+.dialog-error-text {
+    margin: 0;
+    color: #dc2626;
+    font-size: 13px;
+}
+
+.qr-wrap {
+    display: flex;
+    justify-content: center;
+    padding: 10px;
+    background: #faf8ff;
+    border: 1px solid #ede7fb;
+    border-radius: 14px;
+}
+
+.qr-image {
+    width: 220px;
+    height: 220px;
+    object-fit: contain;
+}
+
+.qr-payment-meta {
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 12px;
+}
+
+.qr-payment-meta p {
+    margin: 0 0 8px;
+    font-size: 14px;
+    color: #374151;
+    word-break: break-word;
+}
+
+.qr-payment-meta .qr-demo-warning {
+    margin: 0 0 10px;
+    padding: 8px 10px;
+    border-radius: 8px;
+    background: #fff4d6;
+    color: #9a6700;
+    border: 1px solid #f3d58a;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.qr-payment-meta p:last-child {
+    margin-bottom: 0;
+}
+
+.dialog-action-row {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+.dialog-btn {
+    border: none;
+    height: 40px;
+    border-radius: 10px;
+    padding: 0 14px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.dialog-btn.ghost {
+    border: 1px solid #d1d5db;
+    background: #ffffff;
+    color: #374151;
+}
+
+.dialog-btn.primary {
+    background: linear-gradient(135deg, #b68af8 0%, #885def 100%);
+    color: #ffffff;
+}
+
 @media (max-width: 75rem) {
     .payment-summary-grid {
         grid-template-columns: 1fr;
@@ -63,5 +171,13 @@
 
     .parent-payments-header p {
         font-size: 0.8125rem;
+    }
+
+    .dialog-action-row {
+        flex-direction: column;
+    }
+
+    .dialog-btn {
+        width: 100%;
     }
 }

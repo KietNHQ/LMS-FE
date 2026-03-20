@@ -1,0 +1,128 @@
+.parent-support-faq {
+  min-height: 0;
+  height: 100%;
+  background: #ffffff;
+  border: 1px solid #eadffd;
+  border-radius: 24px;
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 8px 24px rgba(78, 33, 140, 0.08);
+}
+
+.parent-faq-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.parent-faq-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.parent-faq-title h3 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 800;
+  color: #2a1d4d;
+}
+
+.parent-faq-icon {
+  color: #7d57d8;
+  font-size: 20px;
+}
+
+.parent-faq-search {
+  flex-shrink: 0;
+  width: min(320px, 45%);
+}
+
+.parent-faq-search input {
+  width: 100%;
+  height: 44px;
+  border: 1px solid #dfd1fb;
+  border-radius: 14px;
+  padding: 0 14px;
+  font-size: 14px;
+  color: #2c214a;
+  background: #fbf8ff;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.parent-faq-search input:hover {
+  border-color: #c9b2f7;
+}
+
+.parent-faq-search input:focus {
+  outline: none;
+  border-color: #885def;
+  box-shadow: 0 0 0 3px rgba(136, 93, 239, 0.16);
+}
+
+.parent-faq-list {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.parent-faq-list::-webkit-scrollbar {
+  width: 8px;
+}
+
+.parent-faq-list::-webkit-scrollbar-track {
+  background: #f3ebff;
+  border-radius: 999px;
+}
+
+.parent-faq-list::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #c6adf9 0%, #ab89f1 100%);
+  border-radius: 999px;
+}
+
+.parent-faq-category {
+  margin-top: 14px;
+}
+
+.parent-faq-category:first-child {
+  margin-top: 0;
+}
+
+.parent-faq-category h4 {
+  margin: 0 0 8px;
+  font-size: 13px;
+  font-weight: 800;
+  color: #7e6aa7;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.parent-faq-empty {
+  border: 1px dashed #d7c4fb;
+  border-radius: 16px;
+  padding: 22px;
+  text-align: center;
+  font-size: 14px;
+  color: #6d5a95;
+  background: #fbf8ff;
+}
+
+@media (max-width: 900px) {
+  .parent-support-faq {
+    min-height: 320px;
+  }
+
+  .parent-faq-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .parent-faq-search {
+    width: 100%;
+  }
+}
+

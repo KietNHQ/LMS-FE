@@ -2,7 +2,12 @@ import React from "react";
 import "./PaymentTable.css";
 import { FiCheckCircle, FiClock } from "react-icons/fi";
 
-export default function PaymentTable({ payment }) {
+export default function PaymentTable({
+    payment,
+    onOpenDiscount,
+    onOpenPayment,
+    onExportPdf,
+}) {
     const isPaid = payment.status === "paid";
 
     return (
@@ -36,15 +41,27 @@ export default function PaymentTable({ payment }) {
 
                 <div className={`payment-info-box final-box ${payment.status}`}>
                     <span>Thực thu</span>
-                    <strong>{payment.finalAmount}</strong>
+                    <strong>{payment.finalAmountText}</strong>
                 </div>
             </div>
 
             <div className="payment-item-footer">
                 {isPaid ? (
-                    <p className="paid-date">✓ Đã thanh toán ngày {payment.paidDate}</p>
+                    <div className="paid-action-wrap">
+                        <p className="paid-date">✓ Đã thanh toán ngày {payment.paidDate}</p>
+                        <button type="button" className="export-pdf-btn" onClick={onExportPdf}>
+                            Xuất file PDF
+                        </button>
+                    </div>
                 ) : (
-                    <button className="pay-now-btn">Thanh toán ngay</button>
+                    <div className="payment-action-wrap">
+                        <button type="button" className="discount-btn" onClick={onOpenDiscount}>
+                            Nhập mã giảm giá
+                        </button>
+                        <button type="button" className="pay-now-btn" onClick={onOpenPayment}>
+                            Thanh toán QR
+                        </button>
+                    </div>
                 )}
             </div>
         </div>

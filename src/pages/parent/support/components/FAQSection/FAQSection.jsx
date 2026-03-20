@@ -40,28 +40,28 @@ export default function FAQSection(){
 
   return(
 
-    <div className="faq-container">
+    <div className="parent-faq-section-container">
 
-      <h2 className="faq-title">
+      <h2 className="parent-faq-section-title">
 
-        <HelpCircle size={20} className="faq-icon"/>
+        <HelpCircle size={20} className="parent-faq-section-icon"/>
 
         Câu hỏi thường gặp
 
       </h2>
 
-      <div className="faq-list">
+      <div className="parent-faq-section-list">
 
         {faqs.map((item,index)=>(
 
-          <div key={index} className="faq-item">
+          <div key={index} className="parent-faq-section-item">
 
-            <p className="faq-category">
+            <p className="parent-faq-section-category">
               {item.category}
             </p>
 
             <div
-              className="faq-question"
+              className="parent-faq-section-question"
               onClick={()=>toggle(index)}
             >
 
@@ -73,7 +73,7 @@ export default function FAQSection(){
 
             {open===index && (
 
-              <div className="faq-answer">
+              <div className="parent-faq-section-answer">
                 {item.answer}
               </div>
 

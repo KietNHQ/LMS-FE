@@ -39,7 +39,10 @@ const ParentMessages = () => {
 
   return (
     <div className="parent-messages">
-      <h1>Tin nhắn</h1>
+      <div className="parent-messages-header">
+        <h1>Liên lạc giáo viên chủ nhiệm</h1>
+        <p>Trao đổi nhanh với giáo viên chủ nhiệm về học tập, điểm danh và tình hình của con.</p>
+      </div>
 
       <div className="messages-layout">
         <ConversationList onSelect={setSelectedUser} />

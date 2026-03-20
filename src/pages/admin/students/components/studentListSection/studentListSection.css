@@ -1,0 +1,161 @@
+.student-list-card {
+    background: #ffffff;
+    border: 1px solid #e7eaf1;
+    border-radius: 1.35rem;
+    box-shadow: 0 4px 12px rgba(18, 38, 63, 0.05);
+    overflow: hidden;
+}
+
+.student-list-table-wrap {
+    width: 100%;
+    overflow-x: auto;
+}
+
+.student-list-table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 62rem;
+}
+
+.student-list-table thead th {
+    text-align: left;
+    padding: 1rem 1.1rem;
+    font-size: 0.9rem;
+    font-weight: 800;
+    color: #7f8899;
+    border-bottom: 1px solid #eef1f6;
+    background: #ffffff;
+}
+
+.student-list-table tbody td {
+    padding: 0.95rem 1.1rem;
+    border-bottom: 1px solid #eef1f6;
+    vertical-align: middle;
+}
+
+.student-list-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.student-main-info {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.student-avatar {
+    width: 2.7rem;
+    height: 2.7rem;
+    border-radius: 50%;
+    background: #dbe7fb;
+    color: #2d62ea;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.05rem;
+    font-weight: 800;
+    flex-shrink: 0;
+}
+
+.student-name-wrap h4 {
+    margin: 0;
+    font-size: 1rem;
+    color: #2b3445;
+    font-weight: 700;
+}
+
+.student-name-wrap p {
+    margin: 0.2rem 0 0;
+    font-size: 0.86rem;
+    color: #7d8799;
+    font-weight: 500;
+}
+
+.student-class-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 3.35rem;
+    height: 1.7rem;
+    padding: 0 0.7rem;
+    border-radius: 999px;
+    background: #dce7f8;
+    color: #2c5ee7;
+    font-size: 0.82rem;
+    font-weight: 800;
+}
+
+.student-teacher-text {
+    font-size: 0.9rem;
+    color: #4b5565;
+    font-weight: 500;
+}
+
+.student-parent-wrap h5 {
+    margin: 0;
+    font-size: 0.95rem;
+    color: #3a4454;
+    font-weight: 600;
+}
+
+.student-parent-wrap span {
+    display: block;
+    margin-top: 0.2rem;
+    font-size: 0.82rem;
+    color: #7d8799;
+}
+
+.student-status-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 1.75rem;
+    padding: 0.15rem 0.75rem;
+    border-radius: 999px;
+    background: #d7f1df;
+    color: #16934d;
+    font-size: 0.8rem;
+    font-weight: 800;
+}
+
+.student-row-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.5rem;
+}
+
+.student-icon-btn {
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    width: 1.95rem;
+    height: 1.95rem;
+    border-radius: 0.55rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: #98a1b2;
+    transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease;
+}
+
+.student-icon-btn:hover {
+    background: #f3f6fb;
+    color: #23386f;
+    transform: translateY(-1px);
+}
+
+.student-icon-btn svg {
+    font-size: 1rem;
+}
+
+.student-actions-col {
+    text-align: right !important;
+}
+
+.student-empty-row {
+    text-align: center;
+    padding: 1.4rem !important;
+    color: #7d8799;
+    font-size: 0.9rem;
+}

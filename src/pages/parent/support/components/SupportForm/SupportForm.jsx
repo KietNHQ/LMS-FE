@@ -34,9 +34,9 @@ export default function SupportForm(){
 
   return(
 
-    <div className="chat-container">
+    <div className="parent-support-form-container">
 
-      <div className="chat-header">
+      <div className="parent-support-form-header">
 
         <Bot size={18}/>
 
@@ -44,13 +44,13 @@ export default function SupportForm(){
 
       </div>
 
-      <div className="chat-body">
+      <div className="parent-support-form-body">
 
         {chat.map((msg,index)=>(
 
           <div
             key={index}
-            className={`chat-message ${msg.sender}`}
+            className={`parent-support-form-message ${msg.sender}`}
           >
 
             <p>{msg.text}</p>
@@ -63,7 +63,7 @@ export default function SupportForm(){
 
       </div>
 
-      <div className="chat-input">
+      <div className="parent-support-form-input">
 
         <input
           placeholder="Nhập câu hỏi..."
