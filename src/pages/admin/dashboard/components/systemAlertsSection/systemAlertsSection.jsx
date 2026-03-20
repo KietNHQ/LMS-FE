@@ -12,7 +12,7 @@ const SystemAlertsSection = () => {
         </div>
       </div>
 
-      <div className="alert info">
+      <div className="alert blue">
         <BookOpen size={18}/>
         <div>
           <p>3 quiz mới</p>

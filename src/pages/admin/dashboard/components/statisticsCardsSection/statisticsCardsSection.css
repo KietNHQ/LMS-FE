@@ -50,19 +50,23 @@
 .icon.blue {
   background: #eff6ff;
   color: #2563eb;
+  border: 1px solid #78b5ff;
 }
 
 .icon.green {
   background: #ecfdf5;
   color: #16a34a;
+  border: 1px solid #16a34a;
 }
 
 .icon.purple {
   background: #f5f3ff;
   color: #7c3aed;
+  border: 1px solid #9f8cfe;
 }
 
 .icon.orange {
   background: #fff7ed;
   color: #ea580c;
+  border: 1px solid #fbc17a;
 }

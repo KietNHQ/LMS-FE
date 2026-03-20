@@ -1,21 +1,27 @@
+/* ===================== */
+/* DASHBOARD BASE */
+/* ===================== */
 .dashboard {
   padding: 24px;
-  background: #f6f7fb;
   min-height: 100vh;
-  font-family: system-ui;
+  font-family: system-ui, sans-serif;
+  /* background: #f9fafb; */
 }
 
 .header h2 {
   font-size: 22px;
   font-weight: 600;
+  margin: 0;
 }
 
 .header p {
-  color: #888;
+  color: #6b7280;
   margin-top: 4px;
 }
 
-/* GRID */
+/* ===================== */
+/* GRID LAYOUT */
+/* ===================== */
 .row {
   display: grid;
   grid-template-columns: 2fr 1fr;
@@ -23,48 +29,159 @@
   margin-top: 20px;
 }
 
-/* CARD */
+/* ===================== */
+/* CARD SYSTEM */
+/* ===================== */
 .card {
   background: #fff;
   padding: 16px;
   border-radius: 12px;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
 }
 
+.card h3 {
+  margin: 0 0 10px 0;
+  font-size: 16px;
+  font-weight: 600;
+  width: 100%;
+}
+
+/* ===================== */
+/* BIG CARD */
+/* ===================== */
 .card.big {
   height: 260px;
+  display: flex;
+  flex-direction: column;
 }
 
-/* LINE */
-.line-chart {
+/* ===================== */
+/* CHART HEADER */
+/* ===================== */
+.chart-header {
+  display: flex;
+  justify-content: flex-start;
+  margin-bottom: 10px;
+}
+
+/* ===================== */
+/* BAR CHART (MAIN) */
+/* ===================== */
+.bar {
+  display: flex;
+  align-items: flex-end;
+  gap: 14px;
   height: 180px;
-  margin-top: 10px;
+  padding-left: 30px;
+  border-left: 1px solid #e5e7eb;
+  border-bottom: 1px solid #e5e7eb;
   position: relative;
 }
 
-.line-chart::before {
+/* grid lines (ngưỡng) */
+.bar::before {
   content: "";
   position: absolute;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(to top,#dbeafe,transparent);
-  border-radius: 8px;
+  inset: 0;
+  background: repeating-linear-gradient(
+    to top,
+    transparent,
+    transparent 35px,
+    #e5e7eb 36px
+  );
+  pointer-events: none;
 }
 
-.line-chart::after {
-  content: "";
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  border-bottom: 2px solid #3b82f6;
-  border-radius: 50% 50% 0 0;
-  transform: scaleY(0.6);
+/* bars */
+.bar div {
+  width: 22px;
+  background: #60a5fa;
+  border-radius: 6px 6px 0 0;
+  z-index: 1;
 }
 
-/* DONUT */
-.donut-wrap {
+/* ===================== */
+/* AXIS (X & Y) */
+/* ===================== */
+.y-axis {
+  width: 30px;
   display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  font-size: 11px;
+  color: #6b7280;
+}
+
+.x-axis {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 6px;
+  padding-left: 30px;
+  font-size: 11px;
+  color: #6b7280;
+}
+
+/* ===================== */
+/* LINE CHART */
+/* ===================== */
+.line-chart {
+  display: flex;
+  flex-direction: column;
+  height: 200px;
+  margin-top: 10px;
+}
+
+.chart-body {
+  display: flex;
+  flex: 1;
+}
+
+.chart-area {
+  flex: 1;
+  position: relative;
+  border-radius: 8px;
+  overflow: hidden;
+  background: linear-gradient(to top, #dbeafe, transparent);
+}
+
+/* grid line */
+.chart-area::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    to top,
+    #e5e7eb,
+    #e5e7eb 1px,
+    transparent 1px,
+    transparent 40px
+  );
+}
+
+/* points */
+.chart-area span {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  background: #3b82f6;
+  border-radius: 50%;
+}
+
+/* ===================== */
+/* DONUT CHART */
+/* ===================== */
+.donut-card {
+  height: 260px;
+  display: flex;
+  flex-direction: column;
+}
+
+.donut-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 20px;
+  justify-content: center;
 }
 
 .donut {
@@ -84,42 +201,123 @@
   content: "";
   width: 70px;
   height: 70px;
-  background: white;
+  background: #fff;
   border-radius: 50%;
   position: absolute;
-  top:50%;
-  left:50%;
-  transform: translate(-50%,-50%);
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
 }
 
-.legend {
-  font-size: 14px;
+/* legend */
+.legend-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(100px, 1fr));
+  gap: 8px 20px;
+  margin-top: 14px;
+  font-size: 13px;
+}
+
+.legend-grid div {
+  display: flex;
+  align-items: center;
+  white-space: nowrap;
 }
 
 .dot {
-  width:10px;
-  height:10px;
-  border-radius:50%;
-  display:inline-block;
-  margin-right:6px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  margin-right: 6px;
 }
 
-.blue {background:#60a5fa;}
-.green {background:#34d399;}
-.yellow {background:#fbbf24;}
-.red {background:#f87171;}
-
-/* BAR */
-.bar {
-  display:flex;
-  align-items:flex-end;
-  gap:14px;
-  height:180px;
-  margin-top:10px;
+/* ===================== */
+/* CLASS AVERAGE CHART (FIXED) */
+/* ===================== */
+.class-chart {
+  display: flex;
+  height: 180px;
+  margin-top: 10px;
+  width: 100%;
+  overflow: visible;
 }
 
-.bar div {
-  width:22px;
-  background:#60a5fa;
-  border-radius:6px;
+/* area chứa bars */
+.bar-area {
+  flex: 1;
+  display: flex;
+  align-items: flex-end;
+  gap: 14px;
+  padding-left: 10px;
+  border-left: 1px solid #e5e7eb;
+  border-bottom: 1px solid #e5e7eb;
+  position: relative;
+  height: 100%;
 }
+
+/* grid line ngưỡng */
+.bar-area::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    to top,
+    transparent,
+    transparent 35px,
+    #e5e7eb 36px
+  );
+  pointer-events: none;
+}
+
+.bar-column {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  height: 100%;
+  position: relative;
+}
+
+/* từng cột */
+.bar-item {
+  width: 22px;
+  background: #60a5fa;
+  border-radius: 6px 6px 0 0;
+  display: block;
+  min-height: 2px;
+  position: relative;
+  z-index: 2;
+}
+
+/* value trên cột */
+.bar-value {
+  position: absolute;
+  top: -18px;
+  font-size: 10px;
+  color: #374151;
+}
+
+.x-label {
+  margin-top: 6px;
+  font-size: 11px;
+  color: #6b7280;
+  text-align: center;
+  position: relative;
+  z-index: 3;
+}
+
+.class-chart .y-axis {
+  width: 30px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  font-size: 11px;
+  color: #6b7280;
+  height: 100%;
+}
+
+.blue { background: #60a5fa; }
+.green { background: #34d399; }
+.yellow { background: #fbbf24; }
+.red { background: #f87171; }   
