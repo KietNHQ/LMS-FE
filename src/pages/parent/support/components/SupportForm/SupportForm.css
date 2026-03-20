@@ -1,67 +1,99 @@
-.parent-support-form-container{
-  width:100%;
-  background:white;
-  border-radius:12px;
-  display:flex;
-  flex-direction:column;
-  height:420px;
+.parent-support-form-container {
+  width: 100%;
+  min-height: 0;
+  background: #ffffff;
+  border: 1px solid #eadffd;
+  border-radius: 24px;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+  box-shadow: 0 8px 24px rgba(78, 33, 140, 0.08);
 }
 
-.parent-support-form-header{
-  padding:12px;
-
-  display:flex;
-  align-items:center;
-  gap:8px;
-
-  font-weight:600;
-  color:white;
-
-  border-radius:12px 12px 0 0;
-
-  background:linear-gradient(90deg,#5b7cff,#9b59ff);
+.parent-support-form-header {
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 16px;
+  font-weight: 800;
+  color: #ffffff;
+  border-radius: 24px 24px 0 0;
+  background: linear-gradient(140deg, #885def 0%, #b68af8 100%);
 }
 
-.parent-support-form-body{
-  flex:1;
-  padding:12px;
-  overflow-y:auto;
+.parent-support-form-body {
+  flex: 1;
+  min-height: 0;
+  padding: 14px;
+  overflow-y: auto;
+  background: linear-gradient(180deg, #faf7ff 0%, #ffffff 100%);
 }
 
-.parent-support-form-message{
-  background:#f1f1f1;
-  padding:8px 10px;
-  border-radius:8px;
-  margin-bottom:10px;
-  max-width:80%;
+.parent-support-form-message {
+  background: #ffffff;
+  border: 1px solid #e6d8fb;
+  padding: 10px 12px;
+  border-radius: 12px;
+  margin-bottom: 10px;
+  max-width: 86%;
+  color: #2f244d;
 }
 
-.parent-support-form-message.user{
-  margin-left:auto;
-  background:#e5e0ff;
+.parent-support-form-message.user {
+  margin-left: auto;
+  background: #f1e8ff;
+  border-color: #ddc8fb;
 }
 
-.parent-support-form-message span{
-  font-size:11px;
-  color:#777;
+.parent-support-form-message p {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.55;
 }
 
-.parent-support-form-input{
-  display:flex;
-  border-top:1px solid #eee;
+.parent-support-form-message span {
+  display: inline-block;
+  margin-top: 6px;
+  font-size: 11px;
+  color: #8c77b8;
 }
 
-.parent-support-form-input input{
-  flex:1;
-  border:none;
-  padding:10px;
+.parent-support-form-input {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-top: 1px solid #eadffd;
+  padding: 10px;
+  background: #ffffff;
 }
 
-.parent-support-form-input button{
-  border:none;
-  background:#7c5cff;
-  color:white;
-  padding:10px 16px;
-  cursor:pointer;
-  border-radius:0 0 12px 0;
+.parent-support-form-input input {
+  flex: 1;
+  height: 42px;
+  border: 1px solid #dfd1fb;
+  border-radius: 14px;
+  padding: 0 12px;
+  font-size: 14px;
+  outline: none;
+  background: #fbf8ff;
+}
+
+.parent-support-form-input input:focus {
+  border-color: #885def;
+  box-shadow: 0 0 0 3px rgba(136, 93, 239, 0.16);
+}
+
+.parent-support-form-input button {
+  width: 42px;
+  height: 42px;
+  border: none;
+  background: linear-gradient(145deg, #885def 0%, #a37af4 100%);
+  color: #ffffff;
+  cursor: pointer;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
