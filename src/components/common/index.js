@@ -6,3 +6,4 @@ export { default as SearchBar } from "./SearchBar/SearchBar.jsx";
 export { default as SectionCard } from "./SectionCard/SectionCard.jsx";
 export { default as StatusBadge } from "./StatusBadge/StatusBadge.jsx";
 export { default as WeekPicker } from "./WeekPicker/WeekPicker.jsx";
+export { default as CreateUserDialog } from "./Dialog/Admin/CreateUserDialog/CreateUserDialog.jsx";

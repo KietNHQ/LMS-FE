@@ -1,0 +1,110 @@
+.class-info-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(30, 47, 90, 0.32);
+    backdrop-filter: blur(2px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    z-index: 1200;
+}
+
+.class-info-modal {
+    width: 100%;
+    max-width: 520px;
+    background: var(--bg-card);
+    border: 1px solid #e8edf6;
+    border-radius: 24px;
+    padding: 28px 26px 22px;
+    box-shadow: var(--shadow-lg);
+}
+
+.class-info-modal h2 {
+    margin: 0 0 20px;
+    font-size: 22px;
+    font-weight: 800;
+    color: var(--text-heading);
+}
+
+.class-info-form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.class-info-form .form-group label {
+    display: block;
+    margin-bottom: 8px;
+    color: var(--text-secondary);
+    font-size: 15px;
+    font-weight: 700;
+}
+
+.class-info-form .form-group input,
+.class-info-form .form-group select {
+    width: 100%;
+    height: 48px;
+    border: 1px solid var(--border-input);
+    border-radius: 16px;
+    padding: 0 14px;
+    font-size: 15px;
+    color: var(--text-main);
+    background: var(--bg-card);
+    outline: none;
+    box-sizing: border-box;
+}
+
+.class-info-form .form-group input:focus,
+.class-info-form .form-group select:focus {
+    border-color: var(--border-focus);
+    box-shadow: 0 0 0 4px rgba(143, 179, 255, 0.16);
+}
+
+.class-info-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin-top: 6px;
+}
+
+.class-info-actions .btn-secondary,
+.class-info-actions .btn-primary {
+    height: 46px;
+    border-radius: 16px;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.class-info-actions .btn-secondary {
+    border: 1px solid var(--border-input);
+    background: var(--bg-card);
+    color: var(--text-secondary);
+}
+
+.class-info-actions .btn-secondary:hover {
+    background: var(--bg-main);
+}
+
+.class-info-actions .btn-primary {
+    border: none;
+    background: var(--admin-color);
+    color: var(--text-light);
+    box-shadow: 0 10px 24px rgba(30, 47, 90, 0.2);
+}
+
+.class-info-actions .btn-primary:hover {
+    background: #243b73;
+}
+
+@media (max-width: 640px) {
+    .class-info-modal {
+        padding: 22px 18px;
+    }
+
+    .class-info-actions {
+        grid-template-columns: 1fr;
+    }
+}

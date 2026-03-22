@@ -1,0 +1,156 @@
+.teacher-modal-overlay {
+	position: fixed;
+	inset: 0;
+	background: rgba(15, 23, 42, 0.32);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	z-index: 1000;
+	padding: 1rem;
+}
+
+.teacher-modal {
+	width: min(100%, 34rem);
+	background: #ffffff;
+	border-radius: 1.6rem;
+	padding: 1.2rem;
+	box-shadow: 0 20px 48px rgba(15, 23, 42, 0.22);
+}
+
+.teacher-modal h2 {
+	margin: 0 0 1rem;
+	color: #1f2a44;
+}
+
+.teacher-view-header {
+	display: flex;
+	align-items: center;
+	gap: 0.8rem;
+	margin-bottom: 1rem;
+}
+
+.teacher-view-avatar {
+	width: 2.6rem;
+	height: 2.6rem;
+	border-radius: 0.8rem;
+	background: rgba(30, 47, 90, 0.12);
+	color: var(--admin-color, #1e2f5a);
+	font-size: 1.1rem;
+	font-weight: 800;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.teacher-view-header h3,
+.teacher-view-header p {
+	margin: 0;
+}
+
+.teacher-view-header p {
+	color: #667085;
+}
+
+.teacher-view-list {
+	border: 1px solid #e6ecf7;
+	border-radius: 0.9rem;
+	overflow: hidden;
+	margin-bottom: 1rem;
+}
+
+.teacher-view-row {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 0.7rem 0.9rem;
+	border-bottom: 1px solid #eef2f9;
+}
+
+.teacher-view-row:last-child {
+	border-bottom: none;
+}
+
+.teacher-view-row span {
+	color: #6b7280;
+}
+
+.teacher-view-row strong {
+	color: #1f2937;
+	text-align: right;
+}
+
+.teacher-modal-form {
+	display: flex;
+	flex-direction: column;
+	gap: 0.75rem;
+}
+
+.teacher-form-grid.two-cols {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 0.75rem;
+}
+
+.teacher-form-group {
+	display: flex;
+	flex-direction: column;
+	gap: 0.45rem;
+}
+
+.teacher-form-group label {
+	color: #475467;
+	font-weight: 700;
+}
+
+.teacher-form-group input,
+.teacher-form-group select {
+	width: 100%;
+	min-height: 2.7rem;
+	border-radius: 0.75rem;
+	border: 1px solid #d2dbec;
+	outline: none;
+	padding: 0 0.75rem;
+}
+
+.teacher-modal-actions {
+	margin-top: 1rem;
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 0.7rem;
+}
+
+.teacher-modal-actions.single {
+	grid-template-columns: 1fr;
+}
+
+.teacher-cancel-btn,
+.teacher-submit-btn {
+	min-height: 2.8rem;
+	border-radius: 0.85rem;
+	border: none;
+	font-weight: 700;
+	cursor: pointer;
+}
+
+.teacher-cancel-btn {
+	background: #ffffff;
+	border: 1px solid #d6deeb;
+	color: #46556f;
+}
+
+.teacher-submit-btn {
+	background: var(--admin-color, #1e2f5a);
+	color: #ffffff;
+}
+
+.teacher-submit-btn:hover {
+	background: #1a2a52;
+}
+
+@media (max-width: 768px) {
+	.teacher-form-grid.two-cols,
+	.teacher-modal-actions {
+		grid-template-columns: 1fr;
+	}
+}
+

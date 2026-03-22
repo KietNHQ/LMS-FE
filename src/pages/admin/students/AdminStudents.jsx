@@ -1,5 +1,7 @@
 import React, { useMemo, useState } from "react";
+import { read, utils, writeFile } from "xlsx";
 import "./AdminStudents.css";
+import { CreateUserDialog } from "../../../components/common";
 
 import StudentActionsSection from "./components/studentActionsSection/studentActionsSection";
 import StudentListSection from "./components/studentListSection/studentListSection";
@@ -144,8 +146,71 @@ export default function AdminStudents() {
     const [selectedClass, setSelectedClass] = useState("Tất cả lớp");
     const [activeModalMode, setActiveModalMode] = useState(null);
     const [activeStudentId, setActiveStudentId] = useState(null);
+    const [isCreateStudentAccountOpen, setIsCreateStudentAccountOpen] = useState(false);
+    const [isImportingExcel, setIsImportingExcel] = useState(false);
+    const [importFeedback, setImportFeedback] = useState(null);
 
     const [studentForm, setStudentForm] = useState(emptyStudentForm);
+
+    const handleCreateStudentAccount = () => {
+        setIsCreateStudentAccountOpen(false);
+    };
+
+    const handleImportExcel = async (file) => {
+        if (!file) return;
+
+        try {
+            setIsImportingExcel(true);
+            setImportFeedback({
+                type: "info",
+                message: `Dang nap du lieu tu file ${file.name}...`,
+            });
+
+            const buffer = await file.arrayBuffer();
+            const workbook = read(buffer, { type: "array" });
+            const firstSheetName = workbook.SheetNames?.[0];
+
+            if (!firstSheetName) {
+                setImportFeedback({
+                    type: "error",
+                    message: "File Excel khong co du lieu.",
+                });
+                return;
+            }
+
+            setImportFeedback({
+                type: "success",
+                message: "Tinh nang import chua san sang, xin vui long nhap thu cong.",
+            });
+        } catch (error) {
+            console.error(error);
+            setImportFeedback({
+                type: "error",
+                message: "Khong the doc file Excel.",
+            });
+        } finally {
+            setIsImportingExcel(false);
+        }
+    };
+
+    const handleDownloadTemplate = () => {
+        const templateRows = [
+            {
+                "Ho va ten lot": "Nguyen Hoang Quoc",
+                Ten: "Kiet",
+                "Ngay sinh": "2008-10-21",
+                "Ten phu huynh": "Nguyen Van B",
+                "So dien thoai phu huynh": "0901234567",
+                "Co so dien thoai ca nhan": "Co",
+                "So dien thoai ca nhan": "0912345678",
+            },
+        ];
+
+        const worksheet = utils.json_to_sheet(templateRows);
+        const workbook = utils.book_new();
+        utils.book_append_sheet(workbook, worksheet, "MauHocSinh");
+        writeFile(workbook, "mau-import-hoc-sinh.xlsx");
+    };
 
     const filteredStudents = useMemo(() => {
         return students.filter((student) => {
@@ -160,12 +225,6 @@ export default function AdminStudents() {
             return matchSearch && matchClass;
         });
     }, [students, searchTerm, selectedClass]);
-
-    const handleOpenModal = () => {
-        setActiveModalMode("create");
-        setActiveStudentId(null);
-        setStudentForm(emptyStudentForm);
-    };
 
     const handleCloseModal = () => {
         setActiveModalMode(null);
@@ -192,30 +251,6 @@ export default function AdminStudents() {
         };
 
         return teacherMap[className] || "Chưa phân công";
-    };
-
-    const handleCreateStudent = () => {
-        if (!studentForm.name.trim()) return;
-        if (!studentForm.dob.trim()) return;
-        if (!studentForm.parentName.trim()) return;
-        if (!studentForm.parentPhone.trim()) return;
-
-        const createdStudent = {
-            id: Date.now(),
-            name: studentForm.name.trim(),
-            gender: studentForm.gender,
-            dob: studentForm.dob,
-            className: studentForm.className,
-            teacher: getTeacherByClass(studentForm.className),
-            parentName: studentForm.parentName.trim(),
-            parentPhone: studentForm.parentPhone.trim(),
-            parentEmail: studentForm.parentEmail.trim(),
-            address: studentForm.address.trim(),
-            status: "Đang học",
-        };
-
-        setStudents((prev) => [createdStudent, ...prev]);
-        handleCloseModal();
     };
 
     const handleSaveStudentEdit = () => {
@@ -268,11 +303,6 @@ export default function AdminStudents() {
     };
 
     const handleSubmitModal = () => {
-        if (activeModalMode === "create") {
-            handleCreateStudent();
-            return;
-        }
-
         if (activeModalMode === "edit") {
             handleSaveStudentEdit();
         }
@@ -292,9 +322,8 @@ export default function AdminStudents() {
                 classOptions={classOptions}
                 onSearchChange={setSearchTerm}
                 onClassChange={setSelectedClass}
-                onAddStudent={handleOpenModal}
+                onCreateStudentAccount={() => setIsCreateStudentAccountOpen(true)}
             />
-
             <StudentListSection
                 students={filteredStudents}
                 onView={handleViewStudent}
@@ -311,6 +340,24 @@ export default function AdminStudents() {
                     onChange={handleInputChange}
                     onClose={handleCloseModal}
                     onSubmit={handleSubmitModal}
+                />
+            )}
+
+            {isCreateStudentAccountOpen && (
+                <CreateUserDialog
+                    mode="create"
+                    title="Tạo tài khoản học sinh"
+                    submitLabel="Tạo tài khoản"
+                    fixedRole="Học sinh"
+                    onClose={() => {
+                        setIsCreateStudentAccountOpen(false);
+                        setImportFeedback(null);
+                    }}
+                    onSubmit={handleCreateStudentAccount}
+                    onImportExcel={handleImportExcel}
+                    onDownloadTemplate={handleDownloadTemplate}
+                    isImportingExcel={isImportingExcel}
+                    importFeedback={importFeedback}
                 />
             )}
         </div>
