@@ -3,10 +3,33 @@ import StatisticsCardsSection from "./components/statisticsCardsSection/statisti
 import RecentActivitiesSection from "./components/recentActivitiesSection/recentActivitiesSection";
 import SystemAlertsSection from "./components/systemAlertsSection/systemAlertsSection";
 
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  Tooltip,
+  CartesianGrid,
+  ResponsiveContainer,
+  BarChart,
+  Bar
+} from "recharts";
+
 const AdminDashboard = () => {
+
+  // ===== DATA BAR CHART =====
   const classLabels = ["10A1","10A2","10A3","8A1","8A2","7A1","6A1"];
   const classScores = [8.2, 7.5, 7.8, 8.9, 8.1, 7.2, 6.8];
-  const maxScore = 10;
+
+  // ===== DATA LINE CHART =====
+  const revenueData = [
+    { month: "T1", value: 20 },
+    { month: "T2", value: 40 },
+    { month: "T3", value: 30 },
+    { month: "T4", value: 60 },
+    { month: "T5", value: 50 },
+    { month: "T6", value: 70 },
+  ];
 
   return (
     <div className="dashboard">
@@ -21,46 +44,29 @@ const AdminDashboard = () => {
       {/* ROW 1 */}
       <div className="row">
 
-        {/* LINE CHART */}
+        {/* ===== LINE CHART ===== */}
         <div className="card big">
           <h3>Doanh thu học phí theo tháng</h3>
 
-          <div className="line-chart">
-            <div className="chart-body">
-
-              <div className="y-axis">
-                <span>0</span>
-                <span>2tr</span>
-                <span>4tr</span>
-                <span>6tr</span>
-              </div>
-
-              <div className="chart-area">
-                {[20, 40, 30, 60, 50, 70].map((y, i) => (
-                  <span
-                    key={i}
-                    style={{
-                      left: `${i * 16}%`,
-                      bottom: `${y}%`
-                    }}
-                  />
-                ))}
-              </div>
-
-            </div>
-
-            <div className="x-axis">
-              <span>T1</span>
-              <span>T2</span>
-              <span>T3</span>
-              <span>T4</span>
-              <span>T5</span>
-              <span>T6</span>
-            </div>
+          <div style={{ width: "100%", height: 250 }}>
+            <ResponsiveContainer>
+              <LineChart data={revenueData}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="month" />
+                <YAxis />
+                <Tooltip />
+                <Line
+                  type="monotone"
+                  dataKey="value"
+                  stroke="#3b82f6"
+                  strokeWidth={2}
+                />
+              </LineChart>
+            </ResponsiveContainer>
           </div>
         </div>
 
-        {/* DONUT */}
+        {/* DONUT (GIỮ NGUYÊN) */}
         <div className="card donut-card">
           <h3>Phân loại học lực</h3>
 
@@ -83,46 +89,30 @@ const AdminDashboard = () => {
       {/* ROW 2 */}
       <div className="row">
 
-        {/* BAR CHART */}
+        {/* ===== BAR CHART ===== */}
         <div className="card big">
           <h3>Điểm trung bình theo lớp</h3>
 
-          <div className="class-chart">
-
-            {/* Y AXIS */}
-            <div className="y-axis">
-              <span>10</span>
-              <span>8</span>
-              <span>6</span>
-              <span>4</span>
-              <span>2</span>
-              <span>0</span>
-            </div>
-
-            {/* BAR AREA */}
-            <div className="bar-area">
-
-              {classScores.map((score, i) => (
-                <div key={i} className="bar-column">
-
-                  <div
-                    className="bar-item"
-                    style={{
-                      height: `${(score / maxScore) * 100}%`
-                    }}
-                  >
-                    <span className="bar-value">{score}</span>
-                  </div>
-
-                  <span className="x-label">
-                    {classLabels[i]}
-                  </span>
-
-                </div>
-              ))}
-
-            </div>
-
+          <div style={{ width: "100%", height: 300 }}>
+            <ResponsiveContainer>
+              <BarChart
+                data={classLabels.map((label, i) => ({
+                  class: label,
+                  score: classScores[i]
+                }))}
+              >
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="class" />
+                <YAxis domain={[0, 10]} />
+                <Tooltip />
+                <Bar
+                  dataKey="score"
+                  fill="#60a5fa"
+                  radius={[6, 6, 0, 0]}
+                  barSize={30} 
+                />
+              </BarChart>
+            </ResponsiveContainer>
           </div>
         </div>
 

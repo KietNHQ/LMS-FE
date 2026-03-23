@@ -1,0 +1,175 @@
+.admin-wrapper {
+  padding: 24px;
+  min-height: 100vh;
+}
+
+/* HEADER */
+.admin-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.admin-btn-add {
+  background: #1e3a8a;
+  color: white;
+  border: none;
+  padding: 8px 14px;
+  border-radius: 20px;
+  cursor: pointer;
+}
+
+/* CARD */
+.admin-card {
+  display: flex;
+  gap: 12px;
+  padding: 16px;
+  border-radius: 12px;
+  background: #f8fafc;
+  border: 1px solid #dbe2ea;
+  position: relative;
+  transition: all 0.2s;
+  cursor: pointer;
+}
+
+.admin-card:hover {
+  background: #eef4ff;
+  border-color: #3b82f6;
+}
+
+/* ICON */
+.admin-icon {
+  padding: 8px;
+  border-radius: 50%;
+}
+
+/* CONTENT */
+.admin-content h4 {
+  margin: 0;
+  font-size: 14px;
+}
+
+.admin-content p {
+  font-size: 13px;
+  color: #555;
+}
+
+/* META */
+.admin-meta {
+  display: flex;
+  gap: 8px;
+  font-size: 12px;
+}
+
+/* TAG + COLOR */
+.tag {
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 11px;
+}
+
+/* TYPE COLORS */
+.Tất\ cả {
+  background: #e5e7eb;
+  color: #374151;
+}
+
+.Giáo\ viên {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.Học\ sinh {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.Phụ\ huynh {
+  background: #fce7f3;
+  color: #9d174d;
+}
+
+/* DOT (UNREAD) */
+.unread-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  position: absolute;
+  right: 40px;
+  top: 16px;
+}
+
+/* màu dot theo type */
+.dot-Tất\ cả { background: gray; }
+.dot-Giáo\ viên { background: green; }
+.dot-Học\ sinh { background: blue; }
+.dot-Phụ\ huynh { background: pink; }
+
+/* DELETE */
+.admin-delete {
+  position: absolute;
+  right: 12px;
+  top: 12px;
+  color: gray;
+  cursor: pointer;
+}
+
+/* MODAL */
+.admin-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.3);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.admin-modal-box {
+  background: white;
+  padding: 20px;
+  border-radius: 14px;
+  width: 400px;
+  position: relative; /* FIX */
+}
+.admin-close {
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  border: none;
+  background: transparent;
+  font-size: 20px;
+  cursor: pointer;
+}
+/* FILTER BAR */
+.admin-filters {
+  display: flex;
+  gap: 8px;
+  margin: 16px 0;
+  flex-wrap: wrap;
+}
+
+/* BUTTON DEFAULT (nhạt cùng tone xanh) */
+.filter-btn {
+  border: 1px solid #c7d2fe;        /* xanh nhạt */
+  background: #eef2ff;              /* nền xanh rất nhạt */
+  color: #1e3a8a;                  /* chữ xanh đậm */
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+/* HOVER (đậm hơn 1 chút) */
+.filter-btn:hover {
+  background: #dbeafe;
+  border-color: #93c5fd;
+}
+
+/* ACTIVE (đậm nhất) */
+.filter-btn.active {
+  background: #1e3a8a;
+  color: white;
+  border-color: #1e3a8a;
+}

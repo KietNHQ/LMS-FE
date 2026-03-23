@@ -1,0 +1,134 @@
+/* LIST */
+.admin-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* CARD */
+.admin-card {
+  display: flex;
+  gap: 12px;
+  padding: 16px;
+  border-radius: 12px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  position: relative;
+  transition: all 0.25s ease;
+  cursor: pointer;
+}
+
+/* HOVER */
+.admin-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+  border-color: #3b82f6;
+}
+
+/* ICON */
+.admin-icon {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* ICON COLORS */
+.admin-card.all .admin-icon {
+  background: #e5e7eb;
+  color: #374151;
+}
+
+.admin-card.teacher .admin-icon {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.admin-card.student .admin-icon {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.admin-card.parent .admin-icon {
+  background: #fce7f3;
+  color: #9d174d;
+}
+
+/* CONTENT */
+.admin-content p {
+  font-size: 13px;
+  color: #555;
+  margin: 4px 0;
+}
+
+/* TITLE + DOT */
+.admin-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  font-size: 14px;
+}
+
+/* DOT */
+.unread-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+
+  display: inline-block !important;   /* 🔥 ép inline */
+  position: static !important;        /* 🔥 chặn absolute */
+  margin-left: 6px;
+}
+
+/* DOT COLORS */
+.unread-dot.all { background: gray; }
+.unread-dot.teacher { background: green; }
+.unread-dot.student { background: #2563eb; }
+.unread-dot.parent { background: #ec4899; }
+
+/* META */
+.admin-meta {
+  display: flex;
+  gap: 8px;
+  font-size: 12px;
+}
+
+/* TAG */
+.tag {
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 11px;
+}
+
+.tag.all {
+  background: #e5e7eb;
+  color: #374151;
+}
+
+.tag.teacher {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.tag.student {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.tag.parent {
+  background: #fce7f3;
+  color: #9d174d;
+}
+
+/* DELETE */
+.admin-delete {
+  position: absolute;
+  right: 12px;
+  top: 12px;
+  color: gray;
+  cursor: pointer;
+}
