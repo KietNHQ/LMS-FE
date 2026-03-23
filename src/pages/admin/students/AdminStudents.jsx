@@ -114,7 +114,7 @@ const initialStudents = [
     },
 ];
 
-const classOptions = ["Tất cả lớp", "10A1", "10A2", "11B1", "11B2", "12C1", "9A1", "8A1"];
+const classOptions = ["Tất cả lớp", "10A1", "10A2", "11B1", "11B2", "12C1"];
 
 const emptyStudentForm = {
     name: "",
@@ -246,8 +246,6 @@ export default function AdminStudents() {
             "11B1": "Phạm Thị Lan",
             "11B2": "Phan Ngọc Anh",
             "12C1": "Đỗ Hải Yến",
-            "9A1": "Nguyễn Thị Vân",
-            "8A1": "Hoàng Văn Sơn",
         };
 
         return teacherMap[className] || "Chưa phân công";

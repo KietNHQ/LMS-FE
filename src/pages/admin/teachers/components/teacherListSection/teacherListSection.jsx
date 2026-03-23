@@ -1,5 +1,5 @@
 import React from "react";
-import { FiEdit2, FiEye, FiTrash2 } from "react-icons/fi";
+import { FiEdit2, FiEye, FiTrash2, FiBarChart2 } from "react-icons/fi";
 import "./teacherListSection.css";
 
 function getAvatarLetter(name) {
@@ -9,7 +9,6 @@ function getAvatarLetter(name) {
 
 export default function TeacherListSection({
 	teachers,
-	selectedTeacherId,
 	onSelectTeacher,
 	onView,
 	onEdit,
@@ -38,11 +37,7 @@ export default function TeacherListSection({
 							</tr>
 						) : (
 							teachers.map((teacher) => (
-								<tr
-									key={teacher.id}
-									className={selectedTeacherId === teacher.id ? "is-selected" : ""}
-									onClick={() => onSelectTeacher(teacher.id)}
-								>
+								<tr key={teacher.id}>
 									<td>
 										<div className="teacher-main-info">
 											<div className="teacher-avatar">{getAvatarLetter(teacher.name)}</div>
@@ -74,7 +69,17 @@ export default function TeacherListSection({
 										<div className="teacher-row-actions" onClick={(e) => e.stopPropagation()}>
 											<button
 												type="button"
-												className="teacher-icon-btn"
+												className="teacher-icon-btn details"
+												onClick={() => onSelectTeacher(teacher)}
+												aria-label="Chi tiết"
+												title="Chi tiết"
+											>
+												<FiBarChart2 />
+											</button>
+
+											<button
+												type="button"
+												className="teacher-icon-btn view"
 												onClick={() => onView(teacher)}
 												aria-label="Xem"
 												title="Xem"
@@ -84,7 +89,7 @@ export default function TeacherListSection({
 
 											<button
 												type="button"
-												className="teacher-icon-btn"
+												className="teacher-icon-btn edit"
 												onClick={() => onEdit(teacher)}
 												aria-label="Sửa"
 												title="Sửa"
@@ -94,7 +99,7 @@ export default function TeacherListSection({
 
 											<button
 												type="button"
-												className="teacher-icon-btn"
+												className="teacher-icon-btn delete"
 												onClick={() => onDelete(teacher.id)}
 												aria-label="Xóa"
 												title="Xóa"

@@ -1,0 +1,122 @@
+.admin-timetable-page {
+    min-height: 100vh;
+    padding: 2rem;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.admin-timetable-content-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 2.1fr) minmax(18rem, 0.95fr);
+    gap: 1rem;
+    min-width: 0;
+}
+
+.admin-timetable-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(16, 24, 40, 0.45);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 1rem;
+}
+
+.admin-timetable-modal {
+    width: min(46rem, 100%);
+    background: #fff;
+    border-radius: 1rem;
+    border: 1px solid #dae1ed;
+    box-shadow: 0 18px 42px rgba(30, 47, 90, 0.2);
+    padding: 1rem;
+}
+
+.admin-timetable-modal h3 {
+    margin: 0;
+    color: #1f2a44;
+}
+
+.admin-timetable-modal-grid {
+    margin-top: 0.8rem;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.7rem;
+}
+
+.admin-timetable-modal-grid label {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    color: #5d6b84;
+    font-size: 0.82rem;
+    font-weight: 700;
+}
+
+.admin-timetable-modal-grid input,
+.admin-timetable-modal-grid select {
+    min-height: 2.65rem;
+    border: 1px solid #d3dcec;
+    border-radius: 0.75rem;
+    padding: 0 0.75rem;
+    outline: none;
+    color: #334155;
+    font-weight: 600;
+}
+
+.admin-timetable-modal-grid input:focus,
+.admin-timetable-modal-grid select:focus {
+    border-color: #8fb3ff;
+    box-shadow: 0 0 0 3px rgba(143, 179, 255, 0.2);
+}
+
+.admin-timetable-modal-grid input.readonly {
+    background: #f8fafc;
+    color: #475467;
+    cursor: not-allowed;
+}
+
+.admin-timetable-modal-actions {
+    margin-top: 1rem;
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.6rem;
+}
+
+.admin-timetable-modal-actions .btn-secondary,
+.admin-timetable-modal-actions .btn-primary {
+    min-height: 2.65rem;
+    border-radius: 0.75rem;
+    border: none;
+    padding: 0 0.95rem;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.admin-timetable-modal-actions .btn-secondary {
+    background: #eef2f8;
+    color: #51607d;
+}
+
+.admin-timetable-modal-actions .btn-primary {
+    background: var(--admin-color, #1e2f5a);
+    color: #fff;
+}
+
+@media (max-width: 1240px) {
+    .admin-timetable-page {
+        padding: 1.5rem;
+    }
+
+    .admin-timetable-content-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 760px) {
+    .admin-timetable-modal-grid {
+        grid-template-columns: 1fr;
+    }
+}

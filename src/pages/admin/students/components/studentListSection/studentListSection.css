@@ -129,20 +129,36 @@
     border: none;
     background: transparent;
     cursor: pointer;
-    width: 1.95rem;
-    height: 1.95rem;
-    border-radius: 0.55rem;
+    width: 2.25rem;
+    height: 2.25rem;
+    border-radius: 0.7rem;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    color: #98a1b2;
-    transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease;
+    color: #98a2b3;
+    transition: background-color 0.18s ease, color 0.18s ease, transform 0.18s ease, box-shadow 0.18s ease;
 }
 
 .student-icon-btn:hover {
-    background: #f3f6fb;
-    color: #23386f;
     transform: translateY(-1px);
+    background: #eef2fb;
+    color: #20366d;
+    box-shadow: 0 6px 12px rgba(30, 47, 90, 0.14);
+}
+
+.student-icon-btn.view:hover {
+    background: #e9f1ff;
+    color: #2b5fd5;
+}
+
+.student-icon-btn.edit:hover {
+    background: #e9f1ff;
+    color: #2b5fd5;
+}
+
+.student-icon-btn.delete:hover {
+    background: #fff1f1;
+    color: #d14d4d;
 }
 
 .student-icon-btn svg {

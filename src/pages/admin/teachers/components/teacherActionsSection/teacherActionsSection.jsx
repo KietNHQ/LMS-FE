@@ -18,8 +18,13 @@ export default function TeacherActionsSection({
 		<section className="teacher-actions-section">
 			<div className="teacher-actions-top">
 				<div className="teacher-actions-title-wrap">
-					<h1>Quản lý Giáo viên</h1>
-					<p>{totalTeachers} giáo viên trong hệ thống</p>
+					<div className="teacher-actions-title-row">
+						<h1>Quản lý Giáo viên</h1>
+						<div className="teacher-total-badge" aria-live="polite">
+							<span className="teacher-total-number">{totalTeachers}</span>
+							<span className="teacher-total-label">giáo viên</span>
+						</div>
+					</div>
 				</div>
 
 				<button className="teacher-create-account-btn" onClick={onCreateTeacherAccount}>
