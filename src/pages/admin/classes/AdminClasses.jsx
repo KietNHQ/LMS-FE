@@ -145,7 +145,7 @@ export default function AdminClasses() {
         <div className="admin-classes-page">
             <div className="admin-classes-header">
                 <div className="admin-classes-header__content">
-                    <h1>Quản lý Lớp học</h1>
+                    <h1>Quản lý lớp học</h1>
                     <p>{totalClasses} lớp học đang hoạt động</p>
                 </div>
 
