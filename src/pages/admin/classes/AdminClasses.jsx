@@ -1,8 +1,8 @@
 import React, { useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import "./AdminClasses.css";
 
 import ClassListSection from "./components/classListSection/classListSection";
-import ClassDetailSection from "./components/classDetailSection/classDetailSection";
 import ClassInfoSection from "./components/classInfoSection/classInfoSection";
 
 const initialClasses = [
@@ -69,14 +69,22 @@ const initialClasses = [
 ];
 
 export default function AdminClasses() {
+    const navigate = useNavigate();
     const [classes, setClasses] = useState(initialClasses);
-    const [selectedClass, setSelectedClass] = useState(null);
+    const [currentPage, setCurrentPage] = useState(1);
 
     const [isCreateOpen, setIsCreateOpen] = useState(false);
     const [isEditOpen, setIsEditOpen] = useState(false);
-    const [isDetailOpen, setIsDetailOpen] = useState(false);
+    const [selectedClass, setSelectedClass] = useState(null);
 
     const totalClasses = useMemo(() => classes.length, [classes]);
+
+    const totalPages = useMemo(() => Math.max(1, Math.ceil(classes.length / 6)), [classes]);
+
+    const paginatedClasses = useMemo(() => {
+        const start = (currentPage - 1) * 6;
+        return classes.slice(start, start + 6);
+    }, [classes, currentPage]);
 
     const handleOpenCreate = () => {
         setIsCreateOpen(true);
@@ -87,13 +95,15 @@ export default function AdminClasses() {
     };
 
     const handleOpenDetail = (classItem) => {
-        setSelectedClass(classItem);
-        setIsDetailOpen(true);
+        navigate(`/admin/classes/${classItem.id}`);
     };
 
-    const handleCloseDetail = () => {
-        setIsDetailOpen(false);
-        setSelectedClass(null);
+    const goPrevPage = () => {
+        setCurrentPage((prev) => Math.max(1, prev - 1));
+    };
+
+    const goNextPage = () => {
+        setCurrentPage((prev) => Math.min(totalPages, prev + 1));
     };
 
     const handleOpenEdit = (classItem) => {
@@ -121,6 +131,7 @@ export default function AdminClasses() {
         };
 
         setClasses((prev) => [createdClass, ...prev]);
+        setCurrentPage(1);
         setIsCreateOpen(false);
     };
 
@@ -134,11 +145,6 @@ export default function AdminClasses() {
 
     const handleDeleteClass = (id) => {
         setClasses((prev) => prev.filter((item) => item.id !== id));
-        if (selectedClass?.id === id) {
-            setSelectedClass(null);
-            setIsDetailOpen(false);
-            setIsEditOpen(false);
-        }
     };
 
     return (
@@ -146,7 +152,7 @@ export default function AdminClasses() {
             <div className="admin-classes-header">
                 <div className="admin-classes-header__content">
                     <h1>Quản lý lớp học</h1>
-                    <p>{totalClasses} lớp học đang hoạt động</p>
+                    <span className="admin-classes-header__subtitle">{totalClasses} lớp học đang hoạt động</span>
                 </div>
 
                 <button
@@ -160,11 +166,38 @@ export default function AdminClasses() {
             </div>
 
             <ClassListSection
-                classes={classes}
+                classes={paginatedClasses}
                 onView={handleOpenDetail}
                 onEdit={handleOpenEdit}
                 onDelete={handleDeleteClass}
             />
+
+            <div className="admin-classes-pagination">
+                <button
+                    type="button"
+                    className="admin-classes-page-btn"
+                    onClick={goPrevPage}
+                    disabled={currentPage === 1}
+                    aria-label="Trang trước"
+                >
+                    ‹
+                </button>
+
+                <div className="admin-classes-page-indicator">
+                    <span>{currentPage}</span>
+                    <small>/ {totalPages}</small>
+                </div>
+
+                <button
+                    type="button"
+                    className="admin-classes-page-btn"
+                    onClick={goNextPage}
+                    disabled={currentPage === totalPages}
+                    aria-label="Trang sau"
+                >
+                    ›
+                </button>
+            </div>
 
             {isCreateOpen && (
                 <ClassInfoSection
@@ -180,13 +213,6 @@ export default function AdminClasses() {
                     initialData={selectedClass}
                     onClose={handleCloseEdit}
                     onSubmit={handleUpdateClass}
-                />
-            )}
-
-            {isDetailOpen && selectedClass && (
-                <ClassDetailSection
-                    classData={selectedClass}
-                    onClose={handleCloseDetail}
                 />
             )}
         </div>

@@ -13,7 +13,8 @@ import AdminTeachers from "../pages/admin/teachers/AdminTeachers";
 import AdminStudents from "../pages/admin/students/AdminStudents";
 import AdminParents from "../pages/admin/parents/AdminParents";
 import AdminClasses from "../pages/admin/classes/AdminClasses";
-import AdminCourses from "../pages/admin/courses/AdminCourses";
+import ClassDetailSection from "../pages/admin/classes/components/classDetailSection/classDetailSection";
+import AdminQuiz from "../pages/admin/quiz/AdminQuiz";
 import AdminTimetable from "../pages/admin/timetable/AdminTimetable";
 import AdminAttendance from "../pages/admin/attendance/AdminAttendance";
 import AdminNotifications from "../pages/admin/notifications/AdminNotifications";
@@ -74,7 +75,8 @@ export default function AppRoutes() {
         <Route path="students" element={<AdminStudents />} />
         <Route path="parents" element={<AdminParents />} />
         <Route path="classes" element={<AdminClasses />} />
-        <Route path="courses" element={<AdminCourses />} />
+        <Route path="classes/:classId" element={<ClassDetailSection />} />
+        <Route path="quiz" element={<AdminQuiz />} />
         <Route path="timetable" element={<AdminTimetable />} />
         <Route path="attendance" element={<AdminAttendance />} />
         <Route path="notifications" element={<AdminNotifications />} />
