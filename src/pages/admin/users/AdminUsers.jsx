@@ -5,7 +5,7 @@ import "./AdminUsers.css";
 import AccountsOverviewSection from "./components/accountsOverviewSection/AccountsOverviewSection";
 import UsersSearchFilterSort from "./components/usersSearchFilterSort/UsersSearchFilterSort";
 import UserDetailSection from "./components/userDetailSection/UserDetailSection";
-import CreateUserAccount from "./components/CreateUserAccount/CreateUserAccount";
+import { CreateUserDialog } from "../../../components/common";
 import BlockUnblockUsersSection from "./components/blockUnblockUserSection/blockUnblockUserSection";
 
 const initialUsers = [
@@ -224,7 +224,10 @@ export default function AdminUsers() {
             id: Date.now(),
             ...formData,
             status: "Hoạt động",
-            avatar: formData.name?.trim()?.charAt(0)?.toUpperCase() || "U",
+            avatar:
+                formData.firstName?.trim()?.charAt(0)?.toUpperCase() ||
+                formData.name?.trim()?.charAt(0)?.toUpperCase() ||
+                "U",
             color: getAvatarColor(formData.role),
             createdAt: new Date().toISOString().slice(0, 10),
         };
@@ -241,7 +244,10 @@ export default function AdminUsers() {
                     ? {
                         ...user,
                         ...formData,
-                        avatar: formData.name?.trim()?.charAt(0)?.toUpperCase() || "U",
+                        avatar:
+                            formData.firstName?.trim()?.charAt(0)?.toUpperCase() ||
+                            formData.name?.trim()?.charAt(0)?.toUpperCase() ||
+                            "U",
                         color: getAvatarColor(formData.role),
                     }
                     : user
@@ -424,10 +430,11 @@ export default function AdminUsers() {
             />
 
             {isCreateOpen && (
-                <CreateUserAccount
+                <CreateUserDialog
                     mode="create"
                     title="Thêm người dùng mới"
                     submitLabel="Tạo người dùng"
+                    roleOptions={["Admin", "Phụ huynh", "Học sinh", "Giáo viên"]}
                     onClose={() => {
                         setIsCreateOpen(false);
                         setImportFeedback(null);
@@ -441,10 +448,11 @@ export default function AdminUsers() {
             )}
 
             {editingUser && (
-                <CreateUserAccount
+                <CreateUserDialog
                     mode="edit"
                     title="Chỉnh sửa người dùng"
                     submitLabel="Lưu thay đổi"
+                    roleOptions={["Admin", "Phụ huynh", "Học sinh", "Giáo viên"]}
                     initialData={editingUser}
                     onClose={() => setEditingUser(null)}
                     onSubmit={handleSaveEdit}

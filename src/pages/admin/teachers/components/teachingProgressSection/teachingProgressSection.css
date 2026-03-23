@@ -1,0 +1,58 @@
+.teaching-progress-card {
+	background: #ffffff;
+	border: 1px solid #dae1ed;
+	border-radius: 1.5rem;
+	padding: 1rem;
+	display: flex;
+	flex-direction: column;
+	gap: 0.8rem;
+	box-shadow: 0 8px 24px rgba(30, 47, 90, 0.08);
+}
+
+.teaching-progress-card h3 {
+	margin: 0;
+	color: #1f2a44;
+}
+
+.teaching-progress-grid {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 0.6rem;
+}
+
+.teaching-progress-grid article {
+	border: 1px solid #e8eef7;
+	border-radius: 0.75rem;
+	padding: 0.65rem 0.7rem;
+	background: linear-gradient(180deg, #fbfcff 0%, #f7faff 100%);
+}
+
+.teaching-progress-grid span {
+	display: block;
+	color: #64748b;
+	font-size: 0.8rem;
+}
+
+.teaching-progress-grid strong {
+	color: #1f2a44;
+	font-size: 1.06rem;
+}
+
+.teaching-progress-note {
+	border-top: 1px solid #edf2fb;
+	padding-top: 0.7rem;
+}
+
+.teaching-progress-note p,
+.teaching-progress-empty {
+	margin: 0;
+	color: #64748b;
+	font-weight: 600;
+}
+
+@media (max-width: 560px) {
+	.teaching-progress-grid {
+		grid-template-columns: 1fr;
+	}
+}
+

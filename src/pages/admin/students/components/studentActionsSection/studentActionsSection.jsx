@@ -1,5 +1,5 @@
 import React from "react";
-import { FiPlus, FiSearch, FiChevronDown } from "react-icons/fi";
+import { FiSearch, FiChevronDown } from "react-icons/fi";
 import "./studentActionsSection.css";
 
 export default function StudentActionsSection({
@@ -9,7 +9,7 @@ export default function StudentActionsSection({
                                                   classOptions,
                                                   onSearchChange,
                                                   onClassChange,
-                                                  onAddStudent,
+                                                  onCreateStudentAccount,
                                               }) {
     return (
         <section className="student-actions-section">
@@ -19,9 +19,8 @@ export default function StudentActionsSection({
                     <p>{totalStudents} học sinh đang theo học</p>
                 </div>
 
-                <button className="student-add-btn" onClick={onAddStudent}>
-                    <FiPlus />
-                    <span>Thêm học sinh</span>
+                <button className="student-create-account-btn" onClick={onCreateStudentAccount}>
+                    <span>Tạo tài khoản học sinh</span>
                 </button>
             </div>
 
