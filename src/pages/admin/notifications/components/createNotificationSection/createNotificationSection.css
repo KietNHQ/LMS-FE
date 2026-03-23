@@ -1,0 +1,62 @@
+.admin-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.3);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.admin-modal-box {
+  background: white;
+  padding: 20px;
+  border-radius: 14px;
+  width: 380px;
+}
+
+.admin-modal-box h3 {
+  margin-bottom: 12px;
+}
+
+.admin-modal-box label {
+  font-size: 13px;
+  margin-top: 10px;
+  display: block;
+}
+
+.admin-modal-box input,
+.admin-modal-box textarea,
+.admin-modal-box select {
+  width: 100%;
+  margin-top: 6px;
+  padding: 10px;
+  border-radius: 10px;
+  border: 1px solid #ddd;
+}
+
+.admin-modal-box textarea {
+  height: 90px;
+}
+
+.admin-modal-actions {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 16px;
+}
+
+.cancel {
+  background: #f3f4f6;
+  border: none;
+  padding: 10px;
+  border-radius: 10px;
+  width: 45%;
+}
+
+.submit {
+  background: #1e3a8a;
+  color: white;
+  border: none;
+  padding: 10px;
+  border-radius: 10px;
+  width: 45%;
+}

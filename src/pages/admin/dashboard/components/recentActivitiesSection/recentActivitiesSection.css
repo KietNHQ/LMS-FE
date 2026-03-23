@@ -1,0 +1,81 @@
+.card {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 16px;
+}
+
+/* wrapper chính */
+.card-student {
+  background: #ffffff;
+  padding: 0;
+  border-radius: 12px;
+  display: block;
+  width: 100%;
+
+}
+
+/* từng row item */
+.row-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 12px;
+  width: 100%;
+}
+
+/* avatar */
+.avatar {
+  width: 32px;
+  height: 32px;
+  background: #6366f1;
+  color: #ffffff;
+  border-radius: 50%;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  flex-shrink: 0; /* không bị bóp khi resize */
+}
+
+/* info block */
+.info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+/* tên */
+.name {
+  font-weight: 500;
+  color: #111827;
+background: white;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* phụ */
+.sub {
+  font-size: 13px;
+  color: #6b7280;
+background: white;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* status */
+.status {
+  margin-left: auto;  /* đẩy sát phải */
+  flex-shrink: 0;
+
+  background: #dcfce7;
+  color: #16a34a;
+
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+
+  white-space: nowrap;
+}   
