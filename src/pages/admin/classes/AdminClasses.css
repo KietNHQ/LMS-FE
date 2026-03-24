@@ -1,7 +1,15 @@
 .admin-classes-page {
-    min-height: 100%;
+    min-height: calc(100vh - 2rem);
+    display: flex;
+    flex-direction: column;
     padding: 28px 28px 36px;
     box-sizing: border-box;
+}
+
+.admin-classes-body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
 }
 
 .admin-classes-header {
@@ -67,7 +75,7 @@
     justify-content: center;
     align-items: center;
     gap: 10px;
-    margin-top: 20px;
+    margin-top: auto;
     padding-top: 18px;
     border-top: 1px solid #edf1f7;
 }
@@ -126,6 +134,7 @@
 
 @media (max-width: 900px) {
     .admin-classes-page {
+        min-height: calc(100vh - 1.2rem);
         padding: 22px 18px 28px;
     }
 

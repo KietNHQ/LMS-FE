@@ -1,7 +1,9 @@
 import React, { useState } from "react";
+import { FiChevronLeft, FiChevronRight } from "react-icons/fi";
 import "./AdminQuiz.css";
 import QuizListSection from "./components/quizListSection/quizListSection";
-import QuizDetailDialog from "./components/quizDetailDialog/QuizDetailDialog";
+
+const ITEMS_PER_PAGE = 4;
 
 const initialQuizzes = [
     {
@@ -41,24 +43,25 @@ const initialQuizzes = [
 
 export default function AdminQuiz() {
     const [quizzes, setQuizzes] = useState(initialQuizzes);
-    const [selectedQuiz, setSelectedQuiz] = useState(null);
-    const [isDetailDialogOpen, setIsDetailDialogOpen] = useState(false);
+    const [currentPage, setCurrentPage] = useState(1);
 
-    const handleViewQuiz = (quiz) => {
-        setSelectedQuiz(quiz);
-        setIsDetailDialogOpen(true);
-    };
-
-    const handleEditQuiz = (updatedQuiz) => {
-        setQuizzes((prev) =>
-            prev.map((q) => (q.id === updatedQuiz.id ? updatedQuiz : q))
-        );
-        setIsDetailDialogOpen(false);
-        setSelectedQuiz(null);
-    };
+    const totalPages = Math.max(1, Math.ceil(quizzes.length / ITEMS_PER_PAGE));
+    const paginatedQuizzes = quizzes.slice(
+        (currentPage - 1) * ITEMS_PER_PAGE,
+        currentPage * ITEMS_PER_PAGE
+    );
 
     const handleDeleteQuiz = (quizId) => {
-        setQuizzes((prev) => prev.filter((q) => q.id !== quizId));
+        setQuizzes((prev) => {
+            const nextQuizzes = prev.filter((q) => q.id !== quizId);
+            const nextTotalPages = Math.max(
+                1,
+                Math.ceil(nextQuizzes.length / ITEMS_PER_PAGE)
+            );
+
+            setCurrentPage((prevPage) => Math.min(prevPage, nextTotalPages));
+            return nextQuizzes;
+        });
     };
 
     const handleStatusChange = (quizId, newStatus) => {
@@ -69,12 +72,26 @@ export default function AdminQuiz() {
         );
     };
 
+    const handlePageChange = (nextPage) => {
+        if (nextPage < 1 || nextPage > totalPages) {
+            return;
+        }
+        setCurrentPage(nextPage);
+    };
+
+    const goPrevPage = () => handlePageChange(currentPage - 1);
+    const goNextPage = () => handlePageChange(currentPage + 1);
+
     return (
         <div className="admin-quiz">
             <div className="admin-quiz__header">
                 <div className="admin-quiz__content">
-                    <h1>Bài Kiểm Tra</h1>
-                    <p>{quizzes.length} bài kiểm tra</p>
+                    <div className="admin-quiz__title-row">
+                        <h1>Quản lý bài kiểm tra</h1>
+                        <span className="admin-quiz__count">
+                            {quizzes.length} bài kiểm tra
+                        </span>
+                    </div>
                 </div>
                 <button className="admin-quiz__create-btn">
                     <span>+</span>
@@ -82,20 +99,42 @@ export default function AdminQuiz() {
                 </button>
             </div>
 
-            <QuizListSection
-                quizzes={quizzes}
-                onView={handleViewQuiz}
-                onDelete={handleDeleteQuiz}
-                onStatusChange={handleStatusChange}
-            />
-
-            {isDetailDialogOpen && selectedQuiz && (
-                <QuizDetailDialog
-                    quiz={selectedQuiz}
-                    onClose={() => setIsDetailDialogOpen(false)}
-                    onSave={handleEditQuiz}
+            <div className="admin-quiz__body">
+                <QuizListSection
+                    quizzes={paginatedQuizzes}
+                    onDelete={handleDeleteQuiz}
+                    onStatusChange={handleStatusChange}
                 />
-            )}
+
+                {quizzes.length > 0 && (
+                    <div className="admin-quiz-pagination">
+                        <button
+                            type="button"
+                            className="admin-quiz-page-btn"
+                            onClick={goPrevPage}
+                            disabled={currentPage === 1}
+                            aria-label="Trang trước"
+                        >
+                            <FiChevronLeft />
+                        </button>
+
+                        <div className="admin-quiz-page-indicator">
+                            <span>{currentPage}</span>
+                            <small>/ {totalPages}</small>
+                        </div>
+
+                        <button
+                            type="button"
+                            className="admin-quiz-page-btn"
+                            onClick={goNextPage}
+                            disabled={currentPage === totalPages}
+                            aria-label="Trang sau"
+                        >
+                            <FiChevronRight />
+                        </button>
+                    </div>
+                )}
+            </div>
         </div>
     );
 }

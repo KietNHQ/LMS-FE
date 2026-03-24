@@ -1,14 +1,16 @@
 .class-list-grid {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 18px;
+    column-gap: 18px;
+    row-gap: 24px;
 }
 
 .class-list-card {
     background: #ffffff;
     border: 1px solid #e7ebf3;
     border-radius: 22px;
-    padding: 20px 22px 18px;
+    min-height: 286px;
+    padding: 22px 22px 20px;
     box-shadow: 0 6px 18px rgba(31, 42, 68, 0.06);
     transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
@@ -152,9 +154,11 @@
 @media (max-width: 768px) {
     .class-list-grid {
         grid-template-columns: 1fr;
+        row-gap: 14px;
     }
 
     .class-list-card {
+        min-height: auto;
         padding: 18px;
     }
 }

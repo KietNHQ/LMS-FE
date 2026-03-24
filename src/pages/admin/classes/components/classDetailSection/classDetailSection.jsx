@@ -1,18 +1,25 @@
 import React, { useMemo, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { FiSearch, FiChevronLeft, FiChevronRight, FiEdit2, FiUserX } from "react-icons/fi";
+import { FiSearch, FiChevronLeft, FiChevronRight, FiEdit2, FiUserX, FiUserCheck } from "react-icons/fi";
 import "./classDetailSection.css";
+
+// Helper function to format date DD/MM/YYYY
+function formatDateDDMMYYYY(dateString) {
+    if (!dateString) return "";
+    const [year, month, day] = dateString.split("-");
+    return `${day}/${month}/${year}`;
+}
 
 // Mock student data
 const mockStudents = [
-    { id: 1, name: "Nguyễn Minh Tuấn", dob: "2008-03-15" },
-    { id: 2, name: "Trần Thị Bảo Châu", dob: "2008-07-22" },
-    { id: 3, name: "Phạm Văn Hùng", dob: "2008-05-10" },
-    { id: 4, name: "Hoàng Thị Hoa", dob: "2008-02-28" },
-    { id: 5, name: "Lê Văn Dũng", dob: "2008-08-12" },
-    { id: 6, name: "Vũ Thị Trang", dob: "2008-04-05" },
-    { id: 7, name: "Đặng Quốc Hùng", dob: "2007-09-12" },
-    { id: 8, name: "Phạm Thu Hà", dob: "2007-10-21" },
+    { id: 1, name: "Nguyễn Minh Tuấn", dob: "2008-03-15", enrollmentDate: "2024-09-01", parentName: "Nguyễn Văn An", parentPhone: "0912345678" },
+    { id: 2, name: "Trần Thị Bảo Châu", dob: "2008-07-22", enrollmentDate: "2024-09-01", parentName: "Trần Văn Bình", parentPhone: "0987654321" },
+    { id: 3, name: "Phạm Văn Hùng", dob: "2008-05-10", enrollmentDate: "2024-09-02", parentName: "Phạm Thị Hoa", parentPhone: "0923456789" },
+    { id: 4, name: "Hoàng Thị Hoa", dob: "2008-02-28", enrollmentDate: "2024-09-01", parentName: "Hoàng Văn Hùng", parentPhone: "0934567890" },
+    { id: 5, name: "Lê Văn Dũng", dob: "2008-08-12", enrollmentDate: "2024-09-03", parentName: "Lê Thị Linh", parentPhone: "0945678901" },
+    { id: 6, name: "Vũ Thị Trang", dob: "2008-04-05", enrollmentDate: "2024-09-01", parentName: "Vũ Văn Tuấn", parentPhone: "0956789012" },
+    { id: 7, name: "Đặng Quốc Hùng", dob: "2007-09-12", enrollmentDate: "2024-09-02", parentName: "Đặng Thị Mai", parentPhone: "0967890123" },
+    { id: 8, name: "Phạm Thu Hà", dob: "2007-10-21", enrollmentDate: "2024-09-04", parentName: "Phạm Văn Cường", parentPhone: "0978901234" },
 ];
 
 const ITEMS_PER_PAGE = 6;
@@ -45,37 +52,100 @@ export default function ClassDetailSection() {
     const navigate = useNavigate();
     const [searchTerm, setSearchTerm] = useState("");
     const [currentPage, setCurrentPage] = useState(1);
+    const [students, setStudents] = useState(() =>
+        mockStudents.map((student) => ({ ...student, isHidden: false }))
+    );
+    const [activeModalMode, setActiveModalMode] = useState(null);
+    const [activeStudentId, setActiveStudentId] = useState(null);
+    const [editForm, setEditForm] = useState({
+        name: "",
+        dob: "",
+        parentName: "",
+        parentPhone: "",
+    });
 
     const classData = mockClasses.find((c) => String(c.id) === String(classId)) || null;
 
     const filteredStudents = useMemo(() => {
-        if (!searchTerm) return mockStudents;
-        return mockStudents.filter((student) =>
+        if (!searchTerm) return students;
+        return students.filter((student) =>
             student.name.toLowerCase().includes(searchTerm.toLowerCase())
         );
-    }, [searchTerm]);
+    }, [searchTerm, students]);
 
     const totalPages = useMemo(() => Math.max(1, Math.ceil(filteredStudents.length / ITEMS_PER_PAGE)), [filteredStudents]);
+    const effectivePage = Math.min(currentPage, totalPages);
 
     const paginatedStudents = useMemo(() => {
-        const start = (currentPage - 1) * ITEMS_PER_PAGE;
+        const start = (effectivePage - 1) * ITEMS_PER_PAGE;
         return filteredStudents.slice(start, start + ITEMS_PER_PAGE);
-    }, [filteredStudents, currentPage]);
+    }, [filteredStudents, effectivePage]);
 
     const goPrevPage = () => {
-        setCurrentPage((prev) => Math.max(1, prev - 1));
+        setCurrentPage((prev) => Math.max(1, Math.min(prev, totalPages) - 1));
     };
 
     const goNextPage = () => {
         setCurrentPage((prev) => Math.min(totalPages, prev + 1));
     };
 
-    const handleEditStudent = (studentId) => {
-        console.log("Edit student:", studentId);
+    const activeStudent = useMemo(
+        () => students.find((student) => student.id === activeStudentId) || null,
+        [students, activeStudentId]
+    );
+
+    const handleCloseModal = () => {
+        setActiveModalMode(null);
+        setActiveStudentId(null);
+        setEditForm({ name: "", dob: "", parentName: "", parentPhone: "" });
     };
 
-    const handleSoftDelete = (studentId) => {
-        console.log("Soft delete student:", studentId);
+    const handleEditStudent = (student) => {
+        setActiveModalMode("edit");
+        setActiveStudentId(student.id);
+        setEditForm({
+            name: student.name,
+            dob: student.dob,
+            parentName: student.parentName,
+            parentPhone: student.parentPhone,
+        });
+    };
+
+    const handleSaveEdit = () => {
+        if (!activeStudentId) return;
+
+        setStudents((prevStudents) =>
+            prevStudents.map((student) =>
+                student.id === activeStudentId
+                    ? {
+                        ...student,
+                        name: editForm.name.trim() || student.name,
+                        dob: editForm.dob || student.dob,
+                        parentName: editForm.parentName.trim() || student.parentName,
+                        parentPhone: editForm.parentPhone.trim() || student.parentPhone,
+                    }
+                    : student
+            )
+        );
+        handleCloseModal();
+    };
+
+    const handleOpenToggleHiddenDialog = (studentId) => {
+        setActiveModalMode("toggle-hidden");
+        setActiveStudentId(studentId);
+    };
+
+    const handleConfirmToggleHidden = () => {
+        if (!activeStudentId) return;
+
+        setStudents((prevStudents) =>
+            prevStudents.map((student) =>
+                student.id === activeStudentId
+                    ? { ...student, isHidden: !student.isHidden }
+                    : student
+            )
+        );
+        handleCloseModal();
     };
 
     if (!classData) {
@@ -123,11 +193,11 @@ export default function ClassDetailSection() {
             </div>
 
             {/* Students Section */}
-            <div className="students-section">
-                <div className="section-header">
-                    <h2>Danh sách học sinh</h2>
-                    <div className="search-box">
-                        <FiSearch />
+            <div className="students-card">
+                <div className="students-card-header">
+                    <h2 className="students-card-title">Danh sách học sinh</h2>
+                    <div className="class-detail-search-box">
+                        <FiSearch className="class-detail-search-icon" />
                         <input
                             type="text"
                             placeholder="Tìm kiếm học sinh..."
@@ -143,48 +213,57 @@ export default function ClassDetailSection() {
                             <tr>
                                 <th>STT</th>
                                 <th>HỌC SINH</th>
-                                <th>NGÀY SINH</th>
+                                <th>NGÀY NHẬP HỌC</th>
+                                <th>PHỤ HUYNH</th>
                                 <th>THAO TÁC</th>
                             </tr>
                         </thead>
                         <tbody>
-                            {paginatedStudents.map((student, index) => (
-                                <tr key={student.id}>
-                                    <td className="student-index-cell">{(currentPage - 1) * ITEMS_PER_PAGE + index + 1}</td>
-                                    <td>
-                                        <div className="student-main-info">
-                                            <span className="student-avatar">
-                                                {student.name.charAt(0).toUpperCase()}
-                                            </span>
-                                            <div className="student-name-wrap">
-                                                <strong>{student.name}</strong>
-                                                <small>Ngày sinh: {student.dob}</small>
+                            {paginatedStudents.map((student, index) => {
+                                return (
+                                    <tr key={student.id} className={student.isHidden ? "student-row-hidden" : ""}>
+                                        <td className="student-index-cell">{(effectivePage - 1) * ITEMS_PER_PAGE + index + 1}</td>
+                                        <td>
+                                            <div className="student-main-info">
+                                                <span className="student-avatar">
+                                                    {student.name.charAt(0).toUpperCase()}
+                                                </span>
+                                                <div className="student-name-wrap">
+                                                    <strong>{student.name}</strong>
+                                                    <small>Ngày sinh: {formatDateDDMMYYYY(student.dob)}</small>
+                                                </div>
                                             </div>
-                                        </div>
-                                    </td>
-                                    <td className="student-date-cell">{student.dob}</td>
-                                    <td className="student-actions-cell">
-                                        <div className="student-row-actions">
-                                            <button
-                                                className="student-action-btn edit"
-                                                onClick={() => handleEditStudent(student.id)}
-                                                title="Sửa học sinh"
-                                                aria-label="Sửa học sinh"
-                                            >
-                                                <FiEdit2 />
-                                            </button>
-                                            <button
-                                                className="student-action-btn delete"
-                                                onClick={() => handleSoftDelete(student.id)}
-                                                title="Ẩn học sinh"
-                                                aria-label="Ẩn học sinh"
-                                            >
-                                                <FiUserX />
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            ))}
+                                        </td>
+                                        <td className="student-date-cell">{formatDateDDMMYYYY(student.enrollmentDate)}</td>
+                                        <td>
+                                            <div className="student-parent-wrap">
+                                                <strong>{student.parentName}</strong>
+                                                <span>{student.parentPhone}</span>
+                                            </div>
+                                        </td>
+                                        <td className="student-actions-cell">
+                                            <div className="student-row-actions">
+                                                <button
+                                                    className="student-action-btn edit"
+                                                    onClick={() => handleEditStudent(student)}
+                                                    title="Sửa học sinh"
+                                                    aria-label="Sửa học sinh"
+                                                >
+                                                    <FiEdit2 />
+                                                </button>
+                                                <button
+                                                    className={`student-action-btn delete ${student.isHidden ? "active" : ""}`}
+                                                    onClick={() => handleOpenToggleHiddenDialog(student.id)}
+                                                    title={student.isHidden ? "Hiện học sinh" : "Ẩn học sinh"}
+                                                    aria-label={student.isHidden ? "Hiện học sinh" : "Ẩn học sinh"}
+                                                >
+                                                    {student.isHidden ? <FiUserCheck /> : <FiUserX />}
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                );
+                            })}
                         </tbody>
                     </table>
 
@@ -198,25 +277,104 @@ export default function ClassDetailSection() {
                         <button
                             className="page-btn"
                             onClick={goPrevPage}
-                            disabled={currentPage === 1}
+                            disabled={effectivePage === 1}
                             aria-label="Trang trước"
                         >
                             <FiChevronLeft />
                         </button>
 
                         <div className="page-indicator">
-                            <span>{currentPage}</span>
+                            <span>{effectivePage}</span>
                             <small>/ {totalPages}</small>
                         </div>
 
                         <button
                             className="page-btn"
                             onClick={goNextPage}
-                            disabled={currentPage === totalPages}
+                            disabled={effectivePage === totalPages}
                             aria-label="Trang sau"
                         >
                             <FiChevronRight />
                         </button>
+                    </div>
+                )}
+
+                {activeModalMode === "edit" && activeStudent && (
+                    <div className="class-student-modal-overlay" onClick={handleCloseModal}>
+                        <div className="class-student-modal" onClick={(e) => e.stopPropagation()}>
+                            <h3>Chỉnh sửa học sinh</h3>
+
+                            <div className="class-student-modal-grid">
+                                <label>
+                                    <span>Họ và tên</span>
+                                    <input
+                                        type="text"
+                                        value={editForm.name}
+                                        onChange={(e) => setEditForm((prev) => ({ ...prev, name: e.target.value }))}
+                                        placeholder="Nhập họ và tên"
+                                    />
+                                </label>
+
+                                <label>
+                                    <span>Ngày sinh</span>
+                                    <input
+                                        type="date"
+                                        value={editForm.dob}
+                                        onChange={(e) => setEditForm((prev) => ({ ...prev, dob: e.target.value }))}
+                                    />
+                                </label>
+
+                                <label>
+                                    <span>Tên phụ huynh</span>
+                                    <input
+                                        type="text"
+                                        value={editForm.parentName}
+                                        onChange={(e) => setEditForm((prev) => ({ ...prev, parentName: e.target.value }))}
+                                        placeholder="Nhập tên phụ huynh"
+                                    />
+                                </label>
+
+                                <label>
+                                    <span>Số điện thoại phụ huynh</span>
+                                    <input
+                                        type="text"
+                                        value={editForm.parentPhone}
+                                        onChange={(e) => setEditForm((prev) => ({ ...prev, parentPhone: e.target.value }))}
+                                        placeholder="Nhập số điện thoại"
+                                    />
+                                </label>
+                            </div>
+
+                            <div className="class-student-modal-actions">
+                                <button className="class-student-modal-btn cancel" onClick={handleCloseModal}>
+                                    Hủy
+                                </button>
+                                <button className="class-student-modal-btn primary" onClick={handleSaveEdit}>
+                                    Lưu thay đổi
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {activeModalMode === "toggle-hidden" && activeStudent && (
+                    <div className="class-student-modal-overlay" onClick={handleCloseModal}>
+                        <div className="class-student-modal class-student-confirm-modal" onClick={(e) => e.stopPropagation()}>
+                            <h3>{activeStudent.isHidden ? "Hiện lại học sinh" : "Ẩn học sinh"}</h3>
+                            <p>
+                                Bạn có chắc muốn {activeStudent.isHidden ? "hiện lại" : "ẩn"} học sinh
+                                <strong> {activeStudent.name}</strong> không?
+                            </p>
+
+                            <div className="class-student-modal-actions">
+                                <button className="class-student-modal-btn cancel" onClick={handleCloseModal}>
+                                    Hủy
+                                </button>
+                                <button className="class-student-modal-btn primary" onClick={handleConfirmToggleHidden}>
+                                    {activeStudent.isHidden ? "Xác nhận hiện lại" : "Xác nhận ẩn"}
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 )}
             </div>

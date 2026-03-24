@@ -1,15 +1,14 @@
 import React from "react";
-import { FiEye, FiEdit2, FiTrash2 } from "react-icons/fi";
+import {
+    FiEye,
+    FiEyeOff,
+    FiEdit2,
+    FiTrash2,
+} from "react-icons/fi";
 import "./quizListSection.css";
-
-const statusOptions = [
-    { value: "open", label: "Mở", color: "is-open" },
-    { value: "hidden", label: "Ẩn", color: "is-hidden" },
-];
 
 export default function QuizListSection({
     quizzes,
-    onView,
     onDelete,
     onStatusChange,
 }) {
@@ -18,17 +17,48 @@ export default function QuizListSection({
             {quizzes && quizzes.length > 0 ? (
                 <div className="quiz-list-grid">
                     {quizzes.map((quiz) => (
-                        <article key={quiz.id} className="quiz-card">
+                        <article
+                            key={quiz.id}
+                            className={`quiz-card ${
+                                quiz.status === "hidden" ? "quiz-card--hidden" : ""
+                            }`.trim()}
+                        >
                             <div className="quiz-card__header">
-                                <h3 className="quiz-card__title">{quiz.title}</h3>
+                                <div className="quiz-card__heading">
+                                    <h3 className="quiz-card__title">{quiz.title}</h3>
+                                </div>
                                 <div className="quiz-card__actions">
                                     <button
                                         type="button"
-                                        className="quiz-action-btn"
-                                        onClick={() => onView(quiz)}
-                                        title="Xem chi tiết"
+                                        className={`quiz-action-btn ${
+                                            quiz.status === "hidden"
+                                                ? "quiz-action-btn--status-hidden"
+                                                : "quiz-action-btn--status-open"
+                                        }`}
+                                        onClick={() =>
+                                            onStatusChange(
+                                                quiz.id,
+                                                quiz.status === "open"
+                                                    ? "hidden"
+                                                    : "open"
+                                            )
+                                        }
+                                        title={
+                                            quiz.status === "open"
+                                                ? "Đang mở - bấm để ẩn"
+                                                : "Đang ẩn - bấm để mở"
+                                        }
+                                        aria-label={
+                                            quiz.status === "open"
+                                                ? "Đổi trạng thái sang ẩn"
+                                                : "Đổi trạng thái sang mở"
+                                        }
                                     >
-                                        <FiEye />
+                                        {quiz.status === "open" ? (
+                                            <FiEye />
+                                        ) : (
+                                            <FiEyeOff />
+                                        )}
                                     </button>
                                     <button
                                         type="button"
@@ -48,54 +78,38 @@ export default function QuizListSection({
                                 </div>
                             </div>
 
-                            <p className="quiz-card__description">{quiz.description}</p>
+                            <div className="quiz-card__chips-row">
+                                <div className="quiz-card__chips">
+                                    <span className="quiz-chip">{quiz.subject}</span>
+                                    <span className="quiz-chip quiz-chip--neutral">
+                                        {quiz.grade}
+                                    </span>
+                                </div>
 
-                            <div className="quiz-card__meta">
-                                <div className="meta-item">
-                                    <span className="meta-label">Môn:</span>
-                                    <span className="meta-value">{quiz.subject}</span>
-                                </div>
-                                <div className="meta-item">
-                                    <span className="meta-label">Khối:</span>
-                                    <span className="meta-value">{quiz.grade}</span>
-                                </div>
-                                <div className="meta-item">
-                                    <span className="meta-label">Câu hỏi:</span>
-                                    <span className="meta-value">{quiz.questions}</span>
-                                </div>
-                                <div className="meta-item">
-                                    <span className="meta-label">Thời gian:</span>
-                                    <span className="meta-value">{quiz.duration} phút</span>
-                                </div>
-                            </div>
-
-                            <div className="quiz-card__footer">
-                                <select
-                                    value={quiz.status}
-                                    onChange={(e) =>
-                                        onStatusChange(quiz.id, e.target.value)
-                                    }
-                                    className={`quiz-status-select ${
-                                        statusOptions.find(
-                                            (s) => s.value === quiz.status
-                                        )?.color || ""
-                                    }`}
-                                >
-                                    {statusOptions.map((status) => (
-                                        <option
-                                            key={status.value}
-                                            value={status.value}
-                                        >
-                                            {status.label}
-                                        </option>
-                                    ))}
-                                </select>
                                 <span className="quiz-date">
-                                    {new Date(quiz.createdAt).toLocaleDateString(
-                                        "vi-VN"
-                                    )}
+                                    Tạo ngày: {new Date(quiz.createdAt).toLocaleDateString("vi-VN")}
                                 </span>
                             </div>
+
+                            <p className="quiz-card__description">
+                                {quiz.description}
+                            </p>
+
+                            <div className="quiz-card__stats">
+                                <div className="quiz-stat-item">
+                                    <span className="quiz-stat-label">Câu hỏi</span>
+                                    <span className="quiz-stat-value">
+                                        {quiz.questions}
+                                    </span>
+                                </div>
+                                <div className="quiz-stat-item">
+                                    <span className="quiz-stat-label">Thời gian</span>
+                                    <span className="quiz-stat-value">
+                                        {quiz.duration} phút
+                                    </span>
+                                </div>
+                            </div>
+
                         </article>
                     ))}
                 </div>
@@ -104,6 +118,7 @@ export default function QuizListSection({
                     <p>Chưa có bài kiểm tra nào</p>
                 </div>
             )}
+
         </div>
     );
 }

@@ -165,38 +165,40 @@ export default function AdminClasses() {
                 </button>
             </div>
 
-            <ClassListSection
-                classes={paginatedClasses}
-                onView={handleOpenDetail}
-                onEdit={handleOpenEdit}
-                onDelete={handleDeleteClass}
-            />
+            <div className="admin-classes-body">
+                <ClassListSection
+                    classes={paginatedClasses}
+                    onView={handleOpenDetail}
+                    onEdit={handleOpenEdit}
+                    onDelete={handleDeleteClass}
+                />
 
-            <div className="admin-classes-pagination">
-                <button
-                    type="button"
-                    className="admin-classes-page-btn"
-                    onClick={goPrevPage}
-                    disabled={currentPage === 1}
-                    aria-label="Trang trước"
-                >
-                    ‹
-                </button>
+                <div className="admin-classes-pagination">
+                    <button
+                        type="button"
+                        className="admin-classes-page-btn"
+                        onClick={goPrevPage}
+                        disabled={currentPage === 1}
+                        aria-label="Trang trước"
+                    >
+                        ‹
+                    </button>
 
-                <div className="admin-classes-page-indicator">
-                    <span>{currentPage}</span>
-                    <small>/ {totalPages}</small>
+                    <div className="admin-classes-page-indicator">
+                        <span>{currentPage}</span>
+                        <small>/ {totalPages}</small>
+                    </div>
+
+                    <button
+                        type="button"
+                        className="admin-classes-page-btn"
+                        onClick={goNextPage}
+                        disabled={currentPage === totalPages}
+                        aria-label="Trang sau"
+                    >
+                        ›
+                    </button>
                 </div>
-
-                <button
-                    type="button"
-                    className="admin-classes-page-btn"
-                    onClick={goNextPage}
-                    disabled={currentPage === totalPages}
-                    aria-label="Trang sau"
-                >
-                    ›
-                </button>
             </div>
 
             {isCreateOpen && (
