@@ -1,7 +1,6 @@
 import "./AdminDashboard.css";
 import StatisticsCardsSection from "./components/statisticsCardsSection/statisticsCardsSection";
 import RecentActivitiesSection from "./components/recentActivitiesSection/recentActivitiesSection";
-import SystemAlertsSection from "./components/systemAlertsSection/systemAlertsSection";
 
 import {
   LineChart,
@@ -18,7 +17,7 @@ import {
 const AdminDashboard = () => {
 
   // ===== DATA BAR CHART =====
-  const classLabels = ["10A1","10A2","10A3","8A1","8A2","7A1","6A1"];
+  const classLabels = ["10A1","10A2","10A3","12A1","11A2","11A1","12A1"];
   const classScores = [8.2, 7.5, 7.8, 8.9, 8.1, 7.2, 6.8];
 
   // ===== DATA LINE CHART =====
@@ -91,7 +90,7 @@ const AdminDashboard = () => {
 
         {/* ===== BAR CHART ===== */}
         <div className="card big">
-          <h3>Điểm trung bình theo lớp</h3>
+          <h3>Điểm rèn luyện theo lớp</h3>
 
           <div style={{ width: "100%", height: 300 }}>
             <ResponsiveContainer>
@@ -119,7 +118,6 @@ const AdminDashboard = () => {
         <RecentActivitiesSection />
       </div>
 
-      <SystemAlertsSection />
 
     </div>
   );

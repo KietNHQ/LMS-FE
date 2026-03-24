@@ -6,6 +6,7 @@ const data = [
   "Lê Hoàng Nam",
   "Phạm Ngọc Ánh",
   "Vũ Thị Mai",
+  "Nguyễn Huy Hoàng",
 ];
 
 const RecentActivitiesSection = () => {
