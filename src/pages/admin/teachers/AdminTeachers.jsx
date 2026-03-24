@@ -5,8 +5,7 @@ import { CreateUserDialog } from "../../../components/common";
 import TeacherActionsSection from "./components/teacherActionsSection/teacherActionsSection";
 import TeacherListSection from "./components/teacherListSection/teacherListSection";
 import TeacherInformationSection from "./components/teacherInformationSection/teacherInformationSection";
-import TeacherAssignmentSection from "./components/teacherAssignmentSection/teacherAssignmentSection";
-import TeachingProgressSection from "./components/teachingProgressSection/teachingProgressSection";
+import TeacherDetailSection from "./components/TeacherDetailSection/TeacherDetailSection";
 
 const initialTeachers = [
     {
@@ -189,13 +188,14 @@ export default function AdminTeachers() {
     const [searchTerm, setSearchTerm] = useState("");
     const [selectedStatus, setSelectedStatus] = useState("Tất cả trạng thái");
     const [selectedSubject, setSelectedSubject] = useState("Tất cả môn");
-    const [selectedTeacherId, setSelectedTeacherId] = useState(initialTeachers[0]?.id || null);
     const [activeModalMode, setActiveModalMode] = useState(null);
     const [activeTeacherId, setActiveTeacherId] = useState(null);
     const [teacherForm, setTeacherForm] = useState(emptyTeacherForm);
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [isImportingExcel, setIsImportingExcel] = useState(false);
     const [importFeedback, setImportFeedback] = useState(null);
+    const [showDetailModal, setShowDetailModal] = useState(false);
+    const [selectedTeacher, setSelectedTeacher] = useState(null);
 
     const subjectOptions = useMemo(() => {
         const subjects = teachers.map((teacher) => teacher.subject).filter(Boolean);
@@ -218,18 +218,12 @@ export default function AdminTeachers() {
         });
     }, [teachers, searchTerm, selectedStatus, selectedSubject]);
 
-    const selectedTeacher = useMemo(() => {
-        const inFiltered = filteredTeachers.find((teacher) => teacher.id === selectedTeacherId);
-        if (inFiltered) return inFiltered;
 
-        return filteredTeachers[0] || null;
-    }, [filteredTeachers, selectedTeacherId]);
 
     const handleCreateTeacherUser = (formData) => {
         const createdUser = createTeacherFromPayload(formData, Date.now());
 
         setTeachers((prev) => [createdUser, ...prev]);
-        setSelectedTeacherId(createdUser.id);
         setIsDialogOpen(false);
     };
 
@@ -314,7 +308,6 @@ export default function AdminTeachers() {
             }
 
             setTeachers((prev) => [...importedUsers, ...prev]);
-            setSelectedTeacherId(importedUsers[0].id);
             setImportFeedback({
                 type: "success",
                 message: `Da nap ${importedUsers.length} tai khoan giao vien.`,
@@ -359,15 +352,20 @@ export default function AdminTeachers() {
         setTeacherForm(toTeacherForm(teacher));
     };
 
+    const handleShowTeacherDetail = (teacher) => {
+        setSelectedTeacher(teacher);
+        setShowDetailModal(true);
+    };
+
     const handleDeleteTeacher = (id) => {
         const confirmed = window.confirm("Bạn có chắc muốn xóa giáo viên này không?");
         if (!confirmed) return;
 
         setTeachers((prev) => prev.filter((teacher) => teacher.id !== id));
 
-        if (selectedTeacherId === id) {
-            const nextTeacher = teachers.find((teacher) => teacher.id !== id);
-            setSelectedTeacherId(nextTeacher?.id || null);
+        if (selectedTeacher?.id === id) {
+            setSelectedTeacher(null);
+            setShowDetailModal(false);
         }
     };
 
@@ -430,10 +428,12 @@ export default function AdminTeachers() {
                 if (teacher.id !== selectedTeacher.id) return teacher;
                 if (teacher.assignedClasses.includes(normalizedClass)) return teacher;
 
-                return {
+                const updated = {
                     ...teacher,
                     assignedClasses: [...teacher.assignedClasses, normalizedClass],
                 };
+                setSelectedTeacher(updated);
+                return updated;
             })
         );
     };
@@ -445,10 +445,12 @@ export default function AdminTeachers() {
             prev.map((teacher) => {
                 if (teacher.id !== selectedTeacher.id) return teacher;
 
-                return {
+                const updated = {
                     ...teacher,
                     assignedClasses: teacher.assignedClasses.filter((item) => item !== className),
                 };
+                setSelectedTeacher(updated);
+                return updated;
             })
         );
     };
@@ -457,14 +459,17 @@ export default function AdminTeachers() {
         if (!selectedTeacher) return;
 
         setTeachers((prev) =>
-            prev.map((teacher) =>
-                teacher.id === selectedTeacher.id
-                    ? {
+            prev.map((teacher) => {
+                if (teacher.id === selectedTeacher.id) {
+                    const updated = {
                         ...teacher,
                         homeroomClass: className,
-                    }
-                    : teacher
-            )
+                    };
+                    setSelectedTeacher(updated);
+                    return updated;
+                }
+                return teacher;
+            })
         );
     };
 
@@ -483,29 +488,13 @@ export default function AdminTeachers() {
                 onCreateTeacherAccount={() => setIsDialogOpen(true)}
             />
 
-            <div className="admin-teachers-main-grid">
-                <div className="admin-teachers-main-column">
-                    <TeacherListSection
-                        teachers={filteredTeachers}
-                        selectedTeacherId={selectedTeacher?.id || null}
-                        onSelectTeacher={(id) => setSelectedTeacherId(id)}
-                        onView={handleViewTeacher}
-                        onEdit={handleEditTeacher}
-                        onDelete={handleDeleteTeacher}
-                    />
-                </div>
-
-                <div className="admin-teachers-side-column">
-                    <TeacherAssignmentSection
-                        teacher={selectedTeacher}
-                        classOptions={classOptions}
-                        onAssignClass={handleAssignClass}
-                        onRemoveAssignedClass={handleRemoveAssignedClass}
-                        onUpdateHomeroomClass={handleUpdateHomeroomClass}
-                    />
-                    <TeachingProgressSection teacher={selectedTeacher} />
-                </div>
-            </div>
+            <TeacherListSection
+                teachers={filteredTeachers}
+                onSelectTeacher={handleShowTeacherDetail}
+                onView={handleViewTeacher}
+                onEdit={handleEditTeacher}
+                onDelete={handleDeleteTeacher}
+            />
 
             {activeModalMode && (
                 <TeacherInformationSection
@@ -515,6 +504,21 @@ export default function AdminTeachers() {
                     onChange={handleTeacherFormChange}
                     onClose={handleCloseModal}
                     onSubmit={handleSaveTeacherEdit}
+                />
+            )}
+
+            {showDetailModal && selectedTeacher && (
+                <TeacherDetailSection
+                    mode="view"
+                    teacher={selectedTeacher}
+                    classOptions={classOptions}
+                    onAssignClass={handleAssignClass}
+                    onRemoveAssignedClass={handleRemoveAssignedClass}
+                    onUpdateHomeroomClass={handleUpdateHomeroomClass}
+                    onClose={() => {
+                        setShowDetailModal(false);
+                        setSelectedTeacher(null);
+                    }}
                 />
             )}
 

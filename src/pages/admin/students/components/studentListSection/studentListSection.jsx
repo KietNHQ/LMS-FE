@@ -81,7 +81,7 @@ export default function StudentListSection({
                                     <div className="student-row-actions">
                                         <button
                                             type="button"
-                                            className="student-icon-btn"
+                                            className="student-icon-btn view"
                                             onClick={() => onView(student)}
                                             aria-label="Xem"
                                             title="Xem"
@@ -91,7 +91,7 @@ export default function StudentListSection({
 
                                         <button
                                             type="button"
-                                            className="student-icon-btn"
+                                            className="student-icon-btn edit"
                                             onClick={() => onEdit(student)}
                                             aria-label="Sửa"
                                             title="Sửa"
@@ -101,7 +101,7 @@ export default function StudentListSection({
 
                                         <button
                                             type="button"
-                                            className="student-icon-btn"
+                                            className="student-icon-btn delete"
                                             onClick={() => onDelete(student.id)}
                                             aria-label="Xóa"
                                             title="Xóa"

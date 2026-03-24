@@ -1,0 +1,84 @@
+.tt-conflict-section {
+    background: #fff;
+    border: 1px solid #dae1ed;
+    border-radius: 1.3rem;
+    padding: 1rem;
+    box-shadow: 0 8px 24px rgba(30, 47, 90, 0.08);
+    min-width: 0;
+    max-height: 100%;
+    overflow: auto;
+}
+
+.tt-conflict-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.6rem;
+    margin-bottom: 0.8rem;
+}
+
+.tt-conflict-header h3 {
+    margin: 0;
+    color: #1f2a44;
+}
+
+.tt-conflict-header span {
+    min-width: 1.8rem;
+    height: 1.8rem;
+    border-radius: 0.55rem;
+    background: #eef2ff;
+    color: #2b5fd5;
+    font-weight: 800;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.tt-conflict-empty {
+    border: 1px dashed #d5def0;
+    border-radius: 0.9rem;
+    padding: 1rem 0.8rem;
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    color: #64748b;
+}
+
+.tt-conflict-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+}
+
+.tt-conflict-item {
+    border: 1px solid #f1d4d8;
+    background: #fff8f9;
+    border-radius: 0.85rem;
+    padding: 0.65rem 0.7rem;
+}
+
+.tt-conflict-item-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+}
+
+.tt-conflict-item-top strong {
+    color: #a7344a;
+    font-size: 0.88rem;
+}
+
+.tt-conflict-item-top span {
+    color: #7c8aa3;
+    font-size: 0.8rem;
+    font-weight: 700;
+}
+
+.tt-conflict-item p {
+    margin: 0.35rem 0 0;
+    color: #4b5567;
+    font-size: 0.85rem;
+    line-height: 1.35;
+}
+

@@ -12,16 +12,49 @@
 	gap: 1rem;
 }
 
+.teacher-actions-title-row {
+	display: flex;
+	align-items: center;
+	gap: 1rem;
+	flex-wrap: wrap;
+}
+
 .teacher-actions-title-wrap h1 {
 	margin: 0;
 	color: var(--text-heading, #1e2f5a);
-	font-size: 1.6rem;
+	font-size: 2.6rem;
+	line-height: 1.15;
+	font-weight: 800;
 }
 
-.teacher-actions-title-wrap p {
-	margin: 0.35rem 0 0;
-	color: #667085;
-	font-weight: 500;
+.teacher-total-badge {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.35rem;
+	color: #5d6b84;
+	font-size: 1.02rem;
+	font-weight: 700;
+}
+
+.teacher-total-number {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-width: 1.9rem;
+	height: 1.9rem;
+	border-radius: 0.55rem;
+	padding: 0 0.38rem;
+	background: var(--admin-color, #1e2f5a);
+	color: #ffffff;
+	font-size: 0.95rem;
+	font-weight: 800;
+	line-height: 1;
+}
+
+.teacher-total-label {
+	font-size: 1rem;
+	font-weight: 600;
+	color: #5d6b84;
 }
 
 .teacher-create-account-btn {

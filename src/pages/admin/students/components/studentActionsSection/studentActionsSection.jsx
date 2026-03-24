@@ -15,8 +15,13 @@ export default function StudentActionsSection({
         <section className="student-actions-section">
             <div className="student-actions-top">
                 <div className="student-actions-title-wrap">
-                    <h1>Quản lý Học sinh</h1>
-                    <p>{totalStudents} học sinh đang theo học</p>
+                    <div className="student-actions-title-row">
+                        <h1>Quản lý Học sinh</h1>
+                        <div className="student-total-badge" aria-live="polite">
+                            <span className="student-total-number">{totalStudents}</span>
+                            <span className="student-total-label">học sinh</span>
+                        </div>
+                    </div>
                 </div>
 
                 <button className="student-create-account-btn" onClick={onCreateStudentAccount}>
