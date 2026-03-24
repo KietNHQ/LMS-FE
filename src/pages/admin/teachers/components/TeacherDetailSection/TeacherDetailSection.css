@@ -6,7 +6,7 @@
 	left: 0;
 	right: 0;
 	bottom: 0;
-	background: rgba(15, 23, 42, 0.4);
+	background: rgba(30, 47, 90, 0.4);
 	backdrop-filter: blur(4px);
 	display: flex;
 	align-items: center;
@@ -60,19 +60,19 @@
 	width: 3.5rem;
 	height: 3.5rem;
 	border-radius: 50%;
-	background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+	background: linear-gradient(135deg, #1e2f5a 0%, #2d5dd9 100%);
 	color: #ffffff;
 	font-weight: 600;
 	font-size: 1.5rem;
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
-	box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.3);
+	box-shadow: 0 4px 6px -1px rgba(30, 47, 90, 0.3);
 }
 
 .teacher-detail-header h2 {
 	margin: 0;
-	color: #0f172a;
+	color: #26334d;
 	font-size: 1.25rem;
 	font-weight: 700;
 	line-height: 1.4;
@@ -120,7 +120,7 @@
 
 .teacher-detail-section h3 {
 	margin: 0;
-	color: #0f172a;
+	color: #26334d;
 	font-size: 1.125rem;
 	font-weight: 600;
 	position: relative;
@@ -134,7 +134,7 @@
 	bottom: 0;
 	width: 2.5rem;
 	height: 3px;
-	background: #3b82f6;
+	background: #2d5dd9;
 	border-radius: 2px;
 }
 
@@ -153,7 +153,7 @@
 }
 
 .teacher-detail-row strong {
-	color: #0f172a;
+	color: #26334d;
 	font-weight: 600;
 }
 
@@ -184,15 +184,32 @@
 	font-family: inherit;
 }
 
+.teacher-detail-control select {
+	padding-right: 2.5rem;
+	appearance: none;
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23334155' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+	background-repeat: no-repeat;
+	background-position: right 0.75rem center;
+	background-size: 1.25rem 1.25rem;
+}
+
 .teacher-detail-control select:hover,
 .teacher-detail-control input:hover {
 	border-color: #cbd5e1;
 }
 
+.teacher-detail-control select:hover {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23064e3b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+}
+
 .teacher-detail-control select:focus,
 .teacher-detail-control input:focus {
-	border-color: #3b82f6;
-	box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+	border-color: #2d5dd9;
+	box-shadow: 0 0 0 3px rgba(45, 93, 217, 0.15);
+}
+
+.teacher-detail-control select:focus {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%232d5dd9' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
 }
 
 .teacher-detail-add-row {
@@ -209,7 +226,7 @@
 	padding: 0 1.5rem;
 	border: none;
 	border-radius: 0.5rem;
-	background: #1e2f5a;
+	background: #2d5dd9;
 	color: #ffffff;
 	font-weight: 600;
 	cursor: pointer;
@@ -218,9 +235,9 @@
 }
 
 .teacher-detail-add-row button:hover {
-	background: #3b82f6;
+	background: #1e2f5a;
 	transform: translateY(-1px);
-	box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.2);
+	box-shadow: 0 4px 6px -1px rgba(30, 47, 90, 0.2);
 }
 
 .teacher-detail-chip-wrap {
@@ -297,7 +314,7 @@
 }
 
 .teacher-detail-progress-grid article:hover {
-	border-color: #3b82f6;
+	border-color: #2d5dd9;
 	box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
 	transform: translateY(-2px);
 }
@@ -310,7 +327,7 @@
 }
 
 .teacher-detail-progress-grid strong {
-	color: #0f172a;
+	color: #26334d;
 	font-size: 1.5rem;
 	font-weight: 700;
 	line-height: 1;
@@ -326,7 +343,7 @@
 	background: #f8fafc;
 	border-radius: 0.5rem;
 	padding: 1rem;
-	border-left: 3px solid #3b82f6;
+	border-left: 3px solid #2d5dd9;
 }
 
 .teacher-detail-note p {
