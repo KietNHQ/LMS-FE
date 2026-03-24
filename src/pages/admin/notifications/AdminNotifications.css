@@ -124,13 +124,21 @@
   justify-content: center;
   align-items: center;
 }
-
 .admin-modal-box {
   background: white;
   padding: 20px;
   border-radius: 14px;
   width: 400px;
-  position: relative; /* FIX */
+  max-width: 90%;
+
+  max-height: 80vh;     /* 🔥 đúng chỗ */
+  overflow-y: auto;     /* 🔥 scroll ở đây */
+
+  position: relative;
+}
+.admin-modal-box p {
+  word-break: break-word;
+  overflow-wrap: break-word;
 }
 .admin-close {
   position: absolute;
