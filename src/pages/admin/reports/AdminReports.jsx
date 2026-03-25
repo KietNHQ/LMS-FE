@@ -1,11 +1,22 @@
 import React from "react";
 import "./AdminReports.css";
 
-export default function AdminReports() {
-    return (
-        <div className="admin-reports">
-            <h1>Báo Cáo</h1>
-            <p>Trang báo cáo đang được xây dựng...</p>
-        </div>
-    );
-}
+import AcademicReportSection from "./components/academicReportSection/AcademicReportSection";
+import AttendanceReportSection from "./components/attendanceReportSection/AttendanceReportSection";
+import ExportReportSection from "./components/exportReportSection/ExportReportSection";
+import QuizExamReportSection from "./components/quizExamReportSection/QuizExamReportSection";
+import TeacherProgressReportSection from "./components/teacherProgressReportSection/TeacherProgressReportSection";
+
+const AdminReports = () => {
+  return (
+    <div className="admin-reports">
+      <AcademicReportSection />
+      <AttendanceReportSection />
+      <QuizExamReportSection />
+      <TeacherProgressReportSection />
+      <ExportReportSection />
+    </div>
+  );
+};
+
+export default AdminReports;
