@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { FiArrowLeft, FiMenu, FiPlus, FiSave, FiX } from "react-icons/fi";
+import { FiArrowLeft, FiDownload, FiMenu, FiPlus, FiUpload, FiX } from "react-icons/fi";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Modal } from "../../../../../components/ui";
 import CreateEditQuizSection from "../../../../teacher/quiz/components/createEditQuizSection/CreateEditQuizSection";
@@ -88,6 +88,7 @@ export default function CreateQuizPage() {
     const [pendingDeleteQuestionId, setPendingDeleteQuestionId] = useState(null);
 
     const reorderAnimationTimeoutRef = useRef(null);
+    const excelInputRef = useRef(null);
 
     useEffect(() => {
         return () => {
@@ -370,11 +371,79 @@ export default function CreateQuizPage() {
         });
     };
 
-    const handleSaveQuiz = () => {
-        const savedCard = saveQuizAndReturnCard({ showSuccessAlert: true });
-        if (!savedCard) return;
+    const handleDownloadExcelTemplate = () => {
+        const header = [
+            "question",
+            "type",
+            "optionA",
+            "optionB",
+            "optionC",
+            "optionD",
+            "correctAnswer",
+            "score",
+            "questionImage",
+        ];
 
-        console.log("Saved admin quiz:", quiz);
+        const sampleRows = [
+            [
+                "Thủ đô của Việt Nam là gì?",
+                "multiple-choice",
+                "Hà Nội",
+                "Đà Nẵng",
+                "TP.HCM",
+                "Cần Thơ",
+                "A",
+                "0.5",
+                "",
+            ],
+            [
+                "Nêu định nghĩa phản ứng oxi hóa khử",
+                "essay",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "1",
+                "",
+            ],
+        ];
+
+        const csvRows = [header, ...sampleRows]
+            .map((row) => row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(","))
+            .join("\n");
+
+        const blob = new Blob([csvRows], { type: "text/csv;charset=utf-8;" });
+        const url = URL.createObjectURL(blob);
+        const anchor = document.createElement("a");
+        anchor.href = url;
+        anchor.download = "mau-import-bai-kiem-tra.csv";
+        document.body.appendChild(anchor);
+        anchor.click();
+        document.body.removeChild(anchor);
+        URL.revokeObjectURL(url);
+    };
+
+    const handleOpenExcelUpload = () => {
+        excelInputRef.current?.click();
+    };
+
+    const handleUploadExcelFile = (event) => {
+        const file = event.target.files?.[0];
+        if (!file) return;
+
+        const allowedExtensions = [".xlsx", ".xls", ".csv"];
+        const loweredName = file.name.toLowerCase();
+        const isAllowed = allowedExtensions.some((ext) => loweredName.endsWith(ext));
+
+        if (!isAllowed) {
+            alert("Vui lòng chọn file Excel (.xlsx, .xls) hoặc CSV (.csv).");
+            event.target.value = "";
+            return;
+        }
+
+        alert(`Đã tải lên file: ${file.name}. Hệ thống sẽ hỗ trợ đọc file ở bước tiếp theo.`);
+        event.target.value = "";
     };
 
     const handleOpenAddForm = () => {
@@ -450,9 +519,14 @@ export default function CreateQuizPage() {
         handleCancelCreateQuiz();
     };
 
-    const handleQuickActionSave = () => {
+    const handleQuickActionTemplate = () => {
         setIsScrollQuickActionsOpen(false);
-        handleSaveQuiz();
+        handleDownloadExcelTemplate();
+    };
+
+    const handleQuickActionUpload = () => {
+        setIsScrollQuickActionsOpen(false);
+        handleOpenExcelUpload();
     };
 
     const pendingDeleteQuestion = activeQuiz.questions.find(
@@ -485,9 +559,22 @@ export default function CreateQuizPage() {
                         <span>Huỷ</span>
                     </button>
 
-                    <button type="button" className="admin-create-quiz__save-btn" onClick={handleSaveQuiz}>
-                        <FiSave className="admin-create-quiz__save-icon" aria-hidden="true" />
-                        <span>Lưu bài kiểm tra</span>
+                    <button
+                        type="button"
+                        className="admin-create-quiz__template-btn"
+                        onClick={handleDownloadExcelTemplate}
+                    >
+                        <FiDownload aria-hidden="true" />
+                        <span>Tải file Excel mẫu</span>
+                    </button>
+
+                    <button
+                        type="button"
+                        className="admin-create-quiz__upload-btn"
+                        onClick={handleOpenExcelUpload}
+                    >
+                        <FiUpload aria-hidden="true" />
+                        <span>Up file Excel</span>
                     </button>
                 </div>
             </div>
@@ -566,9 +653,14 @@ export default function CreateQuizPage() {
                                 <span>Huỷ</span>
                             </button>
 
-                            <button type="button" className="admin-create-quiz__floating-save" onClick={handleQuickActionSave}>
-                                <FiSave aria-hidden="true" />
-                                <span>Lưu bài kiểm tra</span>
+                            <button type="button" onClick={handleQuickActionTemplate}>
+                                <FiDownload aria-hidden="true" />
+                                <span>Tải mẫu Excel</span>
+                            </button>
+
+                            <button type="button" className="admin-create-quiz__floating-upload" onClick={handleQuickActionUpload}>
+                                <FiUpload aria-hidden="true" />
+                                <span>Up file Excel</span>
                             </button>
                         </div>
                     ) : null}
@@ -577,12 +669,20 @@ export default function CreateQuizPage() {
                         type="button"
                         className="admin-create-quiz__floating-toggle"
                         onClick={handleToggleScrollQuickActions}
-                        aria-label="Mở nhanh thao tác lưu và điều hướng"
+                        aria-label="Mở nhanh thao tác tệp Excel và điều hướng"
                     >
                         <FiMenu aria-hidden="true" />
                     </button>
                 </div>
             ) : null}
+
+            <input
+                ref={excelInputRef}
+                type="file"
+                accept=".xlsx,.xls,.csv"
+                onChange={handleUploadExcelFile}
+                style={{ display: "none" }}
+            />
 
             <CreateQuizDialog
                 open={showSetupDialog}

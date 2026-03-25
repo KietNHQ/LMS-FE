@@ -19,6 +19,7 @@
     transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
     display: flex;
     flex-direction: column;
+    cursor: pointer;
 }
 
 .quiz-card--hidden {
@@ -32,6 +33,11 @@
     transform: translateY(-2px);
     box-shadow: 0 14px 28px rgba(15, 23, 42, 0.1);
     border-color: #bfd0f7;
+}
+
+.quiz-card:focus-within {
+    border-color: #9fb6ef;
+    box-shadow: 0 0 0 3px rgba(52, 88, 196, 0.14);
 }
 
 .quiz-card__header {

@@ -61,6 +61,7 @@ export default function AdminQuiz() {
     const [currentPage, setCurrentPage] = useState(1);
     const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
     const [pendingDeleteQuizId, setPendingDeleteQuizId] = useState(null);
+    const [editingQuizId, setEditingQuizId] = useState(null);
 
 
     const totalPages = Math.max(1, Math.ceil(quizzes.length / ITEMS_PER_PAGE));
@@ -115,15 +116,17 @@ export default function AdminQuiz() {
     const goNextPage = () => handlePageChange(currentPage + 1);
 
     const handleOpenCreateDialog = () => {
+        setEditingQuizId(null);
         setIsCreateDialogOpen(true);
     };
 
     const handleCloseCreateDialog = () => {
         setIsCreateDialogOpen(false);
+        setEditingQuizId(null);
     };
 
     const handleCreateQuiz = (quizMeta) => {
-        setIsCreateDialogOpen(false);
+        handleCloseCreateDialog();
         navigate("/admin/quiz/create", {
             state: {
                 quizMeta,
@@ -131,7 +134,7 @@ export default function AdminQuiz() {
         });
     };
 
-    const handleEditQuiz = (quiz) => {
+    const handleOpenQuizQuestions = (quiz) => {
         navigate("/admin/quiz/create", {
             state: {
                 quizMeta: {
@@ -146,6 +149,40 @@ export default function AdminQuiz() {
             },
         });
     };
+
+    const handleEditQuiz = (quiz) => {
+        setEditingQuizId(quiz.id);
+        setIsCreateDialogOpen(true);
+    };
+
+    const handleSubmitQuizMeta = (quizMeta) => {
+        if (editingQuizId == null) {
+            handleCreateQuiz(quizMeta);
+            return;
+        }
+
+        setQuizzes((prev) =>
+            prev.map((quiz) =>
+                quiz.id === editingQuizId
+                    ? {
+                        ...quiz,
+                        title: quizMeta.title,
+                        subject: quizMeta.subject,
+                        grade: quizMeta.grade,
+                        createdByRole: quizMeta.createdByRole,
+                        createdByName:
+                            quizMeta.createdByRole === "teacher"
+                                ? quizMeta.createdByName
+                                : "Quản trị viên",
+                    }
+                    : quiz
+            )
+        );
+
+        handleCloseCreateDialog();
+    };
+
+    const editingQuiz = quizzes.find((quiz) => quiz.id === editingQuizId) || null;
 
     return (
         <div className="admin-quiz">
@@ -174,6 +211,7 @@ export default function AdminQuiz() {
                     onDelete={handleDeleteQuiz}
                     onStatusChange={handleStatusChange}
                     onEdit={handleEditQuiz}
+                    onCardClick={handleOpenQuizQuestions}
                 />
 
                 {quizzes.length > 0 && (
@@ -207,12 +245,19 @@ export default function AdminQuiz() {
             </div>
 
             <CreateQuizDialog
-                key={isCreateDialogOpen ? "create-open" : "create-closed"}
+                key={editingQuizId != null ? `edit-${editingQuizId}` : (isCreateDialogOpen ? "create-open" : "create-closed")}
                 open={isCreateDialogOpen}
                 onClose={handleCloseCreateDialog}
-                onSubmit={handleCreateQuiz}
-                title="Tạo bài kiểm tra mới"
-                submitLabel="Tạo"
+                onSubmit={handleSubmitQuizMeta}
+                title={editingQuiz ? "Sửa thông tin bài kiểm tra" : "Tạo bài kiểm tra mới"}
+                submitLabel={editingQuiz ? "Lưu thông tin" : "Tạo"}
+                initialValues={editingQuiz ? {
+                    title: editingQuiz.title,
+                    subject: editingQuiz.subject,
+                    grade: editingQuiz.grade,
+                    createdByRole: editingQuiz.createdByRole || "admin",
+                    createdByName: editingQuiz.createdByName || "",
+                } : undefined}
             />
 
             <Modal

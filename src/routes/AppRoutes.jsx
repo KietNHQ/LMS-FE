@@ -34,9 +34,6 @@ const AdminCreateQuiz = lazy(
 const AdminTimetable = lazy(
   () => import("../pages/admin/timetable/AdminTimetable")
 );
-const AdminAttendance = lazy(
-  () => import("../pages/admin/attendance/AdminAttendance")
-);
 const AdminNotifications = lazy(
   () => import("../pages/admin/notifications/AdminNotifications")
 );
@@ -130,7 +127,7 @@ export default function AppRoutes() {
         <Route path="quiz" element={<AdminQuiz />} />
         <Route path="quiz/create" element={<AdminCreateQuiz />} />
         <Route path="timetable" element={<AdminTimetable />} />
-        <Route path="attendance" element={<AdminAttendance />} />
+        <Route path="attendance" element={<Navigate to="/admin/classes" replace />} />
         <Route path="notifications" element={<AdminNotifications />} />
         <Route path="reports" element={<AdminReports />} />
       </Route>

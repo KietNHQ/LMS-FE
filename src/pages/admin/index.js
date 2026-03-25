@@ -7,6 +7,5 @@ export { default as AdminQuiz } from "./quiz/AdminQuiz";
 export { default as AdminCreateQuiz } from "./quiz/create/AdminCreateQuiz";
 export { default as AdminClasses } from "./classes/AdminClasses";
 export { default as AdminTimetable } from "./timetable/AdminTimetable";
-export { default as AdminAttendance } from "./attendance/AdminAttendance";
 export { default as AdminReports } from "./reports/AdminReports";
 export { default as AdminNotifications } from "./notifications/AdminNotifications";

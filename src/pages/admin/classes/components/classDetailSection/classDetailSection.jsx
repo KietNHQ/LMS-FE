@@ -23,6 +23,19 @@ const mockStudents = [
 ];
 
 const ITEMS_PER_PAGE = 6;
+const ATTENDANCE_ALERT_THRESHOLD = 95;
+
+const timeFilterOptions = [
+    { value: "this-week", label: "Tuần này" },
+    { value: "last-week", label: "Tuần trước" },
+    { value: "semester-1", label: "Học kì 1" },
+];
+
+const sortOptions = [
+    { value: "attendance-asc", label: "% chuyên cần thấp đến cao" },
+    { value: "absent-desc", label: "Số ngày nghỉ nhiều đến ít" },
+    { value: "late-desc", label: "Số lần đi muộn nhiều đến ít" },
+];
 
 const mockClasses = [
     {
@@ -33,6 +46,7 @@ const mockClasses = [
         teacher: "Trần Thị Hương",
         students: 35,
         diemTong: 8.5,
+        semester1Closed: true,
         subjects: ["Toán", "Vật lý", "Hóa học", "Ngữ văn", "Tiếng Anh"],
     },
     {
@@ -43,9 +57,53 @@ const mockClasses = [
         teacher: "Lê Văn Minh",
         students: 33,
         diemTong: 7.8,
+        semester1Closed: true,
         subjects: ["Toán", "Vật lý", "Hóa học", "Ngữ văn", "Tiếng Anh"],
     },
 ];
+
+const mockAttendanceByStudent = {
+    1: {
+        "this-week": { attendancePercent: 96, absentDays: 0, lateCount: 1, excusedAbsence: 0, unexcusedAbsence: 0, updatedAt: "2026-03-25" },
+        "last-week": { attendancePercent: 92, absentDays: 1, lateCount: 2, excusedAbsence: 1, unexcusedAbsence: 0, updatedAt: "2026-03-18" },
+        "semester-1": { attendancePercent: 94, absentDays: 4, lateCount: 6, excusedAbsence: 2, unexcusedAbsence: 2, updatedAt: "2025-12-20" },
+    },
+    2: {
+        "this-week": { attendancePercent: 98, absentDays: 0, lateCount: 0, excusedAbsence: 0, unexcusedAbsence: 0, updatedAt: "2026-03-25" },
+        "last-week": { attendancePercent: 96, absentDays: 0, lateCount: 1, excusedAbsence: 0, unexcusedAbsence: 0, updatedAt: "2026-03-18" },
+        "semester-1": { attendancePercent: 97, absentDays: 2, lateCount: 3, excusedAbsence: 1, unexcusedAbsence: 1, updatedAt: "2025-12-20" },
+    },
+    3: {
+        "this-week": { attendancePercent: 89, absentDays: 2, lateCount: 2, excusedAbsence: 1, unexcusedAbsence: 1, updatedAt: "2026-03-25" },
+        "last-week": { attendancePercent: 91, absentDays: 1, lateCount: 3, excusedAbsence: 1, unexcusedAbsence: 0, updatedAt: "2026-03-18" },
+        "semester-1": { attendancePercent: 90, absentDays: 6, lateCount: 8, excusedAbsence: 2, unexcusedAbsence: 4, updatedAt: "2025-12-20" },
+    },
+    4: {
+        "this-week": { attendancePercent: 94, absentDays: 1, lateCount: 1, excusedAbsence: 1, unexcusedAbsence: 0, updatedAt: "2026-03-25" },
+        "last-week": { attendancePercent: 95, absentDays: 0, lateCount: 2, excusedAbsence: 0, unexcusedAbsence: 0, updatedAt: "2026-03-18" },
+        "semester-1": { attendancePercent: 93, absentDays: 5, lateCount: 5, excusedAbsence: 3, unexcusedAbsence: 2, updatedAt: "2025-12-20" },
+    },
+    5: {
+        "this-week": { attendancePercent: 97, absentDays: 0, lateCount: 1, excusedAbsence: 0, unexcusedAbsence: 0, updatedAt: "2026-03-25" },
+        "last-week": { attendancePercent: 94, absentDays: 1, lateCount: 1, excusedAbsence: 1, unexcusedAbsence: 0, updatedAt: "2026-03-18" },
+        "semester-1": { attendancePercent: 95, absentDays: 3, lateCount: 4, excusedAbsence: 2, unexcusedAbsence: 1, updatedAt: "2025-12-20" },
+    },
+    6: {
+        "this-week": { attendancePercent: 90, absentDays: 1, lateCount: 3, excusedAbsence: 0, unexcusedAbsence: 1, updatedAt: "2026-03-25" },
+        "last-week": { attendancePercent: 88, absentDays: 2, lateCount: 2, excusedAbsence: 1, unexcusedAbsence: 1, updatedAt: "2026-03-18" },
+        "semester-1": { attendancePercent: 89, absentDays: 7, lateCount: 9, excusedAbsence: 3, unexcusedAbsence: 4, updatedAt: "2025-12-20" },
+    },
+    7: {
+        "this-week": { attendancePercent: 95, absentDays: 0, lateCount: 2, excusedAbsence: 0, unexcusedAbsence: 0, updatedAt: "2026-03-25" },
+        "last-week": { attendancePercent: 93, absentDays: 1, lateCount: 2, excusedAbsence: 1, unexcusedAbsence: 0, updatedAt: "2026-03-18" },
+        "semester-1": { attendancePercent: 92, absentDays: 5, lateCount: 6, excusedAbsence: 2, unexcusedAbsence: 3, updatedAt: "2025-12-20" },
+    },
+    8: {
+        "this-week": { attendancePercent: 99, absentDays: 0, lateCount: 0, excusedAbsence: 0, unexcusedAbsence: 0, updatedAt: "2026-03-25" },
+        "last-week": { attendancePercent: 97, absentDays: 0, lateCount: 1, excusedAbsence: 0, unexcusedAbsence: 0, updatedAt: "2026-03-18" },
+        "semester-1": { attendancePercent: 98, absentDays: 1, lateCount: 2, excusedAbsence: 1, unexcusedAbsence: 0, updatedAt: "2025-12-20" },
+    },
+};
 
 export default function ClassDetailSection() {
     const { classId } = useParams();
@@ -63,6 +121,9 @@ export default function ClassDetailSection() {
         parentName: "",
         parentPhone: "",
     });
+    const [activeSection, setActiveSection] = useState("students");
+    const [selectedTimeFilter, setSelectedTimeFilter] = useState("this-week");
+    const [selectedSort, setSelectedSort] = useState("attendance-asc");
 
     const classData = mockClasses.find((c) => String(c.id) === String(classId)) || null;
 
@@ -73,6 +134,65 @@ export default function ClassDetailSection() {
         );
     }, [searchTerm, students]);
 
+    const attendanceRows = useMemo(() => {
+        const rows = filteredStudents.map((student) => {
+            const attendanceMetrics =
+                mockAttendanceByStudent[student.id]?.[selectedTimeFilter] || {
+                    attendancePercent: 100,
+                    absentDays: 0,
+                    lateCount: 0,
+                    excusedAbsence: 0,
+                    unexcusedAbsence: 0,
+                    updatedAt: student.enrollmentDate,
+                };
+
+            const isAtRisk =
+                attendanceMetrics.attendancePercent < ATTENDANCE_ALERT_THRESHOLD ||
+                attendanceMetrics.absentDays >= 2 ||
+                attendanceMetrics.lateCount >= 3;
+
+            return {
+                ...student,
+                ...attendanceMetrics,
+                isAtRisk,
+            };
+        });
+
+        const sortedRows = [...rows];
+        if (selectedSort === "attendance-asc") {
+            sortedRows.sort((a, b) => a.attendancePercent - b.attendancePercent);
+        } else if (selectedSort === "absent-desc") {
+            sortedRows.sort((a, b) => b.absentDays - a.absentDays);
+        } else if (selectedSort === "late-desc") {
+            sortedRows.sort((a, b) => b.lateCount - a.lateCount);
+        }
+
+        return sortedRows;
+    }, [filteredStudents, selectedSort, selectedTimeFilter]);
+
+    const attendanceSummary = useMemo(() => {
+        if (!attendanceRows.length) {
+            return {
+                averageAttendance: 0,
+                totalAbsent: 0,
+                totalLate: 0,
+                atRiskCount: 0,
+            };
+        }
+
+        const totalAttendance = attendanceRows.reduce((sum, row) => sum + row.attendancePercent, 0);
+        const totalAbsent = attendanceRows.reduce((sum, row) => sum + row.absentDays, 0);
+        const totalLate = attendanceRows.reduce((sum, row) => sum + row.lateCount, 0);
+        const atRiskCount = attendanceRows.filter((row) => row.isAtRisk).length;
+
+        return {
+            averageAttendance: Number((totalAttendance / attendanceRows.length).toFixed(1)),
+            totalAbsent,
+            totalLate,
+            atRiskCount,
+        };
+    }, [attendanceRows]);
+
     const totalPages = useMemo(() => Math.max(1, Math.ceil(filteredStudents.length / ITEMS_PER_PAGE)), [filteredStudents]);
     const effectivePage = Math.min(currentPage, totalPages);
 
@@ -80,6 +200,11 @@ export default function ClassDetailSection() {
         const start = (effectivePage - 1) * ITEMS_PER_PAGE;
         return filteredStudents.slice(start, start + ITEMS_PER_PAGE);
     }, [filteredStudents, effectivePage]);
+
+    const paginatedAttendanceRows = useMemo(() => {
+        const start = (effectivePage - 1) * ITEMS_PER_PAGE;
+        return attendanceRows.slice(start, start + ITEMS_PER_PAGE);
+    }, [attendanceRows, effectivePage]);
 
     const goPrevPage = () => {
         setCurrentPage((prev) => Math.max(1, Math.min(prev, totalPages) - 1));
@@ -135,6 +260,29 @@ export default function ClassDetailSection() {
         setActiveStudentId(studentId);
     };
 
+    const handleOpenAttendanceSection = () => {
+        setActiveSection("attendance");
+    };
+
+    const handleOpenStudentSection = () => {
+        setActiveSection("students");
+    };
+
+    const handleSearchStudent = (event) => {
+        setSearchTerm(event.target.value);
+        setCurrentPage(1);
+    };
+
+    const handleTimeFilterChange = (event) => {
+        setSelectedTimeFilter(event.target.value);
+        setCurrentPage(1);
+    };
+
+    const handleSortChange = (event) => {
+        setSelectedSort(event.target.value);
+        setCurrentPage(1);
+    };
+
     const handleConfirmToggleHidden = () => {
         if (!activeStudentId) return;
 
@@ -185,15 +333,36 @@ export default function ClassDetailSection() {
                         <span className="info-label">Số học sinh</span>
                         <span className="info-value">{classData.students}</span>
                     </div>
-                    <div className="info-item">
+                    <button
+                        type="button"
+                        className={`info-item info-item--score-trigger ${activeSection === "attendance" ? "active" : ""}`.trim()}
+                        onClick={handleOpenAttendanceSection}
+                    >
                         <span className="info-label">Điểm rèn luyện</span>
                         <span className="info-value score">{classData.diemTong}</span>
-                    </div>
+                    </button>
                 </div>
             </div>
 
-            {/* Students Section */}
-            <div className="students-card">
+            <div className="class-detail-section-switch">
+                <button
+                    type="button"
+                    className={`section-switch-btn ${activeSection === "students" ? "active" : ""}`.trim()}
+                    onClick={handleOpenStudentSection}
+                >
+                    Danh sách học sinh
+                </button>
+                <button
+                    type="button"
+                    className={`section-switch-btn ${activeSection === "attendance" ? "active" : ""}`.trim()}
+                    onClick={handleOpenAttendanceSection}
+                >
+                    Chuyên cần và điểm rèn luyện
+                </button>
+            </div>
+
+            {activeSection === "students" ? (
+                <div className="students-card">
                 <div className="students-card-header">
                     <h2 className="students-card-title">Danh sách học sinh</h2>
                     <div className="class-detail-search-box">
@@ -202,7 +371,7 @@ export default function ClassDetailSection() {
                             type="text"
                             placeholder="Tìm kiếm học sinh..."
                             value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
+                            onChange={handleSearchStudent}
                         />
                     </div>
                 </div>
@@ -378,6 +547,149 @@ export default function ClassDetailSection() {
                     </div>
                 )}
             </div>
+            ) : (
+                <div className="students-card attendance-card">
+                    <div className="students-card-header">
+                        <h2 className="students-card-title">Theo dõi chuyên cần và điểm rèn luyện</h2>
+
+                        <div className="attendance-toolbar">
+                            <div className="class-detail-search-box">
+                                <FiSearch className="class-detail-search-icon" />
+                                <input
+                                    type="text"
+                                    placeholder="Tìm kiếm học sinh..."
+                                    value={searchTerm}
+                                    onChange={handleSearchStudent}
+                                />
+                            </div>
+
+                            <select
+                                className="attendance-filter-select"
+                                value={selectedTimeFilter}
+                                onChange={handleTimeFilterChange}
+                            >
+                                {timeFilterOptions.map((option) => (
+                                    <option key={option.value} value={option.value}>
+                                        {option.label}
+                                    </option>
+                                ))}
+                            </select>
+
+                            <select
+                                className="attendance-filter-select"
+                                value={selectedSort}
+                                onChange={handleSortChange}
+                            >
+                                {sortOptions.map((option) => (
+                                    <option key={option.value} value={option.value}>
+                                        {option.label}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+                    </div>
+
+                    <div className="attendance-summary-grid">
+                        <article className="attendance-summary-card">
+                            <span>Chuyên cần trung bình ({timeFilterOptions.find((f) => f.value === selectedTimeFilter)?.label})</span>
+                            <strong>{attendanceSummary.averageAttendance}%</strong>
+                        </article>
+                        <article className="attendance-summary-card">
+                            <span>Tổng số ngày nghỉ</span>
+                            <strong>{attendanceSummary.totalAbsent}</strong>
+                        </article>
+                        <article className="attendance-summary-card">
+                            <span>Tổng số lần đi muộn</span>
+                            <strong>{attendanceSummary.totalLate}</strong>
+                        </article>
+                        <article className="attendance-summary-card attendance-summary-card--risk">
+                            <span>Số học sinh cần chú ý</span>
+                            <strong>{attendanceSummary.atRiskCount}</strong>
+                        </article>
+                    </div>
+
+                    <div className="table-wrapper">
+                        <table className="students-table attendance-table">
+                            <thead>
+                                <tr>
+                                    <th>STT</th>
+                                    <th>HỌC SINH</th>
+                                    <th>% CHUYÊN CẦN</th>
+                                    <th>NGHỈ</th>
+                                    <th>ĐI MUỘN</th>
+                                    <th>CẬP NHẬT GẦN NHẤT</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {paginatedAttendanceRows.map((student, index) => (
+                                    <tr key={student.id} className={student.isAtRisk ? "attendance-row-risk" : ""}>
+                                        <td className="student-index-cell">{(effectivePage - 1) * ITEMS_PER_PAGE + index + 1}</td>
+                                        <td>
+                                            <div className="student-main-info">
+                                                <span className="student-avatar">
+                                                    {student.name.charAt(0).toUpperCase()}
+                                                </span>
+                                                <div className="student-name-wrap">
+                                                    <strong>{student.name}</strong>
+                                                    <small>{student.parentName}</small>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <span className={`attendance-chip ${student.isAtRisk ? "attendance-chip--risk" : ""}`.trim()}>
+                                                {student.attendancePercent}%
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <div className="attendance-absent-cell">
+                                                <strong>{student.absentDays}</strong>
+                                                <small>
+                                                    {student.excusedAbsence} có phép / {student.unexcusedAbsence} không phép
+                                                </small>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <span className="attendance-late-cell">{student.lateCount} lần</span>
+                                        </td>
+                                        <td className="student-date-cell">{formatDateDDMMYYYY(student.updatedAt)}</td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+
+                        {paginatedAttendanceRows.length === 0 && (
+                            <div className="table-empty">Không tìm thấy học sinh</div>
+                        )}
+                    </div>
+
+                    {totalPages > 1 && (
+                        <div className="table-pagination">
+                            <button
+                                className="page-btn"
+                                onClick={goPrevPage}
+                                disabled={effectivePage === 1}
+                                aria-label="Trang trước"
+                            >
+                                <FiChevronLeft />
+                            </button>
+
+                            <div className="page-indicator">
+                                <span>{effectivePage}</span>
+                                <small>/ {totalPages}</small>
+                            </div>
+
+                            <button
+                                className="page-btn"
+                                onClick={goNextPage}
+                                disabled={effectivePage === totalPages}
+                                aria-label="Trang sau"
+                            >
+                                <FiChevronRight />
+                            </button>
+                        </div>
+                    )}
+                </div>
+            )}
         </div>
     );
 }
