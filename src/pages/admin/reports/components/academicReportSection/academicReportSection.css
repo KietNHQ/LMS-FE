@@ -1,0 +1,239 @@
+/* Title chính */
+h2 {
+  font-size: 24px;
+  font-weight: 700;
+  color: #111827; /* đen đậm */
+  margin: 0;
+}
+
+/* Subtitle */
+h1 {
+  font-size: 14px;
+  font-weight: 400;
+  color: #6b7280; /* xám nhạt */
+  margin-top: 4px;
+}
+/* ===== CONTAINER ===== */
+.academic-container {
+  padding: 20px;
+
+}
+
+/* ===== HEADER ===== */
+.top-controls {
+  display: flex;
+  gap: 12px;
+  margin-top: 10px;
+}
+
+/* ===== BUTTON ===== */
+/* ===== BUTTON ===== */
+.tabs button {
+  border: none;
+  padding: 6px 14px;
+  border-radius: 999px;
+  background: white;
+  color: #444;
+  cursor: pointer;
+  transition: all 0.25s ease;
+    margin-left: 10px;
+
+}
+
+/* hover nhẹ */
+.tabs button:hover {
+  background: #b4cdf0;
+}
+
+/* ACTIVE (gradient bạn yêu cầu) */
+.tabs .active {
+  background: linear-gradient(180deg, #2b3f6f 0%, #152340 100%);
+  color: #fff;
+  box-shadow: 0 2px 6px rgba(21, 35, 64, 0.4);
+}
+
+/* hover khi active */
+.tabs .active:hover {
+  opacity: 0.95;
+}
+
+/* ===== SELECT ===== */
+select {
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  background: white;
+}
+
+/* ===== SUMMARY (KHÔNG XUỐNG HÀNG) ===== */
+.summary {
+  display: flex;
+  gap: 16px;
+  margin: 20px 0;
+  overflow-x: auto;
+}
+
+.card {
+  min-width: 180px;
+  flex: 1;
+  background: white;
+  padding: 18px;
+  border-radius: 14px;
+  text-align: center;
+  transition: 0.2s;
+  border: 1px solid #eee;
+}
+.card span {
+  display: block;
+  font-size: 12px;
+  color: #9ca3af;       /* xám nhạt hơn nữa */
+  margin-top: 4px;
+  font-weight: 500;
+}
+
+.card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+}
+
+/* ===== BADGE ===== */
+.badge {
+  width: 36px;
+  height: 36px;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: auto;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+/* tone nhẹ */
+.card.yeu .badge { background: #fee2e2; color: #b91c1c; }
+.card.trungbinh .badge { background: #fef3c7; color: #92400e; }
+.card.kha .badge { background: #e0e7ff; color: #3730a3; }
+.card.gioi .badge { background: #dcfce7; color: #166534; }
+.card.xuatxac .badge { background: #ede9fe; color: #5b21b6; }
+
+/* ===== BOX ===== */
+.box {
+  padding: 16px;
+  border-radius: 14px;
+  margin-bottom: 20px;
+  border: 1px solid #eee;
+  background: white;
+}
+
+/* ===== TABLE ===== */
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th, td {
+  padding: 12px;
+  text-align: center;
+}
+
+
+/* Riêng cột đầu (Học sinh) căn trái */
+th:first-child,
+td:first-child {
+  text-align: left;
+}
+thead tr {
+  border-bottom: 2px solid #eee;
+}
+
+tbody tr {
+  border-bottom: 1px solid #f1f5f9;
+  transition: 0.2s;
+}
+
+/* hover row */
+tbody tr:hover {
+  background: #f9fbff;
+}
+
+/* ===== STUDENT ===== */
+.student {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.avatar {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: #e0e7ff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  color: #3730a3;
+}
+
+/* ===== TEXT ===== */
+.avg {
+  color: #2563eb;
+  font-weight: 600;
+}
+
+/* ===== PROGRESS ===== */
+.up { color: #16a34a; }
+.down { color: #dc2626; }
+.equal { color: #6b7280; }
+
+/* ===== RANK BADGE (ĐẸP HƠN) ===== */
+.rank {
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 500;
+  display: inline-block;
+  border: 1px solid transparent;
+}
+
+/* tone nhẹ, hiện đại */
+.rank.yeu {
+  background: #fef2f2;
+  color: #b91c1c;
+}
+
+.rank.trungbinh {
+  background: #fffbeb;
+  color: #92400e;
+}
+
+.rank.kha {
+  background: #eff6ff;
+  color: #1d4ed8;
+}
+
+.rank.gioi {
+  background: #f0fdf4;
+  color: #166534;
+}
+
+.rank.xuatxac {
+  background: #faf5ff;
+  color: #6b21a8;
+}
+.progress-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center; /* ⭐ QUAN TRỌNG */
+  gap: 6px;
+  font-weight: 500;
+}
+.class-name {
+  color: #152340;
+  font-weight: 700;
+}
+
+/* màu giữ nguyên */
+.up { color: #16a34a; }
+.down { color: #dc2626; }
+.equal { color: #6b7280; }
