@@ -1,4 +1,5 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
+import { FiChevronLeft, FiChevronRight } from "react-icons/fi";
 import { read, utils, writeFile } from "xlsx";
 import "./AdminTeachers.css";
 import { CreateUserDialog } from "../../../components/common";
@@ -81,6 +82,531 @@ const initialTeachers = [
             attendanceRate: 90,
             averageScore: 7.5,
             pendingLessonPlans: 4,
+        },
+    },
+    {
+        id: 4,
+        name: "Lê Hoàng Nam",
+        lastName: "Lê Hoàng",
+        firstName: "Nam",
+        dob: "1989-05-18",
+        email: "nam.lh@teacher.email.edu.vn",
+        role: "Giáo viên",
+        phone: "0931123456",
+        subject: "Vật lý",
+        homeroomClass: "10A2",
+        assignedClasses: ["10A2", "10A3"],
+        status: "Hoạt động",
+        createdAt: "2026-01-12",
+        profile: {
+            subject: "Vật lý",
+            phone: "0931123456",
+        },
+        progress: {
+            completionRate: 90,
+            attendanceRate: 94,
+            averageScore: 8.1,
+            pendingLessonPlans: 1,
+        },
+    },
+    {
+        id: 5,
+        name: "Đặng Quốc Bảo",
+        lastName: "Đặng Quốc",
+        firstName: "Bảo",
+        dob: "1991-09-07",
+        email: "bao.dq@teacher.email.edu.vn",
+        role: "Giáo viên",
+        phone: "0973344556",
+        subject: "Hóa học",
+        homeroomClass: "11B2",
+        assignedClasses: ["11B1", "11B2"],
+        status: "Hoạt động",
+        createdAt: "2026-01-13",
+        profile: {
+            subject: "Hóa học",
+            phone: "0973344556",
+        },
+        progress: {
+            completionRate: 86,
+            attendanceRate: 91,
+            averageScore: 7.8,
+            pendingLessonPlans: 2,
+        },
+    },
+    {
+        id: 6,
+        name: "Bùi Thu Trang",
+        lastName: "Bùi Thu",
+        firstName: "Trang",
+        dob: "1993-12-01",
+        email: "trang.bt@teacher.email.edu.vn",
+        role: "Giáo viên",
+        phone: "0918877665",
+        subject: "Sinh học",
+        homeroomClass: "12C1",
+        assignedClasses: ["12C1", "12C2"],
+        status: "Hoạt động",
+        createdAt: "2026-01-14",
+        profile: {
+            subject: "Sinh học",
+            phone: "0918877665",
+        },
+        progress: {
+            completionRate: 89,
+            attendanceRate: 92,
+            averageScore: 8.0,
+            pendingLessonPlans: 2,
+        },
+    },
+    {
+        id: 7,
+        name: "Phan Minh Đức",
+        lastName: "Phan Minh",
+        firstName: "Đức",
+        dob: "1988-04-10",
+        email: "duc.pm@teacher.email.edu.vn",
+        role: "Giáo viên",
+        phone: "0909123987",
+        subject: "Lịch sử",
+        homeroomClass: "",
+        assignedClasses: ["10A1", "11B1"],
+        status: "Tạm khóa",
+        createdAt: "2026-01-15",
+        profile: {
+            subject: "Lịch sử",
+            phone: "0909123987",
+        },
+        progress: {
+            completionRate: 74,
+            attendanceRate: 88,
+            averageScore: 7.1,
+            pendingLessonPlans: 5,
+        },
+    },
+    {
+        id: 8,
+        name: "Vũ Gia Hân",
+        lastName: "Vũ Gia",
+        firstName: "Hân",
+        dob: "1995-03-24",
+        email: "han.vg@teacher.email.edu.vn",
+        role: "Giáo viên",
+        phone: "0945566778",
+        subject: "Địa lý",
+        homeroomClass: "10A3",
+        assignedClasses: ["10A3", "12C1"],
+        status: "Hoạt động",
+        createdAt: "2026-01-16",
+        profile: {
+            subject: "Địa lý",
+            phone: "0945566778",
+        },
+        progress: {
+            completionRate: 87,
+            attendanceRate: 93,
+            averageScore: 7.9,
+            pendingLessonPlans: 2,
+        },
+    },
+    {
+        id: 9,
+        name: "Trịnh Khánh Linh",
+        lastName: "Trịnh Khánh",
+        firstName: "Linh",
+        dob: "1992-07-29",
+        email: "linh.tk@teacher.email.edu.vn",
+        role: "Giáo viên",
+        phone: "0922456789",
+        subject: "Tin học",
+        homeroomClass: "11B1",
+        assignedClasses: ["11B1", "12C2"],
+        status: "Hoạt động",
+        createdAt: "2026-01-17",
+        profile: {
+            subject: "Tin học",
+            phone: "0922456789",
+        },
+        progress: {
+            completionRate: 93,
+            attendanceRate: 96,
+            averageScore: 8.5,
+            pendingLessonPlans: 1,
+        },
+    },
+    {
+        id: 10,
+        name: "Ngô Hữu Phúc",
+        lastName: "Ngô Hữu",
+        firstName: "Phúc",
+        dob: "1990-01-15",
+        email: "phuc.nh@teacher.email.edu.vn",
+        role: "Giáo viên",
+        phone: "0967788990",
+        subject: "Giáo dục công dân",
+        homeroomClass: "",
+        assignedClasses: ["10A2", "12C2"],
+        status: "Hoạt động",
+        createdAt: "2026-01-18",
+        profile: {
+            subject: "Giáo dục công dân",
+            phone: "0967788990",
+        },
+        progress: {
+            completionRate: 82,
+            attendanceRate: 90,
+            averageScore: 7.4,
+            pendingLessonPlans: 3,
+        },
+    },
+    {
+        id: 11,
+        name: "Hoàng Mỹ Duyên",
+        lastName: "Hoàng Mỹ",
+        firstName: "Duyên",
+        dob: "1996-06-11",
+        email: "duyen.hm@teacher.email.edu.vn",
+        role: "Giáo viên",
+        phone: "0981122334",
+        subject: "Thể dục",
+        homeroomClass: "",
+        assignedClasses: ["10A1", "11B2", "12C1"],
+        status: "Hoạt động",
+        createdAt: "2026-01-19",
+        profile: {
+            subject: "Thể dục",
+            phone: "0981122334",
+        },
+        progress: {
+            completionRate: 85,
+            attendanceRate: 94,
+            averageScore: 8.2,
+            pendingLessonPlans: 2,
+        },
+    },
+    {
+        id: 12,
+        name: "Lý Thành Công",
+        lastName: "Lý Thành",
+        firstName: "Công",
+        dob: "1987-10-05",
+        email: "cong.lt@teacher.email.edu.vn",
+        role: "Giáo viên",
+        phone: "0953344221",
+        subject: "Công nghệ",
+        homeroomClass: "12C2",
+        assignedClasses: ["11B2", "12C2"],
+        status: "Tạm khóa",
+        createdAt: "2026-01-20",
+        profile: {
+            subject: "Công nghệ",
+            phone: "0953344221",
+        },
+        progress: {
+            completionRate: 78,
+            attendanceRate: 86,
+            averageScore: 7.0,
+            pendingLessonPlans: 6,
+        },
+    },
+    {
+        id: 13,
+        name: "Tạ Ngọc Quỳnh",
+        lastName: "Tạ Ngọc",
+        firstName: "Quỳnh",
+        dob: "1993-03-08",
+        email: "quynh.tn@teacher.email.edu.vn",
+        role: "Giáo viên",
+        phone: "0932456781",
+        subject: "Toán",
+        homeroomClass: "10A1",
+        assignedClasses: ["10A1", "11B1"],
+        status: "Hoạt động",
+        createdAt: "2026-01-21",
+        profile: {
+            subject: "Toán",
+            phone: "0932456781",
+        },
+        progress: {
+            completionRate: 91,
+            attendanceRate: 95,
+            averageScore: 8.4,
+            pendingLessonPlans: 1,
+        },
+    },
+    {
+        id: 14,
+        name: "Mai Thanh Vũ",
+        lastName: "Mai Thanh",
+        firstName: "Vũ",
+        dob: "1986-12-19",
+        email: "vu.mt@teacher.email.edu.vn",
+        role: "Giáo viên",
+        phone: "0913344552",
+        subject: "Ngữ văn",
+        homeroomClass: "11B2",
+        assignedClasses: ["11B2", "12C1"],
+        status: "Hoạt động",
+        createdAt: "2026-01-22",
+        profile: {
+            subject: "Ngữ văn",
+            phone: "0913344552",
+        },
+        progress: {
+            completionRate: 87,
+            attendanceRate: 92,
+            averageScore: 7.8,
+            pendingLessonPlans: 2,
+        },
+    },
+    {
+        id: 15,
+        name: "Chu Hải Yến",
+        lastName: "Chu Hải",
+        firstName: "Yến",
+        dob: "1991-06-25",
+        email: "yen.ch@teacher.email.edu.vn",
+        role: "Giáo viên",
+        phone: "0981765432",
+        subject: "Tiếng Anh",
+        homeroomClass: "",
+        assignedClasses: ["10A2", "12C2"],
+        status: "Hoạt động",
+        createdAt: "2026-01-23",
+        profile: {
+            subject: "Tiếng Anh",
+            phone: "0981765432",
+        },
+        progress: {
+            completionRate: 88,
+            attendanceRate: 93,
+            averageScore: 8.0,
+            pendingLessonPlans: 2,
+        },
+    },
+    {
+        id: 16,
+        name: "Đoàn Minh Nhật",
+        lastName: "Đoàn Minh",
+        firstName: "Nhật",
+        dob: "1990-02-14",
+        email: "nhat.dm@teacher.email.edu.vn",
+        role: "Giáo viên",
+        phone: "0901456789",
+        subject: "Vật lý",
+        homeroomClass: "12C1",
+        assignedClasses: ["12C1", "12C2"],
+        status: "Hoạt động",
+        createdAt: "2026-01-24",
+        profile: {
+            subject: "Vật lý",
+            phone: "0901456789",
+        },
+        progress: {
+            completionRate: 89,
+            attendanceRate: 94,
+            averageScore: 8.1,
+            pendingLessonPlans: 1,
+        },
+    },
+    {
+        id: 17,
+        name: "Phùng Đức Trí",
+        lastName: "Phùng Đức",
+        firstName: "Trí",
+        dob: "1988-09-11",
+        email: "tri.pd@teacher.email.edu.vn",
+        role: "Giáo viên",
+        phone: "0945566123",
+        subject: "Hóa học",
+        homeroomClass: "",
+        assignedClasses: ["11B1", "12C1"],
+        status: "Tạm khóa",
+        createdAt: "2026-01-25",
+        profile: {
+            subject: "Hóa học",
+            phone: "0945566123",
+        },
+        progress: {
+            completionRate: 76,
+            attendanceRate: 87,
+            averageScore: 7.2,
+            pendingLessonPlans: 5,
+        },
+    },
+    {
+        id: 18,
+        name: "Trương Hà My",
+        lastName: "Trương Hà",
+        firstName: "My",
+        dob: "1994-04-02",
+        email: "my.th@teacher.email.edu.vn",
+        role: "Giáo viên",
+        phone: "0971238901",
+        subject: "Sinh học",
+        homeroomClass: "10A2",
+        assignedClasses: ["10A2", "11B2"],
+        status: "Hoạt động",
+        createdAt: "2026-01-26",
+        profile: {
+            subject: "Sinh học",
+            phone: "0971238901",
+        },
+        progress: {
+            completionRate: 86,
+            attendanceRate: 91,
+            averageScore: 7.7,
+            pendingLessonPlans: 3,
+        },
+    },
+    {
+        id: 19,
+        name: "Ninh Gia Khánh",
+        lastName: "Ninh Gia",
+        firstName: "Khánh",
+        dob: "1989-07-17",
+        email: "khanh.ng@teacher.email.edu.vn",
+        role: "Giáo viên",
+        phone: "0923344509",
+        subject: "Lịch sử",
+        homeroomClass: "11B1",
+        assignedClasses: ["11B1", "11B2"],
+        status: "Hoạt động",
+        createdAt: "2026-01-27",
+        profile: {
+            subject: "Lịch sử",
+            phone: "0923344509",
+        },
+        progress: {
+            completionRate: 84,
+            attendanceRate: 90,
+            averageScore: 7.6,
+            pendingLessonPlans: 3,
+        },
+    },
+    {
+        id: 20,
+        name: "Nguyễn Hữu Tài",
+        lastName: "Nguyễn Hữu",
+        firstName: "Tài",
+        dob: "1992-01-30",
+        email: "tai.nh@teacher.email.edu.vn",
+        role: "Giáo viên",
+        phone: "0956781234",
+        subject: "Địa lý",
+        homeroomClass: "12C2",
+        assignedClasses: ["12C2", "10A1"],
+        status: "Hoạt động",
+        createdAt: "2026-01-28",
+        profile: {
+            subject: "Địa lý",
+            phone: "0956781234",
+        },
+        progress: {
+            completionRate: 90,
+            attendanceRate: 95,
+            averageScore: 8.3,
+            pendingLessonPlans: 1,
+        },
+    },
+    {
+        id: 21,
+        name: "Võ Minh Tâm",
+        lastName: "Võ Minh",
+        firstName: "Tâm",
+        dob: "1995-11-06",
+        email: "tam.vm@teacher.email.edu.vn",
+        role: "Giáo viên",
+        phone: "0989012345",
+        subject: "Tin học",
+        homeroomClass: "",
+        assignedClasses: ["10A1", "12C1"],
+        status: "Hoạt động",
+        createdAt: "2026-01-29",
+        profile: {
+            subject: "Tin học",
+            phone: "0989012345",
+        },
+        progress: {
+            completionRate: 94,
+            attendanceRate: 97,
+            averageScore: 8.6,
+            pendingLessonPlans: 1,
+        },
+    },
+    {
+        id: 22,
+        name: "Lâm Quang Huy",
+        lastName: "Lâm Quang",
+        firstName: "Huy",
+        dob: "1987-05-09",
+        email: "huy.lq@teacher.email.edu.vn",
+        role: "Giáo viên",
+        phone: "0917788456",
+        subject: "Giáo dục công dân",
+        homeroomClass: "10A2",
+        assignedClasses: ["10A2", "11B1"],
+        status: "Tạm khóa",
+        createdAt: "2026-01-30",
+        profile: {
+            subject: "Giáo dục công dân",
+            phone: "0917788456",
+        },
+        progress: {
+            completionRate: 75,
+            attendanceRate: 85,
+            averageScore: 7.0,
+            pendingLessonPlans: 6,
+        },
+    },
+    {
+        id: 23,
+        name: "Quách Bảo Anh",
+        lastName: "Quách Bảo",
+        firstName: "Anh",
+        dob: "1996-08-23",
+        email: "anh.qb@teacher.email.edu.vn",
+        role: "Giáo viên",
+        phone: "0961122335",
+        subject: "Thể dục",
+        homeroomClass: "",
+        assignedClasses: ["10A1", "11B2", "12C2"],
+        status: "Hoạt động",
+        createdAt: "2026-01-31",
+        profile: {
+            subject: "Thể dục",
+            phone: "0961122335",
+        },
+        progress: {
+            completionRate: 83,
+            attendanceRate: 92,
+            averageScore: 8.1,
+            pendingLessonPlans: 2,
+        },
+    },
+    {
+        id: 24,
+        name: "Hồ Thanh Tùng",
+        lastName: "Hồ Thanh",
+        firstName: "Tùng",
+        dob: "1991-10-12",
+        email: "tung.ht@teacher.email.edu.vn",
+        role: "Giáo viên",
+        phone: "0905678912",
+        subject: "Công nghệ",
+        homeroomClass: "11B2",
+        assignedClasses: ["11B2", "12C1"],
+        status: "Hoạt động",
+        createdAt: "2026-02-01",
+        profile: {
+            subject: "Công nghệ",
+            phone: "0905678912",
+        },
+        progress: {
+            completionRate: 88,
+            attendanceRate: 93,
+            averageScore: 7.9,
+            pendingLessonPlans: 2,
         },
     },
 ];
@@ -183,6 +709,8 @@ function toTeacherForm(teacher) {
     };
 }
 
+const ITEMS_PER_PAGE = 4;
+
 export default function AdminTeachers() {
     const [teachers, setTeachers] = useState(initialTeachers);
     const [searchTerm, setSearchTerm] = useState("");
@@ -196,11 +724,20 @@ export default function AdminTeachers() {
     const [importFeedback, setImportFeedback] = useState(null);
     const [showDetailModal, setShowDetailModal] = useState(false);
     const [selectedTeacher, setSelectedTeacher] = useState(null);
+    const [currentPage, setCurrentPage] = useState(1);
 
     const subjectOptions = useMemo(() => {
         const subjects = teachers.map((teacher) => teacher.subject).filter(Boolean);
         return ["Tất cả môn", ...new Set(subjects)];
     }, [teachers]);
+
+    const editableSubjectOptions = useMemo(() => {
+        const options = subjectOptions.filter((subject) => subject !== "Tất cả môn");
+        if (teacherForm.subject && !options.includes(teacherForm.subject)) {
+            return [teacherForm.subject, ...options];
+        }
+        return options;
+    }, [subjectOptions, teacherForm.subject]);
 
     const filteredTeachers = useMemo(() => {
         return teachers.filter((teacher) => {
@@ -217,6 +754,21 @@ export default function AdminTeachers() {
             return matchSearch && matchStatus && matchSubject;
         });
     }, [teachers, searchTerm, selectedStatus, selectedSubject]);
+
+    const totalPages = Math.max(1, Math.ceil(filteredTeachers.length / ITEMS_PER_PAGE));
+
+    const paginatedTeachers = useMemo(() => {
+        const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+        return filteredTeachers.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+    }, [filteredTeachers, currentPage]);
+
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [searchTerm, selectedStatus, selectedSubject]);
+
+    useEffect(() => {
+        setCurrentPage((prev) => Math.min(prev, totalPages));
+    }, [totalPages]);
 
 
 
@@ -389,6 +941,8 @@ export default function AdminTeachers() {
             return;
         }
 
+        const savedTeacherName = teacherForm.name.trim();
+
         if (teacherForm.phone && teacherForm.phone.length !== 10) {
             window.alert("Số điện thoại giáo viên phải đủ 10 chữ số.");
             return;
@@ -415,6 +969,8 @@ export default function AdminTeachers() {
                 };
             })
         );
+
+        window.alert(`Đã cập nhật giáo viên ${savedTeacherName} thành công.`);
 
         handleCloseModal();
     };
@@ -489,18 +1045,48 @@ export default function AdminTeachers() {
             />
 
             <TeacherListSection
-                teachers={filteredTeachers}
+                teachers={paginatedTeachers}
                 onSelectTeacher={handleShowTeacherDetail}
                 onView={handleViewTeacher}
                 onEdit={handleEditTeacher}
                 onDelete={handleDeleteTeacher}
             />
 
+            <div className="admin-teachers-pagination-row">
+                <div className="admin-teachers-pagination" aria-label="Phân trang giáo viên">
+                    <button
+                        type="button"
+                        className="admin-teachers-page-btn"
+                        onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+                        disabled={currentPage <= 1}
+                        aria-label="Trang trước"
+                    >
+                        <FiChevronLeft />
+                    </button>
+
+                    <p className="admin-teachers-page-indicator" aria-live="polite">
+                        <span>{currentPage}</span>
+                        <small>/ {totalPages}</small>
+                    </p>
+
+                    <button
+                        type="button"
+                        className="admin-teachers-page-btn"
+                        onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
+                        disabled={currentPage >= totalPages}
+                        aria-label="Trang sau"
+                    >
+                        <FiChevronRight />
+                    </button>
+                </div>
+            </div>
+
             {activeModalMode && (
                 <TeacherInformationSection
                     mode={activeModalMode}
                     formData={teacherForm}
                     classOptions={classOptions}
+                    subjectOptions={editableSubjectOptions}
                     onChange={handleTeacherFormChange}
                     onClose={handleCloseModal}
                     onSubmit={handleSaveTeacherEdit}

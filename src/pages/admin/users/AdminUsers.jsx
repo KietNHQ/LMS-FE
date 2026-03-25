@@ -1,4 +1,5 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect } from "react";
+import { FiChevronLeft, FiChevronRight } from "react-icons/fi";
 import { read, utils, writeFile } from "xlsx";
 import "./AdminUsers.css";
 
@@ -17,6 +18,7 @@ const initialUsers = [
         phone: "0901234567",
         status: "Hoạt động",
         createdAt: "2024-01-01",
+        dob: "1985-05-15",
         avatar: "N",
         color: "navy",
     },
@@ -28,6 +30,7 @@ const initialUsers = [
         phone: "0912345678",
         status: "Hoạt động",
         createdAt: "2024-01-05",
+        dob: "1990-11-20",
         avatar: "T",
         color: "teal",
     },
@@ -39,6 +42,7 @@ const initialUsers = [
         phone: "0923456789",
         status: "Hoạt động",
         createdAt: "2024-01-05",
+        dob: "1988-03-10",
         avatar: "L",
         color: "teal",
     },
@@ -50,6 +54,7 @@ const initialUsers = [
         phone: "0934567890",
         status: "Hoạt động",
         createdAt: "2024-01-06",
+        dob: "1992-07-25",
         avatar: "P",
         color: "teal",
     },
@@ -61,6 +66,7 @@ const initialUsers = [
         phone: "0945678901",
         status: "Vô hiệu hóa",
         createdAt: "2024-01-07",
+        dob: "1987-09-12",
         avatar: "H",
         color: "teal",
     },
@@ -72,6 +78,7 @@ const initialUsers = [
         phone: "—",
         status: "Hoạt động",
         createdAt: "2024-08-01",
+        dob: "2008-01-15",
         avatar: "N",
         color: "blue",
     },
@@ -83,6 +90,7 @@ const initialUsers = [
         phone: "—",
         status: "Hoạt động",
         createdAt: "2024-08-02",
+        dob: "2008-05-22",
         avatar: "C",
         color: "blue",
     },
@@ -94,6 +102,7 @@ const initialUsers = [
         phone: "—",
         status: "Hoạt động",
         createdAt: "2024-08-04",
+        dob: "2008-12-30",
         avatar: "K",
         color: "blue",
     },
@@ -105,6 +114,7 @@ const initialUsers = [
         phone: "0976543210",
         status: "Hoạt động",
         createdAt: "2024-08-05",
+        dob: "1980-06-18",
         avatar: "H",
         color: "orange",
     },
@@ -116,6 +126,7 @@ const initialUsers = [
         phone: "0987654321",
         status: "Vô hiệu hóa",
         createdAt: "2024-08-06",
+        dob: "1978-02-14",
         avatar: "B",
         color: "orange",
     },
@@ -127,6 +138,7 @@ const initialUsers = [
         phone: "0908888888",
         status: "Hoạt động",
         createdAt: "2024-02-01",
+        dob: "1986-10-05",
         avatar: "B",
         color: "navy",
     },
@@ -138,6 +150,7 @@ const initialUsers = [
         phone: "—",
         status: "Hoạt động",
         createdAt: "2024-08-09",
+        dob: "2009-04-12",
         avatar: "N",
         color: "blue",
     },
@@ -167,7 +180,6 @@ function normalizePhoneValue(value) {
     const digits = raw.replace(/\D/g, "");
     if (!digits) return raw;
 
-    // Excel often strips leading 0 when cell is numeric (e.g. 901234567)
     if (digits.length === 9) return `0${digits}`;
 
     return digits;
@@ -193,6 +205,8 @@ function getCellValue(row, keys) {
     return "";
 }
 
+const ITEMS_PER_PAGE = 4;
+
 export default function AdminUsers() {
     const [users, setUsers] = useState(initialUsers);
 
@@ -205,6 +219,7 @@ export default function AdminUsers() {
     const [importFeedback, setImportFeedback] = useState(null);
 
     const [statusTarget, setStatusTarget] = useState(null);
+    const [currentPage, setCurrentPage] = useState(1);
 
     const filteredUsers = useMemo(() => {
         return users.filter((user) => {
@@ -218,6 +233,21 @@ export default function AdminUsers() {
             return matchSearch && matchQuickRole;
         });
     }, [users, searchValue, quickRole]);
+
+    const totalPages = Math.max(1, Math.ceil(filteredUsers.length / ITEMS_PER_PAGE));
+
+    const paginatedUsers = useMemo(() => {
+        const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+        return filteredUsers.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+    }, [filteredUsers, currentPage]);
+
+    React.useEffect(() => {
+        setCurrentPage(1);
+    }, [searchValue, quickRole]);
+
+    React.useEffect(() => {
+        setCurrentPage((prev) => Math.min(prev, totalPages));
+    }, [totalPages]);
 
     const handleCreateUser = (formData) => {
         const newUser = {
@@ -242,17 +272,18 @@ export default function AdminUsers() {
             prev.map((user) =>
                 user.id === editingUser.id
                     ? {
-                        ...user,
-                        ...formData,
-                        avatar:
-                            formData.firstName?.trim()?.charAt(0)?.toUpperCase() ||
-                            formData.name?.trim()?.charAt(0)?.toUpperCase() ||
-                            "U",
-                        color: getAvatarColor(formData.role),
-                    }
+                          ...user,
+                          ...formData,
+                          avatar:
+                              formData.firstName?.trim()?.charAt(0)?.toUpperCase() ||
+                              formData.name?.trim()?.charAt(0)?.toUpperCase() ||
+                              "U",
+                          color: getAvatarColor(formData.role),
+                      }
                     : user
             )
         );
+        window.alert(`Đã cập nhật người dùng ${formData.name.trim()} thành công.`);
         setEditingUser(null);
     };
 
@@ -263,10 +294,10 @@ export default function AdminUsers() {
             prev.map((user) =>
                 user.id === statusTarget.id
                     ? {
-                        ...user,
-                        status:
-                            user.status === "Hoạt động" ? "Vô hiệu hóa" : "Hoạt động",
-                    }
+                          ...user,
+                          status:
+                              user.status === "Hoạt động" ? "Vô hiệu hóa" : "Hoạt động",
+                      }
                     : user
             )
         );
@@ -406,7 +437,6 @@ export default function AdminUsers() {
 
     return (
         <div className="admin-users-page">
-
             <AccountsOverviewSection
                 totalUsers={users.length}
                 onOpenCreate={() => {
@@ -423,11 +453,40 @@ export default function AdminUsers() {
             />
 
             <UserDetailSection
-                users={filteredUsers}
+                users={paginatedUsers}
                 onEdit={setEditingUser}
                 onToggleStatus={setStatusTarget}
                 onDelete={handleDeleteUser}
             />
+
+            <div className="admin-users-pagination-row">
+                <div className="admin-users-pagination" aria-label="Phân trang người dùng">
+                    <button
+                        type="button"
+                        className="admin-users-page-btn"
+                        onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+                        disabled={currentPage <= 1}
+                        aria-label="Trang trước"
+                    >
+                        <FiChevronLeft />
+                    </button>
+
+                    <p className="admin-users-page-indicator" aria-live="polite">
+                        <span>{currentPage}</span>
+                        <small>/ {totalPages}</small>
+                    </p>
+
+                    <button
+                        type="button"
+                        className="admin-users-page-btn"
+                        onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
+                        disabled={currentPage >= totalPages}
+                        aria-label="Trang sau"
+                    >
+                        <FiChevronRight />
+                    </button>
+                </div>
+            </div>
 
             {isCreateOpen && (
                 <CreateUserDialog
