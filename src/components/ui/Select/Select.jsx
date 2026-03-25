@@ -29,10 +29,13 @@ export default function Select({
   disabled = false,
   onFocus,
   onBlur,
+  searchable = false,
+  searchPlaceholder = "Tim kiem...",
   ...props
 }) {
   const [isFocused, setIsFocused] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
   const customDropdownRef = useRef(null);
 
   const normalizedOptions = useMemo(() => {
@@ -45,6 +48,17 @@ export default function Select({
   const selectedOption = useMemo(() => {
     return normalizedOptions.find((option) => String(option.value) === String(value));
   }, [normalizedOptions, value]);
+
+  const filteredOptions = useMemo(() => {
+    if (!searchable) return normalizedOptions;
+
+    const keyword = searchTerm.trim().toLowerCase();
+    if (!keyword) return normalizedOptions;
+
+    return normalizedOptions.filter((option) =>
+      String(option.label).toLowerCase().includes(keyword)
+    );
+  }, [normalizedOptions, searchable, searchTerm]);
 
   useEffect(() => {
     if (variant !== "custom") return undefined;
@@ -96,7 +110,16 @@ export default function Select({
           <button
             type="button"
             className={`custom-dropdown-trigger ${isOpen ? "open" : ""}`}
-            onClick={() => !disabled && setIsOpen((prev) => !prev)}
+            onClick={() => {
+              if (disabled) return;
+              setIsOpen((prev) => {
+                const next = !prev;
+                if (!next) {
+                  setSearchTerm("");
+                }
+                return next;
+              });
+            }}
             disabled={disabled}
             onFocus={handleFocus}
             onBlur={handleBlur}
@@ -108,24 +131,43 @@ export default function Select({
           </button>
 
           <div className={`custom-dropdown-menu ${isOpen ? "show" : ""}`} role="listbox">
-            {normalizedOptions.map((option) => {
-              const isActive = String(option.value) === String(value);
+            {searchable ? (
+              <div className="custom-dropdown-search">
+                <input
+                  type="text"
+                  className="custom-dropdown-search-input"
+                  placeholder={searchPlaceholder}
+                  value={searchTerm}
+                  onChange={(event) => setSearchTerm(event.target.value)}
+                />
+              </div>
+            ) : null}
 
-              return (
-                <button
-                  key={String(option.value)}
-                  type="button"
-                  className={`custom-dropdown-item ${isActive ? "active" : ""}`}
-                  onClick={() => {
-                    emitChange(option.value);
-                    setIsOpen(false);
-                  }}
-                >
-                  <span>{option.label}</span>
-                  {isActive ? <FiCheck /> : null}
-                </button>
-              );
-            })}
+            <div className="custom-dropdown-list">
+              {filteredOptions.length ? (
+                filteredOptions.map((option) => {
+                  const isActive = String(option.value) === String(value);
+
+                  return (
+                    <button
+                      key={String(option.value)}
+                      type="button"
+                      className={`custom-dropdown-item ${isActive ? "active" : ""}`}
+                      onClick={() => {
+                        emitChange(option.value);
+                        setIsOpen(false);
+                        setSearchTerm("");
+                      }}
+                    >
+                      <span>{option.label}</span>
+                      {isActive ? <FiCheck /> : null}
+                    </button>
+                  );
+                })
+              ) : (
+                <p className="custom-dropdown-empty">Khong tim thay ket qua</p>
+              )}
+            </div>
           </div>
         </div>
 

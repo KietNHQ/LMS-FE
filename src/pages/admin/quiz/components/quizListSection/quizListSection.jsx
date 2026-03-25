@@ -7,10 +7,20 @@ import {
 } from "react-icons/fi";
 import "./quizListSection.css";
 
+const getCreatorText = (quiz) => {
+    if (quiz.createdByRole === "teacher") {
+        const teacherName = quiz.createdByName || "Chưa cập nhật";
+        return `Người tạo: Giáo viên - ${teacherName}`;
+    }
+
+    return "Người tạo: Admin";
+};
+
 export default function QuizListSection({
     quizzes,
     onDelete,
     onStatusChange,
+    onEdit,
 }) {
     return (
         <div className="quiz-list-section">
@@ -64,6 +74,7 @@ export default function QuizListSection({
                                         type="button"
                                         className="quiz-action-btn"
                                         title="Chỉnh sửa"
+                                        onClick={() => onEdit?.(quiz)}
                                     >
                                         <FiEdit2 />
                                     </button>
@@ -94,6 +105,8 @@ export default function QuizListSection({
                             <p className="quiz-card__description">
                                 {quiz.description}
                             </p>
+
+                            <p className="quiz-card__creator">{getCreatorText(quiz)}</p>
 
                             <div className="quiz-card__stats">
                                 <div className="quiz-stat-item">

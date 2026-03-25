@@ -1,7 +1,10 @@
 import React, { useState } from "react";
 import { FiChevronLeft, FiChevronRight } from "react-icons/fi";
+import { useLocation, useNavigate } from "react-router-dom";
+import { Modal } from "../../../components/ui";
 import "./AdminQuiz.css";
 import QuizListSection from "./components/quizListSection/quizListSection";
+import CreateQuizDialog from "./components/createQuizDialog/CreateQuizDialog";
 
 const ITEMS_PER_PAGE = 4;
 
@@ -16,6 +19,8 @@ const initialQuizzes = [
         duration: 45,
         status: "open",
         createdAt: "2024-03-20",
+        createdByRole: "admin",
+        createdByName: "Quản trị viên",
     },
     {
         id: 2,
@@ -27,6 +32,8 @@ const initialQuizzes = [
         duration: 30,
         status: "open",
         createdAt: "2024-03-19",
+        createdByRole: "teacher",
+        createdByName: "Lê Minh Hoàng",
     },
     {
         id: 3,
@@ -38,12 +45,23 @@ const initialQuizzes = [
         duration: 40,
         status: "hidden",
         createdAt: "2024-03-18",
+        createdByRole: "admin",
+        createdByName: "Quản trị viên",
     },
 ];
 
 export default function AdminQuiz() {
-    const [quizzes, setQuizzes] = useState(initialQuizzes);
+    const navigate = useNavigate();
+    const location = useLocation();
+    const createdQuizFromState = location.state?.createdQuiz;
+
+    const [quizzes, setQuizzes] = useState(() =>
+        createdQuizFromState ? [createdQuizFromState, ...initialQuizzes] : initialQuizzes
+    );
     const [currentPage, setCurrentPage] = useState(1);
+    const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+    const [pendingDeleteQuizId, setPendingDeleteQuizId] = useState(null);
+
 
     const totalPages = Math.max(1, Math.ceil(quizzes.length / ITEMS_PER_PAGE));
     const paginatedQuizzes = quizzes.slice(
@@ -52,8 +70,18 @@ export default function AdminQuiz() {
     );
 
     const handleDeleteQuiz = (quizId) => {
+        setPendingDeleteQuizId(quizId);
+    };
+
+    const handleCancelDeleteQuiz = () => {
+        setPendingDeleteQuizId(null);
+    };
+
+    const handleConfirmDeleteQuiz = () => {
+        if (pendingDeleteQuizId == null) return;
+
         setQuizzes((prev) => {
-            const nextQuizzes = prev.filter((q) => q.id !== quizId);
+            const nextQuizzes = prev.filter((q) => q.id !== pendingDeleteQuizId);
             const nextTotalPages = Math.max(
                 1,
                 Math.ceil(nextQuizzes.length / ITEMS_PER_PAGE)
@@ -62,7 +90,11 @@ export default function AdminQuiz() {
             setCurrentPage((prevPage) => Math.min(prevPage, nextTotalPages));
             return nextQuizzes;
         });
+
+        setPendingDeleteQuizId(null);
     };
+
+    const pendingDeleteQuiz = quizzes.find((quiz) => quiz.id === pendingDeleteQuizId);
 
     const handleStatusChange = (quizId, newStatus) => {
         setQuizzes((prev) =>
@@ -82,6 +114,39 @@ export default function AdminQuiz() {
     const goPrevPage = () => handlePageChange(currentPage - 1);
     const goNextPage = () => handlePageChange(currentPage + 1);
 
+    const handleOpenCreateDialog = () => {
+        setIsCreateDialogOpen(true);
+    };
+
+    const handleCloseCreateDialog = () => {
+        setIsCreateDialogOpen(false);
+    };
+
+    const handleCreateQuiz = (quizMeta) => {
+        setIsCreateDialogOpen(false);
+        navigate("/admin/quiz/create", {
+            state: {
+                quizMeta,
+            },
+        });
+    };
+
+    const handleEditQuiz = (quiz) => {
+        navigate("/admin/quiz/create", {
+            state: {
+                quizMeta: {
+                    title: quiz.title,
+                    subject: quiz.subject,
+                    grade: quiz.grade,
+                    duration: `${quiz.duration} phút`,
+                    createdByRole: quiz.createdByRole || "admin",
+                    createdByName: quiz.createdByName || "Quản trị viên",
+                },
+                mode: "edit",
+            },
+        });
+    };
+
     return (
         <div className="admin-quiz">
             <div className="admin-quiz__header">
@@ -93,7 +158,11 @@ export default function AdminQuiz() {
                         </span>
                     </div>
                 </div>
-                <button className="admin-quiz__create-btn">
+                <button
+                    type="button"
+                    className="admin-quiz__create-btn"
+                    onClick={handleOpenCreateDialog}
+                >
                     <span>+</span>
                     Tạo bài kiểm tra
                 </button>
@@ -104,6 +173,7 @@ export default function AdminQuiz() {
                     quizzes={paginatedQuizzes}
                     onDelete={handleDeleteQuiz}
                     onStatusChange={handleStatusChange}
+                    onEdit={handleEditQuiz}
                 />
 
                 {quizzes.length > 0 && (
@@ -135,6 +205,47 @@ export default function AdminQuiz() {
                     </div>
                 )}
             </div>
+
+            <CreateQuizDialog
+                key={isCreateDialogOpen ? "create-open" : "create-closed"}
+                open={isCreateDialogOpen}
+                onClose={handleCloseCreateDialog}
+                onSubmit={handleCreateQuiz}
+                title="Tạo bài kiểm tra mới"
+                submitLabel="Tạo"
+            />
+
+            <Modal
+                open={pendingDeleteQuizId != null}
+                onClose={handleCancelDeleteQuiz}
+                title="Xác nhận xoá bài kiểm tra"
+                className="admin-quiz-delete-confirm"
+            >
+                <p className="admin-quiz-delete-confirm__text">
+                    Bạn có chắc muốn xoá thẻ
+                    {" "}
+                    <strong>{pendingDeleteQuiz?.title || "bài kiểm tra này"}</strong>
+                    {" "}
+                    không?
+                </p>
+
+                <div className="admin-quiz-delete-confirm__actions">
+                    <button
+                        type="button"
+                        className="admin-quiz-delete-confirm__cancel"
+                        onClick={handleCancelDeleteQuiz}
+                    >
+                        Huỷ
+                    </button>
+                    <button
+                        type="button"
+                        className="admin-quiz-delete-confirm__submit"
+                        onClick={handleConfirmDeleteQuiz}
+                    >
+                        Xoá
+                    </button>
+                </div>
+            </Modal>
         </div>
     );
 }

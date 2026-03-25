@@ -4,6 +4,7 @@ export { default as AdminStudents } from "./students/AdminStudents";
 export { default as AdminTeachers } from "./teachers/AdminTeachers";
 export { default as AdminParents } from "./parents/AdminParents";
 export { default as AdminQuiz } from "./quiz/AdminQuiz";
+export { default as AdminCreateQuiz } from "./quiz/create/AdminCreateQuiz";
 export { default as AdminClasses } from "./classes/AdminClasses";
 export { default as AdminTimetable } from "./timetable/AdminTimetable";
 export { default as AdminAttendance } from "./attendance/AdminAttendance";

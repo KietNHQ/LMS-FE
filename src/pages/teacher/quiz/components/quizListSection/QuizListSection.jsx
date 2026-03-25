@@ -9,6 +9,10 @@ export default function QuizListSection({
                                             onDelete,
                                             onEdit,
                                             onMove,
+                                            animatedQuestionId,
+                                            moveDirection,
+                                            editingQuestionId,
+                                            renderInlineEditor,
                                         }) {
     if (!questions.length) {
         return (
@@ -21,7 +25,25 @@ export default function QuizListSection({
     return (
         <div className="quiz-question-list">
             {questions.map((item, index) => (
-                <article key={item.id} className="quiz-question-card">
+                <React.Fragment key={item.id}>
+                <article
+                    className={[
+                        "quiz-question-card",
+                        item.id === animatedQuestionId ? "is-moving" : "",
+                        item.id === animatedQuestionId && moveDirection === "up"
+                            ? "is-moving-up"
+                            : "",
+                        item.id === animatedQuestionId && moveDirection === "down"
+                            ? "is-moving-down"
+                            : "",
+                    ]
+                        .join(" ")
+                        .trim()}
+                >
+                    {item.type === "essay" ? (
+                        <span className="question-type-chip">Tự luận</span>
+                    ) : null}
+
                     <div className="question-top-row">
                         <div className="question-index">{index + 1}</div>
 
@@ -66,26 +88,43 @@ export default function QuizListSection({
                                 </div>
                             </div>
 
-                            <div className="question-answers-grid">
-                                {answerKeys.map((key) => {
-                                    const isCorrect = item.correctAnswer === key;
+                            {item.questionImage ? (
+                                <div className="question-image-display">
+                                    <img src={item.questionImage} alt="Ảnh câu hỏi" />
+                                </div>
+                            ) : null}
 
-                                    return (
-                                        <div
-                                            key={key}
-                                            className={`question-answer-item ${isCorrect ? "correct" : ""}`}
-                                        >
+                            {item.type === "essay" ? (
+                                <div className="question-essay-note">
+                                    Câu hỏi tự luận - học sinh sẽ nhập câu trả lời dạng văn bản.
+                                </div>
+                            ) : (
+                                <div className="question-answers-grid">
+                                    {answerKeys.map((key) => {
+                                        const isCorrect = item.correctAnswer === key;
+
+                                        return (
+                                            <div
+                                                key={key}
+                                                className={`question-answer-item ${isCorrect ? "correct" : ""}`}
+                                            >
                       <span className={`answer-badge ${isCorrect ? "correct" : ""}`}>
                         {key}
                       </span>
-                                            <span>{item.answers[key]}</span>
-                                        </div>
-                                    );
-                                })}
-                            </div>
+                                                <span>{item.answers[key]}</span>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            )}
                         </div>
                     </div>
                 </article>
+
+                {item.id === editingQuestionId && typeof renderInlineEditor === "function" ? (
+                    <div className="quiz-inline-editor">{renderInlineEditor(item)}</div>
+                ) : null}
+                </React.Fragment>
             ))}
         </div>
     );
