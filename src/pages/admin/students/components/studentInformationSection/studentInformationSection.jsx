@@ -1,9 +1,20 @@
-import React from "react";
+import React, { useState, useRef, useEffect } from "react";
+import { FiChevronDown } from "react-icons/fi";
 import "./studentInformationSection.css";
 
 function getAvatarLetter(name) {
     if (!name) return "A";
     return name.trim().charAt(0).toUpperCase();
+}
+
+function getStatusClass(status) {
+    switch (status) {
+        case "Đang học": return "status-active";
+        case "Đình chỉ": return "status-suspended";
+        case "Bảo lưu": return "status-reserved";
+        case "Đã tốt nghiệp": return "status-graduated";
+        default: return "status-active";
+    }
 }
 
 export default function StudentInformationSection({
@@ -19,6 +30,24 @@ export default function StudentInformationSection({
     const isEditMode = mode === "edit";
     const title = isEditMode ? "Chỉnh sửa học sinh" : "Thêm học sinh mới";
     const submitLabel = isEditMode ? "Lưu" : "Tạo mới";
+
+    const [isClassOpen, setIsClassOpen] = useState(false);
+    const [isGenderOpen, setIsGenderOpen] = useState(false);
+    const [isStatusOpen, setIsStatusOpen] = useState(false);
+
+    const classRef = useRef(null);
+    const genderRef = useRef(null);
+    const statusRef = useRef(null);
+
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (classRef.current && !classRef.current.contains(event.target)) setIsClassOpen(false);
+            if (genderRef.current && !genderRef.current.contains(event.target)) setIsGenderOpen(false);
+            if (statusRef.current && !statusRef.current.contains(event.target)) setIsStatusOpen(false);
+        };
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, []);
 
     return (
         <div className="student-modal-overlay" onClick={onClose}>
@@ -41,6 +70,10 @@ export default function StudentInformationSection({
                                 <strong>{formData.dob || "--"}</strong>
                             </div>
                             <div className="student-view-row">
+                                <span>Email học sinh</span>
+                                <strong>{formData.email || "--"}</strong>
+                            </div>
+                            <div className="student-view-row">
                                 <span>GVCN</span>
                                 <strong>{teacherName || "--"}</strong>
                             </div>
@@ -59,6 +92,12 @@ export default function StudentInformationSection({
                             <div className="student-view-row">
                                 <span>Email phụ huynh</span>
                                 <strong>{formData.parentEmail || "--"}</strong>
+                            </div>
+                            <div className="student-view-row">
+                                <span>Trạng thái</span>
+                                <strong>
+                                    <span className={`student-status-badge ${getStatusClass(formData.status)}`}>{formData.status || "--"}</span>
+                                </strong>
                             </div>
                         </div>
 
@@ -85,27 +124,68 @@ export default function StudentInformationSection({
                             <div className="student-form-grid two-cols">
                                 <div className="student-form-group">
                                     <label>Lớp</label>
-                                    <select
-                                        value={formData.className}
-                                        onChange={(e) => onChange("className", e.target.value)}
-                                    >
-                                        {classOptions.map((item) => (
-                                            <option key={item} value={item}>
-                                                {item}
-                                            </option>
-                                        ))}
-                                    </select>
+                                    <div className="student-custom-select" ref={classRef}>
+                                        <div
+                                            className={`student-custom-select-trigger ${isClassOpen ? 'active' : ''}`}
+                                            onClick={() => {
+                                                setIsClassOpen(!isClassOpen);
+                                                setIsGenderOpen(false);
+                                                setIsStatusOpen(false);
+                                            }}
+                                        >
+                                            <span>{formData.className || "Chọn lớp"}</span>
+                                            <FiChevronDown className={`student-select-icon ${isClassOpen ? 'open' : ''}`} />
+                                        </div>
+                                        {isClassOpen && (
+                                            <div className="student-custom-select-options">
+                                                {classOptions.map((item) => (
+                                                    <div
+                                                        key={item}
+                                                        className={`student-custom-select-option ${formData.className === item ? 'active' : ''}`}
+                                                        onClick={() => {
+                                                            onChange("className", item);
+                                                            setIsClassOpen(false);
+                                                        }}
+                                                    >
+                                                        {item}
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
                                 </div>
 
                                 <div className="student-form-group">
                                     <label>Giới tính</label>
-                                    <select
-                                        value={formData.gender}
-                                        onChange={(e) => onChange("gender", e.target.value)}
-                                    >
-                                        <option value="Nam">Nam</option>
-                                        <option value="Nữ">Nữ</option>
-                                    </select>
+                                    <div className="student-custom-select" ref={genderRef}>
+                                        <div
+                                            className={`student-custom-select-trigger ${isGenderOpen ? 'active' : ''}`}
+                                            onClick={() => {
+                                                setIsGenderOpen(!isGenderOpen);
+                                                setIsClassOpen(false);
+                                                setIsStatusOpen(false);
+                                            }}
+                                        >
+                                            <span>{formData.gender || "Chọn giới tính"}</span>
+                                            <FiChevronDown className={`student-select-icon ${isGenderOpen ? 'open' : ''}`} />
+                                        </div>
+                                        {isGenderOpen && (
+                                            <div className="student-custom-select-options">
+                                                {["Nam", "Nữ"].map((item) => (
+                                                    <div
+                                                        key={item}
+                                                        className={`student-custom-select-option ${formData.gender === item ? 'active' : ''}`}
+                                                        onClick={() => {
+                                                            onChange("gender", item);
+                                                            setIsGenderOpen(false);
+                                                        }}
+                                                    >
+                                                        {item}
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
                                 </div>
                             </div>
 
@@ -113,13 +193,23 @@ export default function StudentInformationSection({
                                 <div className="student-form-group">
                                     <label>Ngày sinh</label>
                                     <input
-                                        type="text"
-                                        placeholder="dd/mm/yyyy"
+                                        type="date"
                                         value={formData.dob}
                                         onChange={(e) => onChange("dob", e.target.value)}
                                     />
                                 </div>
 
+                                <div className="student-form-group">
+                                    <label>Email học sinh</label>
+                                    <input
+                                        type="email"
+                                        value={formData.email}
+                                        onChange={(e) => onChange("email", e.target.value)}
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="student-form-grid two-cols">
                                 <div className="student-form-group">
                                     <label>Tên phụ huynh</label>
                                     <input
@@ -128,9 +218,7 @@ export default function StudentInformationSection({
                                         onChange={(e) => onChange("parentName", e.target.value)}
                                     />
                                 </div>
-                            </div>
 
-                            <div className="student-form-grid two-cols">
                                 <div className="student-form-group">
                                     <label>SĐT phụ huynh</label>
                                     <input
@@ -139,7 +227,9 @@ export default function StudentInformationSection({
                                         onChange={(e) => onChange("parentPhone", e.target.value)}
                                     />
                                 </div>
+                            </div>
 
+                            <div className="student-form-grid two-cols">
                                 <div className="student-form-group">
                                     <label>Email phụ huynh</label>
                                     <input
@@ -147,6 +237,38 @@ export default function StudentInformationSection({
                                         value={formData.parentEmail}
                                         onChange={(e) => onChange("parentEmail", e.target.value)}
                                     />
+                                </div>
+                                <div className="student-form-group">
+                                    <label>Trạng thái</label>
+                                    <div className="student-custom-select" ref={statusRef}>
+                                        <div
+                                            className={`student-custom-select-trigger ${isStatusOpen ? 'active' : ''}`}
+                                            onClick={() => {
+                                                setIsStatusOpen(!isStatusOpen);
+                                                setIsClassOpen(false);
+                                                setIsGenderOpen(false);
+                                            }}
+                                        >
+                                            <span>{formData.status || "Đang học"}</span>
+                                            <FiChevronDown className={`student-select-icon ${isStatusOpen ? 'open' : ''}`} />
+                                        </div>
+                                        {isStatusOpen && (
+                                            <div className="student-custom-select-options">
+                                                {["Đang học", "Đình chỉ", "Bảo lưu", "Đã tốt nghiệp"].map((item) => (
+                                                    <div
+                                                        key={item}
+                                                        className={`student-custom-select-option ${formData.status === item ? 'active' : ''}`}
+                                                        onClick={() => {
+                                                            onChange("status", item);
+                                                            setIsStatusOpen(false);
+                                                        }}
+                                                    >
+                                                        {item}
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
                                 </div>
                             </div>
 

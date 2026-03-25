@@ -1,5 +1,5 @@
-import React, { useMemo, useState } from "react";
-import { FiDownload, FiUpload } from "react-icons/fi";
+import React, { useMemo, useState, useRef, useEffect } from "react";
+import { FiDownload, FiUpload, FiChevronDown } from "react-icons/fi";
 import "./CreateUserDialog.css";
 
 const allRoleOptions = ["Admin", "Phụ huynh", "Học sinh", "Giáo viên"];
@@ -240,6 +240,19 @@ export default function CreateUserDialog({
 
         return roleOptions;
     }, [roleOptions]);
+
+    const [isRoleOpen, setIsRoleOpen] = useState(false);
+    const roleRef = useRef(null);
+
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (roleRef.current && !roleRef.current.contains(event.target)) {
+                setIsRoleOpen(false);
+            }
+        };
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, []);
 
     const [form, setForm] = useState(() => {
         const role = fixedRole || initialData?.role || normalizedRoleOptions[0] || "Học sinh";
@@ -491,16 +504,31 @@ export default function CreateUserDialog({
                             {fixedRole ? (
                                 <input type="text" value={fixedRole} readOnly />
                             ) : (
-                                <select
-                                    value={form.role}
-                                    onChange={(e) => handleChange("role", e.target.value)}
-                                >
-                                    {normalizedRoleOptions.map((role) => (
-                                        <option key={role} value={role}>
-                                            {role}
-                                        </option>
-                                    ))}
-                                </select>
+                                <div className="admin-custom-select" ref={roleRef}>
+                                    <div
+                                        className={`admin-custom-select-trigger ${isRoleOpen ? "active" : ""}`}
+                                        onClick={() => setIsRoleOpen(!isRoleOpen)}
+                                    >
+                                        <span>{form.role}</span>
+                                        <FiChevronDown className={`admin-select-icon ${isRoleOpen ? "open" : ""}`} />
+                                    </div>
+                                    {isRoleOpen && (
+                                        <div className="admin-custom-select-options">
+                                            {normalizedRoleOptions.map((r) => (
+                                                <div
+                                                    key={r}
+                                                    className={`admin-custom-select-option ${form.role === r ? "active" : ""}`}
+                                                    onClick={() => {
+                                                        handleChange("role", r);
+                                                        setIsRoleOpen(false);
+                                                    }}
+                                                >
+                                                    {r}
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
                             )}
                         </div>
                     </div>

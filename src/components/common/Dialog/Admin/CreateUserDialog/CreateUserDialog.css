@@ -120,8 +120,7 @@
     font-weight: 700;
 }
 
-.admin-create-user-dialog-field input,
-.admin-create-user-dialog-field select {
+.admin-create-user-dialog-field input {
     width: 100%;
     min-height: 3.55rem;
     border-radius: 1.05rem;
@@ -211,37 +210,109 @@
     min-height: auto;
 }
 
-.admin-create-user-dialog-field input:hover,
-.admin-create-user-dialog-field select:hover {
+.admin-create-user-dialog-field input:hover {
     border-color: #b9c8e1;
 }
 
-.admin-create-user-dialog-field input:focus,
-.admin-create-user-dialog-field select:focus {
+.admin-create-user-dialog-field input:focus {
     border-color: var(--border-focus, #8fb3ff);
     box-shadow: 0 0 0 3px rgba(143, 179, 255, 0.2);
 }
 
-.admin-create-user-dialog-field select {
-    appearance: none;
-    -webkit-appearance: none;
-    -moz-appearance: none;
-    padding-right: 2.85rem;
-    line-height: 1.35;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%232f3d5a' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
-    background-repeat: no-repeat;
-    background-position: right 1rem center;
-    background-size: 0.95rem;
+.admin-custom-select {
+    position: relative;
+    width: 100%;
 }
 
-.admin-create-user-dialog-field select::-ms-expand {
-    display: none;
-}
-
-.admin-create-user-dialog-field select option {
-    color: #1f2a44;
+.admin-custom-select-trigger {
+    width: 100%;
+    min-height: 3.55rem;
+    border-radius: 1.05rem;
+    border: 1px solid var(--border-input, #d7deeb);
     background: #ffffff;
+    padding: 0 1rem;
+    font-size: 1rem;
+    font-weight: 500;
+    color: #26334d;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.admin-custom-select-trigger:hover {
+    border-color: #b9c8e1;
+}
+
+.admin-custom-select-trigger.active,
+.admin-custom-select-trigger:focus {
+    border-color: var(--border-focus, #8fb3ff);
+    box-shadow: 0 0 0 3px rgba(143, 179, 255, 0.2);
+}
+
+.admin-select-icon {
+    font-size: 1.1rem;
+    color: #67798f;
+    transition: transform 0.2s ease;
+}
+
+.admin-select-icon.open {
+    transform: rotate(180deg);
+}
+
+.admin-custom-select-options {
+    position: absolute;
+    top: calc(100% + 0.4rem);
+    left: 0;
+    right: 0;
+    background: #ffffff;
+    border: 1px solid #eef2ff;
+    border-radius: 0.95rem;
+    box-shadow: 0 10px 25px rgba(30, 47, 90, 0.1);
+    z-index: 1000;
+    overflow-y: auto;
+    max-height: 16rem;
+    padding: 0.4rem;
+    animation: dropdownSlide 0.2s ease;
+}
+
+.admin-custom-select-options::-webkit-scrollbar {
+    width: 6px;
+}
+
+.admin-custom-select-options::-webkit-scrollbar-track {
+    background: transparent;
+    margin: 0.4rem 0;
+}
+
+.admin-custom-select-options::-webkit-scrollbar-thumb {
+    background: #c3d0e5;
+    border-radius: 4px;
+}
+
+.admin-custom-select-options::-webkit-scrollbar-thumb:hover {
+    background: #a3b6d4;
+}
+
+.admin-custom-select-option {
+    padding: 0.75rem 1rem;
+    border-radius: 0.65rem;
+    font-size: 0.95rem;
     font-weight: 600;
+    color: #475569;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.admin-custom-select-option:hover {
+    background: var(--admin-color, #1e2f5a);
+    color: #ffffff;
+}
+
+.admin-custom-select-option.active {
+    background: #f1f5ff;
+    color: var(--admin-color, #1e2f5a);
 }
 
 .admin-create-user-dialog-email-group {
@@ -328,4 +399,3 @@
         grid-template-columns: 1fr;
     }
 }
-

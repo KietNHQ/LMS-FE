@@ -1,5 +1,6 @@
 import React from "react";
 import { FiSearch, FiChevronDown } from "react-icons/fi";
+import { useState, useRef, useEffect } from "react";
 import "./studentActionsSection.css";
 
 export default function StudentActionsSection({
@@ -7,10 +8,30 @@ export default function StudentActionsSection({
                                                   searchTerm,
                                                   selectedClass,
                                                   classOptions,
+                                                  selectedStatus,
+                                                  statusOptions,
                                                   onSearchChange,
                                                   onClassChange,
+                                                  onStatusChange,
                                                   onCreateStudentAccount,
                                               }) {
+    const [isClassOpen, setIsClassOpen] = useState(false);
+    const [isStatusOpen, setIsStatusOpen] = useState(false);
+    const classRef = useRef(null);
+    const statusRef = useRef(null);
+
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (classRef.current && !classRef.current.contains(event.target)) {
+                setIsClassOpen(false);
+            }
+            if (statusRef.current && !statusRef.current.contains(event.target)) {
+                setIsStatusOpen(false);
+            }
+        };
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, []);
     return (
         <section className="student-actions-section">
             <div className="student-actions-top">
@@ -24,8 +45,8 @@ export default function StudentActionsSection({
                     </div>
                 </div>
 
-                <button className="student-create-account-btn" onClick={onCreateStudentAccount}>
-                    <span>Tạo tài khoản học sinh</span>
+                <button className="student-btn-create" onClick={onCreateStudentAccount}>
+                    Tạo tài khoản học sinh
                 </button>
             </div>
 
@@ -41,18 +62,62 @@ export default function StudentActionsSection({
                 </div>
 
                 <div className="student-filter-wrap">
-                    <div className="student-select-wrap">
-                        <select
-                            value={selectedClass}
-                            onChange={(e) => onClassChange(e.target.value)}
+                    <div className="student-custom-select" ref={classRef}>
+                        <div 
+                            className="student-custom-select-trigger" 
+                            onClick={() => {
+                                setIsClassOpen(!isClassOpen);
+                                setIsStatusOpen(false);
+                            }}
                         >
-                            {classOptions.map((item) => (
-                                <option key={item} value={item}>
-                                    {item}
-                                </option>
-                            ))}
-                        </select>
-                        <FiChevronDown className="student-select-icon" />
+                            <span>{selectedClass}</span>
+                            <FiChevronDown className={`student-select-icon ${isClassOpen ? 'open' : ''}`} />
+                        </div>
+                        {isClassOpen && (
+                            <div className="student-custom-select-options">
+                                {classOptions.map((item) => (
+                                    <div 
+                                        key={item} 
+                                        className={`student-custom-select-option ${selectedClass === item ? 'active' : ''}`}
+                                        onClick={() => {
+                                            onClassChange(item);
+                                            setIsClassOpen(false);
+                                        }}
+                                    >
+                                        {item}
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+
+                    <div className="student-custom-select" ref={statusRef}>
+                        <div 
+                            className="student-custom-select-trigger" 
+                            onClick={() => {
+                                setIsStatusOpen(!isStatusOpen);
+                                setIsClassOpen(false);
+                            }}
+                        >
+                            <span>{selectedStatus}</span>
+                            <FiChevronDown className={`student-select-icon ${isStatusOpen ? 'open' : ''}`} />
+                        </div>
+                        {isStatusOpen && (
+                            <div className="student-custom-select-options">
+                                {statusOptions.map((item) => (
+                                    <div 
+                                        key={item} 
+                                        className={`student-custom-select-option ${selectedStatus === item ? 'active' : ''}`}
+                                        onClick={() => {
+                                            onStatusChange(item);
+                                            setIsStatusOpen(false);
+                                        }}
+                                    >
+                                        {item}
+                                    </div>
+                                ))}
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>

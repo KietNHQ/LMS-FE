@@ -19,18 +19,23 @@
 
 .student-list-table thead th {
     text-align: left;
-    padding: 1rem 1.1rem;
-    font-size: 0.9rem;
+    padding: 1rem 1.5rem;
+    font-size: 0.82rem;
     font-weight: 800;
-    color: #7f8899;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: #6b7891;
     border-bottom: 1px solid #eef1f6;
     background: #ffffff;
 }
 
 .student-list-table tbody td {
-    padding: 0.95rem 1.1rem;
+    padding: 0.5rem 1.5rem;
     border-bottom: 1px solid #eef1f6;
     vertical-align: middle;
+    font-size: 0.98rem;
+    font-weight: 500;
+    color: #5d687c;
 }
 
 .student-list-table tbody tr:last-child td {
@@ -44,15 +49,15 @@
 }
 
 .student-avatar {
-    width: 2.7rem;
-    height: 2.7rem;
+    width: 3rem;
+    height: 3rem;
     border-radius: 50%;
-    background: #dbe7fb;
-    color: #2d62ea;
+    background: var(--student-color, #8fb3ff);
+    color: #ffffff;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.05rem;
+    font-size: 1.1rem;
     font-weight: 800;
     flex-shrink: 0;
 }
@@ -60,14 +65,21 @@
 .student-name-wrap h4 {
     margin: 0;
     font-size: 1rem;
-    color: #2b3445;
-    font-weight: 700;
+    color: #26334d;
+    font-weight: 800;
+    line-height: 1.35;
 }
 
 .student-name-wrap p {
-    margin: 0.2rem 0 0;
+    margin: 0.1rem 0;
+    font-size: 0.95rem;
+    color: #7c879b;
+    font-weight: 500;
+}
+
+.student-dob-gender {
     font-size: 0.86rem;
-    color: #7d8799;
+    color: #9aa5b6;
     font-weight: 500;
 }
 
@@ -86,23 +98,23 @@
 }
 
 .student-teacher-text {
-    font-size: 0.9rem;
-    color: #4b5565;
+    font-size: 0.98rem;
+    color: #5d687c;
     font-weight: 500;
 }
 
 .student-parent-wrap h5 {
     margin: 0;
-    font-size: 0.95rem;
-    color: #3a4454;
+    font-size: 0.98rem;
+    color: #26334d;
     font-weight: 600;
 }
 
 .student-parent-wrap span {
     display: block;
     margin-top: 0.2rem;
-    font-size: 0.82rem;
-    color: #7d8799;
+    font-size: 0.95rem;
+    color: #7c879b;
 }
 
 .student-status-badge {
@@ -112,16 +124,19 @@
     min-height: 1.75rem;
     padding: 0.15rem 0.75rem;
     border-radius: 999px;
-    background: #d7f1df;
-    color: #16934d;
     font-size: 0.8rem;
     font-weight: 800;
 }
 
+.student-status-badge.status-active { background: #d7f1df; color: #16934d; }
+.student-status-badge.status-suspended { background: #fef2f2; color: #b91c1c; }
+.student-status-badge.status-reserved { background: #fffbeb; color: #b45309; }
+.student-status-badge.status-graduated { background: #eff6ff; color: #1d4ed8; }
+
 .student-row-actions {
     display: flex;
     align-items: center;
-    justify-content: flex-end;
+    justify-content: center;
     gap: 0.5rem;
 }
 
@@ -166,7 +181,22 @@
 }
 
 .student-actions-col {
-    text-align: right !important;
+    text-align: center !important;
+}
+
+.student-list-table th:nth-child(1) {
+    text-align: left;
+    padding-left: 5.25rem;
+}
+
+.student-list-table td:nth-child(1) {
+    text-align: left;
+    padding-left: 1.5rem;
+}
+
+.student-list-table th:nth-child(n+2),
+.student-list-table td:nth-child(n+2) {
+    text-align: center;
 }
 
 .student-empty-row {

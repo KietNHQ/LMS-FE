@@ -2,29 +2,28 @@
     display: flex;
     flex-direction: column;
     gap: 1rem;
-    margin-bottom: 1.2rem;
+    margin-bottom: 1rem;
 }
 
 .student-actions-top {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 0.85rem;
+    gap: 1rem;
 }
 
 .student-actions-title-row {
     display: flex;
     align-items: center;
-    gap: 1rem;
-    flex-wrap: wrap;
+    gap: 1.2rem;
 }
 
 .student-actions-title-wrap h1 {
     margin: 0;
+    color: var(--text-heading, #1e2f5a);
     font-size: 2.6rem;
     line-height: 1.15;
     font-weight: 800;
-    color: var(--text-heading, #1e2f5a);
 }
 
 .student-total-badge {
@@ -52,20 +51,19 @@
 }
 
 .student-total-label {
-    font-size: 1rem;
-    color: #7d8799;
+    font-size: 0.95rem;
     font-weight: 600;
+    color: #5d6b84;
 }
 
-
-.student-create-account-btn {
+.student-btn-create {
     outline: none;
     cursor: pointer;
-    height: 3.2rem;
+    height: 3.0rem;
     padding: 0 1.2rem;
     border-radius: 1rem;
-    background: var(--admin-color);
-    color: var(--text-light);
+    background: var(--admin-color, #1e2f5a);
+    color: #ffffff;
     border: none;
     display: inline-flex;
     align-items: center;
@@ -76,38 +74,45 @@
     transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
 }
 
-.student-create-account-btn:hover {
-    transform: translateY(-1px);
-    background: #243b73;
-    box-shadow: 0 14px 28px rgba(30, 47, 90, 0.22);
+.student-btn-create:hover {
+    transform: translateY(-2px);
+    background: #1a2a52;
+    box-shadow: 0 12px 25px rgba(30, 47, 90, 0.2);
 }
 
 .student-toolbar-card {
     background: #ffffff;
-    border: 1px solid #e7eaf1;
-    border-radius: 1.35rem;
-    padding: 1rem;
+    border: 1px solid #e8ebf3;
+    border-radius: 1.2rem;
+    padding: 1rem 1.2rem;
     display: flex;
     align-items: center;
-    gap: 0.8rem;
-    box-shadow: 0 4px 12px rgba(18, 38, 63, 0.05);
+    gap: 1rem;
+    box-shadow: 0 6px 16px rgba(30, 47, 90, 0.08);
 }
 
 .student-search-box {
     flex: 1;
-    height: 3.3rem;
+    height: 3.0rem;
     border-radius: 1rem;
-    background: #f7f7f8;
+    background: #f7f8fc;
+    border: 1px solid #d7deeb;
     display: flex;
     align-items: center;
-    gap: 0.65rem;
-    padding: 0 1rem;
+    gap: 1rem;
+    padding: 0 1.2rem;
+    transition: all 0.2s ease;
+}
+
+.student-search-box:focus-within {
+    background: #ffffff;
+    border-color: #d7deeb;
+    box-shadow: none;
 }
 
 .student-search-icon {
-    font-size: 1.1rem;
-    color: #9aa4b2;
-    flex-shrink: 0;
+    font-size: 1.2rem;
+    color: #94a3b8;
 }
 
 .student-search-box input {
@@ -116,64 +121,125 @@
     outline: none;
     background: transparent;
     font-size: 1rem;
-    color: #2b3445;
-    font-family: inherit;
-}
-
-.student-search-box input::placeholder {
-    color: #9aa4b2;
+    font-weight: 500;
+    color: #1e2f5a;
 }
 
 .student-filter-wrap {
-    flex-shrink: 0;
+    display: flex;
+    gap: 1rem;
+    align-items: center;
 }
 
-.student-select-wrap {
+/* Custom Dropdown Styles */
+.student-custom-select {
     position: relative;
-    min-width: 9.2rem;
+    min-width: 13rem;
 }
 
-.student-select-wrap select {
+.student-custom-select-trigger {
     width: 100%;
-    height: 3.3rem;
-    border: none;
-    outline: none;
+    height: 3.0rem;
+    background: #f7f8fc;
+    border: 1px solid #d7deeb;
     border-radius: 1rem;
-    background: #f7f7f8;
-    padding: 0 2.5rem 0 0.9rem;
-    appearance: none;
-    -webkit-appearance: none;
-    -moz-appearance: none;
-    font-size: 0.95rem;
-    font-family: inherit;
-    color: #2b3445;
+    padding: 0 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
     cursor: pointer;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--admin-color, #1e2f5a);
+    transition: all 0.2s ease;
+}
+
+.student-custom-select-trigger:hover {
+    background: #f1f5ff;
+    border-color: #c7d2fe;
 }
 
 .student-select-icon {
-    position: absolute;
-    right: 0.9rem;
-    top: 50%;
-    transform: translateY(-50%);
-    pointer-events: none;
-    color: #202838;
-    font-size: 1rem;
+    font-size: 1.1rem;
+    transition: transform 0.2s ease;
+    color: var(--admin-color);
 }
 
-@media (max-width: 992px) {
-    .student-actions-top {
-        flex-direction: column;
-        align-items: stretch;
-    }
+.student-select-icon.open {
+    transform: rotate(180deg);
+}
 
+.student-custom-select-options {
+    position: absolute;
+    top: calc(100% + 0.6rem);
+    left: 0;
+    right: 0;
+    background: #ffffff;
+    border: 1px solid #eef2ff;
+    border-radius: 14px;
+    box-shadow: 0 15px 35px rgba(30, 47, 90, 0.12);
+    z-index: 1000;
+    overflow-y: auto;
+    max-height: 16rem;
+    padding: 0.5rem;
+    animation: dropdownSlide 0.2s ease;
+}
 
+.student-custom-select-options::-webkit-scrollbar {
+    width: 6px;
+}
+
+.student-custom-select-options::-webkit-scrollbar-track {
+    background: transparent;
+    margin: 0.5rem 0;
+}
+
+.student-custom-select-options::-webkit-scrollbar-thumb {
+    background: #c3d0e5;
+    border-radius: 4px;
+}
+
+.student-custom-select-options::-webkit-scrollbar-thumb:hover {
+    background: #a3b6d4;
+}
+
+@keyframes dropdownSlide {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.student-custom-select-option {
+    padding: 0.8rem 1rem;
+    border-radius: 10px;
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: #475569;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.student-custom-select-option:hover {
+    background: var(--admin-color, #1e2f5a);
+    color: #ffffff;
+}
+
+.student-custom-select-option.active {
+    background: #f1f5ff;
+    color: var(--admin-color, #1e2f5a);
+    font-weight: 700;
+}
+
+@media (max-width: 1200px) {
     .student-toolbar-card {
         flex-direction: column;
         align-items: stretch;
     }
-
-    .student-filter-wrap,
-    .student-select-wrap {
+    
+    .student-filter-wrap {
         width: 100%;
+    }
+    
+    .student-custom-select {
+        flex: 1;
     }
 }

@@ -9,6 +9,15 @@ function getRoleClass(role) {
     return "parent";
 }
 
+function formatDate(dateString) {
+    if (!dateString) return "—";
+    const parts = dateString.split("-");
+    if (parts.length === 3) {
+        return `${parts[2]}/${parts[1]}/${parts[0]}`;
+    }
+    return dateString;
+}
+
 export default function UserDetailSection({
                                               users,
                                               onEdit,
@@ -22,7 +31,7 @@ export default function UserDetailSection({
                 <span>Vai trò</span>
                 <span>Điện thoại</span>
                 <span>Trạng thái</span>
-                <span>Ngày tạo</span>
+                <span>Ngày sinh</span>
                 <span>Thao tác</span>
             </div>
 
@@ -63,7 +72,7 @@ export default function UserDetailSection({
               </span>
                         </div>
 
-                        <div className="user-detail-date">{user.createdAt}</div>
+                        <div className="user-detail-date">{formatDate(user.dob)}</div>
 
                         <div className="user-detail-actions">
                             <button
