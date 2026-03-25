@@ -4,12 +4,26 @@ import "./studentListSection.css";
 
 function formatDate(dateString) {
     if (!dateString) return "";
+    const parts = dateString.split("-");
+    if (parts.length === 3) {
+        return `${parts[2]}/${parts[1]}/${parts[0]}`;
+    }
     return dateString;
 }
 
 function getAvatarLetter(name) {
     if (!name) return "A";
     return name.trim().charAt(0).toUpperCase();
+}
+
+function getStatusClass(status) {
+    switch (status) {
+        case "Đang học": return "status-active";
+        case "Đình chỉ": return "status-suspended";
+        case "Bảo lưu": return "status-reserved";
+        case "Đã tốt nghiệp": return "status-graduated";
+        default: return "status-active";
+    }
 }
 
 export default function StudentListSection({
@@ -51,9 +65,10 @@ export default function StudentListSection({
 
                                         <div className="student-name-wrap">
                                             <h4>{student.name}</h4>
-                                            <p>
-                                                {student.gender} • {formatDate(student.dob)}
-                                            </p>
+                                            <p>{student.email || "—"}</p>
+                                            <div className="student-dob-gender">
+                                                {formatDate(student.dob)} • {student.gender}
+                                            </div>
                                         </div>
                                     </div>
                                 </td>
@@ -74,7 +89,7 @@ export default function StudentListSection({
                                 </td>
 
                                 <td>
-                                    <span className="student-status-badge">{student.status}</span>
+                                    <span className={`student-status-badge ${getStatusClass(student.status)}`}>{student.status}</span>
                                 </td>
 
                                 <td>

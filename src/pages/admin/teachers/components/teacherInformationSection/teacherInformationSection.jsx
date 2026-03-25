@@ -1,4 +1,5 @@
-import React from "react";
+import React, { useState, useRef, useEffect } from "react";
+import { FiChevronDown } from "react-icons/fi";
 import "./teacherInformationSection.css";
 
 function getAvatarLetter(name) {
@@ -10,11 +11,30 @@ export default function TeacherInformationSection({
 	mode = "view",
 	formData,
 	classOptions,
+	subjectOptions = [],
 	onChange,
 	onClose,
 	onSubmit,
 }) {
 	const isViewMode = mode === "view";
+
+	const [isSubjectOpen, setIsSubjectOpen] = useState(false);
+	const [isClassOpen, setIsClassOpen] = useState(false);
+	const [isStatusOpen, setIsStatusOpen] = useState(false);
+
+	const subjectRef = useRef(null);
+	const classRef = useRef(null);
+	const statusRef = useRef(null);
+
+	useEffect(() => {
+		const handleClickOutside = (event) => {
+			if (subjectRef.current && !subjectRef.current.contains(event.target)) setIsSubjectOpen(false);
+			if (classRef.current && !classRef.current.contains(event.target)) setIsClassOpen(false);
+			if (statusRef.current && !statusRef.current.contains(event.target)) setIsStatusOpen(false);
+		};
+		document.addEventListener("mousedown", handleClickOutside);
+		return () => document.removeEventListener("mousedown", handleClickOutside);
+	}, []);
 
 	return (
 		<div className="teacher-modal-overlay" onClick={onClose}>
@@ -96,11 +116,41 @@ export default function TeacherInformationSection({
 							<div className="teacher-form-grid two-cols">
 								<div className="teacher-form-group">
 									<label>Môn dạy</label>
-									<input
-										type="text"
-										value={formData.subject}
-										onChange={(e) => onChange("subject", e.target.value)}
-									/>
+									<div className="teacher-custom-select" ref={subjectRef}>
+										<div
+											className={`teacher-custom-select-trigger ${isSubjectOpen ? 'active' : ''}`}
+											onClick={() => {
+												setIsSubjectOpen(!isSubjectOpen);
+												setIsClassOpen(false);
+												setIsStatusOpen(false);
+											}}
+										>
+											<span>{formData.subject || "Chọn môn dạy"}</span>
+											<FiChevronDown className={`teacher-select-icon ${isSubjectOpen ? 'open' : ''}`} />
+										</div>
+										{isSubjectOpen && (
+											<div className="teacher-custom-select-options">
+												<div
+													className={`teacher-custom-select-option ${!formData.subject ? 'active' : ''}`}
+													onClick={() => { onChange("subject", ""); setIsSubjectOpen(false); }}
+												>
+													Chọn môn dạy
+												</div>
+												{subjectOptions.map((subject) => (
+													<div
+														key={subject}
+														className={`teacher-custom-select-option ${formData.subject === subject ? 'active' : ''}`}
+														onClick={() => {
+															onChange("subject", subject);
+															setIsSubjectOpen(false);
+														}}
+													>
+														{subject}
+													</div>
+												))}
+											</div>
+										)}
+									</div>
 								</div>
 
 								<div className="teacher-form-group">
@@ -117,28 +167,74 @@ export default function TeacherInformationSection({
 							<div className="teacher-form-grid two-cols">
 								<div className="teacher-form-group">
 									<label>Lớp chủ nhiệm</label>
-									<select
-										value={formData.homeroomClass}
-										onChange={(e) => onChange("homeroomClass", e.target.value)}
-									>
-										<option value="">Chưa phân công</option>
-										{classOptions.map((className) => (
-											<option key={className} value={className}>
-												{className}
-											</option>
-										))}
-									</select>
+									<div className="teacher-custom-select" ref={classRef}>
+										<div
+											className={`teacher-custom-select-trigger ${isClassOpen ? 'active' : ''}`}
+											onClick={() => {
+												setIsClassOpen(!isClassOpen);
+												setIsSubjectOpen(false);
+												setIsStatusOpen(false);
+											}}
+										>
+											<span>{formData.homeroomClass || "Chưa phân công"}</span>
+											<FiChevronDown className={`teacher-select-icon ${isClassOpen ? 'open' : ''}`} />
+										</div>
+										{isClassOpen && (
+											<div className="teacher-custom-select-options">
+												<div
+													className={`teacher-custom-select-option ${!formData.homeroomClass ? 'active' : ''}`}
+													onClick={() => { onChange("homeroomClass", ""); setIsClassOpen(false); }}
+												>
+													Chưa phân công
+												</div>
+												{classOptions.map((className) => (
+													<div
+														key={className}
+														className={`teacher-custom-select-option ${formData.homeroomClass === className ? 'active' : ''}`}
+														onClick={() => {
+															onChange("homeroomClass", className);
+															setIsClassOpen(false);
+														}}
+													>
+														{className}
+													</div>
+												))}
+											</div>
+										)}
+									</div>
 								</div>
 
 								<div className="teacher-form-group">
 									<label>Trạng thái</label>
-									<select
-										value={formData.status}
-										onChange={(e) => onChange("status", e.target.value)}
-									>
-										<option value="Hoạt động">Hoạt động</option>
-										<option value="Tạm khóa">Tạm khóa</option>
-									</select>
+									<div className="teacher-custom-select" ref={statusRef}>
+										<div
+											className={`teacher-custom-select-trigger ${isStatusOpen ? 'active' : ''}`}
+											onClick={() => {
+												setIsStatusOpen(!isStatusOpen);
+												setIsSubjectOpen(false);
+												setIsClassOpen(false);
+											}}
+										>
+											<span>{formData.status || "Hoạt động"}</span>
+											<FiChevronDown className={`teacher-select-icon ${isStatusOpen ? 'open' : ''}`} />
+										</div>
+										{isStatusOpen && (
+											<div className="teacher-custom-select-options">
+												{["Hoạt động", "Tạm khóa"].map((item) => (
+													<div
+														key={item}
+														className={`teacher-custom-select-option ${formData.status === item ? 'active' : ''}`}
+														onClick={() => {
+															onChange("status", item);
+															setIsStatusOpen(false);
+														}}
+													>
+														{item}
+													</div>
+												))}
+											</div>
+										)}
+									</div>
 								</div>
 							</div>
 						</div>

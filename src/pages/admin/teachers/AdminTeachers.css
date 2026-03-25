@@ -1,10 +1,10 @@
 .admin-teachers-page {
     min-height: 100vh;
-    padding: 2rem;
+    padding: 1.5rem 2rem 1rem 2rem;
     box-sizing: border-box;
     display: flex;
     flex-direction: column;
-    gap: 1.5rem;
+    gap: 1rem;
 }
 
 .admin-teachers-page button {
@@ -15,10 +15,104 @@
     filter: brightness(0.98);
 }
 
+.admin-teachers-pagination-row {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    margin-top: 0.2rem;
+    padding-top: 0.9rem;
+    border-top: 1px solid #edf1f7;
+}
+
+.admin-teachers-pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 0.6rem;
+}
+
+.admin-teachers-page-btn {
+    width: 2.75rem;
+    height: 2.75rem;
+    border: 1px solid #dbe4f5;
+    border-radius: 0.85rem;
+    background: #f5f8ff;
+    color: #3458c4;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.admin-teachers-page-btn svg {
+    font-size: 1.2rem;
+    line-height: 1;
+}
+
+.admin-teachers-page-btn:hover:not(:disabled) {
+    background: #eaf1ff;
+    border-color: #9db9ff;
+    box-shadow: 0 10px 20px rgba(95, 134, 245, 0.14);
+    transform: translateY(-2px);
+}
+
+.admin-teachers-page-btn:disabled {
+    background: #f3f5f9;
+    color: #a3adbb;
+    cursor: not-allowed;
+    box-shadow: none;
+}
+
+.admin-teachers-page-indicator {
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    gap: 0.25rem;
+    min-width: 4.5rem;
+    margin: 0;
+    color: #6f7c91;
+}
+
+.admin-teachers-page-indicator span {
+    font-size: 1.55rem;
+    line-height: 1;
+    font-weight: 800;
+    color: #3458c4;
+}
+
+.admin-teachers-page-indicator small {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #8a97aa;
+}
+
 @media (max-width: 1240px) {
     .admin-teachers-page {
         padding: 1.5rem;
         gap: 1.2rem;
     }
-}
 
+    .admin-teachers-pagination-row {
+        padding-top: 0.75rem;
+    }
+
+    .admin-teachers-page-btn {
+        width: 2.35rem;
+        height: 2.35rem;
+        border-radius: 0.7rem;
+    }
+
+    .admin-teachers-page-btn svg {
+        font-size: 1.05rem;
+    }
+
+    .admin-teachers-page-indicator span {
+        font-size: 1.35rem;
+    }
+
+    .admin-teachers-page-indicator small {
+        font-size: 0.84rem;
+    }
+}

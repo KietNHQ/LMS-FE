@@ -8,15 +8,20 @@
     --layout-bg: #e9edf5;
 
     min-height: 100vh;
+    height: 100vh;
     background: var(--layout-bg);
+    overflow: hidden;
 }
 
 .admin-layout__main {
-    min-height: 100vh;
+    min-height: 0;
+    height: 100vh;
     margin-left: calc(var(--sidebar-expanded) + var(--content-gap-expanded));
     width: calc(100% - var(--sidebar-expanded) - var(--content-gap-expanded));
     padding: clamp(1rem, 1.4vw, 1.5rem) clamp(1rem, 1.6vw, 1.6rem);
     box-sizing: border-box;
+    overflow-y: auto;
+    overflow-x: hidden;
     transition:
             margin-left 0.35s ease,
             width 0.35s ease,

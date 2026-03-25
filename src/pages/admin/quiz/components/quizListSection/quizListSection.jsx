@@ -7,10 +7,21 @@ import {
 } from "react-icons/fi";
 import "./quizListSection.css";
 
+const getCreatorText = (quiz) => {
+    if (quiz.createdByRole === "teacher") {
+        const teacherName = quiz.createdByName || "Chưa cập nhật";
+        return `Người tạo: Giáo viên - ${teacherName}`;
+    }
+
+    return "Người tạo: Admin";
+};
+
 export default function QuizListSection({
     quizzes,
     onDelete,
     onStatusChange,
+    onEdit,
+    onCardClick,
 }) {
     return (
         <div className="quiz-list-section">
@@ -22,6 +33,7 @@ export default function QuizListSection({
                             className={`quiz-card ${
                                 quiz.status === "hidden" ? "quiz-card--hidden" : ""
                             }`.trim()}
+                            onClick={() => onCardClick?.(quiz)}
                         >
                             <div className="quiz-card__header">
                                 <div className="quiz-card__heading">
@@ -35,14 +47,15 @@ export default function QuizListSection({
                                                 ? "quiz-action-btn--status-hidden"
                                                 : "quiz-action-btn--status-open"
                                         }`}
-                                        onClick={() =>
+                                        onClick={(event) => {
+                                            event.stopPropagation();
                                             onStatusChange(
                                                 quiz.id,
                                                 quiz.status === "open"
                                                     ? "hidden"
                                                     : "open"
-                                            )
-                                        }
+                                            );
+                                        }}
                                         title={
                                             quiz.status === "open"
                                                 ? "Đang mở - bấm để ẩn"
@@ -64,13 +77,20 @@ export default function QuizListSection({
                                         type="button"
                                         className="quiz-action-btn"
                                         title="Chỉnh sửa"
+                                        onClick={(event) => {
+                                            event.stopPropagation();
+                                            onEdit?.(quiz);
+                                        }}
                                     >
                                         <FiEdit2 />
                                     </button>
                                     <button
                                         type="button"
                                         className="quiz-action-btn quiz-action-btn--delete"
-                                        onClick={() => onDelete(quiz.id)}
+                                        onClick={(event) => {
+                                            event.stopPropagation();
+                                            onDelete(quiz.id);
+                                        }}
                                         title="Xóa"
                                     >
                                         <FiTrash2 />
@@ -94,6 +114,8 @@ export default function QuizListSection({
                             <p className="quiz-card__description">
                                 {quiz.description}
                             </p>
+
+                            <p className="quiz-card__creator">{getCreatorText(quiz)}</p>
 
                             <div className="quiz-card__stats">
                                 <div className="quiz-stat-item">
