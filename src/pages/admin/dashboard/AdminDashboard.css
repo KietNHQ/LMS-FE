@@ -1,116 +1,238 @@
-
-.dashboard {
+.admin-dashboard {
   padding: 24px;
   min-height: 100vh;
-  font-family: system-ui, sans-serif;
+  background: transparent;
+  font-family: var(--font-main, "Nunito", sans-serif);
 }
 
-.header h2 {
-  font-size: 22px;
-  font-weight: 600;
+.admin-dashboard__header {
+  margin-bottom: 20px;
+}
+
+.admin-dashboard__title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.admin-dashboard__header-controls {
+  display: inline-flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.admin-dashboard__year-control,
+.admin-dashboard__term-control {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+}
+
+.admin-dashboard__year-input-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.admin-dashboard__year-input-readonly {
+  width: 7.2rem;
+  height: 2.35rem;
+  border: 1px solid var(--border-input, #d1d5db);
+  border-radius: 0.75rem;
+  text-align: center;
+  color: var(--admin-color, #1e2f5a);
+  font-size: 0.96rem;
+  font-weight: 700;
+  background: #ffffff;
+}
+
+.admin-dashboard__year-arrow-btn {
+  width: 2.35rem;
+  height: 2.35rem;
+  border: 1px solid var(--border-input, #d1d5db);
+  background: #ffffff;
+  border-radius: 0.75rem;
+  font-size: 0.9rem;
+  color: #5d6b84;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.admin-dashboard__year-arrow-btn:hover {
+  border-color: #b8cbf8;
+  color: var(--admin-color, #1e2f5a);
+  background: #f5f8ff;
+}
+
+.admin-dashboard__year-arrow-btn:active {
+  transform: scale(0.95);
+}
+
+.admin-dashboard__term-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.2rem;
+  border: 1px solid var(--border-input, #d1d5db);
+  border-radius: 0.85rem;
+  background: #ffffff;
+}
+
+.admin-dashboard__term-btn {
+  min-width: 5.6rem;
+  height: 2rem;
+  border-radius: 0.65rem;
+  padding: 0 0.75rem;
+  color: #60708b;
+  font-size: 0.86rem;
+  font-weight: 700;
+  transition: all 0.2s ease;
+}
+
+.admin-dashboard__term-btn:hover {
+  color: var(--admin-color, #1e2f5a);
+  background: #eef3ff;
+}
+
+.admin-dashboard__term-btn.is-active {
+  background: var(--admin-color, #1e2f5a);
+  color: #ffffff;
+}
+
+.admin-dashboard__title {
+  font-size: 2.6rem;
+  line-height: 1.15;
+  font-weight: 800;
   margin: 0;
+  color: var(--text-heading, #1e2f5a);
 }
 
-.header p {
-  color: #6b7280;
-  margin-top: 4px;
+.admin-dashboard__header-meta {
+  margin: 0;
+  font-size: 0.95rem;
+  color: #5d6b84;
+  font-weight: 700;
 }
 
+.admin-dashboard__school-year {
+  color: #2f57b8;
+  font-size: 0.95rem;
+  font-weight: 700;
+}
 
-.row {
-  display: grid;
+/* ROW GRID */
+.admin-dashboard__row {
   display: grid;
   grid-template-columns: 2fr 1fr;
-  gap: 20px;
-  margin-top: 20px;
+  gap: 24px;
+  margin-top: 24px;
 }
 
-/* responsive fix */
-@media (max-width: 900px) {
-  .row {
-    grid-template-columns: 1fr;
-  }
-}
-
-
-.card {
-  background: #fff;
-  padding: 16px;
+/* CARD STYLES */
+.admin-dashboard__card {
+  background: #ffffff;
+  padding: 20px;
   border-radius: 12px;
-  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
 }
 
-.card h3 {
-  margin: 0 0 10px 0;
+.admin-dashboard__card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.admin-dashboard__card h3 {
+  margin: 0 0 12px 0;
   font-size: 16px;
-  font-weight: 600;
-  width: 100%;
+  font-weight: 700;
+  color: #111827;
 }
 
+.admin-dashboard__card--big {
+  min-height: 320px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+}
 
-.card.big {
-  min-height: 260px;   /* FIX: không bó chart */
-  height: auto;
+.admin-dashboard__card--donut {
+  min-height: 320px;
   display: flex;
   flex-direction: column;
 }
 
-
-.recharts-wrapper {
-  font-size: 12px;
+.admin-dashboard__card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  gap: 12px;
 }
 
-.recharts-cartesian-axis-tick-value {
-  fill: #6b7280;
+.admin-dashboard__filter-group {
+  display: flex;
+  gap: 8px;
 }
 
-.recharts-tooltip-wrapper {
-  font-size: 12px;
-}
-
-/* line chart đẹp hơn */
-.recharts-line path {
-  stroke-width: 2px;
-}
-
-/* bar chart bo góc đẹp */
-.recharts-bar-rectangle path {
+.admin-dashboard__select {
+  padding: 6px 10px;
+  border: 1px solid #d1d5db;
   border-radius: 6px;
+  background: #ffffff;
+  color: #374151;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
-
-.donut-card {
-  height: 260px;
-  display: flex;
-  flex-direction: column;
+.admin-dashboard__header-controls .admin-dashboard__select {
+  min-width: 7.4rem;
 }
 
-.donut-container {
+.admin-dashboard__select:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.admin-dashboard__select:hover {
+  border-color: #9ca3af;
+}
+
+/* DONUT CHART */
+.admin-dashboard__donut-container {
   flex: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  gap: 12px;
 }
 
-.donut {
+.admin-dashboard__donut {
   width: 140px;
   height: 140px;
   border-radius: 50%;
   position: relative;
   background: conic-gradient(
-    #60a5fa 0% 42%,
-    #34d399 42% 80%,
-    #fbbf24 80% 95%,
-    #f87171 95% 100%
+    #3b82f6 0% 42%,
+    #10b981 42% 80%,
+    #f59e0b 80% 95%,
+    #ef4444 95% 100%
   );
 }
 
-.donut::after {
+.admin-dashboard__donut::after {
   content: "";
   width: 70px;
   height: 70px;
-  background: #fff;
+  background: #ffffff;
   border-radius: 50%;
   position: absolute;
   top: 50%;
@@ -118,31 +240,128 @@
   transform: translate(-50%, -50%);
 }
 
-/* legend */
-.legend-grid {
+/* LEGEND */
+.admin-dashboard__legend-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(100px, 1fr));
-  gap: 8px 20px;
-  margin-top: 14px;
+  gap: 8px 16px;
   font-size: 13px;
+  width: 100%;
 }
 
-.legend-grid div {
+.admin-dashboard__legend-grid div {
   display: flex;
   align-items: center;
   white-space: nowrap;
+  color: #374151;
 }
 
-.dot {
+.admin-dashboard__dot {
   width: 10px;
   height: 10px;
   border-radius: 50%;
   margin-right: 6px;
+  flex-shrink: 0;
 }
 
-.line-chart,
-.chart-area,
-.bar-area,
-.class-chart {
-  display: none;
+.admin-dashboard__dot--blue {
+  background: #3b82f6;
+}
+
+.admin-dashboard__dot--green {
+  background: #10b981;
+}
+
+.admin-dashboard__dot--yellow {
+  background: #f59e0b;
+}
+
+.admin-dashboard__dot--red {
+  background: #ef4444;
+}
+
+/* RESPONSIVE */
+@media (max-width: 1024px) {
+  .admin-dashboard {
+    padding: 16px;
+  }
+
+  .admin-dashboard__row {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+
+  .admin-dashboard__card-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .admin-dashboard__header-controls {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .admin-dashboard__filter-group {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+
+  .admin-dashboard__select {
+    flex: 1;
+    min-width: 120px;
+  }
+}
+
+@media (max-width: 768px) {
+  .admin-dashboard {
+    padding: 12px;
+  }
+
+  .admin-dashboard__title {
+    font-size: 22px;
+  }
+
+  .admin-dashboard__header-meta {
+    font-size: 0.88rem;
+  }
+
+  .admin-dashboard__school-year {
+    font-size: 0.92rem;
+  }
+
+  .admin-dashboard__year-control,
+  .admin-dashboard__term-control {
+    width: 100%;
+  }
+
+  .admin-dashboard__year-input-readonly {
+    flex: 1;
+    width: auto;
+  }
+
+  .admin-dashboard__term-toggle {
+    width: 100%;
+  }
+
+  .admin-dashboard__term-btn {
+    flex: 1;
+  }
+
+  .admin-dashboard__card {
+    padding: 16px;
+  }
+
+  .admin-dashboard__card--big {
+    min-height: 280px;
+  }
+
+  .admin-dashboard__donut {
+    width: 120px;
+    height: 120px;
+  }
+
+  .admin-dashboard__donut::after {
+    width: 60px;
+    height: 60px;
+  }
 }

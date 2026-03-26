@@ -1,5 +1,5 @@
 import "./statisticsCardsSection.css";
-import { GraduationCap, Users, School, DollarSign } from "lucide-react";
+import { GraduationCap, Users, School } from "lucide-react";
 
 const data = [
   {
@@ -23,34 +23,27 @@ const data = [
     icon: <School />,
     color: "purple",
   },
-  {
-    title: "Học phí thu",
-    value: "14tr đ",
-    sub: "4 hóa đơn chưa thanh toán",
-    icon: <DollarSign />,
-    color: "orange",
-  },
 ];
 
 const StatisticsCardsSection = () => {
   return (
-    <div className="stats">
+    <div className="admin-dashboard__stats">
       {data.map((item, i) => (
-        <div key={i} className="card-stat">
+        <div key={i} className="admin-dashboard__stat-card">
 
           {/* LEFT */}
-          <div className="stat-left">
-            <p className="stat-title">{item.title}</p>
+          <div className="admin-dashboard__stat-left">
+            <p className="admin-dashboard__stat-title">{item.title}</p>
 
-            <div className="stat-value-row">
+            <div className="admin-dashboard__stat-value-row">
               <h3>{item.value}</h3>
             </div>
 
-            <span className="stat-sub">{item.sub}</span>
+            <span className="admin-dashboard__stat-sub">{item.sub}</span>
           </div>
 
           {/* RIGHT ICON */}
-          <div className={`icon ${item.color}`}>
+          <div className={`admin-dashboard__icon admin-dashboard__icon--${item.color}`}>
             {item.icon}
           </div>
 

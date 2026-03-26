@@ -12,14 +12,14 @@ function formatDateDDMMYYYY(dateString) {
 
 // Mock student data
 const mockStudents = [
-    { id: 1, name: "Nguyễn Minh Tuấn", dob: "2008-03-15", enrollmentDate: "2024-09-01", parentName: "Nguyễn Văn An", parentPhone: "0912345678" },
-    { id: 2, name: "Trần Thị Bảo Châu", dob: "2008-07-22", enrollmentDate: "2024-09-01", parentName: "Trần Văn Bình", parentPhone: "0987654321" },
-    { id: 3, name: "Phạm Văn Hùng", dob: "2008-05-10", enrollmentDate: "2024-09-02", parentName: "Phạm Thị Hoa", parentPhone: "0923456789" },
-    { id: 4, name: "Hoàng Thị Hoa", dob: "2008-02-28", enrollmentDate: "2024-09-01", parentName: "Hoàng Văn Hùng", parentPhone: "0934567890" },
-    { id: 5, name: "Lê Văn Dũng", dob: "2008-08-12", enrollmentDate: "2024-09-03", parentName: "Lê Thị Linh", parentPhone: "0945678901" },
-    { id: 6, name: "Vũ Thị Trang", dob: "2008-04-05", enrollmentDate: "2024-09-01", parentName: "Vũ Văn Tuấn", parentPhone: "0956789012" },
-    { id: 7, name: "Đặng Quốc Hùng", dob: "2007-09-12", enrollmentDate: "2024-09-02", parentName: "Đặng Thị Mai", parentPhone: "0967890123" },
-    { id: 8, name: "Phạm Thu Hà", dob: "2007-10-21", enrollmentDate: "2024-09-04", parentName: "Phạm Văn Cường", parentPhone: "0978901234" },
+    { id: 1, name: "Nguyễn Minh Tuấn", dob: "2008-03-15", enrollmentDate: "2024-09-01", parentName: "Nguyễn Văn An", parentPhone: "0912345678", tuitionPaid: true },
+    { id: 2, name: "Trần Thị Bảo Châu", dob: "2008-07-22", enrollmentDate: "2024-09-01", parentName: "Trần Văn Bình", parentPhone: "0987654321", tuitionPaid: false },
+    { id: 3, name: "Phạm Văn Hùng", dob: "2008-05-10", enrollmentDate: "2024-09-02", parentName: "Phạm Thị Hoa", parentPhone: "0923456789", tuitionPaid: true },
+    { id: 4, name: "Hoàng Thị Hoa", dob: "2008-02-28", enrollmentDate: "2024-09-01", parentName: "Hoàng Văn Hùng", parentPhone: "0934567890", tuitionPaid: false },
+    { id: 5, name: "Lê Văn Dũng", dob: "2008-08-12", enrollmentDate: "2024-09-03", parentName: "Lê Thị Linh", parentPhone: "0945678901", tuitionPaid: true },
+    { id: 6, name: "Vũ Thị Trang", dob: "2008-04-05", enrollmentDate: "2024-09-01", parentName: "Vũ Văn Tuấn", parentPhone: "0956789012", tuitionPaid: false },
+    { id: 7, name: "Đặng Quốc Hùng", dob: "2007-09-12", enrollmentDate: "2024-09-02", parentName: "Đặng Thị Mai", parentPhone: "0967890123", tuitionPaid: true },
+    { id: 8, name: "Phạm Thu Hà", dob: "2007-10-21", enrollmentDate: "2024-09-04", parentName: "Phạm Văn Cường", parentPhone: "0978901234", tuitionPaid: true },
 ];
 
 const ITEMS_PER_PAGE = 6;
@@ -384,6 +384,7 @@ export default function ClassDetailSection() {
                                 <th>HỌC SINH</th>
                                 <th>NGÀY NHẬP HỌC</th>
                                 <th>PHỤ HUYNH</th>
+                                <th>HỌC PHÍ</th>
                                 <th>THAO TÁC</th>
                             </tr>
                         </thead>
@@ -409,6 +410,11 @@ export default function ClassDetailSection() {
                                                 <strong>{student.parentName}</strong>
                                                 <span>{student.parentPhone}</span>
                                             </div>
+                                        </td>
+                                        <td>
+                                            <span className={`tuition-status-badge ${student.tuitionPaid ? "paid" : "unpaid"}`}>
+                                                {student.tuitionPaid ? "Đã đóng" : "Chưa đóng"}
+                                            </span>
                                         </td>
                                         <td className="student-actions-cell">
                                             <div className="student-row-actions">

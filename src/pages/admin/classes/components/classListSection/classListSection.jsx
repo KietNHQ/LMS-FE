@@ -53,6 +53,14 @@ export default function ClassListSection({ classes, onView, onEdit, onDelete }) 
 
                         <div className="meta-row">
               <span className="meta-left">
+                <PiStudent />
+                Đã đóng học phí
+              </span>
+                            <strong>{item.paidStudents ?? 0}/{item.students}</strong>
+                        </div>
+
+                        <div className="meta-row">
+              <span className="meta-left">
                 <FiBookOpen />
                 Môn học
               </span>
