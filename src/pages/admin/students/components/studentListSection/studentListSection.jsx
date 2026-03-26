@@ -1,5 +1,5 @@
 import React from "react";
-import { FiEdit2, FiEye, FiTrash2 } from "react-icons/fi";
+import { FiEdit2, FiTrash2 } from "react-icons/fi";
 import "./studentListSection.css";
 
 function formatDate(dateString) {
@@ -28,7 +28,7 @@ function getStatusClass(status) {
 
 export default function StudentListSection({
                                                students,
-                                               onView,
+                                               onSelectStudent,
                                                onEdit,
                                                onDelete,
                                            }) {
@@ -56,7 +56,17 @@ export default function StudentListSection({
                         </tr>
                     ) : (
                         students.map((student) => (
-                            <tr key={student.id}>
+                            <tr
+                                key={student.id}
+                                onClick={() => onSelectStudent(student)}
+                                tabIndex={0}
+                                onKeyDown={(e) => {
+                                    if (e.key === "Enter" || e.key === " ") {
+                                        e.preventDefault();
+                                        onSelectStudent(student);
+                                    }
+                                }}
+                            >
                                 <td>
                                     <div className="student-main-info">
                                         <div className="student-avatar">
@@ -93,17 +103,7 @@ export default function StudentListSection({
                                 </td>
 
                                 <td>
-                                    <div className="student-row-actions">
-                                        <button
-                                            type="button"
-                                            className="student-icon-btn view"
-                                            onClick={() => onView(student)}
-                                            aria-label="Xem"
-                                            title="Xem"
-                                        >
-                                            <FiEye />
-                                        </button>
-
+                                    <div className="student-row-actions" onClick={(e) => e.stopPropagation()}>
                                         <button
                                             type="button"
                                             className="student-icon-btn edit"

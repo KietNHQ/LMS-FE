@@ -1,5 +1,5 @@
-import React, { useMemo, useState, useEffect } from "react";
-import { FiChevronLeft, FiChevronRight, FiSearch, FiChevronDown } from "react-icons/fi";
+import React, { useMemo, useState } from "react";
+import { FiChevronLeft, FiChevronRight } from "react-icons/fi";
 import { read, utils, writeFile } from "xlsx";
 import "./AdminStudents.css";
 import { CreateUserDialog } from "../../../components/common";
@@ -367,7 +367,7 @@ export default function AdminStudents() {
             />
             <StudentListSection
                 students={paginatedStudents}
-                onView={handleViewStudent}
+                onSelectStudent={handleViewStudent}
                 onEdit={handleEditStudent}
                 onDelete={handleDeleteStudent}
             />
@@ -408,6 +408,7 @@ export default function AdminStudents() {
                     classOptions={classOptions.filter((item) => item !== "Tất cả lớp")}
                     teacherName={activeStudent?.teacher || getTeacherByClass(studentForm.className)}
                     onChange={handleInputChange}
+                    onRequestEdit={() => setActiveModalMode("edit")}
                     onClose={handleCloseModal}
                     onSubmit={handleSubmitModal}
                 />

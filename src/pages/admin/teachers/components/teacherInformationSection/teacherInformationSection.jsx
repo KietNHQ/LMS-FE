@@ -1,10 +1,19 @@
 import React, { useState, useRef, useEffect } from "react";
-import { FiChevronDown } from "react-icons/fi";
+import { FiChevronDown, FiEdit2, FiX } from "react-icons/fi";
 import "./teacherInformationSection.css";
 
 function getAvatarLetter(name) {
 	if (!name) return "G";
 	return name.trim().charAt(0).toUpperCase();
+}
+
+function formatDisplayDate(dateString) {
+	if (!dateString) return "—";
+	const parts = String(dateString).split("-");
+	if (parts.length === 3) {
+		return `${parts[2]}/${parts[1]}/${parts[0]}`;
+	}
+	return dateString;
 }
 
 export default function TeacherInformationSection({
@@ -15,6 +24,7 @@ export default function TeacherInformationSection({
 	onChange,
 	onClose,
 	onSubmit,
+	onRequestEdit,
 }) {
 	const isViewMode = mode === "view";
 
@@ -42,18 +52,40 @@ export default function TeacherInformationSection({
 				{isViewMode ? (
 					<>
 						<div className="teacher-view-header">
-							<div className="teacher-view-avatar">{getAvatarLetter(formData.name)}</div>
+							<div className="teacher-view-main">
+								<div className="teacher-view-avatar">{getAvatarLetter(formData.name)}</div>
 
-							<div>
-								<h3>{formData.name || "—"}</h3>
-								<p>{formData.subject || "Chưa có môn dạy"}</p>
+								<div>
+									<h3>{formData.name || "—"}</h3>
+									<p>{formData.subject || "Chưa có môn dạy"}</p>
+								</div>
+							</div>
+							<div className="teacher-view-header-actions">
+								<button
+									type="button"
+									className="teacher-view-icon-btn"
+									onClick={onRequestEdit}
+									title="Chỉnh sửa"
+									aria-label="Chỉnh sửa"
+								>
+									<FiEdit2 />
+								</button>
+								<button
+									type="button"
+									className="teacher-view-icon-btn"
+									onClick={onClose}
+									title="Đóng"
+									aria-label="Đóng"
+								>
+									<FiX />
+								</button>
 							</div>
 						</div>
 
 						<div className="teacher-view-list">
 							<div className="teacher-view-row">
 								<span>Ngày sinh</span>
-								<strong>{formData.dob || "—"}</strong>
+								<strong>{formatDisplayDate(formData.dob)}</strong>
 							</div>
 							<div className="teacher-view-row">
 								<span>Email</span>

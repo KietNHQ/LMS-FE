@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { FiX } from "react-icons/fi";
+import React, { useEffect, useRef, useState } from "react";
+import { FiChevronDown, FiX } from "react-icons/fi";
 import "./TeacherDetailSection.css";
 
 function toPercent(value) {
@@ -8,7 +8,6 @@ function toPercent(value) {
 }
 
 export default function TeacherDetailSection({
-	mode,
 	teacher,
 	classOptions,
 	onAssignClass,
@@ -17,6 +16,25 @@ export default function TeacherDetailSection({
 	onClose,
 }) {
 	const [classInput, setClassInput] = useState("");
+	const [isHomeroomOpen, setIsHomeroomOpen] = useState(false);
+	const [isClassOpen, setIsClassOpen] = useState(false);
+
+	const homeroomRef = useRef(null);
+	const classRef = useRef(null);
+
+	useEffect(() => {
+		const handleClickOutside = (event) => {
+			if (homeroomRef.current && !homeroomRef.current.contains(event.target)) {
+				setIsHomeroomOpen(false);
+			}
+			if (classRef.current && !classRef.current.contains(event.target)) {
+				setIsClassOpen(false);
+			}
+		};
+
+		document.addEventListener("mousedown", handleClickOutside);
+		return () => document.removeEventListener("mousedown", handleClickOutside);
+	}, []);
 
 	if (!teacher) return null;
 
@@ -55,37 +73,82 @@ export default function TeacherDetailSection({
 
 						<div className="teacher-detail-control">
 							<label>Lớp chủ nhiệm</label>
-							<select
-								value={teacher.homeroomClass || ""}
-								onChange={(e) => onUpdateHomeroomClass(e.target.value)}
-							>
-								<option value="">Chưa phân công</option>
-								{classOptions.map((className) => (
-									<option key={className} value={className}>
-										{className}
-									</option>
-								))}
-							</select>
+							<div className="teacher-detail-custom-select" ref={homeroomRef}>
+								<button
+									type="button"
+									className={`teacher-detail-custom-select-trigger ${isHomeroomOpen ? "active" : ""}`}
+									onClick={() => {
+										setIsHomeroomOpen((prev) => !prev);
+										setIsClassOpen(false);
+									}}
+								>
+									<span>{teacher.homeroomClass || "Chưa phân công"}</span>
+									<FiChevronDown className={`teacher-detail-select-icon ${isHomeroomOpen ? "open" : ""}`} />
+								</button>
+								{isHomeroomOpen && (
+									<div className="teacher-detail-custom-select-options">
+										<div
+											className={`teacher-detail-custom-select-option ${!teacher.homeroomClass ? "active" : ""}`}
+											onClick={() => {
+												onUpdateHomeroomClass("");
+												setIsHomeroomOpen(false);
+											}}
+										>
+											Chưa phân công
+										</div>
+										{classOptions.map((className) => (
+											<div
+												key={className}
+												className={`teacher-detail-custom-select-option ${teacher.homeroomClass === className ? "active" : ""}`}
+												onClick={() => {
+													onUpdateHomeroomClass(className);
+													setIsHomeroomOpen(false);
+												}}
+											>
+												{className}
+											</div>
+										))}
+									</div>
+								)}
+							</div>
 						</div>
 
 						<div className="teacher-detail-control">
 							<label>Thêm lớp giảng dạy</label>
 							<div className="teacher-detail-add-row">
-								<select
-									value={classInput}
-									onChange={(e) => setClassInput(e.target.value)}
-								>
-									<option value="" disabled>Chọn lớp...</option>
-									{classOptions.map((className) => (
-										<option 
-											key={className} 
-											value={className}
-											disabled={teacher.assignedClasses?.includes(className)}
-										>
-											{className}
-										</option>
-									))}
-								</select>
+								<div className="teacher-detail-custom-select" ref={classRef}>
+									<button
+										type="button"
+										className={`teacher-detail-custom-select-trigger ${isClassOpen ? "active" : ""}`}
+										onClick={() => {
+											setIsClassOpen((prev) => !prev);
+											setIsHomeroomOpen(false);
+										}}
+									>
+										<span>{classInput || "Chọn lớp..."}</span>
+										<FiChevronDown className={`teacher-detail-select-icon ${isClassOpen ? "open" : ""}`} />
+									</button>
+									{isClassOpen && (
+										<div className="teacher-detail-custom-select-options">
+											{classOptions.map((className) => {
+												const isDisabled = teacher.assignedClasses?.includes(className);
+												return (
+													<div
+														key={className}
+														className={`teacher-detail-custom-select-option ${classInput === className ? "active" : ""} ${isDisabled ? "disabled" : ""}`}
+														onClick={() => {
+															if (isDisabled) return;
+															setClassInput(className);
+															setIsClassOpen(false);
+														}}
+													>
+														{className}
+													</div>
+												);
+											})}
+										</div>
+									)}
+								</div>
 								<button
 									type="button"
 									onClick={() => {

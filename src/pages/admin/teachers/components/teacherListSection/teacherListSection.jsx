@@ -1,5 +1,5 @@
 import React from "react";
-import { FiEdit2, FiEye, FiTrash2, FiBarChart2 } from "react-icons/fi";
+import { FiEdit2, FiTrash2, FiBarChart2 } from "react-icons/fi";
 import "./teacherListSection.css";
 
 function getAvatarLetter(name) {
@@ -37,7 +37,17 @@ export default function TeacherListSection({
 							</tr>
 						) : (
 							teachers.map((teacher) => (
-								<tr key={teacher.id}>
+								<tr
+									key={teacher.id}
+									onClick={() => onView(teacher)}
+									tabIndex={0}
+									onKeyDown={(e) => {
+										if (e.key === "Enter" || e.key === " ") {
+											e.preventDefault();
+											onView(teacher);
+										}
+									}}
+								>
 									<td>
 										<div className="teacher-main-info">
 											<div className="teacher-avatar">{getAvatarLetter(teacher.name)}</div>
@@ -75,16 +85,6 @@ export default function TeacherListSection({
 												title="Chi tiết"
 											>
 												<FiBarChart2 />
-											</button>
-
-											<button
-												type="button"
-												className="teacher-icon-btn view"
-												onClick={() => onView(teacher)}
-												aria-label="Xem"
-												title="Xem"
-											>
-												<FiEye />
 											</button>
 
 											<button

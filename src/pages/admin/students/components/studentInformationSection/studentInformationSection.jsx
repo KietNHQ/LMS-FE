@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { FiChevronDown } from "react-icons/fi";
+import { FiChevronDown, FiEdit2, FiX } from "react-icons/fi";
 import "./studentInformationSection.css";
 
 function getAvatarLetter(name) {
@@ -17,6 +17,15 @@ function getStatusClass(status) {
     }
 }
 
+function formatDisplayDate(dateString) {
+    if (!dateString) return "--";
+    const parts = dateString.split("-");
+    if (parts.length === 3) {
+        return `${parts[2]}/${parts[1]}/${parts[0]}`;
+    }
+    return dateString;
+}
+
 export default function StudentInformationSection({
     mode = "create",
     formData,
@@ -25,6 +34,7 @@ export default function StudentInformationSection({
     onChange,
     onClose,
     onSubmit,
+    onRequestEdit,
 }) {
     const isViewMode = mode === "view";
     const isEditMode = mode === "edit";
@@ -55,19 +65,41 @@ export default function StudentInformationSection({
                 {isViewMode ? (
                     <>
                         <div className="student-view-header">
-                            <div className="student-view-avatar">{getAvatarLetter(formData.name)}</div>
-                            <div className="student-view-title-wrap">
-                                <h3>{formData.name}</h3>
-                                <p>
-                                    {formData.className} • {formData.gender}
-                                </p>
+                            <div className="student-view-main">
+                                <div className="student-view-avatar">{getAvatarLetter(formData.name)}</div>
+                                <div className="student-view-title-wrap">
+                                    <h3>{formData.name}</h3>
+                                    <p>
+                                        {formData.className} • {formData.gender}
+                                    </p>
+                                </div>
+                            </div>
+                            <div className="student-view-header-actions">
+                                <button
+                                    type="button"
+                                    className="student-view-icon-btn"
+                                    onClick={onRequestEdit}
+                                    title="Chỉnh sửa"
+                                    aria-label="Chỉnh sửa"
+                                >
+                                    <FiEdit2 />
+                                </button>
+                                <button
+                                    type="button"
+                                    className="student-view-icon-btn"
+                                    onClick={onClose}
+                                    title="Đóng"
+                                    aria-label="Đóng"
+                                >
+                                    <FiX />
+                                </button>
                             </div>
                         </div>
 
                         <div className="student-view-list">
                             <div className="student-view-row">
                                 <span>Ngày sinh</span>
-                                <strong>{formData.dob || "--"}</strong>
+                                <strong>{formatDisplayDate(formData.dob)}</strong>
                             </div>
                             <div className="student-view-row">
                                 <span>Email học sinh</span>

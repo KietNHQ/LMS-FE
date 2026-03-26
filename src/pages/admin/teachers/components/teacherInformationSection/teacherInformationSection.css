@@ -25,21 +25,53 @@
 .teacher-view-header {
 	display: flex;
 	align-items: center;
-	gap: 0.8rem;
+	justify-content: space-between;
 	margin-bottom: 1rem;
 }
 
-.teacher-view-avatar {
-	width: 2.6rem;
-	height: 2.6rem;
-	border-radius: 0.8rem;
-	background: rgba(30, 47, 90, 0.12);
-	color: var(--admin-color, #1e2f5a);
-	font-size: 1.1rem;
-	font-weight: 800;
+.teacher-view-main {
+	display: flex;
+	align-items: center;
+	gap: 0.8rem;
+}
+
+.teacher-view-header-actions {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.35rem;
+}
+
+.teacher-view-icon-btn {
+	width: 2.2rem;
+	height: 2.2rem;
+	border: none;
+	background: transparent;
+	border-radius: 0.65rem;
+	color: #7c879b;
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
+	cursor: pointer;
+	transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.teacher-view-icon-btn:hover {
+	background: #e9f1ff;
+	color: #2b5fd5;
+}
+
+.teacher-view-avatar {
+	width: 3.5rem;
+	height: 3.5rem;
+	border-radius: 50%;
+	background: var(--teacher-color, #4fd1c5);
+	color: #ffffff;
+	font-size: 1.5rem;
+	font-weight: 700;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	box-shadow: 0 4px 10px rgba(79, 209, 197, 0.28);
 }
 
 .teacher-view-header h3,

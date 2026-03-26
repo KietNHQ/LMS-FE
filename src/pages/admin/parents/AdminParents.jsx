@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo } from "react";
 import { FiChevronLeft, FiChevronRight } from "react-icons/fi";
 import { read, utils, writeFile } from "xlsx";
 import "./AdminParents.css";
@@ -498,6 +498,7 @@ export default function AdminParents() {
                     mode={activeModalMode}
                     formData={parentForm}
                     onChange={handleParentFormChange}
+                    onRequestEdit={() => setActiveModalMode("edit")}
                     onClose={handleCloseModal}
                     onSubmit={handleSaveParentEdit}
                 />
