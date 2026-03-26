@@ -1088,6 +1088,7 @@ export default function AdminTeachers() {
                     classOptions={classOptions}
                     subjectOptions={editableSubjectOptions}
                     onChange={handleTeacherFormChange}
+                    onRequestEdit={() => setActiveModalMode("edit")}
                     onClose={handleCloseModal}
                     onSubmit={handleSaveTeacherEdit}
                 />

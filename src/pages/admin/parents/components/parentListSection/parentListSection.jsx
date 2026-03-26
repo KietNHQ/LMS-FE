@@ -1,5 +1,5 @@
 import React from "react";
-import { FiEdit2, FiEye, FiTrash2 } from "react-icons/fi";
+import { FiEdit2, FiTrash2 } from "react-icons/fi";
 import "./parentListSection.css";
 
 export default function ParentListSection({ parents, onView, onEdit, onDelete }) {
@@ -24,7 +24,17 @@ export default function ParentListSection({ parents, onView, onEdit, onDelete })
                             </tr>
                         ) : (
                             parents.map((parent) => (
-                                <tr key={parent.id}>
+                                <tr
+                                    key={parent.id}
+                                    onClick={() => onView(parent)}
+                                    tabIndex={0}
+                                    onKeyDown={(e) => {
+                                        if (e.key === "Enter" || e.key === " ") {
+                                            e.preventDefault();
+                                            onView(parent);
+                                        }
+                                    }}
+                                >
                                     <td>
                                         <div className="parent-main-info">
                                             <div className="parent-avatar">
@@ -51,9 +61,6 @@ export default function ParentListSection({ parents, onView, onEdit, onDelete })
                                     </td>
                                     <td>
                                         <div className="parent-row-actions" onClick={(e) => e.stopPropagation()}>
-                                            <button onClick={() => onView(parent)} title="Xem chi tiết" className="parent-icon-btn view">
-                                                <FiEye />
-                                            </button>
                                             <button onClick={() => onEdit(parent)} title="Chỉnh sửa" className="parent-icon-btn edit">
                                                 <FiEdit2 />
                                             </button>

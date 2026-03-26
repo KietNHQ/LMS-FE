@@ -1,13 +1,38 @@
 import React, { useState } from "react";
-import { FiX, FiPlus, FiTrash2 } from "react-icons/fi";
+import { FiX, FiPlus, FiTrash2, FiEdit2 } from "react-icons/fi";
 import "./parentInformationSection.css";
+
+function getInitials(name) {
+    const words = String(name || "P")
+        .trim()
+        .split(/\s+/)
+        .filter(Boolean);
+
+    if (words.length === 0) return "P";
+    if (words.length === 1) return words[0].charAt(0).toUpperCase();
+    return `${words[0].charAt(0)}${words[words.length - 1].charAt(0)}`.toUpperCase();
+}
+
+function buildFallbackAvatar(name) {
+    const initials = getInitials(name);
+    const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120'>
+<rect width='120' height='120' fill='#d8c8ff'/>
+<text x='50%' y='54%' dominant-baseline='middle' text-anchor='middle' font-family='Inter, Arial, sans-serif' font-size='48' font-weight='700' fill='#5f439d'>${initials}</text>
+</svg>`;
+    return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
+}
+
+function getParentAvatarSrc(formData) {
+    return formData?.avatarUrl || formData?.profile?.avatarUrl || buildFallbackAvatar(formData?.name);
+}
 
 export default function ParentInformationSection({
     mode,
     formData,
     onChange,
     onClose,
-    onSubmit
+    onSubmit,
+    onRequestEdit,
 }) {
     const isViewOnly = mode === "view";
 
@@ -41,17 +66,38 @@ export default function ParentInformationSection({
         onSubmit();
     };
 
+    const avatarSrc = getParentAvatarSrc(formData);
+
     return (
         <div className="parent-info-overlay" onClick={onClose}>
             <div className="parent-info-modal" onClick={(e) => e.stopPropagation()}>
                 <div className="parent-info-header">
-                    <h2>
-                        {mode === "view" && "Chi tiết phụ huynh"}
-                        {mode === "edit" && "Chỉnh sửa phụ huynh"}
-                    </h2>
-                    <button className="parent-info-close" onClick={onClose} title="Đóng">
-                        <FiX />
-                    </button>
+                    <div className="parent-info-title-wrap">
+                        {isViewOnly && (
+                            <div className="parent-info-header-avatar">
+                                <img src={avatarSrc} alt={`Anh phu huynh ${formData.name || ""}`} />
+                            </div>
+                        )}
+                        <h2>
+                            {mode === "view" && "Chi tiết phụ huynh"}
+                            {mode === "edit" && "Chỉnh sửa phụ huynh"}
+                        </h2>
+                    </div>
+                    <div className="parent-info-header-actions">
+                        {isViewOnly && (
+                            <button
+                                className="parent-info-edit"
+                                onClick={onRequestEdit}
+                                title="Chỉnh sửa"
+                                aria-label="Chỉnh sửa"
+                            >
+                                <FiEdit2 />
+                            </button>
+                        )}
+                        <button className="parent-info-close" onClick={onClose} title="Đóng">
+                            <FiX />
+                        </button>
+                    </div>
                 </div>
 
                 <div className="parent-info-body">

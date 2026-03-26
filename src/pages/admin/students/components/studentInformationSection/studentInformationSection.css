@@ -33,23 +33,55 @@
 .student-view-header {
     display: flex;
     align-items: center;
-    gap: 1rem;
+    justify-content: space-between;
     padding-bottom: 1.15rem;
     margin-bottom: 0.2rem;
+}
+
+.student-view-main {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.student-view-header-actions {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+.student-view-icon-btn {
+    width: 2.2rem;
+    height: 2.2rem;
+    border: none;
+    background: transparent;
+    border-radius: 0.65rem;
+    color: #7c879b;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.student-view-icon-btn:hover {
+    background: #e9f1ff;
+    color: #2b5fd5;
 }
 
 .student-view-avatar {
     width: 4.1rem;
     height: 4.1rem;
     border-radius: 1.05rem;
-    background: #dbe7fb;
-    color: #2d62ea;
+    background: var(--student-color, #8fb3ff);
+    color: #ffffff;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     font-size: 1.8rem;
     font-weight: 800;
     flex-shrink: 0;
+    box-shadow: 0 4px 10px rgba(143, 179, 255, 0.3);
 }
 
 .student-view-title-wrap h3 {
