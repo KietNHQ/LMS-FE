@@ -8,6 +8,30 @@
   --teacher-color: #4fd1c5;
   --admin-color: #1e2f5a;
 
+  /* Admin theme tokens */
+  --admin-page-bg: #f4f7ff;
+  --admin-surface: #ffffff;
+  --admin-surface-soft: #f3f6ff;
+  --admin-border: #dce5f7;
+  --admin-border-strong: #c3d2ef;
+  --admin-text-primary: #1e2f5a;
+  --admin-text-secondary: #4d5f82;
+  --admin-text-muted: #7e8eab;
+  --admin-primary: #1e2f5a;
+  --admin-primary-hover: #172547;
+  --admin-primary-soft: #e9efff;
+  --admin-focus-ring: rgba(30, 47, 90, 0.2);
+  --admin-shadow-sm: 0 2px 6px rgba(30, 47, 90, 0.06);
+  --admin-shadow-md: 0 10px 24px rgba(30, 47, 90, 0.12);
+  --admin-success-bg: #e7f9ef;
+  --admin-success-fg: #177245;
+  --admin-info-bg: #ebf2ff;
+  --admin-info-fg: #27498f;
+  --admin-warning-bg: #fff6df;
+  --admin-warning-fg: #8a5a11;
+  --admin-danger-bg: #fdeceb;
+  --admin-danger-fg: #b42318;
+
   /* Shared colors */
   --primary-color: var(--admin-color);
   --primary-light: var(--student-color);

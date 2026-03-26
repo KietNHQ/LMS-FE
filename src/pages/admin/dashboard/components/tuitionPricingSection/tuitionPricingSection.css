@@ -1,5 +1,5 @@
 .admin-dashboard__card--pricing {
-  min-height: 260px;
+  min-height: 330px;
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
@@ -8,7 +8,7 @@
 .admin-dashboard__pricing-year {
   font-size: 0.85rem;
   font-weight: 600;
-  color: #2f57b8;
+  color: var(--admin-primary, #1e2f5a);
 }
 
 .admin-dashboard__pricing-meta {
@@ -20,11 +20,11 @@
 .admin-dashboard__pricing-meta-term {
   font-size: 0.85rem;
   font-weight: 700;
-  color: #2f57b8;
+  color: var(--admin-primary, #1e2f5a);
 }
 
 .admin-dashboard__pricing-term-number {
-  color: #2f57b8;
+  color: var(--admin-primary, #1e2f5a);
   font-weight: 800;
 }
 
@@ -34,6 +34,38 @@
   flex-direction: column;
   gap: 0.85rem;
   margin-top: 0.65rem;
+}
+
+.admin-dashboard__pricing-actions {
+  display: flex;
+  gap: 0.6rem;
+  margin-top: 0.45rem;
+}
+
+.admin-dashboard__pricing-action-btn {
+  border: 1px solid var(--admin-primary, #1e2f5a);
+  background: var(--admin-primary, #1e2f5a);
+  color: #ffffff;
+  border-radius: 0.65rem;
+  padding: 0.4rem 0.7rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+
+.admin-dashboard__pricing-action-btn:hover {
+  background: #172547;
+  transform: translateY(-1px);
+}
+
+.admin-dashboard__pricing-action-btn--secondary {
+  background: #ffffff;
+  color: var(--admin-primary, #1e2f5a);
+}
+
+.admin-dashboard__pricing-action-btn--secondary:hover {
+  background: #ecf1ff;
 }
 
 .admin-dashboard__pricing-row {
@@ -83,7 +115,7 @@
 
 .admin-dashboard__pricing-value span {
   font-weight: 600;
-  color: #2f57b8;
+  color: var(--admin-primary, #1e2f5a);
   font-size: 14px;
 }
 
@@ -106,7 +138,7 @@
 .admin-dashboard__pricing-btn--edit:hover {
   background: #e7efff;
   border-color: #bfd2ff;
-  color: #2f57b8;
+  color: var(--admin-primary, #1e2f5a);
 }
 
 .admin-dashboard__pricing-btn--save {
@@ -144,7 +176,7 @@
 
 .admin-dashboard__pricing-step-btn:hover {
   border-color: #aec2f0;
-  color: #2f57b8;
+  color: var(--admin-primary, #1e2f5a);
   background: #eef3ff;
 }
 
@@ -160,12 +192,194 @@
   background: #ffffff;
   font-size: 0.92rem;
   font-weight: 600;
+  color: var(--admin-primary, #1e2f5a);
+}
+
+.admin-dashboard__pricing-modal {
+  width: min(640px, 100%);
+}
+
+.admin-dashboard__pricing-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.admin-dashboard__pricing-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.admin-dashboard__pricing-field span {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #364152;
+}
+
+.admin-dashboard__pricing-field input,
+.admin-dashboard__pricing-field textarea {
+  border: 1px solid #d0d9f2;
+  border-radius: 0.65rem;
+  padding: 0.55rem 0.7rem;
+  font-size: 0.9rem;
+  font-family: inherit;
+}
+
+.admin-dashboard__pricing-field input:focus,
+.admin-dashboard__pricing-field textarea:focus {
+  outline: none;
+  border-color: var(--admin-primary, #1e2f5a);
+  box-shadow: 0 0 0 3px rgba(30, 47, 90, 0.15);
+}
+
+.admin-dashboard__pricing-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.6rem;
+  margin-top: 0.95rem;
+}
+
+.admin-dashboard__modal-btn {
+  border: 1px solid #d0d5dd;
+  background: #ffffff;
+  color: #344054;
+  border-radius: 0.62rem;
+  padding: 0.42rem 0.9rem;
+  font-size: 0.84rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.admin-dashboard__modal-btn--primary {
+  background: var(--admin-primary, #1e2f5a);
+  border-color: var(--admin-primary, #1e2f5a);
+  color: #ffffff;
+}
+
+.admin-dashboard__modal-btn--primary:hover {
+  background: #172547;
+}
+
+.admin-dashboard__modal-btn--primary:disabled {
+  background: #9fb4e8;
+  border-color: #9fb4e8;
+  cursor: not-allowed;
+}
+
+.admin-dashboard__discount-list {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-top: 0.65rem;
+}
+
+.admin-dashboard__discount-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  border: 1px solid #d3ddf5;
+  background: #f5f8ff;
   color: #2f57b8;
+  border-radius: 99px;
+  padding: 0.28rem 0.62rem;
+  font-size: 0.78rem;
+}
+
+.admin-dashboard__discount-table-wrap {
+  margin-top: 0.75rem;
+  border: 1px solid #dbe5fb;
+  border-radius: 0.75rem;
+  overflow: hidden;
+}
+
+.admin-dashboard__discount-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #ffffff;
+}
+
+.admin-dashboard__discount-table th,
+.admin-dashboard__discount-table td {
+  padding: 0.48rem 0.58rem;
+  font-size: 0.78rem;
+  text-align: left;
+  border-bottom: 1px solid #eef2fb;
+}
+
+.admin-dashboard__discount-table th {
+  background: #f5f8ff;
+  color: #324c88;
+  font-weight: 700;
+}
+
+.admin-dashboard__discount-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.admin-dashboard__discount-status {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.18rem 0.52rem;
+  border-radius: 99px;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.admin-dashboard__discount-status.is-active {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.admin-dashboard__discount-status.is-expired {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.admin-dashboard__discount-actions {
+  display: inline-flex;
+  gap: 0.3rem;
+}
+
+.admin-dashboard__discount-icon-btn {
+  width: 1.65rem;
+  height: 1.65rem;
+  border-radius: 0.5rem;
+  border: 1px solid #d2ddef;
+  background: #ffffff;
+  color: #3d5aa2;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.admin-dashboard__discount-icon-btn:hover {
+  background: #edf3ff;
+  border-color: #bcccf1;
+}
+
+.admin-dashboard__discount-icon-btn.is-danger {
+  color: #b42318;
+  border-color: #f1c7c4;
+}
+
+.admin-dashboard__discount-icon-btn.is-danger:hover {
+  background: #fff1f1;
+  border-color: #ecaca7;
 }
 
 @media (max-width: 1366px) {
   .admin-dashboard__pricing-row {
     padding: 0.8rem 0.8rem;
+  }
+
+  .admin-dashboard__pricing-actions {
+    flex-wrap: wrap;
+  }
+
+  .admin-dashboard__discount-table-wrap {
+    overflow-x: auto;
   }
 
   .admin-dashboard__pricing-edit {

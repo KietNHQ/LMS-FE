@@ -10,9 +10,9 @@
   display: flex;
   gap: 12px;
   padding: 16px;
-  border-radius: 12px;
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  background: var(--admin-surface-soft, #f3f6ff);
+  border: 1px solid var(--admin-border, #dce5f7);
   position: relative;
   transition: all 0.25s ease;
   cursor: pointer;
@@ -21,8 +21,8 @@
 /* HOVER */
 .admin-card:hover {
   transform: translateY(-4px);
-  box-shadow: 0 8px 20px rgba(0,0,0,0.08);
-  border-color: #3b82f6;
+  box-shadow: var(--admin-shadow-md, 0 10px 24px rgba(30, 47, 90, 0.12));
+  border-color: var(--admin-border-strong, #c3d2ef);
 }
 
 /* ICON */
@@ -38,23 +38,23 @@
 
 /* ICON COLORS */
 .admin-card.all .admin-icon {
-  background: #e5e7eb;
-  color: #374151;
+  background: var(--admin-primary-soft, #e9efff);
+  color: var(--admin-primary, #1e2f5a);
 }
 
 .admin-card.teacher .admin-icon {
-  background: #d1fae5;
-  color: #065f46;
+  background: var(--admin-success-bg, #e7f9ef);
+  color: var(--admin-success-fg, #177245);
 }
 
 .admin-card.student .admin-icon {
-  background: #dbeafe;
-  color: #1e40af;
+  background: var(--admin-info-bg, #ebf2ff);
+  color: var(--admin-info-fg, #27498f);
 }
 
 .admin-card.parent .admin-icon {
-  background: #fce7f3;
-  color: #9d174d;
+  background: var(--admin-warning-bg, #fff6df);
+  color: var(--admin-warning-fg, #8a5a11);
 }
 
 /* CONTENT */
@@ -64,7 +64,7 @@
 }
 .admin-content p {
   font-size: 13px;
-  color: #555;
+  color: var(--admin-text-secondary, #4d5f82);
   margin: 2px 0 6px;
   width: 300px;
   white-space: nowrap;        /* 🔥 chỉ 1 dòng */
@@ -100,10 +100,10 @@
 }
 
 /* DOT COLORS */
-.unread-dot.all { background: gray; }
-.unread-dot.teacher { background: green; }
-.unread-dot.student { background: #2563eb; }
-.unread-dot.parent { background: #ec4899; }
+.unread-dot.all { background: var(--admin-text-muted, #7e8eab); }
+.unread-dot.teacher { background: var(--admin-success-fg, #177245); }
+.unread-dot.student { background: var(--admin-info-fg, #27498f); }
+.unread-dot.parent { background: var(--admin-warning-fg, #8a5a11); }
 
 /* META */
 .admin-meta {
@@ -120,23 +120,23 @@
 }
 
 .tag.all {
-  background: #e5e7eb;
-  color: #374151;
+  background: var(--admin-primary-soft, #e9efff);
+  color: var(--admin-primary, #1e2f5a);
 }
 
 .tag.teacher {
-  background: #d1fae5;
-  color: #065f46;
+  background: var(--admin-success-bg, #e7f9ef);
+  color: var(--admin-success-fg, #177245);
 }
 
 .tag.student {
-  background: #dbeafe;
-  color: #1e40af;
+  background: var(--admin-info-bg, #ebf2ff);
+  color: var(--admin-info-fg, #27498f);
 }
 
 .tag.parent {
-  background: #fce7f3;
-  color: #9d174d;
+  background: var(--admin-warning-bg, #fff6df);
+  color: var(--admin-warning-fg, #8a5a11);
 }
 
 /* DELETE */
@@ -144,6 +144,11 @@
   position: absolute;
   right: 12px;
   top: 12px;
-  color: gray;
+  color: var(--admin-text-muted, #7e8eab);
   cursor: pointer;
 }
+
+.admin-delete:hover {
+  color: var(--admin-danger-fg, #b42318);
+}
+

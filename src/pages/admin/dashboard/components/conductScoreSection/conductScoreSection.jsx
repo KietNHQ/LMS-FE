@@ -56,7 +56,7 @@ const ConductScoreSection = ({
             <XAxis dataKey="class" />
             <YAxis domain={[0, 10]} />
             <Tooltip />
-            <Bar dataKey="score" fill="#60a5fa" radius={[6, 6, 0, 0]} barSize={30} />
+            <Bar dataKey="score" fill="var(--admin-color, #1e2f5a)" radius={[6, 6, 0, 0]} barSize={30} />
           </BarChart>
         </ResponsiveContainer>
       </div>

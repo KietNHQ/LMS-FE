@@ -1,145 +1,107 @@
 .admin-wrapper {
-  padding: 24px;
+  padding: 20px;
   min-height: 100vh;
+  background: transparent;
+  font-family: var(--font-main), sans-serif;
 }
 
-/* HEADER */
 .admin-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 16px;
+  margin-bottom: 14px;
+  gap: 12px;
+}
+
+.admin-header h2 {
+  margin: 0;
+  font-size: 1.55rem;
+  color: var(--admin-text-primary, #1e2f5a);
+}
+
+.admin-header p {
+  margin: 4px 0 0;
+  color: var(--admin-text-secondary, #4d5f82);
+  font-size: 0.9rem;
 }
 
 .admin-btn-add {
-  background: #1e3a8a;
-  color: white;
-  border: none;
+  background: var(--admin-primary, #1e2f5a);
+  color: #ffffff;
+  border: 1px solid var(--admin-primary, #1e2f5a);
   padding: 8px 14px;
-  border-radius: 20px;
+  border-radius: 999px;
   cursor: pointer;
+  font-weight: 700;
+  transition: background 0.2s ease;
 }
 
-/* CARD */
-.admin-card {
-  display: flex;
-  gap: 12px;
-  padding: 16px;
-  border-radius: 12px;
-  background: #f8fafc;
-  border: 1px solid #dbe2ea;
-  position: relative;
-  transition: all 0.2s;
-  cursor: pointer;
+.admin-btn-add:hover {
+  background: var(--admin-primary-hover, #172547);
 }
 
-.admin-card:hover {
-  background: #eef4ff;
-  border-color: #3b82f6;
-}
-
-/* ICON */
-.admin-icon {
-  padding: 8px;
-  border-radius: 50%;
-}
-
-/* CONTENT */
-.admin-content h4 {
-  margin: 0;
-  font-size: 14px;
-}
-
-.admin-content p {
-  font-size: 13px;
-  color: #555;
-}
-
-/* META */
-.admin-meta {
+.admin-filters {
   display: flex;
   gap: 8px;
-  font-size: 12px;
+  margin: 16px 0;
+  flex-wrap: wrap;
 }
 
-/* TAG + COLOR */
-.tag {
-  padding: 2px 8px;
-  border-radius: 10px;
-  font-size: 11px;
-}
-
-/* TYPE COLORS */
-.Tất\ cả {
-  background: #e5e7eb;
-  color: #374151;
-}
-
-.Giáo\ viên {
-  background: #d1fae5;
-  color: #065f46;
-}
-
-.Học\ sinh {
-  background: #dbeafe;
-  color: #1e40af;
-}
-
-.Phụ\ huynh {
-  background: #fce7f3;
-  color: #9d174d;
-}
-
-/* DOT (UNREAD) */
-.unread-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  position: absolute;
-  right: 40px;
-  top: 16px;
-}
-
-/* màu dot theo type */
-.dot-Tất\ cả { background: gray; }
-.dot-Giáo\ viên { background: green; }
-.dot-Học\ sinh { background: blue; }
-.dot-Phụ\ huynh { background: pink; }
-
-/* DELETE */
-.admin-delete {
-  position: absolute;
-  right: 12px;
-  top: 12px;
-  color: gray;
+.filter-btn {
+  border: 1px solid var(--admin-border-strong, #c3d2ef);
+  background: var(--admin-primary-soft, #e9efff);
+  color: var(--admin-primary, #1e2f5a);
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-size: 13px;
   cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
 }
 
-/* MODAL */
+.filter-btn:hover {
+  background: #dfe8ff;
+  border-color: var(--admin-border, #dce5f7);
+}
+
+.filter-btn.active {
+  background: var(--admin-primary, #1e2f5a);
+  color: #ffffff;
+  border-color: var(--admin-primary, #1e2f5a);
+}
+
 .admin-modal {
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,0.3);
+  background: rgba(20, 30, 54, 0.34);
   display: flex;
   justify-content: center;
   align-items: center;
+  z-index: 1000;
 }
+
 .admin-modal-box {
-  background: white;
+  background: var(--admin-surface, #ffffff);
+  border: 1px solid var(--admin-border, #dce5f7);
+  box-shadow: var(--admin-shadow-md, 0 10px 24px rgba(30, 47, 90, 0.12));
   padding: 20px;
   border-radius: 14px;
   width: 400px;
   max-width: 90%;
-
-  max-height: 80vh;     /* 🔥 đúng chỗ */
-  overflow-y: auto;     /* 🔥 scroll ở đây */
-
+  max-height: 80vh;
+  overflow-y: auto;
   position: relative;
 }
-.admin-modal-box p {
-  word-break: break-word;
-  overflow-wrap: break-word;
+
+.admin-modal-box h3 {
+  margin-top: 0;
+  color: var(--admin-text-primary, #1e2f5a);
 }
+
+.admin-modal-box p,
+.admin-modal-box span {
+  color: var(--admin-text-secondary, #4d5f82);
+}
+
 .admin-close {
   position: absolute;
   top: 10px;
@@ -148,36 +110,5 @@
   background: transparent;
   font-size: 20px;
   cursor: pointer;
-}
-/* FILTER BAR */
-.admin-filters {
-  display: flex;
-  gap: 8px;
-  margin: 16px 0;
-  flex-wrap: wrap;
-}
-
-/* BUTTON DEFAULT (nhạt cùng tone xanh) */
-.filter-btn {
-  border: 1px solid #c7d2fe;        /* xanh nhạt */
-  background: #eef2ff;              /* nền xanh rất nhạt */
-  color: #1e3a8a;                  /* chữ xanh đậm */
-  padding: 6px 14px;
-  border-radius: 20px;
-  font-size: 13px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-/* HOVER (đậm hơn 1 chút) */
-.filter-btn:hover {
-  background: #dbeafe;
-  border-color: #93c5fd;
-}
-
-/* ACTIVE (đậm nhất) */
-.filter-btn.active {
-  background: #1e3a8a;
-  color: white;
-  border-color: #1e3a8a;
+  color: var(--admin-text-secondary, #4d5f82);
 }

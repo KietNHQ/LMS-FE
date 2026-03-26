@@ -1,8 +1,8 @@
 .admin-dashboard {
-  padding: 24px;
+  padding: 20px;
   min-height: 100vh;
   background: transparent;
-  font-family: var(--font-main, "Nunito", sans-serif);
+  font-family: var(--font-main), sans-serif;
 }
 
 .admin-dashboard__header {
@@ -40,10 +40,10 @@
 .admin-dashboard__year-input-readonly {
   width: 7.2rem;
   height: 2.35rem;
-  border: 1px solid var(--border-input, #d1d5db);
+  border: 1px solid var(--admin-border, #dce5f7);
   border-radius: 0.75rem;
   text-align: center;
-  color: var(--admin-color, #1e2f5a);
+  color: var(--admin-text-primary, #1e2f5a);
   font-size: 0.96rem;
   font-weight: 700;
   background: #ffffff;
@@ -52,11 +52,11 @@
 .admin-dashboard__year-arrow-btn {
   width: 2.35rem;
   height: 2.35rem;
-  border: 1px solid var(--border-input, #d1d5db);
+  border: 1px solid var(--admin-border, #dce5f7);
   background: #ffffff;
   border-radius: 0.75rem;
   font-size: 0.9rem;
-  color: #5d6b84;
+  color: var(--admin-text-secondary, #4d5f82);
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -64,9 +64,9 @@
 }
 
 .admin-dashboard__year-arrow-btn:hover {
-  border-color: #b8cbf8;
-  color: var(--admin-color, #1e2f5a);
-  background: #f5f8ff;
+  border-color: var(--admin-border-strong, #c3d2ef);
+  color: var(--admin-text-primary, #1e2f5a);
+  background: var(--admin-primary-soft, #e9efff);
 }
 
 .admin-dashboard__year-arrow-btn:active {
@@ -78,7 +78,7 @@
   align-items: center;
   gap: 0.3rem;
   padding: 0.2rem;
-  border: 1px solid var(--border-input, #d1d5db);
+  border: 1px solid var(--admin-border, #dce5f7);
   border-radius: 0.85rem;
   background: #ffffff;
 }
@@ -88,19 +88,19 @@
   height: 2rem;
   border-radius: 0.65rem;
   padding: 0 0.75rem;
-  color: #60708b;
+  color: var(--admin-text-secondary, #4d5f82);
   font-size: 0.86rem;
   font-weight: 700;
   transition: all 0.2s ease;
 }
 
 .admin-dashboard__term-btn:hover {
-  color: var(--admin-color, #1e2f5a);
-  background: #eef3ff;
+  color: var(--admin-text-primary, #1e2f5a);
+  background: var(--admin-primary-soft, #e9efff);
 }
 
 .admin-dashboard__term-btn.is-active {
-  background: var(--admin-color, #1e2f5a);
+  background: var(--admin-primary, #1e2f5a);
   color: #ffffff;
 }
 
@@ -109,59 +109,86 @@
   line-height: 1.15;
   font-weight: 800;
   margin: 0;
-  color: var(--text-heading, #1e2f5a);
+  color: var(--admin-text-primary, #1e2f5a);
 }
 
 .admin-dashboard__header-meta {
   margin: 0;
   font-size: 0.95rem;
-  color: #5d6b84;
+  color: var(--admin-text-secondary, #4d5f82);
   font-weight: 700;
 }
 
 .admin-dashboard__school-year {
-  color: #2f57b8;
+  color: var(--admin-primary, #1e2f5a);
   font-size: 0.95rem;
   font-weight: 700;
 }
 
-/* ROW GRID */
-.admin-dashboard__row {
+/* MAIN 4-CARD GRID */
+.admin-dashboard__matrix {
   display: grid;
-  grid-template-columns: 2fr 1fr;
-  gap: 24px;
-  margin-top: 24px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 20px;
+  margin-top: 20px;
+  align-items: stretch;
+}
+
+.admin-dashboard__slot {
+  min-width: 0;
+}
+
+.admin-dashboard__slot--revenue {
+  grid-column: 1 / span 2;
+}
+
+.admin-dashboard__slot--pricing {
+  grid-column: 3;
+}
+
+.admin-dashboard__slot--revenue .admin-dashboard__card,
+.admin-dashboard__slot--pricing .admin-dashboard__card {
+  height: 100%;
+}
+
+.admin-dashboard__slot--conduct {
+  grid-column: 1 / span 2;
+}
+
+.admin-dashboard__slot--academic {
+  grid-column: 3;
 }
 
 /* CARD STYLES */
 .admin-dashboard__card {
-  background: #ffffff;
+  background: var(--admin-surface, #ffffff);
   padding: 20px;
-  border-radius: 12px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  border-radius: var(--radius-lg, 16px);
+  border: 1px solid var(--admin-border, #dce5f7);
+  box-shadow: var(--admin-shadow-sm, 0 2px 6px rgba(30, 47, 90, 0.06));
   transition: box-shadow 0.2s ease, transform 0.2s ease;
 }
 
 .admin-dashboard__card:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--admin-shadow-md, 0 10px 24px rgba(30, 47, 90, 0.12));
 }
 
 .admin-dashboard__card h3 {
   margin: 0 0 12px 0;
   font-size: 16px;
   font-weight: 700;
-  color: #111827;
+  color: var(--admin-text-primary, #1e2f5a);
 }
 
 .admin-dashboard__card--big {
-  min-height: 320px;
+  min-height: 330px;
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
 }
 
 .admin-dashboard__card--donut {
-  min-height: 320px;
+  min-height: 330px;
   display: flex;
   flex-direction: column;
 }
@@ -181,10 +208,10 @@
 
 .admin-dashboard__select {
   padding: 6px 10px;
-  border: 1px solid #d1d5db;
+  border: 1px solid var(--admin-border, #dce5f7);
   border-radius: 6px;
   background: #ffffff;
-  color: #374151;
+  color: var(--admin-text-primary, #1e2f5a);
   font-size: 13px;
   font-weight: 500;
   cursor: pointer;
@@ -197,12 +224,12 @@
 
 .admin-dashboard__select:focus {
   outline: none;
-  border-color: #2563eb;
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+  border-color: var(--admin-primary, #1e2f5a);
+  box-shadow: 0 0 0 3px var(--admin-focus-ring, rgba(30, 47, 90, 0.2));
 }
 
 .admin-dashboard__select:hover {
-  border-color: #9ca3af;
+  border-color: var(--admin-border-strong, #c3d2ef);
 }
 
 /* DONUT CHART */
@@ -221,10 +248,10 @@
   border-radius: 50%;
   position: relative;
   background: conic-gradient(
-    #3b82f6 0% 42%,
-    #10b981 42% 80%,
-    #f59e0b 80% 95%,
-    #ef4444 95% 100%
+    #2f57b8 0% 42%,
+    #4d74cc 42% 80%,
+    #7e9ce0 80% 95%,
+    #b2c4ef 95% 100%
   );
 }
 
@@ -253,7 +280,7 @@
   display: flex;
   align-items: center;
   white-space: nowrap;
-  color: #374151;
+  color: var(--admin-text-secondary, #4d5f82);
 }
 
 .admin-dashboard__dot {
@@ -265,19 +292,19 @@
 }
 
 .admin-dashboard__dot--blue {
-  background: #3b82f6;
+  background: #2f57b8;
 }
 
 .admin-dashboard__dot--green {
-  background: #10b981;
+  background: #4d74cc;
 }
 
 .admin-dashboard__dot--yellow {
-  background: #f59e0b;
+  background: #7e9ce0;
 }
 
 .admin-dashboard__dot--red {
-  background: #ef4444;
+  background: #b2c4ef;
 }
 
 /* RESPONSIVE */
@@ -286,9 +313,17 @@
     padding: 16px;
   }
 
-  .admin-dashboard__row {
+  .admin-dashboard__matrix {
     grid-template-columns: 1fr;
     gap: 20px;
+  }
+
+  .admin-dashboard__slot,
+  .admin-dashboard__slot--revenue,
+  .admin-dashboard__slot--pricing,
+  .admin-dashboard__slot--conduct,
+  .admin-dashboard__slot--academic {
+    grid-column: auto;
   }
 
   .admin-dashboard__card-header {

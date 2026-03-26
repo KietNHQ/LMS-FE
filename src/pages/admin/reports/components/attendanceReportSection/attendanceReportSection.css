@@ -1,6 +1,7 @@
 .section-box {
-  margin-top: 20px;
-  background: white;
+  margin-top: 0;
+  background: var(--admin-surface, #ffffff);
   padding: 20px;
-  border-radius: 12px;
+  border-radius: 14px;
+  border: 1px solid var(--admin-border, #dce5f7);
 }

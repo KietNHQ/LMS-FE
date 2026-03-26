@@ -5,6 +5,7 @@ import RevenueSection from "./components/revenueSection/revenueSection";
 import ConductScoreSection from "./components/conductScoreSection/conductScoreSection";
 import AcademicOverviewSection from "./components/academicOverviewSection/academicOverviewSection";
 import { useState } from "react";
+import initialClasses from "../classes/data/initialClasses";
 
 const AdminDashboard = () => {
   const defaultTuitionTemplate = {
@@ -156,16 +157,68 @@ const AdminDashboard = () => {
   const yearData = tuitionByYearTerm[selectedSchoolYear] || defaultTuitionTemplate;
   const selectedTuitionData = yearData[selectedTerm] || defaultTuitionTemplate[selectedTerm];
 
+  const extractGradeNumber = (gradeValue = "") => {
+    const match = `${gradeValue}`.match(/\d+/);
+    return match ? match[0] : "";
+  };
+
+  const hasSelectedYearClassData = initialClasses.some(
+    (classItem) => classItem.year === selectedSchoolYear
+  );
+
+  const classesForRevenue = hasSelectedYearClassData
+    ? initialClasses.filter((classItem) => classItem.year === selectedSchoolYear)
+    : initialClasses;
+
+  const studentCountByGrade = classesForRevenue.reduce((accumulator, classItem) => {
+    const gradeNumber = extractGradeNumber(classItem.grade);
+
+    if (!gradeNumber) {
+      return accumulator;
+    }
+
+    accumulator[gradeNumber] = (accumulator[gradeNumber] || 0) + (classItem.students || 0);
+    return accumulator;
+  }, {});
+
+  const revenueByGrade = ["10", "11", "12"].map((grade) => {
+    const studentCount = studentCountByGrade[grade] || 0;
+    const tuitionPerStudent = selectedTuitionData[grade] || 0;
+
+    return {
+      grade,
+      gradeLabel: `Khối ${grade}`,
+      studentCount,
+      value: tuitionPerStudent * studentCount,
+    };
+  });
+
+  const revenueSummary = revenueByGrade.reduce(
+    (accumulator, item) => ({
+      studentCount: accumulator.studentCount + item.studentCount,
+      value: accumulator.value + item.value,
+    }),
+    { studentCount: 0, value: 0 }
+  );
+
   const revenueData = [
-    { label: "Khối 10", grade: "10", value: selectedTuitionData["10"] },
-    { label: "Khối 11", grade: "11", value: selectedTuitionData["11"] },
-    { label: "Khối 12", grade: "12", value: selectedTuitionData["12"] },
+    ...revenueByGrade,
+    {
+      grade: "all",
+      gradeLabel: "Cả 3 khối",
+      studentCount: revenueSummary.studentCount,
+      value: revenueSummary.value,
+    },
   ];
 
   const termLabel = selectedTerm === "hk1" ? "Học kỳ 1" : "Học kỳ 2";
 
-  const revenueTooltipFormatter = (value) => {
-    return [`${formatCompactMoney(value)} (${formatCurrency(value)})`, `Doanh thu ${termLabel}`];
+  const revenueTooltipFormatter = (value, _name, payload) => {
+    const studentCount = payload?.payload?.studentCount || 0;
+    return [
+      `${formatCompactMoney(value)} (${formatCurrency(value)})`,
+      `Doanh thu ${termLabel} (${studentCount} học sinh)`,
+    ];
   };
 
   return (
@@ -232,37 +285,40 @@ const AdminDashboard = () => {
 
       <StatisticsCardsSection />
 
-      {/* ROW 1 */}
-      <div className="admin-dashboard__row">
-        <RevenueSection
-          selectedSchoolYear={selectedSchoolYear}
-          termLabel={termLabel}
-          revenueData={revenueData}
-          formatCompactMoney={formatCompactMoney}
-          revenueTooltipFormatter={revenueTooltipFormatter}
-        />
+      <div className="admin-dashboard__matrix">
+        <div className="admin-dashboard__slot admin-dashboard__slot--revenue">
+          <RevenueSection
+            selectedSchoolYear={selectedSchoolYear}
+            termLabel={termLabel}
+            revenueData={revenueData}
+            formatCompactMoney={formatCompactMoney}
+            revenueTooltipFormatter={revenueTooltipFormatter}
+          />
+        </div>
 
-        <TuitionPricingSection
-          selectedSchoolYear={selectedSchoolYear}
-          selectedTerm={selectedTerm}
-          tuitionData={selectedTuitionData}
-          onUpdateTuition={handleUpdateTuition}
-        />
+        <div className="admin-dashboard__slot admin-dashboard__slot--pricing">
+          <TuitionPricingSection
+            selectedSchoolYear={selectedSchoolYear}
+            selectedTerm={selectedTerm}
+            tuitionData={selectedTuitionData}
+            onUpdateTuition={handleUpdateTuition}
+          />
+        </div>
 
-      </div>
+        <div className="admin-dashboard__slot admin-dashboard__slot--conduct">
+          <ConductScoreSection
+            selectedClass={selectedClass}
+            setSelectedClass={setSelectedClass}
+            selectedWeek={selectedWeek}
+            setSelectedWeek={setSelectedWeek}
+            classLabels={classLabels}
+            classScores={classScores}
+          />
+        </div>
 
-      {/* ROW 2 */}
-      <div className="admin-dashboard__row">
-        <ConductScoreSection
-          selectedClass={selectedClass}
-          setSelectedClass={setSelectedClass}
-          selectedWeek={selectedWeek}
-          setSelectedWeek={setSelectedWeek}
-          classLabels={classLabels}
-          classScores={classScores}
-        />
-
-        <AcademicOverviewSection />
+        <div className="admin-dashboard__slot admin-dashboard__slot--academic">
+          <AcademicOverviewSection />
+        </div>
       </div>
 
 

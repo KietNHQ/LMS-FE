@@ -10,11 +10,18 @@ import TeacherProgressReportSection from "./components/teacherProgressReportSect
 const AdminReports = () => {
   return (
     <div className="admin-reports">
-      <AcademicReportSection />
-      <AttendanceReportSection />
-      <QuizExamReportSection />
-      <TeacherProgressReportSection />
-      <ExportReportSection />
+      <div className="admin-reports__header">
+        <h2>Báo cáo tổng hợp</h2>
+        <p>Theo dõi học lực, chuyên cần và tiến độ giảng dạy theo chuẩn quản trị admin.</p>
+      </div>
+
+      <div className="admin-reports__content">
+        <AcademicReportSection />
+        <AttendanceReportSection />
+        <QuizExamReportSection />
+        <TeacherProgressReportSection />
+        <ExportReportSection />
+      </div>
     </div>
   );
 };

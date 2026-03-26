@@ -19,6 +19,8 @@ const RevenueSection = ({
 }) => {
   const navigate = useNavigate();
 
+  const formatGradeTick = (value) => `${value || ""}`.replace(/,/g, " ").trim();
+
   const handleBarClick = (entry) => {
     if (!entry?.grade) {
       return;
@@ -38,12 +40,12 @@ const RevenueSection = ({
         <ResponsiveContainer>
           <BarChart data={revenueData}>
             <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="label" />
+            <XAxis dataKey="gradeLabel" tickFormatter={formatGradeTick} interval={0} />
             <YAxis tickFormatter={formatCompactMoney} />
             <Tooltip formatter={revenueTooltipFormatter} />
             <Bar
               dataKey="value"
-              fill="#2f57b8"
+              fill="var(--admin-color, #1e2f5a)"
               radius={[6, 6, 0, 0]}
               onClick={handleBarClick}
               cursor="pointer"
