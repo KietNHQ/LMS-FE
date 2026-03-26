@@ -4,6 +4,7 @@ import { useState } from "react";
 import Modal from "../../../../../components/ui/Modal/Modal";
 
 const PRICE_STEP = 100000;
+const MAX_TRANSFER_NOTE_LENGTH = 200;
 
 const TuitionPricingSection = ({ selectedSchoolYear, selectedTerm, tuitionData, onUpdateTuition }) => {
   const [editingKey, setEditingKey] = useState(null);
@@ -104,6 +105,14 @@ const TuitionPricingSection = ({ selectedSchoolYear, selectedTerm, tuitionData, 
     setSavedDiscounts((prev) => prev.filter((item) => item.id !== discountId));
   };
 
+  const handleToggleDiscountStatus = (discountId) => {
+    setSavedDiscounts((prev) =>
+      prev.map((item) =>
+        item.id === discountId ? { ...item, isDisabled: !item.isDisabled } : item
+      )
+    );
+  };
+
   const handleSaveDiscount = () => {
     const code = discountForm.code.trim().toUpperCase();
     const percentNumber = Number(discountForm.percent);
@@ -126,19 +135,33 @@ const TuitionPricingSection = ({ selectedSchoolYear, selectedTerm, tuitionData, 
       setSavedDiscounts((prev) =>
         prev.map((item) =>
           item.id === editingDiscountId
-            ? { ...item, code, percent: boundedPercent, expiryDate: discountForm.expiryDate }
+            ? {
+                ...item,
+                code,
+                percent: boundedPercent,
+                expiryDate: discountForm.expiryDate,
+              }
             : item
         )
       );
+
+      setIsDiscountDialogOpen(false);
+      resetDiscountForm();
     } else {
       setSavedDiscounts((prev) => [
-        { id: Date.now(), code, percent: boundedPercent, expiryDate: discountForm.expiryDate },
+        {
+          id: Date.now(),
+          code,
+          percent: boundedPercent,
+          expiryDate: discountForm.expiryDate,
+          isDisabled: false,
+        },
         ...prev,
       ]);
-    }
 
-    resetDiscountForm();
-    setIsDiscountDialogOpen(false);
+      window.alert("Tạo mã giảm giá thành công.");
+      resetDiscountForm();
+    }
   };
 
   return (
@@ -241,6 +264,7 @@ const TuitionPricingSection = ({ selectedSchoolYear, selectedTerm, tuitionData, 
             <tbody>
               {savedDiscounts.map((item) => {
                 const expired = isExpired(item.expiryDate);
+                const disabled = Boolean(item.isDisabled);
 
                 return (
                   <tr key={item.id}>
@@ -249,9 +273,11 @@ const TuitionPricingSection = ({ selectedSchoolYear, selectedTerm, tuitionData, 
                     <td>{formatDate(item.expiryDate)}</td>
                     <td>
                       <span
-                        className={`admin-dashboard__discount-status ${expired ? "is-expired" : "is-active"}`}
+                        className={`admin-dashboard__discount-status ${
+                          disabled ? "is-disabled" : expired ? "is-expired" : "is-active"
+                        }`}
                       >
-                        {expired ? "Hết hạn" : "Còn hạn"}
+                        {disabled ? "Đã tắt" : expired ? "Hết hạn" : "Còn hạn"}
                       </span>
                     </td>
                     <td>
@@ -263,6 +289,14 @@ const TuitionPricingSection = ({ selectedSchoolYear, selectedTerm, tuitionData, 
                           aria-label={`Sửa mã ${item.code}`}
                         >
                           <Edit2 size={14} />
+                        </button>
+                        <button
+                          type="button"
+                          className="admin-dashboard__discount-icon-btn"
+                          onClick={() => handleToggleDiscountStatus(item.id)}
+                          aria-label={`${disabled ? "Kích hoạt" : "Vô hiệu hóa"} mã ${item.code}`}
+                        >
+                          {disabled ? "Bật" : "Tắt"}
                         </button>
                         <button
                           type="button"
@@ -337,16 +371,24 @@ const TuitionPricingSection = ({ selectedSchoolYear, selectedTerm, tuitionData, 
             />
           </label>
 
-          <label className="admin-dashboard__pricing-field">
+          <label className="admin-dashboard__pricing-field admin-dashboard__pricing-field--transfer-template">
             <span>Nội dung chuyển khoản mẫu</span>
             <textarea
+              className="admin-dashboard__pricing-transfer-note"
               rows={3}
+              maxLength={MAX_TRANSFER_NOTE_LENGTH}
               value={paymentInfo.transferNoteTemplate}
               onChange={(event) =>
-                setPaymentInfo((prev) => ({ ...prev, transferNoteTemplate: event.target.value }))
+                setPaymentInfo((prev) => ({
+                  ...prev,
+                  transferNoteTemplate: event.target.value.slice(0, MAX_TRANSFER_NOTE_LENGTH),
+                }))
               }
               placeholder="Ví dụ: {hoc_sinh} {lop} Hoc phi HK{ky}"
             />
+            <small className="admin-dashboard__pricing-note-counter">
+              {paymentInfo.transferNoteTemplate.length}/{MAX_TRANSFER_NOTE_LENGTH}
+            </small>
           </label>
         </div>
 
@@ -373,47 +415,116 @@ const TuitionPricingSection = ({ selectedSchoolYear, selectedTerm, tuitionData, 
         }}
         className="admin-dashboard__pricing-modal"
       >
-        <div className="admin-dashboard__pricing-form">
-          <label className="admin-dashboard__pricing-field">
-            <span>Mã giảm giá</span>
-            <input
-              type="text"
-              value={discountForm.code}
-              onChange={(event) =>
-                setDiscountForm((prev) => ({ ...prev, code: event.target.value.toUpperCase() }))
-              }
-              placeholder="VD: HK1-10OFF"
-            />
-          </label>
+        <div className="admin-dashboard__discount-dialog-content">
+          <div className="admin-dashboard__pricing-form admin-dashboard__discount-dialog-form">
+            <label className="admin-dashboard__pricing-field">
+              <span>Mã giảm giá</span>
+              <input
+                type="text"
+                value={discountForm.code}
+                onChange={(event) =>
+                  setDiscountForm((prev) => ({ ...prev, code: event.target.value.toUpperCase() }))
+                }
+                placeholder="VD: HK1-10OFF"
+              />
+            </label>
 
-          <label className="admin-dashboard__pricing-field">
-            <span>Phần trăm giảm (%)</span>
-            <input
-              type="number"
-              min="0"
-              max="100"
-              value={discountForm.percent}
-              onChange={(event) =>
-                setDiscountForm((prev) => ({ ...prev, percent: event.target.value }))
-              }
-              placeholder="Ví dụ: 10"
-            />
-          </label>
+            <label className="admin-dashboard__pricing-field">
+              <span>Phần trăm giảm (%)</span>
+              <input
+                type="number"
+                min="0"
+                max="100"
+                value={discountForm.percent}
+                onChange={(event) =>
+                  setDiscountForm((prev) => ({ ...prev, percent: event.target.value }))
+                }
+                placeholder="Ví dụ: 10"
+              />
+            </label>
 
-          <label className="admin-dashboard__pricing-field">
-            <span>Hạn sử dụng</span>
-            <input
-              type="date"
-              value={discountForm.expiryDate}
-              onChange={(event) =>
-                setDiscountForm((prev) => ({ ...prev, expiryDate: event.target.value }))
-              }
-            />
-          </label>
+            <label className="admin-dashboard__pricing-field">
+              <span>Hạn sử dụng</span>
+              <input
+                type="date"
+                value={discountForm.expiryDate}
+                onChange={(event) =>
+                  setDiscountForm((prev) => ({ ...prev, expiryDate: event.target.value }))
+                }
+              />
+            </label>
+          </div>
+
+          <div className="admin-dashboard__discount-dialog-section">
+            <div className="admin-dashboard__discount-dialog-header">
+              <span>Danh sách mã đã tạo</span>
+              <small>{savedDiscounts.length} mã</small>
+            </div>
+
+            <div className="admin-dashboard__discount-dialog-list">
+              {savedDiscounts.length > 0 ? (
+                savedDiscounts.map((item) => {
+                  const expired = isExpired(item.expiryDate);
+                  const disabled = Boolean(item.isDisabled);
+
+                  return (
+                    <div key={item.id} className="admin-dashboard__discount-dialog-item">
+                      <div className="admin-dashboard__discount-dialog-item-main">
+                        <strong>{item.code}</strong>
+                        <span>
+                          {item.percent}% • HSD {formatDate(item.expiryDate)}
+                        </span>
+                      </div>
+
+                      <div className="admin-dashboard__discount-dialog-item-actions">
+                        <span
+                          className={`admin-dashboard__discount-status ${
+                            disabled ? "is-disabled" : expired ? "is-expired" : "is-active"
+                          }`}
+                        >
+                          {disabled ? "Đã tắt" : expired ? "Hết hạn" : "Còn hạn"}
+                        </span>
+                        <button
+                          type="button"
+                          className="admin-dashboard__discount-inline-btn"
+                          onClick={() => handleOpenEditDiscount(item)}
+                        >
+                          Xem lại
+                        </button>
+                        <button
+                          type="button"
+                          className="admin-dashboard__discount-inline-btn"
+                          onClick={() => handleToggleDiscountStatus(item.id)}
+                        >
+                          {disabled ? "Kích hoạt" : "Vô hiệu hóa"}
+                        </button>
+                        <button
+                          type="button"
+                          className="admin-dashboard__discount-inline-btn is-danger"
+                          onClick={() => handleDeleteDiscount(item.id)}
+                        >
+                          Xóa
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })
+              ) : (
+                <p className="admin-dashboard__discount-empty">Chưa có mã giảm giá nào.</p>
+              )}
+            </div>
+          </div>
         </div>
 
         <div className="admin-dashboard__pricing-modal-actions">
-          <button type="button" className="admin-dashboard__modal-btn" onClick={() => setIsDiscountDialogOpen(false)}>
+          <button
+            type="button"
+            className="admin-dashboard__modal-btn"
+            onClick={() => {
+              setIsDiscountDialogOpen(false);
+              resetDiscountForm();
+            }}
+          >
             Hủy
           </button>
           <button
