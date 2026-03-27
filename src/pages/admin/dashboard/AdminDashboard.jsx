@@ -81,7 +81,26 @@ const AdminDashboard = () => {
   const [selectedSchoolYear, setSelectedSchoolYear] = useState(initialSchoolYear);
   const [selectedTerm, setSelectedTerm] = useState(initialTerm);
   const [selectedClass, setSelectedClass] = useState("10");
-  const [selectedWeek, setSelectedWeek] = useState("1");
+  const [selectedWeek, setSelectedWeek] = useState(1);
+
+  const getMaxWeekBySchoolYear = (schoolYear) => {
+    const customWeekLimitByYear = {
+      "2024-2025": 35,
+      "2025-2026": 35,
+    };
+
+    return customWeekLimitByYear[schoolYear] || 35;
+  };
+
+  const maxWeek = getMaxWeekBySchoolYear(selectedSchoolYear);
+
+  const handlePrevWeek = () => {
+    setSelectedWeek((prevWeek) => Math.max(prevWeek - 1, 1));
+  };
+
+  const handleNextWeek = () => {
+    setSelectedWeek((prevWeek) => Math.min(prevWeek + 1, maxWeek));
+  };
 
   // ===== DATA BAR CHART - Điểm rèn luyện theo lớp =====
   const classLabels = ["10A1","10A2","10A3","12A1","11A2","11A1","12A1"];
@@ -92,6 +111,7 @@ const AdminDashboard = () => {
 
   const handleYearArrow = (direction) => {
     const nextSchoolYear = shiftSchoolYear(selectedSchoolYear, direction);
+    const nextMaxWeek = getMaxWeekBySchoolYear(nextSchoolYear);
 
     setTuitionByYearTerm((prev) => {
       if (prev[nextSchoolYear]) {
@@ -106,6 +126,7 @@ const AdminDashboard = () => {
     });
 
     setSelectedSchoolYear(nextSchoolYear);
+    setSelectedWeek((prevWeek) => Math.min(Math.max(prevWeek, 1), nextMaxWeek));
   };
 
   const formatCurrency = (value) => {
@@ -310,7 +331,9 @@ const AdminDashboard = () => {
             selectedClass={selectedClass}
             setSelectedClass={setSelectedClass}
             selectedWeek={selectedWeek}
-            setSelectedWeek={setSelectedWeek}
+            maxWeek={maxWeek}
+            onPrevWeek={handlePrevWeek}
+            onNextWeek={handleNextWeek}
             classLabels={classLabels}
             classScores={classScores}
           />

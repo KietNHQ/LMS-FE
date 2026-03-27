@@ -1,3 +1,153 @@
 .admin-dashboard__academic-overview-section {
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.admin-dashboard__academic-overview-section h3 {
+  margin-bottom: 10px;
+}
+
+.admin-dashboard__academic-overview-section .admin-dashboard__card-header {
+  margin-bottom: 8px;
+}
+
+.admin-dashboard__academic-grade-select {
+  width: 136px;
+  min-width: 136px;
+  flex: 0 0 136px;
+}
+
+.admin-dashboard__academic-grade-select .custom-dropdown {
+  width: 100%;
+}
+
+.admin-dashboard__academic-grade-select .custom-dropdown-trigger {
+  min-width: 0;
+  height: 40px;
+  border-radius: 10px;
+  border: 1px solid var(--admin-border, #dce5f7);
+  background: #ffffff;
+  box-shadow: none;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--admin-text-primary, #1e2f5a);
+  padding: 0 30px 0 12px;
+  justify-content: flex-start;
+  position: relative;
+}
+
+.admin-dashboard__academic-grade-select .custom-dropdown-trigger:hover {
+  border-color: var(--admin-border-strong, #c3d2ef);
+  box-shadow: none;
+}
+
+.admin-dashboard__academic-grade-select .custom-dropdown-trigger.open {
+  border-color: var(--admin-primary, #1e2f5a);
+  box-shadow: 0 0 0 3px var(--admin-focus-ring, rgba(30, 47, 90, 0.2));
+}
+
+.admin-dashboard__academic-grade-select .dropdown-arrow {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 18px;
+  height: 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 17px;
+}
+
+.admin-dashboard__academic-grade-select .custom-dropdown-trigger.open .dropdown-arrow {
+  transform: translateY(-50%) rotate(180deg);
+}
+
+.admin-dashboard__academic-grade-select .custom-dropdown-menu {
+  margin-top: 2px;
+  border-radius: 12px;
+  border: 1px solid var(--admin-border, #dce5f7);
+  box-shadow: 0 10px 24px rgba(30, 47, 90, 0.12);
+  background: #ffffff;
+  z-index: 20;
+}
+
+.admin-dashboard__academic-grade-select .custom-dropdown-item {
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.admin-dashboard__academic-grade-select .custom-dropdown-item:hover,
+.admin-dashboard__academic-grade-select .custom-dropdown-item.active {
+  color: var(--admin-text-primary, #1e2f5a);
+  background: var(--admin-primary-soft, #e9efff);
+}
+
+.admin-dashboard__academic-overview-section .admin-dashboard__donut-container {
+  flex: 1;
+  width: 100%;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding-bottom: 6px;
+}
+
+.admin-dashboard__academic-donut-wrap {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+.admin-dashboard__academic-overview-section .admin-dashboard__donut {
+  width: 176px;
+  height: 176px;
+}
+
+.admin-dashboard__academic-overview-section .admin-dashboard__donut::after {
+  width: 78px;
+  height: 78px;
+}
+
+.admin-dashboard__academic-overview-section .admin-dashboard__legend-grid {
+  width: 100%;
+  max-width: 300px;
+  margin: 0 auto;
+  gap: 10px 22px;
+}
+
+.admin-dashboard__academic-overview-section .admin-dashboard__legend-grid div {
+  font-size: 0.95rem;
+  line-height: 1.25;
+  color: var(--admin-text-secondary, #4d5f82);
+}
+
+.admin-dashboard__academic-overview-section .admin-dashboard__dot {
+  width: 11px;
+  height: 11px;
+}
+
+@media (max-width: 1200px) {
+  .admin-dashboard__academic-overview-section .admin-dashboard__donut {
+    width: 162px;
+    height: 162px;
+  }
+
+  .admin-dashboard__academic-overview-section .admin-dashboard__donut::after {
+    width: 72px;
+    height: 72px;
+  }
+
+  .admin-dashboard__academic-overview-section .admin-dashboard__legend-grid {
+    max-width: 280px;
+    gap: 8px 16px;
+  }
+
+  .admin-dashboard__academic-grade-select {
+    width: 128px;
+    min-width: 128px;
+    flex-basis: 128px;
+  }
 }

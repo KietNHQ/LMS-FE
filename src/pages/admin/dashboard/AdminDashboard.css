@@ -151,6 +151,11 @@
   height: 100%;
 }
 
+.admin-dashboard__slot--conduct .admin-dashboard__card,
+.admin-dashboard__slot--academic .admin-dashboard__card {
+  height: 100%;
+}
+
 .admin-dashboard__slot--conduct {
   grid-column: 1 / span 2;
 }

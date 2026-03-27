@@ -17,11 +17,12 @@ export default function AdminClasses() {
     const initialGrade = ["10", "11", "12"].includes(searchParams.get("grade"))
         ? searchParams.get("grade")
         : "all";
+    const initialClassKeyword = searchParams.get("class") || "";
 
     const [classes, setClasses] = useState(initialClasses);
     const [currentPage, setCurrentPage] = useState(1);
     const [selectedGrade, setSelectedGrade] = useState(initialGrade);
-    const [searchKeyword, setSearchKeyword] = useState("");
+    const [searchKeyword, setSearchKeyword] = useState(initialClassKeyword);
 
     const [isCreateOpen, setIsCreateOpen] = useState(false);
     const [isEditOpen, setIsEditOpen] = useState(false);
@@ -96,6 +97,7 @@ export default function AdminClasses() {
         } else {
             nextParams.set("grade", gradeValue);
         }
+        nextParams.delete("class");
         setSearchParams(nextParams);
     };
 
