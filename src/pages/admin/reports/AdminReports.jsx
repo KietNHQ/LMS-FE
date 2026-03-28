@@ -1,21 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
 import "./AdminReports.css";
-import * as XLSX from "xlsx";
-import {
-  Bar,
-  BarChart,
-  CartesianGrid,
-  Legend,
-  Line,
-  LineChart,
-  Pie,
-  PieChart,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from "recharts";
-import { Alert, Button, Card, Select } from "../../../components/ui";
+import { Button, Card, Select } from "../../../components/ui";
+import AcademicReportSection from "./components/academicReportSection/academicReportSection";
+import AttendanceReportSection from "./components/attendanceReportSection/attendanceReportSection";
+import ExportReportSection from "./components/exportReportSection/exportReportSection";
+import QuizExamReportSection from "./components/quizExamReportSection/quizExamReportSection";
+import TeacherProgressReportSection from "./components/teacherProgressReportSection/teacherProgressReportSection";
 import {
   fetchAdminReport,
   fetchTermComparison,
@@ -61,10 +51,125 @@ function getCurrentTerm() {
   return month >= 8 && month <= 12 ? "HK1" : "HK2";
 }
 
-function toStarText(value) {
-  const rounded = Math.max(0, Math.min(5, Math.round(value)));
-  const stars = `${"★".repeat(rounded)}${"☆".repeat(5 - rounded)}`;
-  return `${stars} (${value.toFixed(1)})`;
+const DEMO_CLASS_MEMBERS = [
+  { studentId: "HS001", name: "Nguyễn Văn A", oralTest: 8.5, test15min: 8.0, test45min: 7.8, midterm: 8.2, final: 8.1 },
+  { studentId: "HS002", name: "Trần Thị B", oralTest: 9.0, test15min: 8.5, test45min: 8.2, midterm: 8.8, final: 8.9 },
+  { studentId: "HS003", name: "Lê Hoàng C", oralTest: 7.5, test15min: 7.2, test45min: 7.0, midterm: 7.3, final: 7.4 },
+  { studentId: "HS004", name: "Phạm Quang D", oralTest: 8.0, test15min: 7.8, test45min: 7.9, midterm: 8.1, final: 8.0 },
+  { studentId: "HS005", name: "Hoàng Mỹ E", oralTest: 9.2, test15min: 8.8, test45min: 8.5, midterm: 9.0, final: 9.1 },
+];
+
+const HOMEROOM_TEACHER_BY_CLASS = {
+  "10A1": "Nguyễn Thị Lan",
+  "10A2": "Phạm Quốc Huy",
+  "11B1": "Trần Minh Anh",
+  "11B2": "Lê Thu Hà",
+  "12C1": "Vũ Đức Long",
+  "12C3": "Đặng Thảo Vy",
+};
+
+function formatCompactMoney(value) {
+  const number = Number(value) || 0;
+  const absValue = Math.abs(number);
+
+  const normalize = (input) => {
+    const rounded = input >= 100 ? Math.round(input) : Number(input.toFixed(1));
+    return Number.isInteger(rounded) ? `${rounded}` : `${rounded}`.replace(".", ",");
+  };
+
+  if (absValue >= 1_000_000_000) {
+    return `${number < 0 ? "-" : ""}${normalize(absValue / 1_000_000_000)}b`;
+  }
+
+  if (absValue >= 1_000_000) {
+    return `${number < 0 ? "-" : ""}${normalize(absValue / 1_000_000)}tr`;
+  }
+
+  if (absValue >= 1_000) {
+    return `${number < 0 ? "-" : ""}${normalize(absValue / 1_000)}k`;
+  }
+
+  return `${number}`;
+}
+
+function buildAttendanceBreakdown(rate, totalStudents, seed = 0) {
+  const clampedRate = Math.max(0, Math.min(100, Number(rate) || 0));
+  const lateRateBase = 1 + (seed % 4) * 0.3;
+  const lateRate = Math.min(3.5, Math.max(0.8, lateRateBase));
+  const adjustedLateRate = Math.min(lateRate, Math.max(0, 100 - clampedRate));
+  const absentRate = Math.max(0, 100 - clampedRate - adjustedLateRate);
+
+  const lateCount = Math.round((totalStudents * adjustedLateRate) / 100);
+  const absentCount = Math.round((totalStudents * absentRate) / 100);
+  const presentCount = Math.max(0, totalStudents - lateCount - absentCount);
+
+  return {
+    presentRate: Number(clampedRate.toFixed(1)),
+    lateRate: Number(adjustedLateRate.toFixed(1)),
+    absentRate: Number(absentRate.toFixed(1)),
+    presentCount,
+    lateCount,
+    absentCount,
+  };
+}
+
+function buildAttendanceDays(attendance, totalRequiredDays) {
+  const requiredDays = Math.max(1, Math.round(Number(totalRequiredDays) || 0));
+  const presentDays = Math.round((requiredDays * (attendance?.presentRate || 0)) / 100);
+  const lateDays = Math.round((requiredDays * (attendance?.lateRate || 0)) / 100);
+  const absentDays = Math.max(0, requiredDays - presentDays - lateDays);
+
+  return {
+    requiredDays,
+    presentDays,
+    absentDays,
+    lateDays,
+  };
+}
+
+function getMemberAverageScore(member, fallbackAverageScore) {
+  if (Number.isFinite(Number(member?.averageScore))) {
+    return Number(member.averageScore);
+  }
+
+  const rawScores = [member?.oralTest, member?.test15min, member?.test45min, member?.midterm, member?.final]
+    .map((item) => Number(item))
+    .filter((item) => Number.isFinite(item));
+
+  if (!rawScores.length) {
+    return Number(fallbackAverageScore) || 0;
+  }
+
+  const total = rawScores.reduce((sum, item) => sum + item, 0);
+  return total / rawScores.length;
+}
+
+function getMemberAttendanceDays(member, index, totalRequiredDays) {
+  const requiredDays = Math.max(1, Math.round(Number(totalRequiredDays) || 0));
+
+  if (
+    Number.isFinite(Number(member?.presentDays)) &&
+    Number.isFinite(Number(member?.absentDays)) &&
+    Number.isFinite(Number(member?.lateDays))
+  ) {
+    return {
+      requiredDays,
+      presentDays: Math.max(0, Math.round(Number(member.presentDays))),
+      absentDays: Math.max(0, Math.round(Number(member.absentDays))),
+      lateDays: Math.max(0, Math.round(Number(member.lateDays))),
+    };
+  }
+
+  const lateDays = 1 + (index % 3);
+  const absentDays = 2 + (index % 4);
+  const presentDays = Math.max(0, requiredDays - absentDays - lateDays);
+
+  return {
+    requiredDays,
+    presentDays,
+    absentDays,
+    lateDays,
+  };
 }
 
 const AdminReports = () => {
@@ -89,6 +194,55 @@ const AdminReports = () => {
   const [selectedTeacherForTable, setSelectedTeacherForTable] = useState("all");
   const [selectedTeacherClass, setSelectedTeacherClass] = useState("all");
   const [selectedGrade, setSelectedGrade] = useState("all");
+  const [selectedSubjectScope, setSelectedSubjectScope] = useState("all");
+  const [expandedTeacherClasses, setExpandedTeacherClasses] = useState({});
+  const [expandedGradeClasses, setExpandedGradeClasses] = useState({});
+  const [isExportFloating, setIsExportFloating] = useState(false);
+
+  useEffect(() => {
+    let rafId = 0;
+
+    const handleScroll = () => {
+      if (rafId) {
+        return;
+      }
+
+      rafId = window.requestAnimationFrame(() => {
+        const root = document.querySelector(".admin-layout__main");
+        const scrollTop = root ? root.scrollTop : window.scrollY;
+
+        // Use hysteresis to avoid fast on/off flicker near threshold.
+        setIsExportFloating((prev) => {
+          const showAt = 96;
+          const hideAt = 56;
+
+          if (!prev && scrollTop > showAt) {
+            return true;
+          }
+
+          if (prev && scrollTop < hideAt) {
+            return false;
+          }
+
+          return prev;
+        });
+
+        rafId = 0;
+      });
+    };
+
+    const root = document.querySelector(".admin-layout__main");
+    const scrollTarget = root || window;
+    scrollTarget.addEventListener("scroll", handleScroll, { passive: true });
+    handleScroll();
+
+    return () => {
+      scrollTarget.removeEventListener("scroll", handleScroll);
+      if (rafId) {
+        window.cancelAnimationFrame(rafId);
+      }
+    };
+  }, []);
 
   useEffect(() => {
     let isMounted = true;
@@ -154,6 +308,17 @@ const AdminReports = () => {
       return [];
     }
 
+    const totalStudents = reportData.summary.totalStudents;
+    const breakdown = buildAttendanceBreakdown(reportData.summary.attendanceRate, totalStudents);
+    const academicTotal = reportData.academic.reduce((sum, item) => sum + item.value, 0);
+    const goodAndPrettyGood = reportData.academic.reduce((sum, item) => {
+      if (item.name === "Tốt" || item.name === "Khá") {
+        return sum + item.value;
+      }
+      return sum;
+    }, 0);
+    const goodRate = academicTotal ? (goodAndPrettyGood / academicTotal) * 100 : 0;
+
     return [
       {
         title: "Tổng học sinh",
@@ -164,12 +329,38 @@ const AdminReports = () => {
         value: SCORE_FORMATTER.format(reportData.summary.schoolAverageScore),
       },
       {
-        title: "Tỉ lệ chuyên cần",
-        value: `${PERCENT_FORMATTER.format(reportData.summary.attendanceRate)}%`,
+        title: "Tỉ lệ khá giỏi",
+        value: `${PERCENT_FORMATTER.format(goodRate)}%`,
       },
       {
-        title: "Tổng thu",
+        title: "Tổng doanh thu",
         value: CURRENCY_FORMATTER.format(reportData.summary.totalRevenue),
+      },
+      {
+        title: "Tổng chi tiêu",
+        value: CURRENCY_FORMATTER.format(reportData.summary.totalExpense),
+      },
+      {
+        title: "Sau chi tiêu",
+        value: CURRENCY_FORMATTER.format(reportData.summary.totalAfterExpense),
+      },
+      {
+        title: "Đi học",
+        value: `${breakdown.presentCount.toLocaleString("vi-VN")} (${PERCENT_FORMATTER.format(
+          breakdown.presentRate
+        )}%)`,
+      },
+      {
+        title: "Nghỉ học",
+        value: `${breakdown.absentCount.toLocaleString("vi-VN")} (${PERCENT_FORMATTER.format(
+          breakdown.absentRate
+        )}%)`,
+      },
+      {
+        title: "Đi muộn",
+        value: `${breakdown.lateCount.toLocaleString("vi-VN")} (${PERCENT_FORMATTER.format(
+          breakdown.lateRate
+        )}%)`,
       },
     ];
   }, [reportData]);
@@ -184,6 +375,55 @@ const AdminReports = () => {
       fill: PIE_COLORS[index % PIE_COLORS.length],
     }));
   }, [reportData]);
+
+  const attendanceChartData = useMemo(() => {
+    if (!reportData) {
+      return [];
+    }
+
+    return reportData.attendance.map((item, index) => ({
+      period: item.period,
+      ...buildAttendanceBreakdown(item.rate, reportData.summary.totalStudents, index),
+    }));
+  }, [reportData]);
+
+  const gradeList = reportData?.gradeOverview || [];
+
+  const subjectChartData = useMemo(() => {
+    if (!reportData) {
+      return [];
+    }
+
+    const baseSubjects = reportData.subjects || [];
+    if (filters.classId !== "all" || selectedSubjectScope === "all") {
+      return baseSubjects;
+    }
+
+    const selectedGradeData = gradeList.find((item) => item.grade === selectedSubjectScope);
+    if (!selectedGradeData) {
+      return baseSubjects;
+    }
+
+    const schoolAverage = Number(reportData.summary.schoolAverageScore) || 0;
+    const scale = schoolAverage > 0 ? selectedGradeData.averageScore / schoolAverage : 1;
+
+    return baseSubjects.map((item) => ({
+      ...item,
+      averageScore: Math.max(0, Math.min(10, Number((item.averageScore * scale).toFixed(2)))),
+    }));
+  }, [filters.classId, gradeList, reportData, selectedSubjectScope]);
+
+  const subjectScopeOptions = useMemo(
+    () => [{ value: "all", label: "Toàn trường" }, ...gradeList.map((item) => ({ value: item.grade, label: item.grade }))],
+    [gradeList]
+  );
+
+  const subjectScopeLabel =
+    filters.classId !== "all"
+      ? `Lớp ${filters.classId}`
+      : selectedSubjectScope === "all"
+        ? "Toàn trường"
+        : selectedSubjectScope;
 
   const handleFilterChange = (event) => {
     const { name, value } = event.target;
@@ -241,7 +481,7 @@ const AdminReports = () => {
 
     openDetail(`Môn học: ${point.subject}`, [
       { label: "Điểm trung bình", value: SCORE_FORMATTER.format(point.averageScore) },
-      { label: "Phạm vi", value: filters.classId === "all" ? "Toàn trường" : filters.classId },
+      { label: "Phạm vi", value: subjectScopeLabel },
     ]);
   };
 
@@ -251,7 +491,22 @@ const AdminReports = () => {
     }
 
     openDetail(`Chuyên cần - ${point.period}`, [
-      { label: "Tỉ lệ", value: `${PERCENT_FORMATTER.format(point.rate)}%` },
+      {
+        label: "Đi học",
+        value: `${point.presentCount.toLocaleString("vi-VN")} (${PERCENT_FORMATTER.format(
+          point.presentRate
+        )}%)`,
+      },
+      {
+        label: "Nghỉ học",
+        value: `${point.absentCount.toLocaleString("vi-VN")} (${PERCENT_FORMATTER.format(
+          point.absentRate
+        )}%)`,
+      },
+      {
+        label: "Đi muộn",
+        value: `${point.lateCount.toLocaleString("vi-VN")} (${PERCENT_FORMATTER.format(point.lateRate)}%)`,
+      },
       { label: "Năm học", value: filters.schoolYear },
     ]);
   };
@@ -262,60 +517,11 @@ const AdminReports = () => {
     }
 
     openDetail(`Tài chính - ${point.period || point.grade}`, [
-      { label: "Tổng thu", value: CURRENCY_FORMATTER.format(point.amount) },
+      { label: "Tổng doanh thu", value: CURRENCY_FORMATTER.format(point.amount) },
+      { label: "Tổng chi tiêu", value: CURRENCY_FORMATTER.format(point.expense || 0) },
+      { label: "Sau chi tiêu", value: CURRENCY_FORMATTER.format(point.net || 0) },
       { label: "Học kỳ", value: filters.term },
     ]);
-  };
-
-  const handleExportExcel = () => {
-    if (!reportData) {
-      return;
-    }
-
-    const workbook = XLSX.utils.book_new();
-
-    const summarySheet = XLSX.utils.json_to_sheet([
-      {
-        schoolYear: filters.schoolYear,
-        term: filters.term,
-        classId: filters.classId,
-        teacherId: filters.teacherId,
-        totalStudents: reportData.summary.totalStudents,
-        schoolAverageScore: reportData.summary.schoolAverageScore,
-        attendanceRate: reportData.summary.attendanceRate,
-        totalRevenue: reportData.summary.totalRevenue,
-      },
-    ]);
-
-    const subjectSheet = XLSX.utils.json_to_sheet(reportData.subjects);
-    const attendanceSheet = XLSX.utils.json_to_sheet(reportData.attendance);
-    const financeSheet = XLSX.utils.json_to_sheet(reportData.finance);
-    const teacherSheet = XLSX.utils.json_to_sheet(reportData.teacherPerformance);
-    const teacherSubjectSheet = XLSX.utils.json_to_sheet(
-      reportData.teacherSubjectAnalysis.map((item) => ({
-        teacher: item.teacherName,
-        subject: item.subject,
-        assignedAverage: item.avgAssignedClasses,
-      }))
-    );
-    const gradeSheet = XLSX.utils.json_to_sheet(
-      reportData.gradeOverview.map((item) => ({
-        grade: item.grade,
-        averageScore: item.averageScore,
-        star: item.star,
-      }))
-    );
-
-    XLSX.utils.book_append_sheet(workbook, summarySheet, "Summary");
-    XLSX.utils.book_append_sheet(workbook, subjectSheet, "Subjects");
-    XLSX.utils.book_append_sheet(workbook, attendanceSheet, "Attendance");
-    XLSX.utils.book_append_sheet(workbook, financeSheet, "Finance");
-    XLSX.utils.book_append_sheet(workbook, teacherSheet, "Teacher KPI");
-    XLSX.utils.book_append_sheet(workbook, teacherSubjectSheet, "Teacher Subject");
-    XLSX.utils.book_append_sheet(workbook, gradeSheet, "Grade Overview");
-
-    const fileName = `admin-report-${filters.schoolYear}-${filters.term}.xlsx`;
-    XLSX.writeFile(workbook, fileName);
   };
 
   const handleExportPdf = () => {
@@ -335,7 +541,7 @@ const AdminReports = () => {
       )
       .join("");
 
-    const subjectRows = reportData.subjects
+    const subjectRows = subjectChartData
       .map(
         (item) =>
           `<tr><td>${sanitizeHtml(item.subject)}</td><td>${sanitizeHtml(
@@ -362,7 +568,7 @@ const AdminReports = () => {
           <p>Năm học: ${sanitizeHtml(filters.schoolYear)} - Học kỳ: ${sanitizeHtml(filters.term)}</p>
           <h2>Thống kê nhanh</h2>
           <ul>${summaryHtml}</ul>
-          <h2>Điểm trung bình theo môn</h2>
+          <h2>Điểm trung bình theo môn (${sanitizeHtml(subjectScopeLabel)})</h2>
           <table>
             <thead><tr><th>Môn học</th><th>Điểm TB</th></tr></thead>
             <tbody>${subjectRows}</tbody>
@@ -384,16 +590,27 @@ const AdminReports = () => {
     const scoreDiff = comparisonData.hk2.summary.schoolAverageScore - comparisonData.hk1.summary.schoolAverageScore;
     const attendanceDiff = comparisonData.hk2.summary.attendanceRate - comparisonData.hk1.summary.attendanceRate;
     const revenueDiff = comparisonData.hk2.summary.totalRevenue - comparisonData.hk1.summary.totalRevenue;
+    const netDiff = comparisonData.hk2.summary.totalAfterExpense - comparisonData.hk1.summary.totalAfterExpense;
 
     return {
       scoreDiff,
       attendanceDiff,
       revenueDiff,
+      netDiff,
     };
   }, [comparisonData]);
 
+  const academicComparisonMetrics = useMemo(() => {
+    if (!comparisonData?.metrics) return [];
+    return comparisonData.metrics.filter((item) => item.metricType !== "money-b");
+  }, [comparisonData]);
+
+  const financeComparisonMetrics = useMemo(() => {
+    if (!comparisonData?.metrics) return [];
+    return comparisonData.metrics.filter((item) => item.metricType === "money-b");
+  }, [comparisonData]);
+
   const teacherList = reportData?.teacherSubjectAnalysis || [];
-  const gradeList = reportData?.gradeOverview || [];
 
   useEffect(() => {
     if (!teacherList.length) {
@@ -422,34 +639,122 @@ const AdminReports = () => {
     }
   }, [gradeList, selectedGrade]);
 
+  useEffect(() => {
+    if (selectedSubjectScope === "all") {
+      return;
+    }
+
+    const hasSelectedScope = gradeList.some((item) => item.grade === selectedSubjectScope);
+    if (!hasSelectedScope) {
+      setSelectedSubjectScope("all");
+    }
+  }, [gradeList, selectedSubjectScope]);
+
   const selectedTeacherData = teacherList.find(
     (item) => item.teacherId === selectedTeacherForTable
   );
 
   const teacherClassRows = selectedTeacherData
-    ? selectedTeacherData.assignedClasses.filter(
-        (item) => selectedTeacherClass === "all" || item.classId === selectedTeacherClass
-      )
+    ? selectedTeacherData.assignedClasses
+        .filter(
+          (item) => selectedTeacherClass === "all" || item.classId === selectedTeacherClass
+        )
+        .map((item) => ({
+          ...item,
+          classMembers: item.classMembers || DEMO_CLASS_MEMBERS,
+          homeroomTeacher:
+            item.homeroomTeacher || HOMEROOM_TEACHER_BY_CLASS[item.classId] || "Chưa cập nhật",
+        }))
     : [];
+
+  const gradeAttendanceRows = useMemo(() => {
+    const schoolAttendance = Number(reportData?.summary?.attendanceRate) || 95;
+    const totalStudents = Number(reportData?.summary?.totalStudents) || 1200;
+
+    return gradeList.map((item, index) => {
+      const presentRate = Math.max(88, Math.min(99, schoolAttendance - 0.7 + index * 0.35));
+      const studentEstimate = Math.max(1, Math.round(totalStudents / Math.max(1, gradeList.length)));
+      const breakdown = buildAttendanceBreakdown(presentRate, studentEstimate, index);
+
+      return {
+        ...item,
+        attendance: breakdown,
+      };
+    });
+  }, [gradeList, reportData]);
 
   const selectedGradeData = gradeList.find((item) => item.grade === selectedGrade);
 
-  const subjectTooltipFormatter = (value) => [SCORE_FORMATTER.format(value), "Điểm trung bình"];
-  const attendanceTooltipFormatter = (value) => [`${PERCENT_FORMATTER.format(value)}%`, "Chuyên cần"];
-  const financeTooltipFormatter = (value) => [CURRENCY_FORMATTER.format(value), "Tổng thu học phí"];
-  const compareTooltipFormatter = (value, name) => {
+  const gradeClassRows = useMemo(() => {
+    if (!selectedGradeData) {
+      return [];
+    }
+
+    const selectedGradeAttendance = gradeAttendanceRows.find((item) => item.grade === selectedGradeData.grade);
+    const basePresentRate = selectedGradeAttendance?.attendance?.presentRate ?? 95;
+    const totalRequiredDays = filters.term === "ALL" ? 180 : 90;
+
+    return selectedGradeData.classes.map((classItem, index) => {
+      const classPresentRate = Math.max(87, Math.min(99, basePresentRate + (index % 2 === 0 ? 0.4 : -0.4)));
+      const attendance = buildAttendanceBreakdown(classPresentRate, 40, index);
+      const attendanceDays = buildAttendanceDays(attendance, totalRequiredDays);
+      const classMembers = (classItem.classMembers || DEMO_CLASS_MEMBERS).map((member, memberIndex) => ({
+        ...member,
+        averageScore: getMemberAverageScore(member, classItem.averageScore),
+        attendanceDays: getMemberAttendanceDays(member, memberIndex, totalRequiredDays),
+      }));
+
+      return {
+        ...classItem,
+        attendance,
+        attendanceDays,
+        classMembers,
+        homeroomTeacher:
+          classItem.homeroomTeacher || HOMEROOM_TEACHER_BY_CLASS[classItem.classId] || "Chưa cập nhật",
+      };
+    });
+  }, [filters.term, gradeAttendanceRows, selectedGradeData]);
+
+  const subjectTooltipFormatter = (value) => [
+    SCORE_FORMATTER.format(value),
+    `Điểm trung bình (${subjectScopeLabel})`,
+  ];
+  const attendanceTooltipFormatter = (value, name) => [
+    `${PERCENT_FORMATTER.format(value)}%`,
+    name,
+  ];
+  const financeTooltipFormatter = (value, name) => [
+    `${formatCompactMoney(value)} (${CURRENCY_FORMATTER.format(value)})`,
+    name,
+  ];
+  const compareTooltipFormatter = (value, name, payload) => {
     const label = name === "hk1" ? "Học kỳ 1" : "Học kỳ 2";
-    return [value, label];
+    const metricType = payload?.payload?.metricType;
+
+    if (metricType === "percent") {
+      return [`${PERCENT_FORMATTER.format(value)}%`, label];
+    }
+
+    if (metricType === "money-b") {
+      return [`${PERCENT_FORMATTER.format(value)} tỷ`, label];
+    }
+
+    return [SCORE_FORMATTER.format(value), label];
   };
 
   return (
     <div className="admin-reports">
       <div className="admin-reports__header">
         <h2>Báo cáo tổng hợp</h2>
+        <ExportReportSection
+          isVisible={!isLoading && !!reportData}
+          isFloating={isExportFloating}
+          onExportPdf={handleExportPdf}
+        />
       </div>
 
       <div className="admin-reports__content">
-        <Card title="1. Bộ lọc dữ liệu">
+        <Card title="Bộ lọc dữ liệu">
           <div className="admin-reports__filters">
             <div className="admin-reports__year-control">
               <span className="admin-reports__year-label">Năm học</span>
@@ -482,6 +787,7 @@ const AdminReports = () => {
               label="Học kỳ"
               name="term"
               value={filters.term}
+              variant="custom"
               options={[
                 { value: "HK1", label: "Học kỳ 1" },
                 { value: "HK2", label: "Học kỳ 2" },
@@ -490,7 +796,7 @@ const AdminReports = () => {
               onChange={handleFilterChange}
             />
             <Select
-              label="Lớp (tùy chọn)"
+              label="Lớp"
               name="classId"
               value={filters.classId}
               options={filterOptions.classes}
@@ -500,7 +806,7 @@ const AdminReports = () => {
               searchPlaceholder="Tìm lớp..."
             />
             <Select
-              label="Giáo viên (tùy chọn)"
+              label="Giáo viên"
               name="teacherId"
               value={filters.teacherId}
               options={filterOptions.teachers}
@@ -512,300 +818,113 @@ const AdminReports = () => {
           </div>
         </Card>
 
-        {error ? (
-          <Alert
-            type="error"
-            title="Không tải được dữ liệu"
-            message={error}
-            onClose={() => setError("")}
-          />
-        ) : null}
-
-        {isLoading ? (
-          <Card>
-            <p className="admin-reports__loading">Đang tải báo cáo...</p>
-          </Card>
-        ) : null}
+        <AcademicReportSection
+          error={error}
+          isLoading={isLoading}
+          reportData={reportData}
+          onClearError={() => setError("")}
+          summaryCards={summaryCards}
+          academicChartData={academicChartData}
+          onAcademicClick={handleAcademicClick}
+          subjectScopeLabel={subjectScopeLabel}
+          selectedSubjectScope={selectedSubjectScope}
+          onSubjectScopeChange={(event) => setSelectedSubjectScope(event.target.value)}
+          subjectScopeOptions={subjectScopeOptions}
+          isSubjectScopeDisabled={filters.classId !== "all"}
+          subjectChartData={subjectChartData}
+          onSubjectClick={handleSubjectClick}
+          subjectTooltipFormatter={subjectTooltipFormatter}
+          attendanceChartData={attendanceChartData}
+          onAttendanceClick={handleAttendanceClick}
+          attendanceTooltipFormatter={attendanceTooltipFormatter}
+          financeByGrade={reportData?.financeByGrade || []}
+          onFinanceClick={handleFinanceClick}
+          financeTooltipFormatter={financeTooltipFormatter}
+          formatCompactMoney={formatCompactMoney}
+        />
 
         {!isLoading && reportData ? (
           <>
-            <Card title="2. Thống kê nhanh">
-              <div className="admin-reports__summary-grid">
-                {summaryCards.map((item) => (
-                  <div key={item.title} className="admin-reports__summary-card">
-                    <p className="admin-reports__summary-label">{item.title}</p>
-                    <p className="admin-reports__summary-value">{item.value}</p>
-                  </div>
-                ))}
-              </div>
-            </Card>
 
-            <Card title="3. Biểu đồ tổng hợp">
-              <div className="admin-reports__charts-grid">
-                <div className="admin-reports__chart-item">
-                  <h4>Học lực</h4>
-                  <ResponsiveContainer width="100%" height={270}>
-                    <PieChart>
-                      <Pie
-                        data={academicChartData}
-                        dataKey="value"
-                        nameKey="name"
-                        cx="50%"
-                        cy="50%"
-                        outerRadius={90}
-                        onClick={handleAcademicClick}
-                        cursor="pointer"
-                      />
-                      <Tooltip
-                        formatter={(value, _name, payload) => [
-                          `${value} học sinh`,
-                          `Mức ${payload?.payload?.name || ""}`,
-                        ]}
-                        labelFormatter={() => "Phân bố học lực"}
-                      />
-                      <Legend />
-                    </PieChart>
-                  </ResponsiveContainer>
-                </div>
+            <div className="admin-reports__section admin-reports__section--teacher">
+              <TeacherProgressReportSection
+                teacherList={teacherList}
+                selectedTeacherForTable={selectedTeacherForTable}
+                onTeacherChange={(event) => {
+                  setSelectedTeacherForTable(event.target.value);
+                  setSelectedTeacherClass("all");
+                }}
+                selectedTeacherClass={selectedTeacherClass}
+                onTeacherClassChange={(event) => setSelectedTeacherClass(event.target.value)}
+                selectedTeacherData={selectedTeacherData}
+                teacherClassRows={teacherClassRows}
+                expandedTeacherClasses={expandedTeacherClasses}
+                onToggleTeacherClass={(classId) =>
+                  setExpandedTeacherClasses((prev) => ({
+                    ...prev,
+                    [classId]: !prev[classId],
+                  }))
+                }
+                scoreFormatter={SCORE_FORMATTER}
+              />
+            </div>
 
-                <div className="admin-reports__chart-item">
-                  <h4>Điểm trung bình theo môn</h4>
-                  <ResponsiveContainer width="100%" height={270}>
-                    <BarChart data={reportData.subjects} onClick={handleSubjectClick}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="subject" />
-                      <YAxis domain={[0, 10]} />
-                      <Tooltip formatter={subjectTooltipFormatter} labelFormatter={(value) => `Môn: ${value}`} />
-                      <Bar dataKey="averageScore" fill="#3557d4" cursor="pointer" />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
+            <div className="admin-reports__section admin-reports__section--grade">
+              <AttendanceReportSection
+                gradeAttendanceRows={gradeAttendanceRows}
+                scoreFormatter={SCORE_FORMATTER}
+                percentFormatter={PERCENT_FORMATTER}
+                selectedGrade={selectedGrade}
+                onGradeChange={(event) => setSelectedGrade(event.target.value)}
+                gradeList={gradeList}
+                selectedGradeData={selectedGradeData}
+                gradeClassRows={gradeClassRows}
+                expandedGradeClasses={expandedGradeClasses}
+                onToggleGradeClass={(classId) =>
+                  setExpandedGradeClasses((prev) => ({
+                    ...prev,
+                    [classId]: !prev[classId],
+                  }))
+                }
+              />
+            </div>
 
-                <div className="admin-reports__chart-item">
-                  <h4>Chuyên cần theo thời gian</h4>
-                  <ResponsiveContainer width="100%" height={270}>
-                    <LineChart data={reportData.attendance} onClick={handleAttendanceClick}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="period" />
-                      <YAxis domain={[85, 100]} />
-                      <Tooltip formatter={attendanceTooltipFormatter} labelFormatter={(value) => `Thời điểm: ${value}`} />
-                      <Line type="monotone" dataKey="rate" stroke="#0d9488" strokeWidth={2} />
-                    </LineChart>
-                  </ResponsiveContainer>
-                </div>
-
-                <div className="admin-reports__chart-item">
-                  <h4>Tài chính theo khối (đơn giản)</h4>
-                  <ResponsiveContainer width="100%" height={270}>
-                    <BarChart data={reportData.financeByGrade} onClick={handleFinanceClick}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="grade" />
-                      <YAxis />
-                      <Tooltip formatter={financeTooltipFormatter} labelFormatter={(value) => `${value}`} />
-                      <Bar dataKey="amount" fill="#f97316" cursor="pointer" />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
-              </div>
-            </Card>
-
-            <Card title="4. So sánh học kỳ 1 và học kỳ 2">
-              {isCompareLoading ? (
-                <p className="admin-reports__loading">Đang tải dữ liệu so sánh...</p>
-              ) : null}
-
-              {comparisonSummary ? (
-                <>
-                  <div className="admin-reports__comparison-grid">
-                    <div className="admin-reports__comparison-item">
-                      <span>Chênh lệch điểm TB</span>
-                      <strong>{`${comparisonSummary.scoreDiff >= 0 ? "+" : ""}${SCORE_FORMATTER.format(
-                        comparisonSummary.scoreDiff
-                      )}`}</strong>
-                    </div>
-                    <div className="admin-reports__comparison-item">
-                      <span>Chênh lệch chuyên cần</span>
-                      <strong>{`${comparisonSummary.attendanceDiff >= 0 ? "+" : ""}${PERCENT_FORMATTER.format(
-                        comparisonSummary.attendanceDiff
-                      )}%`}</strong>
-                    </div>
-                    <div className="admin-reports__comparison-item">
-                      <span>Chênh lệch tổng thu</span>
-                      <strong>{`${comparisonSummary.revenueDiff >= 0 ? "+" : ""}${CURRENCY_FORMATTER.format(
-                        comparisonSummary.revenueDiff
-                      )}`}</strong>
-                    </div>
-                  </div>
-
-                  <div className="admin-reports__comparison-chart-wrap">
-                    <ResponsiveContainer width="100%" height={280}>
-                      <BarChart data={comparisonData?.metrics || []}>
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="metric" />
-                        <YAxis />
-                        <Tooltip formatter={compareTooltipFormatter} />
-                        <Legend formatter={(value) => (value === "hk1" ? "Học kỳ 1" : "Học kỳ 2")} />
-                        <Bar dataKey="hk1" fill="#6366f1" name="hk1" />
-                        <Bar dataKey="hk2" fill="#f59e0b" name="hk2" />
-                      </BarChart>
-                    </ResponsiveContainer>
-                  </div>
-                </>
-              ) : null}
-            </Card>
-
-            <Card title="5. Bảng giáo viên theo môn và lớp được phân công">
-              {teacherList.length ? (
-                <>
-                  <div className="admin-reports__table-filters">
-                    <Select
-                      label="Giáo viên"
-                      value={selectedTeacherForTable}
-                      onChange={(event) => {
-                        setSelectedTeacherForTable(event.target.value);
-                        setSelectedTeacherClass("all");
-                      }}
-                      options={teacherList.map((item) => ({
-                        value: item.teacherId,
-                        label: `${item.teacherName} - ${item.subject}`,
-                      }))}
-                      variant="custom"
-                      searchable
-                      searchPlaceholder="Tìm giáo viên..."
-                    />
-                    <Select
-                      label="Lớp được phân công"
-                      value={selectedTeacherClass}
-                      onChange={(event) => setSelectedTeacherClass(event.target.value)}
-                      options={[
-                        { value: "all", label: "Tất cả lớp được phân công" },
-                        ...(selectedTeacherData?.assignedClasses || []).map((item) => ({
-                          value: item.classId,
-                          label: item.classId,
-                        })),
-                      ]}
-                      variant="custom"
-                    />
-                  </div>
-
-                  {selectedTeacherData ? (
-                    <div className="admin-reports__table-wrap">
-                      <table className="admin-reports__table">
-                        <thead>
-                          <tr>
-                            <th>Lớp</th>
-                            <th>Điểm TB lớp</th>
-                            <th>TB tất cả lớp được phân công</th>
-                            <th>Chênh lệch</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {teacherClassRows.map((row) => {
-                            const diff = row.classAverageScore - selectedTeacherData.avgAssignedClasses;
-                            return (
-                              <tr key={row.classId}>
-                                <td>{row.classId}</td>
-                                <td>{SCORE_FORMATTER.format(row.classAverageScore)}</td>
-                                <td>{SCORE_FORMATTER.format(selectedTeacherData.avgAssignedClasses)}</td>
-                                <td>{`${diff >= 0 ? "+" : ""}${SCORE_FORMATTER.format(diff)}`}</td>
-                              </tr>
-                            );
-                          })}
-                        </tbody>
-                      </table>
-                    </div>
-                  ) : null}
-                </>
-              ) : (
-                <p className="admin-reports__loading">Không có dữ liệu giáo viên phù hợp bộ lọc.</p>
-              )}
-            </Card>
-
-            <Card title="6. Báo cáo theo khối và lớp">
-              <div className="admin-reports__table-wrap">
-                <table className="admin-reports__table">
-                  <thead>
-                    <tr>
-                      <th>Khối</th>
-                      <th>Điểm TB môn</th>
-                      <th>Sao</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {gradeList.map((item) => (
-                      <tr key={item.grade}>
-                        <td>{item.grade}</td>
-                        <td>{SCORE_FORMATTER.format(item.averageScore)}</td>
-                        <td>{toStarText(item.star)}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-
-              <div className="admin-reports__table-filters admin-reports__table-filters--single">
-                <Select
-                  label="Chọn khối để xem chi tiết lớp"
-                  value={selectedGrade}
-                  onChange={(event) => setSelectedGrade(event.target.value)}
-                  options={gradeList.map((item) => ({ value: item.grade, label: item.grade }))}
-                  variant="custom"
-                />
-              </div>
-
-              {selectedGradeData ? (
-                <div className="admin-reports__table-wrap">
-                  <table className="admin-reports__table">
-                    <thead>
-                      <tr>
-                        <th>Lớp</th>
-                        <th>Điểm TB môn</th>
-                        <th>Sao</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {selectedGradeData.classes.map((classItem) => (
-                        <tr key={classItem.classId}>
-                          <td>{classItem.classId}</td>
-                          <td>{SCORE_FORMATTER.format(classItem.averageScore)}</td>
-                          <td>{toStarText(classItem.star)}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              ) : null}
-            </Card>
+            <div className="admin-reports__section admin-reports__section--comparison">
+              <QuizExamReportSection
+                isCompareLoading={isCompareLoading}
+                comparisonSummary={comparisonSummary}
+                scoreFormatter={SCORE_FORMATTER}
+                percentFormatter={PERCENT_FORMATTER}
+                currencyFormatter={CURRENCY_FORMATTER}
+                academicComparisonMetrics={academicComparisonMetrics}
+                financeComparisonMetrics={financeComparisonMetrics}
+                compareTooltipFormatter={compareTooltipFormatter}
+              />
+            </div>
 
             {detailView ? (
-              <Card
-                title="Chi tiết khi click chart"
-                actions={
-                  <Button variant="ghost" size="sm" onClick={() => setDetailView(null)}>
-                    Đóng
-                  </Button>
-                }
-              >
-                <h4 className="admin-reports__detail-title">{detailView.title}</h4>
-                <div className="admin-reports__detail-list">
-                  {detailView.rows.map((row) => (
-                    <div key={row.label} className="admin-reports__detail-row">
-                      <span>{row.label}</span>
-                      <strong>{row.value}</strong>
-                    </div>
-                  ))}
-                </div>
-              </Card>
+              <div className="admin-reports__section admin-reports__section--detail">
+                <Card
+                  title="Chi tiết khi click chart"
+                  actions={
+                    <Button variant="ghost" size="sm" onClick={() => setDetailView(null)}>
+                      Đóng
+                    </Button>
+                  }
+                >
+                  <h4 className="admin-reports__detail-title">{detailView.title}</h4>
+                  <div className="admin-reports__detail-list">
+                    {detailView.rows.map((row) => (
+                      <div key={row.label} className="admin-reports__detail-row">
+                        <span>{row.label}</span>
+                        <strong>{row.value}</strong>
+                      </div>
+                    ))}
+                  </div>
+                </Card>
+              </div>
             ) : null}
 
-            <Card title="7. Xuất báo cáo">
-              <div className="admin-reports__export-actions">
-                <Button onClick={handleExportExcel}>Xuất Excel</Button>
-                <Button variant="secondary" onClick={handleExportPdf}>
-                  Xuất PDF
-                </Button>
-              </div>
-            </Card>
           </>
         ) : null}
       </div>

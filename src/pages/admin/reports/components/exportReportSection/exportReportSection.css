@@ -1,14 +1,101 @@
-.export-btn {
-  margin-top: 10px;
-  padding: 10px 16px;
-  border: 1px solid var(--admin-primary, #1e2f5a);
+/* Section: Export control */
+.admin-reports__export-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.admin-reports__export-compact {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: 12px;
+  border: 1px solid var(--admin-border, #dce5f7);
+  background: var(--admin-surface, #ffffff);
+  box-shadow: var(--admin-shadow-sm, 0 2px 6px rgba(30, 47, 90, 0.06));
+  will-change: opacity, transform;
+  transition:
+    opacity 0.26s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.32s cubic-bezier(0.22, 1, 0.36, 1),
+    visibility 0s linear 0.26s;
+}
+
+.admin-reports__export-inline {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.admin-reports__export-inline.is-hidden {
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-10px) scale(0.985);
+  pointer-events: none;
+}
+
+.admin-reports__export-compact--floating {
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  z-index: 30;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(14px) scale(0.97);
+  pointer-events: none;
+}
+
+.admin-reports__export-compact--floating.is-visible {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0) scale(1);
+  pointer-events: auto;
+  transition:
+    opacity 0.3s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.34s cubic-bezier(0.22, 1, 0.36, 1),
+    visibility 0s;
+}
+
+.admin-reports__export-compact-label {
+  font-size: 0.84rem;
+  font-weight: 700;
+  color: var(--admin-text-primary, #1e2f5a);
+}
+
+.admin-reports__export-compact .admin-reports__export-actions {
+  gap: 0;
+}
+
+.admin-reports__export-compact .admin-reports__export-actions button {
+  min-height: 34px;
+  padding: 0 12px;
+  border-radius: 9px;
+  border: 1px solid transparent;
   background: var(--admin-primary, #1e2f5a);
-  border-radius: 10px;
-  cursor: pointer;
-  color: white;
+  color: #fff;
+  font-size: 0.84rem;
   font-weight: 700;
 }
-.export-btn:hover{
-    background: var(--admin-primary-hover, #172547);
 
+.admin-reports__export-compact .admin-reports__export-actions button:hover {
+  background: var(--admin-primary-hover, #172547);
+}
+
+@media (max-width: 768px) {
+  .admin-reports__export-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .admin-reports__export-compact--floating {
+    right: 14px;
+    bottom: 14px;
+    max-width: calc(100vw - 28px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .admin-reports__export-compact,
+  .admin-reports__export-inline,
+  .admin-reports__export-compact--floating {
+    transition: none;
+  }
 }

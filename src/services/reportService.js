@@ -257,16 +257,38 @@ function classToGrade(classId) {
   return match ? `Khối ${match[0]}` : "";
 }
 
-function buildFinanceByGrade(totalRevenue) {
+function normalizeFinanceSummary(totalRevenue, totalExpense) {
+  const normalizedRevenue = Math.max(0, Math.round(Number(totalRevenue) || 0));
+  const fallbackExpense = Math.round(normalizedRevenue * 0.62);
+  const normalizedExpense = Math.max(
+    0,
+    Math.min(
+      normalizedRevenue,
+      Math.round(Number.isFinite(totalExpense) ? totalExpense : fallbackExpense)
+    )
+  );
+
+  return {
+    totalRevenue: normalizedRevenue,
+    totalExpense: normalizedExpense,
+    totalAfterExpense: normalizedRevenue - normalizedExpense,
+  };
+}
+
+function buildFinanceByGrade(totalRevenue, totalExpense) {
   const ratios = [
     { grade: "Khối 10", ratio: 0.34 },
     { grade: "Khối 11", ratio: 0.33 },
     { grade: "Khối 12", ratio: 0.33 },
   ];
 
+  const totals = normalizeFinanceSummary(totalRevenue, totalExpense);
+
   return ratios.map((item) => ({
     grade: item.grade,
-    amount: Math.round(totalRevenue * item.ratio),
+    amount: Math.round(totals.totalRevenue * item.ratio),
+    expense: Math.round(totals.totalExpense * item.ratio),
+    net: Math.round(totals.totalAfterExpense * item.ratio),
   }));
 }
 
@@ -295,6 +317,12 @@ function buildGradeOverview(multiplier) {
 }
 
 function mergeTerms(termA, termB) {
+  const mergedRevenue = termA.summary.totalRevenue + termB.summary.totalRevenue;
+  const mergedExpense =
+    normalizeFinanceSummary(termA.summary.totalRevenue, termA.summary.totalExpense).totalExpense +
+    normalizeFinanceSummary(termB.summary.totalRevenue, termB.summary.totalExpense).totalExpense;
+  const mergedFinance = normalizeFinanceSummary(mergedRevenue, mergedExpense);
+
   return {
     summary: {
       totalStudents: Math.round((termA.summary.totalStudents + termB.summary.totalStudents) / 2),
@@ -302,7 +330,9 @@ function mergeTerms(termA, termB) {
         (termA.summary.schoolAverageScore + termB.summary.schoolAverageScore) / 2
       ),
       attendanceRate: round((termA.summary.attendanceRate + termB.summary.attendanceRate) / 2),
-      totalRevenue: termA.summary.totalRevenue + termB.summary.totalRevenue,
+      totalRevenue: mergedFinance.totalRevenue,
+      totalExpense: mergedFinance.totalExpense,
+      totalAfterExpense: mergedFinance.totalAfterExpense,
     },
     academic: termA.academic.map((itemA, index) => {
       const itemB = termB.academic[index];
@@ -379,12 +409,23 @@ function withScope(baseReport, filters) {
       }));
   }
 
+  const baseFinance = normalizeFinanceSummary(
+    baseReport.summary.totalRevenue,
+    baseReport.summary.totalExpense
+  );
+  const scopedFinance = normalizeFinanceSummary(
+    baseFinance.totalRevenue * multiplier,
+    baseFinance.totalExpense * multiplier
+  );
+
   return {
     summary: {
       totalStudents: Math.max(12, Math.round(baseReport.summary.totalStudents * multiplier)),
       schoolAverageScore: round(baseReport.summary.schoolAverageScore - (1 - multiplier) * 0.2),
       attendanceRate: round(baseReport.summary.attendanceRate - (1 - multiplier) * 0.7),
-      totalRevenue: Math.round(baseReport.summary.totalRevenue * multiplier),
+      totalRevenue: scopedFinance.totalRevenue,
+      totalExpense: scopedFinance.totalExpense,
+      totalAfterExpense: scopedFinance.totalAfterExpense,
     },
     academic: baseReport.academic.map((item) => ({
       ...item,
@@ -406,7 +447,7 @@ function withScope(baseReport, filters) {
       ...item,
       score: round(item.score - (1 - multiplier) * 0.8, 1),
     })),
-    financeByGrade: buildFinanceByGrade(baseReport.summary.totalRevenue * multiplier),
+    financeByGrade: buildFinanceByGrade(scopedFinance.totalRevenue, scopedFinance.totalExpense),
     teacherSubjectAnalysis,
     gradeOverview,
   };
@@ -455,18 +496,33 @@ export async function fetchTermComparison(schoolYear, filters) {
   const metrics = [
     {
       metric: "Điểm trung bình",
+      metricType: "score",
       hk1: hk1.summary.schoolAverageScore,
       hk2: hk2.summary.schoolAverageScore,
     },
     {
       metric: "Chuyên cần (%)",
+      metricType: "percent",
       hk1: hk1.summary.attendanceRate,
       hk2: hk2.summary.attendanceRate,
     },
     {
-      metric: "Tổng thu (tỷ)",
+      metric: "Doanh thu (tỷ)",
+      metricType: "money-b",
       hk1: round(hk1.summary.totalRevenue / 1000000000),
       hk2: round(hk2.summary.totalRevenue / 1000000000),
+    },
+    {
+      metric: "Chi tiêu (tỷ)",
+      metricType: "money-b",
+      hk1: round(hk1.summary.totalExpense / 1000000000),
+      hk2: round(hk2.summary.totalExpense / 1000000000),
+    },
+    {
+      metric: "Sau chi (tỷ)",
+      metricType: "money-b",
+      hk1: round(hk1.summary.totalAfterExpense / 1000000000),
+      hk2: round(hk2.summary.totalAfterExpense / 1000000000),
     },
   ];
 

@@ -1,328 +1,174 @@
-import React, { useState } from "react";
-import "./academicReportSection.css";
-import { TrendingUp, TrendingDown, Minus } from "lucide-react";
 import {
-  BarChart,
   Bar,
+  BarChart,
+  CartesianGrid,
+  Legend,
+  Pie,
+  PieChart,
+  ResponsiveContainer,
+  Tooltip,
   XAxis,
   YAxis,
-  Tooltip,
-  ResponsiveContainer,
-  Cell,
 } from "recharts";
+import { Alert, Card, Select } from "../../../../../components/ui";
+import "./academicReportSection.css";
 
-const AcademicReportSection = () => {
-  const [selectedClass, setSelectedClass] = useState("10A1");
-  const [mode, setMode] = useState("ALL");
-
- const data = {
-  "10A1": [
-    { name: "Nguyễn Văn An", hk1: 6.5, hk2: 3.8 },
-    { name: "Trần Thị Bình", hk1: 8.2, hk2: 7.0 },
-    { name: "Lê Minh Châu", hk1: 3.1, hk2: 3.2 },
-    { name: "Phạm Quốc Dũng", hk1: 5.0, hk2: 6.5 },
-    { name: "Hoàng Thu Hà", hk1: 8.8, hk2: 9.0 },
-    { name: "Đỗ Anh Huy", hk1: 6.2, hk2: 5.5 },
-    { name: "Vũ Khánh Linh", hk1: 7.5, hk2: 7.6 },
-    { name: "Phạm Thanh Tùng", hk1: 8.3, hk2: 8.4 },
-    { name: "Đỗ Minh Hoàng", hk1: 5.2, hk2: 6.0 },
-    { name: "Nguyễn Hải Đăng", hk1: 7.0, hk2: 7.1 },
-    { name: "Trần Văn Phong", hk1: 6.6, hk2: 5.8 },
-    { name: "Lê Hữu Nghĩa", hk1: 8.7, hk2: 9.1 },
-    { name: "Phạm Ngọc Long", hk1: 5.5, hk2: 5.6 }
-  ],
-
-  "10A2": [
-    { name: "Nguyễn Văn Hùng", hk1: 6.0, hk2: 7.2 },
-    { name: "Trần Thị Lan", hk1: 8.5, hk2: 7.3 },
-    { name: "Lê Minh Đức", hk1: 7.3, hk2: 7.4 },
-    { name: "Phạm Quốc Bảo", hk1: 5.1, hk2: 6.2 },
-    { name: "Hoàng Thu Trang", hk1: 9.0, hk2: 9.3 },
-    { name: "Đỗ Anh Tuấn", hk1: 2.4, hk2: 3.6 },
-    { name: "Vũ Khánh Vy", hk1: 7.7, hk2: 7.8 },
-    { name: "Lê Quốc Huy", hk1: 7.0, hk2: 6.2 },
-    { name: "Phạm Thanh Sơn", hk1: 8.4, hk2: 8.6 },
-    { name: "Đỗ Minh Tuấn", hk1: 5.3, hk2: 6.1 },
-    { name: "Nguyễn Hải Nam", hk1: 7.2, hk2: 7.3 },
-    { name: "Trần Văn Nam", hk1: 3.7, hk2: 4.9 },
-    { name: "Lê Hữu Phúc", hk1: 8.8, hk2: 9.0 },
-    { name: "Phạm Ngọc Anh", hk1: 5.6, hk2: 5.7 }
-  ],
-  "11A1": [
-    { name: "Nguyễn Văn Hùng", hk1: 6.0, hk2: 7.2 },
-    { name: "Trần Thị Lan", hk1: 8.5, hk2: 7.3 },
-    { name: "Lê Minh Đức", hk1: 7.3, hk2: 7.4 },
-    { name: "Phạm Quốc Bảo", hk1: 2.1, hk2: 4.2 },
-    { name: "Hoàng Thu Trang", hk1: 9.0, hk2: 9.3 },
-    { name: "Đỗ Anh Tuấn", hk1: 6.4, hk2: 5.6 },
-    { name: "Vũ Khánh Vy", hk1: 7.7, hk2: 7.8 },
-    { name: "Bùi Thanh Hằng", hk1: 5.6, hk2: 6.7 },
-    { name: "Ngô Đức Anh", hk1: 9.1, hk2: 8.7 },
-    { name: "Phan Hoàng Long", hk1: 6.9, hk2: 7.0 },
-    { name: "Trương Ngọc Ánh", hk1: 4.6, hk2: 5.4 },
-    { name: "Đặng Minh Tâm", hk1: 2.8, hk2: 3.9 },
-    { name: "Lý Quang Minh", hk1: 6.5, hk2: 6.6 },
-    { name: "Nguyễn Thị Hoa", hk1: 8.2, hk2: 8.8 },
-  
-  ],
-"11A2": [
-    { name: "Nguyễn Văn Hùng", hk1: 6.0, hk2: 7.2 },
-    { name: "Trần Thị Lan", hk1: 8.5, hk2: 7.3 },
-    { name: "Lê Minh Đức", hk1: 7.3, hk2: 7.4 },
-    { name: "Phạm Quốc Bảo", hk1: 5.1, hk2: 6.2 },
-    { name: "Hoàng Thu Trang", hk1: 9.0, hk2: 4.3 },
-    { name: "Đỗ Anh Tuấn", hk1: 3.4, hk2: 5.6 },
-    { name: "Vũ Khánh Vy", hk1: 3.7, hk2: 2.8 },
-    { name: "Bùi Thanh Hằng", hk1: 5.6, hk2: 6.7 },
-    { name: "Ngô Đức Anh", hk1: 9.1, hk2: 8.7 },
-    { name: "Phan Hoàng Long", hk1: 6.9, hk2: 7.0 },
-    { name: "Trương Ngọc Ánh", hk1: 4.6, hk2: 5.4 },
-    { name: "Đặng Minh Tâm", hk1: 7.8, hk2: 6.9 },
- 
-  ],
-"12A1": [
-    { name: "Nguyễn Văn Hùng", hk1: 6.0, hk2: 7.2 },
-    { name: "Trần Thị Lan", hk1: 8.5, hk2: 7.3 },
-    { name: "Lê Minh Đức", hk1: 7.3, hk2: 7.4 },
-    { name: "Phạm Quốc Bảo", hk1: 5.1, hk2: 6.2 },
-    { name: "Hoàng Thu Trang", hk1: 9.0, hk2: 9.3 },
-    { name: "Đỗ Anh Tuấn", hk1: 6.4, hk2: 5.6 },
-    { name: "Vũ Khánh Vy", hk1: 7.7, hk2: 7.8 },
-    { name: "Bùi Thanh Hằng", hk1: 5.6, hk2: 6.7 },
-    { name: "Ngô Đức Anh", hk1: 9.1, hk2: 8.7 },
-    { name: "Phan Hoàng Long", hk1: 6.9, hk2: 7.0 },
-    { name: "Trương Ngọc Ánh", hk1: 4.6, hk2: 5.4 },
-    { name: "Đặng Minh Tâm", hk1: 7.8, hk2: 6.9 },
-  
-  
-  ],
-"12A2": [
-    { name: "Nguyễn Văn Hùng", hk1: 6.0, hk2: 7.2 },
-    { name: "Trần Thị Lan", hk1: 8.5, hk2: 7.3 },
-    { name: "Lê Minh Đức", hk1: 7.3, hk2: 3.4 },
-    { name: "Phạm Quốc Bảo", hk1: 5.1, hk2: 6.2 },
-    { name: "Hoàng Thu Trang", hk1: 4.0, hk2: 9.3 },
-    { name: "Đỗ Anh Tuấn", hk1: 6.4, hk2: 5.6 },
-    { name: "Vũ Khánh Vy", hk1: 7.7, hk2: 7.8 },
-    { name: "Bùi Thanh Hằng", hk1: 5.6, hk2: 6.7 },
-    { name: "Ngô Đức Anh", hk1: 9.1, hk2: 8.7 },
-    { name: "Phan Hoàng Long", hk1: 6.9, hk2: 7.0 },
-    { name: "Trương Ngọc Ánh", hk1: 4.6, hk2: 5.4 },
-    { name: "Đặng Minh Tâm", hk1: 7.8, hk2: 6.9 },
-    { name: "Lý Quang Minh", hk1: 6.5, hk2: 6.6 },
-    { name: "Nguyễn Thị Hoa", hk1: 5.2, hk2: 4.8 },
-   
-  ],
-
-
-};
-
-  const students = data[selectedClass];
-
-  const calcAvg = (s) => (s.hk1 + s.hk2) / 2;
-
-  const getRank = (avg) => {
-    if (avg < 5) return "yeu";
-    if (avg < 6.5) return "trungbinh";
-    if (avg < 8) return "kha";
-    if (avg < 9) return "gioi";
-    return "xuatxac";
-  };
-
-  const rankLabel = {
-    yeu: "Yếu",
-    trungbinh: "Trung bình",
-    kha: "Khá",
-    gioi: "Giỏi",
-    xuatxac: "Xuất sắc",
-  };
-
-  // 🎨 màu pastel
-  const getSoftColor = (rank) => {
-    const colors = {
-      yeu: "#fca5a5",
-      trungbinh: "#fde68a",
-      kha: "#bfdbfe",
-      gioi: "#86efac",
-      xuatxac: "#d8b4fe",
-    };
-    return colors[rank];
-  };
-
-  // 👉 giá trị theo mode
-  const getValue = (s) => {
-    if (mode === "HK1") return s.hk1;
-    if (mode === "HK2") return s.hk2;
-    return calcAvg(s);
-  };
-
-  const chartData = students.map((s) => {
-    const val = getValue(s);
-    return {
-      name: s.name,
-      value: val,
-      rank: getRank(val),
-    };
-  });
-
-  // 👉 summary
-  const summary = {
-    yeu: 0,
-    trungbinh: 0,
-    kha: 0,
-    gioi: 0,
-    xuatxac: 0,
-  };
-
-  students.forEach((s) => {
-    const r = getRank(calcAvg(s));
-    summary[r]++;
-  });
-
-  // 👉 progress
-const getProgress = (s) => {
-  const diff = s.hk2 - s.hk1;
-
-  if (diff > 0.3)
-    return {
-      text: "Tiến bộ",
-      icon: <TrendingUp size={16} />,
-      class: "up",
-    };
-
-  if (diff < -0.3)
-    return {
-      text: "Tụt dốc",
-      icon: <TrendingDown size={16} />,
-      class: "down",
-    };
-
-  return {
-    text: "Cân bằng",
-    icon: <Minus size={16} />,
-    class: "equal",
-  };
-};
-
+const AcademicReportSection = ({
+  error,
+  isLoading,
+  reportData,
+  onClearError,
+  summaryCards,
+  academicChartData,
+  onAcademicClick,
+  subjectScopeLabel,
+  selectedSubjectScope,
+  onSubjectScopeChange,
+  subjectScopeOptions,
+  isSubjectScopeDisabled,
+  subjectChartData,
+  onSubjectClick,
+  subjectTooltipFormatter,
+  attendanceChartData,
+  onAttendanceClick,
+  attendanceTooltipFormatter,
+  financeByGrade,
+  onFinanceClick,
+  financeTooltipFormatter,
+  formatCompactMoney,
+}) => {
   return (
-    <div className="academic-container">
-      <h2>Thống kê Điểm số</h2>
-      <h1>Phân tích kết quả học tập theo lớp</h1>
+    <>
+      {error ? (
+        <Alert
+          type="error"
+          title="Không tải được dữ liệu"
+          message={error}
+          onClose={onClearError}
+        />
+      ) : null}
 
-      {/* FILTER */}
-      <div className="top-controls">
-        <select
-          value={selectedClass}
-          onChange={(e) => setSelectedClass(e.target.value)}
-        >
-          {Object.keys(data).map((cls) => (
-            <option key={cls}>{cls}</option>
-          ))}
-        </select>
+      {isLoading ? (
+        <Card>
+          <p className="admin-reports__loading">Đang tải báo cáo...</p>
+        </Card>
+      ) : null}
 
-        <div className="tabs">
-          {["HK1", "HK2", "ALL"].map((m) => (
-            <button
-              key={m}
-              className={mode === m ? "active" : ""}
-              onClick={() => setMode(m)}
-            >
-              {m === "ALL" ? "Cả năm" : m}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* SUMMARY */}
-      <div className="summary">
-        {Object.keys(summary).map((key) => (
-          <div className={`card ${key}`} key={key}>
-            <div className="badge">{summary[key]}</div>
-            <p>{summary[key]} học sinh</p>
-            <span>{rankLabel[key]}</span>
-          </div>
-        ))}
-      </div>
-
-      {/* CHART */}
-      <div className="box">
-        <ResponsiveContainer width="100%" height={250}>
-          <BarChart data={chartData}>
-            <XAxis dataKey="name" tick={{ fontSize: 12 }} />
-            <YAxis domain={[0, 10]} />
-
-            <Tooltip
-              contentStyle={{
-                borderRadius: "10px",
-                border: "none",
-                boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
-              }}
-            />
-
-            <Bar
-              dataKey="value"
-              barSize={28}
-              radius={[10, 10, 0, 0]}
-            >
-              {chartData.map((entry, index) => (
-                <Cell
-                  key={index}
-                  fill={getSoftColor(entry.rank)}
-                />
+      {!isLoading && reportData ? (
+        <>
+          <Card title="Thống kê nhanh">
+            <div className="admin-reports__summary-grid">
+              {summaryCards.map((item) => (
+                <div key={item.title} className="admin-reports__summary-card">
+                  <p className="admin-reports__summary-label">{item.title}</p>
+                  <p className="admin-reports__summary-value">{item.value}</p>
+                </div>
               ))}
-            </Bar>
-          </BarChart>
-        </ResponsiveContainer>
-      </div>
+            </div>
+          </Card>
 
-      {/* TABLE */}
-      <div className="box">
-        <h2>
-  Biểu đồ điểm trung bình học sinh — lớp {" "}
-  <span className="class-name">{selectedClass}</span>
-</h2>
-        <table>
-          <thead>
-            <tr>
-              <th>Học sinh</th>
-              <th>HK1</th>
-              <th>HK2</th>
-              <th>Cả năm</th>
-              <th>Tiến độ</th>
-              <th>Học lực</th>
-            </tr>
-          </thead>
+          <Card title="Biểu đồ tổng hợp">
+            <div className="admin-reports__charts-grid">
+              <div className="admin-reports__chart-item">
+                <h4>Học lực</h4>
+                <ResponsiveContainer width="100%" height={270}>
+                  <PieChart>
+                    <Pie
+                      data={academicChartData}
+                      dataKey="value"
+                      nameKey="name"
+                      cx="50%"
+                      cy="50%"
+                      outerRadius={90}
+                      onClick={onAcademicClick}
+                      cursor="pointer"
+                    />
+                    <Tooltip
+                      formatter={(value, _name, payload) => [
+                        `${value} học sinh`,
+                        `Mức ${payload?.payload?.name || ""}`,
+                      ]}
+                      labelFormatter={() => "Phân bố học lực"}
+                    />
+                    <Legend />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
 
-          <tbody>
-            {students.map((s, i) => {
-              const avg = calcAvg(s);
-              const prog = getProgress(s);
-              const rank = getRank(avg);
+              <div className="admin-reports__chart-item">
+                <div className="admin-reports__chart-header">
+                  <h4>Điểm trung bình theo môn ({subjectScopeLabel})</h4>
+                  <Select
+                    label=""
+                    className="admin-reports__chart-scope-select"
+                    value={selectedSubjectScope}
+                    onChange={onSubjectScopeChange}
+                    options={subjectScopeOptions}
+                    variant="custom"
+                    disabled={isSubjectScopeDisabled}
+                  />
+                </div>
+                <ResponsiveContainer width="100%" height={270}>
+                  <BarChart
+                    data={subjectChartData}
+                    onClick={(state) => onSubjectClick(state?.activePayload?.[0]?.payload)}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="subject" />
+                    <YAxis domain={[0, 10]} />
+                    <Tooltip formatter={subjectTooltipFormatter} labelFormatter={(value) => `Môn: ${value}`} />
+                    <Bar dataKey="averageScore" fill="#3557d4" cursor="pointer" />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
 
-              return (
-                <tr key={i}>
-                  <td>{s.name}</td>
-                  <td>{s.hk1}</td>
-                  <td>{s.hk2}</td>
-                  <td>{avg.toFixed(2)}</td>
-                  <td className={`progress-cell ${prog.class}`}>
-  {prog.icon}
-  <span>{prog.text}</span>
-</td>
+              <div className="admin-reports__chart-item">
+                <h4>Chuyên cần (Đi học - Nghỉ học - Đi muộn)</h4>
+                <ResponsiveContainer width="100%" height={270}>
+                  <BarChart
+                    data={attendanceChartData}
+                    onClick={(state) => onAttendanceClick(state?.activePayload?.[0]?.payload)}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="period" />
+                    <YAxis domain={[0, 100]} tickFormatter={(value) => `${value}%`} />
+                    <Tooltip formatter={attendanceTooltipFormatter} labelFormatter={(value) => `Mốc: ${value}`} />
+                    <Legend />
+                    <Bar dataKey="presentRate" name="Đi học" stackId="attendance" fill="#0d9488" cursor="pointer" />
+                    <Bar dataKey="lateRate" name="Đi muộn" stackId="attendance" fill="#f59e0b" cursor="pointer" />
+                    <Bar dataKey="absentRate" name="Nghỉ học" stackId="attendance" fill="#ef4444" cursor="pointer" />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
 
-<td>
-  <span className={`rank ${rank}`}>
-    {rankLabel[rank]}
-  </span>
-</td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
-    </div>
+              <div className="admin-reports__chart-item">
+                <h4>Tài chính theo khối (Doanh thu - Chi tiêu - Sau chi)</h4>
+                <ResponsiveContainer width="100%" height={270}>
+                  <BarChart
+                    data={financeByGrade}
+                    onClick={(state) => onFinanceClick(state?.activePayload?.[0]?.payload)}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="grade" />
+                    <YAxis tickFormatter={formatCompactMoney} />
+                    <Tooltip formatter={financeTooltipFormatter} labelFormatter={(value) => `${value}`} />
+                    <Legend />
+                    <Bar dataKey="amount" fill="#3b82f6" name="Doanh thu" cursor="pointer" />
+                    <Bar dataKey="expense" fill="#ef4444" name="Chi tiêu" cursor="pointer" />
+                    <Bar dataKey="net" fill="#22c55e" name="Sau chi" cursor="pointer" />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+          </Card>
+        </>
+      ) : null}
+    </>
   );
 };
 
 export default AcademicReportSection;
+
+
+
+

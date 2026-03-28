@@ -1,0 +1,40 @@
+/* Section: Term comparison */
+.admin-reports__comparison-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 12px;
+}
+
+.admin-reports__comparison-item {
+  border: 1px solid #dce5f7;
+  border-radius: 12px;
+  background: #f8faff;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.admin-reports__comparison-item span {
+  font-size: 0.88rem;
+  color: #59688e;
+}
+
+.admin-reports__comparison-item strong {
+  font-size: 1.1rem;
+  color: #1d2f5d;
+}
+
+.admin-reports__comparison-chart-wrap {
+  margin-top: 12px;
+  border: 1px solid #dce5f7;
+  border-radius: 12px;
+  padding: 12px;
+}
+
+@media (max-width: 1180px) {
+  .admin-reports__comparison-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
