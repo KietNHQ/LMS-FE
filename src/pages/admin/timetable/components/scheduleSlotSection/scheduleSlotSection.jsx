@@ -27,18 +27,30 @@ function SlotCard({ session, onEditSlot, onDeleteSlot }) {
 
 export default function ScheduleSlotSection({
     selectedClass,
+    sessionView,
     days,
     periods,
     slotsMap,
     onCreateFromSlot,
     onEditSlot,
     onDeleteSlot,
+    onSessionViewChange,
 }) {
+    const isMorning = sessionView === "morning";
+
     return (
         <section className="tt-schedule-section">
             <div className="tt-schedule-header">
-                <h3>Thời khóa biểu lớp {selectedClass}</h3>
-                <p>Nhấn vào ô trống để thêm tiết học nhanh.</p>
+                <div>
+                    <h3>Thời khóa biểu lớp {selectedClass}</h3>
+                </div>
+                <button
+                    type="button"
+                    className="tt-session-toggle-btn"
+                    onClick={() => onSessionViewChange(isMorning ? "afternoon" : "morning")}
+                >
+                    {isMorning ? "Đổi sang 5 tiết chiều" : "Đổi sang 5 tiết sáng"}
+                </button>
             </div>
 
             <div className="tt-schedule-table-wrap">

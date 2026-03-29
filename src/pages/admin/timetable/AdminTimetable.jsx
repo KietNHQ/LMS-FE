@@ -3,10 +3,11 @@ import "./AdminTimetable.css";
 import TimetableFiltersSection from "./components/timetableFiltersSection/timetableFiltersSection";
 import ScheduleSlotSection from "./components/scheduleSlotSection/scheduleSlotSection";
 import ConflictCheckSection from "./components/conflictCheckSection/conflictCheckSection";
+import Modal from "../../../components/ui/Modal/Modal";
 
 const classOptions = ["10A1", "10A2", "11B1", "11B2", "12C1", "12C2"];
 const dayOptions = ["Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6", "Thứ 7"];
-const periodOptions = [1, 2, 3, 4, 5, 6, 7, 8];
+const periodOptions = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 
 function getCurrentWeekValue() {
     const now = new Date();
@@ -157,10 +158,12 @@ export default function AdminTimetable() {
     const [selectedTeacher, setSelectedTeacher] = useState("Tất cả giáo viên");
     const [selectedDay, setSelectedDay] = useState("Tất cả thứ");
     const [searchTerm, setSearchTerm] = useState("");
+    const [sessionView, setSessionView] = useState("morning");
 
     const [activeModalMode, setActiveModalMode] = useState(null);
     const [activeSessionId, setActiveSessionId] = useState(null);
     const [formData, setFormData] = useState(emptyForm);
+    const [isConflictModalOpen, setIsConflictModalOpen] = useState(false);
 
     const teacherOptions = useMemo(() => {
         const names = Array.from(new Set(sessions.map((item) => item.teacher).filter(Boolean)));
@@ -169,9 +172,18 @@ export default function AdminTimetable() {
 
     const dayFilterOptions = ["Tất cả thứ", ...dayOptions];
 
+    const visiblePeriods = useMemo(() => (
+        sessionView === "morning" ? periodOptions.slice(0, 5) : periodOptions.slice(5, 10)
+    ), [sessionView]);
+
     const sessionsInWeek = useMemo(
         () => sessions.filter((item) => item.week === selectedWeek),
         [sessions, selectedWeek]
+    );
+
+    const sessionsInWeekByClass = useMemo(
+        () => sessionsInWeek.filter((item) => item.className === selectedClass),
+        [sessionsInWeek, selectedClass]
     );
 
     const timetableSessions = useMemo(() => {
@@ -244,7 +256,12 @@ export default function AdminTimetable() {
     }, [timetableSessions]);
 
     const openCreateModal = () => {
-        setFormData({ ...emptyForm, className: selectedClass, day: "Thứ 2", period: 1 });
+        setFormData({
+            ...emptyForm,
+            className: selectedClass,
+            day: "Thứ 2",
+            period: visiblePeriods[0] || 1,
+        });
         setActiveSessionId(null);
         setActiveModalMode("create");
     };
@@ -350,7 +367,7 @@ export default function AdminTimetable() {
     return (
         <div className="admin-timetable-page">
             <TimetableFiltersSection
-                totalSessions={sessionsInWeek.length}
+                totalSessions={sessionsInWeekByClass.length}
                 conflictCount={conflicts.length}
                 weekValue={selectedWeek}
                 classOptions={classOptions}
@@ -366,20 +383,21 @@ export default function AdminTimetable() {
                 onDayChange={setSelectedDay}
                 onSearchChange={setSearchTerm}
                 onCreateSession={openCreateModal}
+                onOpenConflicts={() => setIsConflictModalOpen(true)}
             />
 
             <div className="admin-timetable-content-grid">
                 <ScheduleSlotSection
                     selectedClass={selectedClass}
+                    sessionView={sessionView}
                     days={selectedDay === "Tất cả thứ" ? dayOptions : [selectedDay]}
-                    periods={periodOptions}
+                    periods={visiblePeriods}
                     slotsMap={slotsMap}
                     onCreateFromSlot={openCreateFromSlot}
                     onEditSlot={openEditModal}
                     onDeleteSlot={handleDeleteSession}
+                    onSessionViewChange={setSessionView}
                 />
-
-                <ConflictCheckSection conflicts={conflicts} />
             </div>
 
             {activeModalMode && (
@@ -392,6 +410,15 @@ export default function AdminTimetable() {
                     onSubmit={handleSubmitModal}
                 />
             )}
+
+            <Modal
+                open={isConflictModalOpen}
+                title="Kiểm tra xung đột"
+                onClose={() => setIsConflictModalOpen(false)}
+                className="tt-conflict-modal"
+            >
+                <ConflictCheckSection conflicts={conflicts} inDialog />
+            </Modal>
         </div>
     );
 }

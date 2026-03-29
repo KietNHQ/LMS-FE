@@ -1,45 +1,64 @@
-/* LIST */
 .admin-list {
   display: flex;
   flex-direction: column;
   gap: 12px;
+  margin-top: 4px;
 }
 
-/* CARD */
+.admin-list-empty {
+  border-radius: 12px;
+  padding: 14px;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 600;
+  color: #6f7c91;
+  background: #f8fbff;
+  border: 1px dashed #dbe4f5;
+}
+
 .admin-card {
   display: flex;
   gap: 12px;
   padding: 16px;
   border-radius: 14px;
-  background: var(--admin-surface-soft, #f3f6ff);
-  border: 1px solid var(--admin-border, #dce5f7);
+  background: #ffffff;
+  border: 1px solid #e4ebf8;
   position: relative;
-  transition: all 0.25s ease;
+  transition: all 0.2s ease;
   cursor: pointer;
 }
 
-/* HOVER */
 .admin-card:hover {
-  transform: translateY(-4px);
-  box-shadow: var(--admin-shadow-md, 0 10px 24px rgba(30, 47, 90, 0.12));
-  border-color: var(--admin-border-strong, #c3d2ef);
+  background: #f8fbff;
+  border-color: #cfe0ff;
+  transform: translateY(-1px);
+  box-shadow: 0 10px 22px rgba(37, 99, 255, 0.08);
 }
 
-/* ICON */
+.admin-card.is-unread {
+  border-left: 4px solid #4f78eb;
+}
+
 .admin-icon {
-  width: 36px;
-  height: 36px;
+  width: 40px;
+  height: 40px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 50%;
+  border-radius: 10px;
   flex-shrink: 0;
 }
 
-/* ICON COLORS */
 .admin-card.all .admin-icon {
   background: var(--admin-primary-soft, #e9efff);
   color: var(--admin-primary, #1e2f5a);
+}
+
+.admin-card.grade10 .admin-icon,
+.admin-card.grade11 .admin-icon,
+.admin-card.grade12 .admin-icon {
+  background: var(--admin-info-bg, #ebf2ff);
+  color: var(--admin-info-fg, #27498f);
 }
 
 .admin-card.teacher .admin-icon {
@@ -57,71 +76,74 @@
   color: var(--admin-warning-fg, #8a5a11);
 }
 
-/* CONTENT */
 .admin-content {
   flex: 1;
-  min-width: 0; /* 🔥 bắt buộc trong flex */
-}
-.admin-content p {
-  font-size: 13px;
-  color: var(--admin-text-secondary, #4d5f82);
-  margin: 2px 0 6px;
-  width: 300px;
-  white-space: nowrap;        /* 🔥 chỉ 1 dòng */
-  overflow: hidden;           /* 🔥 ẩn phần dư */
-  text-overflow: ellipsis;    /* 🔥 thêm ... */
+  min-width: 0;
 }
 
-/* TITLE + DOT */
+.admin-content p {
+  margin-top: 6px;
+  color: #4f607b;
+  font-size: 14px;
+  line-height: 1.5;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
 .admin-title {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   margin: 0;
-  font-size: 14px;
-
-  overflow: hidden;
-}
-.admin-title span,
-.admin-title {
-  white-space: nowrap;
-  text-overflow: ellipsis;
+  font-size: 16px;
+  color: #1d2f56;
+  font-weight: 700;
 }
 
-/* DOT */
 .unread-dot {
   width: 8px;
   height: 8px;
   border-radius: 50%;
-
-  display: inline-block !important;   /* 🔥 ép inline */
-  position: static !important;        /* 🔥 chặn absolute */
-  margin-left: 6px;
+  display: inline-block;
 }
 
-/* DOT COLORS */
 .unread-dot.all { background: var(--admin-text-muted, #7e8eab); }
+.unread-dot.grade10,
+.unread-dot.grade11,
+.unread-dot.grade12 { background: var(--admin-info-fg, #27498f); }
 .unread-dot.teacher { background: var(--admin-success-fg, #177245); }
 .unread-dot.student { background: var(--admin-info-fg, #27498f); }
 .unread-dot.parent { background: var(--admin-warning-fg, #8a5a11); }
 
-/* META */
 .admin-meta {
   display: flex;
-  gap: 8px;
+  align-items: center;
+  gap: 10px;
   font-size: 12px;
+  color: #8a97aa;
+  font-weight: 600;
+  margin-top: 8px;
 }
 
-/* TAG */
 .tag {
-  padding: 2px 8px;
-  border-radius: 10px;
+  padding: 3px 8px;
+  border-radius: 999px;
   font-size: 11px;
+  font-weight: 700;
 }
 
 .tag.all {
   background: var(--admin-primary-soft, #e9efff);
   color: var(--admin-primary, #1e2f5a);
+}
+
+.tag.grade10,
+.tag.grade11,
+.tag.grade12 {
+  background: var(--admin-info-bg, #ebf2ff);
+  color: var(--admin-info-fg, #27498f);
 }
 
 .tag.teacher {
@@ -139,16 +161,23 @@
   color: var(--admin-warning-fg, #8a5a11);
 }
 
-/* DELETE */
 .admin-delete {
-  position: absolute;
-  right: 12px;
-  top: 12px;
+  width: 34px;
+  height: 34px;
+  border: 1px solid var(--admin-border, #dce5f7);
+  border-radius: 10px;
+  background: var(--admin-surface, #ffffff);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
   color: var(--admin-text-muted, #7e8eab);
   cursor: pointer;
+  transition: all 0.2s ease;
 }
 
 .admin-delete:hover {
+  border-color: var(--admin-danger-bg, #fdeceb);
+  background: var(--admin-danger-bg, #fdeceb);
   color: var(--admin-danger-fg, #b42318);
 }
-

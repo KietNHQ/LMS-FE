@@ -7,6 +7,20 @@
     min-width: 0;
     max-height: 100%;
     overflow: auto;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.tt-conflict-section:hover {
+    border-color: #cdd9ec;
+    box-shadow: 0 12px 28px rgba(30, 47, 90, 0.1);
+}
+
+.tt-conflict-section.in-dialog {
+    border: none;
+    box-shadow: none;
+    border-radius: 0;
+    padding: 0;
+    max-height: min(62vh, 30rem);
 }
 
 .tt-conflict-header {
@@ -54,7 +68,33 @@
     border: 1px solid #f1d4d8;
     background: #fff8f9;
     border-radius: 0.85rem;
+    overflow: hidden;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.tt-conflict-item:hover {
+    border-color: #e9b7c0;
+    box-shadow: 0 8px 18px rgba(167, 52, 74, 0.11);
+}
+
+.tt-conflict-toggle {
+    width: 100%;
+    border: none;
+    text-align: left;
+    background: transparent;
+    cursor: pointer;
     padding: 0.65rem 0.7rem;
+    position: relative;
+    transition: background-color 0.2s ease;
+}
+
+.tt-conflict-toggle:hover {
+    background: #fff4f6;
+}
+
+.tt-conflict-toggle:focus-visible {
+    outline: 2px solid #f0a9b4;
+    outline-offset: -2px;
 }
 
 .tt-conflict-item-top {
@@ -80,5 +120,50 @@
     color: #4b5567;
     font-size: 0.85rem;
     line-height: 1.35;
+    padding-right: 1.8rem;
+}
+
+.tt-conflict-chevron {
+    position: absolute;
+    right: 0.7rem;
+    bottom: 0.72rem;
+    color: #8f5d68;
+    transition: transform 0.2s ease, color 0.2s ease;
+}
+
+.tt-conflict-item.is-open .tt-conflict-chevron {
+    transform: rotate(180deg);
+    color: #a7344a;
+}
+
+.tt-conflict-solution {
+    border-top: 1px dashed #efc0c8;
+    background: #fff;
+    padding: 0.6rem 0.75rem 0.7rem;
+    transition: background-color 0.2s ease;
+}
+
+.tt-conflict-item:hover .tt-conflict-solution {
+    background: #fffdfd;
+}
+
+.tt-conflict-solution h4 {
+    margin: 0;
+    color: #8d2940;
+    font-size: 0.84rem;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+}
+
+.tt-conflict-solution ul {
+    margin: 0.45rem 0 0;
+    padding-left: 1rem;
+    color: #4b5567;
+    font-size: 0.84rem;
+    line-height: 1.35;
+}
+
+.tt-conflict-solution li + li {
+    margin-top: 0.2rem;
 }
 
