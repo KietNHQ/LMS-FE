@@ -1,15 +1,16 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
+import { Bell, BellPlus } from "lucide-react";
 import "./AdminNotifications.css";
 import NotificationHistorySection from "./components/notificationHistorySection/notificationHistorySection";
 import CreateNotificationSection from "./components/createNotificationSection/createNotificationSection";
 
 const FILTERS = ["Tất cả", "Lớp 10", "Lớp 11", "Lớp 12", "Phụ huynh"];
+const TARGET_OPTIONS = ["Tất cả", "Lớp 10", "Lớp 11", "Lớp 12", "Phụ huynh"];
 
 const AdminNotifications = () => {
   const [open, setOpen] = useState(false);
   const [detail, setDetail] = useState(null);
 
-  // 🔥 FILTER STATE
   const [activeFilter, setActiveFilter] = useState("Tất cả");
 
   const [list, setList] = useState([
@@ -37,6 +38,12 @@ const AdminNotifications = () => {
     type: "Tất cả",
   });
 
+  const sortedList = useMemo(() => {
+    return [...list].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  }, [list]);
+
+  const unreadCount = useMemo(() => list.filter((item) => !item.read).length, [list]);
+
   const handleAdd = () => {
     if (!form.title || !form.content) return;
 
@@ -56,6 +63,9 @@ const AdminNotifications = () => {
 
   const handleDelete = (id) => {
     setList(list.filter((i) => i.id !== id));
+    if (detail?.id === id) {
+      setDetail(null);
+    }
   };
 
   const handleOpenDetail = (item) => {
@@ -68,26 +78,43 @@ const AdminNotifications = () => {
     );
   };
 
-  // 🔥 FILTER LOGIC
+  const handleMarkAllRead = () => {
+    setList((prev) => prev.map((item) => ({ ...item, read: true })));
+  };
+
   const filteredList =
     activeFilter === "Tất cả"
-      ? list
-      : list.filter((item) => item.type === activeFilter);
+      ? sortedList
+      : sortedList.filter((item) => item.type === activeFilter);
 
   return (
     <div className="admin-wrapper">
       <div className="admin-header">
-        <div>
+        <div className="admin-header-title">
           <h2>Trung tâm Thông báo</h2>
-          <p>{list.length} thông báo đã gửi</p>
+          <p>{unreadCount} chưa đọc / {list.length} thông báo đã gửi</p>
         </div>
 
-        <button className="admin-btn-add" onClick={() => setOpen(true)}>
-          + Gửi thông báo
-        </button>
+        <div className="admin-header-actions">
+          <button className="admin-bell-btn" onClick={handleMarkAllRead} title="Đánh dấu tất cả đã đọc">
+            <Bell size={18} />
+            {unreadCount > 0 && <span>{unreadCount > 9 ? "9+" : unreadCount}</span>}
+          </button>
+
+          <button className="admin-btn-add" onClick={() => {
+  setForm({
+    title: "",
+    content: "",
+    type: "Tất cả"
+  });
+  setOpen(true);
+}}>
+  <BellPlus size={16} />
+  Gửi thông báo
+</button>
+        </div>
       </div>
 
-      {/* 🔥 FILTER UI */}
       <div className="admin-filters">
         {FILTERS.map((f) => (
           <button
@@ -102,7 +129,6 @@ const AdminNotifications = () => {
         ))}
       </div>
 
-      {/* LIST */}
       <NotificationHistorySection
         list={filteredList}
         onDelete={handleDelete}
@@ -115,9 +141,9 @@ const AdminNotifications = () => {
         form={form}
         setForm={setForm}
         onSubmit={handleAdd}
+        typeOptions={TARGET_OPTIONS}
       />
 
-      {/* DETAIL MODAL */}
       {detail && (
         <div className="admin-modal" onClick={() => setDetail(null)}>
           <div

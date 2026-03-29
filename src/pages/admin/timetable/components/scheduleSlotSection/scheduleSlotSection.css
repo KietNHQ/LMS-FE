@@ -5,6 +5,12 @@
     padding: 1rem;
     box-shadow: 0 8px 24px rgba(30, 47, 90, 0.08);
     min-width: 0;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.tt-schedule-section:hover {
+    border-color: #cdd9ec;
+    box-shadow: 0 12px 28px rgba(30, 47, 90, 0.11);
 }
 
 .tt-schedule-header h3 {
@@ -12,10 +18,40 @@
     color: #1f2a44;
 }
 
+.tt-schedule-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.8rem;
+}
+
 .tt-schedule-header p {
     margin: 0.35rem 0 0;
     color: #6b7891;
     font-size: 0.92rem;
+}
+
+.tt-session-toggle-btn {
+    border: 1px solid #c8d7f7;
+    border-radius: 0.65rem;
+    background: #f2f6ff;
+    color: #1f3f85;
+    font-weight: 700;
+    min-height: 2.35rem;
+    padding: 0 0.8rem;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background-color 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+}
+
+.tt-session-toggle-btn:hover {
+    background: #e8efff;
+    border-color: #9cb8f3;
+}
+
+.tt-session-toggle-btn:focus-visible {
+    outline: 2px solid #88a8ec;
+    outline-offset: 2px;
 }
 
 .tt-schedule-table-wrap {
@@ -55,11 +91,22 @@
     text-align: center;
     padding: 0.9rem 0.45rem;
     white-space: nowrap;
+    transition: background-color 0.2s ease, color 0.2s ease;
 }
 
 .slot-cell {
     min-width: 8.5rem;
     padding: 0.45rem;
+    transition: background-color 0.2s ease;
+}
+
+.tt-schedule-table tbody tr:hover .period-cell {
+    background: #f4f7ff;
+    color: #36508f;
+}
+
+.tt-schedule-table tbody tr:hover .slot-cell {
+    background: #fbfdff;
 }
 
 .tt-slot-card {
@@ -71,6 +118,13 @@
     flex-direction: column;
     gap: 0.2rem;
     background: linear-gradient(180deg, #fbfcff 0%, #f8faff 100%);
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.tt-slot-card:hover {
+    border-color: #b9caea;
+    box-shadow: 0 8px 18px rgba(30, 47, 90, 0.12);
+    transform: translateY(-1px);
 }
 
 .tt-slot-card h5 {
@@ -124,6 +178,7 @@
     align-items: center;
     justify-content: center;
     cursor: pointer;
+    transition: background-color 0.2s ease, color 0.2s ease;
 }
 
 .icon-btn:hover {
@@ -149,11 +204,26 @@
     justify-content: center;
     gap: 0.3rem;
     cursor: pointer;
+    transition: border-color 0.2s ease, background-color 0.2s ease, color 0.2s ease, transform 0.2s ease;
 }
 
 .tt-empty-slot-btn:hover {
     border-color: #9fbaf0;
     background: #f6f9ff;
     color: #2a4f9a;
+    transform: translateY(-1px);
+}
+
+.tt-empty-slot-btn:focus-visible,
+.icon-btn:focus-visible {
+    outline: 2px solid #8fb3ff;
+    outline-offset: 2px;
+}
+
+@media (max-width: 880px) {
+    .tt-schedule-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
 }
 

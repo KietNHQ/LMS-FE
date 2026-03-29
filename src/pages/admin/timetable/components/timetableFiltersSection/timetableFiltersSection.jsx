@@ -1,5 +1,6 @@
-import React from "react";
+  import React from "react";
 import { FiAlertTriangle, FiCalendar, FiClock, FiPlus, FiSearch } from "react-icons/fi";
+import Select from "../../../../../components/ui/Select/Select";
 import "./timetableFiltersSection.css";
 
 export default function TimetableFiltersSection({
@@ -19,18 +20,25 @@ export default function TimetableFiltersSection({
     onDayChange,
     onSearchChange,
     onCreateSession,
+    onOpenConflicts,
 }) {
     return (
         <section className="tt-filters-section">
             <div className="tt-filters-header">
                 <div>
                     <h1>Quản lý thời khóa biểu</h1>
-                    <p>Thiết lập lịch dạy cho các lớp khối 10, 11 và 12 theo từng tuần.</p>
                 </div>
-                <button type="button" className="tt-create-btn" onClick={onCreateSession}>
-                    <FiPlus />
-                    Thêm tiết học
-                </button>
+                <div className="tt-header-actions">
+                    <button type="button" className="tt-conflict-btn" onClick={onOpenConflicts}>
+                        <FiAlertTriangle />
+                        Kiểm tra xung đột
+                        <span>{conflictCount}</span>
+                    </button>
+                    <button type="button" className="tt-create-btn" onClick={onCreateSession}>
+                        <FiPlus />
+                        Thêm tiết học
+                    </button>
+                </div>
             </div>
 
             <div className="tt-stats-grid">
@@ -42,13 +50,18 @@ export default function TimetableFiltersSection({
                     </div>
                 </article>
 
-                <article className="tt-stat-card">
+                <button
+                    type="button"
+                    className="tt-stat-card tt-stat-card--clickable"
+                    onClick={onOpenConflicts}
+                    aria-label="Mo hop thoai kiem tra xung dot"
+                >
                     <span className="icon"><FiAlertTriangle /></span>
                     <div>
                         <strong>{conflictCount}</strong>
                         <p>Xung đột cần xử lý</p>
                     </div>
-                </article>
+                </button>
 
                 <article className="tt-stat-card">
                     <span className="icon"><FiCalendar /></span>
@@ -80,29 +93,35 @@ export default function TimetableFiltersSection({
 
                 <label className="tt-input-wrap">
                     <span>Lớp</span>
-                    <select value={selectedClass} onChange={(e) => onClassChange(e.target.value)}>
-                        {classOptions.map((item) => (
-                            <option key={item} value={item}>{item}</option>
-                        ))}
-                    </select>
+                    <Select
+                        variant="custom"
+                        className="tt-custom-select"
+                        options={classOptions}
+                        value={selectedClass}
+                        onChange={(e) => onClassChange(e.target.value)}
+                    />
                 </label>
 
                 <label className="tt-input-wrap">
                     <span>Giáo viên</span>
-                    <select value={selectedTeacher} onChange={(e) => onTeacherChange(e.target.value)}>
-                        {teacherOptions.map((item) => (
-                            <option key={item} value={item}>{item}</option>
-                        ))}
-                    </select>
+                    <Select
+                        variant="custom"
+                        className="tt-custom-select"
+                        options={teacherOptions}
+                        value={selectedTeacher}
+                        onChange={(e) => onTeacherChange(e.target.value)}
+                    />
                 </label>
 
                 <label className="tt-input-wrap">
                     <span>Thứ</span>
-                    <select value={selectedDay} onChange={(e) => onDayChange(e.target.value)}>
-                        {dayOptions.map((item) => (
-                            <option key={item} value={item}>{item}</option>
-                        ))}
-                    </select>
+                    <Select
+                        variant="custom"
+                        className="tt-custom-select"
+                        options={dayOptions}
+                        value={selectedDay}
+                        onChange={(e) => onDayChange(e.target.value)}
+                    />
                 </label>
             </div>
         </section>

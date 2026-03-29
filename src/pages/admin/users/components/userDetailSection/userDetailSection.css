@@ -1,6 +1,6 @@
 .user-detail-section {
-    background: #ffffff;
-    border: 1px solid #dae1ed;
+    background: var(--admin-surface, #ffffff);
+    border: 1px solid var(--admin-border, #dce5f7);
     border-radius: 1.7rem;
     overflow: hidden;
     box-shadow: 0 8px 24px rgba(30, 47, 90, 0.08);
@@ -8,7 +8,7 @@
 }
 
 .user-detail-section:hover {
-    border-color: #cfd9ea;
+    border-color: var(--admin-border-strong, #c3d2ef);
     box-shadow: 0 12px 28px rgba(30, 47, 90, 0.12);
 }
 
@@ -22,7 +22,7 @@
 
 .user-detail-head {
     padding: 1.2rem 1.5rem;
-    border-bottom: 1px solid #e8eef7;
+    border-bottom: 1px solid var(--admin-border, #dce5f7);
 }
 
 .user-detail-head span {
@@ -30,7 +30,7 @@
     font-weight: 800;
     letter-spacing: 0.03em;
     text-transform: uppercase;
-    color: #6b7891;
+    color: var(--admin-text-secondary, #4d5f82);
     text-align: center;
     justify-self: center;
 }
@@ -43,25 +43,25 @@
 
 .user-detail-row {
     padding: 1rem 1.5rem;
-    border-bottom: 1px solid #eaecf3;
+    border-bottom: 1px solid var(--admin-border, #dce5f7);
     transition: background-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .user-detail-row:hover {
-    background: linear-gradient(180deg, #fbfcff 0%, #f7faff 100%);
-    box-shadow: inset 0 0 0 1px rgba(143, 179, 255, 0.2);
+    background: var(--admin-primary-soft, #e9efff);
+    box-shadow: inset 0 0 0 1px var(--admin-focus-ring, rgba(30, 47, 90, 0.2));
 }
 
 .user-detail-row.is-inactive {
     opacity: 0.58;
     filter: grayscale(0.2);
-    background: #fcfdff;
+    background: var(--admin-surface-soft, #f3f6ff);
 }
 
 .user-detail-row.is-inactive:hover {
     opacity: 0.72;
-    background: #f8fafe;
-    box-shadow: inset 0 0 0 1px rgba(201, 210, 225, 0.35);
+    background: var(--admin-primary-soft, #e9efff);
+    box-shadow: inset 0 0 0 1px var(--admin-border-strong, #c3d2ef);
 }
 
 .user-detail-row.is-inactive .user-detail-actions {
@@ -118,14 +118,14 @@
 }
 
 .user-detail-name {
-    color: #26334d;
+    color: var(--admin-text-primary, #1e2f5a);
     font-size: 1rem;
     font-weight: 800;
     line-height: 1.35;
 }
 
 .user-detail-email {
-    color: #7c879b;
+    color: var(--admin-text-muted, #7e8eab);
     font-size: 0.95rem;
     font-weight: 500;
 }
@@ -149,12 +149,12 @@
 }
 
 .user-role-chip.admin {
-    background: rgba(30, 47, 90, 0.12);
-    color: var(--admin-color);
+    background: var(--admin-primary-soft, #e9efff);
+    color: var(--admin-primary, #1e2f5a);
 }
 
 .user-role-chip.admin:hover {
-    background: rgba(30, 47, 90, 0.18);
+    background: var(--admin-primary-hover, #172547);
 }
 
 .user-role-chip.teacher {
@@ -196,7 +196,7 @@
 
 .user-detail-phone,
 .user-detail-date {
-    color: #5d687c;
+    color: var(--admin-text-secondary, #4d5f82);
     font-size: 0.98rem;
     font-weight: 500;
 }
@@ -217,7 +217,7 @@
     border-radius: 0.7rem;
     display: grid;
     place-items: center;
-    color: #98a2b3;
+    color: var(--admin-text-muted, #7e8eab);
     cursor: pointer;
     transition: background-color 0.18s ease, color 0.18s ease, transform 0.18s ease,
     box-shadow 0.18s ease;
@@ -225,30 +225,30 @@
 
 .user-detail-action-btn:hover {
     transform: translateY(-1px);
-    background: #eef2fb;
-    color: #20366d;
+    background: var(--admin-primary-soft, #e9efff);
+    color: var(--admin-primary, #1e2f5a);
     box-shadow: 0 6px 12px rgba(30, 47, 90, 0.14);
 }
 
 .user-detail-action-btn.edit:hover {
-    background: #e9f1ff;
-    color: #2b5fd5;
+    background: var(--admin-primary-soft, #e9efff);
+    color: var(--admin-primary, #1e2f5a);
 }
 
 .user-detail-action-btn.status:hover {
-    background: #fff4e5;
-    color: #c77900;
+    background: var(--admin-warning-bg, #fff6df);
+    color: var(--admin-warning-fg, #8a5a11);
 }
 
 .user-detail-action-btn.delete:hover {
-    background: #fff1f1;
-    color: #d14d4d;
+    background: var(--admin-danger-bg, #fdeceb);
+    color: var(--admin-danger-fg, #b42318);
 }
 
 .user-detail-empty {
     padding: 3rem 1.5rem;
     text-align: center;
-    color: #7b8699;
+    color: var(--admin-text-muted, #7e8eab);
     font-size: 1rem;
     font-weight: 600;
 }

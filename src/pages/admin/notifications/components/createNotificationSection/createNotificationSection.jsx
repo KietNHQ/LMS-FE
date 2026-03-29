@@ -7,12 +7,13 @@ const CreateNotificationSection = ({
   form,
   setForm,
   onSubmit,
+  typeOptions = [],
 }) => {
   if (!open) return null;
 
   return (
-    <div className="admin-modal">
-      <div className="admin-modal-box">
+    <div className="create-noti-modal" onClick={() => setOpen(false)}>
+      <div className="create-noti-modal-box" onClick={(e) => e.stopPropagation()}>
         <h3>Gửi thông báo mới</h3>
 
         <label>Tiêu đề</label>
@@ -26,7 +27,9 @@ const CreateNotificationSection = ({
 
         <label>Nội dung</label>
         <textarea
-          placeholder="Nội dung thông báo..."
+          placeholder={
+            `Ví dụ: Kính gửi toàn thể giáo viên, học sinh và phụ huynh.\n\n- Thông báo nghỉ học ngày ...\n- Lịch thi học kỳ ...\n- Đề nghị các lớp thực hiện đúng quy định...`
+          }
           value={form.content}
           onChange={(e) =>
             setForm({ ...form, content: e.target.value })
@@ -40,13 +43,12 @@ const CreateNotificationSection = ({
             setForm({ ...form, type: e.target.value })
           }
         >
-          <option>Tất cả</option>
-          <option>Giáo viên</option>
-          <option>Học sinh</option>
-          <option>Phụ huynh</option>
+          {typeOptions.map((option) => (
+            <option key={option} value={option}>{option}</option>
+          ))}
         </select>
 
-        <div className="admin-modal-actions">
+        <div className="create-noti-modal-actions">
           <button className="cancel" onClick={() => setOpen(false)}>
             Hủy
           </button>
