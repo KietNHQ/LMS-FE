@@ -38,6 +38,8 @@ export default function Sidebar({
     const saved = Number(localStorage.getItem(PARENT_UNREAD_COUNT_KEY));
     return Number.isFinite(saved) ? saved : 0;
   });
+  // Hiển thị badge số thông báo cho admin
+  const [adminUnreadCount, setAdminUnreadCount] = useState(0);
 
   const prevIsMobileRef = useRef(isMobile);
 
@@ -148,6 +150,22 @@ export default function Sidebar({
     };
   }, []);
 
+  useEffect(() => {
+    // Lấy số thông báo chưa đọc từ localStorage hoặc API nếu có
+    const saved = Number(localStorage.getItem("admin_unread_notifications_count"));
+    // Đặt setState vào trong requestAnimationFrame để tránh warning
+    window.requestAnimationFrame(() => {
+      setAdminUnreadCount(Number.isFinite(saved) ? saved : 0);
+    });
+    // Có thể lắng nghe sự kiện cập nhật nếu cần
+    const handleUpdate = (event) => {
+      const next = Number(event?.detail);
+      setAdminUnreadCount(Number.isFinite(next) ? next : 0);
+    };
+    window.addEventListener("admin-notification-count-updated", handleUpdate);
+    return () => window.removeEventListener("admin-notification-count-updated", handleUpdate);
+  }, []);
+
   const getNotificationBadgeCount = (itemPath) => {
     if (role === "student" && itemPath === "/student/notifications") {
       return studentUnreadCount;
@@ -155,6 +173,10 @@ export default function Sidebar({
 
     if (role === "parent" && itemPath === "/parent/notifications") {
       return parentUnreadCount;
+    }
+
+    if (role === "admin" && itemPath === "/admin/notifications") {
+      return adminUnreadCount;
     }
 
     return 0;

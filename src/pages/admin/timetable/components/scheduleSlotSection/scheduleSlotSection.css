@@ -32,26 +32,79 @@
 }
 
 .tt-session-toggle-btn {
-    border: 1px solid #c8d7f7;
-    border-radius: 0.65rem;
+    border: 1.5px solid #c8d7f7;
+    border-radius: 0.8rem;
     background: #f2f6ff;
     color: #1f3f85;
-    font-weight: 700;
-    min-height: 2.35rem;
-    padding: 0 0.8rem;
+    font-weight: 800;
+    min-height: 2.1rem;
+    padding: 0 0.7rem;
     cursor: pointer;
     white-space: nowrap;
-    transition: background-color 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    box-shadow: 0 2px 10px 0 rgba(80, 120, 255, 0.08);
+    transition: background 0.2s, border-color 0.2s, box-shadow 0.2s, transform 0.18s;
+    position: relative;
+    z-index: 1;
 }
 
 .tt-session-toggle-btn:hover {
     background: #e8efff;
-    border-color: #9cb8f3;
+    border-color: #7fa8f3;
+    box-shadow: 0 4px 18px 0 rgba(80, 120, 255, 0.18);
+    transform: scale(1.045);
 }
 
-.tt-session-toggle-btn:focus-visible {
-    outline: 2px solid #88a8ec;
-    outline-offset: 2px;
+.tt-session-toggle-icon {
+    font-size: 1.35rem !important;
+    font-weight: bold;
+    filter: drop-shadow(0 0 4px rgba(255, 200, 0, 0.13));
+    transition: filter 0.18s, color 0.18s;
+    margin-right: 0.18rem;
+    vertical-align: middle;
+}
+
+.tt-session-toggle-icon-wrap {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 0.18em;
+}
+
+.tt-session-toggle-icon.sun {
+    color: #ffb300;
+    text-shadow: 0 0 8px #ffe066, 0 0 2px #fffbe6;
+    filter: drop-shadow(0 0 8px #ffe066);
+}
+
+.tt-session-toggle-icon.moon {
+    color: #3a7bd5;
+    text-shadow: 0 0 8px #b3d1ff, 0 0 2px #e6f0ff;
+    filter: drop-shadow(0 0 8px #b3d1ff);
+}
+
+.tt-session-toggle-label {
+    font-size: 1rem;
+    font-weight: 800;
+    letter-spacing: 0.01em;
+    transition: color 0.18s, text-shadow 0.18s;
+    user-select: none;
+}
+
+.tt-session-toggle-label.sun {
+    color: #b97a00;
+    text-shadow: 0 0 4px #ffe066;
+}
+
+.tt-session-toggle-label.moon {
+    color: #2563b6;
+    text-shadow: 0 0 4px #b3d1ff;
+}
+
+.tt-session-toggle-btn:active {
+    transform: scale(0.98);
 }
 
 .tt-schedule-table-wrap {
@@ -226,4 +279,3 @@
         align-items: flex-start;
     }
 }
-

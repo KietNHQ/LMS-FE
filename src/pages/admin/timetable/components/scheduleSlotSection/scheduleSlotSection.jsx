@@ -1,5 +1,8 @@
 import React from "react";
 import { FiEdit2, FiPlus, FiTrash2 } from "react-icons/fi";
+import { MdWbSunny, MdWbTwilight } from "react-icons/md";
+import { BsFillSunFill } from "react-icons/bs";
+import { FaRegMoon } from "react-icons/fa";
 import "./scheduleSlotSection.css";
 
 function SlotCard({ session, onEditSlot, onDeleteSlot }) {
@@ -46,10 +49,19 @@ export default function ScheduleSlotSection({
                 </div>
                 <button
                     type="button"
-                    className="tt-session-toggle-btn"
+                    className={`tt-session-toggle-btn ${isMorning ? "tt-session-toggle-morning" : "tt-session-toggle-afternoon"}`}
                     onClick={() => onSessionViewChange(isMorning ? "afternoon" : "morning")}
                 >
-                    {isMorning ? "Đổi sang 5 tiết chiều" : "Đổi sang 5 tiết sáng"}
+                    <span className="tt-session-toggle-icon-wrap">
+                        {!isMorning ? (
+                            <FaRegMoon className="tt-session-toggle-icon moon" />
+                        ) : (
+                            <BsFillSunFill className="tt-session-toggle-icon sun" />
+                        )}
+                    </span>
+                    <span className={`tt-session-toggle-label ${isMorning ? "moon" : "sun"}`}>
+                        Đổi sang 5 tiết {isMorning ? "chiều" : "sáng"}
+                    </span>
                 </button>
             </div>
 
@@ -99,4 +111,3 @@ export default function ScheduleSlotSection({
         </section>
     );
 }
-

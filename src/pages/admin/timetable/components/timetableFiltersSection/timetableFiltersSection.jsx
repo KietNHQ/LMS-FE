@@ -1,5 +1,5 @@
-  import React from "react";
-import { FiAlertTriangle, FiCalendar, FiClock, FiPlus, FiSearch } from "react-icons/fi";
+import React from "react";
+import { FiAlertTriangle, FiCalendar, FiClock, FiPlus } from "react-icons/fi";
 import Select from "../../../../../components/ui/Select/Select";
 import "./timetableFiltersSection.css";
 
@@ -10,14 +10,17 @@ export default function TimetableFiltersSection({
     classOptions,
     teacherOptions,
     dayOptions,
+    blockOptions,
     selectedClass,
     selectedTeacher,
     selectedDay,
+    selectedBlock,
     searchTerm,
     onWeekChange,
     onClassChange,
     onTeacherChange,
     onDayChange,
+    onBlockChange,
     onSearchChange,
     onCreateSession,
     onOpenConflicts,
@@ -78,17 +81,16 @@ export default function TimetableFiltersSection({
                     <input type="week" value={weekValue} onChange={(e) => onWeekChange(e.target.value)} />
                 </label>
 
-                <label className="tt-input-wrap tt-search-wrap">
-                    <span>Tìm kiếm</span>
-                    <div className="tt-search-box">
-                        <FiSearch />
-                        <input
-                            type="text"
-                            placeholder="Môn học, giáo viên, phòng..."
-                            value={searchTerm}
-                            onChange={(e) => onSearchChange(e.target.value)}
-                        />
-                    </div>
+                {/* Thay thế tìm kiếm bằng filter khối */}
+                <label className="tt-input-wrap">
+                    <span>Khối</span>
+                    <Select
+                        variant="custom"
+                        className="tt-custom-select"
+                        options={blockOptions}
+                        value={selectedBlock}
+                        onChange={(e) => onBlockChange(e.target.value)}
+                    />
                 </label>
 
                 <label className="tt-input-wrap">
@@ -127,4 +129,3 @@ export default function TimetableFiltersSection({
         </section>
     );
 }
-
