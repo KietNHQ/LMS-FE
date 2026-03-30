@@ -6,6 +6,8 @@ import ConflictCheckSection from "./components/conflictCheckSection/conflictChec
 import Modal from "../../../components/ui/Modal/Modal";
 
 const classOptions = ["10A1", "10A2", "11B1", "11B2", "12C1", "12C2"];
+// Tạo blockOptions từ classOptions (lấy ký tự đầu, loại trùng)
+const blockOptions = Array.from(new Set(classOptions.map((c) => c.slice(0, 2))));
 const dayOptions = ["Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6", "Thứ 7"];
 const periodOptions = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 
@@ -154,7 +156,11 @@ function LessonModal({ mode, formData, subjectOptions, onChange, onClose, onSubm
 export default function AdminTimetable() {
     const [sessions, setSessions] = useState(initialSessions);
     const [selectedWeek, setSelectedWeek] = useState(currentWeek);
-    const [selectedClass, setSelectedClass] = useState("10A1");
+    // Thêm state cho selectedBlock
+    const [selectedBlock, setSelectedBlock] = useState(blockOptions[0]);
+    // Khi đổi block, selectedClass sẽ là lớp đầu tiên của block đó
+    const filteredClassOptions = useMemo(() => classOptions.filter((c) => c.startsWith(selectedBlock)), [selectedBlock]);
+    const [selectedClass, setSelectedClass] = useState(filteredClassOptions[0]);
     const [selectedTeacher, setSelectedTeacher] = useState("Tất cả giáo viên");
     const [selectedDay, setSelectedDay] = useState("Tất cả thứ");
     const [searchTerm, setSearchTerm] = useState("");
@@ -165,10 +171,30 @@ export default function AdminTimetable() {
     const [formData, setFormData] = useState(emptyForm);
     const [isConflictModalOpen, setIsConflictModalOpen] = useState(false);
 
+
+    // Khi đổi block, cập nhật selectedClass về lớp đầu tiên của block đó
+    React.useEffect(() => {
+        if (!filteredClassOptions.includes(selectedClass)) {
+            setSelectedClass(filteredClassOptions[0]);
+        }
+    }, [selectedBlock, filteredClassOptions, selectedClass]);
+
+    // Tính lại danh sách giáo viên filter dựa trên tuần, lớp, ngày
     const teacherOptions = useMemo(() => {
-        const names = Array.from(new Set(sessions.map((item) => item.teacher).filter(Boolean)));
+        let filtered = sessions.filter((item) => item.week === selectedWeek && item.className === selectedClass);
+        if (selectedDay !== "Tất cả thứ") {
+            filtered = filtered.filter((item) => item.day === selectedDay);
+        }
+        const names = Array.from(new Set(filtered.map((item) => item.teacher).filter(Boolean)));
         return ["Tất cả giáo viên", ...names];
-    }, [sessions]);
+    }, [sessions, selectedWeek, selectedClass, selectedDay]);
+
+    // Nếu selectedTeacher không còn hợp lệ thì reset về "Tất cả giáo viên"
+    React.useEffect(() => {
+        if (!teacherOptions.includes(selectedTeacher)) {
+            setSelectedTeacher("Tất cả giáo viên");
+        }
+    }, [teacherOptions, selectedTeacher]);
 
     const dayFilterOptions = ["Tất cả thứ", ...dayOptions];
 
@@ -370,7 +396,10 @@ export default function AdminTimetable() {
                 totalSessions={sessionsInWeekByClass.length}
                 conflictCount={conflicts.length}
                 weekValue={selectedWeek}
-                classOptions={classOptions}
+                blockOptions={blockOptions}
+                selectedBlock={selectedBlock}
+                onBlockChange={setSelectedBlock}
+                classOptions={filteredClassOptions}
                 teacherOptions={teacherOptions}
                 dayOptions={dayFilterOptions}
                 selectedClass={selectedClass}
