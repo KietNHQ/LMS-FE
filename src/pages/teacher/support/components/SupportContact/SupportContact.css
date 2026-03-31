@@ -1,0 +1,71 @@
+.teacher-support-contact h3 {
+  margin: 0 0 10px;
+  font-size: 18px;
+  font-weight: 800;
+  color: #1f3f3c;
+}
+
+.teacher-contact-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.teacher-contact-card {
+  background: #ffffff;
+  border: 1px solid #cdecea;
+  border-radius: 16px;
+  padding: 12px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.teacher-contact-card:hover {
+    border-color: #9ee3dc;
+  box-shadow: 0 10px 20px rgba(4, 160, 148, 0.12);
+  transform: translateY(-2px);
+}
+
+.teacher-contact-icon-wrap {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  background: #d9f5f2;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.teacher-contact-icon {
+  font-size: 18px;
+  color: #04a094;
+}
+
+.teacher-contact-content {
+  min-width: 0;
+}
+
+.teacher-contact-content strong {
+  display: block;
+  margin-bottom: 3px;
+  font-size: 14px;
+  font-weight: 700;
+  color: #2f5f5a;
+}
+
+.teacher-contact-content p {
+  margin: 0;
+  font-size: 13px;
+  color: #6bbfb8;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 1080px) {
+  .teacher-contact-grid {
+    grid-template-columns: 1fr;
+  }
+}
+

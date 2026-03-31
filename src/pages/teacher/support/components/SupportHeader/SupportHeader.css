@@ -1,0 +1,53 @@
+.teacher-support-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.teacher-support-header h1 {
+  margin: 0;
+  font-size: 30px;
+  font-weight: 800;
+  color: #16233b;
+  letter-spacing: -0.02em;
+}
+
+.teacher-support-header-meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.teacher-support-meta-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 36px;
+  padding: 0 14px;
+  border-radius: 999px;
+  border: 1px solid #cdecea;
+  background: #f0fbfa;
+  color: #04a094;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.teacher-support-meta-chip--accent {
+   background: #d9f5f2;
+  border-color: #9ee3dc;
+  color: #038f84;
+}
+
+@media (max-width: 900px) {
+  .teacher-support-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .teacher-support-header h1 {
+    font-size: 26px;
+  }
+}
+

@@ -1,0 +1,93 @@
+.teacher-notification-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.teacher-notification-header__title h1 {
+  margin: 0;
+  font-size: clamp(28px, 2.4vw, 40px);
+  line-height: 1.12;
+  font-weight: 800;
+  color: #16233b;
+  letter-spacing: -0.01em;
+}
+
+.teacher-notification-header__title span {
+  display: inline-block;
+  margin-top: 6px;
+  font-size: 14px;
+  color: #6f7c91;
+  font-weight: 600;
+}
+
+.teacher-notification-header__actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex: 1;
+  min-width: 320px;
+}
+
+.teacher-notification-bell {
+  position: relative;
+  width: 56px;
+  height: 56px;
+  border-radius: 18px;
+  background: #ffffff;
+  border: 1px solid #cdecea;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  box-shadow: 0 8px 20px rgba(20, 28, 45, 0.05);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease, border-color 0.2s ease;
+}
+
+.teacher-notification-bell:hover {
+  background: #d9f5f2;
+  border-color: #9ee3dc;
+  transform: translateY(-2px);
+  box-shadow: 0 10px 22px rgba(4, 160, 148, 0.18);
+}
+
+.teacher-notification-bell-icon {
+  color: #04a094;
+}
+
+.teacher-notification-bell-badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: #ff4d4f;
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid #ffffff;
+  line-height: 1;
+  box-shadow: 0 4px 10px rgba(255, 77, 79, 0.22);
+}
+
+@media (max-width: 900px) {
+  .teacher-notification-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .teacher-notification-header__actions {
+    min-width: 0;
+    width: 100%;
+  }
+}
+
