@@ -21,7 +21,7 @@ export default function SidebarItem({ item, onAction, onClick, badgeCount = 0 })
       >
         <span className="sidebar-item-icon">
           <Icon />
-          {(isNotification || badgeCount > 0) && (
+          {badgeCount > 0 && (
             <span className="sidebar-item-badge">
               {badgeCount > 9 ? "9+" : badgeCount}
             </span>
@@ -42,7 +42,7 @@ export default function SidebarItem({ item, onAction, onClick, badgeCount = 0 })
     >
       <span className="sidebar-item-icon">
         <Icon />
-        {(isNotification || badgeCount > 0) && (
+        {badgeCount > 0 && (
           <span className="sidebar-item-badge">
             {badgeCount > 9 ? "9+" : badgeCount}
           </span>

@@ -72,6 +72,9 @@ const TeacherHomeroom = lazy(
 );
 const TeacherLessons = lazy(() => import("../pages/teacher/lessons/TeacherLessons"));
 const TeacherQuiz = lazy(() => import("../pages/teacher/quiz/TeacherQuiz"));
+const TeacherCreateQuiz = lazy(
+  () => import("../pages/teacher/quiz/create/TeacherCreateQuiz")
+);
 const TeacherRequest = lazy(
   () => import("../pages/teacher/request/TeacherRequest")
 );
@@ -155,6 +158,7 @@ export default function AppRoutes() {
         <Route path="lessons"          element={<TeacherLessons />} />
         <Route path="grades"           element={<TeacherGrades />} />
         <Route path="quiz"             element={<TeacherQuiz />} />
+        <Route path="quiz/create"      element={<TeacherCreateQuiz />} />
         <Route path="schedule"         element={<TeacherSchedule />} />
         <Route path="request"          element={<TeacherRequest />} />
         <Route path="notifications"    element={<TeacherNotifications />} />
