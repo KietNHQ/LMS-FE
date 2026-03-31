@@ -52,8 +52,8 @@ const CLASS_LABELS = {
   teacher: "Giáo viên",
 };
 
-const PARENT_UNREAD_COUNT_KEY = "parent_unread_notifications_count";
-const PARENT_UNREAD_COUNT_EVENT = "teacher-notification-count-updated";
+const TEACHER_UNREAD_COUNT_KEY = "teacher_unread_notifications_count";
+const TEACHER_UNREAD_COUNT_EVENT = "teacher-notification-count-updated";
 
 export default function TeacherNotifications() {
 
@@ -73,15 +73,15 @@ export default function TeacherNotifications() {
   );
 
   useEffect(() => {
-    localStorage.setItem(PARENT_UNREAD_COUNT_KEY, String(unreadCount));
+    localStorage.setItem(TEACHER_UNREAD_COUNT_KEY, String(unreadCount));
     window.dispatchEvent(
-      new CustomEvent(PARENT_UNREAD_COUNT_EVENT, {
+      new CustomEvent(TEACHER_UNREAD_COUNT_EVENT, {
         detail: unreadCount,
       })
     );
   }, [unreadCount]);
 
-  const isVisibleForParent = useCallback((targetClass) => {
+  const isVisibleForTeacher = useCallback((targetClass) => {
     return (
       studentClasses.includes(targetClass) ||
       targetClass === "teacher" ||
@@ -94,18 +94,18 @@ export default function TeacherNotifications() {
       ...new Set(
         notifications
           .map((notification) => notification.class)
-          .filter((targetClass) => isVisibleForParent(targetClass))
+          .filter((targetClass) => isVisibleForTeacher(targetClass))
       ),
     ];
-  }, [notifications, isVisibleForParent]);
+  }, [notifications, isVisibleForTeacher]);
 
   const filteredNotifications = useMemo(() => {
     if (filter === "all") {
-      return notifications.filter((notification) => isVisibleForParent(notification.class));
+      return notifications.filter((notification) => isVisibleForTeacher(notification.class));
     }
 
     return notifications.filter((notification) => notification.class === filter);
-  }, [filter, notifications, isVisibleForParent]);
+  }, [filter, notifications, isVisibleForTeacher]);
 
   const getClassLabel = (targetClass) => {
     return CLASS_LABELS[targetClass] || "";

@@ -10,8 +10,11 @@ import "./Sidebar.css";
 const MOBILE_BREAKPOINT = 768;
 const STUDENT_UNREAD_COUNT_KEY = "student_unread_notifications_count";
 const PARENT_UNREAD_COUNT_KEY = "parent_unread_notifications_count";
+const TEACHER_UNREAD_COUNT_KEY = "teacher_unread_notifications_count";
+
 const STUDENT_UNREAD_COUNT_EVENT = "student-notification-count-updated";
 const PARENT_UNREAD_COUNT_EVENT = "parent-notification-count-updated";
+const TEACHER_UNREAD_COUNT_EVENT = "teacher-notification-count-updated";
 
 export default function Sidebar({
                                   role = "student",
@@ -38,6 +41,10 @@ export default function Sidebar({
     const saved = Number(localStorage.getItem(PARENT_UNREAD_COUNT_KEY));
     return Number.isFinite(saved) ? saved : 0;
   });
+  const [teacherUnreadCount, setTeacherUnreadCount] = useState(() => {
+  const saved = Number(localStorage.getItem(TEACHER_UNREAD_COUNT_KEY));
+  return Number.isFinite(saved) ? saved : 0;
+});
   // Hiển thị badge số thông báo cho admin
   const [adminUnreadCount, setAdminUnreadCount] = useState(0);
 
@@ -138,11 +145,15 @@ export default function Sidebar({
       const next = Number(event?.detail);
       setParentUnreadCount(Number.isFinite(next) ? next : 0);
     };
+    const handleTeacherCustomUpdate = (event) => {
+  const next = Number(event?.detail);
+  setTeacherUnreadCount(Number.isFinite(next) ? next : 0);
+};
 
     window.addEventListener("storage", handleStorage);
     window.addEventListener(STUDENT_UNREAD_COUNT_EVENT, handleStudentCustomUpdate);
     window.addEventListener(PARENT_UNREAD_COUNT_EVENT, handleParentCustomUpdate);
-
+window.addEventListener(TEACHER_UNREAD_COUNT_EVENT, handleTeacherCustomUpdate);
     return () => {
       window.removeEventListener("storage", handleStorage);
       window.removeEventListener(STUDENT_UNREAD_COUNT_EVENT, handleStudentCustomUpdate);
@@ -177,6 +188,9 @@ export default function Sidebar({
 
     if (role === "admin" && itemPath === "/admin/notifications") {
       return adminUnreadCount;
+    }
+     if (role === "teacher" && itemPath === "/teacher/notifications") {
+      return teacherUnreadCount;
     }
 
     return 0;
