@@ -10,7 +10,7 @@ import {
   fetchAdminReport,
   fetchTermComparison,
   getReportFilterOptions,
-} from "../../../services/reportService";
+} from "../../../services/pages/admin/reports/reportService";
 
 const PIE_COLORS = ["#3557d4", "#58a5f0", "#9fd7ff", "#ff9b6c"];
 
@@ -551,9 +551,9 @@ const AdminReports = () => {
       .join("");
 
     popup.document.write(`
-      <html>
+      <html lang="vi">
         <head>
-          <title>Admin Report</title>
+          <title>Báo cáo tổng hợp</title>
           <style>
             body { font-family: Arial, sans-serif; padding: 24px; color: #1e2f5a; }
             h1, h2 { margin: 0 0 12px 0; }
@@ -564,7 +564,7 @@ const AdminReports = () => {
           </style>
         </head>
         <body>
-          <h1>Báo cáo Admin</h1>
+          <h1>Báo cáo tổng hợp</h1>
           <p>Năm học: ${sanitizeHtml(filters.schoolYear)} - Học kỳ: ${sanitizeHtml(filters.term)}</p>
           <h2>Thống kê nhanh</h2>
           <ul>${summaryHtml}</ul>

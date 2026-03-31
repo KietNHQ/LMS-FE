@@ -10,7 +10,7 @@ function ForgotPassword() {
     const [email, setEmail] = useState("");
     const [isCodeSent, setIsCodeSent] = useState(false);
     const [otp, setOtp] = useState(["", "", "", "", "", ""]);
-    const [message, setMessage] = useState("");
+    const [message, setMessage] = useState({ text: "", type: "" });
 
     const demoCode = "123456";
 
@@ -18,12 +18,12 @@ function ForgotPassword() {
         e.preventDefault();
 
         if (!email.trim()) {
-            setMessage("Please enter your email first.");
+            setMessage({ text: "Vui lòng nhập email trước.", type: "error" });
             return;
         }
 
         setIsCodeSent(true);
-        setMessage("Verification code has been sent to your email.");
+        setMessage({ text: "Mã xác minh đã được gửi đến email của bạn.", type: "success" });
     };
 
     const handleOtpChange = (value, index) => {
@@ -48,29 +48,29 @@ function ForgotPassword() {
         const code = otp.join("");
 
         if (code.length < 6) {
-            setMessage("Please enter the full 6-digit code.");
+            setMessage({ text: "Vui lòng nhập đầy đủ mã 6 chữ số.", type: "error" });
             return;
         }
 
         if (code === demoCode) {
-            setMessage("Code verified successfully.");
+            setMessage({ text: "Xác minh mã thành công.", type: "success" });
             setTimeout(() => {
                 navigate("/login/resetpass");
             }, 500);
         } else {
-            setMessage("Invalid verification code.");
+            setMessage({ text: "Mã xác minh không hợp lệ.", type: "error" });
         }
     };
 
     return (
         <AuthLayout
-            title="Forgot Password"
-            subtitle="Enter your email and we will send you a verification code."
+            title="Quên mật khẩu"
+            subtitle="Nhập email để nhận mã xác minh."
         >
             <form className="auth-form">
                 <div className="auth-note">
-                    Enter your registered email, then press send code. After that, the
-                    verification fields will appear below.
+                    Nhập email đã đăng ký, sau đó nhấn gửi mã. Các ô nhập mã xác minh
+                    sẽ hiển thị bên dưới.
                 </div>
 
                 <div className="auth-field">
@@ -78,7 +78,7 @@ function ForgotPassword() {
                     <input
                         id="forgot-email"
                         type="email"
-                        placeholder="Enter your registered email"
+                        placeholder="Nhập email đã đăng ký"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                     />
@@ -90,11 +90,11 @@ function ForgotPassword() {
                         className="auth-button"
                         onClick={handleSendCode}
                     >
-                        Send Code
+                        Gửi mã
                     </button>
                 ) : (
                     <div className="auth-code-section">
-                        <div className="auth-code-title">Enter verification code</div>
+                        <div className="auth-code-title">Nhập mã xác minh</div>
 
                         <div className="auth-code-inputs">
                             {otp.map((digit, index) => (
@@ -108,6 +108,7 @@ function ForgotPassword() {
                                     className={digit ? "filled" : ""}
                                     onChange={(e) => handleOtpChange(e.target.value, index)}
                                     onKeyDown={(e) => handleOtpKeyDown(e, index)}
+                                    aria-label={`Số thứ ${index + 1} của mã xác minh`}
                                 />
                             ))}
                         </div>
@@ -117,7 +118,7 @@ function ForgotPassword() {
                             className="auth-button"
                             onClick={handleVerifyCode}
                         >
-                            Verify Code
+                            Xác minh mã
                         </button>
 
                         <button
@@ -125,26 +126,21 @@ function ForgotPassword() {
                             className="auth-button-secondary"
                             onClick={handleSendCode}
                         >
-                            Resend Code
+                            Gửi lại mã
                         </button>
                     </div>
                 )}
 
-                {message && (
+                {message.text && (
                     <div
-                        className={
-                            message.toLowerCase().includes("success") ||
-                            message.toLowerCase().includes("sent")
-                                ? "auth-success"
-                                : "auth-error"
-                        }
+                        className={message.type === "success" ? "auth-success" : "auth-error"}
                     >
-                        {message}
+                        {message.text}
                     </div>
                 )}
 
                 <div className="auth-footer">
-                    Remember your password? <Link to="/login">Back to login</Link>
+                    Đã nhớ mật khẩu? <Link to="/login">Quay lại đăng nhập</Link>
                 </div>
             </form>
         </AuthLayout>

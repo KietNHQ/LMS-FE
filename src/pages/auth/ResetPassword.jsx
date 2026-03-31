@@ -14,25 +14,25 @@ function ResetPassword() {
 
     return (
         <AuthLayout
-            title="Reset Password"
-            subtitle="Create a new password and confirm it to continue."
+            title="Đặt lại mật khẩu"
+            subtitle="Tạo mật khẩu mới và xác nhận để tiếp tục."
         >
             <form className="auth-form" onSubmit={handleSubmit}>
                 <div className="auth-field">
-                    <label htmlFor="new-password">New Password</label>
+                    <label htmlFor="new-password">Mật khẩu mới</label>
 
                     <div className="auth-password-wrapper">
                         <input
                             id="new-password"
                             type={showNewPassword ? "text" : "password"}
-                            placeholder="Enter new password"
+                            placeholder="Nhập mật khẩu mới"
                         />
 
                         <button
                             type="button"
                             className="auth-password-toggle"
                             onClick={() => setShowNewPassword((prev) => !prev)}
-                            aria-label={showNewPassword ? "Hide password" : "Show password"}
+                            aria-label={showNewPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
                         >
                             {showNewPassword ? <FiEyeOff size={20} /> : <FiEye size={20} />}
                         </button>
@@ -40,13 +40,13 @@ function ResetPassword() {
                 </div>
 
                 <div className="auth-field">
-                    <label htmlFor="confirm-password">Confirm Password</label>
+                    <label htmlFor="confirm-password">Xác nhận mật khẩu</label>
 
                     <div className="auth-password-wrapper">
                         <input
                             id="confirm-password"
                             type={showConfirmPassword ? "text" : "password"}
-                            placeholder="Confirm new password"
+                            placeholder="Nhập lại mật khẩu mới"
                         />
 
                         <button
@@ -54,7 +54,7 @@ function ResetPassword() {
                             className="auth-password-toggle"
                             onClick={() => setShowConfirmPassword((prev) => !prev)}
                             aria-label={
-                                showConfirmPassword ? "Hide password" : "Show password"
+                                showConfirmPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"
                             }
                         >
                             {showConfirmPassword ? <FiEyeOff size={20} /> : <FiEye size={20} />}
@@ -63,11 +63,11 @@ function ResetPassword() {
                 </div>
 
                 <button type="submit" className="auth-button">
-                    Reset Password
+                    Đặt lại mật khẩu
                 </button>
 
                 <div className="auth-footer">
-                    Return to <Link to="/login">Login</Link>
+                    Quay lại <Link to="/login">Đăng nhập</Link>
                 </div>
             </form>
         </AuthLayout>

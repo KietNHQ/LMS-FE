@@ -81,7 +81,7 @@ const TeacherProgressReportSection = ({
                               className={`admin-reports__expand-btn ${isExpanded ? "open" : ""}`}
                               onClick={() => onToggleTeacherClass(row.classId)}
                               type="button"
-                              aria-label="View class details"
+                              aria-label="Xem chi tiết lớp"
                               aria-expanded={isExpanded && hasMembers}
                               aria-controls={detailId}
                             >

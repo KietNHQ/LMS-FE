@@ -27,14 +27,14 @@ function AuthLayout({ title, subtitle, children }) {
             <div className="auth-container">
                 <div className="auth-left">
                     <div className="auth-brand">
-                        <div className="auth-brand-badge">Smart Learning Platform</div>
+                        <div className="auth-brand-badge">Nền tảng học tập thông minh</div>
 
-                        <h1>Welcome to LMS High School System</h1>
+                        <h1>Chào mừng đến với hệ thống LMS THPT</h1>
 
                         <p>
-                            A modern learning management platform for students, teachers,
-                            parents, and administrators to connect, manage, and grow
-                            together.
+                            Nền tảng quản lý học tập hiện đại giúp học sinh, giáo viên,
+                            phụ huynh và quản trị viên kết nối, quản lý và phát triển
+                            cùng nhau.
                         </p>
                     </div>
 
@@ -43,36 +43,36 @@ function AuthLayout({ title, subtitle, children }) {
               <span className="auth-stat-value auth-stat-value-admin">
                 {formatStatNumber(1200000000)}
               </span>
-                            <span className="auth-stat-label">Classes</span>
+                            <span className="auth-stat-label">Lớp học</span>
                         </div>
 
                         <div className="auth-stat-card auth-stat-card-parent">
               <span className="auth-stat-value auth-stat-value-parent">
                 {formatStatNumber(45)}
               </span>
-                            <span className="auth-stat-label">Subjects</span>
+                            <span className="auth-stat-label">Môn học</span>
                         </div>
 
                         <div className="auth-stat-card auth-stat-card-teacher">
               <span className="auth-stat-value auth-stat-value-teacher">
                 {formatStatNumber(80)}
               </span>
-                            <span className="auth-stat-label">Teachers</span>
+                            <span className="auth-stat-label">Giáo viên</span>
                         </div>
 
                         <div className="auth-stat-card auth-stat-card-student">
               <span className="auth-stat-value auth-stat-value-student">
                 {formatStatNumber(1200000)}
               </span>
-                            <span className="auth-stat-label">Students</span>
+                            <span className="auth-stat-label">Học sinh</span>
                         </div>
                     </div>
 
                     <div className="auth-illustration-box">
-                        <h3>Better learning starts here</h3>
+                        <h3>Hành trình học tập tốt hơn bắt đầu từ đây</h3>
                         <p>
-                            Track classes, manage lessons, monitor progress, and create a
-                            more engaging education experience in one unified system.
+                            Theo dõi lớp học, quản lý bài giảng, giám sát tiến độ và tạo
+                            trải nghiệm giáo dục hấp dẫn hơn trong một hệ thống thống nhất.
                         </p>
                     </div>
                 </div>

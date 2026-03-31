@@ -2,50 +2,95 @@ import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { FiEye, FiEyeOff } from "react-icons/fi";
 import AuthLayout from "../../layouts/auth/AuthLayout.jsx";
+import { useLogin } from "../../hooks/useAuth";
 import "./Login.css";
 
 function Login() {
+    const [email, setEmail] = useState("");
+    const [password, setPassword] = useState("");
     const [showPassword, setShowPassword] = useState(false);
     const [rememberMe, setRememberMe] = useState(false);
 
+    // State lưu lỗi mật khẩu từ Frontend
+    const [passwordError, setPasswordError] = useState("");
+
+    const loginMutation = useLogin();
+
     const handleSubmit = (e) => {
         e.preventDefault();
+        setPasswordError(""); // Reset lỗi FE
+
+        // Validate FE: Kiểm tra độ dài mật khẩu
+        if (password.length < 6) {
+            setPasswordError("Mật khẩu phải có ít nhất 6 ký tự");
+            return;
+        }
+
+        // Gọi API lên BE
+        loginMutation.mutate({ email, password, rememberMe });
     };
+
+    // Bắt lỗi từ Backend trả về
+    const serverError = loginMutation.error?.response?.data?.error;
+
+    // Gom chung lỗi FE và BE lại để hiển thị
+    const displayError = passwordError || serverError;
 
     return (
         <AuthLayout
-            title="Login"
-            subtitle="Sign in to continue accessing your learning dashboard."
+            title="Đăng nhập"
+            subtitle="Đăng nhập để tiếp tục truy cập bảng điều khiển học tập."
         >
             <form className="auth-form" onSubmit={handleSubmit}>
+
                 <div className="auth-field">
                     <label htmlFor="login-email">Email</label>
                     <input
                         id="login-email"
                         type="email"
-                        placeholder="Enter your email"
+                        placeholder="Nhập email của bạn"
+                        value={email}
+                        onChange={(e) => {
+                            setEmail(e.target.value);
+                            loginMutation.reset(); // Xóa lỗi BE khi user gõ email mới
+                        }}
+                        required
                     />
                 </div>
 
                 <div className="auth-field">
-                    <label htmlFor="login-password">Password</label>
+                    <label htmlFor="login-password">Mật khẩu</label>
 
                     <div className="auth-password-wrapper">
                         <input
                             id="login-password"
                             type={showPassword ? "text" : "password"}
-                            placeholder="Enter your password"
+                            placeholder="Nhập mật khẩu"
+                            value={password}
+                            className={displayError ? "input-error" : ""}
+                            autoComplete="current-password"
+                            onChange={(e) => {
+                                setPassword(e.target.value);
+                                setPasswordError("");
+                                loginMutation.reset();
+                            }}
+                            required
                         />
 
                         <button
                             type="button"
                             className="auth-password-toggle"
                             onClick={() => setShowPassword((prev) => !prev)}
-                            aria-label={showPassword ? "Hide password" : "Show password"}
+                            aria-label={showPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
                         >
                             {showPassword ? <FiEyeOff size={20} /> : <FiEye size={20} />}
                         </button>
                     </div>
+
+                    {/* THÊM MỚI: Dòng chữ báo lỗi đỏ dưới textbox */}
+                    {displayError && (
+                        <span className="error-text">{displayError}</span>
+                    )}
                 </div>
 
                 <div className="auth-row">
@@ -55,16 +100,20 @@ function Login() {
                             checked={rememberMe}
                             onChange={(e) => setRememberMe(e.target.checked)}
                         />
-                        <span>Remember me</span>
+                        <span>Ghi nhớ đăng nhập</span>
                     </label>
 
                     <Link to="/login/forgotpass" className="auth-link">
-                        Forgot password?
+                        Quên mật khẩu?
                     </Link>
                 </div>
 
-                <button type="submit" className="auth-button">
-                    Sign In
+                <button
+                    type="submit"
+                    className="auth-button"
+                    disabled={loginMutation.isPending}
+                >
+                    {loginMutation.isPending ? "Đang đăng nhập..." : "Đăng nhập"}
                 </button>
 
             </form>

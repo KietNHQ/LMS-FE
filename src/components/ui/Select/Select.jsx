@@ -30,7 +30,7 @@ export default function Select({
   onFocus,
   onBlur,
   searchable = false,
-  searchPlaceholder = "Tim kiem...",
+  searchPlaceholder = "Tìm kiếm...",
   ...props
 }) {
   const [isFocused, setIsFocused] = useState(false);
@@ -126,7 +126,7 @@ export default function Select({
             aria-haspopup="listbox"
             aria-expanded={isOpen}
           >
-            <span>{selectedOption?.label || placeholder || "Chon"}</span>
+            <span>{selectedOption?.label || placeholder || "Chọn"}</span>
             <FiChevronDown className="dropdown-arrow" />
           </button>
 
@@ -165,7 +165,7 @@ export default function Select({
                   );
                 })
               ) : (
-                <p className="custom-dropdown-empty">Khong tim thay ket qua</p>
+                <p className="custom-dropdown-empty">Không tìm thấy kết quả</p>
               )}
             </div>
           </div>
