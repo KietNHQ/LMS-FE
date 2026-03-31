@@ -1,11 +1,11 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import { Bell, BellPlus } from "lucide-react";
 import "./AdminNotifications.css";
 import NotificationHistorySection from "./components/notificationHistorySection/notificationHistorySection";
 import CreateNotificationSection from "./components/createNotificationSection/createNotificationSection";
 
 const FILTERS = ["Tất cả", "Lớp 10", "Lớp 11", "Lớp 12", "Phụ huynh"];
-const TARGET_OPTIONS = ["Tất cả", "Lớp 10", "Lớp 11", "Lớp 12", "Phụ huynh"];
+const TARGET_OPTIONS = ["Tất cả", "Lớp 10", "Lớp 11", "Lớp 12", "Giáo viên", "Phụ huynh"];
 
 const AdminNotifications = () => {
   const [open, setOpen] = useState(false);
@@ -43,6 +43,12 @@ const AdminNotifications = () => {
   }, [list]);
 
   const unreadCount = useMemo(() => list.filter((item) => !item.read).length, [list]);
+
+  // Đồng bộ số thông báo chưa đọc ra localStorage và phát event
+  useEffect(() => {
+    localStorage.setItem("admin_unread_notifications_count", unreadCount);
+    window.dispatchEvent(new Event("admin-notification-count-updated"));
+  }, [unreadCount]);
 
   const handleAdd = () => {
     if (!form.title || !form.content) return;
