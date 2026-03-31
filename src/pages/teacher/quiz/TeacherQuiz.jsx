@@ -1,335 +1,296 @@
-import React, { useMemo, useState } from "react";
-import { FiPlus, FiSave } from "react-icons/fi";
+import React, { useState } from "react";
+import { FiChevronLeft, FiChevronRight } from "react-icons/fi";
+import { useLocation, useNavigate } from "react-router-dom";
+import { Modal } from "../../../components/ui";
 import "./TeacherQuiz.css";
+import TeacherQuizListSection from "./components/teacherQuizListSection/TeacherQuizListSection";
+import CreateTeacherQuizDialog from "./components/createTeacherQuizDialog/CreateTeacherQuizDialog";
 
-import CreateEditQuizSection from "./components/createEditQuizSection/CreateEditQuizSection";
-import AssignQuizSection from "./components/assignQuizSection/AssignQuizSection";
-import QuizListSection from "./components/quizListSection/QuizListSection";
+const ITEMS_PER_PAGE = 4;
 
 const initialQuizzes = [
     {
         id: 1,
-        title: "Kiểm tra Toán chương 1",
+        title: "Toán 10 - Chương 1",
+        description: "Bài kiểm tra chương 1 toán lớp 10",
         subject: "Toán",
-        className: "10A1",
-        duration: "45 phút",
-        questions: [
-            {
-                id: 101,
-                question: "Giá trị của x trong phương trình 2x + 4 = 10 là?",
-                answers: {
-                    A: "2",
-                    B: "3",
-                    C: "4",
-                    D: "5",
-                },
-                correctAnswer: "B",
-                score: 0.5,
-            },
-            {
-                id: 102,
-                question: "Diện tích hình tròn bán kính r là?",
-                answers: {
-                    A: "πr",
-                    B: "2πr",
-                    C: "πr²",
-                    D: "2πr²",
-                },
-                correctAnswer: "C",
-                score: 0.5,
-            },
-        ],
+        grade: "Khối 10",
+        questions: 20,
+        duration: 45,
+        status: "open",
+        createdAt: "2024-03-20",
+        createdByRole: "teacher",
+        createdByName: "Lê Minh Hoàng",
     },
     {
         id: 2,
-        title: "Kiểm tra Toán chương 2",
-        subject: "Toán",
-        className: "10A2",
-        duration: "45 phút",
-        questions: [],
+        title: "Vật Lý 10 - Chương 1",
+        description: "Bài kiểm tra chương 1 vật lý lớp 10",
+        subject: "Vật Lý",
+        grade: "Khối 10",
+        questions: 15,
+        duration: 30,
+        status: "open",
+        createdAt: "2024-03-19",
+        createdByRole: "teacher",
+        createdByName: "Lê Minh Hoàng",
+    },
+    {
+        id: 3,
+        title: "Hóa Học 10 - Chương 2",
+        description: "Bài kiểm tra chương 2 hóa học lớp 10",
+        subject: "Hóa Học",
+        grade: "Khối 10",
+        questions: 18,
+        duration: 40,
+        status: "hidden",
+        createdAt: "2024-03-18",
+        createdByRole: "teacher",
+        createdByName: "Lê Minh Hoàng",
     },
 ];
 
-const emptyForm = {
-    question: "",
-    answers: {
-        A: "",
-        B: "",
-        C: "",
-        D: "",
-    },
-    correctAnswer: "A",
-    score: "0.5",
-};
-
 export default function TeacherQuiz() {
-    const [quizzes, setQuizzes] = useState(initialQuizzes);
-    const [activeQuizId, setActiveQuizId] = useState(initialQuizzes[1].id);
-    const [formData, setFormData] = useState(emptyForm);
-    const [editingQuestionId, setEditingQuestionId] = useState(null);
-    const [showAddQuestionForm, setShowAddQuestionForm] = useState(false);
+    const navigate = useNavigate();
+    const location = useLocation();
+    const createdQuizFromState = location.state?.createdQuiz;
 
-    const activeQuiz = useMemo(
-        () => quizzes.find((quiz) => quiz.id === activeQuizId),
-        [quizzes, activeQuizId]
+    const [quizzes, setQuizzes] = useState(() =>
+        createdQuizFromState ? [createdQuizFromState, ...initialQuizzes] : initialQuizzes
+    );
+    const [currentPage, setCurrentPage] = useState(1);
+    const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+    const [pendingDeleteQuizId, setPendingDeleteQuizId] = useState(null);
+    const [editingQuizId, setEditingQuizId] = useState(null);
+
+
+    const totalPages = Math.max(1, Math.ceil(quizzes.length / ITEMS_PER_PAGE));
+    const paginatedQuizzes = quizzes.slice(
+        (currentPage - 1) * ITEMS_PER_PAGE,
+        currentPage * ITEMS_PER_PAGE
     );
 
-    const handleChangeQuestion = (value) => {
-        setFormData((prev) => ({
-            ...prev,
-            question: value,
-        }));
+    const handleDeleteQuiz = (quizId) => {
+        setPendingDeleteQuizId(quizId);
     };
 
-    const handleChangeAnswer = (key, value) => {
-        setFormData((prev) => ({
-            ...prev,
-            answers: {
-                ...prev.answers,
-                [key]: value,
-            },
-        }));
+    const handleCancelDeleteQuiz = () => {
+        setPendingDeleteQuizId(null);
     };
 
-    const handleSelectCorrect = (key) => {
-        setFormData((prev) => ({
-            ...prev,
-            correctAnswer: key,
-        }));
+    const handleConfirmDeleteQuiz = () => {
+        if (pendingDeleteQuizId == null) return;
+
+        setQuizzes((prev) => {
+            const nextQuizzes = prev.filter((q) => q.id !== pendingDeleteQuizId);
+            const nextTotalPages = Math.max(
+                1,
+                Math.ceil(nextQuizzes.length / ITEMS_PER_PAGE)
+            );
+
+            setCurrentPage((prevPage) => Math.min(prevPage, nextTotalPages));
+            return nextQuizzes;
+        });
+
+        setPendingDeleteQuizId(null);
     };
 
-    const handleScoreChange = (value) => {
-        setFormData((prev) => ({
-            ...prev,
-            score: value,
-        }));
-    };
+    const pendingDeleteQuiz = quizzes.find((quiz) => quiz.id === pendingDeleteQuizId);
 
-    const resetForm = () => {
-        setFormData(emptyForm);
-        setEditingQuestionId(null);
-        setShowAddQuestionForm(false);
-    };
-
-    const validateForm = () => {
-        const trimmedQuestion = formData.question.trim();
-        const trimmedAnswers = Object.values(formData.answers).map((item) =>
-            item.trim()
-        );
-
-        if (!trimmedQuestion) {
-            alert("Vui lòng nhập câu hỏi.");
-            return false;
-        }
-
-        if (trimmedAnswers.some((item) => !item)) {
-            alert("Vui lòng nhập đầy đủ 4 đáp án.");
-            return false;
-        }
-
-        if (!formData.correctAnswer) {
-            alert("Vui lòng chọn đáp án đúng.");
-            return false;
-        }
-
-        return true;
-    };
-
-    const handleAddOrUpdateQuestion = () => {
-        if (!validateForm()) return;
-
-        const questionPayload = {
-            id: editingQuestionId ?? Date.now(),
-            question: formData.question.trim(),
-            answers: {
-                A: formData.answers.A.trim(),
-                B: formData.answers.B.trim(),
-                C: formData.answers.C.trim(),
-                D: formData.answers.D.trim(),
-            },
-            correctAnswer: formData.correctAnswer,
-            score: Number(formData.score) || 0.5,
-        };
-
+    const handleStatusChange = (quizId, newStatus) => {
         setQuizzes((prev) =>
-            prev.map((quiz) => {
-                if (quiz.id !== activeQuizId) return quiz;
-
-                if (editingQuestionId) {
-                    return {
-                        ...quiz,
-                        questions: quiz.questions.map((item) =>
-                            item.id === editingQuestionId ? questionPayload : item
-                        ),
-                    };
-                }
-
-                return {
-                    ...quiz,
-                    questions: [...quiz.questions, questionPayload],
-                };
-            })
+            prev.map((q) =>
+                q.id === quizId ? { ...q, status: newStatus } : q
+            )
         );
-
-        resetForm();
     };
 
-    const handleDeleteQuestion = (questionId) => {
-        const confirmed = window.confirm("Bạn có chắc muốn xoá câu hỏi này không?");
-        if (!confirmed) return;
+    const handlePageChange = (nextPage) => {
+        if (nextPage < 1 || nextPage > totalPages) {
+            return;
+        }
+        setCurrentPage(nextPage);
+    };
+
+    const goPrevPage = () => handlePageChange(currentPage - 1);
+    const goNextPage = () => handlePageChange(currentPage + 1);
+
+    const handleOpenCreateDialog = () => {
+        setEditingQuizId(null);
+        setIsCreateDialogOpen(true);
+    };
+
+    const handleCloseCreateDialog = () => {
+        setIsCreateDialogOpen(false);
+        setEditingQuizId(null);
+    };
+
+    const handleCreateQuiz = (quizMeta) => {
+        handleCloseCreateDialog();
+        navigate("/teacher/quiz/create", {
+            state: {
+                quizMeta,
+            },
+        });
+    };
+
+    const handleOpenQuizQuestions = (quiz) => {
+        navigate("/teacher/quiz/create", {
+            state: {
+                quizMeta: {
+                    title: quiz.title,
+                    subject: quiz.subject,
+                    grade: quiz.grade,
+                    duration: `${quiz.duration} phút`,
+                    createdByRole: quiz.createdByRole || "teacher",
+                    createdByName: quiz.createdByName || "",
+                },
+                mode: "edit",
+            },
+        });
+    };
+
+    const handleEditQuiz = (quiz) => {
+        setEditingQuizId(quiz.id);
+        setIsCreateDialogOpen(true);
+    };
+
+    const handleSubmitQuizMeta = (quizMeta) => {
+        if (editingQuizId == null) {
+            handleCreateQuiz(quizMeta);
+            return;
+        }
 
         setQuizzes((prev) =>
             prev.map((quiz) =>
-                quiz.id === activeQuizId
+                quiz.id === editingQuizId
                     ? {
                         ...quiz,
-                        questions: quiz.questions.filter((item) => item.id !== questionId),
+                        title: quizMeta.title,
+                        subject: quizMeta.subject,
+                        grade: quizMeta.grade,
+                        createdByRole: quizMeta.createdByRole,
+                        createdByName:
+                            quizMeta.createdByRole === "teacher"
+                                ? quizMeta.createdByName
+                                : "Quản trị viên",
                     }
                     : quiz
             )
         );
 
-        if (editingQuestionId === questionId) {
-            resetForm();
-        }
+        handleCloseCreateDialog();
     };
 
-    const handleEditQuestion = (question) => {
-        setEditingQuestionId(question.id);
-        setFormData({
-            question: question.question,
-            answers: {
-                A: question.answers.A,
-                B: question.answers.B,
-                C: question.answers.C,
-                D: question.answers.D,
-            },
-            correctAnswer: question.correctAnswer,
-            score: String(question.score),
-        });
-        setShowAddQuestionForm(true);
-
-        setTimeout(() => {
-            window.scrollTo({
-                top: document.body.scrollHeight,
-                behavior: "smooth",
-            });
-        }, 100);
-    };
-
-    const handleMoveQuestion = (questionId, direction) => {
-        setQuizzes((prev) =>
-            prev.map((quiz) => {
-                if (quiz.id !== activeQuizId) return quiz;
-
-                const currentIndex = quiz.questions.findIndex(
-                    (item) => item.id === questionId
-                );
-                if (currentIndex === -1) return quiz;
-
-                const targetIndex = direction === "up" ? currentIndex - 1 : currentIndex + 1;
-
-                if (targetIndex < 0 || targetIndex >= quiz.questions.length) {
-                    return quiz;
-                }
-
-                const newQuestions = [...quiz.questions];
-                [newQuestions[currentIndex], newQuestions[targetIndex]] = [
-                    newQuestions[targetIndex],
-                    newQuestions[currentIndex],
-                ];
-
-                return {
-                    ...quiz,
-                    questions: newQuestions,
-                };
-            })
-        );
-    };
-
-    const handleSaveQuiz = () => {
-        console.log("Saved quizzes:", quizzes);
-        alert("Đã lưu quiz thành công.");
-    };
-
-    const handleOpenAddForm = () => {
-        setEditingQuestionId(null);
-        setFormData(emptyForm);
-        setShowAddQuestionForm(true);
-
-        setTimeout(() => {
-            window.scrollTo({
-                top: document.body.scrollHeight,
-                behavior: "smooth",
-            });
-        }, 100);
-    };
+    const editingQuiz = quizzes.find((quiz) => quiz.id === editingQuizId) || null;
 
     return (
-        <div className="teacher-quiz-page">
-            <div className="quiz-header">
-                <div>
-                    <h1>Soạn thảo Quiz</h1>
-
+        <div className="teacher-quiz">
+            <div className="teacher-quiz__header">
+                <div className="teacher-quiz__content">
+                    <div className="teacher-quiz__title-row">
+                        <h1>Quản lý bài kiểm tra</h1>
+                        <span className="teacher-quiz__count">
+                            {quizzes.length} bài kiểm tra
+                        </span>
+                    </div>
                 </div>
-
-                <button className="save-btn" onClick={handleSaveQuiz}>
-                    <FiSave className="save-btn-icon" aria-hidden="true" />
-                    <span>Lưu quiz</span>
-                </button>
-            </div>
-
-            <div className="quiz-tabs">
-                {quizzes.map((quiz) => (
-                    <button
-                        key={quiz.id}
-                        type="button"
-                        className={`quiz-tab ${activeQuizId === quiz.id ? "active" : ""}`}
-                        onClick={() => {
-                            setActiveQuizId(quiz.id);
-                            resetForm();
-                        }}
-                    >
-                        <h3>{quiz.title}</h3>
-                        <span>
-              {quiz.className} • {quiz.duration.replace(" phút", "p")}
-            </span>
-                    </button>
-                ))}
-            </div>
-
-            <CreateEditQuizSection activeQuiz={activeQuiz} />
-
-            <QuizListSection
-                questions={activeQuiz?.questions || []}
-                onDelete={handleDeleteQuestion}
-                onEdit={handleEditQuestion}
-                onMove={handleMoveQuestion}
-            />
-
-            {!showAddQuestionForm && (
                 <button
                     type="button"
-                    className="open-add-question-btn"
-                    onClick={handleOpenAddForm}
+                    className="teacher-quiz__create-btn"
+                    onClick={handleOpenCreateDialog}
                 >
-                    <FiPlus className="open-add-question-icon" aria-hidden="true" />
-                    <span>Thêm câu hỏi mới</span>
+                    <span>+</span>
+                    Tạo bài kiểm tra
                 </button>
-            )}
+            </div>
 
-            {showAddQuestionForm && (
-                <AssignQuizSection
-                    formData={formData}
-                    editingQuestionId={editingQuestionId}
-                    onChangeQuestion={handleChangeQuestion}
-                    onChangeAnswer={handleChangeAnswer}
-                    onSelectCorrect={handleSelectCorrect}
-                    onScoreChange={handleScoreChange}
-                    onCancel={resetForm}
-                    onSubmit={handleAddOrUpdateQuestion}
+            <div className="teacher-quiz__body">
+                <TeacherQuizListSection
+                    quizzes={paginatedQuizzes}
+                    onDelete={handleDeleteQuiz}
+                    onStatusChange={handleStatusChange}
+                    onEdit={handleEditQuiz}
+                    onCardClick={handleOpenQuizQuestions}
                 />
-            )}
+
+                {quizzes.length > 0 && (
+                    <div className="teacher-quiz-pagination">
+                        <button
+                            type="button"
+                            className="teacher-quiz-page-btn"
+                            onClick={goPrevPage}
+                            disabled={currentPage === 1}
+                            aria-label="Trang trước"
+                        >
+                            <FiChevronLeft />
+                        </button>
+
+                        <div className="teacher-quiz-page-indicator">
+                            <span>{currentPage}</span>
+                            <small>/ {totalPages}</small>
+                        </div>
+
+                        <button
+                            type="button"
+                            className="teacher-quiz-page-btn"
+                            onClick={goNextPage}
+                            disabled={currentPage === totalPages}
+                            aria-label="Trang sau"
+                        >
+                            <FiChevronRight />
+                        </button>
+                    </div>
+                )}
+            </div>
+
+            <CreateTeacherQuizDialog
+                key={editingQuizId != null ? `edit-${editingQuizId}` : (isCreateDialogOpen ? "create-open" : "create-closed")}
+                open={isCreateDialogOpen}
+                onClose={handleCloseCreateDialog}
+                onSubmit={handleSubmitQuizMeta}
+                title={editingQuiz ? "Sửa thông tin bài kiểm tra" : "Tạo bài kiểm tra mới"}
+                submitLabel={editingQuiz ? "Lưu thông tin" : "Tạo"}
+                initialValues={editingQuiz ? {
+                    title: editingQuiz.title,
+                    subject: editingQuiz.subject,
+                    grade: editingQuiz.grade,
+                    createdByRole: editingQuiz.createdByRole || "teacher",
+                    createdByName: editingQuiz.createdByName || "",
+                } : undefined}
+            />
+
+            <Modal
+                open={pendingDeleteQuizId != null}
+                onClose={handleCancelDeleteQuiz}
+                title="Xác nhận xoá bài kiểm tra"
+                className="teacher-quiz-delete-confirm"
+            >
+                <p className="teacher-quiz-delete-confirm__text">
+                    Bạn có chắc muốn xoá thẻ
+                    {" "}
+                    <strong>{pendingDeleteQuiz?.title || "bài kiểm tra này"}</strong>
+                    {" "}
+                    không?
+                </p>
+
+                <div className="teacher-quiz-delete-confirm__actions">
+                    <button
+                        type="button"
+                        className="teacher-quiz-delete-confirm__cancel"
+                        onClick={handleCancelDeleteQuiz}
+                    >
+                        Huỷ
+                    </button>
+                    <button
+                        type="button"
+                        className="teacher-quiz-delete-confirm__submit"
+                        onClick={handleConfirmDeleteQuiz}
+                    >
+                        Xoá
+                    </button>
+                </div>
+            </Modal>
         </div>
     );
 }

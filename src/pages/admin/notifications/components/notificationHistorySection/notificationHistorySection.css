@@ -22,7 +22,10 @@
   padding: 16px;
   border-radius: 14px;
   background: #ffffff;
-  border: 1px solid #e4ebf8;
+  border-top: 1px solid #e4ebf8;
+  border-right: 1px solid #e4ebf8;
+  border-bottom: 1px solid #e4ebf8;
+  border-left: none;
   position: relative;
   transition: all 0.2s ease;
   cursor: pointer;
@@ -35,8 +38,8 @@
   box-shadow: 0 10px 22px rgba(37, 99, 255, 0.08);
 }
 
-.admin-card.is-unread {
-  border-left: 4px solid #4f78eb;
+.admin-card {
+  border-left: 4px solid #1e2f5a;
 }
 
 .admin-icon {
