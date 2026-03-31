@@ -1,0 +1,140 @@
+.teacher-notification-card {
+  width: 100%;
+  min-width: 0;
+  background: #ffffff;
+  border: 1px solid #e7edf8;
+  border-radius: 28px;
+  box-shadow: 0 8px 24px rgba(20, 28, 45, 0.04);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  cursor: pointer;
+}
+
+.teacher-notification-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 28px rgba(4, 160, 148, 0.12);
+  border-color: #9ee3dc;
+}
+
+.teacher-notification-card.is-unread {
+  border-left: 4px solid #04a094;
+}
+
+.teacher-notification-body {
+  display: flex;
+  align-items: flex-start;
+  gap: 18px;
+  padding: 30px 34px;
+  min-width: 0;
+}
+
+.teacher-notification-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  flex: 0 0 48px;
+  border-radius: 14px;
+  background: #ffffff;
+  color: #04a094;
+  border: 1px solid #e4ebf8;
+}
+
+.teacher-notification-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.teacher-notification-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  color: #1d2f56;
+  font-size: 22px;
+  font-weight: 800;
+  line-height: 1.4;
+}
+
+.teacher-notification-unread-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  display: inline-block;
+  flex-shrink: 0;
+  background: linear-gradient(135deg, #11c7b6, #04a094);
+  box-shadow: 0 0 8px rgba(4, 160, 148, 0.55);
+}
+
+.teacher-notification-class-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 34px;
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-size: 16px;
+  font-weight: 700;
+  color: #ffffff;
+  background: linear-gradient(135deg, #11c7b6, #04a094);
+  box-shadow: 0 4px 12px rgba(4, 160, 148, 0.22);
+}
+
+.teacher-notification-text {
+  margin: 14px 0 0;
+  color: #5d6d86;
+  font-size: 18px;
+  line-height: 1.75;
+  word-break: break-word;
+}
+
+.teacher-notification-date {
+  margin-top: 14px;
+  font-size: 16px;
+  font-weight: 700;
+  color: #93a0b4;
+}
+
+@media (max-width: 992px) {
+  .teacher-notification-body {
+    padding: 24px;
+  }
+
+  .teacher-notification-title {
+    font-size: 20px;
+  }
+
+  .teacher-notification-text {
+    font-size: 17px;
+  }
+}
+
+@media (max-width: 768px) {
+  .teacher-notification-card {
+    border-radius: 22px;
+  }
+
+  .teacher-notification-body {
+    padding: 18px;
+    gap: 14px;
+  }
+
+  .teacher-notification-icon {
+    width: 42px;
+    height: 42px;
+    flex-basis: 42px;
+  }
+
+  .teacher-notification-title {
+    font-size: 18px;
+  }
+
+  .teacher-notification-text {
+    font-size: 15px;
+  }
+
+  .teacher-notification-date {
+    font-size: 14px;
+  }
+}
+
