@@ -1,0 +1,79 @@
+.teacher-faq-section-container {
+  min-height: 0;
+  height: 100%;
+  background: #ffffff;
+  border-radius: 24px;
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+ border: 1px solid #cdecea;
+  box-shadow: 0 8px 24px rgba(4, 160, 148, 0.08);
+}
+
+.teacher-faq-section-title {
+  margin: 0 0 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 20px;
+  font-weight: 800;
+  color: #1b2f53;
+}
+
+.teacher-faq-section-icon {
+  color: #04a094;
+}
+
+.teacher-faq-section-list {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.teacher-faq-section-item {
+  margin-bottom: 12px;
+}
+
+.teacher-faq-section-category {
+  margin: 0 0 6px;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #6bbfb8;
+}
+
+.teacher-faq-section-question {
+ border: 1px solid #cdecea;
+  color: #1f3f3c;
+  background: #ffffff;
+  padding: 13px 14px;
+  border-radius: 14px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 700;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.teacher-faq-section-question:hover {
+  border-color: #9ee3dc;
+  box-shadow: 0 8px 16px rgba(4, 160, 148, 0.12);
+  transform: translateY(-1px);
+}
+
+.teacher-faq-section-answer {
+  margin-top: 8px;
+  
+  border-radius: 12px;
+  padding: 10px 12px;
+  font-size: 14px;
+  line-height: 1.6;
+border: 1px solid #d9f5f2;
+  background: #f0fbfa;
+  color: #4f8f89;
+}

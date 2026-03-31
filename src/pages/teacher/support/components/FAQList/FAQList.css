@@ -1,0 +1,129 @@
+.teacher-support-faq {
+  min-height: 0;
+  height: 100%;
+  background: #ffffff;
+  border-radius: 24px;
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+ border: 1px solid #cdecea;
+  box-shadow: 0 8px 24px rgba(4, 160, 148, 0.08);
+}
+
+.teacher-faq-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.teacher-faq-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.teacher-faq-title h3 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 800;
+  color: #1f3f3c;
+}
+
+.teacher-faq-icon {
+  color: #04a094;
+  font-size: 20px;
+}
+
+.teacher-faq-search {
+  flex-shrink: 0;
+  width: min(320px, 45%);
+}
+
+.teacher-faq-search input {
+  width: 100%;
+  height: 44px;
+  border-radius: 14px;
+  padding: 0 14px;
+  font-size: 14px;
+  border: 1px solid #cdecea;
+  background: #f0fbfa;
+  color: #1f3f3c;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.teacher-faq-search input:hover {
+  border-color: #9ee3dc;
+}
+
+.teacher-faq-search input:focus {
+  outline: none;
+   border-color: #04a094;
+  box-shadow: 0 0 0 3px rgba(4, 160, 148, 0.16);
+
+}
+
+.teacher-faq-list {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.teacher-faq-list::-webkit-scrollbar {
+  width: 8px;
+}
+
+.teacher-faq-list::-webkit-scrollbar-track {
+  background: #e0f7f5;
+  border-radius: 999px;
+}
+
+.teacher-faq-list::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #9ee3dc 0%, #04a094 100%);
+  border-radius: 999px;
+}
+
+.teacher-faq-category {
+  margin-top: 14px;
+}
+
+.teacher-faq-category:first-child {
+  margin-top: 0;
+}
+
+.teacher-faq-category h4 {
+  margin: 0 0 8px;
+  font-size: 13px;
+  font-weight: 800;
+  color: #6bbfb8;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.teacher-faq-empty {
+  border-radius: 16px;
+  padding: 22px;
+  text-align: center;
+  font-size: 14px;
+  border: 1px dashed #9ee3dc;
+  background: #f0fbfa;
+  color: #4f8f89;
+}
+
+@media (max-width: 900px) {
+  .teacher-support-faq {
+    min-height: 320px;
+  }
+
+  .teacher-faq-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .teacher-faq-search {
+    width: 100%;
+  }
+}
+

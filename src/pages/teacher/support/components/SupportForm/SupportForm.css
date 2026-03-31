@@ -1,0 +1,98 @@
+.teacher-support-form-container {
+  width: 100%;
+  min-height: 0;
+  background: #ffffff;
+  border-radius: 24px;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+border: 1px solid #cdecea;
+  box-shadow: 0 8px 24px rgba(4, 160, 148, 0.08);}
+
+.teacher-support-form-header {
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 16px;
+  font-weight: 800;
+  color: #ffffff;
+  border-radius: 24px 24px 0 0;
+  background: linear-gradient(140deg, #11c7b6 0%, #04a094 100%);
+}
+
+.teacher-support-form-body {
+  flex: 1;
+  min-height: 0;
+  padding: 14px;
+  overflow-y: auto;
+  background: linear-gradient(180deg, #f0fbfa 0%, #ffffff 100%);
+}
+
+.teacher-support-form-message {
+  background: #ffffff;
+  border: 1px solid #cdecea;
+  padding: 10px 12px;
+  border-radius: 12px;
+  margin-bottom: 10px;
+  max-width: 86%;
+  color: #2f244d;
+}
+
+.teacher-support-form-message.user {
+  margin-left: auto;
+   background: #d9f5f2;
+  border-color: #9ee3dc;
+}
+
+.teacher-support-form-message p {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+.teacher-support-form-message span {
+  display: inline-block;
+  margin-top: 6px;
+  font-size: 11px;
+  color: #6bbfb8;
+}
+
+.teacher-support-form-input {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-top: 1px solid #cdecea;
+  padding: 10px;
+  background: #ffffff;
+}
+
+.teacher-support-form-input input {
+  flex: 1;
+  height: 42px;
+  border-radius: 14px;
+  padding: 0 12px;
+  font-size: 14px;
+  outline: none;
+ border: 1px solid #cdecea;
+  background: #f0fbfa;
+}
+
+.teacher-support-form-input input:focus {
+  border-color: #04a094;
+  box-shadow: 0 0 0 3px rgba(4, 160, 148, 0.16);
+}
+
+.teacher-support-form-input button {
+  width: 42px;
+  height: 42px;
+  border: none;
+  background: linear-gradient(145deg, #11c7b6 0%, #04a094 100%);
+  color: #ffffff;
+  cursor: pointer;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
