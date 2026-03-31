@@ -94,7 +94,7 @@ function buildDefaultForm(role) {
         firstName: "",
         dob: "",
         role: role || "Học sinh",
-        password: "",
+
         studentInfo: {
             parentName: "",
             parentPhone: "",
@@ -146,7 +146,7 @@ function buildFormFromInitialData(initialData, mode, role) {
         firstName: profile.firstName || parsed.firstName,
         dob: profile.dob || "",
         role,
-        password: "",
+
         studentInfo: {
             parentName: profile.parentName || "",
             parentPhone: normalizePhone(profile.parentPhone || ""),
@@ -332,11 +332,7 @@ export default function CreateUserDialog({
     const handleSubmit = (e) => {
         e.preventDefault();
 
-        const normalizedPassword = String(form.password || "").trim();
-        if (mode === "create" && normalizedPassword.length < 6) {
-            window.alert("Mat khau toi thieu 6 ky tu.");
-            return;
-        }
+
 
         if (!form.lastName.trim() || !form.firstName.trim()) {
             window.alert("Vui long nhap day du ho va ten.");
@@ -409,7 +405,7 @@ export default function CreateUserDialog({
                 firstName: form.firstName.trim(),
                 dob: form.dob,
             },
-            ...(normalizedPassword ? { password: normalizedPassword } : {}),
+
         };
 
         onSubmit(payload);
@@ -718,18 +714,7 @@ export default function CreateUserDialog({
                         </div>
                     )}
 
-                    <div className="admin-create-user-dialog-field">
-                        <label>Mật khẩu</label>
-                        <input
-                            type="password"
-                            placeholder={mode === "create" ? "Nhap mat khau" : "De trong neu khong doi"}
-                            value={form.password}
-                            onChange={(e) => handleChange("password", e.target.value)}
-                            minLength={6}
-                            autoComplete="new-password"
-                            required={mode === "create"}
-                        />
-                    </div>
+
 
                     <div className="admin-create-user-dialog-actions">
                         <button
