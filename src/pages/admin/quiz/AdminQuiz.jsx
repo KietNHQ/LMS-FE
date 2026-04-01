@@ -1,10 +1,13 @@
-import React, { useState } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { FiChevronLeft, FiChevronRight } from "react-icons/fi";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Modal } from "../../../components/ui";
 import "./AdminQuiz.css";
 import QuizListSection from "./components/quizListSection/quizListSection";
 import CreateQuizDialog from "./components/createQuizDialog/CreateQuizDialog";
+import QuizToolbar from "./components/quizToolbar/QuizToolbar";
+import { SchoolYearTermSelector } from "../../../components/common";
+import { useSchoolYearTerm } from "../../../hooks/useSchoolYearTerm";
 
 const ITEMS_PER_PAGE = 4;
 
@@ -51,6 +54,7 @@ const initialQuizzes = [
 ];
 
 export default function AdminQuiz() {
+    const { selectedSchoolYear, selectedTerm, handleYearArrow, handleTermChange } = useSchoolYearTerm();
     const navigate = useNavigate();
     const location = useLocation();
     const createdQuizFromState = location.state?.createdQuiz;
@@ -63,9 +67,42 @@ export default function AdminQuiz() {
     const [pendingDeleteQuizId, setPendingDeleteQuizId] = useState(null);
     const [editingQuizId, setEditingQuizId] = useState(null);
 
+    const [searchTerm, setSearchTerm] = useState("");
+    const [selectedSubject, setSelectedSubject] = useState("Tất cả môn");
+    const [selectedGrade, setSelectedGrade] = useState("Tất cả khối");
 
-    const totalPages = Math.max(1, Math.ceil(quizzes.length / ITEMS_PER_PAGE));
-    const paginatedQuizzes = quizzes.slice(
+    const subjectOptions = useMemo(() => {
+        const subjects = new Set(quizzes.map((q) => q.subject));
+        return ["Tất cả môn", ...Array.from(subjects)];
+    }, [quizzes]);
+
+    const gradeOptions = useMemo(() => {
+        const grades = new Set(quizzes.map((q) => q.grade));
+        return ["Tất cả khối", ...Array.from(grades)];
+    }, [quizzes]);
+
+    const filteredQuizzes = useMemo(() => {
+        return quizzes.filter((quiz) => {
+            const term = searchTerm.toLowerCase();
+            const matchSearch =
+                quiz.title.toLowerCase().includes(term) ||
+                quiz.description.toLowerCase().includes(term);
+            const matchSubject =
+                selectedSubject === "Tất cả môn" || quiz.subject === selectedSubject;
+            const matchGrade =
+                selectedGrade === "Tất cả khối" || quiz.grade === selectedGrade;
+
+            return matchSearch && matchSubject && matchGrade;
+        });
+    }, [quizzes, searchTerm, selectedSubject, selectedGrade]);
+
+    // Reset pagination when filters change
+    React.useEffect(() => {
+        setCurrentPage(1);
+    }, [searchTerm, selectedSubject, selectedGrade]);
+
+    const totalPages = Math.max(1, Math.ceil(filteredQuizzes.length / ITEMS_PER_PAGE));
+    const paginatedQuizzes = filteredQuizzes.slice(
         (currentPage - 1) * ITEMS_PER_PAGE,
         currentPage * ITEMS_PER_PAGE
     );
@@ -195,26 +232,46 @@ export default function AdminQuiz() {
                         </span>
                     </div>
                 </div>
-                <button
-                    type="button"
-                    className="admin-quiz__create-btn"
-                    onClick={handleOpenCreateDialog}
-                >
-                    <span>+</span>
-                    Tạo bài kiểm tra
-                </button>
+                <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+                    <SchoolYearTermSelector
+                        selectedSchoolYear={selectedSchoolYear}
+                        selectedTerm={selectedTerm}
+                        onYearChange={handleYearArrow}
+                        onTermChange={handleTermChange}
+                    />
+                </div>
+            </div>
+
+            <div style={{ marginBottom: '16px' }}>
+                <QuizToolbar
+                    searchTerm={searchTerm}
+                    selectedSubject={selectedSubject}
+                    selectedGrade={selectedGrade}
+                    subjectOptions={subjectOptions}
+                    gradeOptions={gradeOptions}
+                    onSearchChange={setSearchTerm}
+                    onSubjectChange={setSelectedSubject}
+                    onGradeChange={setSelectedGrade}
+                    onCreateClick={handleOpenCreateDialog}
+                />
             </div>
 
             <div className="admin-quiz__body">
-                <QuizListSection
-                    quizzes={paginatedQuizzes}
-                    onDelete={handleDeleteQuiz}
-                    onStatusChange={handleStatusChange}
-                    onEdit={handleEditQuiz}
-                    onCardClick={handleOpenQuizQuestions}
-                />
+                {filteredQuizzes.length === 0 ? (
+                    <div style={{ textAlign: 'center', color: '#666', marginTop: '2rem' }}>
+                        Không có bài kiểm tra nào phù hợp với bộ lọc.
+                    </div>
+                ) : (
+                    <QuizListSection
+                        quizzes={paginatedQuizzes}
+                        onDelete={handleDeleteQuiz}
+                        onStatusChange={handleStatusChange}
+                        onEdit={handleEditQuiz}
+                        onCardClick={handleOpenQuizQuestions}
+                    />
+                )}
 
-                {quizzes.length > 0 && (
+                {filteredQuizzes.length > 0 && (
                     <div className="admin-quiz-pagination">
                         <button
                             type="button"

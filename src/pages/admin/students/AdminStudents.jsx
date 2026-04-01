@@ -2,7 +2,8 @@ import React, { useMemo, useState } from "react";
 import { FiChevronLeft, FiChevronRight } from "react-icons/fi";
 import { read, utils, writeFile } from "xlsx";
 import "./AdminStudents.css";
-import { CreateUserDialog } from "../../../components/common";
+import { CreateUserDialog, SchoolYearTermSelector } from "../../../components/common";
+import { useSchoolYearTerm } from "../../../hooks/useSchoolYearTerm";
 
 import StudentActionsSection from "./components/studentActionsSection/studentActionsSection";
 import StudentListSection from "./components/studentListSection/studentListSection";
@@ -157,6 +158,7 @@ function toStudentForm(student) {
 const ITEMS_PER_PAGE = 4;
 
 export default function AdminStudents() {
+    const { selectedSchoolYear, selectedTerm, handleYearArrow, handleTermChange } = useSchoolYearTerm();
     const [students, setStudents] = useState(initialStudents);
     const [searchTerm, setSearchTerm] = useState("");
     const [selectedClass, setSelectedClass] = useState("Tất cả lớp");
@@ -364,7 +366,14 @@ export default function AdminStudents() {
                 onClassChange={setSelectedClass}
                 onStatusChange={setSelectedStatus}
                 onCreateStudentAccount={() => setIsCreateStudentAccountOpen(true)}
-            />
+            >
+                <SchoolYearTermSelector
+                    selectedSchoolYear={selectedSchoolYear}
+                    selectedTerm={selectedTerm}
+                    onYearChange={handleYearArrow}
+                    onTermChange={handleTermChange}
+                />
+            </StudentActionsSection>
             <StudentListSection
                 students={paginatedStudents}
                 onSelectStudent={handleViewStudent}

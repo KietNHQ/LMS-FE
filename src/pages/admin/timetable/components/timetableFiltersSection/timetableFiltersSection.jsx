@@ -24,6 +24,7 @@ export default function TimetableFiltersSection({
     onSearchChange,
     onCreateSession,
     onOpenConflicts,
+    children,
 }) {
     return (
         <section className="tt-filters-section">
@@ -31,7 +32,8 @@ export default function TimetableFiltersSection({
                 <div>
                     <h1>Quản lý thời khóa biểu</h1>
                 </div>
-                <div className="tt-header-actions">
+                <div className="tt-header-actions" style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+                    {children}
                     <button type="button" className="tt-conflict-btn" onClick={onOpenConflicts}>
                         <FiAlertTriangle />
                         Kiểm tra xung đột

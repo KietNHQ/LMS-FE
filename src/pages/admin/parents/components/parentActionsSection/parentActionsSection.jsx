@@ -13,7 +13,8 @@ export default function ParentActionsSection({
     onSearchChange,
     onStatusChange,
     onClassChange,
-    onCreateParentAccount
+    onCreateParentAccount,
+    children
 }) {
     const [isStatusOpen, setIsStatusOpen] = useState(false);
     const [isClassOpen, setIsClassOpen] = useState(false);
@@ -46,9 +47,9 @@ export default function ParentActionsSection({
                     </div>
                 </div>
 
-                <button className="parent-btn-create" onClick={onCreateParentAccount}>
-                    Tạo tài khoản phụ huynh
-                </button>
+                <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+                    {children}
+                </div>
             </div>
 
             <div className="parent-toolbar-card">
@@ -121,6 +122,9 @@ export default function ParentActionsSection({
                         )}
                     </div>
                 </div>
+                <button className="parent-btn-create" onClick={onCreateParentAccount} style={{ height: '3.4rem', borderRadius: '1rem', padding: '0 1.5rem', marginLeft: '0.7rem' }}>
+                    Tạo tài khoản phụ huynh
+                </button>
             </div>
         </section>
     );

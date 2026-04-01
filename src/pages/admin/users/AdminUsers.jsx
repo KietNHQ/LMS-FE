@@ -1,12 +1,13 @@
 import React, { useMemo, useState, useEffect } from "react";
-import { FiChevronLeft, FiChevronRight } from "react-icons/fi";
+import { FiChevronLeft, FiChevronRight, FiPlus } from "react-icons/fi";
 import { read, utils, writeFile } from "xlsx";
 import "./AdminUsers.css";
 
 import AccountsOverviewSection from "./components/accountsOverviewSection/AccountsOverviewSection";
 import UsersSearchFilterSort from "./components/usersSearchFilterSort/UsersSearchFilterSort";
 import UserDetailSection from "./components/userDetailSection/UserDetailSection";
-import { CreateUserDialog } from "../../../components/common";
+import { CreateUserDialog, SchoolYearTermSelector } from "../../../components/common";
+import { useSchoolYearTerm } from "../../../hooks/useSchoolYearTerm";
 import BlockUnblockUsersSection from "./components/blockUnblockUserSection/blockUnblockUserSection";
 
 const initialUsers = [
@@ -208,6 +209,7 @@ function getCellValue(row, keys) {
 const ITEMS_PER_PAGE = 4;
 
 export default function AdminUsers() {
+    const { selectedSchoolYear, selectedTerm, handleYearArrow, handleTermChange } = useSchoolYearTerm();
     const [users, setUsers] = useState(initialUsers);
 
     const [searchValue, setSearchValue] = useState("");
@@ -437,20 +439,32 @@ export default function AdminUsers() {
 
     return (
         <div className="admin-users-page">
-            <AccountsOverviewSection
-                totalUsers={users.length}
-                onOpenCreate={() => {
-                    setImportFeedback(null);
-                    setIsCreateOpen(true);
-                }}
-            />
+            <AccountsOverviewSection totalUsers={users.length}>
+                <SchoolYearTermSelector
+                    selectedSchoolYear={selectedSchoolYear}
+                    selectedTerm={selectedTerm}
+                    onYearChange={handleYearArrow}
+                    onTermChange={handleTermChange}
+                />
+            </AccountsOverviewSection>
 
             <UsersSearchFilterSort
                 searchValue={searchValue}
                 onSearchChange={setSearchValue}
                 quickRole={quickRole}
                 onQuickRoleChange={setQuickRole}
-            />
+            >
+                <button 
+                    className="accounts-overview-add-btn" 
+                    onClick={() => {
+                        setImportFeedback(null);
+                        setIsCreateOpen(true);
+                    }}
+                >
+                    <FiPlus />
+                    <span>Thêm người dùng</span>
+                </button>
+            </UsersSearchFilterSort>
 
             <UserDetailSection
                 users={paginatedUsers}

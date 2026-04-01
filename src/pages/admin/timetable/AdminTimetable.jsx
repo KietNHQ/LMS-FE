@@ -4,6 +4,8 @@ import TimetableFiltersSection from "./components/timetableFiltersSection/timeta
 import ScheduleSlotSection from "./components/scheduleSlotSection/scheduleSlotSection";
 import ConflictCheckSection from "./components/conflictCheckSection/conflictCheckSection";
 import Modal from "../../../components/ui/Modal/Modal";
+import { SchoolYearTermSelector } from "../../../components/common";
+import { useSchoolYearTerm } from "../../../hooks/useSchoolYearTerm";
 
 const classOptions = ["10A1", "10A2", "11B1", "11B2", "12C1", "12C2"];
 // Tạo blockOptions từ classOptions (lấy ký tự đầu, loại trùng)
@@ -154,6 +156,7 @@ function LessonModal({ mode, formData, subjectOptions, onChange, onClose, onSubm
 }
 
 export default function AdminTimetable() {
+    const { selectedSchoolYear, selectedTerm, handleYearArrow, handleTermChange } = useSchoolYearTerm();
     const [sessions, setSessions] = useState(initialSessions);
     const [selectedWeek, setSelectedWeek] = useState(currentWeek);
     // Thêm state cho selectedBlock
@@ -413,7 +416,14 @@ export default function AdminTimetable() {
                 onSearchChange={setSearchTerm}
                 onCreateSession={openCreateModal}
                 onOpenConflicts={() => setIsConflictModalOpen(true)}
-            />
+            >
+                <SchoolYearTermSelector
+                    selectedSchoolYear={selectedSchoolYear}
+                    selectedTerm={selectedTerm}
+                    onYearChange={handleYearArrow}
+                    onTermChange={handleTermChange}
+                />
+            </TimetableFiltersSection>
 
             <div className="admin-timetable-content-grid">
                 <ScheduleSlotSection

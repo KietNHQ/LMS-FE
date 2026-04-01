@@ -6,9 +6,12 @@ import initialClasses from "./data/initialClasses";
 
 import ClassListSection from "./components/classListSection/classListSection";
 import ClassInfoSection from "./components/classInfoSection/classInfoSection";
+import { SchoolYearTermSelector } from "../../../components/common";
+import { useSchoolYearTerm } from "../../../hooks/useSchoolYearTerm";
 
 
 export default function AdminClasses() {
+    const { selectedSchoolYear, selectedTerm, handleYearArrow, handleTermChange } = useSchoolYearTerm();
     const ITEMS_PER_PAGE = 6;
 
     const navigate = useNavigate();
@@ -161,14 +164,14 @@ export default function AdminClasses() {
                     </span>
                 </div>
 
-                <button
-                    type="button"
-                    className="admin-classes-header__create-btn"
-                    onClick={handleOpenCreate}
-                >
-                    <span className="plus-icon">+</span>
-                    Tạo lớp học
-                </button>
+                <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+                    <SchoolYearTermSelector
+                        selectedSchoolYear={selectedSchoolYear}
+                        selectedTerm={selectedTerm}
+                        onYearChange={handleYearArrow}
+                        onTermChange={handleTermChange}
+                    />
+                </div>
             </div>
 
             <div className="admin-classes-toolbar">
@@ -195,6 +198,15 @@ export default function AdminClasses() {
                         </button>
                     ))}
                 </div>
+                <button
+                    type="button"
+                    className="admin-classes-header__create-btn"
+                    onClick={handleOpenCreate}
+                    style={{ marginLeft: '1rem', whiteSpace: 'nowrap' }}
+                >
+                    <span className="plus-icon">+</span>
+                    Tạo lớp học
+                </button>
             </div>
 
             <div className="admin-classes-body">

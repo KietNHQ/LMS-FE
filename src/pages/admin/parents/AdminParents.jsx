@@ -2,7 +2,8 @@ import React, { useState, useMemo } from "react";
 import { FiChevronLeft, FiChevronRight } from "react-icons/fi";
 import { read, utils, writeFile } from "xlsx";
 import "./AdminParents.css";
-import { CreateUserDialog } from "../../../components/common";
+import { CreateUserDialog, SchoolYearTermSelector } from "../../../components/common";
+import { useSchoolYearTerm } from "../../../hooks/useSchoolYearTerm";
 import ParentActionsSection from "./components/parentActionsSection/parentActionsSection";
 import ParentListSection from "./components/parentListSection/parentListSection";
 import ParentInformationSection from "./components/parentInformationSection/parentInformationSection";
@@ -181,6 +182,7 @@ function buildParentEmail(firstName, lastName) {
 const ITEMS_PER_PAGE = 4;
 
 export default function AdminParents() {
+    const { selectedSchoolYear, selectedTerm, handleYearArrow, handleTermChange } = useSchoolYearTerm();
     const [parents, setParents] = useState(initialParents);
     const [searchTerm, setSearchTerm] = useState("");
     const [selectedStatus, setSelectedStatus] = useState("Tất cả trạng thái");
@@ -455,7 +457,14 @@ export default function AdminParents() {
                 onStatusChange={setSelectedStatus}
                 onClassChange={setSelectedClass}
                 onCreateParentAccount={() => setIsDialogOpen(true)}
-            />
+            >
+                <SchoolYearTermSelector
+                    selectedSchoolYear={selectedSchoolYear}
+                    selectedTerm={selectedTerm}
+                    onYearChange={handleYearArrow}
+                    onTermChange={handleTermChange}
+                />
+            </ParentActionsSection>
 
             <ParentListSection
                 parents={paginatedParents}

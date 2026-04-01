@@ -14,6 +14,7 @@ export default function StudentActionsSection({
                                                   onClassChange,
                                                   onStatusChange,
                                                   onCreateStudentAccount,
+                                                  children,
                                               }) {
     const [isClassOpen, setIsClassOpen] = useState(false);
     const [isStatusOpen, setIsStatusOpen] = useState(false);
@@ -45,9 +46,9 @@ export default function StudentActionsSection({
                     </div>
                 </div>
 
-                <button className="student-btn-create" onClick={onCreateStudentAccount}>
-                    Tạo tài khoản học sinh
-                </button>
+                <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+                    {children}
+                </div>
             </div>
 
             <div className="student-toolbar-card">
@@ -120,6 +121,9 @@ export default function StudentActionsSection({
                         )}
                     </div>
                 </div>
+                <button className="student-btn-create" onClick={onCreateStudentAccount} style={{ height: '3.4rem', borderRadius: '1rem', padding: '0 1.5rem', marginLeft: '0.7rem' }}>
+                    Tạo tài khoản học sinh
+                </button>
             </div>
         </section>
     );

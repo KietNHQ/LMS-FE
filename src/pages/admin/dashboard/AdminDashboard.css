@@ -24,86 +24,6 @@
   flex-wrap: wrap;
 }
 
-.admin-dashboard__year-control,
-.admin-dashboard__term-control {
-  display: flex;
-  align-items: center;
-  gap: 0.55rem;
-}
-
-.admin-dashboard__year-input-wrapper {
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-}
-
-.admin-dashboard__year-input-readonly {
-  width: 7.2rem;
-  height: 2.35rem;
-  border: 1px solid var(--admin-border, #dce5f7);
-  border-radius: 0.75rem;
-  text-align: center;
-  color: var(--admin-text-primary, #1e2f5a);
-  font-size: 0.96rem;
-  font-weight: 700;
-  background: #ffffff;
-}
-
-.admin-dashboard__year-arrow-btn {
-  width: 2.35rem;
-  height: 2.35rem;
-  border: 1px solid var(--admin-border, #dce5f7);
-  background: #ffffff;
-  border-radius: 0.75rem;
-  font-size: 0.9rem;
-  color: var(--admin-text-secondary, #4d5f82);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.2s ease;
-}
-
-.admin-dashboard__year-arrow-btn:hover {
-  border-color: var(--admin-border-strong, #c3d2ef);
-  color: var(--admin-text-primary, #1e2f5a);
-  background: var(--admin-primary-soft, #e9efff);
-}
-
-.admin-dashboard__year-arrow-btn:active {
-  transform: scale(0.95);
-}
-
-.admin-dashboard__term-toggle {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.3rem;
-  padding: 0.2rem;
-  border: 1px solid var(--admin-border, #dce5f7);
-  border-radius: 0.85rem;
-  background: #ffffff;
-}
-
-.admin-dashboard__term-btn {
-  min-width: 5.6rem;
-  height: 2rem;
-  border-radius: 0.65rem;
-  padding: 0 0.75rem;
-  color: var(--admin-text-secondary, #4d5f82);
-  font-size: 0.86rem;
-  font-weight: 700;
-  transition: all 0.2s ease;
-}
-
-.admin-dashboard__term-btn:hover {
-  color: var(--admin-text-primary, #1e2f5a);
-  background: var(--admin-primary-soft, #e9efff);
-}
-
-.admin-dashboard__term-btn.is-active {
-  background: var(--admin-primary, #1e2f5a);
-  color: #ffffff;
-}
-
 .admin-dashboard__title {
   font-size: 2.6rem;
   line-height: 1.15;
@@ -149,6 +69,27 @@
 .admin-dashboard__slot--revenue .admin-dashboard__card,
 .admin-dashboard__slot--pricing .admin-dashboard__card {
   height: 100%;
+}
+
+.admin-dashboard__slot--pricing {
+  display: flex;
+}
+
+.admin-dashboard__slot--pricing .event-calendar {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  height: 100%;
+  background: var(--admin-surface, #ffffff);
+  padding: 20px;
+  border-radius: var(--radius-lg, 16px);
+  border: 1px solid var(--admin-border, #dce5f7);
+  box-shadow: var(--admin-shadow-sm, 0 2px 6px rgba(30, 47, 90, 0.06));
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.admin-dashboard__slot--pricing .event-calendar:hover {
+  box-shadow: var(--admin-shadow-md, 0 10px 24px rgba(30, 47, 90, 0.12));
 }
 
 .admin-dashboard__slot--conduct .admin-dashboard__card,
@@ -367,24 +308,6 @@
 
   .admin-dashboard__school-year {
     font-size: 0.92rem;
-  }
-
-  .admin-dashboard__year-control,
-  .admin-dashboard__term-control {
-    width: 100%;
-  }
-
-  .admin-dashboard__year-input-readonly {
-    flex: 1;
-    width: auto;
-  }
-
-  .admin-dashboard__term-toggle {
-    width: 100%;
-  }
-
-  .admin-dashboard__term-btn {
-    flex: 1;
   }
 
   .admin-dashboard__card {

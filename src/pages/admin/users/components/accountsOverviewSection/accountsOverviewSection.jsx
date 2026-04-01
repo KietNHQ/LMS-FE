@@ -4,7 +4,7 @@ import "./AccountsOverviewSection.css";
 
 export default function AccountsOverviewSection({
     totalUsers,
-    onOpenCreate,
+    children,
 }) {
     return (
         <div className="accounts-overview-section">
@@ -19,11 +19,7 @@ export default function AccountsOverviewSection({
             </div>
 
             <div className="accounts-overview-actions">
-
-                <button className="accounts-overview-add-btn" onClick={onOpenCreate}>
-                    <FiPlus />
-                    <span>Thêm người dùng</span>
-                </button>
+                {children}
             </div>
         </div>
     );

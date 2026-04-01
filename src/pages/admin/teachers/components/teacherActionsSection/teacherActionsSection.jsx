@@ -13,6 +13,7 @@ export default function TeacherActionsSection({
 	onStatusChange,
 	onSubjectChange,
 	onCreateTeacherAccount,
+	children,
 }) {
 	const [isSubjectOpen, setIsSubjectOpen] = useState(false);
 	const [isStatusOpen, setIsStatusOpen] = useState(false);
@@ -45,9 +46,9 @@ export default function TeacherActionsSection({
 					</div>
 				</div>
 
-				<button className="teacher-create-account-btn" onClick={onCreateTeacherAccount}>
-					Tạo tài khoản giáo viên
-				</button>
+				<div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+					{children}
+				</div>
 			</div>
 
 			<div className="teacher-toolbar-card">
@@ -120,6 +121,9 @@ export default function TeacherActionsSection({
 						)}
 					</div>
 				</div>
+				<button className="teacher-create-account-btn" onClick={onCreateTeacherAccount} style={{ height: '3.4rem', borderRadius: '1rem', padding: '0 1.5rem', marginLeft: '0.7rem' }}>
+					Tạo tài khoản giáo viên
+				</button>
 			</div>
 		</section>
 	);

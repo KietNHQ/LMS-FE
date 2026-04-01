@@ -9,6 +9,7 @@ export default function UsersSearchFilterSort({
                                                   onSearchChange,
                                                   quickRole,
                                                   onQuickRoleChange,
+                                                  children,
                                               }) {
     return (
         <div className="users-search-filter-sort">
@@ -32,6 +33,9 @@ export default function UsersSearchFilterSort({
                         {tab}
                     </button>
                 ))}
+            </div>
+            <div style={{ marginLeft: 'auto' }}>
+                {children}
             </div>
         </div>
     );

@@ -1,11 +1,23 @@
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { FiEye, FiEyeOff } from "react-icons/fi";
 import AuthLayout from "../../layouts/auth/AuthLayout.jsx";
 import { useLogin } from "../../hooks/useAuth";
+import { LoadingAnimationBook, LoadingSpinner } from "../../components/common";
 import "./Login.css";
 
+const LOGIN_ENTRY_LOADER_KEY = "login-entry-loader-seen";
+
 function Login() {
+    const [isCardLoading, setIsCardLoading] = useState(() => {
+        if (typeof window === "undefined") {
+            return false;
+        }
+
+        return sessionStorage.getItem(LOGIN_ENTRY_LOADER_KEY) !== "1";
+    });
+    const [showSubmitSpinner, setShowSubmitSpinner] = useState(false);
+    const submitSpinnerTimerRef = useRef(null);
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [showPassword, setShowPassword] = useState(false);
@@ -15,8 +27,30 @@ function Login() {
     const [passwordError, setPasswordError] = useState("");
 
     const loginMutation = useLogin();
+    const isSubmitting = loginMutation.isPending;
 
-    const handleSubmit = (e) => {
+    useEffect(() => {
+        if (!isCardLoading) {
+            return;
+        }
+
+        const timer = setTimeout(() => {
+            setIsCardLoading(false);
+            sessionStorage.setItem(LOGIN_ENTRY_LOADER_KEY, "1");
+        }, 120);
+
+        return () => clearTimeout(timer);
+    }, [isCardLoading]);
+
+    useEffect(() => {
+        return () => {
+            if (submitSpinnerTimerRef.current) {
+                clearTimeout(submitSpinnerTimerRef.current);
+            }
+        };
+    }, []);
+
+    const handleSubmit = async (e) => {
         e.preventDefault();
         setPasswordError(""); // Reset lỗi FE
 
@@ -26,8 +60,28 @@ function Login() {
             return;
         }
 
+        // Avoid flashing spinner for very fast responses.
+        setShowSubmitSpinner(false);
+        if (submitSpinnerTimerRef.current) {
+            clearTimeout(submitSpinnerTimerRef.current);
+        }
+
+        submitSpinnerTimerRef.current = setTimeout(() => {
+            setShowSubmitSpinner(true);
+        });
+
         // Gọi API lên BE
-        loginMutation.mutate({ email, password, rememberMe });
+        try {
+            await loginMutation.mutateAsync({ email, password, rememberMe });
+        } catch {
+            // onError trong hook đã xử lý toast.
+        } finally {
+            if (submitSpinnerTimerRef.current) {
+                clearTimeout(submitSpinnerTimerRef.current);
+                submitSpinnerTimerRef.current = null;
+            }
+            setShowSubmitSpinner(false);
+        }
     };
 
     // Bắt lỗi từ Backend trả về
@@ -41,6 +95,11 @@ function Login() {
             title="Đăng nhập"
             subtitle="Đăng nhập để tiếp tục truy cập bảng điều khiển học tập."
         >
+            {isCardLoading ? (
+                <div className="login-entry-loader" role="status" aria-live="polite">
+                    <LoadingAnimationBook label="Đang tải trang đăng nhập..." size="md" />
+                </div>
+            ) : (
             <form className="auth-form" onSubmit={handleSubmit}>
 
                 <div className="auth-field">
@@ -54,6 +113,7 @@ function Login() {
                             setEmail(e.target.value);
                             loginMutation.reset(); // Xóa lỗi BE khi user gõ email mới
                         }}
+                        disabled={isSubmitting}
                         required
                     />
                 </div>
@@ -74,6 +134,7 @@ function Login() {
                                 setPasswordError("");
                                 loginMutation.reset();
                             }}
+                            disabled={isSubmitting}
                             required
                         />
 
@@ -82,6 +143,7 @@ function Login() {
                             className="auth-password-toggle"
                             onClick={() => setShowPassword((prev) => !prev)}
                             aria-label={showPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
+                            disabled={isSubmitting}
                         >
                             {showPassword ? <FiEyeOff size={20} /> : <FiEye size={20} />}
                         </button>
@@ -99,6 +161,7 @@ function Login() {
                             type="checkbox"
                             checked={rememberMe}
                             onChange={(e) => setRememberMe(e.target.checked)}
+                            disabled={isSubmitting}
                         />
                         <span>Ghi nhớ đăng nhập</span>
                     </label>
@@ -111,12 +174,17 @@ function Login() {
                 <button
                     type="submit"
                     className="auth-button"
-                    disabled={loginMutation.isPending}
+                    disabled={isSubmitting}
                 >
-                    {loginMutation.isPending ? "Đang đăng nhập..." : "Đăng nhập"}
+                    {isSubmitting && showSubmitSpinner ? (
+                        <LoadingSpinner size="sm" label="Đang đăng nhập..." />
+                    ) : (
+                        "Đăng nhập"
+                    )}
                 </button>
 
             </form>
+            )}
         </AuthLayout>
     );
 }

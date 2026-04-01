@@ -1,31 +1,31 @@
 import "./statisticsCardsSection.css";
 import { GraduationCap, Users, School } from "lucide-react";
 
-const data = [
-  {
-    title: "Tổng học sinh",
-    value: "8",
-    sub: "Tất cả khối lớp",
-    icon: <GraduationCap />,
-    color: "blue",
-  },
-  {
-    title: "Giáo viên",
-    value: "4",
-    sub: "Đang giảng dạy",
-    icon: <Users />,
-    color: "green",
-  },
-  {
-    title: "Lớp học",
-    value: "7",
-    sub: "Năm học 2024-2025",
-    icon: <School />,
-    color: "purple",
-  },
-];
+const StatisticsCardsSection = ({ totalStudents, totalTeachers, totalClasses, selectedSchoolYear }) => {
+  const data = [
+    {
+      title: "Tổng học sinh",
+      value: totalStudents,
+      sub: "Tất cả khối lớp",
+      icon: <GraduationCap />,
+      color: "blue",
+    },
+    {
+      title: "Giáo viên",
+      value: totalTeachers,
+      sub: "Đang giảng dạy",
+      icon: <Users />,
+      color: "green",
+    },
+    {
+      title: "Lớp học",
+      value: totalClasses,
+      sub: `Năm học ${selectedSchoolYear}`,
+      icon: <School />,
+      color: "purple",
+    },
+  ];
 
-const StatisticsCardsSection = () => {
   return (
     <div className="admin-dashboard__stats">
       {data.map((item, i) => (

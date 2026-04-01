@@ -49,6 +49,7 @@ export const sidebarConfig = {
         { label: "Phụ Huynh", icon: FiUsers, path: "/admin/parents" },
         { label: "Lớp Học", icon: FiBookOpen, path: "/admin/classes" },
         { label: "Bài Kiểm Tra", icon: FiFileText, path: "/admin/quiz" },
+        { label: "Thanh Toán", icon: FiCreditCard, path: "/admin/payment" },
         { label: "Thời Khóa Biểu", icon: FiCalendar, path: "/admin/timetable" },
         { label: "Thông Báo", icon: FiBell, path: "/admin/notifications" },
         { label: "Báo Cáo", icon: FiBarChart2, path: "/admin/reports" }

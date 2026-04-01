@@ -1,6 +1,7 @@
 import React from "react";
 import { BrowserRouter } from "react-router-dom";
 import AppRoutes from "./routes/AppRoutes";
+import { SchoolYearProvider } from "./context/SchoolYearContext";
 
 /* GLOBAL STYLE */
 import "./styles/variables.css";
@@ -8,9 +9,11 @@ import "./styles/global.css";
 
 function App() {
   return (
-    <BrowserRouter>
-      <AppRoutes />
-    </BrowserRouter>
+    <SchoolYearProvider>
+      <BrowserRouter>
+        <AppRoutes />
+      </BrowserRouter>
+    </SchoolYearProvider>
   );
 }
 

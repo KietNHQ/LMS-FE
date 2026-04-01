@@ -1,40 +1,20 @@
 import "./AdminDashboard.css";
 import StatisticsCardsSection from "./components/statisticsCardsSection/statisticsCardsSection";
-import TuitionPricingSection from "./components/tuitionPricingSection/tuitionPricingSection";
+import EventCalendarSection from "./components/eventCalendarSection/eventCalendarSection";
 import RevenueSection from "./components/revenueSection/revenueSection";
 import ConductScoreSection from "./components/conductScoreSection/conductScoreSection";
 import AcademicOverviewSection from "./components/academicOverviewSection/academicOverviewSection";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import initialClasses from "../classes/data/initialClasses";
+import { adminDashboardService } from "../../../services/pages/admin/dashboard/dashboardService";
+import { SchoolYearTermSelector } from "../../../components/common";
+import { getCurrentSchoolYear, getCurrentTerm, shiftSchoolYear } from "../../../utils/dateUtils";
 
 const AdminDashboard = () => {
+  const adminName = localStorage.getItem('email')?.split('@')[0] || 'Quản Trị Viên';
   const defaultTuitionTemplate = {
     hk1: { "10": 5000000, "11": 5200000, "12": 5500000 },
     hk2: { "10": 5300000, "11": 5500000, "12": 5800000 },
-  };
-
-  const getCurrentSchoolYear = () => {
-    const today = new Date();
-    const currentYear = today.getFullYear();
-    const currentMonth = today.getMonth() + 1;
-
-    if (currentMonth < 8) {
-      return `${currentYear - 1}-${currentYear}`;
-    }
-
-    return `${currentYear}-${currentYear + 1}`;
-  };
-
-  const getCurrentTerm = () => {
-    const currentMonth = new Date().getMonth() + 1;
-
-    // HK1 thường kéo dài từ tháng 8 đến tháng 12, HK2 từ tháng 1 đến tháng 5.
-    // Tháng 6-7 là giai đoạn cuối năm học nên mặc định vẫn giữ HK2.
-    if (currentMonth >= 8 && currentMonth <= 12) {
-      return "hk1";
-    }
-
-    return "hk2";
   };
 
   const cloneYearTuition = (yearData) => ({
@@ -42,21 +22,65 @@ const AdminDashboard = () => {
     hk2: { ...yearData.hk2 },
   });
 
-  const shiftSchoolYear = (yearRange, direction) => {
-    const [startRaw, endRaw] = yearRange.split("-");
-    const start = Number(startRaw);
-    const end = Number(endRaw);
-
-    if (!Number.isFinite(start) || !Number.isFinite(end)) {
-      return yearRange;
-    }
-
-    const delta = direction === "next" ? 1 : -1;
-    return `${start + delta}-${end + delta}`;
-  };
-
   const initialSchoolYear = getCurrentSchoolYear();
   const initialTerm = getCurrentTerm();
+
+  const getMaxWeekBySchoolYear = (schoolYear) => {
+    const customWeekLimitByYear = {
+      "2024-2025": 35,
+      "2025-2026": 35,
+    };
+
+    return customWeekLimitByYear[schoolYear] || 35;
+  };
+
+  const getTermWeekRange = (schoolYear, term) => {
+    const totalWeeks = getMaxWeekBySchoolYear(schoolYear);
+    const hk1Weeks = Math.ceil(totalWeeks / 2);
+    const hk2Weeks = Math.max(totalWeeks - hk1Weeks, 1);
+
+    if (term === "hk2") {
+      return { startWeek: hk1Weeks + 1, endWeek: totalWeeks, maxWeekInTerm: hk2Weeks };
+    }
+
+    return { startWeek: 1, endWeek: hk1Weeks, maxWeekInTerm: hk1Weeks };
+  };
+
+  const getCurrentWeekForSchoolYear = (schoolYear, term) => {
+    const [startRaw, endRaw] = `${schoolYear}`.split("-");
+    const startYear = Number(startRaw);
+    const endYear = Number(endRaw);
+    const { startWeek, endWeek, maxWeekInTerm } = getTermWeekRange(schoolYear, term);
+
+    if (!Number.isFinite(startYear) || !Number.isFinite(endYear)) {
+      return 1;
+    }
+
+    const termStart = term === "hk2"
+      ? new Date(endYear, 0, 1)
+      : new Date(startYear, 7, 1);
+    const termEnd = term === "hk2"
+      ? new Date(endYear, 4, 31, 23, 59, 59, 999)
+      : new Date(startYear, 11, 31, 23, 59, 59, 999);
+    const now = new Date();
+
+    if (now < termStart) {
+      return startWeek;
+    }
+
+    if (now > termEnd) {
+      return endWeek;
+    }
+
+    const diffTime = now.getTime() - termStart.getTime();
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    const computedWeek = Math.floor(diffDays / 7) + 1;
+
+    const weekInTerm = Math.min(Math.max(computedWeek, 1), maxWeekInTerm);
+    const weekInSchoolYear = startWeek - 1 + weekInTerm;
+
+    return Math.min(Math.max(weekInSchoolYear, startWeek), endWeek);
+  };
 
   const createInitialTuitionMap = () => {
     const baseMap = {
@@ -81,16 +105,33 @@ const AdminDashboard = () => {
   const [selectedSchoolYear, setSelectedSchoolYear] = useState(initialSchoolYear);
   const [selectedTerm, setSelectedTerm] = useState(initialTerm);
   const [selectedClass, setSelectedClass] = useState("10");
-  const [selectedWeek, setSelectedWeek] = useState(1);
+  const [selectedWeek, setSelectedWeek] = useState(() => getCurrentWeekForSchoolYear(initialSchoolYear, initialTerm));
+  const [summaryStats, setSummaryStats] = useState({
+    totalStudents: 8,
+    totalTeachers: 4,
+    totalClasses: 7,
+  });
 
-  const getMaxWeekBySchoolYear = (schoolYear) => {
-    const customWeekLimitByYear = {
-      "2024-2025": 35,
-      "2025-2026": 35,
+  useEffect(() => {
+    let isMounted = true;
+
+    const fetchSummaryStats = async () => {
+      try {
+        const summary = await adminDashboardService.getDashboardSummary();
+        if (isMounted) {
+          setSummaryStats(summary);
+        }
+      } catch {
+        // Keep current fallback stats if API request fails.
+      }
     };
 
-    return customWeekLimitByYear[schoolYear] || 35;
-  };
+    fetchSummaryStats();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const maxWeek = getMaxWeekBySchoolYear(selectedSchoolYear);
 
@@ -102,7 +143,7 @@ const AdminDashboard = () => {
     setSelectedWeek((prevWeek) => Math.min(prevWeek + 1, maxWeek));
   };
 
-  // ===== DATA BAR CHART - Điểm rèn luyện theo lớp =====
+  // ===== DATA BAR CHART - Điểm thi đua theo lớp =====
   const classLabels = ["10A1","10A2","10A3","12A1","11A2","11A1","12A1"];
   const classScores = [8.2, 7.5, 7.8, 8.9, 8.1, 7.2, 6.8];
 
@@ -111,7 +152,6 @@ const AdminDashboard = () => {
 
   const handleYearArrow = (direction) => {
     const nextSchoolYear = shiftSchoolYear(selectedSchoolYear, direction);
-    const nextMaxWeek = getMaxWeekBySchoolYear(nextSchoolYear);
 
     setTuitionByYearTerm((prev) => {
       if (prev[nextSchoolYear]) {
@@ -126,7 +166,12 @@ const AdminDashboard = () => {
     });
 
     setSelectedSchoolYear(nextSchoolYear);
-    setSelectedWeek((prevWeek) => Math.min(Math.max(prevWeek, 1), nextMaxWeek));
+    setSelectedWeek(getCurrentWeekForSchoolYear(nextSchoolYear, selectedTerm));
+  };
+
+  const handleTermChange = (term) => {
+    setSelectedTerm(term);
+    setSelectedWeek(getCurrentWeekForSchoolYear(selectedSchoolYear, term));
   };
 
   const formatCurrency = (value) => {
@@ -162,18 +207,6 @@ const AdminDashboard = () => {
     return `${absValue}`;
   };
 
-  const handleUpdateTuition = (grade, newValue) => {
-    setTuitionByYearTerm((prev) => ({
-      ...prev,
-      [selectedSchoolYear]: {
-        ...(prev[selectedSchoolYear] || defaultTuitionTemplate),
-        [selectedTerm]: {
-          ...((prev[selectedSchoolYear] && prev[selectedSchoolYear][selectedTerm]) || defaultTuitionTemplate[selectedTerm]),
-          [grade]: newValue,
-        },
-      },
-    }));
-  };
 
   const yearData = tuitionByYearTerm[selectedSchoolYear] || defaultTuitionTemplate;
   const selectedTuitionData = yearData[selectedTerm] || defaultTuitionTemplate[selectedTerm];
@@ -202,128 +235,84 @@ const AdminDashboard = () => {
     return accumulator;
   }, {});
 
-  const revenueByGrade = ["10", "11", "12"].map((grade) => {
+  const hk1TuitionData = yearData.hk1 || defaultTuitionTemplate.hk1;
+  const hk2TuitionData = yearData.hk2 || defaultTuitionTemplate.hk2;
+
+  const revenueComparisonData = ["10", "11", "12"].map((grade) => {
     const studentCount = studentCountByGrade[grade] || 0;
-    const tuitionPerStudent = selectedTuitionData[grade] || 0;
+    const paidStudentCount = studentCount;
 
     return {
       grade,
       gradeLabel: `Khối ${grade}`,
       studentCount,
-      value: tuitionPerStudent * studentCount,
+      paidStudentCount,
+      hk1Value: (hk1TuitionData[grade] || 0) * studentCount,
+      hk2Value: (hk2TuitionData[grade] || 0) * studentCount,
     };
   });
 
-  const revenueSummary = revenueByGrade.reduce(
+  const revenueSummary = revenueComparisonData.reduce(
     (accumulator, item) => ({
       studentCount: accumulator.studentCount + item.studentCount,
-      value: accumulator.value + item.value,
+      paidStudentCount: accumulator.paidStudentCount + item.paidStudentCount,
+      hk1Value: accumulator.hk1Value + item.hk1Value,
+      hk2Value: accumulator.hk2Value + item.hk2Value,
     }),
-    { studentCount: 0, value: 0 }
+    { studentCount: 0, paidStudentCount: 0, hk1Value: 0, hk2Value: 0 }
   );
 
-  const revenueData = [
-    ...revenueByGrade,
-    {
-      grade: "all",
-      gradeLabel: "Cả 3 khối",
-      studentCount: revenueSummary.studentCount,
-      value: revenueSummary.value,
-    },
-  ];
+  revenueComparisonData.push({
+    grade: "all",
+    gradeLabel: "Cả 3 khối",
+    studentCount: revenueSummary.studentCount,
+    paidStudentCount: revenueSummary.paidStudentCount,
+    hk1Value: revenueSummary.hk1Value,
+    hk2Value: revenueSummary.hk2Value,
+  });
 
+  const hasHk2Data = Object.values(hk2TuitionData).some((amount) => Number(amount) > 0);
   const termLabel = selectedTerm === "hk1" ? "Học kỳ 1" : "Học kỳ 2";
-
-  const revenueTooltipFormatter = (value, _name, payload) => {
-    const studentCount = payload?.payload?.studentCount || 0;
-    return [
-      `${formatCompactMoney(value)} (${formatCurrency(value)})`,
-      `Doanh thu ${termLabel} (${studentCount} học sinh)`,
-    ];
-  };
 
   return (
     <div className="admin-dashboard">
 
       <div className="admin-dashboard__header">
         <div className="admin-dashboard__title-row">
-          <h2 className="admin-dashboard__title">Xin chào, Quản Trị Viên</h2>
+          <h2 className="admin-dashboard__title">Xin chào, {adminName}</h2>
 
           <div className="admin-dashboard__header-controls">
-            <div className="admin-dashboard__year-control">
-              <span className="admin-dashboard__header-meta">Năm học</span>
-              <div className="admin-dashboard__year-input-wrapper">
-                <button
-                  type="button"
-                  className="admin-dashboard__year-arrow-btn"
-                  onClick={() => handleYearArrow("prev")}
-                  title="Năm trước"
-                  aria-label="Năm trước"
-                >
-                  ◀
-                </button>
-                <input
-                  type="text"
-                  value={selectedSchoolYear}
-                  readOnly
-                  className="admin-dashboard__year-input-readonly"
-                  aria-label="Năm học đang chọn"
-                />
-                <button
-                  type="button"
-                  className="admin-dashboard__year-arrow-btn"
-                  onClick={() => handleYearArrow("next")}
-                  title="Năm sau"
-                  aria-label="Năm sau"
-                >
-                  ▶
-                </button>
-              </div>
-            </div>
-
-            <div className="admin-dashboard__term-control">
-              <span className="admin-dashboard__header-meta">Học kỳ</span>
-              <div className="admin-dashboard__term-toggle">
-                <button
-                  type="button"
-                  className={`admin-dashboard__term-btn ${selectedTerm === "hk1" ? "is-active" : ""}`}
-                  onClick={() => setSelectedTerm("hk1")}
-                >
-                  Học kỳ 1
-                </button>
-                <button
-                  type="button"
-                  className={`admin-dashboard__term-btn ${selectedTerm === "hk2" ? "is-active" : ""}`}
-                  onClick={() => setSelectedTerm("hk2")}
-                >
-                  Học kỳ 2
-                </button>
-              </div>
-            </div>
+            <SchoolYearTermSelector
+              selectedSchoolYear={selectedSchoolYear}
+              selectedTerm={selectedTerm}
+              onYearChange={handleYearArrow}
+              onTermChange={handleTermChange}
+            />
           </div>
         </div>
       </div>
 
-      <StatisticsCardsSection />
+      <StatisticsCardsSection
+        totalStudents={summaryStats.totalStudents}
+        totalTeachers={summaryStats.totalTeachers}
+        totalClasses={summaryStats.totalClasses}
+        selectedSchoolYear={selectedSchoolYear}
+      />
 
       <div className="admin-dashboard__matrix">
         <div className="admin-dashboard__slot admin-dashboard__slot--revenue">
           <RevenueSection
             selectedSchoolYear={selectedSchoolYear}
+            selectedTerm={selectedTerm}
             termLabel={termLabel}
-            revenueData={revenueData}
+            hasHk2Data={hasHk2Data}
+            comparisonData={revenueComparisonData}
             formatCompactMoney={formatCompactMoney}
-            revenueTooltipFormatter={revenueTooltipFormatter}
           />
         </div>
 
         <div className="admin-dashboard__slot admin-dashboard__slot--pricing">
-          <TuitionPricingSection
-            selectedSchoolYear={selectedSchoolYear}
-            selectedTerm={selectedTerm}
-            tuitionData={selectedTuitionData}
-            onUpdateTuition={handleUpdateTuition}
-          />
+          <EventCalendarSection />
         </div>
 
         <div className="admin-dashboard__slot admin-dashboard__slot--conduct">

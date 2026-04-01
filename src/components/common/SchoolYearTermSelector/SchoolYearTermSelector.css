@@ -1,0 +1,121 @@
+.school-year-term-selector {
+  display: inline-flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.school-year-term-selector__group {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+}
+
+.school-year-term-selector__year-input-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.school-year-term-selector__year-input {
+  width: 7.2rem;
+  height: 2.35rem;
+  border: 1px solid var(--admin-border, #dce5f7);
+  border-radius: 0.75rem;
+  text-align: center;
+  color: var(--admin-text-primary, #1e2f5a);
+  font-size: 0.96rem;
+  font-weight: 700;
+  background: #ffffff;
+}
+
+.school-year-term-selector__arrow-btn {
+  width: 2.35rem;
+  height: 2.35rem;
+  border: 1px solid var(--admin-border, #dce5f7);
+  background: #ffffff;
+  border-radius: 0.75rem;
+  font-size: 0.9rem;
+  color: var(--admin-text-secondary, #4d5f82);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.school-year-term-selector__arrow-btn:hover {
+  border-color: var(--admin-border-strong, #c3d2ef);
+  color: var(--admin-text-primary, #1e2f5a);
+  background: var(--admin-primary-soft, #e9efff);
+}
+
+.school-year-term-selector__arrow-btn:active {
+  transform: scale(0.95);
+}
+
+.school-year-term-selector__term-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.2rem;
+  border: 1px solid var(--admin-border, #dce5f7);
+  border-radius: 0.85rem;
+  background: #ffffff;
+}
+
+.school-year-term-selector__term-btn {
+  min-width: 5.6rem;
+  height: 2rem;
+  border-radius: 0.65rem;
+  padding: 0 0.75rem;
+  color: var(--admin-text-secondary, #4d5f82);
+  font-size: 0.86rem;
+  font-weight: 700;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  background: transparent;
+  border: none;
+}
+
+.school-year-term-selector__term-btn:hover {
+  color: var(--admin-text-primary, #1e2f5a);
+  background: var(--admin-primary-soft, #e9efff);
+}
+
+.school-year-term-selector__term-btn.is-active {
+  background: var(--admin-primary, #1e2f5a);
+  color: #ffffff;
+}
+
+.school-year-term-selector__label {
+  margin: 0;
+  font-size: 0.95rem;
+  color: var(--admin-text-secondary, #4d5f82);
+  font-weight: 700;
+}
+
+/* RESPONSIVE */
+@media (max-width: 768px) {
+  .school-year-term-selector {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .school-year-term-selector__group {
+    width: 100%;
+  }
+
+  .school-year-term-selector__year-input {
+    flex: 1;
+    width: auto;
+  }
+
+  .school-year-term-selector__term-toggle {
+    width: 100%;
+  }
+
+  .school-year-term-selector__term-btn {
+    flex: 1;
+  }
+}

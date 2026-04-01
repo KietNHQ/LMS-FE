@@ -99,6 +99,41 @@
     margin-top: 4px;
 }
 
+.auth-button:disabled {
+    cursor: not-allowed;
+    opacity: 0.9;
+}
+
+.auth-button:disabled:hover {
+    transform: none;
+    box-shadow: 0 10px 22px rgba(30, 47, 90, 0.18);
+}
+
+.auth-button .common-loading-spinner {
+    min-height: auto;
+    flex-direction: row;
+    gap: 8px;
+}
+
+.auth-button .common-loading-spinner__label {
+    margin: 0;
+    color: #ffffff;
+    font-size: 14px;
+    font-weight: 700;
+}
+
+.auth-button .common-loading-spinner__circle {
+    border-color: rgba(255, 255, 255, 0.35);
+    border-top-color: #ffffff;
+}
+
+.login-entry-loader {
+    min-height: 340px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
 .auth-button:hover {
     transform: translateY(-1px);
     box-shadow: 0 12px 28px rgba(30, 47, 90, 0.22);

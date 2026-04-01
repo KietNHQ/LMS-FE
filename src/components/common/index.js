@@ -7,3 +7,5 @@ export { default as SectionCard } from "./SectionCard/SectionCard.jsx";
 export { default as StatusBadge } from "./StatusBadge/StatusBadge.jsx";
 export { default as WeekPicker } from "./WeekPicker/WeekPicker.jsx";
 export { default as CreateUserDialog } from "./Dialog/Admin/CreateUserDialog/CreateUserDialog.jsx";
+export { default as EventCalendar } from "./EventCalendar/EventCalendar.jsx";
+export { default as SchoolYearTermSelector } from "./SchoolYearTermSelector/SchoolYearTermSelector.jsx";

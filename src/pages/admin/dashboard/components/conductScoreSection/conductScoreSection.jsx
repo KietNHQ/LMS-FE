@@ -37,7 +37,7 @@ const ConductScoreSection = ({
 
   const handleTooltipFormatter = (value) => [
     `${Number(value).toFixed(1)} điểm`,
-    "Điểm rèn luyện",
+    "Điểm thi đua",
   ];
 
   const handleLabelFormatter = (label) => `Lớp ${label}`;
@@ -61,7 +61,7 @@ const ConductScoreSection = ({
   return (
     <div className="admin-dashboard__card admin-dashboard__card--big admin-dashboard__conduct-section">
       <div className="admin-dashboard__card-header">
-        <h3>Điểm Rèn Luyện Theo Lớp</h3>
+        <h3>Điểm thi đua theo lớp</h3>
         <div className="admin-dashboard__filter-group">
           <Select
             value={selectedClass}

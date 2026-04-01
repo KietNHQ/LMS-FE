@@ -2,7 +2,8 @@ import React, { useEffect, useMemo, useState } from "react";
 import { FiChevronLeft, FiChevronRight } from "react-icons/fi";
 import { read, utils, writeFile } from "xlsx";
 import "./AdminTeachers.css";
-import { CreateUserDialog } from "../../../components/common";
+import { CreateUserDialog, SchoolYearTermSelector } from "../../../components/common";
+import { useSchoolYearTerm } from "../../../hooks/useSchoolYearTerm";
 import TeacherActionsSection from "./components/teacherActionsSection/teacherActionsSection";
 import TeacherListSection from "./components/teacherListSection/teacherListSection";
 import TeacherInformationSection from "./components/teacherInformationSection/teacherInformationSection";
@@ -712,6 +713,7 @@ function toTeacherForm(teacher) {
 const ITEMS_PER_PAGE = 4;
 
 export default function AdminTeachers() {
+    const { selectedSchoolYear, selectedTerm, handleYearArrow, handleTermChange } = useSchoolYearTerm();
     const [teachers, setTeachers] = useState(initialTeachers);
     const [searchTerm, setSearchTerm] = useState("");
     const [selectedStatus, setSelectedStatus] = useState("Tất cả trạng thái");
@@ -1042,7 +1044,14 @@ export default function AdminTeachers() {
                 onStatusChange={setSelectedStatus}
                 onSubjectChange={setSelectedSubject}
                 onCreateTeacherAccount={() => setIsDialogOpen(true)}
-            />
+            >
+                <SchoolYearTermSelector
+                    selectedSchoolYear={selectedSchoolYear}
+                    selectedTerm={selectedTerm}
+                    onYearChange={handleYearArrow}
+                    onTermChange={handleTermChange}
+                />
+            </TeacherActionsSection>
 
             <TeacherListSection
                 teachers={paginatedTeachers}
