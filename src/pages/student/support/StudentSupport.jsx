@@ -1,13 +1,9 @@
 import "./StudentSupport.css";
 import { useState } from "react";
-import {
-  FaRobot,
-  FaPaperPlane,
-  FaRegClock
-} from "react-icons/fa";
-import SupportHeader from "./components/SupportHeader/SupportHeader";
+import { FaPaperPlane, FaRegClock, FaRobot } from "react-icons/fa";
 import FAQList from "./components/FAQList/FAQList";
 import SupportContact from "./components/SupportContact/SupportContact";
+import SupportHeader from "./components/SupportHeader/SupportHeader";
 
 export default function StudentSupport() {
   const [faqSearch, setFaqSearch] = useState("");
@@ -15,136 +11,117 @@ export default function StudentSupport() {
   const faqs = [
     {
       category: "Học tập",
-      question: "Làm sao để nộp bài tập?",
-      answer: "Truy cập lớp học, chọn bài tập và tải tệp trước hạn nộp.",
-      popularity: 95
+      question: "Làm sao để theo dõi kết quả học tập của con?",
+      answer: "Bạn mở mục Tổng quan con em hoặc Điểm số để xem chi tiết theo học kỳ.",
+      popularity: 96,
     },
     {
       category: "Tài chính",
-      question: "Học phí được thanh toán như thế nào?",
-      answer: "Bạn có thể thanh toán online hoặc tại phòng tài vụ theo thông báo của trường.",
-      popularity: 70
+      question: "Phụ huynh thanh toán học phí cho con ở đâu?",
+      answer: "Bạn có thể thanh toán trong mục Thanh toán hoặc liên hệ phòng tài vụ để được hỗ trợ.",
+      popularity: 90,
     },
     {
       category: "Liên hệ",
-      question: "Làm sao để liên hệ với giáo viên?",
-      answer: "Vào mục Tin nhắn trong LMS để gửi trao đổi trực tiếp cho giáo viên bộ môn.",
-      popularity: 78
+      question: "Làm sao nhắn tin giáo viên chủ nhiệm?",
+      answer: "Vào mục Liên lạc giáo viên chủ nhiệm và chọn cuộc trò chuyện cần trao đổi.",
+      popularity: 86,
     },
     {
       category: "Điểm danh",
-      question: "Điểm danh được ghi nhận khi nào?",
-      answer: "Điểm danh được cập nhật ngay sau khi giáo viên hoàn tất buổi học.",
-      popularity: 83
+      question: "Có thể xem lịch sử điểm danh theo tháng không?",
+      answer: "Có, hệ thống cho phép xem điểm danh tuần/tháng trong phần Tổng quan con em.",
+      popularity: 84,
     },
     {
-      category: "Giảng dạy",
-      question: "Làm thế nào để tạo quiz?",
-      answer: "Chức năng tạo quiz chỉ dành cho tài khoản giáo viên hoặc quản trị viên.",
-      popularity: 52
+      category: "Thông báo",
+      question: "Vì sao thông báo chưa đọc chưa cập nhật?",
+      answer: "Hãy tải lại trang và kiểm tra mục Thông báo để đồng bộ số lượng chưa đọc mới nhất.",
+      popularity: 75,
     },
     {
       category: "Tài khoản",
-      question: "Quên mật khẩu thì làm thế nào?",
-      answer: "Bạn dùng mục Quên mật khẩu tại đăng nhập hoặc vào Hồ sơ để đổi mật khẩu.",
-      popularity: 92
+      question: "Quên mật khẩu tài khoản phụ huynh phải làm gì?",
+      answer: "Sử dụng Quên mật khẩu ở trang đăng nhập hoặc liên hệ bộ phận hỗ trợ để cấp lại.",
+      popularity: 88,
     },
-    {
-      category: "Lịch học",
-      question: "Lịch học thay đổi có được báo không?",
-      answer: "Có. Hệ thống sẽ gửi thông báo khi có thay đổi lịch học hoặc phòng học.",
-      popularity: 80
-    },
-    {
-      category: "Điểm số",
-      question: "Khi nào điểm kiểm tra được cập nhật?",
-      answer: "Điểm được cập nhật sau khi giáo viên chấm và xác nhận lên hệ thống.",
-      popularity: 84
-    }
   ];
 
   const sortedFaqs = [...faqs].sort((a, b) => b.popularity - a.popularity);
-
   const normalizedKeyword = faqSearch.trim().toLowerCase();
 
   const filteredFaqs = sortedFaqs.filter((faq) => {
     if (!normalizedKeyword) return true;
+
     const content = `${faq.category} ${faq.question} ${faq.answer}`.toLowerCase();
     return content.includes(normalizedKeyword);
   });
 
   const groupedFaqs = filteredFaqs.reduce((acc, faq) => {
-    if (!acc[faq.category]) acc[faq.category] = [];
+    if (!acc[faq.category]) {
+      acc[faq.category] = [];
+    }
     acc[faq.category].push(faq);
     return acc;
   }, {});
 
   return (
-    <div className="support-page">
-
+    <div className="student-support-page">
       <SupportHeader
         faqCount={filteredFaqs.length}
         chatStatus="Hoạt động"
       />
 
-      <div className="support-container">
-
+      <div className="student-support-container">
         <FAQList
           groupedFaqs={groupedFaqs}
           keyword={faqSearch}
           onKeywordChange={setFaqSearch}
         />
 
-        <div className="support-chat">
-
-          <div className="chat-header">
+        <div className="student-support-chat">
+          <div className="student-chat-header">
             <h4>
               <FaRobot /> Trợ lý LMS
             </h4>
-            <span className="chat-status">
+
+            <span className="student-chat-status">
               <FaRegClock /> Phản hồi trong 5-10 phút
             </span>
           </div>
 
-          <div className="chat-body">
-
-            <div className="chat-message is-bot">
-              <div className="chat-role">Bot</div>
-
-              Xin chào! Tôi là trợ lý LMS. Bạn cần hỗ trợ vấn đề nào?
-
-              <div className="chat-time">14:48</div>
+          <div className="student-chat-body">
+            <div className="student-chat-message is-bot">
+              <div className="student-chat-role">Bot</div>
+              Xin chào! Tôi là trợ lý LMS dành cho phụ huynh. Bạn cần hỗ trợ vấn đề nào?
+              <div className="student-chat-time">14:48</div>
             </div>
 
-            <div className="chat-message is-user">
-              <div className="chat-role">Ban</div>
-              Em quên mật khẩu và muốn đổi lại.
-              <div className="chat-time">14:49</div>
+            <div className="student-chat-message is-user">
+              <div className="student-chat-role">Bạn</div>
+              Tôi muốn xem lịch sử điểm danh của con trong tháng này.
+              <div className="student-chat-time">14:49</div>
             </div>
 
-            <div className="chat-message is-bot">
-              <div className="chat-role">Bot</div>
-              Bạn vào Hồ sơ cá nhân, chọn Đổi mật khẩu và nhập thông tin mới.
-              <div className="chat-time">14:49</div>
+            <div className="student-chat-message is-bot">
+              <div className="student-chat-role">Bot</div>
+              Bạn vào Tổng quan con em, chọn tab Điểm danh và xem bộ lọc theo tháng.
+              <div className="student-chat-time">14:49</div>
             </div>
-
           </div>
 
-          <div className="chat-input">
+          <div className="student-chat-input">
             <input placeholder="Nhập câu hỏi cần hỗ trợ..." />
-            <button type="button" aria-label="Gui tin nhan">
+            <button type="button" aria-label="Gửi tin nhắn">
               <FaPaperPlane />
             </button>
           </div>
-
         </div>
-
       </div>
 
-      <footer className="support-footer">
+      <footer className="student-support-footer">
         <SupportContact />
       </footer>
-
     </div>
   );
 }
