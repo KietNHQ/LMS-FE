@@ -1,4 +1,64 @@
-.recent-activities-section {
-    padding: 1rem;
+.teacher-dashboard-recent {
+  background: white;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
+/* Item */
+.recent-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 15px;
+}
+
+/* Left (icon + text) */
+.recent-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Icon */
+.recent-icon {
+  width: 32px;
+  height: 32px;
+  background: #ede9fe;
+  color: #8b5cf6;
+  border-radius: 8px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Text */
+.recent-item p {
+  font-weight: 500;
+}
+
+.recent-item span {
+  font-size: 13px;
+  color: #777;
+}
+
+/* ===== STATUS CHUẨN UI ===== */
+.status {
+  font-size: 12px;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-weight: 500;
+}
+
+/* Đã đăng */
+.status.published {
+  background: #d1fae5;
+  color: #059669;
+}
+
+/* Nháp */
+.status.draft {
+  background: #f3f4f6;
+  color: #6b7280;
+}

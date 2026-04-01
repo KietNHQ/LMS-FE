@@ -1,4 +1,69 @@
-.upcoming-schedule-section {
-    padding: 1rem;
+.teacher-dashboard-schedule {
+  background: white;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
+/* Title có icon */
+.teacher-dashboard-title {
+  font-weight: 600;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Icon */
+.teacher-dashboard-title-icon {
+  color: #3b82f6;
+  background: #eff6ff;
+  padding: 4px;
+  border-radius: 6px;
+}
+
+/* Item */
+.schedule-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 15px;
+}
+
+/* Tên lớp */
+.schedule-item p {
+  font-weight: 500;
+}
+
+/* Text phụ */
+.schedule-item span {
+  font-size: 13px;
+  color: #777;
+}
+
+/* Hover giống UI dashboard */
+.schedule-item:hover {
+  background: #f9fafb;
+  padding: 8px;
+  border-radius: 8px;
+  transition: 0.2s;
+}
+/* Left block (icon + text) */
+.schedule-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Icon nhỏ */
+.schedule-icon {
+  width: 32px;
+  height: 32px;
+  background: #d1fae5;
+  color: #10b981;
+  border-radius: 8px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
