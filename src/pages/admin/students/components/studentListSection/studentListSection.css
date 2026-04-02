@@ -19,7 +19,7 @@
 
 .student-list-table thead th {
     text-align: left;
-    padding: 1rem 1.5rem;
+    padding: 0.65rem 1.25rem;
     font-size: 0.82rem;
     font-weight: 800;
     text-transform: uppercase;
@@ -30,10 +30,10 @@
 }
 
 .student-list-table tbody td {
-    padding: 0.5rem 1.5rem;
+    padding: 0.4rem 1.25rem;
     border-bottom: 1px solid #eef1f6;
     vertical-align: middle;
-    font-size: 0.98rem;
+    font-size: 0.94rem;
     font-weight: 500;
     color: #5d687c;
 }
@@ -65,8 +65,8 @@
 }
 
 .student-avatar {
-    width: 3rem;
-    height: 3rem;
+    width: 2.5rem;
+    height: 2.5rem;
     border-radius: 50%;
     background: var(--student-color, #8fb3ff);
     color: #ffffff;
@@ -80,21 +80,21 @@
 
 .student-name-wrap h4 {
     margin: 0;
-    font-size: 1rem;
+    font-size: 0.95rem;
     color: #26334d;
     font-weight: 800;
-    line-height: 1.35;
+    line-height: 1.2;
 }
 
 .student-name-wrap p {
-    margin: 0.1rem 0;
-    font-size: 0.95rem;
+    margin: 0;
+    font-size: 0.88rem;
     color: #7c879b;
     font-weight: 500;
 }
 
 .student-dob-gender {
-    font-size: 0.86rem;
+    font-size: 0.84rem;
     color: #9aa5b6;
     font-weight: 500;
 }
@@ -103,13 +103,13 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    min-width: 3.35rem;
-    height: 1.7rem;
-    padding: 0 0.7rem;
+    min-width: 3.25rem;
+    height: 1.5rem;
+    padding: 0 0.6rem;
     border-radius: 999px;
     background: #dce7f8;
     color: #2c5ee7;
-    font-size: 0.82rem;
+    font-size: 0.8rem;
     font-weight: 800;
 }
 
@@ -137,17 +137,32 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    min-height: 1.75rem;
-    padding: 0.15rem 0.75rem;
+    min-height: 1.5rem;
+    padding: 0.1rem 0.65rem;
     border-radius: 999px;
-    font-size: 0.8rem;
+    font-size: 0.78rem;
     font-weight: 800;
 }
 
-.student-status-badge.status-active { background: #d7f1df; color: #16934d; }
-.student-status-badge.status-suspended { background: #fef2f2; color: #b91c1c; }
-.student-status-badge.status-reserved { background: #fffbeb; color: #b45309; }
-.student-status-badge.status-graduated { background: #eff6ff; color: #1d4ed8; }
+.student-status-badge.status-active {
+    background: #d7f1df;
+    color: #16934d;
+}
+
+.student-status-badge.status-suspended {
+    background: #fef2f2;
+    color: #b91c1c;
+}
+
+.student-status-badge.status-reserved {
+    background: #fffbeb;
+    color: #b45309;
+}
+
+.student-status-badge.status-graduated {
+    background: #eff6ff;
+    color: #1d4ed8;
+}
 
 .student-row-actions {
     display: flex;
@@ -208,6 +223,32 @@
 .student-list-table td:nth-child(1) {
     text-align: left;
     padding-left: 1.5rem;
+}
+
+.student-list-table th:nth-child(n+2),
+.student-list-table td:nth-child(n+2) {
+    text-align: center;
+}
+
+.student-empty-row {
+    text-align: center;
+    padding: 1.4rem !important;
+    color: #7d8799;
+    font-size: 0.9rem;
+}
+
+.student-actions-col {
+    text-align: center !important;
+}
+
+.student-list-table th:nth-child(1) {
+    text-align: left;
+    padding-left: 1.5rem;
+}
+
+.student-list-table td:nth-child(1) {
+    text-align: left;
+    padding-left: 1rem;
 }
 
 .student-list-table th:nth-child(n+2),

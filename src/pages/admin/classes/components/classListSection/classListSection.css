@@ -1,16 +1,16 @@
 .class-list-grid {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
-    column-gap: 18px;
-    row-gap: 24px;
+    column-gap: 16px;
+    row-gap: 16px;
 }
 
 .class-list-card {
     background: #ffffff;
     border: 1px solid #e7ebf3;
-    border-radius: 22px;
-    min-height: 286px;
-    padding: 22px 22px 20px;
+    border-radius: 16px;
+    min-height: auto;
+    padding: 14px 16px 12px;
     box-shadow: 0 6px 18px rgba(31, 42, 68, 0.06);
     transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
@@ -27,12 +27,12 @@
 }
 
 .class-list-card__icon {
-    width: 48px;
-    height: 48px;
-    border-radius: 16px;
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
     display: grid;
     place-items: center;
-    font-size: 24px;
+    font-size: 20px;
     flex-shrink: 0;
 }
 
@@ -57,15 +57,15 @@
 }
 
 .class-list-card__heading h3 {
-    margin: 0 0 6px;
-    font-size: 18px;
+    margin: 0 0 2px;
+    font-size: 16px;
     font-weight: 800;
     color: #1f2a44;
 }
 
 .class-list-card__heading p {
     margin: 0;
-    font-size: 14px;
+    font-size: 13px;
     color: #7c8599;
     font-weight: 600;
 }
@@ -95,8 +95,8 @@
 }
 
 .class-list-card__meta {
-    margin-top: 14px;
-    padding: 14px 0 10px;
+    margin-top: 8px;
+    padding: 8px 0 6px;
     border-bottom: 1px solid #edf1f7;
 }
 

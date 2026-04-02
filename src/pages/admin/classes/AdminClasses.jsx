@@ -6,7 +6,7 @@ import initialClasses from "./data/initialClasses";
 
 import ClassListSection from "./components/classListSection/classListSection";
 import ClassInfoSection from "./components/classInfoSection/classInfoSection";
-import { SchoolYearTermSelector } from "../../../components/common";
+import { SchoolYearTermSelector, PageHeader } from "../../../components/common";
 import { useSchoolYearTerm } from "../../../hooks/useSchoolYearTerm";
 
 
@@ -44,6 +44,12 @@ export default function AdminClasses() {
         const keyword = searchKeyword.trim().toLowerCase();
 
         return classes.filter((item) => {
+            const yearMatch = item.year === selectedSchoolYear || !item.year;
+            
+            if (!yearMatch) {
+                return false;
+            }
+
             const gradeMatch = selectedGrade === "all" || item.grade === `Khối ${selectedGrade}`;
 
             if (!gradeMatch) {
@@ -59,7 +65,7 @@ export default function AdminClasses() {
                 .toLowerCase()
                 .includes(keyword);
         });
-    }, [classes, searchKeyword, selectedGrade]);
+    }, [classes, searchKeyword, selectedGrade, selectedSchoolYear]);
 
     const totalPages = useMemo(
         () => Math.max(1, Math.ceil(filteredClasses.length / ITEMS_PER_PAGE)),
@@ -156,23 +162,18 @@ export default function AdminClasses() {
 
     return (
         <div className="admin-classes-page">
-            <div className="admin-classes-header">
-                <div className="admin-classes-header__content">
-                    <h1>Quản lý lớp học</h1>
-                    <span className="admin-classes-header__subtitle">
-                        {filteredClasses.length} / {totalClasses} lớp học đang hoạt động
-                    </span>
-                </div>
-
-                <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+            <PageHeader 
+                title="Quản lý Lớp học" 
+                eyebrow={`${filteredClasses.length} / ${totalClasses} lớp đang hoạt động`}
+                actions={
                     <SchoolYearTermSelector
                         selectedSchoolYear={selectedSchoolYear}
                         selectedTerm={selectedTerm}
                         onYearChange={handleYearArrow}
                         onTermChange={handleTermChange}
                     />
-                </div>
-            </div>
+                }
+            />
 
             <div className="admin-classes-toolbar">
                 <div className="admin-classes-search">

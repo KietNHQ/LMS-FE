@@ -16,6 +16,10 @@ import {
     FiTrendingUp,
     FiCreditCard
 } from "react-icons/fi";
+import { LuUserCog } from "react-icons/lu";
+import { FaChalkboardTeacher } from "react-icons/fa";
+import { PiStudentBold } from "react-icons/pi";
+import { RiParentFill } from "react-icons/ri";
 
 export const roleTheme = {
     admin: {
@@ -43,10 +47,10 @@ export const roleTheme = {
 export const sidebarConfig = {
     admin: [
         { label: "Trang chủ", icon: FiGrid, path: "/admin/dashboard" },
-        { label: "Người Dùng", icon: FiUsers, path: "/admin/users" },
-        { label: "Giáo Viên", icon: FiUsers, path: "/admin/teachers" },
-        { label: "Học Sinh", icon: FiUsers, path: "/admin/students" },
-        { label: "Phụ Huynh", icon: FiUsers, path: "/admin/parents" },
+        { label: "Người Dùng", icon: LuUserCog, path: "/admin/users" },
+        { label: "Giáo Viên", icon: FaChalkboardTeacher, path: "/admin/teachers" },
+        { label: "Học Sinh", icon: PiStudentBold, path: "/admin/students" },
+        { label: "Phụ Huynh", icon: RiParentFill, path: "/admin/parents" },
         { label: "Lớp Học", icon: FiBookOpen, path: "/admin/classes" },
         { label: "Bài Kiểm Tra", icon: FiFileText, path: "/admin/quiz" },
         { label: "Thanh Toán", icon: FiCreditCard, path: "/admin/payment" },

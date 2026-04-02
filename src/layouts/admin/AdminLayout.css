@@ -18,14 +18,14 @@
     height: 100vh;
     margin-left: calc(var(--sidebar-expanded) + var(--content-gap-expanded));
     width: calc(100% - var(--sidebar-expanded) - var(--content-gap-expanded));
-    padding: clamp(1rem, 1.4vw, 1.5rem) clamp(1rem, 1.6vw, 1.6rem);
+    padding: 1.25rem 1.5rem;
     box-sizing: border-box;
     overflow-y: auto;
     overflow-x: hidden;
     transition:
-            margin-left 0.35s ease,
-            width 0.35s ease,
-            padding 0.35s ease;
+        margin-left 0.35s ease,
+        width 0.35s ease,
+        padding 0.35s ease;
 }
 
 .admin-layout.collapsed .admin-layout__main {

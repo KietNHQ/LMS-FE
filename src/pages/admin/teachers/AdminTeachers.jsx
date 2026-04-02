@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { FiChevronLeft, FiChevronRight } from "react-icons/fi";
 import { read, utils, writeFile } from "xlsx";
 import "./AdminTeachers.css";
-import { CreateUserDialog, SchoolYearTermSelector } from "../../../components/common";
+import { CreateUserDialog, SchoolYearTermSelector, PageHeader } from "../../../components/common";
 import { useSchoolYearTerm } from "../../../hooks/useSchoolYearTerm";
 import TeacherActionsSection from "./components/teacherActionsSection/teacherActionsSection";
 import TeacherListSection from "./components/teacherListSection/teacherListSection";
@@ -710,7 +710,7 @@ function toTeacherForm(teacher) {
     };
 }
 
-const ITEMS_PER_PAGE = 4;
+const ITEMS_PER_PAGE = 7;
 
 export default function AdminTeachers() {
     const { selectedSchoolYear, selectedTerm, handleYearArrow, handleTermChange } = useSchoolYearTerm();
@@ -1033,6 +1033,19 @@ export default function AdminTeachers() {
 
     return (
         <div className="admin-teachers-page">
+            <PageHeader
+                title="Quản lý Giáo viên"
+                eyebrow={`Tổng cộng: ${teachers.length} giáo viên`}
+                actions={
+                    <SchoolYearTermSelector
+                        selectedSchoolYear={selectedSchoolYear}
+                        selectedTerm={selectedTerm}
+                        onYearChange={handleYearArrow}
+                        onTermChange={handleTermChange}
+                    />
+                }
+            />
+
             <TeacherActionsSection
                 totalTeachers={teachers.length}
                 searchTerm={searchTerm}
@@ -1044,14 +1057,7 @@ export default function AdminTeachers() {
                 onStatusChange={setSelectedStatus}
                 onSubjectChange={setSelectedSubject}
                 onCreateTeacherAccount={() => setIsDialogOpen(true)}
-            >
-                <SchoolYearTermSelector
-                    selectedSchoolYear={selectedSchoolYear}
-                    selectedTerm={selectedTerm}
-                    onYearChange={handleYearArrow}
-                    onTermChange={handleTermChange}
-                />
-            </TeacherActionsSection>
+            />
 
             <TeacherListSection
                 teachers={paginatedTeachers}

@@ -22,11 +22,11 @@
 .parent-list-table th,
 .parent-list-table tbody td {
 	text-align: left;
-	padding: 1.2rem 1.5rem;
+	padding: 0.65rem 1.25rem;
 	border-bottom: 1px solid #eef1f6;
 	vertical-align: middle;
 	overflow-wrap: anywhere;
-	font-size: 0.98rem;
+	font-size: 0.94rem;
 	font-weight: 500;
 	color: #5d687c;
 }
@@ -73,15 +73,15 @@
 }
 
 .parent-avatar {
-	width: 3rem;
-	height: 3rem;
+	width: 2.5rem;
+	height: 2.5rem;
 	border-radius: 50%;
 	background: var(--parent-color, #d8c8ff);
 	color: #5f439d;
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	font-size: 1.1rem;
+	font-size: 1.05rem;
 	font-weight: 800;
 	flex-shrink: 0;
 }
@@ -100,18 +100,18 @@
 
 .parent-name-wrap h4 {
 	color: #26334d;
-	font-size: 1rem;
-	line-height: 1.35;
+	font-size: 0.95rem;
+	line-height: 1.2;
 	margin: 0;
 	font-weight: 800;
 }
 
 .parent-name-wrap p {
 	color: #7c879b;
-	font-size: 0.95rem;
+	font-size: 0.88rem;
 	font-weight: 500;
-	line-height: 1.2;
-	margin: 0.25rem 0 0 0;
+	line-height: 1.15;
+	margin: 0;
 	white-space: nowrap;
 	overflow: hidden;
 	text-overflow: ellipsis;
@@ -126,12 +126,17 @@
 
 .child-badge {
 	display: inline-flex;
-	padding: 0.3rem 0.55rem;
+	padding: 0.15rem 0.5rem;
 	border-radius: 999px;
 	background: rgba(143, 179, 255, 0.24);
 	color: #3f6fdb;
-	font-size: 0.8rem;
+	font-size: 0.78rem;
 	font-weight: 700;
+}
+
+.child-badge.graduated {
+	background: rgba(16, 185, 129, 0.15);
+	color: #10b981;
 }
 
 .parent-row-actions {
@@ -234,6 +239,7 @@
 }
 
 @media (max-width: 1280px) {
+
 	.parent-list-table th,
 	.parent-list-table td {
 		padding: 0.85rem 0.75rem;
@@ -248,4 +254,5 @@
 	.parent-row-actions {
 		gap: 0.2rem;
 	}
+}
 }

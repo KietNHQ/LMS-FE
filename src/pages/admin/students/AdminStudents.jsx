@@ -2,7 +2,7 @@ import React, { useMemo, useState } from "react";
 import { FiChevronLeft, FiChevronRight } from "react-icons/fi";
 import { read, utils, writeFile } from "xlsx";
 import "./AdminStudents.css";
-import { CreateUserDialog, SchoolYearTermSelector } from "../../../components/common";
+import { CreateUserDialog, SchoolYearTermSelector, PageHeader } from "../../../components/common";
 import { useSchoolYearTerm } from "../../../hooks/useSchoolYearTerm";
 
 import StudentActionsSection from "./components/studentActionsSection/studentActionsSection";
@@ -17,6 +17,7 @@ const initialStudents = [
         gender: "Nam",
         dob: "2008-03-15",
         className: "10A1",
+        academicYear: "2025-2026",
         teacher: "Trần Thị Hương",
         parentName: "Nguyễn Văn Phụ Huynh",
         parentPhone: "0956789012",
@@ -31,6 +32,7 @@ const initialStudents = [
         gender: "Nữ",
         dob: "2008-07-22",
         className: "10A1",
+        academicYear: "2025-2026",
         teacher: "Trần Thị Hương",
         parentName: "Nguyễn Văn Phụ Huynh",
         parentPhone: "0956789012",
@@ -122,6 +124,36 @@ const initialStudents = [
         address: "Hải Phòng",
         status: "Đang học",
     },
+    {
+        id: 9,
+        name: "Nguyễn Văn Cũ",
+        email: "cu.nv@gmail.com",
+        gender: "Nam",
+        dob: "2007-01-01",
+        className: "10A1",
+        academicYear: "2024-2025",
+        teacher: "Trần Thị Hương",
+        parentName: "Nguyễn Văn Phụ Huynh",
+        parentPhone: "0956789012",
+        parentEmail: "phuhuynh1@gmail.com",
+        address: "Hải Phòng",
+        status: "Đã tốt nghiệp",
+    },
+    {
+        id: 10,
+        name: "Trần Thị Cũ",
+        email: "cu.tt@gmail.com",
+        gender: "Nữ",
+        dob: "2007-02-02",
+        className: "10A1",
+        academicYear: "2024-2025",
+        teacher: "Trần Thị Hương",
+        parentName: "Nguyễn Văn Phụ Huynh",
+        parentPhone: "0956789012",
+        parentEmail: "phuhuynh2@gmail.com",
+        address: "Hải Phòng",
+        status: "Đã tốt nghiệp",
+    },
 ];
 
 const classOptions = ["Tất cả lớp", "10A1", "10A2", "11B1", "11B2", "12C1"];
@@ -131,6 +163,7 @@ const emptyStudentForm = {
     name: "",
     email: "",
     className: "10A1",
+    academicYear: "2025-2026",
     gender: "Nam",
     dob: "",
     parentName: "",
@@ -145,6 +178,7 @@ function toStudentForm(student) {
         name: student?.name || "",
         email: student?.email || "",
         className: student?.className || "10A1",
+        academicYear: student?.academicYear || "2025-2026",
         gender: student?.gender || "Nam",
         dob: student?.dob || "",
         parentName: student?.parentName || "",
@@ -155,7 +189,7 @@ function toStudentForm(student) {
     };
 }
 
-const ITEMS_PER_PAGE = 4;
+const ITEMS_PER_PAGE = 6;
 
 export default function AdminStudents() {
     const { selectedSchoolYear, selectedTerm, handleYearArrow, handleTermChange } = useSchoolYearTerm();
@@ -234,6 +268,8 @@ export default function AdminStudents() {
 
     const filteredStudents = useMemo(() => {
         return students.filter((student) => {
+            const matchYear = student.academicYear === selectedSchoolYear || !student.academicYear;
+
             const matchSearch =
                 student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                 student.parentName.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -245,9 +281,9 @@ export default function AdminStudents() {
             const matchStatus =
                 selectedStatus === "Tất cả trạng thái" || student.status === selectedStatus;
 
-            return matchSearch && matchClass && matchStatus;
+            return matchYear && matchSearch && matchClass && matchStatus;
         });
-    }, [students, searchTerm, selectedClass, selectedStatus]);
+    }, [students, searchTerm, selectedClass, selectedStatus, selectedSchoolYear]);
 
     const totalPages = Math.max(1, Math.ceil(filteredStudents.length / ITEMS_PER_PAGE));
 
@@ -355,6 +391,19 @@ export default function AdminStudents() {
 
     return (
         <div className="admin-students-page">
+            <PageHeader
+                title="Quản lý Học sinh"
+                eyebrow={`Tổng cộng: ${students.length} học sinh`}
+                actions={
+                    <SchoolYearTermSelector
+                        selectedSchoolYear={selectedSchoolYear}
+                        selectedTerm={selectedTerm}
+                        onYearChange={handleYearArrow}
+                        onTermChange={handleTermChange}
+                    />
+                }
+            />
+
             <StudentActionsSection
                 totalStudents={students.length}
                 searchTerm={searchTerm}
@@ -366,14 +415,8 @@ export default function AdminStudents() {
                 onClassChange={setSelectedClass}
                 onStatusChange={setSelectedStatus}
                 onCreateStudentAccount={() => setIsCreateStudentAccountOpen(true)}
-            >
-                <SchoolYearTermSelector
-                    selectedSchoolYear={selectedSchoolYear}
-                    selectedTerm={selectedTerm}
-                    onYearChange={handleYearArrow}
-                    onTermChange={handleTermChange}
-                />
-            </StudentActionsSection>
+            />
+
             <StudentListSection
                 students={paginatedStudents}
                 onSelectStudent={handleViewStudent}

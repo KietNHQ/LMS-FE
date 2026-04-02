@@ -37,7 +37,11 @@ export default function ParentInformationSection({
     const isViewOnly = mode === "view";
 
     // Manage children locally since they might be an array in profile
-    const [children, setChildren] = useState(formData.profile?.children || []);
+    const [children, setChildren] = useState(
+        isViewOnly && formData.displayChildren
+            ? formData.displayChildren
+            : formData.profile?.children || []
+    );
 
     const handleAddChild = () => {
         setChildren([...children, { childName: "", childClass: "" }]);

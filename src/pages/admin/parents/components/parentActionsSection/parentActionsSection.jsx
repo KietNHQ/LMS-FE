@@ -36,22 +36,6 @@ export default function ParentActionsSection({
 
     return (
         <section className="parent-actions-section">
-            <div className="parent-actions-top">
-                <div className="parent-actions-title-wrap">
-                    <div className="parent-actions-title-row">
-                        <h1>Quản lý Phụ huynh</h1>
-                        <div className="parent-total-badge" aria-live="polite">
-                            <span className="parent-total-number">{totalParents}</span>
-                            <span className="parent-total-label">phụ huynh</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-                    {children}
-                </div>
-            </div>
-
             <div className="parent-toolbar-card">
                 <div className="parent-search-box">
                     <FiSearch className="parent-search-icon" />

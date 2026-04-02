@@ -2,7 +2,7 @@ import React, { useState, useMemo } from "react";
 import { FiChevronLeft, FiChevronRight } from "react-icons/fi";
 import { read, utils, writeFile } from "xlsx";
 import "./AdminParents.css";
-import { CreateUserDialog, SchoolYearTermSelector } from "../../../components/common";
+import { CreateUserDialog, SchoolYearTermSelector, PageHeader } from "../../../components/common";
 import { useSchoolYearTerm } from "../../../hooks/useSchoolYearTerm";
 import ParentActionsSection from "./components/parentActionsSection/parentActionsSection";
 import ParentListSection from "./components/parentListSection/parentListSection";
@@ -127,7 +127,7 @@ const initialParents = [
             dob: "1976-11-12",
             phone: "0956789012",
             children: [
-                { childName: "Đặng Hoàng Bách", childClass: "12D1" }
+                { childName: "Đặng Hoàng Bách", childClass: "Đã tốt nghiệp" }
             ]
         },
         createdAt: "2026-03-25"
@@ -179,7 +179,7 @@ function buildParentEmail(firstName, lastName) {
     return `${localPart}@parent.email.edu.vn`;
 }
 
-const ITEMS_PER_PAGE = 4;
+const ITEMS_PER_PAGE = 7;
 
 export default function AdminParents() {
     const { selectedSchoolYear, selectedTerm, handleYearArrow, handleTermChange } = useSchoolYearTerm();
@@ -202,7 +202,41 @@ export default function AdminParents() {
     const [importFeedback, setImportFeedback] = useState(null);
 
     const filteredParents = useMemo(() => {
-        return parents.filter((parent) => {
+        return parents.map((parent) => {
+            const baseStart = 2024;
+            const targetStart = parseInt(selectedSchoolYear.split("-")[0]);
+            const diff = targetStart - baseStart;
+
+            const updatedChildren = parent.profile?.children?.map(child => {
+                if (!child.childClass || child.childClass === "Đã tốt nghiệp") return child;
+
+                const match = child.childClass.match(/^(\d+)(.*)$/);
+                if (!match) return child;
+
+                const currentGrade = parseInt(match[1]);
+                let newGrade = currentGrade + diff;
+                let newClass = `${newGrade}${match[2]}`;
+
+                if (newGrade > 12) newClass = "Đã tốt nghiệp";
+                if (newGrade < 10) newClass = "Chưa nhập học";
+
+                return { ...child, childClass: newClass };
+            }).filter(child => child.childClass !== "Chưa nhập học") || [];
+
+            return {
+                ...parent,
+                displayChildren: updatedChildren,
+                profile: {
+                    ...parent.profile,
+                    children: parent.profile?.children // Giữ nguyên bản gốc
+                }
+            };
+        }).filter((parent) => {
+            // Không hiển thị phụ huynh nếu tất cả các con đều "Chưa nhập học" trong năm học này
+            if (parent.profile?.children?.length > 0 && parent.displayChildren.length === 0) {
+                return false;
+            }
+
             const searchStr = searchTerm.toLowerCase();
             const matchesSearch =
                 parent.name.toLowerCase().includes(searchStr) ||
@@ -215,12 +249,12 @@ export default function AdminParents() {
             let matchesClass = true;
             if (selectedClass !== "Tất cả khối") {
                 const gradePrefix = selectedClass.replace("Khối ", "");
-                matchesClass = parent.profile?.children?.some(c => c.childClass?.startsWith(gradePrefix));
+                matchesClass = parent.displayChildren?.some(c => c.childClass?.startsWith(gradePrefix));
             }
 
             return matchesSearch && matchesStatus && matchesClass;
         });
-    }, [parents, searchTerm, selectedStatus, selectedClass]);
+    }, [parents, searchTerm, selectedStatus, selectedClass, selectedSchoolYear]);
 
     const totalPages = Math.max(1, Math.ceil(filteredParents.length / ITEMS_PER_PAGE));
 
@@ -446,6 +480,19 @@ export default function AdminParents() {
 
     return (
         <div className="admin-parents-page">
+            <PageHeader
+                title="Quản lý Phụ huynh"
+                eyebrow={`Tổng cộng: ${parents.length} phụ huynh`}
+                actions={
+                    <SchoolYearTermSelector
+                        selectedSchoolYear={selectedSchoolYear}
+                        selectedTerm={selectedTerm}
+                        onYearChange={handleYearArrow}
+                        onTermChange={handleTermChange}
+                    />
+                }
+            />
+
             <ParentActionsSection
                 totalParents={parents.length}
                 searchTerm={searchTerm}
@@ -457,14 +504,7 @@ export default function AdminParents() {
                 onStatusChange={setSelectedStatus}
                 onClassChange={setSelectedClass}
                 onCreateParentAccount={() => setIsDialogOpen(true)}
-            >
-                <SchoolYearTermSelector
-                    selectedSchoolYear={selectedSchoolYear}
-                    selectedTerm={selectedTerm}
-                    onYearChange={handleYearArrow}
-                    onTermChange={handleTermChange}
-                />
-            </ParentActionsSection>
+            />
 
             <ParentListSection
                 parents={paginatedParents}

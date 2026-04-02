@@ -1,4 +1,5 @@
 import React from "react";
+import { FiChevronLeft, FiChevronRight } from "react-icons/fi";
 import "./SchoolYearTermSelector.css";
 
 const SchoolYearTermSelector = ({
@@ -20,7 +21,7 @@ const SchoolYearTermSelector = ({
             title="Năm trước"
             aria-label="Năm trước"
           >
-            ◀
+            <FiChevronLeft />
           </button>
           <input
             type="text"
@@ -36,7 +37,7 @@ const SchoolYearTermSelector = ({
             title="Năm sau"
             aria-label="Năm sau"
           >
-            ▶
+            <FiChevronRight />
           </button>
         </div>
       </div>

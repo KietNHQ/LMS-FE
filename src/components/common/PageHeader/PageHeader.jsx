@@ -10,7 +10,7 @@ export default function PageHeader({
 }) {
   return (
     <div className="common-page-header">
-      <div className="common-page-header__main">
+      <div className="common-page-header__left">
         {eyebrow ? <span className="common-page-header__eyebrow">{eyebrow}</span> : null}
 
         {breadcrumbs.length > 0 ? (
@@ -24,7 +24,7 @@ export default function PageHeader({
           </div>
         ) : null}
 
-        <div>
+        <div className="common-page-header__title-container">
           <h1>{title}</h1>
           {description ? <p>{description}</p> : null}
         </div>

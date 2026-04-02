@@ -1,0 +1,172 @@
+.expenditure-section {
+    background: #ffffff;
+    border-radius: 1.35rem;
+    padding: 0;
+    box-shadow: 0 4px 12px rgba(18, 38, 63, 0.05);
+    border: 1px solid #e7eaf1;
+    overflow: hidden;
+}
+
+.expenditure-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.25rem 1.25rem 0.5rem 1.25rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.expenditure-summary h3 {
+    margin: 0;
+    font-size: 1.15rem;
+    color: #1e2f5a;
+    font-weight: 800;
+}
+
+.expenditure-total {
+    font-size: 0.95rem;
+    color: #64748b;
+}
+
+.expenditure-total span {
+    font-size: 1.15rem;
+    margin-left: 0.5rem;
+}
+
+.expenditure-add-btn {
+    background: #1e2f5a;
+    color: white;
+    border: none;
+    padding: 0.6rem 1.15rem;
+    border-radius: 0.85rem;
+    font-weight: 700;
+    font-size: 0.88rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 12px rgba(30, 47, 90, 0.2);
+}
+
+.expenditure-add-btn:hover {
+    background: #152340;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(30, 47, 90, 0.25);
+}
+
+.expenditure-table-wrap {
+    overflow-x: auto;
+}
+
+.expenditure-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.expenditure-table th {
+    background: #ffffff;
+    padding: 0.65rem 1.25rem;
+    font-size: 0.82rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: #6b7891;
+    border-bottom: 1px solid #eef1f6;
+    text-align: left;
+}
+
+.expenditure-table td {
+    padding: 0.75rem 1.25rem;
+    border-bottom: 1px solid #eef1f6;
+    color: #5d687c;
+    vertical-align: middle;
+    font-size: 0.94rem;
+}
+
+.expenditure-table tr:hover {
+    background: #f8fafc;
+}
+
+.fw-600 { font-weight: 600; }
+.fw-700 { font-weight: 700; }
+.text-danger { color: #ef4444; }
+.text-gray { color: #64748b; }
+.text-center { text-align: center; }
+
+/* Pagination Styles */
+.expenditure-pagination {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.85rem 1.25rem;
+    background: #f8fafc;
+    border-top: 1px solid #eef1f6;
+}
+
+.pagination-info {
+    font-size: 0.85rem;
+    color: #64748b;
+    font-weight: 500;
+}
+
+/* Pagination Styles - Standardized */
+.payment-pagination-row {
+    display: flex;
+    justify-content: center;
+    padding: 1.25rem 1.5rem;
+    background: #ffffff;
+}
+
+.payment-pagination {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+}
+
+.payment-page-indicator {
+    display: flex;
+    align-items: baseline;
+    gap: 0.2rem;
+}
+
+.payment-page-indicator span {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: #1e2f5a;
+    line-height: 1;
+}
+
+.payment-page-indicator small {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: #94a3b8;
+}
+
+.payment-page-btn {
+    width: 2.75rem;
+    height: 2.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    color: #1e2f5a;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 1.25rem;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+
+.payment-page-btn:hover:not(:disabled) {
+    background: #1e2f5a;
+    color: #ffffff;
+    border-color: #1e2f5a;
+}
+
+.payment-page-btn:disabled {
+    opacity: 0.3;
+    background: #f8fafc;
+    cursor: not-allowed;
+}

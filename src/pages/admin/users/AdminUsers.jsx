@@ -6,7 +6,7 @@ import "./AdminUsers.css";
 import AccountsOverviewSection from "./components/accountsOverviewSection/AccountsOverviewSection";
 import UsersSearchFilterSort from "./components/usersSearchFilterSort/UsersSearchFilterSort";
 import UserDetailSection from "./components/userDetailSection/UserDetailSection";
-import { CreateUserDialog, SchoolYearTermSelector } from "../../../components/common";
+import { CreateUserDialog, SchoolYearTermSelector, PageHeader } from "../../../components/common";
 import { useSchoolYearTerm } from "../../../hooks/useSchoolYearTerm";
 import BlockUnblockUsersSection from "./components/blockUnblockUserSection/blockUnblockUserSection";
 
@@ -206,7 +206,7 @@ function getCellValue(row, keys) {
     return "";
 }
 
-const ITEMS_PER_PAGE = 4;
+const ITEMS_PER_PAGE = 7;
 
 export default function AdminUsers() {
     const { selectedSchoolYear, selectedTerm, handleYearArrow, handleTermChange } = useSchoolYearTerm();
@@ -274,14 +274,14 @@ export default function AdminUsers() {
             prev.map((user) =>
                 user.id === editingUser.id
                     ? {
-                          ...user,
-                          ...formData,
-                          avatar:
-                              formData.firstName?.trim()?.charAt(0)?.toUpperCase() ||
-                              formData.name?.trim()?.charAt(0)?.toUpperCase() ||
-                              "U",
-                          color: getAvatarColor(formData.role),
-                      }
+                        ...user,
+                        ...formData,
+                        avatar:
+                            formData.firstName?.trim()?.charAt(0)?.toUpperCase() ||
+                            formData.name?.trim()?.charAt(0)?.toUpperCase() ||
+                            "U",
+                        color: getAvatarColor(formData.role),
+                    }
                     : user
             )
         );
@@ -296,10 +296,10 @@ export default function AdminUsers() {
             prev.map((user) =>
                 user.id === statusTarget.id
                     ? {
-                          ...user,
-                          status:
-                              user.status === "Hoạt động" ? "Vô hiệu hóa" : "Hoạt động",
-                      }
+                        ...user,
+                        status:
+                            user.status === "Hoạt động" ? "Vô hiệu hóa" : "Hoạt động",
+                    }
                     : user
             )
         );
@@ -439,14 +439,18 @@ export default function AdminUsers() {
 
     return (
         <div className="admin-users-page">
-            <AccountsOverviewSection totalUsers={users.length}>
-                <SchoolYearTermSelector
-                    selectedSchoolYear={selectedSchoolYear}
-                    selectedTerm={selectedTerm}
-                    onYearChange={handleYearArrow}
-                    onTermChange={handleTermChange}
-                />
-            </AccountsOverviewSection>
+            <PageHeader
+                title="Quản lý Người dùng"
+                eyebrow={`Tổng cộng: ${users.length} tài khoản`}
+                actions={
+                    <SchoolYearTermSelector
+                        selectedSchoolYear={selectedSchoolYear}
+                        selectedTerm={selectedTerm}
+                        onYearChange={handleYearArrow}
+                        onTermChange={handleTermChange}
+                    />
+                }
+            />
 
             <UsersSearchFilterSort
                 searchValue={searchValue}
@@ -454,8 +458,8 @@ export default function AdminUsers() {
                 quickRole={quickRole}
                 onQuickRoleChange={setQuickRole}
             >
-                <button 
-                    className="accounts-overview-add-btn" 
+                <button
+                    className="accounts-overview-add-btn"
                     onClick={() => {
                         setImportFeedback(null);
                         setIsCreateOpen(true);

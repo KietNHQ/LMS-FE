@@ -22,11 +22,11 @@
 .teacher-list-table th,
 .teacher-list-table tbody td {
 	text-align: left;
-	padding: 1.08rem 1.5rem;
+	padding: 0.65rem 1.25rem;
 	border-bottom: 1px solid #eef1f6;
 	vertical-align: middle;
 	overflow-wrap: anywhere;
-	font-size: 0.98rem;
+	font-size: 0.94rem;
 	font-weight: 500;
 	color: #5d687c;
 }
@@ -36,8 +36,8 @@
 	color: #6b7891;
 	font-size: 0.82rem;
 	font-weight: 800;
-	padding-top: 1.12rem;
-	padding-bottom: 1.12rem;
+	padding-top: 0.75rem;
+	padding-bottom: 0.75rem;
 	text-transform: uppercase;
 	letter-spacing: 0.03em;
 }
@@ -80,12 +80,12 @@
 }
 
 .teacher-avatar {
-	width: 3.3rem;
-	height: 3.3rem;
+	width: 2.5rem;
+	height: 2.5rem;
 	border-radius: 50%;
 	background: var(--teacher-color, #4fd1c5);
 	color: #ffffff;
-	font-size: 1.1rem;
+	font-size: 1.05rem;
 	font-weight: 800;
 	display: inline-flex;
 	align-items: center;
@@ -107,18 +107,18 @@
 
 .teacher-name-wrap h4 {
 	color: #26334d;
-	font-size: 1rem;
-	line-height: 1.4;
+	font-size: 0.95rem;
+	line-height: 1.2;
 	margin: 0;
 	font-weight: 800;
 }
 
 .teacher-name-wrap p {
 	color: #7c879b;
-	font-size: 0.95rem;
+	font-size: 0.88rem;
 	font-weight: 500;
-	line-height: 1.25;
-	margin: 0.16rem 0 0 0;
+	line-height: 1.2;
+	margin: 0;
 	white-space: nowrap;
 	overflow: hidden;
 	text-overflow: ellipsis;
@@ -128,12 +128,12 @@
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
-	min-height: 1.85rem;
-	padding: 0.2rem 0.76rem;
+	min-height: 1.5rem;
+	padding: 0.1rem 0.7rem;
 	border-radius: 999px;
 	background: rgba(143, 179, 255, 0.24);
 	color: #3f6fdb;
-	font-size: 0.8rem;
+	font-size: 0.78rem;
 	font-weight: 700;
 }
 
@@ -141,10 +141,10 @@
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
-	min-height: 1.85rem;
-	padding: 0.2rem 0.76rem;
+	min-height: 1.5rem;
+	padding: 0.1rem 0.7rem;
 	border-radius: 999px;
-	font-size: 0.8rem;
+	font-size: 0.78rem;
 	font-weight: 700;
 }
 
@@ -247,12 +247,12 @@
 
 .teacher-list-table th:nth-child(2),
 .teacher-list-table td:nth-child(2) {
-	width: 12%;
+	width: 10%;
 }
 
 .teacher-list-table th:nth-child(3),
 .teacher-list-table td:nth-child(3) {
-	width: 14%;
+	width: 12%;
 	white-space: nowrap;
 }
 
@@ -263,7 +263,12 @@
 
 .teacher-list-table th:nth-child(5),
 .teacher-list-table td:nth-child(5) {
-	width: 22%;
+	width: 12%;
+}
+
+.teacher-list-table th:nth-child(6),
+.teacher-list-table td:nth-child(6) {
+	width: 15%;
 	padding-right: 0.8rem;
 }
 
@@ -273,6 +278,7 @@
 }
 
 @media (max-width: 1280px) {
+
 	.teacher-list-table th,
 	.teacher-list-table td {
 		padding: 0.94rem 0.85rem;
@@ -287,4 +293,15 @@
 	.teacher-row-actions {
 		gap: 0.2rem;
 	}
+}
+
+.teacher-icon-btn {
+	width: 1.95rem;
+	height: 1.95rem;
+	border-radius: 0.6rem;
+}
+
+.teacher-row-actions {
+	gap: 0.2rem;
+}
 }

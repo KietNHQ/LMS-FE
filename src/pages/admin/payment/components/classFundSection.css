@@ -1,0 +1,392 @@
+.fund-empty {
+    padding: 3rem;
+    text-align: center;
+    color: #6b7891;
+    font-size: 1.1rem;
+    background: #ffffff;
+    border-radius: 1rem;
+    border: 1px dashed #dae1ed;
+}
+
+.fund-section {
+    background: #ffffff;
+    border-radius: 1.35rem;
+    padding: 0;
+    box-shadow: 0 4px 12px rgba(18, 38, 63, 0.05);
+    border: 1px solid #e7eaf1;
+    overflow: hidden;
+}
+
+.fund-stats-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.25rem 1.5rem;
+}
+
+.header-text h3 {
+    margin: 0;
+    color: #1e2f5a;
+    font-size: 1.15rem;
+    font-weight: 800;
+}
+
+.header-text .subtitle {
+    margin: 0.25rem 0 0 0;
+    color: #64748b;
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+.fund-add-btn {
+    background: #1e2f5a;
+    color: white;
+    border: none;
+    padding: 0.6rem 1.15rem;
+    border-radius: 0.85rem;
+    font-weight: 700;
+    font-size: 0.88rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 12px rgba(30, 47, 90, 0.2);
+}
+
+.fund-add-btn:hover {
+    background: #152340;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(30, 47, 90, 0.25);
+}
+
+.fund-table-wrap {
+    overflow-x: auto;
+}
+
+.fund-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+.fund-table th {
+    background: #f8fafc;
+    padding: 0.85rem 1.25rem;
+    font-size: 0.8rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #64748b;
+    border-bottom: 1px solid #eef1f6;
+    text-align: left;
+}
+
+.fund-main-row {
+    transition: background 0.2s ease;
+}
+
+.fund-main-row.clickable {
+    cursor: pointer;
+}
+
+.fund-main-row:hover {
+    background: #f1f5f9;
+}
+
+.fund-main-row td {
+    padding: 0.85rem 1.25rem;
+    border-bottom: 1px solid #eef1f6;
+    color: #334155;
+    vertical-align: middle;
+    font-size: 0.94rem;
+}
+
+.view-detail-btn {
+    background: transparent;
+    border: none;
+    color: #1e2f5a;
+    font-weight: 700;
+    font-size: 0.88rem;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    cursor: pointer;
+    padding: 0.4rem 0.75rem;
+    border-radius: 6px;
+    transition: all 0.2s;
+}
+
+.view-detail-btn:hover {
+    background: rgba(30, 47, 90, 0.08);
+}
+
+/* --- DETAIL VIEW STYLES --- */
+.detail-view-active {
+    animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+    from { opacity: 0; transform: translateX(10px); }
+    to { opacity: 1; transform: translateX(0); }
+}
+
+.fund-detail-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.25rem 1.5rem;
+    border-bottom: 1px solid #eef1f6;
+    background: #ffffff;
+}
+
+.back-btn {
+    background: #f1f5f9;
+    border: 1px solid #e2e8f0;
+    color: #475569;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 0.85rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.back-btn:hover {
+    background: #e2e8f0;
+    color: #1e293b;
+}
+
+.class-title h3 {
+    margin: 0;
+    color: #1e2f5a;
+    font-size: 1.25rem;
+    font-weight: 800;
+}
+
+.teacher-name {
+    display: block;
+    font-size: 0.85rem;
+    color: #64748b;
+    font-weight: 600;
+    margin-top: 2px;
+}
+
+.read-only-badge {
+    background: #fef3c7;
+    color: #92400e;
+    font-size: 0.75rem;
+    font-weight: 800;
+    padding: 0.35rem 0.75rem;
+    border-radius: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+}
+
+/* Stats Cards */
+.fund-stats-cards {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.25rem;
+    padding: 1.25rem 1.5rem;
+    background: #f8fafc;
+}
+
+.stat-card {
+    background: #ffffff;
+    padding: 1.25rem;
+    border-radius: 12px;
+    border: 1px solid #eef1f6;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+}
+
+.stat-icon {
+    width: 3rem;
+    height: 3rem;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.4rem;
+}
+
+.collected .stat-icon { background: rgba(16, 185, 129, 0.1); color: #10b981; }
+.spent .stat-icon { background: rgba(239, 68, 68, 0.1); color: #ef4444; }
+.balance .stat-icon { background: rgba(30, 47, 90, 0.1); color: #1e2f5a; }
+
+.stat-info label {
+    display: block;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #64748b;
+    text-transform: uppercase;
+}
+
+.stat-info .amount {
+    font-size: 1.2rem;
+    font-weight: 800;
+    color: #1e2f5a;
+}
+
+/* Detail Grid & Scrollable Panels */
+.fund-detail-grid {
+    display: grid;
+    grid-template-columns: 1.2fr 0.8fr;
+    gap: 1.5rem;
+    padding: 0 1.5rem 1.5rem 1.5rem;
+    background: #f8fafc;
+}
+
+.fund-detail-panel {
+    background: #ffffff;
+    border-radius: 1rem;
+    border: 1px solid #eef1f6;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.panel-header {
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid #eef1f6;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.panel-header h4 {
+    margin: 0;
+    font-size: 1rem;
+    color: #334155;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.count-badge {
+    font-size: 0.75rem;
+    background: #f1f5f9;
+    padding: 0.2rem 0.6rem;
+    border-radius: 6px;
+    font-weight: 700;
+    color: #475569;
+}
+
+.subtable-container {
+    max-height: 320px; /* IMPORTANT: Keeps page scroll-free */
+    overflow-y: auto;
+}
+
+.fund-subtable {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.fund-subtable th {
+    position: sticky;
+    top: 0;
+    background: #ffffff;
+    z-index: 5;
+    padding: 0.75rem 1.25rem;
+    font-size: 0.85rem;
+    color: #64748b;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.fund-subtable td {
+    padding: 0.75rem 1.25rem;
+    font-size: 0.92rem;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.fw-500 { font-weight: 500; }
+.fw-600 { font-weight: 600; }
+.fw-700 { font-weight: 700; }
+.text-primary { color: #1e2f5a; }
+.text-success { color: #10b981; }
+.text-danger { color: #ef4444; }
+.text-gray { color: #64748b; }
+.text-center { text-align: center; }
+
+/* Pagination Styles - Standardized */
+.payment-pagination-row {
+    display: flex;
+    justify-content: center;
+    padding: 1.25rem 1.5rem;
+    background: #ffffff;
+}
+
+.payment-pagination {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+}
+
+.payment-page-indicator {
+    display: flex;
+    align-items: baseline;
+    gap: 0.2rem;
+}
+
+.payment-page-indicator span {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: #1e2f5a;
+    line-height: 1;
+}
+
+.payment-page-indicator small {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: #94a3b8;
+}
+
+.payment-page-btn {
+    width: 2.75rem;
+    height: 2.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    color: #1e2f5a;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 1.25rem;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+
+.payment-page-btn:hover:not(:disabled) {
+    background: #1e2f5a;
+    color: #ffffff;
+    border-color: #1e2f5a;
+}
+
+.payment-page-btn:disabled {
+    opacity: 0.3;
+    background: #f8fafc;
+    cursor: not-allowed;
+}
+
+.status-badge {
+    padding: 0.25rem 0.6rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 700;
+}
+.status-badge.paid { background: #d1fae5; color: #065f46; }
+.status-badge.unpaid { background: #fee2e2; color: #991b1b; }
+
+@media (max-width: 1200px) {
+    .fund-detail-grid, .fund-stats-cards {
+        grid-template-columns: 1fr;
+    }
+}

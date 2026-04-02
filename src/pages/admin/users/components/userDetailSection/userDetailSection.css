@@ -21,7 +21,7 @@
 }
 
 .user-detail-head {
-    padding: 1.2rem 1.5rem;
+    padding: 0.75rem 1.25rem;
     border-bottom: 1px solid var(--admin-border, #dce5f7);
 }
 
@@ -42,7 +42,7 @@
 }
 
 .user-detail-row {
-    padding: 1rem 1.5rem;
+    padding: 0.6rem 1.25rem;
     border-bottom: 1px solid var(--admin-border, #dce5f7);
     transition: background-color 0.2s ease, box-shadow 0.2s ease;
 }
@@ -73,7 +73,7 @@
     border-bottom: none;
 }
 
-.user-detail-row > :nth-child(n + 2) {
+.user-detail-row> :nth-child(n + 2) {
     justify-self: center;
 }
 
@@ -85,8 +85,8 @@
 }
 
 .user-detail-avatar {
-    width: 3rem;
-    height: 3rem;
+    width: 2.5rem;
+    height: 2.5rem;
     border-radius: 50%;
     display: grid;
     place-items: center;
@@ -119,14 +119,14 @@
 
 .user-detail-name {
     color: var(--admin-text-primary, #1e2f5a);
-    font-size: 1rem;
+    font-size: 0.95rem;
     font-weight: 800;
-    line-height: 1.35;
+    line-height: 1.2;
 }
 
 .user-detail-email {
     color: var(--admin-text-muted, #7e8eab);
-    font-size: 0.95rem;
+    font-size: 0.88rem;
     font-weight: 500;
 }
 
@@ -135,10 +135,10 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    min-height: 1.9rem;
-    padding: 0.15rem 0.85rem;
+    min-height: 1.6rem;
+    padding: 0.1rem 0.75rem;
     border-radius: 999px;
-    font-size: 0.94rem;
+    font-size: 0.88rem;
     font-weight: 700;
     transition: transform 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease;
 }
@@ -197,7 +197,7 @@
 .user-detail-phone,
 .user-detail-date {
     color: var(--admin-text-secondary, #4d5f82);
-    font-size: 0.98rem;
+    font-size: 0.94rem;
     font-weight: 500;
 }
 
@@ -220,7 +220,7 @@
     color: var(--admin-text-muted, #7e8eab);
     cursor: pointer;
     transition: background-color 0.18s ease, color 0.18s ease, transform 0.18s ease,
-    box-shadow 0.18s ease;
+        box-shadow 0.18s ease;
 }
 
 .user-detail-action-btn:hover {
@@ -251,4 +251,7 @@
     color: var(--admin-text-muted, #7e8eab);
     font-size: 1rem;
     font-weight: 600;
+}
+
+font-weight: 600;
 }

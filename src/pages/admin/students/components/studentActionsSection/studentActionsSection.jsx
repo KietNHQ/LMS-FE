@@ -35,22 +35,6 @@ export default function StudentActionsSection({
     }, []);
     return (
         <section className="student-actions-section">
-            <div className="student-actions-top">
-                <div className="student-actions-title-wrap">
-                    <div className="student-actions-title-row">
-                        <h1>Quản lý Học sinh</h1>
-                        <div className="student-total-badge" aria-live="polite">
-                            <span className="student-total-number">{totalStudents}</span>
-                            <span className="student-total-label">học sinh</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-                    {children}
-                </div>
-            </div>
-
             <div className="student-toolbar-card">
                 <div className="student-search-box">
                     <FiSearch className="student-search-icon" />

@@ -1,119 +1,88 @@
 .parent-actions-section {
-	display: flex;
-	flex-direction: column;
-	gap: 1rem;
-	margin-bottom: 1rem;
-}
-
-.parent-actions-top {
-	display: flex;
-	align-items: center;
-	justify-content: space-between;
-	gap: 1rem;
-}
-
-.parent-actions-title-row {
-	display: flex;
-	align-items: center;
-	gap: 1rem;
-	flex-wrap: wrap;
-}
-
-.parent-actions-title-wrap h1 {
-	margin: 0;
-	color: var(--text-heading, #1e2f5a);
-	font-size: 2.6rem;
-	line-height: 1.15;
-	font-weight: 800;
-}
-
-.parent-total-badge {
-	display: inline-flex;
-	align-items: center;
-	gap: 0.35rem;
-	color: #5d6b84;
-	font-size: 1.02rem;
-	font-weight: 700;
-}
-
-.parent-total-number {
-	display: inline-flex;
-	align-items: center;
-	justify-content: center;
-	min-width: 1.9rem;
-	height: 1.9rem;
-	border-radius: 0.55rem;
-	padding: 0 0.38rem;
-	background: var(--admin-color, #1e2f5a);
-	color: #ffffff;
-	font-size: 0.95rem;
-	font-weight: 800;
-	line-height: 1;
-}
-
-.parent-total-label {
-	font-size: 1rem;
-	font-weight: 600;
-	color: #5d6b84;
-}
-
-.parent-btn-create {
-	outline: none;
-	cursor: pointer;
-	height: 3.0rem;
-	padding: 0 1.2rem;
-	border-radius: 1rem;
-	background: var(--admin-color, #1e2f5a);
-	color: #ffffff;
-	border: none;
-	display: inline-flex;
-	align-items: center;
-	gap: 0;
-	font-size: 1rem;
-	font-weight: 700;
-	box-shadow: 0 10px 24px rgba(30, 47, 90, 0.18);
-	transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
-}
-
-.parent-btn-create:hover {
-	transform: translateY(-1px);
-	background: #1a2a52;
-	box-shadow: 0 14px 28px rgba(30, 47, 90, 0.22);
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
 }
 
 .parent-toolbar-card {
-	background: #ffffff;
-	border: 1px solid #e8ebf3;
-	border-radius: 1.2rem;
-	padding: 1rem 1.2rem;
-	display: flex;
-	align-items: center;
-	gap: 1rem;
-	box-shadow: 0 6px 16px rgba(30, 47, 90, 0.08);
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+    background: #ffffff;
+    padding: 0.85rem 1.1rem;
+    border-radius: 14px;
+    border: 1px solid #dce5f7;
+    box-shadow: 0 2px 6px rgba(30, 47, 90, 0.05);
+    flex-wrap: wrap;
 }
 
 .parent-search-box {
-	flex: 1;
-	height: 3.0rem;
-	border-radius: 1rem;
-	background: #f7f8fc;
-	border: 1px solid #d7deeb;
-	display: flex;
-	align-items: center;
-	gap: 0.85rem;
-	padding: 0 1rem;
-	transition: background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
-}
-
-.parent-search-box:hover {
-	background: #f2f6ff;
-	border-color: #b9c8e1;
+    flex: 1;
+    min-width: 280px;
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    background: #f8fafc;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 0 1rem;
+    height: 2.75rem;
+    transition: all 0.2s ease;
 }
 
 .parent-search-box:focus-within {
-	background: #eef4ff;
-	border-color: #d7deeb;
+    border-color: #3f6fdb;
+    background: #ffffff;
+    box-shadow: 0 0 0 4px rgba(63, 111, 219, 0.1);
 }
+
+.parent-search-icon {
+    font-size: 1.2rem;
+    color: #94a3b8;
+}
+
+.parent-search-box input {
+    width: 100%;
+    border: none;
+    background: transparent;
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: #1e2f5a;
+    outline: none;
+}
+
+.parent-filter-wrap {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.parent-btn-create {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    background: #1e2f5a !important;
+    color: #ffffff;
+    border: none;
+    border-radius: 8px !important;
+    padding: 0 1.25rem !important;
+    height: 2.75rem !important;
+    font-weight: 700;
+    font-size: 0.88rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+    margin-left: 0.5rem !important;
+    box-shadow: none !important;
+}
+
+.parent-btn-create:hover {
+    background: #2d4177 !important;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(30, 47, 90, 0.2) !important;
+}
+
 
 .parent-search-icon {
 	font-size: 1.15rem;
@@ -150,10 +119,10 @@
 
 .parent-custom-select-trigger {
 	width: 100%;
-	height: 3.0rem;
+	height: 2.75rem;
 	background: #f7f8fc;
 	border: 1px solid #d7deeb;
-	border-radius: 1rem;
+	border-radius: 0.85rem;
 	padding: 0 1rem;
 	display: flex;
 	align-items: center;

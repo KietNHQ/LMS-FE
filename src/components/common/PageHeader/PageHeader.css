@@ -1,27 +1,33 @@
 .common-page-header {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
-  gap: 20px;
-  padding: 20px 0;
+  gap: 16px;
+  padding: 2px 0 6px 0;
   flex-wrap: wrap;
 }
 
-.common-page-header__main {
+.common-page-header__left {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 2px;
+}
+
+.common-page-header__title-container {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
 }
 
 .common-page-header__eyebrow {
   width: fit-content;
-  padding: 6px 12px;
-  border-radius: var(--radius-pill);
-  background: rgba(143, 179, 255, 0.12);
-  color: var(--primary-color);
-  font-size: 12px;
-  font-weight: 800;
-  letter-spacing: 0.3px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  background: #f1f5f9;
+  color: #64748b;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
   text-transform: uppercase;
 }
 
@@ -29,29 +35,29 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  color: var(--text-secondary);
+  color: #64748b;
   font-size: 13px;
-  font-weight: 700;
+  font-weight: 500;
+  margin-bottom: 2px;
 }
 
 .common-page-header h1 {
   margin: 0;
-  color: var(--text-heading);
-  font-size: clamp(28px, 4vw, 36px);
-  line-height: 1.2;
+  color: #1e2f5a;
+  font-size: 1.85rem;
+  font-weight: 700;
+  line-height: 1.1;
 }
 
 .common-page-header p {
-  margin-top: 8px;
-  max-width: 720px;
-  color: var(--text-secondary);
-  font-size: 15px;
-  line-height: 1.75;
+  margin: 2px 0 0 0;
+  color: #64748b;
+  font-size: 0.95rem;
+  font-weight: 500;
 }
 
 .common-page-header__actions {
   display: flex;
   align-items: center;
   gap: 12px;
-  flex-wrap: wrap;
 }

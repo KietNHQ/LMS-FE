@@ -11,7 +11,7 @@ export default function ParentListSection({ parents, onView, onEdit, onDelete })
                         <tr>
                             <th>PHỤ HUYNH</th>
                             <th>SĐT</th>
-                            <th>HỌC SINH QUẢN LÝ</th>
+                            <th>GIÁM HỘ HỌC SINH</th>
                             <th className="parent-actions-col">THAO TÁC</th>
                         </tr>
                     </thead>
@@ -49,12 +49,15 @@ export default function ParentListSection({ parents, onView, onEdit, onDelete })
                                     <td>{parent.phone}</td>
                                     <td>
                                         <div className="parent-children-badges">
-                                            {(parent.profile?.children || []).map((child, idx) => (
-                                                <span key={idx} className="child-badge">
-                                                    {child.childName} ({child.childClass})
-                                                </span>
-                                            ))}
-                                            {!(parent.profile?.children?.length) && (
+                                            {(parent.displayChildren || parent.profile?.children || []).map((child, idx) => {
+                                                const isGraduated = child.childClass === "Đã tốt nghiệp";
+                                                return (
+                                                    <span key={idx} className={`child-badge ${isGraduated ? 'graduated' : ''}`}>
+                                                        {child.childName} ({child.childClass})
+                                                    </span>
+                                                );
+                                            })}
+                                            {!(parent.displayChildren?.length || parent.profile?.children?.length) && (
                                                 <span className="text-gray-400 italic">Chưa có thông tin</span>
                                             )}
                                         </div>

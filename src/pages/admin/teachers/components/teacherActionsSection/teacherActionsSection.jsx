@@ -34,24 +34,8 @@ export default function TeacherActionsSection({
 	}, []);
 
 	return (
-		<section className="teacher-actions-section">
-			<div className="teacher-actions-top">
-				<div className="teacher-actions-title-wrap">
-					<div className="teacher-actions-title-row">
-						<h1>Quản lý Giáo viên</h1>
-						<div className="teacher-total-badge" aria-live="polite">
-							<span className="teacher-total-number">{totalTeachers}</span>
-							<span className="teacher-total-label">giáo viên</span>
-						</div>
-					</div>
-				</div>
-
-				<div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-					{children}
-				</div>
-			</div>
-
-			<div className="teacher-toolbar-card">
+        <section className="teacher-actions-section">
+            <div className="teacher-toolbar-card">
 				<div className="teacher-search-box">
 					<FiSearch className="teacher-search-icon" />
 					<input

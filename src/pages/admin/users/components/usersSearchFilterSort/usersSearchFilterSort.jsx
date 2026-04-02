@@ -1,20 +1,20 @@
 import React from "react";
-import { FiSearch } from "react-icons/fi";
+import { FiSearch, FiChevronDown } from "react-icons/fi";
 import "./UsersSearchFilterSort.css";
 
 const tabs = ["Tất cả", "Admin", "Giáo viên", "Học sinh", "Phụ huynh"];
 
 export default function UsersSearchFilterSort({
-                                                  searchValue,
-                                                  onSearchChange,
-                                                  quickRole,
-                                                  onQuickRoleChange,
-                                                  children,
-                                              }) {
+    searchValue,
+    onSearchChange,
+    quickRole,
+    onQuickRoleChange,
+    children,
+}) {
     return (
-        <div className="users-search-filter-sort">
+        <div className="users-toolbar-card">
             <div className="users-search-box">
-                <FiSearch />
+                <FiSearch className="users-search-icon" />
                 <input
                     type="text"
                     placeholder="Tìm kiếm tên, email..."
@@ -23,20 +23,23 @@ export default function UsersSearchFilterSort({
                 />
             </div>
 
-            <div className="users-role-tabs">
-                {tabs.map((tab) => (
-                    <button
-                        key={tab}
-                        className={`users-role-tab ${quickRole === tab ? "active" : ""}`}
-                        onClick={() => onQuickRoleChange(tab)}
+            <div className="users-filter-group">
+                <div className="users-custom-select">
+                    <select 
+                        value={quickRole} 
+                        onChange={(e) => onQuickRoleChange(e.target.value)}
                     >
-                        {tab}
-                    </button>
-                ))}
-            </div>
-            <div style={{ marginLeft: 'auto' }}>
+                        {tabs.map((tab) => (
+                            <option key={tab} value={tab}>
+                                {tab === "Tất cả" ? "Tất cả vai trò" : tab}
+                            </option>
+                        ))}
+                    </select>
+                    <FiChevronDown className="users-select-arrow" />
+                </div>
+                
                 {children}
             </div>
         </div>
     );
-}
+}

@@ -22,6 +22,7 @@ export default function TeacherListSection({
 						<tr>
 							<th>GIÁO VIÊN</th>
 							<th>MÔN DẠY</th>
+                            <th>LỚP CHỦ NHIỆM</th>
 							<th>SĐT</th>
 							<th>TRẠNG THÁI</th>
 							<th className="teacher-actions-col">THAO TÁC</th>
@@ -62,6 +63,12 @@ export default function TeacherListSection({
 									<td>
 										<span className="teacher-subject-badge">{teacher.subject || "—"}</span>
 									</td>
+
+                                    <td>
+                                        <span className={`teacher-subject-badge ${teacher.homeroomClass ? '' : 'inactive'}`}>
+                                            {teacher.homeroomClass || "Không có"}
+                                        </span>
+                                    </td>
 
 									<td>{teacher.phone || "—"}</td>
 
