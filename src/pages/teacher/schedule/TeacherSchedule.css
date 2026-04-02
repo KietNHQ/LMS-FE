@@ -1,0 +1,120 @@
+.teacher-schedule {
+  padding: 24px;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.teacher-schedule-header h1 {
+  font-size: 22px;
+  font-weight: 700;
+  color: #111827;
+  margin-bottom: 4px;
+}
+
+.teacher-schedule-header p {
+  font-size: 13px;
+  color: #6b7280;
+}
+
+.teacher-schedule-content {
+  width: 100%;
+}
+
+/* ===== Modal Styles ===== */
+.teacher-daily-modal {
+  max-width: 500px;
+  width: 95vw;
+  padding: 0 !important;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+.teacher-daily-modal .daily-schedule-section {
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  margin: 0;
+  max-height: 85vh;
+  overflow-y: auto;
+}
+
+.teacher-lesson-modal {
+  max-width: 400px;
+  width: 90vw;
+}
+
+.teacher-lesson-modal-content {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 8px 0;
+}
+
+.modal-header-info {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid #f3f4f6;
+  padding-bottom: 12px;
+}
+
+.modal-header-info h3 {
+  font-size: 18px;
+  font-weight: 700;
+  color: #1f2937;
+  margin: 0;
+}
+
+.modal-badge {
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.modal-body-info {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.modal-body-info p {
+  margin: 0;
+  font-size: 14px;
+  color: #4b5563;
+  line-height: 1.5;
+}
+
+.modal-body-info strong {
+  color: #111827;
+  font-weight: 600;
+  display: inline-block;
+  width: 80px;
+}
+
+/* Re-use colors from daily schedule */
+.modal-badge.color-teal {
+  background: #ccfbf1;
+  color: #0f766e;
+}
+
+.modal-badge.color-blue {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.modal-badge.color-purple {
+  background: #ede9fe;
+  color: #6d28d9;
+}
+
+.modal-badge.color-orange {
+  background: #ffedd5;
+  color: #c2410c;
+}
+
+.modal-badge.color-pink {
+  background: #fce7f3;
+  color: #9d174d;
+}

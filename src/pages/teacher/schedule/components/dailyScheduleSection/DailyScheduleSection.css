@@ -1,4 +1,188 @@
 .daily-schedule-section {
-    padding: 1rem;
+  background: white;
+  border-radius: 14px;
+  padding: 20px 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
 }
 
+/* ===== Header ===== */
+.daily-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 18px;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.daily-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: #111827;
+}
+
+.daily-date {
+  font-size: 13px;
+  color: #6b7280;
+  margin-top: 3px;
+  text-transform: capitalize;
+}
+
+.daily-summary-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: #f0fdfa;
+  color: #0d9488;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 5px 13px;
+  border-radius: 20px;
+  border: 1px solid #ccfbf1;
+}
+
+/* ===== List ===== */
+.daily-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* ===== Item ===== */
+.daily-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  transition: transform 0.2s, box-shadow 0.2s;
+  cursor: pointer;
+}
+
+.daily-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+}
+
+/* Period Badge */
+.daily-period-badge {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 40px;
+  padding-top: 2px;
+}
+
+.daily-period-badge span {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  opacity: 0.7;
+  font-weight: 600;
+}
+
+.daily-period-badge strong {
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1.1;
+}
+
+/* Info */
+.daily-info {
+  flex: 1;
+}
+
+.daily-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+
+.daily-subject {
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.daily-arrow {
+  opacity: 0.4;
+}
+
+.daily-note {
+  font-size: 12px;
+  opacity: 0.75;
+  margin-bottom: 8px;
+}
+
+.daily-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.daily-meta span {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  font-weight: 500;
+  opacity: 0.8;
+}
+
+/* ===== Color Variants ===== */
+.daily-item.color-teal {
+  background: #f0fdfa;
+  border-left: 4px solid #0d9488;
+  color: #0f766e;
+}
+
+.daily-item.color-blue {
+  background: #eff6ff;
+  border-left: 4px solid #3b82f6;
+  color: #1d4ed8;
+}
+
+.daily-item.color-purple {
+  background: #f5f3ff;
+  border-left: 4px solid #7c3aed;
+  color: #6d28d9;
+}
+
+.daily-item.color-orange {
+  background: #fff7ed;
+  border-left: 4px solid #ea580c;
+  color: #c2410c;
+}
+
+.daily-item.color-pink {
+  background: #fdf2f8;
+  border-left: 4px solid #ec4899;
+  color: #9d174d;
+}
+
+/* ===== Empty ===== */
+.daily-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  text-align: center;
+  color: #9ca3af;
+}
+
+.daily-empty-icon {
+  font-size: 40px;
+  margin-bottom: 10px;
+}
+
+.daily-empty p {
+  font-size: 14px;
+  font-weight: 600;
+  color: #6b7280;
+  margin-bottom: 5px;
+}
+
+.daily-empty span {
+  font-size: 13px;
+}

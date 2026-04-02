@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useEffect } from "react";
+import React, { useMemo, useState} from "react";
 import { FiChevronLeft, FiChevronRight } from "react-icons/fi";
 import { read, utils, writeFile } from "xlsx";
 import "./AdminUsers.css";
