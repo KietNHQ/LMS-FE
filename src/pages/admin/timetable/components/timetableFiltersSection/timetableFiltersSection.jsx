@@ -1,12 +1,11 @@
 import React from "react";
-import { FiAlertTriangle, FiCalendar, FiClock, FiPlus } from "react-icons/fi";
+import { FiAlertTriangle, FiClock, FiLayers } from "react-icons/fi";
 import Select from "../../../../../components/ui/Select/Select";
 import "./timetableFiltersSection.css";
 
 export default function TimetableFiltersSection({
     totalSessions,
     conflictCount,
-    weekValue,
     classOptions,
     teacherOptions,
     dayOptions,
@@ -16,7 +15,6 @@ export default function TimetableFiltersSection({
     selectedDay,
     selectedBlock,
     searchTerm,
-    onWeekChange,
     onClassChange,
     onTeacherChange,
     onDayChange,
@@ -29,104 +27,88 @@ export default function TimetableFiltersSection({
     return (
         <section className="tt-filters-section">
             <div className="tt-filters-header">
-                <div>
-                    <h1>Quản lý thời khóa biểu</h1>
+                <div className="tt-title-area">
+                    <h1 className="tt-main-title">Quản lý thời khóa biểu</h1>
                 </div>
-                <div className="tt-header-actions" style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-                    {children}
-                    <button type="button" className="tt-conflict-btn" onClick={onOpenConflicts}>
-                        <FiAlertTriangle />
-                        Kiểm tra xung đột
-                        <span>{conflictCount}</span>
-                    </button>
-                    <button type="button" className="tt-create-btn" onClick={onCreateSession}>
-                        <FiPlus />
-                        Thêm tiết học
-                    </button>
+                <div className="tt-header-actions">
+                    <div className="tt-year-selector-wrap">
+                        {children}
+                    </div>
                 </div>
             </div>
 
             <div className="tt-stats-grid">
-                <article className="tt-stat-card">
-                    <span className="icon"><FiClock /></span>
-                    <div>
-                        <strong>{totalSessions}</strong>
-                        <p>Tiết học trong tuần</p>
+                <div className="tt-stat-mini-card">
+                    <div className="stat-icon-box navy"><FiClock /></div>
+                    <div className="stat-content">
+                        <span className="stat-value">{totalSessions}</span>
+                        <span className="stat-label">Tiết học / kỳ</span>
                     </div>
-                </article>
+                </div>
 
-                <button
-                    type="button"
-                    className="tt-stat-card tt-stat-card--clickable"
-                    onClick={onOpenConflicts}
-                    aria-label="Mo hop thoai kiem tra xung dot"
-                >
-                    <span className="icon"><FiAlertTriangle /></span>
-                    <div>
-                        <strong>{conflictCount}</strong>
-                        <p>Xung đột cần xử lý</p>
+                <div className="tt-stat-mini-card clickable" onClick={onOpenConflicts}>
+                    <div className="stat-icon-box warning"><FiAlertTriangle /></div>
+                    <div className="stat-content">
+                        <span className="stat-value">{conflictCount}</span>
+                        <span className="stat-label">Tiết bị trùng</span>
                     </div>
-                </button>
+                </div>
 
-                <article className="tt-stat-card">
-                    <span className="icon"><FiCalendar /></span>
-                    <div>
-                        <strong>{selectedClass}</strong>
-                        <p>Lớp đang xem</p>
+                <div className="tt-stat-mini-card">
+                    <div className="stat-icon-box info"><FiLayers /></div>
+                    <div className="stat-content">
+                        <span className="stat-value">{selectedClass}</span>
+                        <span className="stat-label">Lớp đang xem</span>
                     </div>
-                </article>
+                </div>
             </div>
 
             <div className="tt-filter-panel">
-                <label className="tt-input-wrap tt-week-wrap">
-                    <span>Tuần học</span>
-                    <input type="week" value={weekValue} onChange={(e) => onWeekChange(e.target.value)} />
-                </label>
+                <div className="tt-filter-group">
+                    <div className="tt-input-field">
+                        <label>Khối</label>
+                        <Select
+                            variant="custom"
+                            className="tt-custom-select"
+                            options={blockOptions}
+                            value={selectedBlock}
+                            onChange={(e) => onBlockChange(e.target.value)}
+                        />
+                    </div>
 
-                {/* Thay thế tìm kiếm bằng filter khối */}
-                <label className="tt-input-wrap">
-                    <span>Khối</span>
-                    <Select
-                        variant="custom"
-                        className="tt-custom-select"
-                        options={blockOptions}
-                        value={selectedBlock}
-                        onChange={(e) => onBlockChange(e.target.value)}
-                    />
-                </label>
+                    <div className="tt-input-field">
+                        <label>Lớp</label>
+                        <Select
+                            variant="custom"
+                            className="tt-custom-select"
+                            options={classOptions}
+                            value={selectedClass}
+                            onChange={(e) => onClassChange(e.target.value)}
+                        />
+                    </div>
 
-                <label className="tt-input-wrap">
-                    <span>Lớp</span>
-                    <Select
-                        variant="custom"
-                        className="tt-custom-select"
-                        options={classOptions}
-                        value={selectedClass}
-                        onChange={(e) => onClassChange(e.target.value)}
-                    />
-                </label>
+                    <div className="tt-input-field">
+                        <label>Giáo viên</label>
+                        <Select
+                            variant="custom"
+                            className="tt-custom-select"
+                            options={teacherOptions}
+                            value={selectedTeacher}
+                            onChange={(e) => onTeacherChange(e.target.value)}
+                        />
+                    </div>
 
-                <label className="tt-input-wrap">
-                    <span>Giáo viên</span>
-                    <Select
-                        variant="custom"
-                        className="tt-custom-select"
-                        options={teacherOptions}
-                        value={selectedTeacher}
-                        onChange={(e) => onTeacherChange(e.target.value)}
-                    />
-                </label>
-
-                <label className="tt-input-wrap">
-                    <span>Thứ</span>
-                    <Select
-                        variant="custom"
-                        className="tt-custom-select"
-                        options={dayOptions}
-                        value={selectedDay}
-                        onChange={(e) => onDayChange(e.target.value)}
-                    />
-                </label>
+                    <div className="tt-input-field">
+                        <label>Thứ</label>
+                        <Select
+                            variant="custom"
+                            className="tt-custom-select"
+                            options={dayOptions}
+                            value={selectedDay}
+                            onChange={(e) => onDayChange(e.target.value)}
+                        />
+                    </div>
+                </div>
             </div>
         </section>
     );

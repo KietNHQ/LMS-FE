@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { FiChevronDown, FiChevronUp, FiDollarSign, FiChevronLeft, FiChevronRight, FiArrowLeft, FiUsers, FiActivity } from "react-icons/fi";
+import { FiChevronDown, FiChevronUp, FiDollarSign, FiChevronLeft, FiChevronRight, FiArrowLeft, FiUsers, FiActivity, FiEye } from "react-icons/fi";
 import "./classFundSection.css";
 
 const ITEMS_PER_PAGE = 5;
@@ -171,7 +171,7 @@ export default function ClassFundSection({ classFundData }) {
                                     <td className="fw-700 text-primary">{formatCurrency(balance)}</td>
                                     <td className="col-actions">
                                         <button className="view-detail-btn">
-                                            Xem chi tiết <FiChevronRight />
+                                            <FiEye /> Xem
                                         </button>
                                     </td>
                                 </tr>

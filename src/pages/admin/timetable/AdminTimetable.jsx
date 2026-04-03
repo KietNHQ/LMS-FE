@@ -6,6 +6,7 @@ import ConflictCheckSection from "./components/conflictCheckSection/conflictChec
 import Modal from "../../../components/ui/Modal/Modal";
 import { SchoolYearTermSelector } from "../../../components/common";
 import { useSchoolYearTerm } from "../../../hooks/useSchoolYearTerm";
+import { FiUsers, FiCalendar, FiClock, FiBook, FiUser, FiMapPin, FiActivity, FiX, FiCheckCircle, FiSave, FiPlus } from "react-icons/fi";
 
 const classOptions = ["10A1", "10A2", "11B1", "11B2", "12C1", "12C2"];
 // Tạo blockOptions từ classOptions (lấy ký tự đầu, loại trùng)
@@ -13,29 +14,18 @@ const blockOptions = Array.from(new Set(classOptions.map((c) => c.slice(0, 2))))
 const dayOptions = ["Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6", "Thứ 7"];
 const periodOptions = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 
-function getCurrentWeekValue() {
-    const now = new Date();
-    const date = new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()));
-    const dayNum = date.getUTCDay() || 7;
-    date.setUTCDate(date.getUTCDate() + 4 - dayNum);
-    const yearStart = new Date(Date.UTC(date.getUTCFullYear(), 0, 1));
-    const weekNo = Math.ceil((((date - yearStart) / 86400000) + 1) / 7);
-    return `${date.getUTCFullYear()}-W${String(weekNo).padStart(2, "0")}`;
-}
-
-const currentWeek = getCurrentWeekValue();
 
 const initialSessions = [
-    { id: 1, week: currentWeek, className: "10A1", day: "Thứ 2", period: 1, subject: "Toán", teacher: "Trần Thị Hương", room: "P201", status: "Đã chốt" },
-    { id: 2, week: currentWeek, className: "10A1", day: "Thứ 2", period: 2, subject: "Ngữ văn", teacher: "Phạm Văn Long", room: "P105", status: "Đã chốt" },
-    { id: 3, week: currentWeek, className: "10A1", day: "Thứ 3", period: 1, subject: "Tiếng Anh", teacher: "Nguyễn Thị Mai", room: "P302", status: "Đã chốt" },
-    { id: 4, week: currentWeek, className: "10A1", day: "Thứ 4", period: 3, subject: "Vật lý", teacher: "Đỗ Hải Yến", room: "P205", status: "Đã chốt" },
-    { id: 5, week: currentWeek, className: "10A2", day: "Thứ 2", period: 1, subject: "Toán", teacher: "Trần Thị Hương", room: "P202", status: "Đã chốt" },
-    { id: 6, week: currentWeek, className: "10A2", day: "Thứ 2", period: 2, subject: "Ngữ văn", teacher: "Phạm Văn Long", room: "P105", status: "Đã chốt" },
-    { id: 7, week: currentWeek, className: "11B1", day: "Thứ 2", period: 1, subject: "Hóa học", teacher: "Lê Văn Minh", room: "P301", status: "Đã chốt" },
-    { id: 8, week: currentWeek, className: "11B2", day: "Thứ 2", period: 1, subject: "Toán", teacher: "Trần Thị Hương", room: "P201", status: "Đã chốt" },
-    { id: 9, week: currentWeek, className: "12C1", day: "Thứ 5", period: 4, subject: "Sinh học", teacher: "Phạm Thị Lan", room: "P401", status: "Chờ duyệt" },
-    { id: 10, week: currentWeek, className: "12C2", day: "Thứ 6", period: 5, subject: "Địa lý", teacher: "Võ Văn Khánh", room: "P110", status: "Đã chốt" },
+    { id: 1, year: "2025-2026", term: "Học kỳ 2", className: "10A1", day: "Thứ 2", period: 1, subject: "Toán", teacher: "Trần Thị Hương", room: "P201", status: "Đã chốt" },
+    { id: 2, year: "2025-2026", term: "Học kỳ 2", className: "10A1", day: "Thứ 2", period: 2, subject: "Ngữ văn", teacher: "Phạm Văn Long", room: "P105", status: "Đã chốt" },
+    { id: 3, year: "2025-2026", term: "Học kỳ 2", className: "10A1", day: "Thứ 3", period: 1, subject: "Tiếng Anh", teacher: "Nguyễn Thị Mai", room: "P302", status: "Đã chốt" },
+    { id: 4, year: "2025-2026", term: "Học kỳ 2", className: "10A1", day: "Thứ 4", period: 3, subject: "Vật lý", teacher: "Đỗ Hải Yến", room: "P205", status: "Đã chốt" },
+    { id: 5, year: "2025-2026", term: "Học kỳ 2", className: "10A2", day: "Thứ 2", period: 1, subject: "Toán", teacher: "Trần Thị Hương", room: "P202", status: "Đã chốt" },
+    { id: 6, year: "2025-2026", term: "Học kỳ 2", className: "10A2", day: "Thứ 2", period: 2, subject: "Ngữ văn", teacher: "Phạm Văn Long", room: "P105", status: "Đã chốt" },
+    { id: 7, year: "2025-2026", term: "Học kỳ 2", className: "11B1", day: "Thứ 2", period: 1, subject: "Hóa học", teacher: "Lê Văn Minh", room: "P301", status: "Đã chốt" },
+    { id: 8, year: "2025-2026", term: "Học kỳ 2", className: "11B2", day: "Thứ 2", period: 1, subject: "Toán", teacher: "Trần Thị Hương", room: "P201", status: "Đã chốt" },
+    { id: 9, year: "2025-2026", term: "Học kỳ 2", className: "12C1", day: "Thứ 5", period: 4, subject: "Sinh học", teacher: "Phạm Thị Lan", room: "P401", status: "Chờ duyệt" },
+    { id: 10, year: "2025-2026", term: "Học kỳ 2", className: "12C2", day: "Thứ 6", period: 5, subject: "Địa lý", teacher: "Võ Văn Khánh", room: "P110", status: "Đã chốt" },
 ];
 
 const teacherCatalog = Array.from(
@@ -75,79 +65,116 @@ function LessonModal({ mode, formData, subjectOptions, onChange, onClose, onSubm
     const teacherOptionsBySubject = getTeachersBySubject(formData.subject);
 
     return (
-        <div className="admin-timetable-modal-overlay" onClick={onClose}>
-            <div className="admin-timetable-modal" onClick={(e) => e.stopPropagation()}>
-                <h3>{mode === "edit" ? "Cập nhật tiết học" : "Thêm tiết học"}</h3>
-                <div className="admin-timetable-modal-grid">
-                    <label>
-                        Lớp
-                        <select name="className" value={formData.className} onChange={onChange}>
-                            {classOptions.map((item) => (
-                                <option key={item} value={item}>{item}</option>
-                            ))}
-                        </select>
-                    </label>
-                    <label>
-                        Thứ
-                        <select name="day" value={formData.day} onChange={onChange}>
-                            {dayOptions.map((item) => (
-                                <option key={item} value={item}>{item}</option>
-                            ))}
-                        </select>
-                    </label>
-                    <label>
-                        Tiết
-                        <select name="period" value={formData.period} onChange={onChange}>
-                            {periodOptions.map((item) => (
-                                <option key={item} value={item}>{item}</option>
-                            ))}
-                        </select>
-                    </label>
-                    <label>
-                        Môn học
-                        <select name="subject" value={formData.subject} onChange={onChange}>
-                            {subjectOptions.map((item) => (
-                                <option key={item} value={item}>
-                                    {item}
-                                </option>
-                            ))}
-                        </select>
-                    </label>
-                    <label>
-                        Giáo viên
-                        <select
-                            name="teacher"
-                            value={formData.teacher}
-                            onChange={onChange}
-                            disabled={teacherOptionsBySubject.length === 0}
-                        >
-                            {teacherOptionsBySubject.length === 0 ? (
-                                <option value="">Không có giáo viên cho môn này</option>
-                            ) : (
-                                teacherOptionsBySubject.map((item) => (
-                                    <option key={item} value={item}>
-                                        {item}
-                                    </option>
-                                ))
-                            )}
-                        </select>
-                    </label>
-                    <label>
-                        Phòng học
-                        <input name="room" value={formData.room} onChange={onChange} placeholder="VD: P201" />
-                    </label>
-                    <label>
-                        Trạng thái
-                        <select name="status" value={formData.status} onChange={onChange}>
-                            <option value="Đã chốt">Đã chốt</option>
-                            <option value="Chờ duyệt">Chờ duyệt</option>
-                        </select>
-                    </label>
+        <div className="admin-timetable-modal-overlay">
+            <div className="admin-timetable-modal exp-modal-card lesson-modal-wide">
+                <div className="modal-header exp-header">
+                    <div className="modal-icon-circle">
+                        {mode === "edit" ? <FiCheckCircle /> : <FiPlus />}
+                    </div>
+                    <h3>{mode === "edit" ? "Cập nhật tiết học" : "Thêm tiết học mới"}</h3>
+                    <p>Chỉnh sửa thông tin chi tiết cho khung giờ đã chọn.</p>
+                    <button className="modal-close-btn" onClick={onClose}>
+                        <FiX />
+                    </button>
                 </div>
-                <div className="admin-timetable-modal-actions">
-                    <button type="button" className="btn-secondary" onClick={onClose}>Hủy</button>
-                    <button type="button" className="btn-primary" onClick={onSubmit}>
-                        {mode === "edit" ? "Lưu thay đổi" : "Thêm tiết"}
+
+                <div className="modal-body exp-body">
+                    <div className="exp-form-grid">
+                        <div className="exp-form-item">
+                            <label className="exp-label"><FiUsers /> Lớp</label>
+                            <div className="exp-input-wrapper">
+                                <select className="exp-select" name="className" value={formData.className} onChange={onChange}>
+                                    {classOptions.map((item) => (
+                                        <option key={item} value={item}>{item}</option>
+                                    ))}
+                                </select>
+                            </div>
+                        </div>
+
+                        <div className="exp-form-item">
+                            <label className="exp-label"><FiCalendar /> Thứ</label>
+                            <div className="exp-input-wrapper">
+                                <select className="exp-select" name="day" value={formData.day} onChange={onChange}>
+                                    {dayOptions.map((item) => (
+                                        <option key={item} value={item}>{item}</option>
+                                    ))}
+                                </select>
+                            </div>
+                        </div>
+
+                        <div className="exp-form-item">
+                            <label className="exp-label"><FiClock /> Tiết</label>
+                            <div className="exp-input-wrapper">
+                                <select className="exp-select" name="period" value={formData.period} onChange={onChange}>
+                                    {periodOptions.map((item) => (
+                                        <option key={item} value={item}>{item}</option>
+                                    ))}
+                                </select>
+                            </div>
+                        </div>
+
+                        <div className="exp-form-item">
+                            <label className="exp-label"><FiBook /> Môn học</label>
+                            <div className="exp-input-wrapper">
+                                <select className="exp-select" name="subject" value={formData.subject} onChange={onChange}>
+                                    {subjectOptions.map((item) => (
+                                        <option key={item} value={item}>{item}</option>
+                                    ))}
+                                </select>
+                            </div>
+                        </div>
+
+                        <div className="exp-form-item full-width">
+                            <label className="exp-label"><FiUser /> Giáo viên giảng dạy</label>
+                            <div className="exp-input-wrapper">
+                                <select 
+                                    className="exp-select"
+                                    name="teacher"
+                                    value={formData.teacher}
+                                    onChange={onChange}
+                                    disabled={teacherOptionsBySubject.length === 0}
+                                >
+                                    {teacherOptionsBySubject.length === 0 ? (
+                                        <option value="">Không có giáo viên cho môn này</option>
+                                    ) : (
+                                        teacherOptionsBySubject.map((item) => (
+                                            <option key={item} value={item}>{item}</option>
+                                        ))
+                                    )}
+                                </select>
+                            </div>
+                        </div>
+
+                        <div className="exp-form-item">
+                            <label className="exp-label"><FiMapPin /> Phòng học</label>
+                            <div className="exp-input-wrapper">
+                                <input 
+                                    className="exp-input"
+                                    name="room" 
+                                    value={formData.room} 
+                                    onChange={onChange} 
+                                    placeholder="VD: P201" 
+                                />
+                            </div>
+                        </div>
+
+                        <div className="exp-form-item">
+                            <label className="exp-label"><FiActivity /> Trạng thái</label>
+                            <div className="exp-input-wrapper">
+                                <select className="exp-select" name="status" value={formData.status} onChange={onChange}>
+                                    <option value="Đã chốt">Đã chốt</option>
+                                    <option value="Chờ duyệt">Chờ duyệt</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="modal-footer exp-footer">
+                    <button type="button" className="exp-btn-cancel" onClick={onClose}>Hủy bỏ</button>
+                    <button type="button" className="exp-btn-submit" onClick={onSubmit}>
+                        {mode === "edit" ? <FiSave /> : <FiPlus />}
+                        {mode === "edit" ? "Lưu thay đổi" : "Thêm tiết học"}
                     </button>
                 </div>
             </div>
@@ -156,9 +183,13 @@ function LessonModal({ mode, formData, subjectOptions, onChange, onClose, onSubm
 }
 
 export default function AdminTimetable() {
-    const { selectedSchoolYear, selectedTerm, handleYearArrow, handleTermChange } = useSchoolYearTerm();
+    const { 
+        selectedSchoolYear = "2025-2026", 
+        selectedTerm = "Học kỳ 1", 
+        handleYearArrow, 
+        handleTermChange 
+    } = useSchoolYearTerm() || {};
     const [sessions, setSessions] = useState(initialSessions);
-    const [selectedWeek, setSelectedWeek] = useState(currentWeek);
     // Thêm state cho selectedBlock
     const [selectedBlock, setSelectedBlock] = useState(blockOptions[0]);
     // Khi đổi block, selectedClass sẽ là lớp đầu tiên của block đó
@@ -184,13 +215,17 @@ export default function AdminTimetable() {
 
     // Tính lại danh sách giáo viên filter dựa trên tuần, lớp, ngày
     const teacherOptions = useMemo(() => {
-        let filtered = sessions.filter((item) => item.week === selectedWeek && item.className === selectedClass);
+        let filtered = sessions.filter((item) => 
+            item.year === selectedSchoolYear && 
+            item.term === selectedTerm && 
+            item.className === selectedClass
+        );
         if (selectedDay !== "Tất cả thứ") {
             filtered = filtered.filter((item) => item.day === selectedDay);
         }
         const names = Array.from(new Set(filtered.map((item) => item.teacher).filter(Boolean)));
         return ["Tất cả giáo viên", ...names];
-    }, [sessions, selectedWeek, selectedClass, selectedDay]);
+    }, [sessions, selectedSchoolYear, selectedTerm, selectedClass, selectedDay]);
 
     // Nếu selectedTeacher không còn hợp lệ thì reset về "Tất cả giáo viên"
     React.useEffect(() => {
@@ -205,18 +240,18 @@ export default function AdminTimetable() {
         sessionView === "morning" ? periodOptions.slice(0, 5) : periodOptions.slice(5, 10)
     ), [sessionView]);
 
-    const sessionsInWeek = useMemo(
-        () => sessions.filter((item) => item.week === selectedWeek),
-        [sessions, selectedWeek]
+    const sessionsInTerm = useMemo(
+        () => sessions.filter((item) => item.year === selectedSchoolYear && item.term === selectedTerm),
+        [sessions, selectedSchoolYear, selectedTerm]
     );
 
-    const sessionsInWeekByClass = useMemo(
-        () => sessionsInWeek.filter((item) => item.className === selectedClass),
-        [sessionsInWeek, selectedClass]
+    const sessionsInTermByClass = useMemo(
+        () => sessionsInTerm.filter((item) => item.className === selectedClass),
+        [sessionsInTerm, selectedClass]
     );
 
     const timetableSessions = useMemo(() => {
-        return sessionsInWeek.filter((item) => {
+        return sessionsInTerm.filter((item) => {
             const matchesClass = item.className === selectedClass;
             const matchesTeacher = selectedTeacher === "Tất cả giáo viên" || item.teacher === selectedTeacher;
             const matchesDay = selectedDay === "Tất cả thứ" || item.day === selectedDay;
@@ -229,10 +264,10 @@ export default function AdminTimetable() {
 
             return matchesClass && matchesTeacher && matchesDay && matchesKeyword;
         });
-    }, [sessionsInWeek, selectedClass, selectedTeacher, selectedDay, searchTerm]);
+    }, [sessionsInTerm, selectedClass, selectedTeacher, selectedDay, searchTerm]);
 
     const conflicts = useMemo(() => {
-        const scoped = sessionsInWeek.filter((item) => {
+        const scoped = sessionsInTerm.filter((item) => {
             const matchDay = selectedDay === "Tất cả thứ" || item.day === selectedDay;
             const matchTeacher = selectedTeacher === "Tất cả giáo viên" || item.teacher === selectedTeacher;
             return matchDay && matchTeacher;
@@ -274,7 +309,7 @@ export default function AdminTimetable() {
         });
 
         return found;
-    }, [sessionsInWeek, selectedDay, selectedTeacher]);
+    }, [sessionsInTerm, selectedDay, selectedTeacher]);
 
     const slotsMap = useMemo(() => {
         const map = new Map();
@@ -365,7 +400,8 @@ export default function AdminTimetable() {
         }
 
         const duplicatedClassSlot = sessions.find((item) => (
-            item.week === selectedWeek &&
+            item.year === selectedSchoolYear &&
+            item.term === selectedTerm &&
             item.className === formData.className &&
             item.day === formData.day &&
             item.period === formData.period &&
@@ -380,12 +416,12 @@ export default function AdminTimetable() {
         if (activeModalMode === "edit" && activeSessionId) {
             setSessions((prev) => prev.map((item) => (
                 item.id === activeSessionId
-                    ? { ...item, ...formData, week: selectedWeek }
+                    ? { ...item, ...formData, year: selectedSchoolYear, term: selectedTerm }
                     : item
             )));
         } else {
             setSessions((prev) => [
-                { id: Date.now(), week: selectedWeek, ...formData },
+                { id: Date.now(), year: selectedSchoolYear, term: selectedTerm, ...formData },
                 ...prev,
             ]);
         }
@@ -396,9 +432,8 @@ export default function AdminTimetable() {
     return (
         <div className="admin-timetable-page">
             <TimetableFiltersSection
-                totalSessions={sessionsInWeekByClass.length}
+                totalSessions={sessionsInTermByClass.length}
                 conflictCount={conflicts.length}
-                weekValue={selectedWeek}
                 blockOptions={blockOptions}
                 selectedBlock={selectedBlock}
                 onBlockChange={setSelectedBlock}
@@ -409,7 +444,6 @@ export default function AdminTimetable() {
                 selectedTeacher={selectedTeacher}
                 selectedDay={selectedDay}
                 searchTerm={searchTerm}
-                onWeekChange={setSelectedWeek}
                 onClassChange={setSelectedClass}
                 onTeacherChange={setSelectedTeacher}
                 onDayChange={setSelectedDay}
@@ -436,6 +470,8 @@ export default function AdminTimetable() {
                     onEditSlot={openEditModal}
                     onDeleteSlot={handleDeleteSession}
                     onSessionViewChange={setSessionView}
+                    onOpenConflicts={() => setIsConflictModalOpen(true)}
+                    conflictCount={conflicts.length}
                 />
             </div>
 

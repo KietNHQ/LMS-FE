@@ -11,27 +11,32 @@ import "./AdminPayment.css";
 // --- MOCK DATA ---
 const MOCK_TUITION = {
     "10": {
-        total: 5500000,
-        details: [
-            { name: "Học phí cơ sở", amount: 3000000, note: "Bắt buộc" },
-            { name: "Cơ sở vật chất", amount: 1500000, note: "Bắt buộc" },
-            { name: "Đồng phục", amount: 1000000, note: "Tự chọn" }
+        "Học kỳ 1": [
+            { name: "Học phí (Tiết chuẩn)", amount: 3000000, note: "Bắt buộc" },
+            { name: "Sách giáo khoa", amount: 500000, note: "Bắt buộc" },
+            { name: "Bảo hiểm y tế", amount: 800000, note: "Bắt buộc" }
+        ],
+        "Học kỳ 2": [
+            { name: "Học phí (Tiết chuẩn)", amount: 1500000, note: "Bắt buộc" },
+            { name: "Phi kỹ năng sống", amount: 400000, note: "Tự nguyện" }
         ]
     },
     "11": {
-        total: 5200000,
-        details: [
-            { name: "Học phí cơ sở", amount: 3000000, note: "Bắt buộc" },
-            { name: "Cơ sở vật chất", amount: 1500000, note: "Bắt buộc" },
-            { name: "Quỹ hoạt động", amount: 700000, note: "Bắt buộc" }
+        "Học kỳ 1": [
+            { name: "Học phí (Tiết chuẩn)", amount: 3000000, note: "Bắt buộc" },
+            { name: "Đồng phục thể dục", amount: 600000, note: "Phát sinh" }
+        ],
+        "Học kỳ 2": [
+            { name: "Học phí (Tiết chuẩn)", amount: 1500000, note: "Bắt buộc" }
         ]
     },
     "12": {
-        total: 6000000,
-        details: [
-            { name: "Học phí cơ sở", amount: 3500000, note: "Bắt buộc" },
-            { name: "Cơ sở vật chất", amount: 1500000, note: "Bắt buộc" },
-            { name: "Lệ phí thi hộ", amount: 1000000, note: "Bắt buộc" }
+        "Học kỳ 1": [
+            { name: "Học phí (Tiết chuẩn)", amount: 3000000, note: "Bắt buộc" },
+            { name: "Lệ phí thi tốt nghiệp", amount: 1000000, note: "Bắt buộc" }
+        ],
+        "Học kỳ 2": [
+            { name: "Học phí (Tiết chuẩn)", amount: 1500000, note: "Bắt buộc" }
         ]
     }
 };
@@ -85,9 +90,9 @@ const AdminPayment = () => {
     // For simplicity, tuition filtering just by grade (hiding non-selected grades)
     const filteredTuition = useMemo(() => {
         const result = {};
-        for (const [grade, data] of Object.entries(MOCK_TUITION)) {
+        for (const [grade, semesters] of Object.entries(MOCK_TUITION)) {
             if (selectedGrade === "Tất cả khối" || selectedGrade === `Khối ${grade}`) {
-                result[grade] = data;
+                result[grade] = semesters;
             }
         }
         return result;
@@ -145,7 +150,12 @@ const AdminPayment = () => {
             {/* TABS CONTENT */}
             <div className="payment-tab-content">
                 {activeTab === 'tuition' && (
-                    <TuitionFeeSection tuitionData={filteredTuition} selectedGrade={selectedGrade} />
+                    <TuitionFeeSection 
+                        tuitionData={filteredTuition} 
+                        selectedGrade={selectedGrade} 
+                        selectedTerm={selectedTerm}
+                        selectedSchoolYear={selectedSchoolYear}
+                    />
                 )}
                 {activeTab === 'funds' && (
                     <ClassFundSection classFundData={filteredClassFunds} />

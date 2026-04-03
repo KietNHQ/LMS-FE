@@ -1,5 +1,7 @@
-import React from "react";
+import { useState } from "react";
+import { FiChevronDown } from "react-icons/fi";
 import "./createNotificationSection.css";
+
 
 const CreateNotificationSection = ({
   open,
@@ -9,7 +11,20 @@ const CreateNotificationSection = ({
   onSubmit,
   typeOptions = [],
 }) => {
+  const [showDropdown, setShowDropdown] = useState(false);
+
+  const getRoleClass = (type) => {
+    if (!type) return "all";
+    const t = type.toLowerCase();
+    if (t === "tất cả") return "all";
+    if (t === "giáo viên") return "teacher";
+    if (t.includes("phụ huynh")) return "parent";
+    if (t.includes("lớp") || t.includes("khối")) return "student";
+    return "all";
+  };
+
   if (!open) return null;
+
 
   return (
     <div className="create-noti-modal" onClick={() => setOpen(false)}>
@@ -25,6 +40,35 @@ const CreateNotificationSection = ({
           }
         />
 
+        <label>Gửi đến</label>
+        <div className="custom-dropdown" onClick={() => setShowDropdown(!showDropdown)}>
+          <div className="selected-value">
+            <div className="selected-label">
+              <span className={`role-dot ${getRoleClass(form.type)}`} />
+              {form.type}
+            </div>
+            <FiChevronDown className={showDropdown ? "rotate" : ""} />
+          </div>
+          {showDropdown && (
+            <div className="dropdown-options">
+              {typeOptions.map((option) => (
+                <div 
+                  key={option} 
+                  className={`option-item ${form.type === option ? "active" : ""}`}
+                  onClick={() => {
+                    setForm({ ...form, type: option });
+                    setShowDropdown(false);
+                  }}
+                >
+                  <span className={`role-dot ${getRoleClass(option)}`} />
+                  {option}
+                </div>
+              ))}
+            </div>
+          )}
+
+        </div>
+
         <label>Nội dung</label>
         <textarea
           placeholder={
@@ -36,17 +80,7 @@ const CreateNotificationSection = ({
           }
         />
 
-        <label>Gửi đến</label>
-        <select
-          value={form.type}
-          onChange={(e) =>
-            setForm({ ...form, type: e.target.value })
-          }
-        >
-          {typeOptions.map((option) => (
-            <option key={option} value={option}>{option}</option>
-          ))}
-        </select>
+
 
         <div className="create-noti-modal-actions">
           <button className="cancel" onClick={() => setOpen(false)}>

@@ -4,8 +4,19 @@ import "./AdminNotifications.css";
 import NotificationHistorySection from "./components/notificationHistorySection/notificationHistorySection";
 import CreateNotificationSection from "./components/createNotificationSection/createNotificationSection";
 
-const FILTERS = ["Tất cả", "Lớp 10", "Lớp 11", "Lớp 12", "Phụ huynh"];
-const TARGET_OPTIONS = ["Tất cả", "Lớp 10", "Lớp 11", "Lớp 12", "Giáo viên", "Phụ huynh"];
+const FILTERS = ["Tất cả", "Khối 10", "Khối 11", "Khối 12", "Giáo viên", "Phụ huynh"];
+const TARGET_OPTIONS = [
+  "Tất cả", 
+  "Tất cả khối",
+  "Lớp 10", 
+  "Lớp 11", 
+  "Lớp 12", 
+  "Giáo viên", 
+  "Phụ huynh (Tất cả)",
+  "Phụ huynh Lớp 10",
+  "Phụ huynh Lớp 11",
+  "Phụ huynh Lớp 12"
+];
 
 const AdminNotifications = () => {
   const [open, setOpen] = useState(false);
@@ -13,24 +24,42 @@ const AdminNotifications = () => {
 
   const [activeFilter, setActiveFilter] = useState("Tất cả");
 
-  const [list, setList] = useState([
-    {
-      id: 1,
-      title: "Lịch thi HK2 2024-2025",
-      content: "Nhà trường thông báo lịch thi học kỳ 2...",
-      type: "Lớp 10",
-      date: "2025-01-15",
-      read: false,
-    },
-    {
-      id: 2,
-      title: "Họp phụ huynh tháng 2",
-      content: "Kính mời phụ huynh...",
-      type: "Phụ huynh",
-      date: "2025-01-10",
-      read: false,
-    },
-  ]);
+  const [list, setList] = useState(() => {
+    const saved = localStorage.getItem("admin_notifications_list");
+    return saved ? JSON.parse(saved) : [
+      {
+        id: 1,
+        title: "Lịch thi HK2 2024-2025",
+        content: "Nhà trường thông báo lịch thi học kỳ 2...",
+        type: "Lớp 10",
+        date: "2025-01-15",
+        read: false,
+      },
+      {
+        id: 2,
+        title: "Họp phụ huynh tháng 2",
+        content: "Kính mời phụ huynh...",
+        type: "Phụ huynh",
+        date: "2025-01-10",
+        read: false,
+      },
+    ];
+  });
+
+  // Sync to localStorage whenever list changes
+  useEffect(() => {
+    localStorage.setItem("admin_notifications_list", JSON.stringify(list));
+  }, [list]);
+
+  // Listen for updates from other pages
+  useEffect(() => {
+    const handleRefresh = () => {
+      const saved = localStorage.getItem("admin_notifications_list");
+      if (saved) setList(JSON.parse(saved));
+    };
+    window.addEventListener("admin-notifications-updated", handleRefresh);
+    return () => window.removeEventListener("admin-notifications-updated", handleRefresh);
+  }, []);
 
   const [form, setForm] = useState({
     title: "",
@@ -88,10 +117,18 @@ const AdminNotifications = () => {
     setList((prev) => prev.map((item) => ({ ...item, read: true })));
   };
 
-  const filteredList =
-    activeFilter === "Tất cả"
-      ? sortedList
-      : sortedList.filter((item) => item.type === activeFilter);
+  const filteredList = useMemo(() => {
+    if (activeFilter === "Tất cả") return sortedList;
+    return sortedList.filter((item) => {
+      if (activeFilter === "Giáo viên") return item.type === "Giáo viên";
+      if (activeFilter === "Phụ huynh") return item.type.includes("Phụ huynh");
+      if (activeFilter.includes("Khối")) {
+          const gradeNum = activeFilter.replace("Khối ", "");
+          return item.type.includes(gradeNum);
+      }
+      return item.type === activeFilter;
+    });
+  }, [activeFilter, sortedList]);
 
   return (
     <div className="admin-wrapper">

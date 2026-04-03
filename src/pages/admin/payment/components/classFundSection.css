@@ -104,21 +104,26 @@
 
 .view-detail-btn {
     background: transparent;
-    border: none;
+    border: 1px solid #e2e8f0;
     color: #1e2f5a;
     font-weight: 700;
-    font-size: 0.88rem;
-    display: flex;
+    font-size: 0.82rem;
+    display: inline-flex;
     align-items: center;
-    gap: 0.25rem;
+    gap: 0.4rem;
     cursor: pointer;
-    padding: 0.4rem 0.75rem;
-    border-radius: 6px;
-    transition: all 0.2s;
+    padding: 0.4rem 0.85rem;
+    border-radius: 8px;
+    transition: all 0.25s;
+    white-space: nowrap;
 }
 
 .view-detail-btn:hover {
-    background: rgba(30, 47, 90, 0.08);
+    background: #1e2f5a;
+    color: #ffffff;
+    border-color: #1e2f5a;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(30, 47, 90, 0.15);
 }
 
 /* --- DETAIL VIEW STYLES --- */
@@ -315,66 +320,7 @@
 .text-gray { color: #64748b; }
 .text-center { text-align: center; }
 
-/* Pagination Styles - Standardized */
-.payment-pagination-row {
-    display: flex;
-    justify-content: center;
-    padding: 1.25rem 1.5rem;
-    background: #ffffff;
-}
-
-.payment-pagination {
-    display: flex;
-    align-items: center;
-    gap: 1.5rem;
-}
-
-.payment-page-indicator {
-    display: flex;
-    align-items: baseline;
-    gap: 0.2rem;
-}
-
-.payment-page-indicator span {
-    font-size: 1.5rem;
-    font-weight: 800;
-    color: #1e2f5a;
-    line-height: 1;
-}
-
-.payment-page-indicator small {
-    font-size: 0.9rem;
-    font-weight: 700;
-    color: #94a3b8;
-}
-
-.payment-page-btn {
-    width: 2.75rem;
-    height: 2.75rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: #ffffff;
-    border: 1px solid #e2e8f0;
-    border-radius: 12px;
-    color: #1e2f5a;
-    cursor: pointer;
-    transition: all 0.2s;
-    font-size: 1.25rem;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-}
-
-.payment-page-btn:hover:not(:disabled) {
-    background: #1e2f5a;
-    color: #ffffff;
-    border-color: #1e2f5a;
-}
-
-.payment-page-btn:disabled {
-    opacity: 0.3;
-    background: #f8fafc;
-    cursor: not-allowed;
-}
+/* Pagination Styles - Standardized in AdminPayment.css */
 
 .status-badge {
     padding: 0.25rem 0.6rem;

@@ -3,24 +3,15 @@ import "./notificationHistorySection.css";
 import { Bell, Trash2 } from "lucide-react";
 
 const getTypeClass = (type) => {
-  switch (type) {
-    case "Tất cả":
-      return "all";
-    case "Lớp 10":
-      return "grade10";
-    case "Lớp 11":
-      return "grade11";
-    case "Lớp 12":
-      return "grade12";
-    case "Giáo viên":
-      return "teacher";
-    case "Học sinh":
-      return "student";
-    case "Phụ huynh":
-      return "parent";
-    default:
-      return "all";
-  }
+  if (!type) return "all";
+  const t = type.toLowerCase();
+  
+  if (t === "tất cả") return "all";
+  if (t === "giáo viên") return "teacher";
+  if (t.includes("phụ huynh")) return "parent";
+  if (t.includes("lớp") || t.includes("khối")) return "student";
+  
+  return "all";
 };
 
 const formatDate = (rawDate) => {
