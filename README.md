@@ -10,6 +10,7 @@ Dự án bao gồm một hệ thống quản trị toàn diện, phân hệ rõ 
 
 ### 1. Bảng điều khiển (Dashboard)
 - Giao diện tổng quan trực quan với các biểu đồ thống kê đa chiều (sử dụng `recharts`).
+- **Bảng xếp hạng thi đua tuần:** Hệ thống danh sách xếp hạng nề nếp với mật độ thông tin cao, hỗ trợ lọc theo khối (Top 3 mỗi khối hoặc danh sách đầy đủ), tích hợp biểu tượng hạng (Vàng/Bạc/Đồng) và chỉ số xu hướng (Tăng/Giảm/Ổn định).
 - Theo dõi số lượng học sinh, doanh thu, lịch học hiện tại trong ngày.
 - Quản lý đồng bộ: **Năm học & Học kỳ** được áp dụng toàn cục (Global Context), thay đổi năm/học kỳ trên Dashboard sẽ tự động đồng bộ hoá dữ liệu lọc trên tất cả các trang quản lý khác.
 
@@ -21,6 +22,11 @@ Dự án bao gồm một hệ thống quản trị toàn diện, phân hệ rõ 
 
 ### 3. Quản lý Đào tạo & Vận hành
 - **Quản lý Lớp học (Classes):** Xây dựng phòng học, chia khối (Grade), gán giáo viên chủ nhiệm và sĩ số.
+- **Quản lý Thi đua (Competition Management):**
+  - **Trang tổng quan:** Hiển thị thẻ hiệu năng của từng lớp (Hạng, Điểm số, Xu hướng) với thanh tiến trình trực quan.
+  - **Chi tiết thi đua:** Nhật ký ghi nhận vi phạm/khen thưởng chi tiết cho từng lớp. Hỗ trợ CRUD (Thêm/Sửa/Xóa) bản ghi nề nếp.
+  - **Bộ chọn tuần (Calendar-style):** Giao diện lưới lịch học tuần trực quan, phân nhóm theo tháng và học kỳ.
+  - **Hệ thống tính điểm:** Tự động hóa việc trừ/cộng điểm dựa trên danh mục quy định (Chuyên cần, Tác phong, Học tập).
 - **Quản lý Bài Kiểm Tra (Quizzes):** Tạo, chỉnh sửa bài kiểm tra. Hỗ trợ hệ thống bộ lọc đa phân cấp (theo Khối, theo Môn học) rất trực quan và tiện dụng.
 - **Quản lý Thời Khóa Biểu (Timetable):** Giao diện lưới lịch học giúp admin và giáo viên dễ dàng xếp lịch, tự động phát hiện xung đột lịch giảng dạy (Conflict Checker).
 - **Quản lý Thanh Toán (Payments):** Theo dõi học phí, in hóa đơn và kiểm soát các giao dịch tài chính liên quan đến học viên.
@@ -74,4 +80,5 @@ npm run build
 ## Thiết kế UI/UX
 Dự án được chăm chút rất kỹ về mặt UI/UX để mang lại cảm giác thân thiện và "Premium":
 - Cấu trúc Header & Toolbar: Bộ chọn bộ lọc, công cụ tìm kiếm và các nút hành động (Tạo mới, Xóa) được tổ chức ngăn nắp, phản hồi tốt trên nhiều kích thước màn hình.
+- **Thiết kế Navy Admin Standard:** Sử dụng hệ màu Navy chuyên nghiệp, bo góc 20px, hiệu ứng đổ bóng mượt mà và các thành phần "Soft Dropdown" đồng nhất trên toàn hệ thống.
 - Trải nghiệm liền mạch nhờ Global Context kết nối mọi trang quản lý thông qua bối cảnh thời gian cụ thể (Năm học + Học kỳ).
