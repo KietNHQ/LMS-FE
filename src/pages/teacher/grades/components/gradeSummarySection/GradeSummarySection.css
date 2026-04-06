@@ -1,4 +1,104 @@
 .grade-summary-section {
-    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
 }
 
+.grade-summary-cards {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.grade-summary-card {
+    padding: 14px;
+    border-radius: 16px;
+    border: 1px solid #dbe4f5;
+    background: #f8fbff;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-height: 92px;
+    text-align: left;
+    width: 100%;
+}
+
+button.grade-summary-card {
+    font: inherit;
+    appearance: none;
+    outline: none;
+}
+
+.grade-summary-card.is-clickable {
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+}
+
+.grade-summary-card.is-clickable:hover {
+    border-color: #9ee3dc;
+    background: #f0fbfa;
+    transform: translateY(-1px);
+    box-shadow: 0 10px 18px rgba(4, 160, 148, 0.12);
+}
+
+.grade-summary-card.is-clickable:focus-visible {
+    border-color: #04a094;
+    box-shadow: 0 0 0 3px rgba(4, 160, 148, 0.16);
+}
+
+.grade-summary-card:disabled {
+    cursor: default;
+}
+
+.grade-summary-card span {
+    font-size: 12px;
+    font-weight: 700;
+    color: #6f7c91;
+}
+
+.grade-summary-card strong {
+    font-size: 24px;
+    line-height: 1.1;
+    font-weight: 900;
+    color: #16233b;
+}
+
+.grade-summary-card.is-detail strong {
+    font-size: 18px;
+    line-height: 1.35;
+    font-weight: 800;
+    word-break: break-word;
+}
+
+.grade-summary-card.tone-teacher strong,
+.grade-summary-card.tone-teacher span {
+    color: #04a094;
+}
+
+.grade-summary-card.tone-success strong,
+.grade-summary-card.tone-success span {
+    color: #16806a;
+}
+
+.grade-summary-card.tone-accent strong,
+.grade-summary-card.tone-accent span {
+    color: #4454c8;
+}
+
+.grade-summary-card.tone-danger strong,
+.grade-summary-card.tone-danger span {
+    color: #dc3f2f;
+}
+
+.grade-summary-card small {
+    margin-top: auto;
+    font-size: 11px;
+    font-weight: 700;
+    color: #7d8ea3;
+}
+
+@media (max-width: 900px) {
+    .grade-summary-cards {
+        grid-template-columns: 1fr;
+    }
+}
