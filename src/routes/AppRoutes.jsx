@@ -87,6 +87,9 @@ const TeacherSupport = lazy(() => import("../pages/teacher/support/TeacherSuppor
 const TeacherTeachingClasses = lazy(
   () => import("../pages/teacher/teachingClasses/TeacherTeachingClasses")
 );
+const TeacherTeachingClassDetail = lazy(
+  () => import("../pages/teacher/teachingClasses/TeacherTeachingClassDetail")
+);
 const TeacherNotifications = lazy(
   () => import("../pages/teacher/notifications/TeacherNotifications")
 );
@@ -157,6 +160,7 @@ export default function AppRoutes() {
         <Route index element={<Navigate to="dashboard" replace />} />
         <Route path="dashboard"        element={<TeacherDashboard />} />
         <Route path="teaching-classes" element={<TeacherTeachingClasses />} />
+        <Route path="teaching-classes/:classId" element={<TeacherTeachingClassDetail />} />
         <Route path="homeroom"         element={<TeacherHomeroom />} />
         <Route path="lessons"          element={<TeacherLessons />} />
         <Route path="grades"           element={<TeacherGrades />} />
