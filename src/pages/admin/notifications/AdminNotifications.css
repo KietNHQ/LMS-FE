@@ -1,15 +1,17 @@
 .admin-wrapper {
-  padding: 22px;
-  min-height: calc(100vh - 1rem);
+  padding: 0;
+  min-height: 0;
   background: transparent;
   font-family: var(--font-main), sans-serif;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
 }
 
 .admin-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 12px;
   gap: 12px;
 }
 
@@ -222,7 +224,7 @@
 
 @media (max-width: 900px) {
   .admin-wrapper {
-    padding: 16px 10px;
+    gap: 0.85rem;
   }
 
   .admin-header {

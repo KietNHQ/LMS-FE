@@ -40,6 +40,8 @@ const AdminNotifications = lazy(
 const AdminReports = lazy(() => import("../pages/admin/reports/AdminReports"));
 
 const AdminPayment = lazy(() => import("../pages/admin/payment/AdminPayment"));
+const AdminCompetition = lazy(() => import("../pages/admin/competition/AdminCompetition"));
+const AdminCompetitionDetail = lazy(() => import("../pages/admin/competition/AdminCompetitionDetail"));
 
 /* STUDENT PAGES */
 const StudentLayout = lazy(() => import("../layouts/student/StudentLayout"));
@@ -87,6 +89,9 @@ const TeacherSupport = lazy(() => import("../pages/teacher/support/TeacherSuppor
 const TeacherTeachingClasses = lazy(
   () => import("../pages/teacher/teachingClasses/TeacherTeachingClasses")
 );
+const TeacherTeachingClassDetail = lazy(
+  () => import("../pages/teacher/teachingClasses/TeacherTeachingClassDetail")
+);
 const TeacherNotifications = lazy(
   () => import("../pages/teacher/notifications/TeacherNotifications")
 );
@@ -132,6 +137,8 @@ export default function AppRoutes() {
         <Route path="quiz" element={<AdminQuiz />} />
         <Route path="quiz/create" element={<AdminCreateQuiz />} />
         <Route path="payment" element={<AdminPayment />} />
+        <Route path="competition" element={<AdminCompetition />} />
+        <Route path="competition/:classId" element={<AdminCompetitionDetail />} />
         <Route path="timetable" element={<AdminTimetable />} />
         <Route path="attendance" element={<Navigate to="/admin/classes" replace />} />
         <Route path="notifications" element={<AdminNotifications />} />
@@ -157,6 +164,7 @@ export default function AppRoutes() {
         <Route index element={<Navigate to="dashboard" replace />} />
         <Route path="dashboard"        element={<TeacherDashboard />} />
         <Route path="teaching-classes" element={<TeacherTeachingClasses />} />
+        <Route path="teaching-classes/:classId" element={<TeacherTeachingClassDetail />} />
         <Route path="homeroom"         element={<TeacherHomeroom />} />
         <Route path="lessons"          element={<TeacherLessons />} />
         <Route path="grades"           element={<TeacherGrades />} />

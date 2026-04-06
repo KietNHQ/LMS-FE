@@ -1,0 +1,150 @@
+.admin-competition-page {
+    padding: 0 2rem 1rem 2rem;
+    max-width: 1600px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    height: calc(100vh - 100px); /* Tries to fill the viewport */
+    gap: 1rem;
+}
+
+.competition-cards-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: repeat(2, 1fr);
+    gap: 1.5rem; /* Reduced gap to fit 3x2 */
+    margin-top: 2rem;
+    padding-top: 10px;
+    flex: 1; /* Allow grid to expand */
+}
+
+/* Card Interaction Refinements */
+.class-competition-card.clickable {
+    cursor: pointer;
+    /* Removed overflow: hidden to allow rank badge to show */
+    position: relative;
+    border-radius: 24px; /* Matches project standards */
+    background: white;
+    border: 1px solid #f1f5f9;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.card-overlay {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 1rem;
+    background: linear-gradient(to top, rgba(30, 41, 59, 1), rgba(30, 41, 59, 0.8));
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    font-size: 0.9rem;
+    font-weight: 700;
+    transform: translateY(100%);
+    transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 10;
+}
+
+.class-competition-card:hover .card-overlay {
+    transform: translateY(0);
+}
+
+.class-competition-card:hover {
+    border-color: #3b82f6;
+    transform: translateY(-8px);
+    box-shadow: 0 25px 50px -12px rgba(59, 130, 246, 0.25);
+}
+
+/* Standard Pagination (Navy/Blue Style) */
+.admin-competition-pagination-row {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid #edf1f7;
+}
+
+.admin-competition-pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 0.8rem;
+}
+
+.admin-competition-page-btn {
+    width: 3rem;
+    height: 3rem;
+    border: 1px solid #dbe4f5;
+    border-radius: 1rem;
+    background: #f5f8ff;
+    color: #3458c4;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 1.2rem;
+}
+
+.admin-competition-page-btn:hover:not(:disabled) {
+    background: #eaf1ff;
+    border-color: #9db9ff;
+    box-shadow: 0 10px 20px rgba(52, 88, 196, 0.15);
+    transform: translateY(-2px);
+}
+
+.admin-competition-page-btn:disabled {
+    background: #f3f5f9;
+    color: #a3adbb;
+    cursor: not-allowed;
+    border-color: #e2e8f0;
+}
+
+.admin-competition-page-indicator {
+    display: flex;
+    align-items: flex-end;
+    gap: 0.25rem;
+    min-width: 5rem;
+    justify-content: center;
+    margin: 0;
+}
+
+.admin-competition-page-indicator span {
+    font-size: 1.75rem;
+    font-weight: 850;
+    color: #3458c4;
+    line-height: 1;
+}
+
+.admin-competition-page-indicator small {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #8a97aa;
+    margin-bottom: 2px;
+}
+
+/* Config Button */
+.config-rules-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.65rem 1.25rem;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    color: #1e293b;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.config-rules-btn:hover {
+    background: #f1f5f9;
+    border-color: #cbd5e1;
+}

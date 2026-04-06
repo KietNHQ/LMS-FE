@@ -14,7 +14,8 @@ import {
     FiSettings,
     FiMessageSquare,
     FiTrendingUp,
-    FiCreditCard
+    FiCreditCard,
+    FiStar
 } from "react-icons/fi";
 import { LuUserCog } from "react-icons/lu";
 import { FaChalkboardTeacher } from "react-icons/fa";
@@ -52,6 +53,7 @@ export const sidebarConfig = {
         { label: "Học Sinh", icon: PiStudentBold, path: "/admin/students" },
         { label: "Phụ Huynh", icon: RiParentFill, path: "/admin/parents" },
         { label: "Lớp Học", icon: FiBookOpen, path: "/admin/classes" },
+        { label: "Điểm thi đua", icon: FiStar, path: "/admin/competition" },
         { label: "Bài Kiểm Tra", icon: FiFileText, path: "/admin/quiz" },
         { label: "Thanh Toán", icon: FiCreditCard, path: "/admin/payment" },
         { label: "Thời Khóa Biểu", icon: FiCalendar, path: "/admin/timetable" },
