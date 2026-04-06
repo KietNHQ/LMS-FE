@@ -143,9 +143,21 @@ const AdminDashboard = () => {
     setSelectedWeek((prevWeek) => Math.min(prevWeek + 1, maxWeek));
   };
 
-  // ===== DATA BAR CHART - Điểm thi đua theo lớp =====
-  const classLabels = ["10A1","10A2","10A3","12A1","11A2","11A1","12A1"];
-  const classScores = [8.2, 7.5, 7.8, 8.9, 8.1, 7.2, 6.8];
+  // ===== COMPETITION DATA - Điểm thi đua theo lớp =====
+  const competitionData = [
+    { id: 1, label: "10A1", score: 8.2 },
+    { id: 2, label: "10A2", score: 7.5 },
+    { id: 3, label: "10A3", score: 7.8 },
+    { id: 4, label: "10A4", score: 6.5 },
+    { id: 5, label: "10A5", score: 5.9 },
+    { id: 6, label: "11A1", score: 8.5 },
+    { id: 7, label: "11A2", score: 8.1 },
+    { id: 8, label: "11A3", score: 7.2 },
+    { id: 9, label: "11A4", score: 6.0 },
+    { id: 10, label: "12A1", score: 8.9 },
+    { id: 11, label: "12A2", score: 7.9 },
+    { id: 12, label: "12A3", score: 6.8 },
+  ];
 
   // ===== HỌC PHÍ THEO NĂM HỌC / HỌC KỲ / KHỐI =====
   const [tuitionByYearTerm, setTuitionByYearTerm] = useState(createInitialTuitionMap);
@@ -323,8 +335,7 @@ const AdminDashboard = () => {
             maxWeek={maxWeek}
             onPrevWeek={handlePrevWeek}
             onNextWeek={handleNextWeek}
-            classLabels={classLabels}
-            classScores={classScores}
+            competitionData={competitionData}
           />
         </div>
 

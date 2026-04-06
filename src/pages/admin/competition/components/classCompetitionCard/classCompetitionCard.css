@@ -1,0 +1,120 @@
+.class-competition-card {
+    background: white;
+    border-radius: 20px;
+    padding: 0; /* Removed padding */
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+    border: 1px solid #f1f5f9;
+    position: relative;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card-body-wrapper {
+    padding: 1.25rem 1.5rem; /* Balanced for 3-column grid */
+    overflow: hidden;
+    position: relative;
+    width: 100%;
+    height: 100%;
+    border-radius: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem; /* More compact for 2 rows */
+}
+.class-competition-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+}
+.card-rank {
+    position: absolute;
+    top: -12px;
+    left: 20px;
+    background: #1e293b;
+    color: white;
+    font-size: 0.8rem;
+    font-weight: 800;
+    padding: 0.35rem 1rem;
+    border-radius: 10px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+    white-space: nowrap;
+}
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-top: 0.5rem;
+}
+.class-name {
+    margin: 0;
+    font-size: 1.3rem; /* Optimized for 3 cols */
+    font-weight: 850;
+    color: #1e293b;
+    letter-spacing: -0.5px;
+}
+.teacher-name {
+    margin: 0.35rem 0 0 0;
+    font-size: 0.9rem; /* Bigger font */
+    font-weight: 600;
+    color: #64748b;
+}
+.trend-indicator {
+    font-size: 1.25rem;
+    display: flex;
+    align-items: center;
+}
+.card-main {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+.points-display {
+    display: flex;
+    align-items: baseline;
+    gap: 0.25rem;
+}
+.current-points {
+    font-size: 2.75rem; /* Still large but fits 3 cols better */
+    font-weight: 900;
+    color: #1e293b;
+    line-height: 1;
+}
+.max-points {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #94a3b8;
+}
+.progress-bar-container {
+    height: 12px; /* Thicker bar */
+    background: #f1f5f9;
+    border-radius: 6px;
+    overflow: hidden;
+}
+.progress-bar-fill {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 0.5s ease;
+}
+.card-footer {
+    margin-top: 0.5rem;
+}
+.adjust-btn {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.75rem;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+    background: #f8fafc;
+    color: #334155;
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+.adjust-btn:hover {
+    background: #f1f5f9;
+    border-color: #cbd5e1;
+    color: #1e293b;
+}

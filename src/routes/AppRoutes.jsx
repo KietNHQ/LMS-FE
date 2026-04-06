@@ -40,6 +40,8 @@ const AdminNotifications = lazy(
 const AdminReports = lazy(() => import("../pages/admin/reports/AdminReports"));
 
 const AdminPayment = lazy(() => import("../pages/admin/payment/AdminPayment"));
+const AdminCompetition = lazy(() => import("../pages/admin/competition/AdminCompetition"));
+const AdminCompetitionDetail = lazy(() => import("../pages/admin/competition/AdminCompetitionDetail"));
 
 /* STUDENT PAGES */
 const StudentLayout = lazy(() => import("../layouts/student/StudentLayout"));
@@ -132,6 +134,8 @@ export default function AppRoutes() {
         <Route path="quiz" element={<AdminQuiz />} />
         <Route path="quiz/create" element={<AdminCreateQuiz />} />
         <Route path="payment" element={<AdminPayment />} />
+        <Route path="competition" element={<AdminCompetition />} />
+        <Route path="competition/:classId" element={<AdminCompetitionDetail />} />
         <Route path="timetable" element={<AdminTimetable />} />
         <Route path="attendance" element={<Navigate to="/admin/classes" replace />} />
         <Route path="notifications" element={<AdminNotifications />} />

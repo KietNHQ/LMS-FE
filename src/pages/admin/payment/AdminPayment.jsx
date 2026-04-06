@@ -3,7 +3,6 @@ import { PageHeader, SchoolYearTermSelector } from "../../../components/common";
 import { useSchoolYearTerm } from "../../../hooks/useSchoolYearTerm";
 import PaymentActionsSection from "./components/paymentActionsSection";
 import TuitionFeeSection from "./components/tuitionFeeSection";
-import ClassFundSection from "./components/classFundSection";
 import TransferInfoSection from "./components/transferInfoSection";
 import SchoolExpenditureSection from "./components/schoolExpenditureSection";
 import "./AdminPayment.css";
@@ -41,17 +40,6 @@ const MOCK_TUITION = {
     }
 };
 
-const MOCK_CLASS_FUNDS = [
-    { className: "10A1", teacher: "Cô Hoa", totalCollected: 12000000, totalSpent: 4500000, studentContributions: [{ name: "Nguyễn Văn A", amount: 300000, isPaid: true }], expenditures: [{ desc: "Mua chậu hoa", amount: 500000, date: "15/09/2025" }] },
-    { className: "10A2", teacher: "Thầy Bình", totalCollected: 11000000, totalSpent: 3000000, studentContributions: [], expenditures: [] },
-    { className: "10A3", teacher: "Cô Cúc", totalCollected: 9000000, totalSpent: 1000000, studentContributions: [], expenditures: [] },
-    { className: "11B1", teacher: "Cô Đào", totalCollected: 15000000, totalSpent: 8000000, studentContributions: [], expenditures: [] },
-    { className: "11B2", teacher: "Thầy Hùng", totalCollected: 10000000, totalSpent: 2000000, studentContributions: [], expenditures: [] },
-    { className: "11B3", teacher: "Cô Lan", totalCollected: 12500000, totalSpent: 5000000, studentContributions: [], expenditures: [] },
-    { className: "12C1", teacher: "Thầy Minh", totalCollected: 20000000, totalSpent: 15000000, studentContributions: [], expenditures: [] },
-    { className: "12C2", teacher: "Cô Nguyệt", totalCollected: 18000000, totalSpent: 6000000, studentContributions: [], expenditures: [] },
-    { className: "12C3", teacher: "Thầy Phước", totalCollected: 14000000, totalSpent: 4000000, studentContributions: [], expenditures: [] }
-];
 
 const MOCK_SCHOOL_EXPENDITURE = [
     { id: "GD001", category: "Sửa chữa", description: "Bảo trì máy chiếu phòng học 201", date: "05/10/2025", personInCharge: "Nguyễn Văn Bảo Trì", amount: 1500000 },
@@ -74,13 +62,6 @@ const AdminPayment = () => {
     // State for Tabs
     const [activeTab, setActiveTab] = useState("tuition");
 
-    // Filter logic for Class Funds based on selectedGrade
-    const filteredClassFunds = useMemo(() => {
-        return MOCK_CLASS_FUNDS.filter(fund => {
-            const matchesGrade = selectedGrade === "Tất cả khối" || fund.className.startsWith(selectedGrade.replace("Khối ", ""));
-            return matchesGrade;
-        });
-    }, [selectedGrade]);
 
     // Filter logic for School Expenditure
     const filteredExpenditures = useMemo(() => {
@@ -128,12 +109,6 @@ const AdminPayment = () => {
                     Học Phí Các Khối
                 </button>
                 <button 
-                    className={`payment-tab-btn ${activeTab === 'funds' ? 'active' : ''}`}
-                    onClick={() => setActiveTab('funds')}
-                >
-                    Quỹ Lớp
-                </button>
-                <button 
                     className={`payment-tab-btn ${activeTab === 'expenditure' ? 'active' : ''}`}
                     onClick={() => setActiveTab('expenditure')}
                 >
@@ -156,9 +131,6 @@ const AdminPayment = () => {
                         selectedTerm={selectedTerm}
                         selectedSchoolYear={selectedSchoolYear}
                     />
-                )}
-                {activeTab === 'funds' && (
-                    <ClassFundSection classFundData={filteredClassFunds} />
                 )}
                 {activeTab === 'expenditure' && (
                     <SchoolExpenditureSection expenditureData={filteredExpenditures} />
