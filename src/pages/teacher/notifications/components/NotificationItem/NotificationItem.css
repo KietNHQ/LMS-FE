@@ -2,28 +2,28 @@
   width: 100%;
   min-width: 0;
   background: #ffffff;
-  border: 1px solid #e7edf8;
-  border-radius: 28px;
-  box-shadow: 0 8px 24px rgba(20, 28, 45, 0.04);
+  border: 1px solid #e4ebf8;
+  border-radius: 14px;
+  box-shadow: 0 8px 22px rgba(20, 28, 45, 0.04);
   transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
   cursor: pointer;
 }
 
 .teacher-notification-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 14px 28px rgba(4, 160, 148, 0.12);
+  transform: translateY(-1px);
+  box-shadow: 0 10px 22px rgba(4, 160, 148, 0.12);
   border-color: #9ee3dc;
 }
 
 .teacher-notification-card.is-unread {
-  border-left: 4px solid #04a094;
+  border-left: 4px solid var(--teacher-color, #4fd1c5);
 }
 
 .teacher-notification-body {
   display: flex;
   align-items: flex-start;
-  gap: 18px;
-  padding: 30px 34px;
+  gap: 14px;
+  padding: 16px;
   min-width: 0;
 }
 
@@ -31,13 +31,13 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 48px;
-  height: 48px;
-  flex: 0 0 48px;
-  border-radius: 14px;
-  background: #ffffff;
+  width: 40px;
+  height: 40px;
+  flex: 0 0 40px;
+  border-radius: 10px;
+  background: #f0fbfa;
   color: #04a094;
-  border: 1px solid #e4ebf8;
+  border: 1px solid #cdecea;
 }
 
 .teacher-notification-content {
@@ -48,17 +48,17 @@
 .teacher-notification-title {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
   flex-wrap: wrap;
   color: #1d2f56;
-  font-size: 22px;
+  font-size: 16px;
   font-weight: 800;
-  line-height: 1.4;
+  line-height: 1.35;
 }
 
 .teacher-notification-unread-dot {
-  width: 10px;
-  height: 10px;
+  width: 8px;
+  height: 8px;
   border-radius: 50%;
   display: inline-block;
   flex-shrink: 0;
@@ -70,10 +70,10 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-height: 34px;
-  padding: 6px 14px;
+  min-height: 28px;
+  padding: 4px 10px;
   border-radius: 999px;
-  font-size: 16px;
+  font-size: 12px;
   font-weight: 700;
   color: #ffffff;
   background: linear-gradient(135deg, #11c7b6, #04a094);
@@ -81,60 +81,60 @@
 }
 
 .teacher-notification-text {
-  margin: 14px 0 0;
+  margin: 6px 0 0;
   color: #5d6d86;
-  font-size: 18px;
-  line-height: 1.75;
+  font-size: 14px;
+  line-height: 1.5;
   word-break: break-word;
 }
 
 .teacher-notification-date {
-  margin-top: 14px;
-  font-size: 16px;
+  margin-top: 8px;
+  font-size: 12px;
   font-weight: 700;
-  color: #93a0b4;
+  color: #8a97aa;
 }
 
 @media (max-width: 992px) {
   .teacher-notification-body {
-    padding: 24px;
+    padding: 14px;
   }
 
   .teacher-notification-title {
-    font-size: 20px;
+    font-size: 15px;
   }
 
   .teacher-notification-text {
-    font-size: 17px;
+    font-size: 13px;
   }
 }
 
 @media (max-width: 768px) {
   .teacher-notification-card {
-    border-radius: 22px;
+    border-radius: 12px;
   }
 
   .teacher-notification-body {
-    padding: 18px;
-    gap: 14px;
+    padding: 12px;
+    gap: 12px;
   }
 
   .teacher-notification-icon {
-    width: 42px;
-    height: 42px;
-    flex-basis: 42px;
+    width: 38px;
+    height: 38px;
+    flex-basis: 38px;
   }
 
   .teacher-notification-title {
-    font-size: 18px;
+    font-size: 14px;
   }
 
   .teacher-notification-text {
-    font-size: 15px;
+    font-size: 13px;
   }
 
   .teacher-notification-date {
-    font-size: 14px;
+    font-size: 11px;
   }
 }
 
