@@ -1,7 +1,6 @@
-import React, { useState } from "react";
+import React from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import "./TeacherTeachingClasses.css";
-import ClassDetailSection from "./components/classDetailSection/ClassDetailSection";
 import ClassStudentsSection from "./components/classStudentsSection/ClassStudentsSection";
 import { teachingClassesData } from "./data/teachingClassesData";
 
@@ -9,7 +8,6 @@ const TeacherTeachingClassDetail = () => {
   const { classId } = useParams();
   const { state } = useLocation();
   const navigate = useNavigate();
-  const [activeSection, setActiveSection] = useState("students");
 
   const fallbackClass = teachingClassesData.find((item) => item.id === Number(classId));
   const classData = state?.classData || fallbackClass;
@@ -64,28 +62,7 @@ const TeacherTeachingClassDetail = () => {
         </div>
       </div>
 
-      <div className="class-detail-section-switch">
-        <button
-          type="button"
-          className={`section-switch-btn switch-students ${activeSection === "students" ? "active" : ""}`.trim()}
-          onClick={() => setActiveSection("students")}
-        >
-          Danh sách học sinh
-        </button>
-        <button
-          type="button"
-          className={`section-switch-btn switch-details ${activeSection === "details" ? "active" : ""}`.trim()}
-          onClick={() => setActiveSection("details")}
-        >
-          Đánh giá tiết học
-        </button>
-      </div>
-
-      {activeSection === "students" ? (
-        <ClassStudentsSection students={classData.students} />
-      ) : (
-        <ClassDetailSection classData={classData} />
-      )}
+      <ClassStudentsSection students={classData.students} />
     </div>
   );
 };
