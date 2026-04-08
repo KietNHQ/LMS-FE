@@ -5,7 +5,9 @@ import SectionCard from "../../../../../components/common/SectionCard/SectionCar
 import "./GradeListSection.css";
 
 function formatScore(value) {
-    return Number(value).toFixed(1);
+    const numericValue = Number(value);
+    if (!Number.isFinite(numericValue)) return "-";
+    return numericValue.toFixed(1);
 }
 
 const RANK_LABELS = {

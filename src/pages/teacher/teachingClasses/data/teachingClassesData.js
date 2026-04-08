@@ -13,7 +13,7 @@ const parentNames = [
   "Vũ Thị F", "Đặng Văn G", "Bùi Thị H", "Đinh Văn I", "Tạ Thị K",
 ];
 
-function generateStudent(id) {
+function generateStudent(id, className, teacher) {
   const firstName = vietnameseFirstNames[Math.floor(Math.random() * vietnameseFirstNames.length)];
   const lastName = vietnameseLastNames[Math.floor(Math.random() * vietnameseLastNames.length)];
   const name = `${lastName} ${firstName}`;
@@ -29,13 +29,29 @@ function generateStudent(id) {
   const randomNumber = String(Math.floor(Math.random() * 9000000) + 1000000);
   const parentPhone = randomArea + randomNumber;
 
+  // Generate email
+  const firstNameInitial = firstName.charAt(0).toLowerCase();
+  const lastNameInitial = lastName.charAt(0).toLowerCase();
+  const email = `${firstName.toLowerCase()}.${lastNameInitial}@student.edu.vn`;
+
   const enrollmentDate = "2024-09-01";
   const tuitionPaid = Math.random() > 0.3;
+
+  const genders = ["Nam", "Nữ"];
+  const gender = genders[Math.floor(Math.random() * genders.length)];
+
+  const statuses = ["Đang học", "Đình chỉ", "Bảo lưu", "Đã tốt nghiệp"];
+  const status = statuses[Math.floor(Math.random() * statuses.length)];
 
   return {
     id,
     name,
     dob,
+    email,
+    gender,
+    className,
+    teacher,
+    status,
     parentName,
     parentPhone,
     enrollmentDate,
@@ -43,8 +59,8 @@ function generateStudent(id) {
   };
 }
 
-function generateStudentsForClass(count) {
-  return Array.from({ length: count }, (_, i) => generateStudent(i + 1));
+function generateStudentsForClass(count, className, teacher) {
+  return Array.from({ length: count }, (_, i) => generateStudent(i + 1, className, teacher));
 }
 
 export const teachingClassesData = [
@@ -58,7 +74,7 @@ export const teachingClassesData = [
     status: "Đang hoạt động",
     teacher: "Thầy Nguyễn Văn Hùng",
     paidStudents: 17,
-    students: generateStudentsForClass(20),
+    students: generateStudentsForClass(20, "10A1", "Thầy Nguyễn Văn Hùng"),
   },
   {
     id: 2,
@@ -70,7 +86,7 @@ export const teachingClassesData = [
     status: "Đã hoàn thành",
     teacher: "Cô Trần Thị Linh",
     paidStudents: 15,
-    students: generateStudentsForClass(15),
+    students: generateStudentsForClass(15, "11A2", "Cô Trần Thị Linh"),
   },
   {
     id: 3,
@@ -82,7 +98,7 @@ export const teachingClassesData = [
     status: "Đang hoạt động",
     teacher: "Thầy Lê Minh Tuấn",
     paidStudents: 14,
-    students: generateStudentsForClass(18),
+    students: generateStudentsForClass(18, "12A1", "Thầy Lê Minh Tuấn"),
   },
   {
     id: 4,
@@ -94,7 +110,7 @@ export const teachingClassesData = [
     status: "Đang hoạt động",
     teacher: "Cô Hoàng Thị Hoa",
     paidStudents: 16,
-    students: generateStudentsForClass(21),
+    students: generateStudentsForClass(21, "10A2", "Cô Hoàng Thị Hoa"),
   },
   {
     id: 5,
@@ -106,7 +122,7 @@ export const teachingClassesData = [
     status: "Đã hoàn thành",
     teacher: "Thầy Phạm Hùng Dũng",
     paidStudents: 19,
-    students: generateStudentsForClass(22),
+    students: generateStudentsForClass(22, "10A3", "Thầy Phạm Hùng Dũng"),
   },
   {
     id: 6,
@@ -118,7 +134,7 @@ export const teachingClassesData = [
     status: "Đang hoạt động",
     teacher: "Cô Bùi Thị Hương",
     paidStudents: 20,
-    students: generateStudentsForClass(23),
+    students: generateStudentsForClass(23, "11A1", "Cô Bùi Thị Hương"),
   },
   {
     id: 7,
@@ -130,7 +146,7 @@ export const teachingClassesData = [
     status: "Đang hoạt động",
     teacher: "Thầy Đặng Quốc Tiến",
     paidStudents: 12,
-    students: generateStudentsForClass(17),
+    students: generateStudentsForClass(17, "11A3", "Thầy Đặng Quốc Tiến"),
   },
   {
     id: 8,
@@ -142,7 +158,7 @@ export const teachingClassesData = [
     status: "Đã hoàn thành",
     teacher: "Cô Vũ Thị Minh",
     paidStudents: 18,
-    students: generateStudentsForClass(20),
+    students: generateStudentsForClass(20, "12A2", "Cô Vũ Thị Minh"),
   },
   {
     id: 9,
@@ -154,7 +170,7 @@ export const teachingClassesData = [
     status: "Đang hoạt động",
     teacher: "Thầy Đinh Hải Long",
     paidStudents: 13,
-    students: generateStudentsForClass(19),
+    students: generateStudentsForClass(19, "12A3", "Thầy Đinh Hải Long"),
   },
   {
     id: 10,
@@ -166,7 +182,7 @@ export const teachingClassesData = [
     status: "Đang hoạt động",
     teacher: "Cô Nguyễn Thị Thanh",
     paidStudents: 20,
-    students: generateStudentsForClass(24),
+    students: generateStudentsForClass(24, "10A4", "Cô Nguyễn Thị Thanh"),
   },
   {
     id: 11,
@@ -178,7 +194,7 @@ export const teachingClassesData = [
     status: "Đang hoạt động",
     teacher: "Thầy Trần Văn Khắc",
     paidStudents: 15,
-    students: generateStudentsForClass(20),
+    students: generateStudentsForClass(20, "10A5", "Thầy Trần Văn Khắc"),
   },
   {
     id: 12,
@@ -190,7 +206,7 @@ export const teachingClassesData = [
     status: "Đang hoạt động",
     teacher: "Cô Phạm Thị Hà",
     paidStudents: 18,
-    students: generateStudentsForClass(21),
+    students: generateStudentsForClass(21, "11A4", "Cô Phạm Thị Hà"),
   },
   {
     id: 13,
@@ -202,6 +218,6 @@ export const teachingClassesData = [
     status: "Đã hoàn thành",
     teacher: "Thầy Hồ Văn Minh",
     paidStudents: 17,
-    students: generateStudentsForClass(19),
+    students: generateStudentsForClass(19, "11A5", "Thầy Hồ Văn Minh"),
   },
 ];

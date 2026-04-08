@@ -1,4 +1,225 @@
 .homeroom-attendance-section {
-    padding: 1rem;
+  --text-primary: #111827;
+  --text-secondary: #6b7280;
+  --bg-surface-secondary: #f9fafb;
+  --border-color: #e5e7eb;
+  --color-teacher: #00897b;
+  background: white;
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+  border: 1px solid var(--border-color, #e5e7eb);
 }
 
+.attendance-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.attendance-header h2 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text-primary, #111827);
+}
+
+.date-picker-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border: 1px solid var(--border-color, #e5e7eb);
+  border-radius: 8px;
+  background-color: var(--bg-surface-secondary, #f9fafb);
+}
+
+.date-icon {
+  color: var(--text-secondary, #6b7280);
+}
+
+.attendance-date-picker {
+  border: none;
+  background: transparent;
+  font-size: 14px;
+  color: var(--text-primary, #111827);
+  outline: none;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.attendance-stats {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.attendance-stat-card {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px;
+  border-radius: 12px;
+  background-color: var(--bg-surface-secondary, #f9fafb);
+}
+
+.attendance-stat-card.present .stat-icon {
+  color: #059669;
+  background-color: #d1fae5;
+}
+
+.attendance-stat-card.absent .stat-icon {
+  color: #dc2626;
+  background-color: #fee2e2;
+}
+
+.attendance-stat-card.late .stat-icon {
+  color: #d97706;
+  background-color: #fef3c7;
+}
+
+.attendance-stat-card .stat-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+}
+
+.attendance-stat-card .stat-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.attendance-stat-card .stat-label {
+  font-size: 13px;
+  color: var(--text-secondary, #6b7280);
+  font-weight: 500;
+}
+
+.attendance-stat-card .stat-value {
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--text-primary, #111827);
+}
+
+/* Table styles overriding and matching the app theme */
+.attendance-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.attendance-table th {
+  text-align: left;
+  padding: 12px 16px;
+  font-size: 12px;
+  text-transform: uppercase;
+  color: var(--text-secondary, #6b7280);
+  border-bottom: 1px solid var(--border-color, #e5e7eb);
+  background-color: var(--bg-surface-secondary, #f9fafb);
+}
+
+.attendance-table td {
+  padding: 16px;
+  border-bottom: 1px solid var(--border-color, #e5e7eb);
+  color: var(--text-primary, #111827);
+  font-size: 14px;
+}
+
+.student-main-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.status-pill.present {
+  background-color: #d1fae5;
+  color: #059669;
+}
+
+.status-pill.absent {
+  background-color: #fee2e2;
+  color: #dc2626;
+}
+
+.status-pill.late {
+  background-color: #fef3c7;
+  color: #d97706;
+}
+
+.note-cell {
+  color: var(--text-secondary, #6b7280);
+  font-style: italic;
+}
+
+.attendance-status-select,
+.attendance-note-input {
+  width: 100%;
+  min-height: 34px;
+  border: 1px solid var(--border-color, #d1d5db);
+  border-radius: 8px;
+  padding: 0 10px;
+  font-size: 13px;
+  color: var(--text-primary, #111827);
+  background: #ffffff;
+}
+
+.attendance-note-input {
+  min-width: 180px;
+}
+
+.attendance-row-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.edit-btn {
+  background: transparent;
+  border: 1px solid var(--color-teacher, #00897b);
+  color: var(--color-teacher, #00897b);
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.edit-btn:hover {
+  background-color: var(--color-teacher, #00897b);
+  color: white;
+}
+
+.edit-btn.save-btn {
+  background-color: var(--color-teacher, #00897b);
+  color: #ffffff;
+}
+
+.edit-btn.save-btn:hover {
+  background-color: #0b7f74;
+  border-color: #0b7f74;
+}
+
+.edit-btn.cancel-btn {
+  border-color: #d1d5db;
+  color: #6b7280;
+}
+
+.edit-btn.cancel-btn:hover {
+  background-color: #f3f4f6;
+  color: #4b5563;
+}
