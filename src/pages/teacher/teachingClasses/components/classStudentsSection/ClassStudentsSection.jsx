@@ -483,7 +483,7 @@ const ClassStudentsSection = ({ students }) => {
   return (
     <div className="students-card">
       <div className="students-card-header">
-        <h2 className="students-card-title">Danh sách học sinh</h2>
+        <h2 className="students-card-title">Danh sách & đánh giá</h2>
         <div className="class-detail-search-box">
           <FiSearch className="class-detail-search-icon" />
           <input
