@@ -179,6 +179,7 @@ export default function AdminQuiz() {
                     subject: quiz.subject,
                     grade: quiz.grade,
                     duration: `${quiz.duration} phút`,
+                    examFormat: quiz.examFormat || "Trắc nghiệm",
                     createdByRole: quiz.createdByRole || "admin",
                     createdByName: quiz.createdByName || "Quản trị viên",
                 },
@@ -206,6 +207,8 @@ export default function AdminQuiz() {
                         title: quizMeta.title,
                         subject: quizMeta.subject,
                         grade: quizMeta.grade,
+                        duration: quizMeta.duration?.replace(/\D/g, "") || quiz.duration,
+                        examFormat: quizMeta.examFormat,
                         createdByRole: quizMeta.createdByRole,
                         createdByName:
                             quizMeta.createdByRole === "teacher"
@@ -312,6 +315,8 @@ export default function AdminQuiz() {
                     title: editingQuiz.title,
                     subject: editingQuiz.subject,
                     grade: editingQuiz.grade,
+                    duration: `${editingQuiz.duration} phút`,
+                    examFormat: editingQuiz.examFormat || "Trắc nghiệm",
                     createdByRole: editingQuiz.createdByRole || "admin",
                     createdByName: editingQuiz.createdByName || "",
                 } : undefined}

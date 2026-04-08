@@ -17,6 +17,13 @@
     min-height: 0;
 }
 
+.create-quiz-dialog__row {
+    display: grid;
+    grid-template-columns: 1fr 120px;
+    gap: 16px;
+    align-items: flex-end;
+}
+
 .create-quiz-dialog__field {
     display: flex;
     flex-direction: column;
