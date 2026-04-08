@@ -38,6 +38,9 @@ const AdminNotifications = lazy(
   () => import("../pages/admin/notifications/AdminNotifications")
 );
 const AdminReports = lazy(() => import("../pages/admin/reports/AdminReports"));
+const AdminQuizSubmissions = lazy(
+    () => import("../pages/admin/quiz/submissions/AdminQuizSubmissions")
+);
 
 const AdminPayment = lazy(() => import("../pages/admin/payment/AdminPayment"));
 const AdminCompetition = lazy(() => import("../pages/admin/competition/AdminCompetition"));
@@ -89,6 +92,9 @@ const TeacherSupport = lazy(() => import("../pages/teacher/support/TeacherSuppor
 const TeacherTeachingClasses = lazy(
   () => import("../pages/teacher/teachingClasses/TeacherTeachingClasses")
 );
+const TeacherQuizSubmissions = lazy(
+    () => import("../pages/teacher/quiz/submissions/TeacherQuizSubmissions")
+);
 const TeacherTeachingClassDetail = lazy(
   () => import("../pages/teacher/teachingClasses/TeacherTeachingClassDetail")
 );
@@ -136,6 +142,7 @@ export default function AppRoutes() {
         <Route path="classes/:classId" element={<ClassDetailSection />} />
         <Route path="quiz" element={<AdminQuiz />} />
         <Route path="quiz/create" element={<AdminCreateQuiz />} />
+        <Route path="quiz/:quizId/submissions" element={<AdminQuizSubmissions />} />
         <Route path="payment" element={<AdminPayment />} />
         <Route path="competition" element={<AdminCompetition />} />
         <Route path="competition/:classId" element={<AdminCompetitionDetail />} />
@@ -170,6 +177,7 @@ export default function AppRoutes() {
         <Route path="grades"           element={<TeacherGrades />} />
         <Route path="quiz"             element={<TeacherQuiz />} />
         <Route path="quiz/create"      element={<TeacherCreateQuiz />} />
+        <Route path="quiz/:quizId/submissions" element={<TeacherQuizSubmissions />} />
         <Route path="schedule"         element={<TeacherSchedule />} />
         <Route path="request"          element={<TeacherRequest />} />
         <Route path="notifications"    element={<TeacherNotifications />} />

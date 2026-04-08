@@ -40,7 +40,7 @@
 
 .teacher-create-quiz__back-btn,
 .teacher-create-quiz__cancel-btn {
-    border: 1px solid #b8e8e2;
+    border: 1px solid #cfd6e6;
     background: #ffffff;
     color: #374151;
     border-radius: 999px;
@@ -57,10 +57,10 @@
 
 .teacher-create-quiz__back-btn:hover,
 .teacher-create-quiz__cancel-btn:hover {
-    border-color: #7ed4c8;
-    background: #f0faf8;
+    border-color: #8fa3d6;
+    background: #f6f8ff;
     transform: translateY(-0.0625rem);
-    box-shadow: 0 0.5rem 1rem rgba(79, 209, 197, 0.15);
+    box-shadow: 0 0.5rem 1rem rgba(47, 87, 184, 0.12);
 }
 
 .teacher-create-quiz__template-btn,
@@ -79,16 +79,16 @@
 }
 
 .teacher-create-quiz__template-btn {
-    border: 1px solid #b8e8e2;
+    border: 1px solid #cfd6e6;
     background: #ffffff;
     color: #374151;
 }
 
 .teacher-create-quiz__template-btn:hover {
-    border-color: #7ed4c8;
-    background: #f0faf8;
+    border-color: #8fa3d6;
+    background: #f6f8ff;
     transform: translateY(-0.0625rem);
-    box-shadow: 0 0.5rem 1rem rgba(79, 209, 197, 0.15);
+    box-shadow: 0 0.5rem 1rem rgba(47, 87, 184, 0.12);
 }
 
 .teacher-create-quiz__upload-btn {

@@ -1,0 +1,103 @@
+.ui-tooltip-wrapper {
+  position: relative;
+  display: inline-flex;
+  vertical-align: middle;
+}
+
+.ui-tooltip {
+  position: absolute;
+  padding: 8px 12px;
+  background: rgba(15, 23, 42, 0.95); /* Slate 900 with opacity */
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  border-radius: 8px;
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 1000;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(6px); /* Glassmorphism */
+  animation: tooltip-fade-in 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Tooltip Arrow */
+.ui-tooltip::after {
+  content: "";
+  position: absolute;
+  border-width: 5px;
+  border-style: solid;
+}
+
+/* Position: Top */
+.ui-tooltip--top {
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%) translateY(-10px);
+}
+.ui-tooltip--top::after {
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border-color: rgba(15, 23, 42, 0.95) transparent transparent transparent;
+}
+
+/* Position: Bottom */
+.ui-tooltip--bottom {
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%) translateY(10px);
+}
+.ui-tooltip--bottom::after {
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border-color: transparent transparent rgba(15, 23, 42, 0.95) transparent;
+}
+
+/* Position: Left */
+.ui-tooltip--left {
+  right: 100%;
+  top: 50%;
+  transform: translateY(-50%) translateX(-10px);
+}
+.ui-tooltip--left::after {
+  left: 100%;
+  top: 50%;
+  transform: translateY(-50%);
+  border-color: transparent transparent transparent rgba(15, 23, 42, 0.95);
+}
+
+/* Position: Right */
+.ui-tooltip--right {
+  left: 100%;
+  top: 50%;
+  transform: translateY(-50%) translateX(10px);
+}
+.ui-tooltip--right::after {
+  right: 100%;
+  top: 50%;
+  transform: translateY(-50%);
+  border-color: transparent rgba(15, 23, 42, 0.95) transparent transparent;
+}
+
+@keyframes tooltip-fade-in {
+  from {
+    opacity: 0;
+    transform: translate(var(--tw-translate-x), var(--tw-translate-y)) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translate(var(--tw-translate-x), var(--tw-translate-y)) scale(1);
+  }
+}
+
+/* For browsers that don't support custom properties well in animations, 
+   we simplify the transform but keep the logic in the CSS. */
+@keyframes tooltip-fade-in {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}

@@ -1,13 +1,15 @@
 import React, { useState } from "react";
 import { Modal, Select } from "../../../../../components/ui";
+import { parseDurationMinutes } from "../../../../../services/shared/quiz/quizService";
 import "./CreateQuizDialog.css";
 
 const defaultForm = {
     title: "",
     subject: "",
     grade: "",
-    duration: "",
+    duration: "45",
     examFormat: "Trắc nghiệm",
+    examType: "Thường xuyên",
     createdByRole: "admin",
     createdByName: "",
 };
@@ -28,6 +30,7 @@ const subjectOptions = [
 ];
 
 const formatOptions = ["Trắc nghiệm", "Tự luận", "Trắc nghiệm và tự luận"];
+const examTypeOptions = ["Thường xuyên", "Giữa kỳ", "Cuối kỳ"];
 
 export default function CreateQuizDialog({
     open,
@@ -41,8 +44,9 @@ export default function CreateQuizDialog({
         title: initialValues?.title || defaultForm.title,
         subject: initialValues?.subject || defaultForm.subject,
         grade: initialValues?.grade || defaultForm.grade,
-        duration: initialValues?.duration?.replace(/\D/g, "") || defaultForm.duration,
+        duration: String(parseDurationMinutes(initialValues?.duration || defaultForm.duration)),
         examFormat: initialValues?.examFormat || defaultForm.examFormat,
+        examType: initialValues?.examType || defaultForm.examType,
         createdByRole: initialValues?.createdByRole || defaultForm.createdByRole,
         createdByName:
             initialValues?.createdByRole === "teacher"
@@ -51,24 +55,7 @@ export default function CreateQuizDialog({
     }));
 
     const handleChange = (key, value) => {
-        setFormData((prev) => {
-            const next = { ...prev, [key]: value };
-
-            if (key === "subject") {
-                if (value === "Ngữ văn") {
-                    next.duration = "120";
-                    next.examFormat = "Tự luận";
-                } else if (value === "Toán") {
-                    next.duration = "90";
-                    next.examFormat = "Trắc nghiệm";
-                } else if (value) {
-                    next.duration = "50";
-                    next.examFormat = "Trắc nghiệm";
-                }
-            }
-
-            return next;
-        });
+        setFormData((prev) => ({ ...prev, [key]: value }));
     };
 
     const handleSubmit = () => {
@@ -78,12 +65,13 @@ export default function CreateQuizDialog({
             grade: formData.grade.trim(),
             duration: formData.duration ? `${formData.duration} phút` : "",
             examFormat: formData.examFormat,
+            examType: formData.examType,
             createdByRole: formData.createdByRole,
             createdByName: "Quản trị viên",
         };
 
-        if (!payload.title || !payload.subject || !payload.grade || !formData.duration) {
-            alert("Vui lòng điền đầy đủ tên bài kiểm tra, môn học, thời gian và khối.");
+        if (!payload.title || !payload.subject || !payload.grade || !formData.duration || !payload.examType) {
+            alert("Vui lòng điền đầy đủ tên bài kiểm tra, môn học, thời gian, khối và loại bài kiểm tra.");
             return;
         }
 
@@ -166,6 +154,19 @@ export default function CreateQuizDialog({
                     />
                 </div>
 
+                <div className="create-quiz-dialog__field">
+                    <Select
+                        label="Loại bài kiểm tra"
+                        variant="custom"
+                        className="create-quiz-dialog__select"
+                        id="admin-quiz-exam-type"
+                        name="admin-quiz-exam-type"
+                        options={examTypeOptions}
+                        value={formData.examType}
+                        onChange={(event) => handleChange("examType", event.target.value)}
+                    />
+                </div>
+
                 <div className="create-quiz-dialog__actions">
                     <button type="button" className="create-quiz-dialog__cancel" onClick={onClose}>
                         Hủy
@@ -178,5 +179,4 @@ export default function CreateQuizDialog({
         </Modal>
     );
 }
-
 

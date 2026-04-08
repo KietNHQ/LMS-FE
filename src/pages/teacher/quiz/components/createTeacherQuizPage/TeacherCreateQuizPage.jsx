@@ -6,6 +6,11 @@ import CreateEditQuizSection from "../../components/createEditQuizSection/Create
 import AssignQuizSection from "../../components/assignQuizSection/AssignQuizSection";
 import QuizListSection from "../../components/quizListSection/QuizListSection";
 import CreateTeacherQuizDialog from "../createTeacherQuizDialog/CreateTeacherQuizDialog";
+import {
+    DEFAULT_QUIZ_DURATION_LABEL,
+    formatDurationLabel,
+    parseDurationMinutes,
+} from "../../../../../services/shared/quiz/quizService";
 import "./TeacherCreateQuizPage.css";
 
 const MAX_QUESTION_SCORE = 10;
@@ -29,8 +34,9 @@ const createQuizFromMeta = (meta = {}) => ({
     id: Date.now(),
     title: meta.title || "Bài kiểm tra mới",
     subject: meta.subject || "",
-    className: meta.grade || "",
-    duration: meta.duration || "45 phút",
+    grade: meta.grade || "",
+    className: meta.className || "",
+    duration: formatDurationLabel(meta.duration || DEFAULT_QUIZ_DURATION_LABEL),
     createdByRole: meta.createdByRole || "teacher",
     createdByName: meta.createdByName || "",
     questions: [],
@@ -44,19 +50,16 @@ const getQuestionScoreValue = (score) => {
 const getTotalScore = (questions = []) =>
     questions.reduce((sum, item) => sum + getQuestionScoreValue(item.score), 0);
 
-const parseDurationMinutes = (durationValue) => {
-    const matched = String(durationValue || "").match(/\d+/);
-    return matched ? Number(matched[0]) : 45;
-};
-
 const buildQuizCardPayload = (quizData, quizCardId) => ({
     id: quizCardId || Date.now(),
     title: quizData.title,
-    description: `Bài kiểm tra ${quizData.subject || ""}`.trim(),
+    description: `Bài kiểm tra ${quizData.subject || ""} cho lớp ${quizData.className || ""}`.trim(),
     subject: quizData.subject || "",
-    grade: quizData.className || "",
+    grade: quizData.grade || "",
+    className: quizData.className || "",
     questions: quizData.questions.length,
     duration: parseDurationMinutes(quizData.duration),
+    durationLabel: formatDurationLabel(quizData.duration),
     status: "open",
     createdAt: new Date().toISOString().slice(0, 10),
     createdByRole: quizData.createdByRole || "teacher",
@@ -207,10 +210,8 @@ export default function TeacherCreateQuizPage() {
             return false;
         }
 
-        if (!quiz.questions.length) {
-            alert("Vui lòng thêm ít nhất 1 câu hỏi trước khi lưu.");
-            return false;
-        }
+        // No longer mandatory to have at least 1 question before saving, 
+        // allowing the user to go back even with an empty draft (matching Admin behavior).
 
         return true;
     };
@@ -404,7 +405,9 @@ export default function TeacherCreateQuizPage() {
             ...prev,
             title: quizMeta.title,
             subject: quizMeta.subject,
-            className: quizMeta.grade,
+            grade: quizMeta.grade,
+            className: quizMeta.className,
+            duration: formatDurationLabel(quizMeta.duration),
             createdByRole: quizMeta.createdByRole || "teacher",
             createdByName:
                 quizMeta.createdByRole === "teacher"

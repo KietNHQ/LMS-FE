@@ -1,0 +1,528 @@
+.admin-quiz-subs {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    background: #f8fafc;
+    color: #1e293b;
+    overflow: hidden;
+}
+
+/* Header */
+.admin-quiz-subs__header {
+    background: #ffffff;
+    border-bottom: 1px solid #e2e8f0;
+    padding: 1rem 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    z-index: 10;
+}
+
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+}
+
+.admin-quiz-subs__header .back-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: #ffffff;
+    border: 1.5px solid #1e293b;
+    color: #1e293b;
+    padding: 0.5rem 1rem;
+    border-radius: 999px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.admin-quiz-subs__header .back-btn:hover {
+    background: #f1f5f9;
+    transform: translateX(-4px);
+}
+
+.title-section h1 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin: 0;
+    color: #1e293b;
+}
+
+.quiz-tag {
+    font-size: 0.85rem;
+    color: #64748b;
+    font-weight: 500;
+}
+
+/* Layout */
+.admin-quiz-subs__layout {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+}
+
+/* Student Sidebar */
+.student-sidebar {
+    width: 320px;
+    background: #ffffff;
+    border-right: 1px solid #e2e8f0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.sidebar-header {
+    padding: 1.25rem;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.search-box {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    background: #f1f5f9;
+    padding: 0.75rem 1rem;
+    border-radius: 12px;
+    margin-bottom: 1rem;
+}
+
+.search-box input {
+    background: transparent;
+    border: none;
+    outline: none;
+    font-size: 0.9rem;
+    width: 100%;
+    color: #1e293b;
+}
+
+.filter-chips {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.filter-chips button {
+    flex: 1;
+    padding: 0.4rem;
+    font-size: 0.8rem;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+    background: #ffffff;
+    color: #64748b;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.filter-chips button.active {
+    background: #1e293b;
+    color: #ffffff;
+    border-color: #1e293b;
+}
+
+.student-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0.5rem;
+}
+
+.student-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.85rem 1rem;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-bottom: 0.25rem;
+}
+
+.student-item:hover {
+    background: #f8fafc;
+}
+
+.student-item.selected {
+    background: #ebf3ff;
+    border: 1px solid #9fb6ef;
+}
+
+.student-avatar {
+    width: 40px;
+    height: 40px;
+    background: #e2e8f0;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #64748b;
+}
+
+.student-meta {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    min-width: 0;
+}
+
+.student-name {
+    font-weight: 700;
+    color: #1e293b;
+    font-size: 0.95rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: block;
+}
+
+.student-status-right {
+    display: grid;
+    grid-template-columns: 1fr 24px;
+    align-items: center;
+    gap: 0.5rem;
+    flex-shrink: 0;
+    width: 85px;
+}
+
+.student-class-badge {
+    font-size: 0.65rem;
+    padding: 0.15rem 0.45rem;
+    background: #ebf3ff;
+    color: #2f57b8;
+    border: 1px solid #d8dfef;
+    border-radius: 4px;
+    font-weight: 800;
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    justify-self: end;
+    min-width: 44px;
+}
+
+.status-text {
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+.status-text.graded { color: #10b981; }
+.status-text.pending { color: #f59e0b; }
+.status-text.not-submitted { color: #94a3b8; }
+
+.graded-icon {
+    color: #10b981;
+    font-size: 1.15rem;
+    grid-column: 2;
+    justify-self: center;
+}
+
+/* Main Content */
+.submission-detail {
+    flex: 1;
+    overflow-y: auto;
+    background: #ffffff;
+}
+
+.empty-state {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: #94a3b8;
+    text-align: center;
+    padding: 2rem;
+}
+
+.empty-state h2 {
+    color: #64748b;
+    margin: 1rem 0 0.5rem;
+}
+
+.detail-content {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+.student-summary-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 2rem;
+    border-bottom: 1.5px dashed #e2e8f0;
+    margin-bottom: 2rem;
+}
+
+.summary-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.summary-name-row {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+}
+
+.class-indicator {
+    background: #1e293b;
+    color: #ffffff !important;
+    padding: 0.2rem 0.6rem;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    font-weight: 800;
+}
+
+.summary-info h2 {
+    font-size: 1.35rem;
+    font-weight: 800;
+    color: #0f172a;
+    margin: 0;
+    line-height: 1.2;
+}
+
+.summary-info span {
+    color: #64748b;
+    font-size: 0.9rem;
+}
+
+.score-summary {
+    display: flex;
+    gap: 1rem;
+}
+
+.score-box {
+    background: #f8fafc;
+    padding: 0.75rem 1.25rem;
+    border-radius: 14px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    border: 1px solid #e2e8f0;
+}
+
+.score-box label {
+    font-size: 0.75rem;
+    color: #64748b;
+    text-transform: uppercase;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+}
+
+.score-box strong {
+    font-size: 1.25rem;
+    color: #1e293b;
+}
+
+.score-box.total {
+    background: #1e293b;
+    border-color: #1e293b;
+    color: #ffffff;
+}
+
+.score-box.total label {
+    color: #ffffff;
+    opacity: 0.9;
+}
+
+.score-box.total strong {
+    color: #ffffff;
+    font-size: 1.5rem;
+}
+
+/* Questions */
+.review-question-item {
+    margin-bottom: 2.5rem;
+    padding-bottom: 2rem;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.question-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.q-number {
+    background: #f1f5f9;
+    color: #475569;
+    font-weight: 700;
+    padding: 0.25rem 0.75rem;
+    border-radius: 8px;
+    font-size: 0.9rem;
+}
+
+.q-text {
+    flex: 1;
+    font-size: 1.1rem;
+    font-weight: 600;
+    line-height: 1.5;
+    margin: 0;
+}
+
+.q-type-badge {
+    font-size: 0.7rem;
+    padding: 0.2rem 0.6rem;
+    border-radius: 999px;
+    text-transform: uppercase;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.q-type-badge.multiple-choice { background: #ecfdf5; color: #059669; }
+.q-type-badge.essay { background: #ebf3ff; color: #2f57b8; }
+
+/* MCQ Review */
+.options-review {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+    padding-left: 3.5rem;
+}
+
+.review-option {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.75rem 1rem;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+    background: #ffffff;
+    font-size: 0.95rem;
+}
+
+.opt-label {
+    width: 24px;
+    height: 24px;
+    background: #ebf3ff;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 0.8rem;
+    color: #2f57b8;
+}
+
+.review-option.selected-correct {
+    border-color: #10b981;
+    background: #f0fdf4;
+    color: #065f46;
+}
+
+.review-option.selected-wrong {
+    border-color: #ef4444;
+    background: #fef2f2;
+    color: #991b1b;
+}
+
+.review-option.correct-option:not(.selected-correct) {
+    border-color: #10b981;
+    border-style: dashed;
+    background: #f0fdf4;
+}
+
+/* Essay Grading Area */
+.essay-grading-area {
+    padding-left: 3.5rem;
+}
+
+.student-answer-box {
+    background: #f8fafc;
+    padding: 1.25rem;
+    border-radius: 12px;
+    margin-bottom: 1.5rem;
+    border-left: 4px solid #1e293b;
+}
+
+.student-answer-box label {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #64748b;
+    display: block;
+    margin-bottom: 0.5rem;
+}
+
+.answer-text {
+    font-size: 1rem;
+    line-height: 1.6;
+    color: #1e293b;
+}
+
+.grading-control {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    padding: 1.25rem;
+    border-radius: 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.input-group label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #1e293b;
+    margin-right: 1rem;
+}
+
+.input-wrapper {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: #f1f5f9;
+    padding: 0.5rem 1rem;
+    border-radius: 10px;
+}
+
+.input-wrapper input {
+    width: 60px;
+    background: transparent;
+    border: none;
+    font-weight: 700;
+    font-size: 1.1rem;
+    text-align: center;
+    outline: none;
+}
+
+.input-wrapper span {
+    color: #94a3b8;
+    font-weight: 600;
+}
+
+.save-score-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: #1e293b;
+    color: #ffffff;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 10px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.save-score-btn:hover {
+    background: #334155;
+    transform: scale(1.02);
+}
+
+/* Scrollbar styling */
+.student-list::-webkit-scrollbar,
+.submission-detail::-webkit-scrollbar {
+    width: 6px;
+}
+
+.student-list::-webkit-scrollbar-thumb,
+.submission-detail::-webkit-scrollbar-thumb {
+    background: #e2e8f0;
+    border-radius: 10px;
+}

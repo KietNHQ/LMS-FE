@@ -94,15 +94,27 @@
 }
 
 .quiz-action-btn--status-open {
-    color: #0f9f6f;
-    border-color: #98ddc6;
-    background: #edfdf6;
+    color: #2f57b8;
+    border-color: #abc7ff;
+    background: #f0f7ff;
 }
 
 .quiz-action-btn--status-hidden {
-    color: #94a3b8;
+    color: #64748b;
     border-color: #cbd5e1;
     background: #f1f5f9;
+}
+
+.quiz-action-btn--primary {
+    background: #1e293b;
+    color: white;
+    border-color: #1e293b;
+}
+
+.quiz-action-btn--primary:hover {
+    background: #334155;
+    color: white;
+    border-color: #334155;
 }
 
 .quiz-card__description {
@@ -112,6 +124,7 @@
     line-height: 1.45;
     display: -webkit-box;
     -webkit-line-clamp: 2;
+    line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
 }
@@ -167,6 +180,30 @@
 .quiz-chip--neutral {
     background: #f3f4f7;
     color: #4b5565;
+}
+
+.quiz-chip--outlined {
+    background: #ffffff;
+    border: 1px solid #d8dfef;
+    color: #3458c4;
+}
+
+.quiz-card__grading-status {
+    margin: 0 0 8px;
+    font-size: 13px;
+    font-weight: 700;
+    color: #2f57b8;
+}
+
+.quiz-card__assignment {
+    margin: 0 0 12px;
+    font-size: 12px;
+    color: #475467;
+}
+
+.quiz-stat-value--duration {
+    font-size: 17px;
+    line-height: 1.2;
 }
 
 .quiz-card__stats {
@@ -235,4 +272,3 @@
         font-size: 18px;
     }
 }
-
