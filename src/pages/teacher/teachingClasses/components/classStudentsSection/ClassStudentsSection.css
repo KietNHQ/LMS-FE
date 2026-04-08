@@ -101,23 +101,400 @@
 
 .tc-open-form-btn {
   min-height: 40px;
-  padding: 0 16px;
-  border-radius: 11px;
-  border: 1px solid #3ccfc2;
-  background: linear-gradient(180deg, #5fddd2 0%, #2bc6b8 100%);
+  padding: 0 18px;
+  border-radius: 12px;
+  border: 1px solid rgba(60, 207, 194, 0.9);
+  background: linear-gradient(180deg, #6fe5db 0%, #25bbae 100%);
   color: #ffffff;
   font-size: 13px;
   font-weight: 800;
-  letter-spacing: 0.2px;
+  letter-spacing: 0.3px;
   white-space: nowrap;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease, background 0.18s ease;
+  box-shadow: 0 10px 24px rgba(37, 187, 174, 0.22);
 }
 
 .tc-open-form-btn:hover {
-  filter: brightness(1.02);
-  box-shadow: 0 10px 20px rgba(43, 198, 184, 0.24);
+  filter: brightness(1.03);
+  box-shadow: 0 14px 28px rgba(37, 187, 174, 0.28);
   transform: translateY(-1px);
+}
+
+.tc-open-form-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 8px 18px rgba(37, 187, 174, 0.2);
+}
+
+.tc-open-form-btn:focus-visible,
+.review-icon-btn:focus-visible,
+.page-btn:focus-visible,
+.review-action-btn:focus-visible,
+.tc-review-dialog-btn:focus-visible,
+.lesson-history-calendar-btn:focus-visible,
+.lesson-calendar-nav-btn:focus-visible {
+  outline: 3px solid rgba(17, 199, 182, 0.24);
+  outline-offset: 2px;
+}
+
+.tc-review-modal {
+  width: min(760px, 100%);
+}
+
+.tc-review-modal .ui-modal__body {
+  background: #ffffff;
+  padding: 14px 16px 16px;
+}
+
+.tc-review-dialog-content {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.tc-review-dialog-student {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.tc-review-dialog-student-info {
+  min-width: 0;
+}
+
+.tc-review-dialog-student-title-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.tc-review-dialog-avatar {
+  width: 46px;
+  height: 46px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, var(--tc-primary, #11c7b6) 0%, var(--tc-primary-strong, #04a094) 100%);
+  color: #ffffff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: 16px;
+  font-weight: 800;
+  box-shadow: 0 8px 20px rgba(4, 160, 148, 0.24);
+}
+
+.tc-review-dialog-student h4 {
+  margin: 0;
+  color: var(--tc-text-main, #0f4f4a);
+  font-size: 16px;
+  font-weight: 850;
+}
+
+.tc-review-dialog-score-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  min-height: 26px;
+  padding: 0 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.2px;
+  white-space: nowrap;
+  box-shadow: 0 8px 18px rgba(4, 160, 148, 0.12);
+}
+
+.tc-review-dialog-score-badge.positive {
+  background: linear-gradient(180deg, #dcfce7 0%, #bbf7d0 100%);
+  color: #166534;
+  border: 1px solid #86efac;
+}
+
+.tc-review-dialog-score-badge.negative {
+  background: linear-gradient(180deg, #fee2e2 0%, #fecaca 100%);
+  color: #b91c1c;
+  border: 1px solid #fca5a5;
+}
+
+.tc-review-dialog-student-title-row h4 {
+  margin: 0;
+  line-height: 1.2;
+}
+
+.tc-review-dialog-student p {
+  margin: 4px 0 0;
+  color: var(--tc-text-subtle, #3f7873);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.tc-review-dialog-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.tc-review-dialog-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  border: 1px solid #d7ebe8;
+  border-radius: 16px;
+  background: linear-gradient(180deg, #ffffff 0%, #f7fffe 100%);
+  box-shadow: 0 10px 22px rgba(4, 160, 148, 0.06);
+  transition: border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
+}
+
+.tc-review-dialog-field:hover {
+  border-color: rgba(60, 207, 194, 0.95);
+  box-shadow: 0 14px 28px rgba(37, 187, 174, 0.1);
+  transform: translateY(-1px);
+}
+
+.tc-review-dialog-field select.tc-input {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  min-height: 50px;
+  padding-right: 46px;
+  border: 1px solid #c7efea;
+  border-radius: 14px;
+  background-color: #ffffff;
+  background-image:
+    linear-gradient(45deg, transparent 50%, #10b9ab 50%),
+    linear-gradient(135deg, #10b9ab 50%, transparent 50%),
+    linear-gradient(180deg, #ffffff 0%, #f6fffe 100%);
+  background-position:
+    calc(100% - 18px) calc(50% - 2px),
+    calc(100% - 12px) calc(50% - 2px),
+    0 0;
+  background-size: 6px 6px, 6px 6px, 100% 100%;
+  background-repeat: no-repeat;
+  box-shadow: 0 8px 18px rgba(4, 160, 148, 0.08);
+  cursor: pointer;
+}
+
+.tc-review-dialog-field select.tc-input:hover {
+  border-color: rgba(60, 207, 194, 0.95);
+  box-shadow: 0 10px 22px rgba(37, 187, 174, 0.12);
+}
+
+.tc-review-dialog-field select.tc-input:focus,
+.tc-review-dialog-field select.tc-input:focus-visible {
+  border-color: var(--tc-primary, #11c7b6);
+  box-shadow: 0 0 0 4px rgba(17, 199, 182, 0.14), 0 12px 24px rgba(37, 187, 174, 0.12);
+}
+
+.tc-review-dialog-field select.tc-input option {
+  color: #0f4f4a;
+  background: #ffffff;
+}
+
+.tc-review-dialog-field select.tc-input option:checked {
+  background: #e7fbf8;
+}
+
+.tc-review-dialog-field select.tc-input option:hover {
+  background: #eefbf9;
+}
+
+.tc-review-dialog-field select.tc-input::-ms-expand {
+  display: none;
+}
+
+.tc-review-dialog-field--full {
+  grid-column: 1 / -1;
+}
+
+.tc-review-dialog-field--full .tc-input {
+  min-height: 48px;
+  border-radius: 14px;
+  box-shadow: 0 8px 18px rgba(4, 160, 148, 0.06);
+}
+
+.tc-review-dialog-field--full:hover {
+  transform: none;
+}
+
+.tc-review-dialog-entry-box {
+  background: linear-gradient(180deg, #f9fffe 0%, #eefcf9 100%);
+}
+
+.tc-review-dialog-entry-box-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.tc-review-dialog-add-entry-btn {
+  min-height: 34px;
+  padding: 0 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(60, 207, 194, 0.95);
+  background: linear-gradient(180deg, #6fe5db 0%, #25bbae 100%);
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 10px 22px rgba(37, 187, 174, 0.22);
+}
+
+.tc-review-dialog-entry-empty {
+  margin: 0;
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1px dashed #bfe8e2;
+  background: #ffffff;
+  color: var(--tc-text-subtle, #3f7873);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.5;
+}
+
+.tc-review-dialog-entry-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.tc-review-dialog-entry-card {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 16px;
+  border: 1px solid #caece8;
+  background: #ffffff;
+  box-shadow: 0 10px 22px rgba(4, 160, 148, 0.06);
+}
+
+.tc-review-dialog-entry-card-main {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.tc-review-dialog-entry-card-main strong {
+  color: var(--tc-text-main, #0f4f4a);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.tc-review-dialog-entry-card-main span {
+  color: var(--tc-text-main, #0f4f4a);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.tc-review-dialog-entry-card-main small {
+  color: var(--tc-text-subtle, #3f7873);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.tc-review-dialog-entry-card-side {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.tc-review-dialog-entry-remove {
+  border: 0;
+  background: transparent;
+  color: #b91c1c;
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+  padding: 0;
+}
+
+.tc-review-dialog-entry-total {
+  margin: 8px 0 0;
+  color: var(--tc-text-subtle, #3f7873);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.tc-review-dialog-preview {
+  border: 1px solid #caece8;
+  border-left: 4px solid var(--tc-primary-strong, #04a094);
+  border-radius: 12px;
+  background: #f9fffe;
+  padding: 12px 14px;
+}
+
+.tc-review-dialog-preview p {
+  margin: 6px 0 0;
+  color: var(--tc-text-main, #0f4f4a);
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.5;
+}
+
+.tc-review-dialog-preview--text {
+  border-left-color: #3ccfc2;
+}
+
+.tc-review-dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.tc-review-dialog-btn {
+  min-height: 42px;
+  padding: 0 18px;
+  border-radius: 12px;
+  border: 1px solid transparent;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.2px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.2s ease;
+}
+
+.tc-review-dialog-btn.secondary {
+  border-color: #d7ebe8;
+  background: linear-gradient(180deg, #ffffff 0%, #f7fcfb 100%);
+  color: var(--tc-text-main, #0f4f4a);
+  box-shadow: 0 8px 18px rgba(16, 24, 40, 0.06);
+}
+
+.tc-review-dialog-btn.secondary:hover {
+  background: linear-gradient(180deg, #ffffff 0%, #eef8f6 100%);
+  border-color: #c7dfdb;
+  transform: translateY(-1px);
+  box-shadow: 0 10px 22px rgba(16, 24, 40, 0.08);
+}
+
+.tc-review-dialog-btn.primary {
+  border-color: rgba(60, 207, 194, 0.95);
+  background: linear-gradient(180deg, #6fe5db 0%, #25bbae 100%);
+  color: #ffffff;
+  box-shadow: 0 10px 24px rgba(37, 187, 174, 0.22);
+}
+
+.tc-review-dialog-btn.primary:hover {
+  filter: brightness(1.03);
+  box-shadow: 0 14px 28px rgba(37, 187, 174, 0.28);
+  transform: translateY(-1px);
+}
+
+.tc-review-dialog-btn.primary:active,
+.tc-review-dialog-btn.secondary:active {
+  transform: translateY(0);
 }
 
 .tc-lesson-modal {
@@ -203,22 +580,28 @@
 .tc-add-btn {
   align-self: flex-start;
   min-height: 40px;
-  padding: 0 16px;
-  border-radius: 11px;
-  border: 1px solid #3ccfc2;
-  background: linear-gradient(180deg, #5fddd2 0%, #2bc6b8 100%);
+  padding: 0 18px;
+  border-radius: 12px;
+  border: 1px solid rgba(60, 207, 194, 0.9);
+  background: linear-gradient(180deg, #6fe5db 0%, #25bbae 100%);
   color: #ffffff;
   font-size: 13px;
   font-weight: 800;
-  letter-spacing: 0.2px;
+  letter-spacing: 0.3px;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease;
+  box-shadow: 0 10px 24px rgba(37, 187, 174, 0.22);
 }
 
 .tc-add-btn:hover {
-  filter: brightness(1.02);
-  box-shadow: 0 10px 20px rgba(43, 198, 184, 0.24);
+  filter: brightness(1.03);
+  box-shadow: 0 14px 28px rgba(37, 187, 174, 0.28);
   transform: translateY(-1px);
+}
+
+.tc-add-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 8px 18px rgba(37, 187, 174, 0.2);
 }
 
 .lesson-history {
@@ -252,20 +635,23 @@
 .lesson-history-calendar-btn {
   width: 34px;
   height: 34px;
-  border: 1px solid #9de7df;
-  border-radius: 10px;
-  background: #ffffff;
+  border: 1px solid #c7efea;
+  border-radius: 11px;
+  background: linear-gradient(180deg, #ffffff 0%, #f5fffe 100%);
   color: var(--tc-primary-strong, #04a094);
   display: inline-flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease, border-color 0.18s ease;
+  box-shadow: 0 6px 14px rgba(4, 160, 148, 0.08);
 }
 
 .lesson-history-calendar-btn:hover {
-  background: #ecfbf9;
+  background: linear-gradient(180deg, #f6fffe 0%, #eafaf8 100%);
   border-color: var(--tc-primary, #11c7b6);
+  transform: translateY(-1px);
+  box-shadow: 0 10px 18px rgba(4, 160, 148, 0.14);
 }
 
 .lesson-history-date-picker input[type="date"] {
@@ -310,13 +696,22 @@
   width: 28px;
   height: 28px;
   border: 1px solid #cdeee9;
-  border-radius: 8px;
-  background: #f7fffe;
+  border-radius: 9px;
+  background: linear-gradient(180deg, #ffffff 0%, #f6fffe 100%);
   color: var(--tc-primary-strong, #04a094);
   display: inline-flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
+  box-shadow: 0 6px 14px rgba(4, 160, 148, 0.08);
+  transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease, border-color 0.18s ease;
+}
+
+.lesson-calendar-nav-btn:hover {
+  background: linear-gradient(180deg, #f6fffe 0%, #eafaf8 100%);
+  border-color: var(--tc-primary, #11c7b6);
+  transform: translateY(-1px);
+  box-shadow: 0 8px 16px rgba(4, 160, 148, 0.12);
 }
 
 .lesson-calendar-table {
@@ -603,23 +998,25 @@
 .review-icon-btn {
   width: 28px;
   height: 28px;
-  border: 1px solid var(--tc-border, #9de7df);
-  border-radius: 7px;
-  background: #f4fdfc;
+  border: 1px solid rgba(156, 231, 223, 0.95);
+  border-radius: 9px;
+  background: linear-gradient(180deg, #ffffff 0%, #f4fdfc 100%);
   color: var(--tc-primary-strong, #04a094);
   display: inline-flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease, color 0.18s ease, border-color 0.18s ease;
   flex-shrink: 0;
+  box-shadow: 0 6px 14px rgba(4, 160, 148, 0.08);
 }
 
 .review-icon-btn:hover {
-  background: var(--tc-primary, #11c7b6);
-  border-color: var(--tc-primary-strong, #04a094);
+  background: linear-gradient(180deg, #6fe5db 0%, #25bbae 100%);
+  border-color: rgba(60, 207, 194, 0.95);
   color: #ffffff;
   transform: translateY(-1px);
+  box-shadow: 0 10px 20px rgba(37, 187, 174, 0.22);
 }
 
 .attendance-checkbox {
@@ -651,18 +1048,6 @@
   gap: 8px;
 }
 
-.review-editor textarea {
-  width: 100%;
-  border: 1.5px solid var(--tc-border, #9de7df);
-  border-radius: 10px;
-  padding: 8px 10px;
-  font-size: 12px;
-  color: var(--tc-text-main, #0f4f4a);
-  resize: vertical;
-  min-height: 56px;
-  font-family: inherit;
-}
-
 .review-editor textarea:focus {
   outline: none;
   border-color: var(--tc-primary, #11c7b6);
@@ -677,10 +1062,10 @@
 
 .review-action-btn {
   min-height: 28px;
-  padding: 0 10px;
-  border-radius: 8px;
+  padding: 0 12px;
+  border-radius: 9px;
   border: 1px solid var(--tc-border, #9de7df);
-  background: #ffffff;
+  background: linear-gradient(180deg, #ffffff 0%, #f4fdfc 100%);
   color: var(--tc-text-main, #0f4f4a);
   font-size: 12px;
   font-weight: 700;
@@ -688,21 +1073,25 @@
   align-items: center;
   gap: 6px;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease, border-color 0.18s ease, color 0.18s ease;
+  box-shadow: 0 6px 14px rgba(4, 160, 148, 0.06);
 }
 
 .review-action-btn.save {
   border-color: var(--tc-primary-strong, #04a094);
-  background: var(--tc-primary-strong, #04a094);
+  background: linear-gradient(180deg, #30bfb1 0%, #04a094 100%);
   color: #ffffff;
 }
 
 .review-action-btn.save:hover {
-  filter: brightness(1.05);
+  transform: translateY(-1px);
+  box-shadow: 0 10px 18px rgba(4, 160, 148, 0.18);
 }
 
 .review-action-btn.cancel:hover {
-  background: #f2f8f7;
+  background: linear-gradient(180deg, #ffffff 0%, #edf7f5 100%);
+  border-color: #c7dfdb;
+  transform: translateY(-1px);
 }
 
 .students-pagination {
@@ -717,24 +1106,25 @@
 .page-btn {
   width: 38px;
   height: 38px;
-  border: 1.5px solid var(--tc-border, #9de7df);
-  border-radius: 10px;
-  background: #f4fdfc;
+  border: 1.5px solid rgba(156, 231, 223, 0.95);
+  border-radius: 12px;
+  background: linear-gradient(180deg, #ffffff 0%, #f4fdfc 100%);
   color: var(--tc-text-main, #0f4f4a);
   display: inline-flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease, color 0.18s ease, border-color 0.18s ease;
   font-size: 18px;
   font-weight: 700;
+  box-shadow: 0 6px 14px rgba(4, 160, 148, 0.08);
 }
 
 .page-btn:hover:not(:disabled) {
-  background: var(--tc-primary, #11c7b6);
+  background: linear-gradient(180deg, #6fe5db 0%, #25bbae 100%);
   color: #ffffff;
-  border-color: var(--tc-primary-strong, #04a094);
-  box-shadow: 0 8px 16px rgba(4, 160, 148, 0.24);
+  border-color: rgba(60, 207, 194, 0.95);
+  box-shadow: 0 12px 22px rgba(37, 187, 174, 0.22);
   transform: translateY(-2px);
 }
 
@@ -817,6 +1207,10 @@
   .students-table thead th.student-name-header {
     padding-left: 56px;
   }
+
+  .tc-review-modal {
+    width: min(620px, 100%);
+  }
 }
 
 @media (max-width: 768px) {
@@ -873,6 +1267,28 @@
 
   .lesson-history-date-picker input[type="date"] {
     width: 100%;
+  }
+
+  .tc-review-modal {
+    width: 100%;
+  }
+
+  .tc-review-modal .ui-modal__body {
+    padding: 14px;
+  }
+
+  .tc-review-dialog-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .tc-review-dialog-student {
+    gap: 10px;
+  }
+
+  .tc-review-dialog-avatar {
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
   }
 
   .table-wrapper {
