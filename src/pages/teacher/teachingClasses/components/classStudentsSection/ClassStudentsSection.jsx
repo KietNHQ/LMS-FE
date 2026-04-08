@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { FiCalendar, FiCheck, FiChevronLeft, FiChevronRight, FiEdit3, FiSearch, FiX } from "react-icons/fi";
+import { FiCalendar, FiCheck, FiChevronLeft, FiChevronRight, FiEdit3, FiSearch } from "react-icons/fi";
 import Modal from "../../../../../components/ui/Modal/Modal";
 import "./ClassStudentsSection.css";
 
@@ -82,13 +82,87 @@ const parseDateKey = (dateKey) => {
   return new Date(year, month - 1, day);
 };
 
+const REVIEW_CONTENT_MAPPING = {
+  "Chuyên cần": [
+    { label: "Vắng có phép (lượt) (-5đ)", pts: -5 },
+    { label: "Vắng không phép (lượt) (-20đ)", pts: -20 },
+    { label: "Đi học muộn (lượt) (-10đ)", pts: -10 },
+    { label: "Trốn học/Bỏ tiết (lượt) (-50đ)", pts: -50 },
+  ],
+  "Tác phong & Văn hóa": [
+    { label: "Lỗi đồng phục/Thẻ (-10đ)", pts: -10 },
+    { label: "Lỗi diện mạo (tóc/móng) (-20đ)", pts: -20 },
+    { label: "Hành vi vô lễ (Trừ nặng) (-100đ)", pts: -100 },
+  ],
+  "Học tập & Nền nếp": [
+    { label: "Tiết học tốt (+50đ)", pts: 50 },
+    { label: "Phát biểu xây dựng bài (+10đ)", pts: 10 },
+    { label: "Không làm bài tập (-20đ)", pts: -20 },
+    { label: "Nói chuyện riêng (-15đ)", pts: -15 },
+  ],
+};
+
+const getReviewSummaryText = (review) => {
+  if (!review) {
+    return "";
+  }
+
+  if (typeof review === "string") {
+    return review;
+  }
+
+  if (review.summary) {
+    return review.summary;
+  }
+
+  if (!Array.isArray(review.entries) || review.entries.length === 0) {
+    return "";
+  }
+
+  return review.entries
+    .map((entry) => {
+      const pointLabel = entry.pts > 0 ? `+${entry.pts}` : entry.pts;
+      return [entry.category, entry.content?.label, entry.note, `Điểm: ${pointLabel}`].filter(Boolean).join(" • ");
+    })
+    .join(" || ");
+};
+
+const normalizeReviewEntry = (entry) => ({
+  id: entry.id ?? Date.now(),
+  category: entry.category || "Chuyên cần",
+  content: entry.content || { label: "", pts: 0 },
+  note: entry.note || "",
+  pts: typeof entry.pts === "number" ? entry.pts : entry.content?.pts || 0,
+});
+
+const normalizeStoredReview = (review) => {
+  if (!review) {
+    return null;
+  }
+
+  if (typeof review === "string") {
+    return {
+      summary: review,
+      entries: [],
+    };
+  }
+
+  return {
+    summary: review.summary || getReviewSummaryText(review),
+    entries: Array.isArray(review.entries) ? review.entries.map(normalizeReviewEntry) : [],
+  };
+};
+
 const ClassStudentsSection = ({ students }) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [studentReviews, setStudentReviews] = useState({});
   const [studentAttendance, setStudentAttendance] = useState({});
-  const [editingStudentId, setEditingStudentId] = useState(null);
-  const [reviewDraft, setReviewDraft] = useState("");
+  const [reviewDialogStudent, setReviewDialogStudent] = useState(null);
+  const [reviewCategory, setReviewCategory] = useState("Chuyên cần");
+  const [reviewContent, setReviewContent] = useState(REVIEW_CONTENT_MAPPING["Chuyên cần"][0]);
+  const [reviewNote, setReviewNote] = useState("");
+  const [reviewEntries, setReviewEntries] = useState([]);
   const [isLessonReviewDialogOpen, setIsLessonReviewDialogOpen] = useState(false);
   const [lessonScore, setLessonScore] = useState("");
   const [lessonNote, setLessonNote] = useState("");
@@ -188,8 +262,6 @@ const ClassStudentsSection = ({ students }) => {
     setStudentAttendance(selectedDateLatestReview.attendanceSnapshot || {});
     setStudentReviews(selectedDateLatestReview.studentReviewSnapshot || {});
     setCurrentPage(1);
-    setEditingStudentId(null);
-    setReviewDraft("");
   }, [selectedDateLatestReview]);
 
   useEffect(() => {
@@ -222,23 +294,102 @@ const ClassStudentsSection = ({ students }) => {
     setCurrentPage((prev) => Math.min(totalPages, prev + 1));
   };
 
-  const startEditReview = (student) => {
-    setEditingStudentId(student.id);
-    setReviewDraft(studentReviews[student.id] || "");
+  const openReviewDialog = (student) => {
+    setReviewDialogStudent(student);
+    const existingReview = normalizeStoredReview(studentReviews[student.id]);
+
+    setReviewCategory("Chuyên cần");
+    setReviewContent(REVIEW_CONTENT_MAPPING["Chuyên cần"][0]);
+    setReviewNote("");
+    setReviewEntries(existingReview?.entries || []);
+
+    if (existingReview?.entries?.length > 0) {
+      const firstEntry = existingReview.entries[0];
+      setReviewCategory(firstEntry.category || "Chuyên cần");
+      setReviewContent(firstEntry.content || REVIEW_CONTENT_MAPPING["Chuyên cần"][0]);
+      setReviewNote(firstEntry.note || "");
+    }
   };
 
-  const cancelEditReview = () => {
-    setEditingStudentId(null);
-    setReviewDraft("");
+  const closeReviewDialog = () => {
+    setReviewDialogStudent(null);
+    setReviewCategory("Chuyên cần");
+    setReviewContent(REVIEW_CONTENT_MAPPING["Chuyên cần"][0]);
+    setReviewNote("");
+    setReviewEntries([]);
   };
 
-  const saveReview = (studentId) => {
+  const handleReviewCategoryChange = (category) => {
+    setReviewCategory(category);
+    setReviewContent(REVIEW_CONTENT_MAPPING[category][0]);
+  };
+
+  const reviewTotalPoints = useMemo(
+    () => reviewEntries.reduce((total, entry) => total + entry.pts, 0),
+    [reviewEntries]
+  );
+
+  const addReviewEntry = () => {
+    const note = reviewNote.trim();
+
+    setReviewEntries((currentEntries) => [
+      ...currentEntries,
+      {
+        id: Date.now(),
+        category: reviewCategory,
+        content: reviewContent,
+        note,
+        pts: reviewContent.pts,
+      },
+    ]);
+    setReviewNote("");
+  };
+
+  const removeReviewEntry = (entryId) => {
+    setReviewEntries((currentEntries) => currentEntries.filter((entry) => entry.id !== entryId));
+  };
+
+  const saveReview = () => {
+    if (!reviewDialogStudent) {
+      return;
+    }
+
+    const entriesToSave =
+      reviewEntries.length > 0
+        ? reviewEntries
+        : [
+            {
+              id: Date.now(),
+              category: reviewCategory,
+              content: reviewContent,
+              note: reviewNote.trim(),
+              pts: reviewContent.pts,
+            },
+          ];
+
+    const totalPoints = entriesToSave.reduce((total, entry) => total + entry.pts, 0);
+
+    const reviewText = [
+      entriesToSave
+        .map((entry) => {
+          const pointLabel = entry.pts > 0 ? `+${entry.pts}` : entry.pts;
+          return [entry.category, entry.content.label, entry.note, `Điểm: ${pointLabel}`].filter(Boolean).join(" • ");
+        })
+        .join(" || "),
+      `Tổng: ${totalPoints > 0 ? `+${totalPoints}` : totalPoints}`,
+    ]
+      .filter(Boolean)
+      .join(" • ");
+
     setStudentReviews((prev) => ({
       ...prev,
-      [studentId]: reviewDraft.trim(),
+      [reviewDialogStudent.id]: {
+        summary: reviewText,
+        entries: entriesToSave,
+        totalPoints,
+      },
     }));
-    setEditingStudentId(null);
-    setReviewDraft("");
+    closeReviewDialog();
   };
 
   const toggleAttendance = (studentId) => {
@@ -484,6 +635,150 @@ const ClassStudentsSection = ({ students }) => {
       </section>
 
       <Modal
+        open={!!reviewDialogStudent}
+        onClose={closeReviewDialog}
+        title="Điền thông tin ghi nhận"
+        className="tc-review-modal"
+      >
+        {reviewDialogStudent ? (
+          <div className="tc-review-dialog-content">
+            <div className="tc-review-dialog-student">
+              <div className="tc-review-dialog-avatar">
+                {reviewDialogStudent.name.charAt(0).toUpperCase()}
+              </div>
+              <div className="tc-review-dialog-student-info">
+                <div className="tc-review-dialog-student-title-row">
+                  <h4>{reviewDialogStudent.name}</h4>
+                  <span className={`tc-review-dialog-score-badge ${reviewTotalPoints >= 0 ? "positive" : "negative"}`}>
+                    {reviewTotalPoints > 0 ? `+${reviewTotalPoints}` : reviewTotalPoints} điểm
+                  </span>
+                </div>
+                <p>
+                  {reviewDialogStudent.parentName} • {reviewDialogStudent.parentPhone}
+                </p>
+              </div>
+            </div>
+
+            <div className="tc-review-dialog-grid">
+              <div className="tc-review-dialog-field">
+                <label className="tc-detail-label" htmlFor="review-category">
+                  Nhóm ghi nhận
+                </label>
+                <select
+                  id="review-category"
+                  className="tc-input"
+                  value={reviewCategory}
+                  onChange={(e) => handleReviewCategoryChange(e.target.value)}
+                >
+                  {Object.keys(REVIEW_CONTENT_MAPPING).map((category) => (
+                    <option key={category} value={category}>
+                      {category}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="tc-review-dialog-field">
+                <label className="tc-detail-label" htmlFor="review-content">
+                  Nội dung
+                </label>
+                <select
+                  id="review-content"
+                  className="tc-input"
+                  value={reviewContent.label}
+                  onChange={(e) => {
+                    const nextContent = REVIEW_CONTENT_MAPPING[reviewCategory].find(
+                      (item) => item.label === e.target.value
+                    );
+                    if (nextContent) {
+                      setReviewContent(nextContent);
+                    }
+                  }}
+                >
+                  {REVIEW_CONTENT_MAPPING[reviewCategory].map((item) => (
+                    <option key={item.label} value={item.label}>
+                      {item.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="tc-review-dialog-field tc-review-dialog-field--full">
+                <label className="tc-detail-label" htmlFor="review-note">
+                  Ghi chú
+                </label>
+                <input
+                  id="review-note"
+                  className="tc-input"
+                  type="text"
+                  value={reviewNote}
+                  onChange={(e) => setReviewNote(e.target.value)}
+                  placeholder="Nhập ghi chú bổ sung..."
+                />
+              </div>
+
+              <div className="tc-review-dialog-field tc-review-dialog-field--full tc-review-dialog-entry-box">
+                <div className="tc-review-dialog-entry-box-top">
+                  <span className="tc-detail-label">ghi nhận đã chọn</span>
+                  <button type="button" className="tc-review-dialog-add-entry-btn" onClick={addReviewEntry}>
+                    Thêm ghi nhận
+                  </button>
+                </div>
+
+                {reviewEntries.length === 0 ? (
+                  <p className="tc-review-dialog-entry-empty">
+                    Chọn nhóm ghi nhận, nội dung và ghi chú nếu cần, sau đó bấm thêm để tạo nhiều ô đánh giá.
+                  </p>
+                ) : (
+                  <div className="tc-review-dialog-entry-list">
+                    {reviewEntries.map((entry) => {
+                      const pointLabel = entry.pts > 0 ? `+${entry.pts}` : entry.pts;
+
+                      return (
+                        <div key={entry.id} className="tc-review-dialog-entry-card">
+                          <div className="tc-review-dialog-entry-card-main">
+                            <strong>{entry.category}</strong>
+                            <span>{entry.content.label}</span>
+                            {entry.note ? <small>{entry.note}</small> : null}
+                          </div>
+                          <div className="tc-review-dialog-entry-card-side">
+                            <span className={`tc-review-dialog-score-badge ${entry.pts >= 0 ? "positive" : "negative"}`}>
+                              {pointLabel} điểm
+                            </span>
+                            <button
+                              type="button"
+                              className="tc-review-dialog-entry-remove"
+                              onClick={() => removeReviewEntry(entry.id)}
+                            >
+                              Xóa
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+
+                <p className="tc-review-dialog-entry-total">
+                  Tổng điểm hiện tại: {reviewTotalPoints > 0 ? `+${reviewTotalPoints}` : reviewTotalPoints}
+                </p>
+              </div>
+            </div>
+
+            <div className="tc-review-dialog-actions">
+              <button type="button" className="tc-review-dialog-btn secondary" onClick={closeReviewDialog}>
+                Hủy
+              </button>
+              <button type="button" className="tc-review-dialog-btn primary" onClick={saveReview}>
+                <FiCheck />
+                Lưu ghi nhận
+              </button>
+            </div>
+          </div>
+        ) : null}
+      </Modal>
+
+      <Modal
         open={isLessonReviewDialogOpen}
         onClose={closeLessonReviewDialog}
         title="Điền thông tin đánh giá tiết học"
@@ -576,52 +871,16 @@ const ClassStudentsSection = ({ students }) => {
                 <td className="student-parent">{student.parentName}</td>
                 <td className="student-phone">{student.parentPhone}</td>
                 <td className="student-review-cell">
-                  {editingStudentId === student.id ? (
-                    <div className="review-editor">
-                      <textarea
-                        value={reviewDraft}
-                        onChange={(e) => setReviewDraft(e.target.value)}
-                        placeholder="Nhập đánh giá cho học sinh..."
-                        rows={2}
-                      />
-                      <div className="review-editor-actions">
-                        <button
-                          type="button"
-                          className="review-action-btn save"
-                          onClick={() => saveReview(student.id)}
-                          aria-label="Lưu đánh giá"
-                        >
-                          <FiCheck />
-                          <span>Lưu</span>
-                        </button>
-                        <button
-                          type="button"
-                          className="review-action-btn cancel"
-                          onClick={cancelEditReview}
-                          aria-label="Hủy đánh giá"
-                        >
-                          <FiX />
-                          <span>Hủy</span>
-                        </button>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="review-display">
-                      <p>
-                        {studentReviews[student.id]
-                          ? studentReviews[student.id]
-                          : "Chưa có đánh giá"}
-                      </p>
-                      <button
-                        type="button"
-                        className="review-icon-btn"
-                        onClick={() => startEditReview(student)}
-                        aria-label={`Đánh giá học sinh ${student.name}`}
-                      >
-                        <FiEdit3 />
-                      </button>
-                    </div>
-                  )}
+                  <div className="review-display">
+                    <button
+                      type="button"
+                      className="review-icon-btn"
+                      onClick={() => openReviewDialog(student)}
+                      aria-label={`Đánh giá học sinh ${student.name}`}
+                    >
+                      <FiEdit3 />
+                    </button>
+                  </div>
                 </td>
                 <td className="student-attendance-cell">
                   <label className="attendance-checkbox">
