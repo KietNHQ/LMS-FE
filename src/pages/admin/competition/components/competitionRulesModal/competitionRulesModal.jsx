@@ -27,19 +27,6 @@ const CompetitionRulesModal = ({ isOpen, onClose, rules, onSave }) => {
         });
     };
 
-    const updateGrade = (grade, value) => {
-        setLocalRules({
-            ...localRules,
-            academic: {
-                ...localRules.academic,
-                grades: {
-                    ...localRules.academic.grades,
-                    [grade]: parseInt(value) || 0
-                }
-            }
-        });
-    };
-
     return (
         <div className="modal-overlay">
             <div className="modal-content rules-modal-large">
@@ -64,108 +51,100 @@ const CompetitionRulesModal = ({ isOpen, onClose, rules, onSave }) => {
                                     type="number" 
                                     min="0" 
                                     max="1000" 
-                                    value={localRules.standardPoint} 
+                                    value={localRules.standardPoint || 100} 
                                     onChange={(e) => setLocalRules({...localRules, standardPoint: parseInt(e.target.value) || 0})} 
                                 />
                             </div>
                         </div>
                     </div>
 
-                    {/* 1. CHUYÊN CẦN */}
+                    {/* 1. VI PHẠM */}
                     <div className="rules-section">
                         <div className="section-title">
-                            <FiChevronRight /> <h4>1. Chuyên cần & Hiện diện</h4>
+                            <FiChevronRight /> <h4>1. Nhóm Vi Phạm</h4>
                         </div>
+                        
+                        <h5 className="sub-section-title">Chuyên cần</h5>
                         <div className="rules-grid">
-                            <div className="rule-item">
-                                <label>Vắng có phép (lượt)</label>
-                                <input type="number" min="-200" max="200" value={localRules.attendance.excused} onChange={(e) => updateNested('attendance', 'excused', e.target.value)} />
-                            </div>
-                            <div className="rule-item">
-                                <label>Vắng không phép (lượt)</label>
-                                <input type="number" min="-200" max="200" value={localRules.attendance.unexcused} onChange={(e) => updateNested('attendance', 'unexcused', e.target.value)} />
-                            </div>
-                            <div className="rule-item">
-                                <label>Đi học muộn (lượt)</label>
-                                <input type="number" min="-200" max="200" value={localRules.attendance.late} onChange={(e) => updateNested('attendance', 'late', e.target.value)} />
-                            </div>
-                            <div className="rule-item">
-                                <label>Trốn học/Bỏ tiết (lượt)</label>
-                                <input type="number" min="-200" max="200" value={localRules.attendance.skipping} onChange={(e) => updateNested('attendance', 'skipping', e.target.value)} />
-                            </div>
-                            <div className="rule-item highlight">
-                                <label>Thưởng trì sĩ số tuần (%)</label>
-                                <input type="number" min="0" max="200" value={localRules.attendance.perfectAttendanceBonus} onChange={(e) => updateNested('attendance', 'perfectAttendanceBonus', e.target.value)} />
-                            </div>
+                            <div className="rule-item"><label>Nghỉ học k phép</label><input type="number" value={localRules.attendance_violation?.unexcused || 0} onChange={(e) => updateNested('attendance_violation', 'unexcused', e.target.value)} /></div>
+                            <div className="rule-item"><label>Đi học muộn</label><input type="number" value={localRules.attendance_violation?.late || 0} onChange={(e) => updateNested('attendance_violation', 'late', e.target.value)} /></div>
+                            <div className="rule-item serious"><label>Trốn học, bỏ tiết</label><input type="number" value={localRules.attendance_violation?.skip_class || 0} onChange={(e) => updateNested('attendance_violation', 'skip_class', e.target.value)} /></div>
+                            <div className="rule-item"><label>Bỏ giờ trong tiết</label><input type="number" value={localRules.attendance_violation?.skip_period || 0} onChange={(e) => updateNested('attendance_violation', 'skip_period', e.target.value)} /></div>
+                        </div>
+
+                        <h5 className="sub-section-title mt-sm">Nề nếp - Tác phong</h5>
+                        <div className="rules-grid">
+                            <div className="rule-item"><label>Đồng phục/tác phong</label><input type="number" value={localRules.discipline_violation?.uniform || 0} onChange={(e) => updateNested('discipline_violation', 'uniform', e.target.value)} /></div>
+                            <div className="rule-item"><label>Mất trật tự trong giờ</label><input type="number" value={localRules.discipline_violation?.disorder || 0} onChange={(e) => updateNested('discipline_violation', 'disorder', e.target.value)} /></div>
+                            <div className="rule-item"><label>Nói tục, chửi thề</label><input type="number" value={localRules.discipline_violation?.swearing || 0} onChange={(e) => updateNested('discipline_violation', 'swearing', e.target.value)} /></div>
+                            <div className="rule-item"><label>Dùng đt trái phép</label><input type="number" value={localRules.discipline_violation?.phone || 0} onChange={(e) => updateNested('discipline_violation', 'phone', e.target.value)} /></div>
+                            <div className="rule-item"><label>Ăn uống trong giờ</label><input type="number" value={localRules.discipline_violation?.eating || 0} onChange={(e) => updateNested('discipline_violation', 'eating', e.target.value)} /></div>
+                            <div className="rule-item"><label>Gây gổ, xô đẩy</label><input type="number" value={localRules.discipline_violation?.fighting || 0} onChange={(e) => updateNested('discipline_violation', 'fighting', e.target.value)} /></div>
+                            <div className="rule-item serious"><label>Bắt nạt, xúc phạm</label><input type="number" value={localRules.discipline_violation?.bullying || 0} onChange={(e) => updateNested('discipline_violation', 'bullying', e.target.value)} /></div>
+                        </div>
+
+                        <h5 className="sub-section-title mt-sm">Tài sản - Môi trường</h5>
+                        <div className="rules-grid">
+                            <div className="rule-item"><label>Hư hỏng tài sản</label><input type="number" value={localRules.property_violation?.damage || 0} onChange={(e) => updateNested('property_violation', 'damage', e.target.value)} /></div>
+                            <div className="rule-item"><label>Vẽ bậy, bôi bẩn</label><input type="number" value={localRules.property_violation?.vandalism || 0} onChange={(e) => updateNested('property_violation', 'vandalism', e.target.value)} /></div>
+                            <div className="rule-item"><label>Vứt rác bừa bãi</label><input type="number" value={localRules.property_violation?.littering || 0} onChange={(e) => updateNested('property_violation', 'littering', e.target.value)} /></div>
+                            <div className="rule-item"><label>Không tắt điện/quạt</label><input type="number" value={localRules.property_violation?.no_electricity || 0} onChange={(e) => updateNested('property_violation', 'no_electricity', e.target.value)} /></div>
+                        </div>
+
+                        <h5 className="sub-section-title mt-sm">Học tập</h5>
+                        <div className="rules-grid">
+                            <div className="rule-item"><label>Không làm bài tập</label><input type="number" value={localRules.academic_violation?.no_homework || 0} onChange={(e) => updateNested('academic_violation', 'no_homework', e.target.value)} /></div>
+                            <div className="rule-item"><label>Không mang sách vở</label><input type="number" value={localRules.academic_violation?.no_materials || 0} onChange={(e) => updateNested('academic_violation', 'no_materials', e.target.value)} /></div>
+                            <div className="rule-item serious"><label>Gian lận thi cử</label><input type="number" value={localRules.academic_violation?.cheating || 0} onChange={(e) => updateNested('academic_violation', 'cheating', e.target.value)} /></div>
+                            <div className="rule-item"><label>K tham gia ngoại khóa</label><input type="number" value={localRules.academic_violation?.no_extracurricular || 0} onChange={(e) => updateNested('academic_violation', 'no_extracurricular', e.target.value)} /></div>
                         </div>
                     </div>
 
-                    {/* 2. TÁC PHONG */}
+                    {/* 2. KHEN THƯỞNG */}
                     <div className="rules-section">
                         <div className="section-title">
-                            <FiChevronRight /> <h4>2. Tác phong & Văn hóa</h4>
+                            <FiChevronRight /> <h4>2. Nhóm Khen Thưởng</h4>
                         </div>
-                        <div className="rules-grid">
-                            <div className="rule-item">
-                                <label>Lỗi đồng phục/Thẻ</label>
-                                <input type="number" min="-200" max="0" value={localRules.conduct.uniform} onChange={(e) => updateNested('conduct', 'uniform', e.target.value)} />
-                            </div>
-                            <div className="rule-item">
-                                <label>Lỗi diện mạo (tóc/móng)</label>
-                                <input type="number" min="-200" max="0" value={localRules.conduct.appearance} onChange={(e) => updateNested('conduct', 'appearance', e.target.value)} />
-                            </div>
-                            <div className="rule-item serious">
-                                <label>Hành vi vô lễ (Trừ nặng)</label>
-                                <input type="number" min="-500" max="0" value={localRules.conduct.behavior} onChange={(e) => updateNested('conduct', 'behavior', e.target.value)} />
-                            </div>
-                        </div>
-                    </div>
 
-                    {/* 3. HỌC TẬP */}
-                    <div className="rules-section">
-                        <div className="section-title">
-                            <FiChevronRight /> <h4>3. Học tập & Tiết học</h4>
-                        </div>
-                        <div className="rules-grid-grades">
-                            {Object.entries(localRules.academic.grades).map(([grade, pts]) => (
-                                <div key={grade} className="rule-item mini">
-                                    <label>Tiết {grade}</label>
-                                    <input type="number" min="-100" max="100" value={pts} onChange={(e) => updateGrade(grade, e.target.value)} />
-                                </div>
-                            ))}
-                        </div>
-                        <div className="rules-grid mt-sm">
-                            <div className="rule-item highlight">
-                                <label>Thưởng "Tuần học tốt"</label>
-                                <input type="number" min="0" max="200" value={localRules.academic.excellentWeekBonus} onChange={(e) => updateNested('academic', 'excellentWeekBonus', e.target.value)} />
-                            </div>
-                            <div className="rule-item highlight">
-                                <label>Tiết có nhận xét tốt</label>
-                                <input type="number" min="0" max="200" value={localRules.academic.goodNotesBonus} onChange={(e) => updateNested('academic', 'goodNotesBonus', e.target.value)} />
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* 4. KHÁC */}
-                    <div className="rules-section">
-                        <div className="section-title">
-                            <FiChevronRight /> <h4>4. Khen thưởng & Việc tốt</h4>
-                        </div>
+                        <h5 className="sub-section-title">Chuyên cần</h5>
                         <div className="rules-grid">
-                            <div className="rule-item highlight">
-                                <label>Nhặt được của rơi</label>
-                                <input type="number" min="0" max="100" value={localRules.achievements.goodDeeds} onChange={(e) => updateNested('achievements', 'goodDeeds', e.target.value)} />
-                            </div>
-                            <div className="rule-item highlight">
-                                <label>Giải phong trào/MC</label>
-                                <input type="number" min="0" max="100" value={localRules.achievements.movementAwards} onChange={(e) => updateNested('achievements', 'movementAwards', e.target.value)} />
-                            </div>
+                            <div className="rule-item highlight"><label>Đi học đủ 1 tháng</label><input type="number" value={localRules.attendance_reward?.month || 0} onChange={(e) => updateNested('attendance_reward', 'month', e.target.value)} /></div>
+                            <div className="rule-item highlight"><label>100% chuyên cần HK</label><input type="number" value={localRules.attendance_reward?.semester || 0} onChange={(e) => updateNested('attendance_reward', 'semester', e.target.value)} /></div>
+                            <div className="rule-item highlight"><label>K đi muộn trong HK</label><input type="number" value={localRules.attendance_reward?.no_late_semester || 0} onChange={(e) => updateNested('attendance_reward', 'no_late_semester', e.target.value)} /></div>
+                        </div>
+
+                        <h5 className="sub-section-title mt-sm">Học tập</h5>
+                        <div className="rules-grid">
+                            <div className="rule-item highlight"><label>HSG cấp trường</label><input type="number" value={localRules.academic_reward?.school || 0} onChange={(e) => updateNested('academic_reward', 'school', e.target.value)} /></div>
+                            <div className="rule-item highlight"><label>HSG Tỉnh/TP</label><input type="number" value={localRules.academic_reward?.province || 0} onChange={(e) => updateNested('academic_reward', 'province', e.target.value)} /></div>
+                            <div className="rule-item highlight"><label>HSG QG/QT</label><input type="number" value={localRules.academic_reward?.national || 0} onChange={(e) => updateNested('academic_reward', 'national', e.target.value)} /></div>
+                            <div className="rule-item highlight"><label>Tiến bộ rõ rệt</label><input type="number" value={localRules.academic_reward?.improvement || 0} onChange={(e) => updateNested('academic_reward', 'improvement', e.target.value)} /></div>
+                            <div className="rule-item highlight"><label>Điểm TB {">"} 8.0</label><input type="number" value={localRules.academic_reward?.high_avg || 0} onChange={(e) => updateNested('academic_reward', 'high_avg', e.target.value)} /></div>
+                        </div>
+
+                        <h5 className="sub-section-title mt-sm">Phong trào</h5>
+                        <div className="rules-grid">
+                            <div className="rule-item highlight"><label>Giải Nhất trường</label><input type="number" value={localRules.activity_reward?.first_school || 0} onChange={(e) => updateNested('activity_reward', 'first_school', e.target.value)} /></div>
+                            <div className="rule-item highlight"><label>Giải Nhì/Ba trường</label><input type="number" value={localRules.activity_reward?.second_school || 0} onChange={(e) => updateNested('activity_reward', 'second_school', e.target.value)} /></div>
+                            <div className="rule-item highlight"><label>Giải Nhất Tỉnh</label><input type="number" value={localRules.activity_reward?.first_province || 0} onChange={(e) => updateNested('activity_reward', 'first_province', e.target.value)} /></div>
+                            <div className="rule-item highlight"><label>Giải QG/QT</label><input type="number" value={localRules.activity_reward?.national || 0} onChange={(e) => updateNested('activity_reward', 'national', e.target.value)} /></div>
+                            <div className="rule-item highlight"><label>Tình nguyện viên</label><input type="number" value={localRules.activity_reward?.volunteer || 0} onChange={(e) => updateNested('activity_reward', 'volunteer', e.target.value)} /></div>
+                            <div className="rule-item highlight"><label>Tham gia CLB</label><input type="number" value={localRules.activity_reward?.club || 0} onChange={(e) => updateNested('activity_reward', 'club', e.target.value)} /></div>
+                        </div>
+
+                        <h5 className="sub-section-title mt-sm">Tích cực</h5>
+                        <div className="rules-grid">
+                            <div className="rule-item highlight"><label>Nhặt của rơi trả lại</label><input type="number" value={localRules.positive_reward?.found_lost || 0} onChange={(e) => updateNested('positive_reward', 'found_lost', e.target.value)} /></div>
+                            <div className="rule-item highlight"><label>Báo nguy cơ mất đồ</label><input type="number" value={localRules.positive_reward?.report_risk || 0} onChange={(e) => updateNested('positive_reward', 'report_risk', e.target.value)} /></div>
+                            <div className="rule-item highlight"><label>Gương mẫu</label><input type="number" value={localRules.positive_reward?.role_model || 0} onChange={(e) => updateNested('positive_reward', 'role_model', e.target.value)} /></div>
+                            <div className="rule-item highlight"><label>Giúp đỡ bạn bè</label><input type="number" value={localRules.positive_reward?.help_peers || 0} onChange={(e) => updateNested('positive_reward', 'help_peers', e.target.value)} /></div>
+                            <div className="rule-item highlight"><label>Phát hiện sai phạm</label><input type="number" value={localRules.positive_reward?.report_violation || 0} onChange={(e) => updateNested('positive_reward', 'report_violation', e.target.value)} /></div>
                         </div>
                     </div>
 
                     <div className="rules-info-banner">
                         <FiInfo />
-                        <p>Các chỉ số trên được xây dựng dựa trên Thông tư 22/2021/TT-BGDĐT và quy định chấm điểm Sao Đỏ.</p>
+                        <p>Các chỉ số trên được đồng bộ trực tiếp với Báo cáo Hệ thống Quản lý Thi Đua Rèn Luyện HS THPT.</p>
                     </div>
                 </div>
 

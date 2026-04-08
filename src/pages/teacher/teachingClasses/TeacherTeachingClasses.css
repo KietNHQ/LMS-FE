@@ -1,19 +1,26 @@
-.teacher-classes-page {
-  --tc-primary: #11c7b6;
-  --tc-primary-strong: #04a094;
-  --tc-primary-soft: #e6fbf9;
-  --tc-border: #9de7df;
-  --tc-border-strong: #62d6cb;
-  --tc-text-main: #0f4f4a;
-  --tc-text-subtle: #3f7873;
-  --tc-focus-ring: rgba(17, 199, 182, 0.2);
+:root,
+.teacher-classes-page,
+.class-detail-page,
+.tc-review-modal,
+.tc-lesson-modal {
+  --tc-primary: #0d9488;
+  --tc-primary-strong: #0f766e;
+  --tc-primary-soft: #f0fdfa;
+  --tc-border: #5eead4;
+  --tc-border-strong: #2dd4bf;
+  --tc-text-main: #134e4a;
+  --tc-text-subtle: #115e59;
+  --tc-focus-ring: rgba(13, 148, 136, 0.2);
   --admin-border: var(--tc-border);
   --admin-border-strong: var(--tc-border-strong);
   --admin-text-primary: var(--tc-text-main);
   --admin-text-secondary: var(--tc-text-subtle);
   --admin-primary-soft: var(--tc-primary-soft);
   --admin-primary: var(--tc-primary-strong);
+}
 
+.teacher-classes-page,
+.class-detail-page {
   display: flex;
   flex-direction: column;
   padding: 0;
@@ -40,7 +47,7 @@
   padding: 0 20px;
   border: none;
   border-radius: 12px;
-  background: var(--tc-primary-strong, #04a094);
+  background: var(--tc-primary-strong, #0f766e);
   color: #ffffff;
   font-size: 14px;
   font-weight: 700;
@@ -48,7 +55,7 @@
   transition: all 0.2s ease;
   white-space: nowrap;
   margin-bottom: 24px;
-  box-shadow: 0 4px 12px rgba(4, 160, 148, 0.2);
+  box-shadow: 0 4px 12px rgba(15, 118, 110, 0.2);
   width: fit-content;
   line-height: 1;
   color: #ffffff;
@@ -59,7 +66,7 @@
 .back-btn:hover {
   color: #ffffff;
   background: #03847a;
-  box-shadow: 0 8px 20px rgba(4, 160, 148, 0.28);
+  box-shadow: 0 8px 20px rgba(15, 118, 110, 0.28);
   transform: translateY(-2px);
 }
 
@@ -76,20 +83,20 @@
 
 .back-btn.teacher-back-btn {
   background: var(--tc-primary-strong);
-  box-shadow: 0 4px 12px rgba(4, 160, 148, 0.18);
+  box-shadow: 0 4px 12px rgba(15, 118, 110, 0.18);
 }
 
 .back-btn.teacher-back-btn:hover {
   color: #ffffff;
   background: #03847a;
-  box-shadow: 0 8px 20px rgba(4, 160, 148, 0.28);
+  box-shadow: 0 8px 20px rgba(15, 118, 110, 0.28);
 }
 
 .empty-state {
   min-height: 280px;
   border: 2px dashed var(--tc-border-strong);
   border-radius: 18px;
-  background: #f4fdfc;
+  background: #f0fdfa;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -112,9 +119,9 @@
 }
 
 .class-detail-header.teacher-detail-header {
-  background: linear-gradient(180deg, #ffffff 0%, #f4fdfc 100%);
+  background: linear-gradient(180deg, #ffffff 0%, #f0fdfa 100%);
   border: 1px solid var(--tc-border);
-  box-shadow: 0 8px 24px rgba(17, 199, 182, 0.12);
+  box-shadow: 0 8px 24px rgba(13, 148, 136, 0.12);
 }
 
 .class-detail-top {
@@ -134,12 +141,12 @@
 .class-detail-top .back-btn {
   margin-bottom: 0;
   flex-shrink: 0;
-  background: var(--tc-primary, #11c7b6);
-  box-shadow: 0 6px 14px rgba(17, 199, 182, 0.3);
+  background: var(--tc-primary, #0d9488);
+  box-shadow: 0 6px 14px rgba(13, 148, 136, 0.3);
 }
 
 .class-detail-top .back-btn:hover {
-  background: var(--tc-primary-strong, #04a094);
+  background: var(--tc-primary-strong, #0f766e);
 }
 
 .class-detail-top .back-btn:active {
@@ -187,7 +194,7 @@
 
 .class-detail-header.teacher-detail-header .info-item {
   border: 1.5px solid rgba(20, 20, 20, 0.22);
-  background: #f4fdfc;
+  background: #f0fdfa;
 }
 
 .info-label {
@@ -217,7 +224,7 @@
   border-color: var(--tc-primary-strong);
   background: var(--tc-primary-soft);
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(4, 160, 148, 0.2);
+  box-shadow: 0 4px 12px rgba(15, 118, 110, 0.2);
 }
 
 .info-item.info-item--score-trigger.active {
@@ -258,14 +265,14 @@
   margin-bottom: 0;
   -webkit-tap-highlight-color: transparent;
   user-select: none;
-  box-shadow: 0 4px 12px rgba(4, 160, 148, 0.2);
+  box-shadow: 0 4px 12px rgba(15, 118, 110, 0.2);
 }
 
 .section-switch-btn:hover {
   border-color: #03847a;
   color: #ffffff;
-  background: var(--tc-primary, #11c7b6);
-  box-shadow: 0 8px 18px rgba(4, 160, 148, 0.28);
+  background: var(--tc-primary, #0d9488);
+  box-shadow: 0 8px 18px rgba(15, 118, 110, 0.28);
   transform: translateY(-1px);
 }
 
@@ -278,7 +285,7 @@
   border-color: #03847a;
   background: #03847a;
   color: #ffffff;
-  box-shadow: 0 8px 16px rgba(4, 160, 148, 0.28);
+  box-shadow: 0 8px 16px rgba(15, 118, 110, 0.28);
 }
 
 .section-switch-btn.active:hover {
@@ -292,7 +299,7 @@
   border-color: var(--tc-primary-strong);
   background: var(--tc-primary-strong);
   color: #ffffff;
-  box-shadow: 0 8px 16px rgba(4, 160, 148, 0.28);
+  box-shadow: 0 8px 16px rgba(15, 118, 110, 0.28);
 }
 
 .section-switch-btn:focus-visible {
@@ -325,7 +332,7 @@
   padding: 0.85rem 1.1rem;
   border-radius: 14px;
   border: 1px solid var(--tc-border);
-  box-shadow: 0 2px 6px rgba(17, 199, 182, 0.12);
+  box-shadow: 0 2px 6px rgba(13, 148, 136, 0.12);
   margin-bottom: 1rem;
   flex-wrap: wrap;
 }
@@ -383,7 +390,7 @@
   padding: 0 12px;
   border: 1px solid var(--tc-border);
   border-radius: 8px;
-  background: #f4fdfc;
+  background: #f0fdfa;
   color: var(--tc-primary-strong);
   font-size: 14px;
   font-weight: 700;
@@ -401,7 +408,7 @@
   border-color: var(--tc-primary-strong);
   background: var(--tc-primary-strong);
   color: #ffffff;
-  box-shadow: 0 8px 16px rgba(4, 160, 148, 0.28);
+  box-shadow: 0 8px 16px rgba(15, 118, 110, 0.28);
 }
 
 .admin-classes-body {
@@ -415,7 +422,7 @@
   min-height: 280px;
   border: 1px dashed var(--tc-border-strong);
   border-radius: 18px;
-  background: #f4fdfc;
+  background: #f0fdfa;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -448,20 +455,20 @@
   border: 1px solid #cfeeea;
   border-radius: 16px;
   padding: 14px 16px 12px;
-  box-shadow: 0 6px 16px rgba(4, 160, 148, 0.12);
+  box-shadow: 0 6px 16px rgba(15, 118, 110, 0.12);
   transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
   cursor: pointer;
 }
 
 .teacher-class-list-card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 12px 24px rgba(4, 160, 148, 0.2);
+  box-shadow: 0 12px 24px rgba(15, 118, 110, 0.2);
 }
 
 .teacher-class-list-card.is-active {
   background: #ffffff;
   border-color: var(--tc-primary-strong);
-  box-shadow: 0 14px 28px rgba(4, 160, 148, 0.24);
+  box-shadow: 0 14px 28px rgba(15, 118, 110, 0.24);
 }
 
 .teacher-class-list-card__top {

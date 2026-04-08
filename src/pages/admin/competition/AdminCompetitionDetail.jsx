@@ -6,22 +6,59 @@ import { FiArrowLeft, FiPlus, FiTrash2, FiEdit2, FiCalendar, FiChevronDown, FiX,
 import "./AdminCompetitionDetail.css";
 
 const CONTENT_MAPPING = {
-    "Chuyên cần": [
-        { label: "Vắng có phép (lượt) (-5đ)", pts: -5 },
-        { label: "Vắng không phép (lượt) (-20đ)", pts: -20 },
-        { label: "Đi học muộn (lượt) (-10đ)", pts: -10 },
-        { label: "Trốn học/Bỏ tiết (lượt) (-50đ)", pts: -50 }
+    "Vi phạm: Chuyên cần": [
+        { label: "Nghỉ học không phép (-15đ)", pts: -15 },
+        { label: "Đi học muộn (-5đ)", pts: -5 },
+        { label: "Trốn học, bỏ tiết (-50đ)", pts: -50 },
+        { label: "Bỏ giờ trong tiết (-10đ)", pts: -10 }
     ],
-    "Tác phong & Văn hóa": [
-        { label: "Lỗi đồng phục/Thẻ (-10đ)", pts: -10 },
-        { label: "Lỗi diện mạo (tóc/móng) (-20đ)", pts: -20 },
-        { label: "Hành vi vô lễ (Trừ nặng) (-100đ)", pts: -100 }
+    "Vi phạm: Nề nếp - Tác phong": [
+        { label: "Vi phạm đồng phục/tác phong (-10đ)", pts: -10 },
+        { label: "Mất trật tự trong giờ (-20đ)", pts: -20 },
+        { label: "Nói tục, chửi thề (-15đ)", pts: -15 },
+        { label: "Sử dụng điện thoại trái phép (-5đ)", pts: -5 },
+        { label: "Ăn uống trong giờ (-3đ)", pts: -3 },
+        { label: "Gây gổ, xô đẩy (-25đ)", pts: -25 },
+        { label: "Bắt nạt, xúc phạm (-30đ)", pts: -30 }
     ],
-    "Học tập & Nền nếp": [
-        { label: "Tiết học tốt (+50đ)", pts: 50 },
-        { label: "Phát biểu xây dựng bài (+10đ)", pts: 10 },
-        { label: "Không làm bài tập (-20đ)", pts: -20 },
-        { label: "Nói chuyện riêng (-15đ)", pts: -15 }
+    "Vi phạm: Tài sản - Môi trường": [
+        { label: "Làm hư hỏng tài sản trường (-20đ)", pts: -20 },
+        { label: "Vẽ bậy, bôi bẩn (-10đ)", pts: -10 },
+        { label: "Vứt rác bừa bãi (-3đ)", pts: -3 },
+        { label: "Không tắt điện/quạt khi ra về (-2đ)", pts: -2 }
+    ],
+    "Vi phạm: Học tập": [
+        { label: "Không làm bài tập (-2đ)", pts: -2 },
+        { label: "Không mang sách vở (-2đ)", pts: -2 },
+        { label: "Gian lận thi cử (-50đ)", pts: -50 },
+        { label: "Không tham gia hoạt động ngoại khóa (-5đ)", pts: -5 }
+    ],
+    "Thưởng: Chuyên cần": [
+        { label: "Đi học đầy đủ 1 tháng (+20đ)", pts: 20 },
+        { label: "Đi học đầy đủ 1 học kỳ (+50đ)", pts: 50 },
+        { label: "Không đi muộn trong HK (+10đ)", pts: 10 }
+    ],
+    "Thưởng: Học tập": [
+        { label: "Học sinh giỏi cấp trường (+30đ)", pts: 30 },
+        { label: "Học sinh giỏi cấp Tỉnh/TP (+50đ)", pts: 50 },
+        { label: "HSG cấp Quốc gia/Quốc tế (+100đ)", pts: 100 },
+        { label: "Tiến bộ rõ rệt (+20đ)", pts: 20 },
+        { label: "Điểm TB > 8.0 (+15đ)", pts: 15 }
+    ],
+    "Thưởng: Phong trào": [
+        { label: "Giải Nhất NT/TDTT trường (+20đ)", pts: 20 },
+        { label: "Giải Nhì/Ba NT/TDTT trường (+15đ)", pts: 15 },
+        { label: "Giải Nhất Tỉnh (+50đ)", pts: 50 },
+        { label: "Giải Quốc gia/Quốc tế (+100đ)", pts: 100 },
+        { label: "Tình nguyện viên tích cực (+15đ)", pts: 15 },
+        { label: "Tham gia CLB (+10đ)", pts: 10 }
+    ],
+    "Thưởng: Tích cực": [
+        { label: "Nhặt được của rơi trả lại (+20đ)", pts: 20 },
+        { label: "Báo cáo nguy cơ mất đồ (+5đ)", pts: 5 },
+        { label: "Gương mẫu được tuyên dương (+20đ)", pts: 20 },
+        { label: "Giúp đỡ bạn bè được ghi nhận (+10đ)", pts: 10 },
+        { label: "Phát hiện sai phạm, báo cáo (+15đ)", pts: 15 }
     ],
     "Khác": []
 };
@@ -79,7 +116,7 @@ const EditModal = ({ record, onSave, onClose }) => {
         if (record?.content === "Ghi nhận khác") return "Khác";
         return Object.keys(CONTENT_MAPPING).find(key => 
             CONTENT_MAPPING[key].some(opt => opt.label.includes(record?.content))
-        ) || "Chuyên cần";
+        ) || "Vi phạm: Chuyên cần";
     }, [record]);
 
     const initialContent = useMemo(() => {
@@ -232,11 +269,11 @@ const AdminCompetitionDetail = () => {
     const weekPickerRef = useRef(null);
 
     const [isTypeOpen, setIsTypeOpen] = useState(false);
-    const [selectedType, setSelectedType] = useState("Chuyên cần");
+    const [selectedType, setSelectedType] = useState("Vi phạm: Chuyên cần");
     const typeRef = useRef(null);
 
     const [isContentOpen, setIsContentOpen] = useState(false);
-    const [selectedContent, setSelectedContent] = useState(CONTENT_MAPPING["Chuyên cần"][0]);
+    const [selectedContent, setSelectedContent] = useState(CONTENT_MAPPING["Vi phạm: Chuyên cần"][0]);
     const contentRef = useRef(null);
 
     const [description, setDescription] = useState("");

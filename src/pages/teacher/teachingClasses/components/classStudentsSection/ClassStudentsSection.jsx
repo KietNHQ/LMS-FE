@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { FiCalendar, FiCheck, FiChevronLeft, FiChevronRight, FiEdit3, FiSearch } from "react-icons/fi";
 import Modal from "../../../../../components/ui/Modal/Modal";
+import Select from "../../../../../components/ui/Select/Select";
 import "./ClassStudentsSection.css";
 
 const PERIOD_DURATION_MINUTES = 45;
@@ -83,22 +84,39 @@ const parseDateKey = (dateKey) => {
 };
 
 const REVIEW_CONTENT_MAPPING = {
-  "Chuyên cần": [
-    { label: "Vắng có phép (lượt) (-5đ)", pts: -5 },
-    { label: "Vắng không phép (lượt) (-20đ)", pts: -20 },
-    { label: "Đi học muộn (lượt) (-10đ)", pts: -10 },
-    { label: "Trốn học/Bỏ tiết (lượt) (-50đ)", pts: -50 },
+  "Vi phạm: Chuyên cần": [
+    { label: "Nghỉ học không phép (-15đ)", pts: -15 },
+    { label: "Đi học muộn (-5đ)", pts: -5 },
+    { label: "Trốn học, bỏ tiết (-50đ)", pts: -50 },
+    { label: "Bỏ giờ trong tiết (-10đ)", pts: -10 },
   ],
-  "Tác phong & Văn hóa": [
-    { label: "Lỗi đồng phục/Thẻ (-10đ)", pts: -10 },
-    { label: "Lỗi diện mạo (tóc/móng) (-20đ)", pts: -20 },
-    { label: "Hành vi vô lễ (Trừ nặng) (-100đ)", pts: -100 },
+  "Vi phạm: Nề nếp - Tác phong": [
+    { label: "Vi phạm đồng phục/tác phong (-10đ)", pts: -10 },
+    { label: "Mất trật tự trong giờ (-20đ)", pts: -20 },
+    { label: "Nói tục, chửi thề (-15đ)", pts: -15 },
+    { label: "Sử dụng điện thoại trái phép (-5đ)", pts: -5 },
+    { label: "Ăn uống trong giờ (-3đ)", pts: -3 },
+    { label: "Gây gổ, xô đẩy (-25đ)", pts: -25 },
+    { label: "Bắt nạt, xúc phạm (-30đ)", pts: -30 },
   ],
-  "Học tập & Nền nếp": [
-    { label: "Tiết học tốt (+50đ)", pts: 50 },
-    { label: "Phát biểu xây dựng bài (+10đ)", pts: 10 },
-    { label: "Không làm bài tập (-20đ)", pts: -20 },
-    { label: "Nói chuyện riêng (-15đ)", pts: -15 },
+  "Vi phạm: Tài sản - Môi trường": [
+    { label: "Làm hư hỏng tài sản trường (-20đ)", pts: -20 },
+    { label: "Vẽ bậy, bôi bẩn (-10đ)", pts: -10 },
+    { label: "Vứt rác bừa bãi (-3đ)", pts: -3 },
+    { label: "Không tắt điện/quạt khi ra về (-2đ)", pts: -2 },
+  ],
+  "Vi phạm: Học tập": [
+    { label: "Không làm bài tập (-2đ)", pts: -2 },
+    { label: "Không mang sách vở (-2đ)", pts: -2 },
+    { label: "Gian lận thi cử (-50đ)", pts: -50 },
+    { label: "Không tham gia hoạt động ngoại khóa (-5đ)", pts: -5 },
+  ],
+  "Khen thưởng & Tích cực": [
+    { label: "Nhặt được của rơi trả lại (+20đ)", pts: 20 },
+    { label: "Gương mẫu được tuyên dương (+20đ)", pts: 20 },
+    { label: "Giúp đỡ bạn bè được ghi nhận (+10đ)", pts: 10 },
+    { label: "Phát hiện sai phạm, báo cáo (+15đ)", pts: 15 },
+    { label: "Tiến bộ rõ rệt (+20đ)", pts: 20 },
   ],
 };
 
@@ -129,7 +147,7 @@ const getReviewSummaryText = (review) => {
 
 const normalizeReviewEntry = (entry) => ({
   id: entry.id ?? Date.now(),
-  category: entry.category || "Chuyên cần",
+  category: entry.category || "Vi phạm: Chuyên cần",
   content: entry.content || { label: "", pts: 0 },
   note: entry.note || "",
   pts: typeof entry.pts === "number" ? entry.pts : entry.content?.pts || 0,
@@ -159,8 +177,8 @@ const ClassStudentsSection = ({ students }) => {
   const [studentReviews, setStudentReviews] = useState({});
   const [studentAttendance, setStudentAttendance] = useState({});
   const [reviewDialogStudent, setReviewDialogStudent] = useState(null);
-  const [reviewCategory, setReviewCategory] = useState("Chuyên cần");
-  const [reviewContent, setReviewContent] = useState(REVIEW_CONTENT_MAPPING["Chuyên cần"][0]);
+  const [reviewCategory, setReviewCategory] = useState("Vi phạm: Chuyên cần");
+  const [reviewContent, setReviewContent] = useState(REVIEW_CONTENT_MAPPING["Vi phạm: Chuyên cần"][0]);
   const [reviewNote, setReviewNote] = useState("");
   const [reviewEntries, setReviewEntries] = useState([]);
   const [isLessonReviewDialogOpen, setIsLessonReviewDialogOpen] = useState(false);
@@ -238,8 +256,8 @@ const ClassStudentsSection = ({ students }) => {
   const absentToday = Math.max(totalStudents - attendedToday, 0);
   const todayLabel = new Date().toLocaleDateString("vi-VN");
 
-  const currentLessonLabel = "Hôm nay";
-  const currentLessonTime = `${todayLessonInfo.periodLabel}${todayLessonInfo.timeRange ? `, ${todayLessonInfo.timeRange}` : ""} - ${todayLabel}`;
+  const currentLessonLabel = `Tiết học ${lessonReviews.length + 1}`;
+  const currentLessonTime = `${todayLessonInfo.periodLabel === "Ngoài khung tiết" ? "Tiết 1" : todayLessonInfo.periodLabel} - ${todayLabel}`;
 
   const availableReviewDates = useMemo(
     () => [...new Set(lessonReviews.map((review) => review.reviewDate))].sort((a, b) => b.localeCompare(a)),
@@ -298,23 +316,23 @@ const ClassStudentsSection = ({ students }) => {
     setReviewDialogStudent(student);
     const existingReview = normalizeStoredReview(studentReviews[student.id]);
 
-    setReviewCategory("Chuyên cần");
-    setReviewContent(REVIEW_CONTENT_MAPPING["Chuyên cần"][0]);
+    setReviewCategory("Vi phạm: Chuyên cần");
+    setReviewContent(REVIEW_CONTENT_MAPPING["Vi phạm: Chuyên cần"][0]);
     setReviewNote("");
     setReviewEntries(existingReview?.entries || []);
 
     if (existingReview?.entries?.length > 0) {
       const firstEntry = existingReview.entries[0];
-      setReviewCategory(firstEntry.category || "Chuyên cần");
-      setReviewContent(firstEntry.content || REVIEW_CONTENT_MAPPING["Chuyên cần"][0]);
+      setReviewCategory(firstEntry.category || "Vi phạm: Chuyên cần");
+      setReviewContent(firstEntry.content || REVIEW_CONTENT_MAPPING["Vi phạm: Chuyên cần"][0]);
       setReviewNote(firstEntry.note || "");
     }
   };
 
   const closeReviewDialog = () => {
     setReviewDialogStudent(null);
-    setReviewCategory("Chuyên cần");
-    setReviewContent(REVIEW_CONTENT_MAPPING["Chuyên cần"][0]);
+    setReviewCategory("Vi phạm: Chuyên cần");
+    setReviewContent(REVIEW_CONTENT_MAPPING["Vi phạm: Chuyên cần"][0]);
     setReviewNote("");
     setReviewEntries([]);
   };
@@ -664,27 +682,25 @@ const ClassStudentsSection = ({ students }) => {
                 <label className="tc-detail-label" htmlFor="review-category">
                   Nhóm ghi nhận
                 </label>
-                <select
+                <Select
+                  variant="custom"
                   id="review-category"
-                  className="tc-input"
                   value={reviewCategory}
                   onChange={(e) => handleReviewCategoryChange(e.target.value)}
-                >
-                  {Object.keys(REVIEW_CONTENT_MAPPING).map((category) => (
-                    <option key={category} value={category}>
-                      {category}
-                    </option>
-                  ))}
-                </select>
+                  options={Object.keys(REVIEW_CONTENT_MAPPING).map((category) => ({
+                    value: category,
+                    label: category
+                  }))}
+                />
               </div>
 
               <div className="tc-review-dialog-field">
                 <label className="tc-detail-label" htmlFor="review-content">
                   Nội dung
                 </label>
-                <select
+                <Select
+                  variant="custom"
                   id="review-content"
-                  className="tc-input"
                   value={reviewContent.label}
                   onChange={(e) => {
                     const nextContent = REVIEW_CONTENT_MAPPING[reviewCategory].find(
@@ -694,13 +710,11 @@ const ClassStudentsSection = ({ students }) => {
                       setReviewContent(nextContent);
                     }
                   }}
-                >
-                  {REVIEW_CONTENT_MAPPING[reviewCategory].map((item) => (
-                    <option key={item.label} value={item.label}>
-                      {item.label}
-                    </option>
-                  ))}
-                </select>
+                  options={REVIEW_CONTENT_MAPPING[reviewCategory].map((item) => ({
+                    value: item.label,
+                    label: item.label
+                  }))}
+                />
               </div>
 
               <div className="tc-review-dialog-field tc-review-dialog-field--full">
@@ -807,14 +821,18 @@ const ClassStudentsSection = ({ students }) => {
               <label className="tc-detail-label" htmlFor="lesson-score">
                 Điểm đánh giá
               </label>
-              <input
+              <Select
+                variant="custom"
                 id="lesson-score"
-                className="tc-input"
-                type="text"
                 value={lessonScore}
                 onChange={(e) => setLessonScore(e.target.value)}
-                placeholder="Ví dụ: A+, A, B, C..."
-                required
+                placeholder="-- Chọn xếp loại --"
+                options={[
+                  { value: "A (Tốt)", label: "Tốt (A) • +10đ" },
+                  { value: "B (Khá)", label: "Khá (B) • +5đ" },
+                  { value: "C (Trung bình)", label: "Trung bình (C) • 0đ" },
+                  { value: "D (Yếu)", label: "Yếu (D) • -5đ" }
+                ]}
               />
             </div>
 

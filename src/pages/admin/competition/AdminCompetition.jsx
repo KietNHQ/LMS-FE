@@ -37,10 +37,14 @@ const AdminCompetition = () => {
     
     const [competitionRules, setCompetitionRules] = useState({
         standardPoint: 100,
-        attendance: { excused: -5, unexcused: -20, late: -10, skipping: -50, perfectAttendanceBonus: 20 },
-        conduct: { uniform: -10, appearance: -20, behavior: -100 },
-        academic: { grades: { A: 10, B: -10, C: -20, D: -40 }, goodNotesBonus: 50, excellentWeekBonus: 50 },
-        achievements: { goodDeeds: 50, movementAwards: 40 }
+        attendance_violation: { unexcused: -15, late: -5, skip_class: -50, skip_period: -10 },
+        discipline_violation: { uniform: -10, disorder: -20, swearing: -15, phone: -5, eating: -3, fighting: -25, bullying: -30 },
+        property_violation: { damage: -20, vandalism: -10, littering: -3, no_electricity: -2 },
+        academic_violation: { no_homework: -2, no_materials: -2, cheating: -50, no_extracurricular: -5 },
+        attendance_reward: { month: 20, semester: 50, no_late_semester: 10 },
+        academic_reward: { school: 30, province: 50, national: 100, improvement: 20, high_avg: 15 },
+        activity_reward: { first_school: 20, second_school: 15, first_province: 50, national: 100, volunteer: 15, club: 10 },
+        positive_reward: { found_lost: 20, report_risk: 5, role_model: 20, help_peers: 10, report_violation: 15 }
     });
 
     const ITEMS_PER_PAGE = 6;
