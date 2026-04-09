@@ -1,6 +1,11 @@
 import React, { useState } from "react";
 import { Modal, Select } from "../../../../../components/ui";
 import { DEFAULT_PROFILE_BY_ROLE } from "../../../../../components/common/Dialog/ProfileDialog/profileData";
+import {
+    DEFAULT_QUIZ_DURATION_LABEL,
+    QUIZ_DURATION_OPTIONS,
+    formatDurationLabel,
+} from "../../../../../services/shared/quiz/quizService";
 import "./CreateTeacherQuizDialog.css";
 
 const CURRENT_TEACHER = DEFAULT_PROFILE_BY_ROLE.teacher;
@@ -12,22 +17,20 @@ const defaultForm = {
     title: "",
     subject: CURRENT_TEACHER_SUBJECT,
     grade: "",
+    className: "",
+    duration: DEFAULT_QUIZ_DURATION_LABEL,
     createdByRole: "teacher",
     createdByName: CURRENT_TEACHER_NAME,
 };
 
+const TEACHER_CLASSES_BY_GRADE = {
+    "Khối 10": ["10A1", "10A2", "10A3", "10A4"],
+    "Khối 11": ["11B1", "11B2", "11B3"],
+    "Khối 12": ["12A1", "12A2", "12A3"],
+};
+
 const gradeOptions = ["Khối 10", "Khối 11", "Khối 12"];
-const subjectOptions = [
-    "Toán",
-    "Ngữ Văn",
-    "Tiếng Anh",
-    "Vật Lý",
-    "Hóa Học",
-    "Sinh Học",
-    "Lịch Sử",
-    "Địa Lý",
-    "Tin Học",
-];
+const durationOptions = QUIZ_DURATION_OPTIONS.map((item) => item.label);
 
 export default function CreateTeacherQuizDialog({
     open,
@@ -41,15 +44,21 @@ export default function CreateTeacherQuizDialog({
         title: initialValues?.title || defaultForm.title,
         subject: initialValues?.subject || defaultForm.subject,
         grade: initialValues?.grade || defaultForm.grade,
+        className: initialValues?.className || defaultForm.className,
+        duration: formatDurationLabel(initialValues?.duration || defaultForm.duration),
         createdByRole: "teacher",
         createdByName: initialValues?.createdByName || CURRENT_TEACHER_NAME,
     }));
 
     const handleChange = (key, value) => {
-        setFormData((prev) => ({
-            ...prev,
-            [key]: value,
-        }));
+        setFormData((prev) => {
+            const next = { ...prev, [key]: value };
+            // Auto-clear class if grade changes
+            if (key === "grade") {
+                next.className = "";
+            }
+            return next;
+        });
     };
 
     const handleSubmit = () => {
@@ -57,12 +66,14 @@ export default function CreateTeacherQuizDialog({
             title: formData.title.trim(),
             subject: formData.subject.trim(),
             grade: formData.grade.trim(),
+            className: formData.className.trim(),
+            duration: formData.duration,
             createdByRole: "teacher",
             createdByName: formData.createdByName.trim() || CURRENT_TEACHER_NAME,
         };
 
-        if (!payload.title || !payload.subject || !payload.grade) {
-            alert("Vui lòng điền đầy đủ tên bài kiểm tra, môn học và khối.");
+        if (!payload.title || !payload.subject || !payload.grade || !payload.className || !payload.duration) {
+            alert("Vui lòng điền đầy đủ tên bài kiểm tra, môn học, khối, lớp và thời lượng.");
             return;
         }
 
@@ -93,17 +104,8 @@ export default function CreateTeacherQuizDialog({
                     />
                 </div>
 
-                <div className="teacher-create-quiz-dialog__field">
-                    <label htmlFor="teacher-quiz-creator-name">Giáo viên</label>
-                    <input
-                        id="teacher-quiz-creator-name"
-                        type="text"
-                        value={formData.createdByName}
-                        readOnly
-                    />
-                </div>
 
-                <div className="teacher-create-quiz-dialog__field">
+                <div className="teacher-create-quiz-dialog__field teacher-create-quiz-dialog__field--half">
                     <Select
                         label="Khối"
                         variant="custom"
@@ -114,6 +116,34 @@ export default function CreateTeacherQuizDialog({
                         placeholder="Chọn khối"
                         value={formData.grade}
                         onChange={(event) => handleChange("grade", event.target.value)}
+                    />
+                </div>
+
+                <div className="teacher-create-quiz-dialog__field teacher-create-quiz-dialog__field--half">
+                    <Select
+                        label="Lớp"
+                        variant="custom"
+                        className="teacher-create-quiz-dialog__select"
+                        id="teacher-quiz-class"
+                        name="teacher-quiz-class"
+                        options={TEACHER_CLASSES_BY_GRADE[formData.grade] || []}
+                        placeholder="Chọn lớp"
+                        disabled={!formData.grade}
+                        value={formData.className}
+                        onChange={(event) => handleChange("className", event.target.value)}
+                    />
+                </div>
+
+                <div className="teacher-create-quiz-dialog__field teacher-create-quiz-dialog__field--half">
+                    <Select
+                        label="Thời lượng"
+                        variant="custom"
+                        className="teacher-create-quiz-dialog__select"
+                        id="teacher-quiz-duration"
+                        name="teacher-quiz-duration"
+                        options={durationOptions}
+                        value={formData.duration}
+                        onChange={(event) => handleChange("duration", event.target.value)}
                     />
                 </div>
 

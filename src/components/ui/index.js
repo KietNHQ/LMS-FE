@@ -6,3 +6,4 @@ export { default as Table } from "./Table/Table";
 export { default as Select } from "./Select/Select";
 export { default as Alert } from "./Alert/Alert";
 export { default as Pagination } from "./Pagination/Pagination";
+export { default as Tooltip } from "./Tooltip/Tooltip";

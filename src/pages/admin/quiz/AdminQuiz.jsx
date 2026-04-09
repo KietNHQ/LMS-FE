@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo } from "react";
 import { FiChevronLeft, FiChevronRight } from "react-icons/fi";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Modal } from "../../../components/ui";
@@ -8,48 +8,76 @@ import CreateQuizDialog from "./components/createQuizDialog/CreateQuizDialog";
 import QuizToolbar from "./components/quizToolbar/QuizToolbar";
 import { SchoolYearTermSelector } from "../../../components/common";
 import { useSchoolYearTerm } from "../../../hooks/useSchoolYearTerm";
+import {
+    DEFAULT_GRADE_FILTER_OPTIONS,
+    formatDurationLabel,
+    normalizeGrade,
+    parseDurationMinutes,
+} from "../../../services/shared/quiz/quizService";
 
 const ITEMS_PER_PAGE = 4;
 
 const initialQuizzes = [
     {
         id: 1,
-        title: "Toán 10 - Chương 1",
-        description: "Bài kiểm tra chương 1 toán lớp 10",
+        title: "Toán 10 - Kiểm tra giữa kỳ",
+        description: "Bài kiểm tra giữa kỳ toán lớp 10",
         subject: "Toán",
         grade: "Khối 10",
         questions: 20,
         duration: 45,
+        durationLabel: "1 tiết (45 phút)",
         status: "open",
         createdAt: "2024-03-20",
         createdByRole: "admin",
         createdByName: "Quản trị viên",
+        examType: "Giữa kỳ",
+        submissionCount: 12,
+        gradingAssignment: {
+            required: true,
+            source: "random",
+            assignedTeacherName: "Lê Minh Hoàng",
+        },
+        gradingStatus: "in-progress",
     },
     {
         id: 2,
-        title: "Vật Lý 10 - Chương 1",
+        title: "Vật Lý 10 - Kiểm tra 15 phút Chương 1",
         description: "Bài kiểm tra chương 1 vật lý lớp 10",
         subject: "Vật Lý",
         grade: "Khối 10",
         questions: 15,
-        duration: 30,
+        duration: 15,
+        durationLabel: "15 phút",
         status: "open",
         createdAt: "2024-03-19",
         createdByRole: "teacher",
         createdByName: "Lê Minh Hoàng",
+        examType: "Thường xuyên",
+        submissionCount: 8,
+        gradingStatus: "ready",
     },
     {
         id: 3,
-        title: "Hóa Học 10 - Chương 2",
-        description: "Bài kiểm tra chương 2 hóa học lớp 10",
+        title: "Hóa Học 10 - Cuối kỳ Chương 2",
+        description: "Bài kiểm tra cuối kỳ hóa học lớp 10",
         subject: "Hóa Học",
         grade: "Khối 10",
         questions: 18,
-        duration: 40,
+        duration: 45,
+        durationLabel: "1 tiết (45 phút)",
         status: "hidden",
         createdAt: "2024-03-18",
         createdByRole: "admin",
         createdByName: "Quản trị viên",
+        examType: "Cuối kỳ",
+        submissionCount: 0,
+        gradingAssignment: {
+            required: false,
+            source: "none",
+            assignedTeacherName: "",
+        },
+        gradingStatus: "no-submission",
     },
 ];
 
@@ -60,7 +88,16 @@ export default function AdminQuiz() {
     const createdQuizFromState = location.state?.createdQuiz;
 
     const [quizzes, setQuizzes] = useState(() =>
-        createdQuizFromState ? [createdQuizFromState, ...initialQuizzes] : initialQuizzes
+        createdQuizFromState
+            ? [{
+                ...createdQuizFromState,
+                duration: parseDurationMinutes(createdQuizFromState.duration),
+                durationLabel: formatDurationLabel(createdQuizFromState.durationLabel || createdQuizFromState.duration),
+                examType: createdQuizFromState.examType || "Thường xuyên",
+                submissionCount: createdQuizFromState.submissionCount || 0,
+                gradingStatus: createdQuizFromState.gradingStatus || "no-submission",
+            }, ...initialQuizzes]
+            : initialQuizzes
     );
     const [currentPage, setCurrentPage] = useState(1);
     const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
@@ -77,8 +114,10 @@ export default function AdminQuiz() {
     }, [quizzes]);
 
     const gradeOptions = useMemo(() => {
-        const grades = new Set(quizzes.map((q) => q.grade));
-        return ["Tất cả khối", ...Array.from(grades)];
+        const grades = quizzes.map((q) => q.grade).filter(Boolean);
+        const uniqueGradeOptions = Array.from(new Set(grades));
+
+        return Array.from(new Set([...DEFAULT_GRADE_FILTER_OPTIONS, ...uniqueGradeOptions]));
     }, [quizzes]);
 
     const filteredQuizzes = useMemo(() => {
@@ -90,7 +129,8 @@ export default function AdminQuiz() {
             const matchSubject =
                 selectedSubject === "Tất cả môn" || quiz.subject === selectedSubject;
             const matchGrade =
-                selectedGrade === "Tất cả khối" || quiz.grade === selectedGrade;
+                selectedGrade === "Tất cả khối" ||
+                normalizeGrade(quiz.grade) === normalizeGrade(selectedGrade);
 
             return matchSearch && matchSubject && matchGrade;
         });
@@ -178,7 +218,9 @@ export default function AdminQuiz() {
                     title: quiz.title,
                     subject: quiz.subject,
                     grade: quiz.grade,
-                    duration: `${quiz.duration} phút`,
+                    duration: quiz.durationLabel || formatDurationLabel(quiz.duration),
+                    examFormat: quiz.examFormat || "Trắc nghiệm",
+                    examType: quiz.examType || "Thường xuyên",
                     createdByRole: quiz.createdByRole || "admin",
                     createdByName: quiz.createdByName || "Quản trị viên",
                 },
@@ -206,6 +248,10 @@ export default function AdminQuiz() {
                         title: quizMeta.title,
                         subject: quizMeta.subject,
                         grade: quizMeta.grade,
+                        duration: parseDurationMinutes(quizMeta.duration || quiz.duration),
+                        durationLabel: formatDurationLabel(quizMeta.duration || quiz.durationLabel),
+                        examFormat: quizMeta.examFormat,
+                        examType: quizMeta.examType || "Thường xuyên",
                         createdByRole: quizMeta.createdByRole,
                         createdByName:
                             quizMeta.createdByRole === "teacher"
@@ -312,6 +358,9 @@ export default function AdminQuiz() {
                     title: editingQuiz.title,
                     subject: editingQuiz.subject,
                     grade: editingQuiz.grade,
+                    duration: editingQuiz.durationLabel || formatDurationLabel(editingQuiz.duration),
+                    examFormat: editingQuiz.examFormat || "Trắc nghiệm",
+                    examType: editingQuiz.examType || "Thường xuyên",
                     createdByRole: editingQuiz.createdByRole || "admin",
                     createdByName: editingQuiz.createdByName || "",
                 } : undefined}
@@ -351,4 +400,3 @@ export default function AdminQuiz() {
         </div>
     );
 }
-

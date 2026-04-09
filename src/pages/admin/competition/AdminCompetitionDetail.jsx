@@ -6,23 +6,61 @@ import { FiArrowLeft, FiPlus, FiTrash2, FiEdit2, FiCalendar, FiChevronDown, FiX,
 import "./AdminCompetitionDetail.css";
 
 const CONTENT_MAPPING = {
-    "Chuyên cần": [
-        { label: "Vắng có phép (lượt) (-5đ)", pts: -5 },
-        { label: "Vắng không phép (lượt) (-20đ)", pts: -20 },
-        { label: "Đi học muộn (lượt) (-10đ)", pts: -10 },
-        { label: "Trốn học/Bỏ tiết (lượt) (-50đ)", pts: -50 }
+    "Vi phạm: Chuyên cần": [
+        { label: "Nghỉ học không phép (-15đ)", pts: -15 },
+        { label: "Đi học muộn (-5đ)", pts: -5 },
+        { label: "Trốn học, bỏ tiết (-50đ)", pts: -50 },
+        { label: "Bỏ giờ trong tiết (-10đ)", pts: -10 }
     ],
-    "Tác phong & Văn hóa": [
-        { label: "Lỗi đồng phục/Thẻ (-10đ)", pts: -10 },
-        { label: "Lỗi diện mạo (tóc/móng) (-20đ)", pts: -20 },
-        { label: "Hành vi vô lễ (Trừ nặng) (-100đ)", pts: -100 }
+    "Vi phạm: Nề nếp - Tác phong": [
+        { label: "Vi phạm đồng phục/tác phong (-10đ)", pts: -10 },
+        { label: "Mất trật tự trong giờ (-20đ)", pts: -20 },
+        { label: "Nói tục, chửi thề (-15đ)", pts: -15 },
+        { label: "Sử dụng điện thoại trái phép (-5đ)", pts: -5 },
+        { label: "Ăn uống trong giờ (-3đ)", pts: -3 },
+        { label: "Gây gổ, xô đẩy (-25đ)", pts: -25 },
+        { label: "Bắt nạt, xúc phạm (-30đ)", pts: -30 }
     ],
-    "Học tập & Nền nếp": [
-        { label: "Tiết học tốt (+50đ)", pts: 50 },
-        { label: "Phát biểu xây dựng bài (+10đ)", pts: 10 },
-        { label: "Không làm bài tập (-20đ)", pts: -20 },
-        { label: "Nói chuyện riêng (-15đ)", pts: -15 }
-    ]
+    "Vi phạm: Tài sản - Môi trường": [
+        { label: "Làm hư hỏng tài sản trường (-20đ)", pts: -20 },
+        { label: "Vẽ bậy, bôi bẩn (-10đ)", pts: -10 },
+        { label: "Vứt rác bừa bãi (-3đ)", pts: -3 },
+        { label: "Không tắt điện/quạt khi ra về (-2đ)", pts: -2 }
+    ],
+    "Vi phạm: Học tập": [
+        { label: "Không làm bài tập (-2đ)", pts: -2 },
+        { label: "Không mang sách vở (-2đ)", pts: -2 },
+        { label: "Gian lận thi cử (-50đ)", pts: -50 },
+        { label: "Không tham gia hoạt động ngoại khóa (-5đ)", pts: -5 }
+    ],
+    "Thưởng: Chuyên cần": [
+        { label: "Đi học đầy đủ 1 tháng (+20đ)", pts: 20 },
+        { label: "Đi học đầy đủ 1 học kỳ (+50đ)", pts: 50 },
+        { label: "Không đi muộn trong HK (+10đ)", pts: 10 }
+    ],
+    "Thưởng: Học tập": [
+        { label: "Học sinh giỏi cấp trường (+30đ)", pts: 30 },
+        { label: "Học sinh giỏi cấp Tỉnh/TP (+50đ)", pts: 50 },
+        { label: "HSG cấp Quốc gia/Quốc tế (+100đ)", pts: 100 },
+        { label: "Tiến bộ rõ rệt (+20đ)", pts: 20 },
+        { label: "Điểm TB > 8.0 (+15đ)", pts: 15 }
+    ],
+    "Thưởng: Phong trào": [
+        { label: "Giải Nhất NT/TDTT trường (+20đ)", pts: 20 },
+        { label: "Giải Nhì/Ba NT/TDTT trường (+15đ)", pts: 15 },
+        { label: "Giải Nhất Tỉnh (+50đ)", pts: 50 },
+        { label: "Giải Quốc gia/Quốc tế (+100đ)", pts: 100 },
+        { label: "Tình nguyện viên tích cực (+15đ)", pts: 15 },
+        { label: "Tham gia CLB (+10đ)", pts: 10 }
+    ],
+    "Thưởng: Tích cực": [
+        { label: "Nhặt được của rơi trả lại (+20đ)", pts: 20 },
+        { label: "Báo cáo nguy cơ mất đồ (+5đ)", pts: 5 },
+        { label: "Gương mẫu được tuyên dương (+20đ)", pts: 20 },
+        { label: "Giúp đỡ bạn bè được ghi nhận (+10đ)", pts: 10 },
+        { label: "Phát hiện sai phạm, báo cáo (+15đ)", pts: 15 }
+    ],
+    "Khác": []
 };
 
 const DetailModal = ({ record, onClose }) => {
@@ -75,12 +113,14 @@ const DetailModal = ({ record, onClose }) => {
 const EditModal = ({ record, onSave, onClose }) => {
     // Determine initial selected type and option based on record content
     const initialType = useMemo(() => {
+        if (record?.content === "Ghi nhận khác") return "Khác";
         return Object.keys(CONTENT_MAPPING).find(key => 
             CONTENT_MAPPING[key].some(opt => opt.label.includes(record?.content))
-        ) || "Chuyên cần";
+        ) || "Vi phạm: Chuyên cần";
     }, [record]);
 
     const initialContent = useMemo(() => {
+        if (initialType === "Khác") return { label: "Ghi nhận khác", pts: record?.pts || 0 };
         const options = CONTENT_MAPPING[initialType];
         return options.find(opt => opt.label.includes(record?.content)) || options[0];
     }, [initialType, record]);
@@ -89,18 +129,33 @@ const EditModal = ({ record, onSave, onClose }) => {
     const [selectedContent, setSelectedContent] = useState(initialContent);
     const [desc, setDesc] = useState(record?.description || "");
     
+    // Custom point states for "Khác"
+    const [customPts, setCustomPts] = useState(Math.abs(record?.pts || 0));
+    const [isPositive, setIsPositive] = useState((record?.pts || 0) >= 0);
+    
     // Internal dropdown states
     const [isTypeOpen, setIsTypeOpen] = useState(false);
     const [isContentOpen, setIsContentOpen] = useState(false);
     const typeRef = useRef(null);
     const contentRef = useRef(null);
 
-    const contentOptions = useMemo(() => CONTENT_MAPPING[selectedType], [selectedType]);
+    const contentOptions = useMemo(() => CONTENT_MAPPING[selectedType] || [], [selectedType]);
 
     const handleTypeUpdate = (type) => {
         setSelectedType(type);
-        setSelectedContent(CONTENT_MAPPING[type][0]);
+        if (type !== "Khác") {
+            setSelectedContent(CONTENT_MAPPING[type][0]);
+        } else {
+            setSelectedContent({ label: "Ghi nhận khác", pts: isPositive ? customPts : -customPts });
+        }
         setIsTypeOpen(false);
+    };
+
+    const handlePointChange = (val) => {
+        const num = parseInt(val) || 0;
+        if (num > 100) setCustomPts(100);
+        else if (num < 0) setCustomPts(0);
+        else setCustomPts(num);
     };
 
     if (!record) return null;
@@ -134,22 +189,44 @@ const EditModal = ({ record, onSave, onClose }) => {
                             </div>
                         </div>
 
-                        <div className="form-row-edit">
-                            <label>Nội dung vi phạm/khen thưởng</label>
-                            <div className="admin-custom-select" ref={contentRef} onClick={() => setIsContentOpen(!isContentOpen)}>
-                                <div className={`admin-custom-select-trigger ${isContentOpen ? "active" : ""}`}>
-                                    <span>{selectedContent.label}</span>
-                                    <FiChevronDown className={`admin-select-icon ${isContentOpen ? "open" : ""}`} />
-                                </div>
-                                {isContentOpen && (
-                                    <div className="admin-custom-select-options custom-scroll">
-                                        {contentOptions.map((opt, i) => (
-                                            <div key={i} className="admin-custom-select-option" onClick={() => { setSelectedContent(opt); setIsContentOpen(false); }}>{opt.label}</div>
-                                        ))}
+                        {selectedType !== "Khác" ? (
+                            <div className="form-row-edit">
+                                <label>Nội dung vi phạm/khen thưởng</label>
+                                <div className="admin-custom-select" ref={contentRef} onClick={() => setIsContentOpen(!isContentOpen)}>
+                                    <div className={`admin-custom-select-trigger ${isContentOpen ? "active" : ""}`}>
+                                        <span>{selectedContent.label}</span>
+                                        <FiChevronDown className={`admin-select-icon ${isContentOpen ? "open" : ""}`} />
                                     </div>
-                                )}
+                                    {isContentOpen && (
+                                        <div className="admin-custom-select-options custom-scroll">
+                                            {contentOptions.map((opt, i) => (
+                                                <div key={i} className="admin-custom-select-option" onClick={() => { setSelectedContent(opt); setIsContentOpen(false); }}>{opt.label}</div>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
                             </div>
-                        </div>
+                        ) : (
+                            <div className="form-row-edit">
+                                <label>Số điểm ghi nhận (+/- tối đa 100)</label>
+                                <div className="pts-input-group">
+                                    <button 
+                                        className={`btn-toggle-sign ${isPositive ? 'pos' : 'neg'}`}
+                                        onClick={() => setIsPositive(!isPositive)}
+                                        title="Thay đổi dấu (+/-)"
+                                    >
+                                        {isPositive ? '+' : '-'}
+                                    </button>
+                                    <input 
+                                        type="number" 
+                                        className="admin-point-input"
+                                        value={customPts === 0 ? "" : customPts}
+                                        onChange={(e) => handlePointChange(e.target.value)}
+                                        placeholder="0"
+                                    />
+                                </div>
+                            </div>
+                        )}
 
                         <div className="form-row-edit">
                             <label>Chi tiết sự việc</label>
@@ -164,13 +241,16 @@ const EditModal = ({ record, onSave, onClose }) => {
                 </div>
                 <div className="modal-footer-standard edit-footer-fixed">
                     <button className="btn-close-standard flex-shrink" onClick={onClose}>Hủy bỏ</button>
-                    <button className="btn-admin-standard-primary flex-grow" onClick={() => onSave({ 
-                        ...record, 
-                        content: selectedContent.label.split(" (")[0], 
-                        pts: selectedContent.pts,
-                        type: selectedContent.pts >= 0 ? "achievement" : "violation",
-                        description: desc 
-                    })}>
+                    <button className="btn-admin-standard-primary flex-grow" onClick={() => {
+                        const finalPts = selectedType === "Khác" ? (isPositive ? customPts : -customPts) : selectedContent.pts;
+                        onSave({ 
+                            ...record, 
+                            content: selectedType === "Khác" ? "Ghi nhận khác" : selectedContent.label.split(" (")[0], 
+                            pts: finalPts,
+                            type: finalPts >= 0 ? "achievement" : "violation",
+                            description: desc 
+                        });
+                    }}>
                         <FiSave /> Cập nhật ghi nhận
                     </button>
                 </div>
@@ -189,16 +269,20 @@ const AdminCompetitionDetail = () => {
     const weekPickerRef = useRef(null);
 
     const [isTypeOpen, setIsTypeOpen] = useState(false);
-    const [selectedType, setSelectedType] = useState("Chuyên cần");
+    const [selectedType, setSelectedType] = useState("Vi phạm: Chuyên cần");
     const typeRef = useRef(null);
 
     const [isContentOpen, setIsContentOpen] = useState(false);
-    const [selectedContent, setSelectedContent] = useState(CONTENT_MAPPING["Chuyên cần"][0]);
+    const [selectedContent, setSelectedContent] = useState(CONTENT_MAPPING["Vi phạm: Chuyên cần"][0]);
     const contentRef = useRef(null);
 
     const [description, setDescription] = useState("");
     const [selectedRecord, setSelectedRecord] = useState(null);
     const [editingRecord, setEditingRecord] = useState(null);
+
+    // Custom point states for "Khác"
+    const [customPts, setCustomPts] = useState(0);
+    const [isPositive, setIsPositive] = useState(true);
 
     const [historyList, setHistoryList] = useState([
         { id: 1, date: "05/01/2026", week: 19, type: "standard", content: "Điểm chuẩn mặc định HK2", actor: "Hệ thống", pts: 100 },
@@ -206,19 +290,27 @@ const AdminCompetitionDetail = () => {
     ]);
 
     const handleAddRecord = () => {
-        if (!selectedContent) return;
+        let pts = selectedContent.pts;
+        let contentLabel = selectedContent.label.split(" (")[0];
+
+        if (selectedType === "Khác") {
+            pts = isPositive ? customPts : -customPts;
+            contentLabel = "Ghi nhận khác";
+        }
+
         const newRecord = {
             id: Date.now(),
             date: "06/04/2026",
             week: selectedWeek,
-            type: selectedContent.pts >= 0 ? "achievement" : "violation",
-            content: selectedContent.label.split(" (")[0],
+            type: pts >= 0 ? "achievement" : "violation",
+            content: contentLabel,
             actor: "Quản trị viên (Demo)",
-            pts: selectedContent.pts,
+            pts: pts,
             description: description || ""
         };
         setHistoryList([newRecord, ...historyList]);
         setDescription("");
+        setCustomPts(0);
         alert("Đã thêm thành công!");
     };
 
@@ -238,8 +330,19 @@ const AdminCompetitionDetail = () => {
 
     const handleTypeChange = (type) => {
         setSelectedType(type);
-        setSelectedContent(CONTENT_MAPPING[type][0]);
+        if (type !== "Khác") {
+            setSelectedContent(CONTENT_MAPPING[type][0]);
+        } else {
+            setSelectedContent({ label: "Ghi nhận khác", pts: 0 });
+        }
         setIsTypeOpen(false);
+    };
+
+    const handlePointChange = (val) => {
+        const num = parseInt(val) || 0;
+        if (num > 100) setCustomPts(100);
+        else if (num < 0) setCustomPts(0);
+        else setCustomPts(num);
     };
 
     const groupedWeeks = useMemo(() => {
@@ -429,22 +532,44 @@ const AdminCompetitionDetail = () => {
                                     )}
                                 </div>
                             </div>
-                            <div className="form-row">
-                                <label>Nội dung vi phạm</label>
-                                <div className="admin-custom-select" ref={contentRef} onClick={() => setIsContentOpen(!isContentOpen)}>
-                                    <div className={`admin-custom-select-trigger ${isContentOpen ? "active" : ""}`}>
-                                        <span>{selectedContent.label}</span>
-                                        <FiChevronDown className={`admin-select-icon ${isContentOpen ? "open" : ""}`} />
-                                    </div>
-                                    {isContentOpen && (
-                                        <div className="admin-custom-select-options custom-scroll">
-                                            {contentOptions.map((opt, i) => (
-                                                <div key={i} className="admin-custom-select-option" onClick={() => setSelectedContent(opt)}>{opt.label}</div>
-                                            ))}
+                            {selectedType !== "Khác" ? (
+                                <div className="form-row">
+                                    <label>Nội dung vi phạm</label>
+                                    <div className="admin-custom-select" ref={contentRef} onClick={() => setIsContentOpen(!isContentOpen)}>
+                                        <div className={`admin-custom-select-trigger ${isContentOpen ? "active" : ""}`}>
+                                            <span>{selectedContent.label}</span>
+                                            <FiChevronDown className={`admin-select-icon ${isContentOpen ? "open" : ""}`} />
                                         </div>
-                                    )}
+                                        {isContentOpen && (
+                                            <div className="admin-custom-select-options custom-scroll">
+                                                {contentOptions.map((opt, i) => (
+                                                    <div key={i} className="admin-custom-select-option" onClick={() => setSelectedContent(opt)}>{opt.label}</div>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
                                 </div>
-                            </div>
+                            ) : (
+                                <div className="form-row">
+                                    <label>Số điểm ghi nhận (+/- tối đa 100)</label>
+                                    <div className="pts-input-group">
+                                        <button 
+                                            className={`btn-toggle-sign ${isPositive ? 'pos' : 'neg'}`}
+                                            onClick={() => setIsPositive(!isPositive)}
+                                            title="Thay đổi dấu (+/-)"
+                                        >
+                                            {isPositive ? '+' : '-'}
+                                        </button>
+                                        <input 
+                                            type="number" 
+                                            className="admin-point-input"
+                                            value={customPts === 0 ? "" : customPts}
+                                            onChange={(e) => handlePointChange(e.target.value)}
+                                            placeholder="0"
+                                        />
+                                    </div>
+                                </div>
+                            )}
                             <div className="form-row">
                                 <label>Mô tả chi tiết</label>
                                 <textarea className="admin-form-textarea" placeholder="Nội dung..." value={description} onChange={e => setDescription(e.target.value)} />

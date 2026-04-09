@@ -6,6 +6,10 @@ import CreateEditQuizSection from "../../../../teacher/quiz/components/createEdi
 import AssignQuizSection from "../../../../teacher/quiz/components/assignQuizSection/AssignQuizSection";
 import QuizListSection from "../../../../teacher/quiz/components/quizListSection/QuizListSection";
 import CreateQuizDialog from "../createQuizDialog/CreateQuizDialog";
+import {
+    formatDurationLabel,
+    parseDurationMinutes,
+} from "../../../../../services/shared/quiz/quizService";
 import "./CreateQuizPage.css";
 
 const MAX_QUESTION_SCORE = 10;
@@ -30,7 +34,9 @@ const createQuizFromMeta = (meta = {}) => ({
     title: meta.title || "Bài kiểm tra mới",
     subject: meta.subject || "",
     className: meta.grade || "",
-    duration: meta.duration || "45 phút",
+    duration: formatDurationLabel(meta.duration || "45 phút"),
+    examFormat: meta.examFormat || "Trắc nghiệm",
+    examType: meta.examType || "Thường xuyên",
     createdByRole: meta.createdByRole || "admin",
     createdByName:
         meta.createdByRole === "teacher"
@@ -47,9 +53,9 @@ const getQuestionScoreValue = (score) => {
 const getTotalScore = (questions = []) =>
     questions.reduce((sum, item) => sum + getQuestionScoreValue(item.score), 0);
 
-const parseDurationMinutes = (durationValue) => {
-    const matched = String(durationValue || "").match(/\d+/);
-    return matched ? Number(matched[0]) : 45;
+const getDefaultQuestionType = (examFormat) => {
+    if (examFormat === "Tự luận") return "essay";
+    return "multiple-choice";
 };
 
 const buildQuizCardPayload = (quizData, quizCardId) => ({
@@ -60,6 +66,7 @@ const buildQuizCardPayload = (quizData, quizCardId) => ({
     grade: quizData.className || "",
     questions: quizData.questions.length,
     duration: parseDurationMinutes(quizData.duration),
+    durationLabel: formatDurationLabel(quizData.duration),
     status: "open",
     createdAt: new Date().toISOString().slice(0, 10),
     createdByRole: quizData.createdByRole || "admin",
@@ -67,6 +74,7 @@ const buildQuizCardPayload = (quizData, quizCardId) => ({
         quizData.createdByRole === "teacher"
             ? quizData.createdByName || ""
             : "Quản trị viên",
+    examType: quizData.examType || "Thường xuyên",
 });
 
 export default function CreateQuizPage() {
@@ -77,7 +85,7 @@ export default function CreateQuizPage() {
     const [quiz, setQuiz] = useState(() => createQuizFromMeta(routeQuizMeta));
     const [showSetupDialog, setShowSetupDialog] = useState(!routeQuizMeta);
     const [formData, setFormData] = useState(emptyForm);
-    const [questionType, setQuestionType] = useState("multiple-choice");
+    const [questionType, setQuestionType] = useState(() => getDefaultQuestionType(routeQuizMeta?.examFormat));
     const [editingQuestionId, setEditingQuestionId] = useState(null);
     const [showAddQuestionForm, setShowAddQuestionForm] = useState(false);
     const [animatedQuestionId, setAnimatedQuestionId] = useState(null);
@@ -180,7 +188,7 @@ export default function CreateQuizPage() {
 
     const resetForm = () => {
         setFormData(emptyForm);
-        setQuestionType("multiple-choice");
+        setQuestionType(getDefaultQuestionType(quiz.examFormat));
         setEditingQuestionId(null);
         setShowAddQuestionForm(false);
     };
@@ -231,10 +239,7 @@ export default function CreateQuizPage() {
             return false;
         }
 
-        if (!quiz.questions.length) {
-            alert("Vui lòng thêm ít nhất 1 câu hỏi trước khi lưu.");
-            return false;
-        }
+        // Removed validation for mandatory at least 1 question as requested by user.
 
         return true;
     };
@@ -448,7 +453,7 @@ export default function CreateQuizPage() {
 
     const handleOpenAddForm = () => {
         setEditingQuestionId(null);
-        setQuestionType("multiple-choice");
+        setQuestionType(getDefaultQuestionType(quiz.examFormat));
         setFormData(emptyForm);
         setShowAddQuestionForm(true);
 
@@ -466,6 +471,9 @@ export default function CreateQuizPage() {
             title: quizMeta.title,
             subject: quizMeta.subject,
             className: quizMeta.grade,
+            duration: formatDurationLabel(quizMeta.duration),
+            examFormat: quizMeta.examFormat,
+            examType: quizMeta.examType || "Thường xuyên",
             createdByRole: quizMeta.createdByRole || "admin",
             createdByName:
                 quizMeta.createdByRole === "teacher"
@@ -598,7 +606,11 @@ export default function CreateQuizPage() {
                         scoreStep={ADMIN_SCORE_STEP}
                         questionImage={formData.questionImage}
                         onChangeQuestionImage={handleChangeQuestionImage}
-                        onChangeQuestionType={setQuestionType}
+                        onChangeQuestionType={
+                            activeQuiz.examFormat === "Trắc nghiệm và tự luận"
+                                ? setQuestionType
+                                : null
+                        }
                         onChangeQuestion={handleChangeQuestion}
                         onChangeAnswer={handleChangeAnswer}
                         onSelectCorrect={handleSelectCorrect}
@@ -629,7 +641,11 @@ export default function CreateQuizPage() {
                     scoreStep={ADMIN_SCORE_STEP}
                     questionImage={formData.questionImage}
                     onChangeQuestionImage={handleChangeQuestionImage}
-                    onChangeQuestionType={setQuestionType}
+                    onChangeQuestionType={
+                        activeQuiz.examFormat === "Trắc nghiệm và tự luận"
+                            ? setQuestionType
+                            : null
+                    }
                     onChangeQuestion={handleChangeQuestion}
                     onChangeAnswer={handleChangeAnswer}
                     onSelectCorrect={handleSelectCorrect}
@@ -729,4 +745,3 @@ export default function CreateQuizPage() {
         </div>
     );
 }
-

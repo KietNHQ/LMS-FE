@@ -18,29 +18,38 @@
 }
 
 .grade-filters {
-    display: flex;
-    gap: 0.5rem;
-    background: #f1f5f9;
-    padding: 0.25rem;
-    border-radius: 12px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    background: transparent;
+    padding: 0;
 }
 
 .filter-btn {
-    padding: 0.5rem 1rem;
+    min-height: 32px;
+    padding: 0 12px;
+    border: 1px solid rgba(24, 45, 99, 0.2);
     border-radius: 8px;
-    border: none;
-    background: transparent;
-    color: #64748b;
-    font-size: 0.9rem;
-    font-weight: 600;
+    background: #f8faff;
+    color: #1e2f5a;
+    font-size: 14px;
+    font-weight: 700;
     cursor: pointer;
     transition: all 0.2s ease;
 }
 
+.filter-btn:hover {
+    border-color: #1e2f5a;
+    color: #1e2f5a;
+    background: rgba(24, 45, 99, 0.08);
+}
+
 .filter-btn.active {
-    background: white;
-    color: #1e293b;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    border-color: #1e2f5a;
+    background: #1e2f5a;
+    color: #ffffff;
+    box-shadow: 0 8px 16px rgba(24, 45, 99, 0.22);
 }
 
 .week-picker-custom {

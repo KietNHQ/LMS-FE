@@ -1,0 +1,147 @@
+.submission-review-dialog {
+    width: min(980px, 100%);
+}
+
+.submission-review-dialog__summary {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 10px;
+}
+
+.submission-review-dialog__summary span {
+    padding: 6px 10px;
+    border-radius: 999px;
+    background: #eef7ff;
+    color: #2156a5;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.submission-review-dialog__summary .ready {
+    background: #ecfdf3;
+    color: #027a48;
+}
+
+.submission-review-dialog__summary .pending {
+    background: #fff7ed;
+    color: #b54708;
+}
+
+.submission-review-dialog__assignment {
+    margin: 0 0 10px;
+    color: #344054;
+}
+
+.submission-review-dialog__warning {
+    margin: 0 0 12px;
+    border: 1px solid #fecdca;
+    background: #fff6f5;
+    color: #b42318;
+    border-radius: 10px;
+    padding: 10px 12px;
+}
+
+.submission-review-dialog__list {
+    display: grid;
+    gap: 12px;
+    max-height: 64vh;
+    overflow: auto;
+    padding-right: 4px;
+}
+
+.submission-review-dialog__item {
+    border: 1px solid #d0d5dd;
+    border-radius: 14px;
+    padding: 12px;
+    background: #ffffff;
+}
+
+.submission-review-dialog__item-header {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.submission-review-dialog__item-header h4 {
+    margin: 0 0 4px;
+    font-size: 16px;
+}
+
+.submission-review-dialog__item-header small {
+    color: #667085;
+}
+
+.submission-review-dialog__item-header .graded,
+.submission-review-dialog__item-header .waiting {
+    align-self: flex-start;
+    border-radius: 999px;
+    padding: 4px 9px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.submission-review-dialog__item-header .graded {
+    background: #ecfdf3;
+    color: #027a48;
+}
+
+.submission-review-dialog__item-header .waiting {
+    background: #fff7ed;
+    color: #b54708;
+}
+
+.submission-review-dialog__essay-preview {
+    margin: 10px 0;
+    color: #344054;
+}
+
+.submission-review-dialog__scores {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+}
+
+.submission-review-dialog__scores label {
+    display: block;
+    margin-bottom: 6px;
+    font-size: 12px;
+    color: #667085;
+}
+
+.submission-review-dialog__scores input {
+    width: 100%;
+    min-height: 36px;
+    border: 1px solid #d0d5dd;
+    border-radius: 10px;
+    padding: 0 10px;
+}
+
+.submission-review-dialog__actions {
+    margin-top: 10px;
+    display: flex;
+    justify-content: flex-end;
+}
+
+.submission-review-dialog__actions button {
+    border: 1px solid #14b8a6;
+    background: #f0fdfa;
+    color: #0f766e;
+    border-radius: 10px;
+    min-height: 36px;
+    padding: 0 12px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.submission-review-dialog__actions button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+@media (max-width: 900px) {
+    .submission-review-dialog__scores {
+        grid-template-columns: 1fr;
+    }
+}
+

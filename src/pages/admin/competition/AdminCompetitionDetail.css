@@ -630,3 +630,66 @@
     background: white;
     outline: none;
 }
+
+/* Custom Point Input UI for "Khác" option */
+.pts-input-group {
+    display: flex;
+    gap: 0.75rem;
+    align-items: center;
+}
+
+.btn-toggle-sign {
+    width: 48px;
+    height: 3rem;
+    border-radius: 10px;
+    border: 1.5px solid #e2e8f0;
+    font-size: 1.25rem;
+    font-weight: 900;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.btn-toggle-sign.pos {
+    background: #dcfce7;
+    color: #15803d;
+    border-color: #bbf7d0;
+}
+
+.btn-toggle-sign.neg {
+    background: #fee2e2;
+    color: #dc2626;
+    border-color: #fecaca;
+}
+
+.admin-point-input {
+    flex: 1;
+    height: 3rem;
+    padding: 0 1rem;
+    border-radius: 10px;
+    border: 1.5px solid #e2e8f0;
+    background: #fbfcfd;
+    font-size: 1.1rem;
+    font-weight: 750;
+    color: #1e293b;
+    transition: all 0.2s;
+    appearance: textfield; /* Standard property */
+    -moz-appearance: textfield; /* Remove arrows in Firefox */
+}
+
+/* Remove arrows in Chrome, Safari, Edge, Opera */
+.admin-point-input::-webkit-outer-spin-button,
+.admin-point-input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+.admin-point-input:focus {
+    border-color: #3458c4;
+    background: white;
+    outline: none;
+    box-shadow: 0 0 0 4px rgba(52, 88, 196, 0.08);
+}

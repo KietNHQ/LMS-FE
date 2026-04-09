@@ -91,6 +91,16 @@
     letter-spacing: 0.5px;
 }
 
+.sub-section-title {
+    font-size: 0.9rem;
+    font-weight: 800;
+    color: #475569;
+    margin: 0.75rem 0 1rem 0.25rem;
+    padding-bottom: 0.25rem;
+    border-bottom: 2px solid #f1f5f9;
+    width: 100%;
+}
+
 .rules-grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr); /* 4 columns instead of 3 */
