@@ -1,0 +1,306 @@
+.tc-review-modal {
+  width: min(760px, 100%);
+}
+
+.tc-review-modal .ui-modal__body {
+  background: #ffffff;
+  padding: 14px 16px 16px;
+}
+
+.tc-review-dialog-content {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.tc-review-dialog-student {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.tc-review-dialog-avatar {
+  width: 46px;
+  height: 46px;
+  border-radius: 14px;
+  background: var(--tc-primary-strong);
+  color: #ffffff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: 16px;
+  font-weight: 800;
+  box-shadow: 0 8px 20px rgba(15, 118, 110, 0.24);
+}
+
+.tc-review-dialog-student-info {
+  min-width: 0;
+}
+
+.tc-review-dialog-student h4 {
+  margin: 0;
+  color: var(--tc-text-main, #134e4a);
+  font-size: 16px;
+  font-weight: 850;
+  line-height: 1.2;
+}
+
+.tc-review-dialog-student-title-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.tc-review-dialog-student p {
+  margin: 4px 0 0;
+  color: var(--tc-text-subtle, #115e59);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.tc-review-dialog-score-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  min-height: 26px;
+  padding: 0 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.2px;
+  white-space: nowrap;
+  box-shadow: 0 8px 18px rgba(15, 118, 110, 0.12);
+}
+
+.tc-review-dialog-score-badge.positive {
+  background: linear-gradient(180deg, #dcfce7 0%, #bbf7d0 100%);
+  color: #166534;
+  border: 1px solid #86efac;
+}
+
+.tc-review-dialog-score-badge.negative {
+  background: linear-gradient(180deg, #fee2e2 0%, #fecaca 100%);
+  color: #b91c1c;
+  border: 1px solid #fca5a5;
+}
+
+.tc-review-dialog-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.tc-review-dialog-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  border: 1px solid var(--tc-border);
+  border-radius: 16px;
+  background: linear-gradient(180deg, #ffffff 0%, var(--tc-primary-soft) 100%);
+  box-shadow: 0 10px 22px var(--tc-shadow);
+  transition: border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
+}
+
+.tc-review-dialog-field:hover {
+  border-color: rgba(13, 148, 136, 0.95);
+  box-shadow: 0 14px 28px rgba(13, 148, 136, 0.1);
+  transform: translateY(-1px);
+}
+
+.tc-review-dialog-field--full {
+  grid-column: 1 / -1;
+}
+
+.tc-review-dialog-field--full .tc-input {
+  min-height: 48px;
+  border-radius: 14px;
+  box-shadow: 0 8px 18px rgba(15, 118, 110, 0.06);
+}
+
+.tc-review-dialog-entry-box {
+  background: linear-gradient(180deg, #f0fdfa 0%, #f0fdfa 100%);
+  grid-column: 1 / -1;
+}
+
+.tc-review-dialog-entry-box-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.tc-review-dialog-add-entry-btn {
+  min-height: 34px;
+  padding: 0 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(13, 148, 136, 0.95);
+  background: var(--tc-gradient);
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 10px 22px var(--tc-shadow);
+}
+
+.tc-review-dialog-entry-empty {
+  margin: 0;
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1px dashed #99f6e4;
+  background: #ffffff;
+  color: var(--tc-text-subtle, #115e59);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.5;
+}
+
+.tc-review-dialog-entry-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.tc-review-dialog-entry-card {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 16px;
+  border: 1px solid #5eead4;
+  background: #ffffff;
+  box-shadow: 0 10px 22px rgba(15, 118, 110, 0.06);
+}
+
+.tc-review-dialog-entry-card-main {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.tc-review-dialog-entry-card-main strong {
+  color: var(--tc-text-main, #134e4a);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.tc-review-dialog-entry-card-main span {
+  color: var(--tc-text-main, #134e4a);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.tc-review-dialog-entry-card-main small {
+  color: var(--tc-text-subtle, #115e59);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.tc-review-dialog-entry-card-side {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.tc-review-dialog-entry-remove {
+  border: 0;
+  background: transparent;
+  color: #b91c1c;
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+  padding: 0;
+}
+
+.tc-review-dialog-entry-total {
+  margin: 8px 0 0;
+  color: var(--tc-text-subtle, #115e59);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.tc-review-dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.tc-review-dialog-btn {
+  min-height: 42px;
+  padding: 0 18px;
+  border-radius: 12px;
+  border: 1px solid transparent;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.2px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.2s ease;
+}
+
+.tc-review-dialog-btn.secondary {
+  border-color: #99f6e4;
+  background: linear-gradient(180deg, #ffffff 0%, #f7fcfb 100%);
+  color: var(--tc-text-main, #134e4a);
+  box-shadow: 0 8px 18px rgba(16, 24, 40, 0.06);
+}
+
+.tc-review-dialog-btn.secondary:hover {
+  background: linear-gradient(180deg, #ffffff 0%, #eef8f6 100%);
+  border-color: #c7dfdb;
+  transform: translateY(-1px);
+  box-shadow: 0 10px 22px rgba(16, 24, 40, 0.08);
+}
+
+.tc-review-dialog-btn.primary {
+  border-color: #04a094;
+  background: var(--tc-gradient);
+  color: #ffffff;
+  box-shadow: 0 10px 24px var(--tc-shadow);
+}
+
+.tc-review-dialog-btn.primary:hover {
+  filter: brightness(1.03);
+  box-shadow: 0 14px 28px rgba(13, 148, 136, 0.28);
+  transform: translateY(-1px);
+}
+
+@media (max-width: 1024px) {
+  .tc-review-modal {
+    width: min(620px, 100%);
+  }
+}
+
+@media (max-width: 768px) {
+  .tc-review-modal {
+    width: 100%;
+  }
+
+  .tc-review-modal .ui-modal__body {
+    padding: 14px;
+  }
+
+  .tc-review-dialog-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .tc-review-dialog-student {
+    gap: 10px;
+  }
+
+  .tc-review-dialog-avatar {
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+  }
+}

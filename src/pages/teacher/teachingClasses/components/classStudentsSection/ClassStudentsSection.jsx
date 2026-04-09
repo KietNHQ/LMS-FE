@@ -1,186 +1,41 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { FiCalendar, FiCheck, FiChevronLeft, FiChevronRight, FiEdit3, FiSearch } from "react-icons/fi";
-import Modal from "../../../../../components/ui/Modal/Modal";
-import Select from "../../../../../components/ui/Select/Select";
+import { FiSearch } from "react-icons/fi";
 import "./ClassStudentsSection.css";
 
-const PERIOD_DURATION_MINUTES = 45;
-const BREAK_AFTER_PERIOD_2_MINUTES = 15;
+// Utilities
+import {
+  getCurrentLessonInfo,
+  toDateKey,
+  shiftDateKey,
+  parseDateKey,
+  REVIEW_CONTENT_MAPPING,
+  normalizeStoredReview,
+} from "../../utils/teachingClassesUtils";
 
-const toMinutes = (hours, minutes) => hours * 60 + minutes;
+// Sub-components
+import LessonTimeline from "./subcomponents/LessonTimeline";
+import StudentReviewModal from "./subcomponents/StudentReviewModal";
+import LessonReviewModal from "./subcomponents/LessonReviewModal";
+import StudentsTable from "./subcomponents/StudentsTable";
+import Pagination from "./subcomponents/Pagination";
 
-const formatTimeRange = (startMinute, endMinute) => {
-  const startHour = String(Math.floor(startMinute / 60)).padStart(2, "0");
-  const startMin = String(startMinute % 60).padStart(2, "0");
-  const endHour = String(Math.floor(endMinute / 60)).padStart(2, "0");
-  const endMin = String(endMinute % 60).padStart(2, "0");
-
-  return `${startHour}:${startMin} - ${endHour}:${endMin}`;
-};
-
-const buildSessionSlots = (sessionName, basePeriodNumber, firstStartMinute) => {
-  const p1Start = firstStartMinute;
-  const p2Start = p1Start + PERIOD_DURATION_MINUTES;
-  const p3Start = p2Start + PERIOD_DURATION_MINUTES + BREAK_AFTER_PERIOD_2_MINUTES;
-  const p4Start = p3Start + PERIOD_DURATION_MINUTES;
-  const p5Start = p4Start + PERIOD_DURATION_MINUTES;
-  const starts = [p1Start, p2Start, p3Start, p4Start, p5Start];
-
-  return starts.map((startMinute, index) => {
-    const endMinute = startMinute + PERIOD_DURATION_MINUTES;
-    return {
-      periodLabel: `Tiết ${basePeriodNumber + index}`,
-      sessionLabel: sessionName,
-      startMinute,
-      endMinute,
-      timeRange: formatTimeRange(startMinute, endMinute),
-    };
-  });
-};
-
-const LESSON_SLOTS = [
-  ...buildSessionSlots("Buổi sáng", 1, toMinutes(7, 15)),
-  ...buildSessionSlots("Buổi chiều", 1, toMinutes(13, 15)),
-];
-
-const getCurrentLessonInfo = (date) => {
-  const currentMinute = toMinutes(date.getHours(), date.getMinutes());
-
-  const matchedSlot = LESSON_SLOTS.find(
-    (slot) => currentMinute >= slot.startMinute && currentMinute < slot.endMinute
-  );
-
-  if (matchedSlot) {
-    return {
-      periodLabel: matchedSlot.periodLabel,
-      sessionLabel: matchedSlot.sessionLabel,
-      timeRange: matchedSlot.timeRange,
-    };
-  }
-
-  return {
-    periodLabel: "Ngoài khung tiết",
-    sessionLabel: date.getHours() < 12 ? "Buổi sáng" : "Buổi chiều",
-    timeRange: "",
-  };
-};
-
-const toDateKey = (date) => {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
-};
-
-const shiftDateKey = (baseDate, dayOffset) => {
-  const shifted = new Date(baseDate);
-  shifted.setDate(baseDate.getDate() + dayOffset);
-  return toDateKey(shifted);
-};
-
-const parseDateKey = (dateKey) => {
-  const [year, month, day] = dateKey.split("-").map(Number);
-  return new Date(year, month - 1, day);
-};
-
-const REVIEW_CONTENT_MAPPING = {
-  "Vi phạm: Chuyên cần": [
-    { label: "Nghỉ học không phép (-15đ)", pts: -15 },
-    { label: "Đi học muộn (-5đ)", pts: -5 },
-    { label: "Trốn học, bỏ tiết (-50đ)", pts: -50 },
-    { label: "Bỏ giờ trong tiết (-10đ)", pts: -10 },
-  ],
-  "Vi phạm: Nề nếp - Tác phong": [
-    { label: "Vi phạm đồng phục/tác phong (-10đ)", pts: -10 },
-    { label: "Mất trật tự trong giờ (-20đ)", pts: -20 },
-    { label: "Nói tục, chửi thề (-15đ)", pts: -15 },
-    { label: "Sử dụng điện thoại trái phép (-5đ)", pts: -5 },
-    { label: "Ăn uống trong giờ (-3đ)", pts: -3 },
-    { label: "Gây gổ, xô đẩy (-25đ)", pts: -25 },
-    { label: "Bắt nạt, xúc phạm (-30đ)", pts: -30 },
-  ],
-  "Vi phạm: Tài sản - Môi trường": [
-    { label: "Làm hư hỏng tài sản trường (-20đ)", pts: -20 },
-    { label: "Vẽ bậy, bôi bẩn (-10đ)", pts: -10 },
-    { label: "Vứt rác bừa bãi (-3đ)", pts: -3 },
-    { label: "Không tắt điện/quạt khi ra về (-2đ)", pts: -2 },
-  ],
-  "Vi phạm: Học tập": [
-    { label: "Không làm bài tập (-2đ)", pts: -2 },
-    { label: "Không mang sách vở (-2đ)", pts: -2 },
-    { label: "Gian lận thi cử (-50đ)", pts: -50 },
-    { label: "Không tham gia hoạt động ngoại khóa (-5đ)", pts: -5 },
-  ],
-  "Khen thưởng & Tích cực": [
-    { label: "Nhặt được của rơi trả lại (+20đ)", pts: 20 },
-    { label: "Gương mẫu được tuyên dương (+20đ)", pts: 20 },
-    { label: "Giúp đỡ bạn bè được ghi nhận (+10đ)", pts: 10 },
-    { label: "Phát hiện sai phạm, báo cáo (+15đ)", pts: 15 },
-    { label: "Tiến bộ rõ rệt (+20đ)", pts: 20 },
-  ],
-};
-
-const getReviewSummaryText = (review) => {
-  if (!review) {
-    return "";
-  }
-
-  if (typeof review === "string") {
-    return review;
-  }
-
-  if (review.summary) {
-    return review.summary;
-  }
-
-  if (!Array.isArray(review.entries) || review.entries.length === 0) {
-    return "";
-  }
-
-  return review.entries
-    .map((entry) => {
-      const pointLabel = entry.pts > 0 ? `+${entry.pts}` : entry.pts;
-      return [entry.category, entry.content?.label, entry.note, `Điểm: ${pointLabel}`].filter(Boolean).join(" • ");
-    })
-    .join(" || ");
-};
-
-const normalizeReviewEntry = (entry) => ({
-  id: entry.id ?? Date.now(),
-  category: entry.category || "Vi phạm: Chuyên cần",
-  content: entry.content || { label: "", pts: 0 },
-  note: entry.note || "",
-  pts: typeof entry.pts === "number" ? entry.pts : entry.content?.pts || 0,
-});
-
-const normalizeStoredReview = (review) => {
-  if (!review) {
-    return null;
-  }
-
-  if (typeof review === "string") {
-    return {
-      summary: review,
-      entries: [],
-    };
-  }
-
-  return {
-    summary: review.summary || getReviewSummaryText(review),
-    entries: Array.isArray(review.entries) ? review.entries.map(normalizeReviewEntry) : [],
-  };
-};
+const ITEMS_PER_PAGE = 8;
 
 const ClassStudentsSection = ({ students }) => {
+  // --- State ---
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [studentReviews, setStudentReviews] = useState({});
   const [studentAttendance, setStudentAttendance] = useState({});
+  
+  // Student Review Modal State
   const [reviewDialogStudent, setReviewDialogStudent] = useState(null);
   const [reviewCategory, setReviewCategory] = useState("Vi phạm: Chuyên cần");
   const [reviewContent, setReviewContent] = useState(REVIEW_CONTENT_MAPPING["Vi phạm: Chuyên cần"][0]);
   const [reviewNote, setReviewNote] = useState("");
   const [reviewEntries, setReviewEntries] = useState([]);
+  
+  // Lesson Review Modal State
   const [isLessonReviewDialogOpen, setIsLessonReviewDialogOpen] = useState(false);
   const [lessonScore, setLessonScore] = useState("");
   const [lessonNote, setLessonNote] = useState("");
@@ -244,12 +99,14 @@ const ClassStudentsSection = ({ students }) => {
       },
     ];
   });
+
+  // Timeline & Calendar State
   const [todayLessonInfo, setTodayLessonInfo] = useState(() => getCurrentLessonInfo(new Date()));
   const [selectedHistoryDate, setSelectedHistoryDate] = useState(() => toDateKey(new Date()));
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const [calendarViewDate, setCalendarViewDate] = useState(() => parseDateKey(toDateKey(new Date())));
-  const ITEMS_PER_PAGE = 8;
 
+  // --- Derived State ---
   const totalStudents = students.length;
   const markedAttendedCount = Object.values(studentAttendance).filter(Boolean).length;
   const attendedToday = markedAttendedCount;
@@ -272,20 +129,6 @@ const ClassStudentsSection = ({ students }) => {
 
   const selectedDateLatestReview = reviewsForSelectedDate[0] || null;
 
-  useEffect(() => {
-    if (!selectedDateLatestReview) {
-      return;
-    }
-
-    setStudentAttendance(selectedDateLatestReview.attendanceSnapshot || {});
-    setStudentReviews(selectedDateLatestReview.studentReviewSnapshot || {});
-    setCurrentPage(1);
-  }, [selectedDateLatestReview]);
-
-  useEffect(() => {
-    setCalendarViewDate(parseDateKey(selectedHistoryDate));
-  }, [selectedHistoryDate]);
-
   const filteredStudents = students.filter((student) =>
     student.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
@@ -298,19 +141,25 @@ const ClassStudentsSection = ({ students }) => {
     effectivePage * ITEMS_PER_PAGE
   );
 
-  const formatDate = (dateString) => {
-    if (!dateString) return "";
-    const [year, month, day] = dateString.split("-");
-    return `${day}/${month}/${year}`;
-  };
+  const reviewTotalPoints = useMemo(
+    () => reviewEntries.reduce((total, entry) => total + entry.pts, 0),
+    [reviewEntries]
+  );
 
-  const goPrevPage = () => {
-    setCurrentPage((prev) => Math.max(1, prev - 1));
-  };
+  // --- Effects ---
+  useEffect(() => {
+    if (!selectedDateLatestReview) return;
+    setStudentAttendance(selectedDateLatestReview.attendanceSnapshot || {});
+    setStudentReviews(selectedDateLatestReview.studentReviewSnapshot || {});
+    setCurrentPage(1);
+  }, [selectedDateLatestReview]);
 
-  const goNextPage = () => {
-    setCurrentPage((prev) => Math.min(totalPages, prev + 1));
-  };
+  useEffect(() => {
+    setCalendarViewDate(parseDateKey(selectedHistoryDate));
+  }, [selectedHistoryDate]);
+
+  // --- Handlers ---
+  const handleBackToToday = () => setSelectedHistoryDate(toDateKey(new Date()));
 
   const openReviewDialog = (student) => {
     setReviewDialogStudent(student);
@@ -342,21 +191,14 @@ const ClassStudentsSection = ({ students }) => {
     setReviewContent(REVIEW_CONTENT_MAPPING[category][0]);
   };
 
-  const reviewTotalPoints = useMemo(
-    () => reviewEntries.reduce((total, entry) => total + entry.pts, 0),
-    [reviewEntries]
-  );
-
   const addReviewEntry = () => {
-    const note = reviewNote.trim();
-
     setReviewEntries((currentEntries) => [
       ...currentEntries,
       {
         id: Date.now(),
         category: reviewCategory,
         content: reviewContent,
-        note,
+        note: reviewNote.trim(),
         pts: reviewContent.pts,
       },
     ]);
@@ -368,22 +210,17 @@ const ClassStudentsSection = ({ students }) => {
   };
 
   const saveReview = () => {
-    if (!reviewDialogStudent) {
-      return;
-    }
+    if (!reviewDialogStudent) return;
 
-    const entriesToSave =
-      reviewEntries.length > 0
-        ? reviewEntries
-        : [
-            {
-              id: Date.now(),
-              category: reviewCategory,
-              content: reviewContent,
-              note: reviewNote.trim(),
-              pts: reviewContent.pts,
-            },
-          ];
+    const entriesToSave = reviewEntries.length > 0 ? reviewEntries : [
+      {
+        id: Date.now(),
+        category: reviewCategory,
+        content: reviewContent,
+        note: reviewNote.trim(),
+        pts: reviewContent.pts,
+      },
+    ];
 
     const totalPoints = entriesToSave.reduce((total, entry) => total + entry.pts, 0);
 
@@ -395,9 +232,7 @@ const ClassStudentsSection = ({ students }) => {
         })
         .join(" || "),
       `Tổng: ${totalPoints > 0 ? `+${totalPoints}` : totalPoints}`,
-    ]
-      .filter(Boolean)
-      .join(" • ");
+    ].filter(Boolean).join(" • ");
 
     setStudentReviews((prev) => ({
       ...prev,
@@ -417,23 +252,9 @@ const ClassStudentsSection = ({ students }) => {
     }));
   };
 
-  const openLessonReviewDialog = () => {
-    setTodayLessonInfo(getCurrentLessonInfo(new Date()));
-    setIsLessonReviewDialogOpen(true);
-  };
-
-  const closeLessonReviewDialog = () => {
-    setIsLessonReviewDialogOpen(false);
-    setLessonScore("");
-    setLessonNote("");
-  };
-
   const handleAddLessonReview = (event) => {
     event.preventDefault();
-
-    if (!lessonScore.trim() || !lessonNote.trim()) {
-      return;
-    }
+    if (!lessonScore.trim() || !lessonNote.trim()) return;
 
     const reviewDateKey = toDateKey(new Date());
     const attendanceSnapshot = students.reduce((acc, student) => {
@@ -461,18 +282,19 @@ const ClassStudentsSection = ({ students }) => {
 
     setLessonReviews((prev) => [newReview, ...prev]);
     setSelectedHistoryDate(reviewDateKey);
-    closeLessonReviewDialog();
+    setIsLessonReviewDialogOpen(false);
+    setLessonScore("");
+    setLessonNote("");
   };
 
+  // Calendar Helpers
   const calendarMonthLabel = calendarViewDate.toLocaleDateString("vi-VN", {
     month: "long",
     year: "numeric",
   });
-
   const firstOfMonth = new Date(calendarViewDate.getFullYear(), calendarViewDate.getMonth(), 1);
   const daysInMonth = new Date(calendarViewDate.getFullYear(), calendarViewDate.getMonth() + 1, 0).getDate();
   const firstWeekday = (firstOfMonth.getDay() + 6) % 7;
-
   const calendarCells = Array.from({ length: 42 }, (_, idx) => {
     const dayOffset = idx - firstWeekday + 1;
     const dateObj = new Date(calendarViewDate.getFullYear(), calendarViewDate.getMonth(), dayOffset);
@@ -487,16 +309,6 @@ const ClassStudentsSection = ({ students }) => {
       hasReview: availableReviewDateSet.has(dateKey),
     };
   });
-
-  const openCalendar = () => {
-    setCalendarViewDate(parseDateKey(selectedHistoryDate));
-    setIsCalendarOpen(true);
-  };
-
-  const selectCalendarDate = (dateKey) => {
-    setSelectedHistoryDate(dateKey);
-    setIsCalendarOpen(false);
-  };
 
   return (
     <div className="students-card">
@@ -516,432 +328,73 @@ const ClassStudentsSection = ({ students }) => {
         </div>
       </div>
 
-      <section className="lesson-timeline" aria-label="Mốc thời gian tiết học">
-        <div className="lesson-timeline-header">
-          <div className="lesson-timeline-title-wrap">
-            <h3>Mốc thời gian tiết học</h3>
-            <p>{currentLessonTime}</p>
-          </div>
+      <LessonTimeline 
+        currentLessonTime={currentLessonTime}
+        onOpenLessonReview={() => setIsLessonReviewDialogOpen(true)}
+        selectedHistoryDate={selectedHistoryDate}
+        setSelectedHistoryDate={setSelectedHistoryDate}
+        onOpenCalendar={() => setIsCalendarOpen(true)}
+        isCalendarOpen={isCalendarOpen}
+        availableReviewDates={availableReviewDates}
+        reviewsForSelectedDate={reviewsForSelectedDate}
+        onTodayClick={handleBackToToday}
+        calendarProps={{
+          calendarMonthLabel,
+          calendarViewDate,
+          setCalendarViewDate,
+          calendarCells,
+          onSelectDate: (dateKey) => {
+            setSelectedHistoryDate(dateKey);
+            setIsCalendarOpen(false);
+          }
+        }}
+      />
 
-          <button type="button" className="tc-open-form-btn" onClick={openLessonReviewDialog}>
-            Đánh giá tiết học
-          </button>
-        </div>
-
-        <div className="lesson-history">
-          <div className="lesson-history-header">
-            <h4>Lịch sử các tiết học đã đánh giá</h4>
-            <div className="lesson-history-date-picker">
-              <button
-                type="button"
-                className="lesson-history-calendar-btn"
-                onClick={() => setSelectedHistoryDate(toDateKey(new Date()))}
-                aria-label="Chọn ngày hiện tại"
-              >
-                <FiCalendar />
-              </button>
-              <input
-                type="date"
-                value={selectedHistoryDate}
-                onChange={(e) => setSelectedHistoryDate(e.target.value)}
-                onMouseDown={(e) => {
-                  e.preventDefault();
-                  openCalendar();
-                }}
-                onFocus={(e) => {
-                  e.target.blur();
-                  openCalendar();
-                }}
-                list="lesson-review-dates"
-                aria-label="Chọn ngày đã đánh giá"
-                readOnly
-              />
-              <datalist id="lesson-review-dates">
-                {availableReviewDates.map((dateKey) => (
-                  <option key={dateKey} value={dateKey} />
-                ))}
-              </datalist>
-
-              {isCalendarOpen && (
-                <div className="lesson-calendar-popover">
-                  <div className="lesson-calendar-header">
-                    <button
-                      type="button"
-                      className="lesson-calendar-nav-btn"
-                      onClick={() =>
-                        setCalendarViewDate(
-                          new Date(calendarViewDate.getFullYear(), calendarViewDate.getMonth() - 1, 1)
-                        )
-                      }
-                      aria-label="Tháng trước"
-                    >
-                      <FiChevronLeft />
-                    </button>
-                    <strong>{calendarMonthLabel}</strong>
-                    <button
-                      type="button"
-                      className="lesson-calendar-nav-btn"
-                      onClick={() =>
-                        setCalendarViewDate(
-                          new Date(calendarViewDate.getFullYear(), calendarViewDate.getMonth() + 1, 1)
-                        )
-                      }
-                      aria-label="Tháng sau"
-                    >
-                      <FiChevronRight />
-                    </button>
-                  </div>
-
-                  <table className="lesson-calendar-table">
-                    <thead>
-                      <tr>
-                        <th>T2</th>
-                        <th>T3</th>
-                        <th>T4</th>
-                        <th>T5</th>
-                        <th>T6</th>
-                        <th>T7</th>
-                        <th>CN</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {Array.from({ length: 6 }, (_, weekIdx) => (
-                        <tr key={`week-${weekIdx}`}>
-                          {calendarCells.slice(weekIdx * 7, weekIdx * 7 + 7).map((cell) => (
-                            <td key={cell.dateKey}>
-                              <button
-                                type="button"
-                                className={`lesson-calendar-day ${cell.isCurrentMonth ? "" : "out-month"} ${
-                                  cell.hasReview ? "has-review" : ""
-                                } ${cell.isSelected ? "selected" : ""} ${cell.isToday ? "today" : ""}`.trim()}
-                                onClick={() => selectCalendarDate(cell.dateKey)}
-                              >
-                                {cell.day}
-                              </button>
-                            </td>
-                          ))}
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {reviewsForSelectedDate.length === 0 ? (
-            <p className="lesson-history-empty">Ngày này chưa có đánh giá tiết học.</p>
-          ) : (
-            <ul className="lesson-history-list">
-              {reviewsForSelectedDate.map((review) => (
-                <li key={review.id} className="lesson-history-item">
-                  <div className="lesson-history-item-top">
-                    <span className="lesson-history-tag">{review.lessonLabel}</span>
-                    <span className="lesson-history-score">{review.score}</span>
-                  </div>
-                  <p className="lesson-history-time">{review.lessonTime}</p>
-                  <p className="lesson-history-attendance">
-                    Đi học: <strong>{review.attended}</strong> | Vắng: <strong>{review.absent}</strong>
-                  </p>
-                  <p className="lesson-history-note">{review.note}</p>
-                  <small>{review.createdAt}</small>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-      </section>
-
-      <Modal
-        open={!!reviewDialogStudent}
+      <StudentReviewModal 
+        student={reviewDialogStudent}
         onClose={closeReviewDialog}
-        title="Điền thông tin ghi nhận"
-        className="tc-review-modal"
-      >
-        {reviewDialogStudent ? (
-          <div className="tc-review-dialog-content">
-            <div className="tc-review-dialog-student">
-              <div className="tc-review-dialog-avatar">
-                {reviewDialogStudent.name.charAt(0).toUpperCase()}
-              </div>
-              <div className="tc-review-dialog-student-info">
-                <div className="tc-review-dialog-student-title-row">
-                  <h4>{reviewDialogStudent.name}</h4>
-                  <span className={`tc-review-dialog-score-badge ${reviewTotalPoints >= 0 ? "positive" : "negative"}`}>
-                    {reviewTotalPoints > 0 ? `+${reviewTotalPoints}` : reviewTotalPoints} điểm
-                  </span>
-                </div>
-                <p>
-                  {reviewDialogStudent.parentName} • {reviewDialogStudent.parentPhone}
-                </p>
-              </div>
-            </div>
+        reviewCategory={reviewCategory}
+        onCategoryChange={handleReviewCategoryChange}
+        reviewContent={reviewContent}
+        onContentChange={setReviewContent}
+        reviewNote={reviewNote}
+        setReviewNote={setReviewNote}
+        reviewEntries={reviewEntries}
+        onAddEntry={addReviewEntry}
+        onRemoveEntry={removeReviewEntry}
+        reviewTotalPoints={reviewTotalPoints}
+        onSave={saveReview}
+      />
 
-            <div className="tc-review-dialog-grid">
-              <div className="tc-review-dialog-field">
-                <label className="tc-detail-label" htmlFor="review-category">
-                  Nhóm ghi nhận
-                </label>
-                <Select
-                  variant="custom"
-                  id="review-category"
-                  value={reviewCategory}
-                  onChange={(e) => handleReviewCategoryChange(e.target.value)}
-                  options={Object.keys(REVIEW_CONTENT_MAPPING).map((category) => ({
-                    value: category,
-                    label: category
-                  }))}
-                />
-              </div>
+      <LessonReviewModal 
+        isOpen={isLessonReviewDialogOpen}
+        onClose={() => setIsLessonReviewDialogOpen(false)}
+        onAddReview={handleAddLessonReview}
+        currentLessonLabel={currentLessonLabel}
+        currentLessonTime={currentLessonTime}
+        attendedToday={attendedToday}
+        absentToday={absentToday}
+        lessonScore={lessonScore}
+        setLessonScore={setLessonScore}
+        lessonNote={lessonNote}
+        setLessonNote={setLessonNote}
+      />
 
-              <div className="tc-review-dialog-field">
-                <label className="tc-detail-label" htmlFor="review-content">
-                  Nội dung
-                </label>
-                <Select
-                  variant="custom"
-                  id="review-content"
-                  value={reviewContent.label}
-                  onChange={(e) => {
-                    const nextContent = REVIEW_CONTENT_MAPPING[reviewCategory].find(
-                      (item) => item.label === e.target.value
-                    );
-                    if (nextContent) {
-                      setReviewContent(nextContent);
-                    }
-                  }}
-                  options={REVIEW_CONTENT_MAPPING[reviewCategory].map((item) => ({
-                    value: item.label,
-                    label: item.label
-                  }))}
-                />
-              </div>
+      <StudentsTable 
+        students={paginatedStudents}
+        studentAttendance={studentAttendance}
+        onToggleAttendance={toggleAttendance}
+        onOpenReview={openReviewDialog}
+        effectivePage={effectivePage}
+        itemsPerPage={ITEMS_PER_PAGE}
+      />
 
-              <div className="tc-review-dialog-field tc-review-dialog-field--full">
-                <label className="tc-detail-label" htmlFor="review-note">
-                  Ghi chú
-                </label>
-                <input
-                  id="review-note"
-                  className="tc-input"
-                  type="text"
-                  value={reviewNote}
-                  onChange={(e) => setReviewNote(e.target.value)}
-                  placeholder="Nhập ghi chú bổ sung..."
-                />
-              </div>
-
-              <div className="tc-review-dialog-field tc-review-dialog-field--full tc-review-dialog-entry-box">
-                <div className="tc-review-dialog-entry-box-top">
-                  <span className="tc-detail-label">ghi nhận đã chọn</span>
-                  <button type="button" className="tc-review-dialog-add-entry-btn" onClick={addReviewEntry}>
-                    Thêm ghi nhận
-                  </button>
-                </div>
-
-                {reviewEntries.length === 0 ? (
-                  <p className="tc-review-dialog-entry-empty">
-                    Chọn nhóm ghi nhận, nội dung và ghi chú nếu cần, sau đó bấm thêm để tạo nhiều ô đánh giá.
-                  </p>
-                ) : (
-                  <div className="tc-review-dialog-entry-list">
-                    {reviewEntries.map((entry) => {
-                      const pointLabel = entry.pts > 0 ? `+${entry.pts}` : entry.pts;
-
-                      return (
-                        <div key={entry.id} className="tc-review-dialog-entry-card">
-                          <div className="tc-review-dialog-entry-card-main">
-                            <strong>{entry.category}</strong>
-                            <span>{entry.content.label}</span>
-                            {entry.note ? <small>{entry.note}</small> : null}
-                          </div>
-                          <div className="tc-review-dialog-entry-card-side">
-                            <span className={`tc-review-dialog-score-badge ${entry.pts >= 0 ? "positive" : "negative"}`}>
-                              {pointLabel} điểm
-                            </span>
-                            <button
-                              type="button"
-                              className="tc-review-dialog-entry-remove"
-                              onClick={() => removeReviewEntry(entry.id)}
-                            >
-                              Xóa
-                            </button>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-
-                <p className="tc-review-dialog-entry-total">
-                  Tổng điểm hiện tại: {reviewTotalPoints > 0 ? `+${reviewTotalPoints}` : reviewTotalPoints}
-                </p>
-              </div>
-            </div>
-
-            <div className="tc-review-dialog-actions">
-              <button type="button" className="tc-review-dialog-btn secondary" onClick={closeReviewDialog}>
-                Hủy
-              </button>
-              <button type="button" className="tc-review-dialog-btn primary" onClick={saveReview}>
-                <FiCheck />
-                Lưu ghi nhận
-              </button>
-            </div>
-          </div>
-        ) : null}
-      </Modal>
-
-      <Modal
-        open={isLessonReviewDialogOpen}
-        onClose={closeLessonReviewDialog}
-        title="Điền thông tin đánh giá tiết học"
-        className="tc-lesson-modal"
-      >
-        <form className="tc-lesson-form" onSubmit={handleAddLessonReview}>
-          <div className="tc-detail-grid">
-            <div>
-              <span className="tc-detail-label">Mốc tiết học</span>
-              <p className="tc-readonly-value">{currentLessonLabel}</p>
-            </div>
-
-            <div>
-              <span className="tc-detail-label">Thời gian</span>
-              <p className="tc-readonly-value">{currentLessonTime}</p>
-            </div>
-
-            <div>
-              <span className="tc-detail-label">Điểm danh</span>
-              <p className="tc-readonly-value">
-                Đi học {attendedToday} - Vắng {absentToday}
-              </p>
-            </div>
-
-            <div>
-              <label className="tc-detail-label" htmlFor="lesson-score">
-                Điểm đánh giá
-              </label>
-              <Select
-                variant="custom"
-                id="lesson-score"
-                value={lessonScore}
-                onChange={(e) => setLessonScore(e.target.value)}
-                placeholder="-- Chọn xếp loại --"
-                options={[
-                  { value: "A (Tốt)", label: "Tốt (A) • +10đ" },
-                  { value: "B (Khá)", label: "Khá (B) • +5đ" },
-                  { value: "C (Trung bình)", label: "Trung bình (C) • 0đ" },
-                  { value: "D (Yếu)", label: "Yếu (D) • -5đ" }
-                ]}
-              />
-            </div>
-
-            <div className="tc-note-field">
-              <label className="tc-detail-label" htmlFor="lesson-note">
-                Nhận xét tiết học
-              </label>
-              <textarea
-                id="lesson-note"
-                className="tc-textarea"
-                value={lessonNote}
-                onChange={(e) => setLessonNote(e.target.value)}
-                placeholder="Nhập nhận xét về mức độ tập trung, thái độ học tập, tiến độ bài học..."
-                rows={4}
-                required
-              />
-            </div>
-          </div>
-
-          <button type="submit" className="tc-add-btn">
-            Lưu đánh giá
-          </button>
-        </form>
-      </Modal>
-
-      <div className="table-wrapper">
-        <table className="students-table">
-          <thead>
-            <tr>
-              <th>STT</th>
-              <th className="student-name-header">HỌC SINH</th>
-              <th>NGÀY SINH</th>
-              <th>PHỤ HUYNH</th>
-              <th>SỐ ĐIỆN THOẠI</th>
-              <th>ĐÁNH GIÁ</th>
-              <th>ĐIỂM DANH</th>
-            </tr>
-          </thead>
-          <tbody>
-            {paginatedStudents.map((student, index) => (
-              <tr key={student.id}>
-                <td className="student-index-cell">
-                  {(effectivePage - 1) * ITEMS_PER_PAGE + index + 1}
-                </td>
-                <td className="student-name-cell">
-                  <div className="student-main-info">
-                    <span className="student-avatar">
-                      {student.name.charAt(0).toUpperCase()}
-                    </span>
-                    <span className="student-name">{student.name}</span>
-                  </div>
-                </td>
-                <td className="student-dob">{formatDate(student.dob)}</td>
-                <td className="student-parent">{student.parentName}</td>
-                <td className="student-phone">{student.parentPhone}</td>
-                <td className="student-review-cell">
-                  <div className="review-display">
-                    <button
-                      type="button"
-                      className="review-icon-btn"
-                      onClick={() => openReviewDialog(student)}
-                      aria-label={`Đánh giá học sinh ${student.name}`}
-                    >
-                      <FiEdit3 />
-                    </button>
-                  </div>
-                </td>
-                <td className="student-attendance-cell">
-                  <label className="attendance-checkbox">
-                    <input
-                      type="checkbox"
-                      checked={!!studentAttendance[student.id]}
-                      onChange={() => toggleAttendance(student.id)}
-                      aria-label={`Đi học ${student.name}`}
-                    />
-                  </label>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-      <div className="students-pagination">
-        <button
-          type="button"
-          className="page-btn"
-          onClick={goPrevPage}
-          disabled={effectivePage === 1}
-          aria-label="Trang trước"
-        >
-          ‹
-        </button>
-
-        <div className="page-indicator">
-          <span>{effectivePage}</span>
-          <small>/ {totalPages}</small>
-        </div>
-
-        <button
-          type="button"
-          className="page-btn"
-          onClick={goNextPage}
-          disabled={effectivePage === totalPages}
-          aria-label="Trang sau"
-        >
-          ›
-        </button>
-      </div>
+      <Pagination 
+        effectivePage={effectivePage}
+        totalPages={totalPages}
+        onPrevPage={() => setCurrentPage(p => Math.max(1, p - 1))}
+        onNextPage={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+      />
     </div>
   );
 };
