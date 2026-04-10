@@ -32,38 +32,63 @@
   box-shadow: none !important;
 }
 
+.teacher-daily-modal .ui-modal {
+  max-height: 90vh;
+}
+
+.teacher-daily-modal .ui-modal__header {
+  display: none;
+}
+
+.teacher-daily-modal .ui-modal__body {
+  padding: 0;
+}
+
 .teacher-daily-modal .daily-schedule-section {
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
   margin: 0;
-  max-height: 85vh;
-  overflow-y: auto;
+  border-radius: 16px;
 }
 
 .teacher-lesson-modal {
-  max-width: 400px;
-  width: 90vw;
+  max-width: 720px;
+  width: 94vw;
 }
 
 .teacher-lesson-modal-content {
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  padding: 8px 0;
+  gap: 14px;
+  padding: 4px 0;
 }
 
 .modal-header-info {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
   border-bottom: 1px solid #f3f4f6;
   padding-bottom: 12px;
+  gap: 12px;
 }
 
 .modal-header-info h3 {
-  font-size: 18px;
+  font-size: 19px;
   font-weight: 700;
   color: #1f2937;
   margin: 0;
+}
+
+.modal-header-subtitle {
+  margin: 6px 0 0;
+  font-size: 13px;
+  color: #64748b;
+}
+
+.modal-header-badges {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
 }
 
 .modal-badge {
@@ -73,24 +98,72 @@
   font-weight: 700;
 }
 
-.modal-body-info {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
+.modal-type-badge {
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: #eff6ff;
+  color: #1d4ed8;
+  font-size: 12px;
+  font-weight: 700;
 }
 
-.modal-body-info p {
-  margin: 0;
+.modal-info-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.modal-info-card {
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 10px 12px;
+  background: #f8fafc;
+}
+
+.modal-info-card-wide {
+  grid-column: 1 / -1;
+}
+
+.modal-info-card h4 {
+  margin: 0 0 8px;
   font-size: 14px;
-  color: #4b5563;
-  line-height: 1.5;
+  font-weight: 700;
+  color: #0f172a;
 }
 
-.modal-body-info strong {
+.modal-info-card p {
+  margin: 0 0 6px;
+  font-size: 13px;
+  color: #475569;
+  line-height: 1.45;
+}
+
+.modal-info-card p:last-child {
+  margin-bottom: 0;
+}
+
+.modal-info-card strong {
   color: #111827;
   font-weight: 600;
-  display: inline-block;
-  width: 80px;
+}
+
+.modal-reminder-list {
+  margin: 0;
+  padding-left: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.modal-reminder-list li {
+  font-size: 13px;
+  color: #475569;
+}
+
+@media (max-width: 680px) {
+  .modal-info-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 /* Re-use colors from daily schedule */

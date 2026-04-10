@@ -1,8 +1,6 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import "./DailyScheduleSection.css";
-import { MapPin, Users, Clock, BookOpen, ChevronRight } from "lucide-react";
-
-const DAY_NAMES = ["Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6", "Thứ 7", "Chủ nhật"];
+import { MapPin, Users, Clock, BookOpen, ChevronRight, FileText, BookMarked, Pencil, BarChart3 } from "lucide-react";
 
 const PERIOD_TIME = {
   1: "07:00 - 07:45",
@@ -63,7 +61,44 @@ function getWeekDates(offset = 0) {
   return days;
 }
 
+function getLessonStatus(note) {
+  if (note?.toLowerCase().includes("kiểm tra")) return "quiz";
+  if (note?.toLowerCase().includes("ôn tập")) return "review";
+  if (note?.toLowerCase().includes("bài tập")) return "practice";
+  return "lesson";
+}
+
+function formatTimeRange(period) {
+  const [start, end] = PERIOD_TIME[period].split(" - ");
+  return { start, end };
+}
+
+function groupLessonsByClass(lessons) {
+  const grouped = {};
+  lessons.forEach((lesson) => {
+    if (!grouped[lesson.class]) {
+      grouped[lesson.class] = [];
+    }
+    grouped[lesson.class].push(lesson);
+  });
+  // Sort by first period of each class
+  return Object.fromEntries(
+    Object.entries(grouped).sort((a, b) => {
+      const periodA = Math.min(...a[1].map((l) => l.period));
+      const periodB = Math.min(...b[1].map((l) => l.period));
+      return periodA - periodB;
+    })
+  );
+}
+
 export default function DailyScheduleSection({ weekOffset, selectedDay, selectedClass, onLessonSelect }) {
+  const [currentTime, setCurrentTime] = useState(new Date());
+
+  useEffect(() => {
+    const timer = setInterval(() => setCurrentTime(new Date()), 60000);
+    return () => clearInterval(timer);
+  }, []);
+
   const days = getWeekDates(weekOffset);
   const date = days[selectedDay];
 
@@ -72,6 +107,9 @@ export default function DailyScheduleSection({ weekOffset, selectedDay, selected
     lessons = lessons.filter((l) => l.class === selectedClass);
   }
 
+  const groupedLessons = groupLessonsByClass(lessons);
+  const classCount = Object.keys(groupedLessons).length;
+
   const dateStr = date.toLocaleDateString("vi-VN", {
     weekday: "long",
     day: "2-digit",
@@ -79,18 +117,47 @@ export default function DailyScheduleSection({ weekOffset, selectedDay, selected
     year: "numeric",
   });
 
+  const isToday = new Date().toDateString() === date.toDateString();
+  const currentTimeStr = currentTime.toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" });
+
+  const buildLessonDetail = (lesson) => ({
+    ...lesson,
+    dayIndex: selectedDay,
+    dayName: ["Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6", "Thứ 7", "CN"][selectedDay],
+    dateLabel: date.toLocaleDateString("vi-VN", {
+      weekday: "long",
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+    }),
+    timeRange: PERIOD_TIME[lesson.period],
+    session: lesson.period <= 5 ? "Sáng" : "Chiều",
+    lessonType:
+      getLessonStatus(lesson.note) === "quiz"
+        ? "Kiểm tra"
+        : getLessonStatus(lesson.note) === "review"
+          ? "Ôn tập"
+          : getLessonStatus(lesson.note) === "practice"
+            ? "Luyện tập"
+            : "Bài mới",
+  });
+
   return (
     <div className="daily-schedule-section">
       {/* Header */}
       <div className="daily-header">
-        <div>
+        <div className="daily-header-content">
           <p className="daily-title">Lịch dạy trong ngày</p>
-          <p className="daily-date">{dateStr}</p>
+          <p className="daily-date">
+            {dateStr}
+            {isToday && <span className="daily-today-badge">Hôm nay</span>}
+          </p>
+          {isToday && <p className="daily-current-time">⏰ Thời gian hiện tại: {currentTimeStr}</p>}
         </div>
         <div className="daily-summary">
           <span className="daily-summary-badge">
             <BookOpen size={13} />
-            {lessons.length} tiết
+            {lessons.length} tiết / {classCount} lớp
           </span>
         </div>
       </div>
@@ -104,32 +171,79 @@ export default function DailyScheduleSection({ weekOffset, selectedDay, selected
         </div>
       ) : (
         <div className="daily-list">
-          {lessons.map((lesson, idx) => (
-            <div key={idx} className={`daily-item color-${lesson.color}`} onClick={() => onLessonSelect?.(lesson)}>
-              {/* Period badge */}
-              <div className="daily-period-badge">
-                <span>Tiết</span>
-                <strong>{lesson.period}</strong>
+          {Object.entries(groupedLessons).map(([className, classLessons]) => (
+            <div key={className} className="daily-class-group">
+              {/* Class Header */}
+              <div className="daily-class-header">
+                <span className="daily-class-badge">{className}</span>
+                <span className="daily-class-count">{classLessons.length} tiết</span>
               </div>
 
-              {/* Info */}
-              <div className="daily-info">
-                <div className="daily-top">
-                  <span className="daily-subject">{lesson.subject}</span>
-                  <ChevronRight size={16} className="daily-arrow" />
-                </div>
-                <p className="daily-note">{lesson.note}</p>
-                <div className="daily-meta">
-                  <span>
-                    <Clock size={12} /> {PERIOD_TIME[lesson.period]}
-                  </span>
-                  <span>
-                    <Users size={12} /> {lesson.class} — {lesson.students} HS
-                  </span>
-                  <span>
-                    <MapPin size={12} /> {lesson.room}
-                  </span>
-                </div>
+              {/* Class Lessons */}
+              <div className="daily-class-items">
+                {classLessons.map((lesson, idx) => {
+                  const status = getLessonStatus(lesson.note);
+                  const { start } = formatTimeRange(lesson.period);
+
+                  return (
+                    <div
+                      key={idx}
+                      className={`daily-item color-${lesson.color}`}
+                      onClick={() => onLessonSelect?.(buildLessonDetail(lesson))}
+                    >
+                      {/* Period badge with time */}
+                      <div className="daily-period-badge">
+                        <span>Tiết</span>
+                        <strong>{lesson.period}</strong>
+                        <small>{start}</small>
+                      </div>
+
+                      {/* Info */}
+                      <div className="daily-info">
+                        <div className="daily-top">
+                          <div className="daily-subject-wrapper">
+                            <span className="daily-subject">{lesson.subject}</span>
+                            <span className={`daily-status-badge status-${status}`}>
+                              {status === "quiz" && (
+                                <>
+                                  <FileText size={12} /> Kiểm tra
+                                </>
+                              )}
+                              {status === "review" && (
+                                <>
+                                  <BookMarked size={12} /> Ôn tập
+                                </>
+                              )}
+                              {status === "practice" && (
+                                <>
+                                  <Pencil size={12} /> Bài tập
+                                </>
+                              )}
+                              {status === "lesson" && (
+                                <>
+                                  <BarChart3 size={12} /> Giảng dạy
+                                </>
+                              )}
+                            </span>
+                          </div>
+                          <ChevronRight size={16} className="daily-arrow" />
+                        </div>
+                        <p className="daily-note">{lesson.note}</p>
+                        <div className="daily-meta">
+                          <span className="daily-time-full">
+                            <Clock size={12} /> {PERIOD_TIME[lesson.period]}
+                          </span>
+                          <span>
+                            <Users size={12} /> {lesson.students} HS
+                          </span>
+                          <span>
+                            <MapPin size={12} /> {lesson.room}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             </div>
           ))}

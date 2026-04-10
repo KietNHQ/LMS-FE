@@ -4,9 +4,8 @@
   background: rgba(16, 24, 40, 0.46);
   display: flex;
   justify-content: center;
-   align-items: flex-start;
+  align-items: center;
   padding: 12px;
-  overflow-y: auto;
   z-index: 1000;
 }
 
@@ -16,7 +15,7 @@
   border-radius: 16px;
   border: 1px solid #eaecf0;
   box-shadow: 0 20px 40px rgba(16, 24, 40, 0.2);
-  max-height: calc(100vh - 24px);
+  max-height: 90vh;
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -62,5 +61,6 @@
   padding: 16px;
   flex: 1;
   min-height: 0;
-  overflow: auto;
+  overflow-y: auto;
+  overflow-x: hidden;
 }

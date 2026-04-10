@@ -242,6 +242,35 @@
 .lesson-subject { font-size: 11.5px; font-weight: 800; line-height: 1.25; color: #161c2d; display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .lesson-room { font-size: 10px; font-weight: 700; color: #475467; background: #f1f5f9; padding: 1px 4px; border-radius: 4px; width: fit-content; margin-bottom: 4px; }
 
+.lesson-type-chip {
+  flex-shrink: 0;
+  font-size: 9.5px;
+  font-weight: 700;
+  padding: 1px 5px;
+  border-radius: 999px;
+  white-space: nowrap;
+  border: 1px solid transparent;
+  line-height: 1.35;
+}
+
+.lesson-type-chip.status-quiz {
+  background: #fee2e2;
+  border-color: #fecaca;
+  color: #b91c1c;
+}
+
+.lesson-type-chip.status-review {
+  background: #ede9fe;
+  border-color: #ddd6fe;
+  color: #6d28d9;
+}
+
+.lesson-type-chip.status-lesson {
+  background: #dcfce7;
+  border-color: #bbf7d0;
+  color: #166534;
+}
+
 .lesson-extra { margin-top: auto; display: flex; flex-direction: column; gap: 3px; border-top: 1px dashed rgba(0, 0, 0, 0.06); padding-top: 5px; }
 .lesson-extra span { font-size: 10px; font-weight: 600; color: #64748b; display: flex; align-items: center; gap: 3px; }
 .lesson-extra svg { font-size: 11px; color: #94a3b8; }

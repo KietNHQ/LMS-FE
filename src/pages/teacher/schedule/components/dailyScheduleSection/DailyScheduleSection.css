@@ -15,6 +15,10 @@
   gap: 10px;
 }
 
+.daily-header-content {
+  flex: 1;
+}
+
 .daily-title {
   font-size: 15px;
   font-weight: 600;
@@ -26,6 +30,26 @@
   color: #6b7280;
   margin-top: 3px;
   text-transform: capitalize;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.daily-today-badge {
+  display: inline-block;
+  background: #ff6b6b;
+  color: white;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.daily-current-time {
+  font-size: 13px;
+  color: #0f766e;
+  font-weight: 600;
+  margin-top: 6px;
 }
 
 .daily-summary-badge {
@@ -45,7 +69,53 @@
 .daily-list {
   display: flex;
   flex-direction: column;
+  gap: 24px;
+}
+
+/* ===== Class Group ===== */
+.daily-class-group {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.daily-class-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: linear-gradient(135deg, #f0fdfa 0%, #e8f8f6 100%);
+  border-left: 4px solid #0d9488;
+  border-radius: 8px;
   gap: 12px;
+}
+
+.daily-class-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 28px;
+  border-radius: 6px;
+  background: #0d9488;
+  color: white;
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.daily-class-count {
+  font-size: 12px;
+  color: #0f766e;
+  font-weight: 600;
+}
+
+.daily-class-items {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-left: 12px;
 }
 
 /* ===== Item ===== */
@@ -69,7 +139,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  min-width: 40px;
+  min-width: 45px;
   padding-top: 2px;
 }
 
@@ -87,6 +157,13 @@
   line-height: 1.1;
 }
 
+.daily-period-badge small {
+  font-size: 10px;
+  font-weight: 500;
+  opacity: 0.6;
+  margin-top: 2px;
+}
+
 /* Info */
 .daily-info {
   flex: 1;
@@ -97,6 +174,14 @@
   align-items: center;
   justify-content: space-between;
   margin-bottom: 4px;
+  gap: 8px;
+}
+
+.daily-subject-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
 }
 
 .daily-subject {
@@ -104,14 +189,50 @@
   font-weight: 700;
 }
 
+.daily-status-badge {
+  display: inline-flex;
+  align-items: center;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 6px;
+  white-space: nowrap;
+  gap: 4px;
+}
+
+.daily-status-badge.status-quiz {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.daily-status-badge.status-review {
+  background: #fef3c7;
+  color: #a16207;
+}
+
+.daily-status-badge.status-practice {
+  background: #ecfdf5;
+  color: #166534;
+}
+
+.daily-status-badge.status-lesson {
+  background: #eff6ff;
+  color: #1e40af;
+}
+
 .daily-arrow {
   opacity: 0.4;
 }
 
 .daily-note {
-  font-size: 12px;
-  opacity: 0.75;
+  font-size: 13px;
+  font-weight: 500;
+  color: #111827;
   margin-bottom: 8px;
+  padding: 6px 8px;
+  background: rgba(255, 255, 255, 0.6);
+  border-radius: 6px;
+  border-left: 3px solid currentColor;
 }
 
 .daily-meta {
@@ -127,6 +248,11 @@
   font-size: 12px;
   font-weight: 500;
   opacity: 0.8;
+}
+
+.daily-time-full {
+  font-weight: 600 !important;
+  opacity: 1 !important;
 }
 
 /* ===== Color Variants ===== */
