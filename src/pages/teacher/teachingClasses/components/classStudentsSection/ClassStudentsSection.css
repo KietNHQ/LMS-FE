@@ -65,46 +65,17 @@
   font-weight: 500;
 }
 
-.lesson-timeline {
-  border: 1px solid var(--tc-border, #5eead4);
-  border-radius: 14px;
-  background: linear-gradient(180deg, #f0fdfa 0%, #ccfbf1 100%);
-  padding: 16px;
-  margin-bottom: 18px;
-}
-
-.lesson-timeline-header h3 {
-  margin: 0;
-  font-size: 16px;
-  font-weight: 800;
-  color: var(--tc-text-main, #134e4a);
-}
-
-.lesson-timeline-header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 12px;
-}
-
-.lesson-timeline-title-wrap {
-  display: flex;
-  flex-direction: column;
-}
-
-.lesson-timeline-header p {
-  margin: 4px 0 0;
-  color: var(--tc-text-subtle, #115e59);
-  font-size: 13px;
-  font-weight: 500;
-}
-
 .tc-open-form-btn {
   min-height: 40px;
   padding: 0 18px;
   border-radius: 12px;
+<<<<<<< HEAD
   border: 1px solid var(--tc-primary-strong, #0f766e);
   background: linear-gradient(180deg, var(--tc-primary, #0d9488) 0%, var(--tc-primary-strong, #0f766e) 100%);
+=======
+  border: 1px solid #04a094;
+  background: var(--tc-gradient);
+>>>>>>> 250d23b87fa79a7da02c1bc4866fb22543ad5844
   color: #ffffff;
   font-size: 13px;
   font-weight: 800;
@@ -112,7 +83,7 @@
   white-space: nowrap;
   cursor: pointer;
   transition: transform 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease, background 0.18s ease;
-  box-shadow: 0 10px 24px rgba(13, 148, 136, 0.22);
+  box-shadow: 0 10px 24px var(--tc-shadow);
 }
 
 .tc-open-form-btn:hover {
@@ -126,6 +97,7 @@
   box-shadow: 0 8px 18px rgba(13, 148, 136, 0.2);
 }
 
+<<<<<<< HEAD
 .tc-open-form-btn:focus-visible,
 .review-icon-btn:focus-visible,
 .page-btn:focus-visible,
@@ -1163,6 +1135,8 @@
 }
 
 /* Responsive */
+=======
+>>>>>>> 250d23b87fa79a7da02c1bc4866fb22543ad5844
 @media (max-width: 1024px) {
   .students-card {
     padding: 20px;
@@ -1176,40 +1150,8 @@
     flex: 0 1 300px;
   }
 
-  .students-table {
-    font-size: 13px;
-  }
-
-  .students-table th,
-  .students-table td {
-    padding: 10px 8px;
-  }
-
-  .student-avatar {
-    width: 36px;
-    height: 36px;
-    font-size: 14px;
-  }
-
-  .lesson-timeline-header {
-    align-items: stretch;
-    flex-direction: column;
-  }
-
   .tc-open-form-btn {
     align-self: flex-end;
-  }
-
-  .tc-detail-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .students-table thead th.student-name-header {
-    padding-left: 56px;
-  }
-
-  .tc-review-modal {
-    width: min(620px, 100%);
   }
 }
 
@@ -1232,19 +1174,11 @@
     min-width: unset;
   }
 
-  .lesson-timeline {
-    padding: 12px;
-  }
-
-  .lesson-timeline-header h3 {
-    font-size: 15px;
-  }
-
-  .tc-open-form-btn,
-  .tc-add-btn {
+  .tc-open-form-btn {
     width: 100%;
     justify-content: center;
   }
+<<<<<<< HEAD
 
   .lesson-history-header {
     flex-direction: column;
@@ -1356,3 +1290,6 @@
     font-size: 11px;
   }
 }
+=======
+}
+>>>>>>> 250d23b87fa79a7da02c1bc4866fb22543ad5844

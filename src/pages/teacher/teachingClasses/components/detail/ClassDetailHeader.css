@@ -1,0 +1,136 @@
+.class-detail-header {
+  background: #ffffff;
+  border: 1px solid #e7edf9;
+  border-radius: 20px;
+  padding: 28px;
+  margin-bottom: 28px;
+  box-shadow: 0 8px 24px rgba(20, 32, 70, 0.05);
+}
+
+.class-detail-header.teacher-detail-header {
+  background: linear-gradient(180deg, #ffffff 0%, #f0fdfa 100%);
+  border: 1px solid var(--tc-border);
+  box-shadow: 0 8px 24px rgba(13, 148, 136, 0.12);
+}
+
+.class-detail-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 40px;
+  margin-bottom: 20px;
+  padding-bottom: 20px;
+  border-bottom: 2px solid #edf2fb;
+}
+
+.class-detail-header.teacher-detail-header .class-detail-top {
+  border-bottom: 2px solid var(--tc-border);
+}
+
+.class-detail-title {
+  margin-left: auto;
+  text-align: right;
+}
+
+.class-detail-title h1 {
+  margin: 0;
+  font-size: 44px;
+  font-weight: 800;
+  color: var(--tc-text-main);
+  line-height: 1.1;
+  letter-spacing: -0.3px;
+}
+
+.class-detail-title p {
+  margin: 8px 0 0;
+  font-size: 16px;
+  color: var(--tc-text-subtle);
+  font-weight: 500;
+}
+
+.class-detail-info {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+}
+
+.info-item {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 14px 16px;
+  border: 1px solid #ecf1fb;
+  border-radius: 14px;
+  background: #fafcff;
+  text-align: left;
+  transition: all 0.2s ease;
+}
+
+.class-detail-header.teacher-detail-header .info-item {
+  border: 1.5px solid rgba(20, 20, 20, 0.22);
+  background: #f0fdfa;
+}
+
+.info-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: #8a92a5;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.class-detail-header.teacher-detail-header .info-label {
+  color: var(--tc-text-subtle);
+}
+
+.info-value {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--tc-text-main);
+  line-height: 1.3;
+}
+
+.back-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 44px;
+  padding: 0 20px;
+  border: none;
+  border-radius: 12px;
+  background: var(--tc-primary-strong, #0f766e);
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  box-shadow: 0 4px 12px rgba(15, 118, 110, 0.2);
+  width: fit-content;
+  line-height: 1;
+}
+
+.back-btn:hover {
+  background: #03847a;
+  box-shadow: 0 8px 20px rgba(15, 118, 110, 0.28);
+  transform: translateY(-2px);
+}
+
+.back-btn.teacher-back-btn {
+  background: var(--tc-primary-strong);
+  box-shadow: 0 4px 12px rgba(15, 118, 110, 0.18);
+}
+
+@media (max-width: 640px) {
+  .class-detail-top {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 14px;
+  }
+
+  .class-detail-title {
+    margin-left: 0;
+    text-align: left;
+  }
+}

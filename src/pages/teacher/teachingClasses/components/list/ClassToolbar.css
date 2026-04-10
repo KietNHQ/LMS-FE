@@ -1,0 +1,102 @@
+.admin-classes-toolbar.teacher-classes-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  background: #ffffff;
+  padding: 0.85rem 1.1rem;
+  border-radius: 14px;
+  border: 1px solid var(--tc-border);
+  box-shadow: 0 2px 6px rgba(13, 148, 136, 0.12);
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+}
+
+.teacher-classes-toolbar .admin-classes-search {
+  flex: 1;
+  min-width: 280px;
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  background: #f8fafc;
+  border: 1.5px solid var(--tc-border);
+  border-radius: 8px;
+  padding: 0 1rem;
+  height: 2.75rem;
+  transition: all 0.2s ease;
+}
+
+.teacher-classes-toolbar .admin-classes-search:focus-within {
+  border-color: var(--tc-primary);
+  background: #ffffff;
+  box-shadow: 0 0 0 4px var(--tc-focus-ring);
+}
+
+.teacher-classes-toolbar .admin-classes-search svg {
+  font-size: 1.2rem;
+  color: #5d9d97;
+  flex-shrink: 0;
+}
+
+.teacher-classes-toolbar .admin-classes-search input {
+  width: 100%;
+  border: none;
+  background: transparent;
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: var(--tc-text-main);
+  outline: none;
+}
+
+.teacher-classes-toolbar .admin-classes-search input::placeholder {
+  color: #74a7a2;
+  font-weight: 500;
+}
+
+.admin-classes-grade-filter {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.teacher-classes-toolbar .teacher-classes-grade-btn {
+  min-height: 32px;
+  padding: 0 12px;
+  border: 1px solid var(--tc-border);
+  border-radius: 8px;
+  background: #f0fdfa;
+  color: var(--tc-primary-strong);
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.teacher-classes-toolbar .teacher-classes-grade-btn:hover {
+  border-color: var(--tc-primary-strong);
+  color: var(--tc-primary-strong);
+  background: var(--tc-primary-soft);
+}
+
+.teacher-classes-toolbar .teacher-classes-grade-btn.is-active {
+  border-color: #04a094;
+  background: var(--tc-gradient);
+  color: #ffffff;
+  box-shadow: 0 8px 16px var(--tc-shadow);
+}
+
+@media (max-width: 640px) {
+  .admin-classes-toolbar.teacher-classes-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .teacher-classes-toolbar .admin-classes-search {
+    min-width: unset;
+    width: 100%;
+  }
+
+  .admin-classes-grade-filter {
+    width: 100%;
+  }
+}
