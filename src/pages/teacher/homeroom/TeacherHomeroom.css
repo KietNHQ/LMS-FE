@@ -1,0 +1,123 @@
+.teacher-homeroom-page {
+  --tc-primary: #0d9488;
+  --tc-primary-strong: #0f766e;
+  --tc-primary-soft: #f0fdfa;
+  --tc-border: #5eead4;
+  --tc-text-main: #134e4a;
+  --tc-text-subtle: #115e59;
+  padding: 24px;
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.homeroom-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 20px;
+}
+
+.homeroom-stat-card {
+  background: white;
+  border-radius: 16px;
+  padding: 24px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  border: 1px solid var(--border-color, #e5e7eb);
+}
+
+.homeroom-stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 20px -8px rgba(14, 116, 106, 0.45);
+  border-color: #0f766e;
+}
+
+.homeroom-stat-card:hover .stat-icon {
+  background-color: #0f766e;
+  color: #ffffff;
+}
+
+.stat-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
+  background-color: rgba(79, 209, 197, 0.18);
+  color: var(--teacher-color, #4fd1c5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+}
+
+.stat-info h3 {
+  margin: 0 0 4px 0;
+  font-size: 14px;
+  color: var(--text-secondary, #6b7280);
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.stat-info p {
+  margin: 0;
+  font-size: 20px;
+  color: var(--text-primary, #111827);
+  font-weight: 600;
+}
+
+/* Section Switcher */
+.homeroom-section-switch {
+  display: flex;
+  gap: 8px;
+  border-bottom: 2px solid var(--border-color, #e5e7eb);
+  margin-bottom: 24px;
+}
+
+.teacher-homeroom-page .section-switch-btn {
+  background: transparent;
+  border: none;
+  padding: 12px 24px;
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--text-secondary, #6b7280);
+  cursor: pointer;
+  position: relative;
+  border-radius: 10px 10px 0 0;
+  transition: all 0.2s ease;
+}
+
+.teacher-homeroom-page .section-switch-btn:hover {
+  color: #0f766e;
+  background-color: rgba(15, 118, 110, 0.18);
+  box-shadow: inset 0 -3px 0 #0f766e;
+}
+
+.teacher-homeroom-page .section-switch-btn.active {
+  color: #ffffff;
+  background-color: #0f766e;
+  font-weight: 700;
+  box-shadow: 0 6px 14px -8px rgba(15, 118, 110, 0.75);
+}
+
+.teacher-homeroom-page .section-switch-btn.active::after {
+  content: '';
+  position: absolute;
+  bottom: 2px;
+  left: 14px;
+  right: 14px;
+  height: 2px;
+  background-color: rgba(255, 255, 255, 0.95);
+  border-radius: 2px;
+}
+
+/* Make sure the nested Students list feels integrated */
+.homeroom-section-content .students-card {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+  border: 1px solid var(--border-color, #e5e7eb);
+  margin: 0; /* Override any margins */
+}

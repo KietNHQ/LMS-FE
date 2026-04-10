@@ -1,10 +1,11 @@
 import { useMemo, useState } from "react";
 import Modal from "../../../components/ui/Modal/Modal";
+import { Select } from "../../../components/ui";
 import { PageHeader, SchoolYearTermSelector } from "../../../components/common";
 import { useSchoolYearTerm } from "../../../hooks/useSchoolYearTerm";
 import GradeListSection from "./components/gradeListSection/GradeListSection";
 import GradeEntrySection from "./components/gradeEntrySection/GradeEntrySection";
-import GradeSummarySection from "./components/gradeSummarySection/GradeSummarySection";
+import GradeSummarySection, { GradeSummaryHeader } from "./components/gradeSummarySection/GradeSummarySection";
 import "./TeacherGrades.css";
 
 const SEMESTERS = {
@@ -124,13 +125,73 @@ function round1(value) {
     return Math.round(value * 10) / 10;
 }
 
+function formatScoreValue(value) {
+    return value === "" || value === null || value === undefined ? "" : String(round1(Number(value)));
+}
+
+function createDraftFromScores(scores) {
+    const oralScores = scores?.oralScores?.length ? scores.oralScores : [scores?.oral ?? ""];
+    const test15Scores = scores?.test15Scores?.length ? scores.test15Scores : [scores?.test15 ?? ""];
+    const oneTietScores = scores?.oneTietScores?.length ? scores.oneTietScores : [scores?.oneTiet ?? ""];
+    const midterm = scores?.midterm ?? oneTietScores?.[0] ?? "";
+
+    return {
+        oralScores: oralScores.map(formatScoreValue),
+        test15Scores: test15Scores.map(formatScoreValue),
+        oneTietScores: oneTietScores.map(formatScoreValue),
+        midterm: formatScoreValue(midterm),
+        oneTiet: formatScoreValue(oneTietScores[0]),
+        final: formatScoreValue(scores?.final),
+        note: scores?.note || "",
+    };
+}
+
+function parseDraftScores(values, fallbackValues = []) {
+    const sourceValues = values?.length ? values : fallbackValues.map((value) => String(value));
+
+    const parsedScores = sourceValues
+        .map((value, index) => {
+            if (value === "" || value === null || value === undefined) {
+                // Keep old values only for already-existing columns; ignore newly-added empty columns.
+                if (index < fallbackValues.length && sourceValues.length <= fallbackValues.length) {
+                    return clampScore(Number(fallbackValues[index]));
+                }
+                return null;
+            }
+
+            const parsed = Number(value);
+            return Number.isFinite(parsed) ? clampScore(parsed) : null;
+        })
+        .filter((value) => value !== null);
+
+    return parsedScores.length ? parsedScores : [clampScore(Number(fallbackValues[0] ?? 0))];
+}
+
+function getDisplayScoreFromList(values = []) {
+    const numericValues = values.filter((value) => typeof value === "number" && !Number.isNaN(value));
+    if (!numericValues.length) return 0;
+    if (numericValues.length === 1) return round1(numericValues[0]);
+    return round1(numericValues.reduce((sum, value) => sum + value, 0) / numericValues.length);
+}
+
 function clampScore(value) {
     return Math.min(10, Math.max(0, round1(value)));
 }
 
 function calculateAverage(scores) {
-    const total = scores.oral + scores.test15 + scores.midterm * 2 + scores.final * 3;
-    return round1(total / 7);
+    const oneTietValues = scores.oneTietScores?.length ? scores.oneTietScores : scores.oneTiet !== undefined ? [scores.oneTiet] : [];
+    const midtermValue = typeof scores.midterm === "number" && !Number.isNaN(scores.midterm) ? [scores.midterm] : [];
+
+    const components = [
+        ...(scores.oralScores || []),
+        ...(scores.test15Scores || []),
+        ...midtermValue,
+        ...oneTietValues,
+        scores.final,
+    ].filter((value) => typeof value === "number" && !Number.isNaN(value));
+
+    if (!components.length) return 0;
+    return round1(components.reduce((sum, value) => sum + value, 0) / components.length);
 }
 
 function getRank(average) {
@@ -143,33 +204,31 @@ function getRank(average) {
 
 function getDraftFromRecord(record) {
     if (!record) {
-        return { oral: "", test15: "", midterm: "", final: "", note: "" };
+        return { oralScores: [""], test15Scores: [""], oneTietScores: [""], midterm: "", oneTiet: "", final: "", note: "" };
     }
 
-    return {
-        oral: String(record.oral),
-        test15: String(record.test15),
-        midterm: String(record.midterm),
-        final: String(record.final),
-        note: record.note || "",
-    };
+    return createDraftFromScores(record);
 }
 
 function buildScoresFromDraft(draft, fallbackRecord) {
+    const fallback = createDraftFromScores(fallbackRecord);
+
     return {
-        oral: clampScore(Number(draft.oral === "" ? fallbackRecord.oral : draft.oral)),
-        test15: clampScore(Number(draft.test15 === "" ? fallbackRecord.test15 : draft.test15)),
-        midterm: clampScore(Number(draft.midterm === "" ? fallbackRecord.midterm : draft.midterm)),
-        final: clampScore(Number(draft.final === "" ? fallbackRecord.final : draft.final)),
+        oralScores: parseDraftScores(draft.oralScores || [], fallback.oralScores),
+        test15Scores: parseDraftScores(draft.test15Scores || [], fallback.test15Scores),
+        midterm: clampScore(Number(draft.midterm === "" ? fallback.midterm : draft.midterm)),
+        oneTietScores: parseDraftScores(draft.oneTietScores || (draft.oneTiet !== undefined ? [draft.oneTiet] : []), fallback.oneTietScores || [fallback.oneTiet]),
+        final: clampScore(Number(draft.final === "" ? fallback.final : draft.final)),
         note: String(draft.note || "").trim(),
     };
 }
 
 function buildScore(baseScores, offset) {
     return {
-        oral: clampScore(baseScores.oral + offset),
-        test15: clampScore(baseScores.test15 + offset),
+        oralScores: [clampScore(baseScores.oral + offset)],
+        test15Scores: [clampScore(baseScores.test15 + offset)],
         midterm: clampScore(baseScores.midterm + offset),
+        oneTietScores: [clampScore(baseScores.midterm + offset - 0.2)],
         final: clampScore(baseScores.final + offset),
     };
 }
@@ -184,7 +243,11 @@ function buildRecords(classConfig, subject, semester, overrides = {}) {
     return classConfig.students.map((student, index) => {
         const recordKey = `${classConfig.label}-${subject}-${semester}-${student.id}`;
         const override = overrides[recordKey];
-        const scores = override || buildScore(baseScores, SCORE_OFFSETS[index % SCORE_OFFSETS.length]);
+        const rawScores = override || buildScore(baseScores, SCORE_OFFSETS[index % SCORE_OFFSETS.length]);
+        const scores = rawScores.oralScores ? rawScores : createDraftFromScores(rawScores);
+        const oral = getDisplayScoreFromList(scores.oralScores);
+        const test15 = getDisplayScoreFromList(scores.test15Scores);
+        const oneTiet = getDisplayScoreFromList(scores.oneTietScores);
         const average = calculateAverage(scores);
         const rank = getRank(average);
 
@@ -194,6 +257,9 @@ function buildRecords(classConfig, subject, semester, overrides = {}) {
             subject,
             semester,
             ...scores,
+            oral,
+            test15,
+            oneTiet,
             average,
             rank,
             status: average >= 5 ? "Đạt" : "Chưa đạt",
@@ -208,13 +274,9 @@ export default function TeacherGrades() {
     const [selectedClassId, setSelectedClassId] = useState(DEFAULT_CLASS_ID);
     const [selectedStudentId, setSelectedStudentId] = useState(DEFAULT_CLASS_CONFIG.students[0].id);
     const [overrides, setOverrides] = useState({});
-    const [draft, setDraft] = useState({
-        oral: String(DEFAULT_CLASS_CONFIG.subjectBases[DEFAULT_CLASS_CONFIG.subjects[0]].hk1.oral),
-        test15: String(DEFAULT_CLASS_CONFIG.subjectBases[DEFAULT_CLASS_CONFIG.subjects[0]].hk1.test15),
-        midterm: String(DEFAULT_CLASS_CONFIG.subjectBases[DEFAULT_CLASS_CONFIG.subjects[0]].hk1.midterm),
-        final: String(DEFAULT_CLASS_CONFIG.subjectBases[DEFAULT_CLASS_CONFIG.subjects[0]].hk1.final),
-        note: "",
-    });
+    const [draft, setDraft] = useState(
+        getDraftFromRecord(buildScore(DEFAULT_CLASS_CONFIG.subjectBases[DEFAULT_CLASS_CONFIG.subjects[0]].hk1, 0))
+    );
     const [saveMessage, setSaveMessage] = useState("");
     const [entryDialogOpen, setEntryDialogOpen] = useState(false);
     const [editDialogOpen, setEditDialogOpen] = useState(false);
@@ -302,7 +364,7 @@ export default function TeacherGrades() {
     const handleOpenSummaryStudent = (summaryCard) => {
         if (!summaryCard || !summaryCard.records?.length) return;
 
-        if (summaryCard.key === "atRisk" && summaryCard.records.length > 1) {
+        if (summaryCard.key === "atRisk") {
             setAtRiskCandidates(summaryCard.records);
             setAtRiskDialogOpen(true);
             return;
@@ -377,13 +439,9 @@ export default function TeacherGrades() {
             [selectedRecord.recordKey]: nextScores,
         }));
         setSaveMessage(`Đã cập nhật điểm cho ${selectedRecord.name} trong ${currentSubject} - ${semesterLabel}.`);
-        setDraft({
-            oral: String(nextScores.oral),
-            test15: String(nextScores.test15),
-            midterm: String(nextScores.midterm),
-            final: String(nextScores.final),
-            note: nextScores.note,
-        });
+        window.alert(`Đã lưu điểm cho ${selectedRecord.name}.`);
+        setDraft(getDraftFromRecord(nextScores));
+        setEntryDialogOpen(false);
     };
 
     const handleSaveEditDialog = () => {
@@ -408,6 +466,7 @@ export default function TeacherGrades() {
         setSelectedStudentId(nextRecord.id);
         setDraft(getDraftFromRecord(nextRecord));
         setSaveMessage(`Đã chỉnh sửa điểm cho ${nextRecord.name} trong ${currentSubject} - ${semesterLabel}.`);
+        window.alert(`Đã lưu điểm cho ${nextRecord.name}.`);
         closeEditDialog();
     };
 
@@ -416,6 +475,21 @@ export default function TeacherGrades() {
 
         setDraft(getDraftFromRecord(selectedRecord));
         setSaveMessage("");
+    };
+
+    const editOralScores = editDraft.oralScores?.length ? editDraft.oralScores : [editDraft.oral ?? ""];
+    const editTest15Scores = editDraft.test15Scores?.length ? editDraft.test15Scores : [editDraft.test15 ?? ""];
+    const editOneTietScores = editDraft.oneTietScores?.length ? editDraft.oneTietScores : [editDraft.oneTiet ?? ""];
+    const editMidterm = editDraft.midterm ?? "";
+
+    const updateEditScoreList = (field, index, value, currentValues) => {
+        const nextValues = [...currentValues];
+        nextValues[index] = value;
+        setEditDraft((prev) => ({ ...prev, [field]: nextValues }));
+    };
+
+    const addEditScoreField = (field, currentValues) => {
+        setEditDraft((prev) => ({ ...prev, [field]: [...currentValues, ""] }));
     };
 
     return (
@@ -434,35 +508,34 @@ export default function TeacherGrades() {
             />
 
             <div className="teacher-grades-top-panel">
+                <div className="teacher-grades-summary-header">
+                    <GradeSummaryHeader subjectLabel={currentSubject} />
+                </div>
+
                 <div className="teacher-grades-toolbar">
                     <div className="teacher-grades-toolbar__group">
-                        <label className="teacher-grades-field">
-                            <span>Chọn lớp</span>
-                            <select value={selectedClassId} onChange={handleClassChange}>
-                                {classOptions.map((classId) => (
-                                    <option key={classId} value={classId}>
-                                        {CLASS_CONFIGS[classId].label}
-                                    </option>
-                                ))}
-                            </select>
-                        </label>
+                        <Select
+                            className="teacher-grades-select"
+                            label="Chọn lớp"
+                            value={selectedClassId}
+                            variant="custom"
+                            options={classOptions.map((classId) => ({ value: classId, label: CLASS_CONFIGS[classId].label }))}
+                            onChange={handleClassChange}
+                        />
                     </div>
 
                     <div className="teacher-grades-toolbar__center">
-                        <span className="grade-entry-badge">Môn: {currentSubject}</span>
+                        <span className="grade-entry-badge">{semesterLabel}</span>
                     </div>
 
                     <div className="teacher-grades-toolbar__meta">
-                        <span className="grade-entry-badge teacher-grades-teacher-badge">Giảng viên: {currentClass.teacher || "Chưa phân công"}</span>
+                        <span className="grade-entry-badge teacher-grades-teacher-badge">Giảng viên chủ nhiệm: {currentClass.teacher || "Chưa phân công"}</span>
                     </div>
 
                 </div>
 
                 <div className="teacher-grades-summary-row">
                     <GradeSummarySection
-                        classLabel={currentClass.label}
-                        semesterLabel={semesterLabel}
-                        subjectLabel={currentSubject}
                         stats={summaryStats}
                         onOpenStudent={handleOpenSummaryStudent}
                     />
@@ -491,13 +564,8 @@ export default function TeacherGrades() {
             >
                 <GradeEntrySection
                     classLabel={currentClass.label}
-                    semesterLabel={semesterLabel}
-                    subjectLabel={currentSubject}
-                    studentOptions={currentRecords}
-                    selectedStudentId={activeStudentId}
                     selectedRecord={selectedRecord}
                     draft={draft}
-                    onSelectStudent={handleSelectStudent}
                     onDraftChange={(field, value) => setDraft((prev) => ({ ...prev, [field]: value }))}
                     onSave={handleSave}
                     onReset={handleReset}
@@ -549,55 +617,104 @@ export default function TeacherGrades() {
                             <span>{semesterLabel}</span>
                         </div>
 
-                        <div className="teacher-grade-edit-grid">
-                            <label>
+                        <section className="grade-entry-score-block">
+                            <div className="grade-entry-score-block__head">
                                 <span>Điểm miệng</span>
-                                <input
-                                    type="number"
-                                    min="0"
-                                    max="10"
-                                    step="0.1"
-                                    value={editDraft.oral}
-                                    onChange={(event) => setEditDraft((prev) => ({ ...prev, oral: event.target.value }))}
-                                />
-                            </label>
+                                <button type="button" className="grade-entry-score-add-btn" onClick={() => addEditScoreField("oralScores", editOralScores)}>
+                                    +
+                                </button>
+                            </div>
 
-                            <label>
+                            <div className="grade-entry-score-grid">
+                                {editOralScores.map((value, index) => (
+                                    <label key={`edit-oral-${index}`} className="grade-entry-field">
+                                        <span>Miệng {index + 1}</span>
+                                        <input
+                                            type="number"
+                                            min="0"
+                                            max="10"
+                                            step="0.1"
+                                            value={value}
+                                            onChange={(event) => updateEditScoreList("oralScores", index, event.target.value, editOralScores)}
+                                        />
+                                    </label>
+                                ))}
+                            </div>
+                        </section>
+
+                        <section className="grade-entry-score-block">
+                            <div className="grade-entry-score-block__head">
                                 <span>Điểm 15 phút</span>
-                                <input
-                                    type="number"
-                                    min="0"
-                                    max="10"
-                                    step="0.1"
-                                    value={editDraft.test15}
-                                    onChange={(event) => setEditDraft((prev) => ({ ...prev, test15: event.target.value }))}
-                                />
-                            </label>
+                                <button type="button" className="grade-entry-score-add-btn" onClick={() => addEditScoreField("test15Scores", editTest15Scores)}>
+                                    +
+                                </button>
+                            </div>
 
-                            <label>
-                                <span>Giữa kỳ</span>
-                                <input
-                                    type="number"
-                                    min="0"
-                                    max="10"
-                                    step="0.1"
-                                    value={editDraft.midterm}
-                                    onChange={(event) => setEditDraft((prev) => ({ ...prev, midterm: event.target.value }))}
-                                />
-                            </label>
+                            <div className="grade-entry-score-grid">
+                                {editTest15Scores.map((value, index) => (
+                                    <label key={`edit-test15-${index}`} className="grade-entry-field">
+                                        <span>15 phút {index + 1}</span>
+                                        <input
+                                            type="number"
+                                            min="0"
+                                            max="10"
+                                            step="0.1"
+                                            value={value}
+                                            onChange={(event) => updateEditScoreList("test15Scores", index, event.target.value, editTest15Scores)}
+                                        />
+                                    </label>
+                                ))}
+                            </div>
+                        </section>
 
-                            <label>
-                                <span>Cuối kỳ</span>
-                                <input
-                                    type="number"
-                                    min="0"
-                                    max="10"
-                                    step="0.1"
-                                    value={editDraft.final}
-                                    onChange={(event) => setEditDraft((prev) => ({ ...prev, final: event.target.value }))}
-                                />
-                            </label>
-                        </div>
+                        <section className="grade-entry-score-block">
+                            <div className="grade-entry-score-block__head">
+                                <span>Điểm 1 tiết</span>
+                                <button type="button" className="grade-entry-score-add-btn" onClick={() => addEditScoreField("oneTietScores", editOneTietScores)}>
+                                    +
+                                </button>
+                            </div>
+
+                            <div className="grade-entry-score-grid">
+                                {editOneTietScores.map((value, index) => (
+                                    <label key={`edit-one-tiet-${index}`} className="grade-entry-field">
+                                        <span>1 tiết {index + 1}</span>
+                                        <input
+                                            type="number"
+                                            min="0"
+                                            max="10"
+                                            step="0.1"
+                                            value={value}
+                                            onChange={(event) => updateEditScoreList("oneTietScores", index, event.target.value, editOneTietScores)}
+                                        />
+                                    </label>
+                                ))}
+                            </div>
+                        </section>
+
+                        <label className="teacher-grade-edit-note">
+                            <span>Giữa kỳ</span>
+                            <input
+                                type="number"
+                                min="0"
+                                max="10"
+                                step="0.1"
+                                value={editMidterm}
+                                onChange={(event) => setEditDraft((prev) => ({ ...prev, midterm: event.target.value }))}
+                            />
+                        </label>
+
+                        <label className="teacher-grade-edit-note">
+                            <span>Cuối kỳ</span>
+                            <input
+                                type="number"
+                                min="0"
+                                max="10"
+                                step="0.1"
+                                value={editDraft.final}
+                                onChange={(event) => setEditDraft((prev) => ({ ...prev, final: event.target.value }))}
+                            />
+                        </label>
 
                         <label className="teacher-grade-edit-note">
                             <span>Ghi chú</span>
@@ -623,4 +740,8 @@ export default function TeacherGrades() {
         </div>
     );
 }
+
+
+
+
 

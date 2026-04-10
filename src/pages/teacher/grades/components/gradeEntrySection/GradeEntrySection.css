@@ -1,7 +1,7 @@
 .grade-entry-section {
     display: flex;
     flex-direction: column;
-    gap: 14px;
+    gap: 10px;
 }
 
 .grade-entry-badge {
@@ -20,16 +20,16 @@
 
 .grade-entry-overview {
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 12px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
 }
 
 .grade-entry-overview__item {
     display: flex;
     flex-direction: column;
-    gap: 6px;
-    padding: 14px;
-    border-radius: 16px;
+    gap: 4px;
+    padding: 10px 12px;
+    border-radius: 12px;
     background: #f8fbff;
     border: 1px solid #dbe4f5;
 }
@@ -41,7 +41,7 @@
 }
 
 .grade-entry-overview__item strong {
-    font-size: 15px;
+    font-size: 14px;
     font-weight: 800;
     color: #16233b;
 }
@@ -55,18 +55,18 @@
 .grade-entry-form {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 12px;
+    gap: 8px;
 }
 
 .grade-entry-field {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 6px;
     min-width: 0;
 }
 
 .grade-entry-field span {
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 700;
     color: #4d5f82;
 }
@@ -76,10 +76,10 @@
 .grade-entry-field textarea {
     width: 100%;
     border: 1px solid #dbe4f5;
-    border-radius: 12px;
+    border-radius: 10px;
     background: #ffffff;
-    padding: 0 14px;
-    font-size: 14px;
+    padding: 0 12px;
+    font-size: 13px;
     color: #1d2f56;
     outline: none;
     transition: all 0.2s ease;
@@ -87,12 +87,12 @@
 
 .grade-entry-field input,
 .grade-entry-field select {
-    min-height: 44px;
+    min-height: 38px;
 }
 
 .grade-entry-field textarea {
-    min-height: 92px;
-    padding: 12px 14px;
+    min-height: 64px;
+    padding: 8px 12px;
     resize: vertical;
 }
 
@@ -110,17 +110,65 @@
     grid-column: 1 / -1;
 }
 
+.grade-entry-multi-block {
+    border: 1px solid #dbe4f5;
+    border-radius: 10px;
+    padding: 8px;
+    background: #f8fbff;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.grade-entry-multi-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.grade-entry-multi-head span {
+    font-size: 12px;
+    font-weight: 800;
+    color: #4d5f82;
+}
+
+.grade-entry-add-btn {
+    width: 24px;
+    height: 24px;
+    border-radius: 999px;
+    border: 1px solid #9ee3dc;
+    background: #ffffff;
+    color: #04a094;
+    font-size: 18px;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.grade-entry-multi-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+}
+
 .grade-entry-actions {
     display: flex;
     justify-content: flex-end;
-    gap: 10px;
+    gap: 8px;
     flex-wrap: wrap;
+    position: sticky;
+    bottom: -1px;
+    z-index: 3;
+    margin-top: 2px;
+    padding: 10px 0 2px;
+    background: linear-gradient(180deg, rgba(248, 251, 255, 0) 0%, #f8fbff 38%, #f8fbff 100%);
+    border-top: 1px solid #dbe4f5;
 }
 
 .grade-entry-btn {
-    min-height: 44px;
-    padding: 0 16px;
-    border-radius: 12px;
+    min-height: 36px;
+    padding: 0 14px;
+    border-radius: 10px;
     border: 1px solid transparent;
     cursor: pointer;
     font-weight: 800;
@@ -154,5 +202,16 @@
     .grade-entry-form {
         grid-template-columns: 1fr;
     }
-}
 
+    .grade-entry-multi-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .grade-entry-actions {
+        justify-content: stretch;
+    }
+
+    .grade-entry-btn {
+        flex: 1 1 48%;
+    }
+}

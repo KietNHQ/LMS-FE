@@ -1,7 +1,36 @@
-.grade-summary-section {
+.grade-summary-section__header {
+    padding: 0;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.grade-summary-section__header h3 {
+    font-size: 16px;
+    font-weight: 800;
+    color: #1d2f56;
+    margin: 0;
+}
+
+.grade-summary-subject-badge {
+    display: inline-flex;
+    align-items: center;
+    min-height: 34px;
+    padding: 0 12px;
+    border-radius: 999px;
+    border: 1px solid #bfe7e2;
+    background: #e8f8f6;
+    color: #0f766e;
+    font-size: 13px;
+    font-weight: 800;
+}
+
+.grade-summary-wrapper {
     display: flex;
     flex-direction: column;
-    gap: 14px;
+    gap: 12px;
 }
 
 .grade-summary-cards {
