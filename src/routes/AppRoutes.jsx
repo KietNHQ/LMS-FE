@@ -82,9 +82,6 @@ const TeacherQuiz = lazy(() => import("../pages/teacher/quiz/TeacherQuiz"));
 const TeacherCreateQuiz = lazy(
   () => import("../pages/teacher/quiz/create/TeacherCreateQuiz")
 );
-const TeacherRequest = lazy(
-  () => import("../pages/teacher/request/TeacherRequest")
-);
 const TeacherSchedule = lazy(
   () => import("../pages/teacher/schedule/TeacherSchedule")
 );
