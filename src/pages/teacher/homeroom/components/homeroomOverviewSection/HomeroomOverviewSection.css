@@ -1,4 +1,11 @@
 .homeroom-overview-section {
+  --hr-accent: #0f766e;
+  --hr-accent-strong: #0b5f58;
+  --hr-accent-soft: #e8f8f6;
+  --hr-accent-soft-2: #dcf4f1;
+  --hr-accent-soft-3: #cfeeea;
+  --hr-accent-text: #127d74;
+  --hr-border: #cdecea;
   display: flex;
   flex-direction: column;
   gap: 24px;
@@ -30,16 +37,17 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .modern-shadow {
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.04), 0 8px 10px -6px rgba(0, 0, 0, 0.01);
+  box-shadow: 0 6px 16px -8px rgba(17, 24, 39, 0.12);
 }
 
 .overview-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.08), 0 10px 10px -5px rgba(0, 0, 0, 0.03);
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px -10px rgba(17, 24, 39, 0.18);
 }
 
 /* Card Headers */
@@ -49,7 +57,7 @@
   gap: 16px;
   padding: 24px;
   border-bottom: 1px solid rgba(229, 231, 235, 0.5);
-  background: linear-gradient(180deg, rgba(249, 250, 251, 0.8) 0%, rgba(255, 255, 255, 0) 100%);
+  background: #f9fafb;
 }
 
 .card-header.borderless {
@@ -65,34 +73,34 @@
   align-items: center;
   justify-content: center;
   font-size: 20px;
-  color: white;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  color: #374151;
+  box-shadow: none;
 }
 
 /* Beautiful Gradients */
 .gradient-purple {
-  background: linear-gradient(135deg, #a855f7 0%, #7e22ce 100%);
-  box-shadow: 0 4px 12px rgba(168, 85, 247, 0.3);
+  background: var(--hr-accent-soft);
+  color: var(--hr-accent-text);
 }
 
 .gradient-green {
-  background: linear-gradient(135deg, #34d399 0%, #059669 100%);
-  box-shadow: 0 4px 12px rgba(52, 211, 153, 0.3);
+  background: var(--hr-accent-soft-2);
+  color: var(--hr-accent-text);
 }
 
 .gradient-blue {
-  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
-  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+  background: var(--hr-accent-soft-3);
+  color: var(--hr-accent-text);
 }
 
 .gradient-orange {
-  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+  background: var(--hr-accent-soft);
+  color: var(--hr-accent-text);
 }
 
 .gradient-red {
-  background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%);
-  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+  background: var(--hr-accent-soft-2);
+  color: var(--hr-accent-text);
 }
 
 .card-header h2 {
@@ -155,10 +163,10 @@
   transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.progress-fill.excellent { background: linear-gradient(90deg, #34d399, #10b981); }
-.progress-fill.good { background: linear-gradient(90deg, #60a5fa, #3b82f6); }
-.progress-fill.average { background: linear-gradient(90deg, #fbbf24, #f59e0b); }
-.progress-fill.weak { background: linear-gradient(90deg, #f87171, #ef4444); }
+.progress-fill.excellent { background: #0f766e; }
+.progress-fill.good { background: #14b8a6; }
+.progress-fill.average { background: #2dd4bf; }
+.progress-fill.weak { background: #5eead4; }
 
 /* Tuition Donut Chart purely CSS */
 .tuition-content {
@@ -176,12 +184,13 @@
 }
 
 .tuition-circle {
+  --percent: 0%;
   width: 100%;
   height: 100%;
   border-radius: 50%;
   background: conic-gradient(
-    #10b981 var(--percent), 
-    #f3f4f6 var(--percent)
+    var(--hr-accent) var(--percent, 0%),
+    #f3f4f6 var(--percent, 0%)
   );
   display: flex;
   align-items: center;
@@ -244,7 +253,7 @@
   border-radius: 4px;
 }
 
-.legend-dot.paid { background-color: #10b981; }
+.legend-dot.paid { background-color: var(--hr-accent); }
 .legend-dot.unpaid { background-color: #f3f4f6; border: 2px solid #e5e7eb; }
 
 /* Info Row Improvements */
@@ -273,7 +282,7 @@
 }
 
 .info-value.highlight {
-  color: #1d4ed8;
+  color: var(--hr-accent);
   font-size: 16px;
 }
 
@@ -287,8 +296,8 @@
 }
 
 .status-badge.active {
-  background-color: #ecfdf5;
-  color: #059669;
+  background-color: var(--hr-accent-soft);
+  color: var(--hr-accent);
 }
 
 /* Beautiful Officer Avatars */
@@ -325,13 +334,13 @@
   justify-content: center;
   font-size: 22px;
   font-weight: 700;
-  color: white;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  color: #1f2937;
+  box-shadow: none;
 }
 
-.monitor-gradient { background: linear-gradient(135deg, #f43f5e, #e11d48); }
-.vice-gradient { background: linear-gradient(135deg, #6366f1, #4f46e5); }
-.secretary-gradient { background: linear-gradient(135deg, #10b981, #059669); }
+.monitor-gradient { background: var(--hr-accent-soft); color: var(--hr-accent-text); }
+.vice-gradient { background: var(--hr-accent-soft-2); color: var(--hr-accent-text); }
+.secretary-gradient { background: var(--hr-accent-soft-3); color: var(--hr-accent-text); }
 
 .officer-info h4 {
   margin: 0 0 4px 0;
@@ -390,9 +399,9 @@
   box-shadow: 0 0 0 4px white;
 }
 
-.timeline-dot.type-meeting { border-color: #8b5cf6; }
-.timeline-dot.type-class { border-color: #3b82f6; }
-.timeline-dot.type-event { border-color: #f59e0b; }
+.timeline-dot.type-meeting { border-color: #14b8a6; }
+.timeline-dot.type-class { border-color: #2dd4bf; }
+.timeline-dot.type-event { border-color: #5eead4; }
 
 .activity-details {
   background: #f9fafb;

@@ -22,6 +22,15 @@ const PERIOD_TIME = {
   10: "16:25 - 17:10",
 };
 
+function getLessonStatus(note) {
+  const lower = (note || "").toLowerCase();
+  if (lower.includes("kiểm tra")) return { key: "quiz", label: "Kiểm tra" };
+  if (lower.includes("ôn") || lower.includes("bài tập") || lower.includes("luyện")) {
+    return { key: "review", label: "Ôn luyện" };
+  }
+  return { key: "lesson", label: "Bài mới" };
+}
+
 // Mock schedule data: { dayIndex (0=Mon): [{ period, subject, class, room, color }] }
 const SCHEDULE_DATA = {
   0: [
@@ -89,6 +98,24 @@ export default function WeeklyScheduleSection({ weekOffset, selectedClass, onSel
   const isMorning = sessionView === "morning";
   const displayPeriods = isMorning ? [1, 2, 3, 4, 5] : [6, 7, 8, 9, 10];
 
+  const buildLessonDetail = (lesson, dayIdx, period) => {
+    const date = days[dayIdx];
+    return {
+      ...lesson,
+      dayIndex: dayIdx,
+      dayName: DAY_NAMES[dayIdx],
+      dateLabel: date.toLocaleDateString("vi-VN", {
+        weekday: "long",
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+      }),
+      timeRange: PERIOD_TIME[period],
+      session: period <= 5 ? "Sáng" : "Chiều",
+      lessonType: getLessonStatus(lesson.note).label,
+    };
+  };
+
   return (
     <div className="weekly-schedule-section">
       <div className="weekly-header-bar">
@@ -140,6 +167,7 @@ export default function WeeklyScheduleSection({ weekOffset, selectedClass, onSel
                 </td>
                 {days.map((_, dayIdx) => {
                   const lesson = getCellLesson(dayIdx, period);
+                  const lessonStatus = lesson ? getLessonStatus(lesson.note) : null;
                   return (
                     <td
                       key={dayIdx}
@@ -150,11 +178,14 @@ export default function WeeklyScheduleSection({ weekOffset, selectedClass, onSel
                           className={`lesson-card color-${lesson.color}`}
                           onClick={(e) => {
                             e.stopPropagation();
-                            onLessonSelect?.(lesson);
+                            onLessonSelect?.(buildLessonDetail(lesson, dayIdx, period));
                           }}
                         >
                           <div className="lesson-header">
                             <div className="lesson-subject">{lesson.subject}</div>
+                            <span className={`lesson-type-chip status-${lessonStatus?.key}`}>
+                              {lessonStatus?.label}
+                            </span>
                           </div>
                           <div className="lesson-room">{lesson.room}</div>
                           <div className="lesson-extra">

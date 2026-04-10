@@ -5,6 +5,41 @@ import ScheduleFilterSection from "./components/scheduleFilterSection/ScheduleFi
 import Modal from "../../../components/ui/Modal/Modal";
 import "./TeacherSchedule.css";
 
+const PERIOD_TIME = {
+  1: "07:00 - 07:45",
+  2: "07:50 - 08:35",
+  3: "08:45 - 09:30",
+  4: "09:35 - 10:20",
+  5: "10:30 - 11:15",
+  6: "13:00 - 13:45",
+  7: "13:50 - 14:35",
+  8: "14:45 - 15:30",
+  9: "15:35 - 16:20",
+  10: "16:25 - 17:10",
+};
+
+function getLessonType(note = "") {
+  const lower = note.toLowerCase();
+  if (lower.includes("kiểm tra")) return "Kiểm tra";
+  if (lower.includes("ôn tập")) return "Ôn tập";
+  if (lower.includes("bài tập")) return "Luyện tập";
+  return "Bài mới";
+}
+
+function getTeachingGoal(note = "") {
+  if (note.toLowerCase().includes("kiểm tra")) return "Đánh giá mức độ nắm bài của học sinh.";
+  if (note.toLowerCase().includes("ôn tập")) return "Củng cố kiến thức trọng tâm và kỹ năng giải bài.";
+  if (note.toLowerCase().includes("bài tập")) return "Rèn luyện vận dụng qua bài tập theo mức độ.";
+  return "Giới thiệu kiến thức mới và luyện tập cơ bản.";
+}
+
+function getReminderByType(type) {
+  if (type === "Kiểm tra") return ["Chuẩn bị đề kiểm tra", "Nhắc học sinh mang đầy đủ dụng cụ", "Ổn định lớp trước khi phát đề"];
+  if (type === "Ôn tập") return ["Tổng hợp công thức trọng tâm", "Gọi 1-2 học sinh trình bày", "Chốt lỗi sai thường gặp"];
+  if (type === "Luyện tập") return ["Phân nhóm bài dễ - khó", "Quan sát tiến độ theo nhóm", "Chữa nhanh bài đại diện"];
+  return ["Nêu mục tiêu bài học đầu tiết", "Minh họa ví dụ trọng tâm", "Kiểm tra nhanh cuối tiết"];
+}
+
 function getTodayDayIndex() {
   const day = new Date().getDay(); // 0=Sun
   // Mon=0 ... Sat=5, Sun=6
@@ -31,6 +66,12 @@ export default function TeacherSchedule() {
     setSelectedDay(idx);
     setIsDailyModalOpen(true);
   };
+
+  const lessonType = selectedLesson ? selectedLesson.lessonType || getLessonType(selectedLesson.note) : "";
+  const timeRange = selectedLesson
+    ? selectedLesson.timeRange || PERIOD_TIME[selectedLesson.period] || "Chưa cập nhật"
+    : "";
+  const reminderList = selectedLesson ? getReminderByType(lessonType) : [];
 
   return (
     <div className="teacher-schedule">
@@ -78,16 +119,48 @@ export default function TeacherSchedule() {
         {selectedLesson && (
           <div className="teacher-lesson-modal-content">
             <div className="modal-header-info">
-              <h3>{selectedLesson.subject}</h3>
-              <span className={`modal-badge color-${selectedLesson.color}`}>
-                Tiết {selectedLesson.period}
-              </span>
+              <div>
+                <h3>{selectedLesson.subject}</h3>
+                <p className="modal-header-subtitle">
+                  {selectedLesson.dayName || "Lịch học"} - {selectedLesson.dateLabel || "Chưa cập nhật ngày"}
+                </p>
+              </div>
+              <div className="modal-header-badges">
+                <span className={`modal-badge color-${selectedLesson.color}`}>Tiết {selectedLesson.period}</span>
+                <span className="modal-type-badge">{lessonType}</span>
+              </div>
             </div>
-            <div className="modal-body-info">
-              <p><strong>Lớp:</strong> {selectedLesson.class}</p>
-              <p><strong>Phòng:</strong> {selectedLesson.room}</p>
-              {selectedLesson.students && <p><strong>Sĩ số:</strong> {selectedLesson.students} học sinh</p>}
-              {selectedLesson.note && <p><strong>Nội dung:</strong> {selectedLesson.note}</p>}
+
+            <div className="modal-info-grid">
+              <div className="modal-info-card">
+                <h4>Tổng quan</h4>
+                <p><strong>Lớp:</strong> {selectedLesson.class}</p>
+                <p><strong>Phòng học:</strong> {selectedLesson.room}</p>
+                <p><strong>Sĩ số:</strong> {selectedLesson.students || 0} học sinh</p>
+                <p><strong>Buổi học:</strong> {selectedLesson.session || (selectedLesson.period <= 5 ? "Sáng" : "Chiều")}</p>
+              </div>
+
+              <div className="modal-info-card">
+                <h4>Thời gian</h4>
+                <p><strong>Khung giờ:</strong> {timeRange}</p>
+                <p><strong>Tiết:</strong> {selectedLesson.period}</p>
+                <p><strong>Loại tiết:</strong> {lessonType}</p>
+              </div>
+
+              <div className="modal-info-card modal-info-card-wide">
+                <h4>Nội dung giảng dạy</h4>
+                <p><strong>Nội dung chính:</strong> {selectedLesson.note || "Chưa cập nhật nội dung."}</p>
+                <p><strong>Mục tiêu:</strong> {getTeachingGoal(selectedLesson.note)}</p>
+              </div>
+
+              <div className="modal-info-card modal-info-card-wide">
+                <h4>Nhắc nhớ cho tiết này</h4>
+                <ul className="modal-reminder-list">
+                  {reminderList.map((item) => (
+                    <li key={item}>{item}</li>
+                  ))}
+                </ul>
+              </div>
             </div>
           </div>
         )}
