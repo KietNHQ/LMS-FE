@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Send, AlertCircle, CheckCircle2, X } from "lucide-react";
+import Select from "../../../../../components/ui/Select/Select";
 import "./CreateNotificationForm.css";
-
 export default function CreateNotificationForm({ onClose }) {
     const [formData, setFormData] = useState({
         receiver: "homeroom",
@@ -63,17 +63,18 @@ export default function CreateNotificationForm({ onClose }) {
 
             <form className="create-notification-form" onSubmit={handleSubmit}>
                 <div className="form-group">
-                    <label htmlFor="receiver">Gửi đến</label>
-                    <select 
-                        id="receiver" 
-                        name="receiver" 
+                    <Select
+                        variant="custom"
+                        id="receiver"
+                        name="receiver"
+                        label="Gửi đến"
                         value={formData.receiver}
                         onChange={handleChange}
-                        className="form-control premium-input"
-                    >
-                        <option value="homeroom">Lớp chủ nhiệm (Gửi thông báo lớp)</option>
-                        <option value="admin">Ban Giám Hiệu (Gửi yêu cầu hỗ trợ)</option>
-                    </select>
+                        options={[
+                            { value: "homeroom", label: "Lớp chủ nhiệm (Gửi thông báo lớp)" },
+                            { value: "admin", label: "Ban Giám Hiệu (Gửi yêu cầu hỗ trợ)" }
+                        ]}
+                    />
                 </div>
 
                 <div className="form-group">
