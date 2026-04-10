@@ -104,6 +104,20 @@
   outline: none;
 }
 
+.custom-dropdown-trigger-content {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  min-width: 0;
+}
+
+.custom-dropdown-trigger-content span {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .custom-dropdown-trigger:hover {
   border-color: #b8cbf8;
   box-shadow: 0 10px 24px rgba(143, 179, 255, 0.12);

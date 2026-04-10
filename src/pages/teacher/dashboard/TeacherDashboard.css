@@ -1,166 +1,104 @@
 .teacher-dashboard-container {
-  padding: 20px;
-  background: #f5f7fb;
+  padding: 24px;
+  background: transparent;
   min-height: 100vh;
 }
 
-/* Header */
-.teacher-dashboard-header h2 {
-  font-size: 22px;
-  font-weight: 600;
+/* ===== Teacher Teal Theme Overrides ===== */
+.theme-teacher {
+  --role-primary: #14b8a6;
+  --role-primary-soft: #f0fdfa;
+  --role-border: #ccfbf1;
+
+  /* Apply to components that use these variables */
+  --admin-primary: var(--role-primary);
+  --admin-primary-soft: var(--role-primary-soft);
+  --admin-border: var(--role-border);
+  --admin-text-primary: #0f766e;
 }
 
-.teacher-dashboard-header p {
-  color: #888;
+/* Header */
+.teacher-dashboard-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.teacher-dashboard-header h2 {
+  font-size: 28px;
+  font-weight: 800;
+  color: #1e293b;
+  margin: 0;
+}
+
+.header-time-box {
+  display: flex;
+  align-items: center;
+  gap: 12px;
   margin-top: 4px;
+}
+
+.current-time {
+  font-size: 16px;
+  font-weight: 700;
+  color: #0d9488;
+  background: #f0fdfa;
+  padding: 2px 10px;
+  border-radius: 6px;
+  font-family: monospace;
+}
+
+.current-date {
+  font-size: 14px;
+  color: #64748b;
+  font-weight: 500;
 }
 
 /* Layout */
 .teacher-dashboard-middle {
-  display: grid;
-  grid-template-columns: 2fr 1fr;
-  gap: 20px;
-  margin-top: 20px;
+  display: flex;
+  gap: 24px;
+  margin-top: 24px;
+  height: 550px;
+}
+
+.teacher-dashboard-middle> :first-child {
+  flex: 1;
+}
+
+.teacher-dashboard-middle>.teacher-dashboard-calendar {
+  flex: 0 0 420px;
+  /* Fixed smaller width for calendar */
 }
 
 .teacher-dashboard-bottom {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 20px;
-  margin-top: 20px;
+  grid-template-columns: 1.2fr 1fr;
+  gap: 24px;
+  margin-top: 24px;
 }
 
+/* Section Titles */
 .teacher-dashboard-title {
-  font-weight: 600;
-  margin-bottom: 10px;
+  font-size: 16px;
+  font-weight: 700;
+  color: #1e293b;
+  margin-bottom: 20px;
 }
 
-/* ===== Chart ===== */
-.teacher-dashboard-chart {
+.teacher-dashboard-calendar {
   background: white;
   padding: 20px;
   border-radius: 12px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  font-size: 0.9em;
+  /* Scale down calendar slightly */
 }
 
-/* ===== WRAPPER ===== */
-.teacher-chart-wrapper {
-  position: relative;
-  margin-top: 20px;
-}
-
-/* ===== Y AXIS ===== */
-.teacher-y-axis {
-  position: absolute;
-  left: var(--teacher-axis-left);
-  bottom: 30px;
-
-  width: 2px;
-  height: var(--teacher-chart-height);
-
-  background: #ddd;
-}
-
-/* Labels */
-.teacher-y-axis-labels {
-  position: absolute;
-  left: 0;
-  bottom: 30px;
-
-  width: var(--teacher-axis-left);
-  height: var(--teacher-chart-height);
-
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-}
-
-.teacher-y-axis-label {
-  display: flex;
-  justify-content: flex-end;
-  align-items: center;
-  gap: 5px;
-}
-
-.teacher-y-axis-label span {
-  font-size: 12px;
-  color: #888;
-}
-
-.teacher-y-tick {
-  width: 6px;
-  height: 1px;
-  background: #999;
-}
-
-/* ===== CHART BOX ===== */
-.teacher-chart-box {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-around;
-
-  height: var(--teacher-chart-height);
-
-  margin-left: var(--teacher-axis-left);
-  width: calc(100% - var(--teacher-axis-left));
-}
-
-/* Column */
-.teacher-chart-column {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-
-  flex: none; /* QUAN TRỌNG */
-}
-
-/* Bar */
-.teacher-bar {
-  width: 40px;
-  background: #4fd1c5;
-  border-radius: 6px;
-  transition: all 0.3s ease;
-}
-
-.teacher-bar:hover {
-  transform: translateY(-3px);
-  opacity: 0.9;
-}
-
-/* Label */
-.teacher-chart-label {
-  margin-top: 6px;
-  font-size: 13px;
-  color: #777;
-}
-
-/* ===== X AXIS ===== */
-.teacher-x-axis {
-  position: absolute;
-  left: var(--teacher-axis-left);
-  bottom: 30px;
-
-  width: calc(100% - var(--teacher-axis-left));
-  height: 2px;
-
-  background: #ddd;
-}
-/* ===== X TICKS ===== */
-.teacher-x-axis-ticks {
-  position: absolute;
-  left: var(--teacher-axis-left);
-  bottom: 30px;
-
-  width: calc(100% - var(--teacher-axis-left));
-
-  display: flex;
-  justify-content: space-around;
-}
-
-.teacher-x-tick {
-  width: 2px;
-  height: 6px;
-  background: #999;
+.teacher-dashboard-calendar .event-calendar {
+  transform: scale(0.95);
+  transform-origin: top center;
 }
 
 /* ===== Quiz ===== */
@@ -221,6 +159,7 @@
   align-items: center;
   justify-content: center;
 }
+
 :root {
   --teacher-axis-left: 50px;
   --teacher-chart-height: 150px;

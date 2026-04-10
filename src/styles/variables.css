@@ -62,6 +62,12 @@
   --warning-color: #f59e0b;
   --info-color: #0ea5e9;
 
+  /* Calendar Event Palette (Default) */
+  --cal-blue: #0ea5e9;
+  --cal-red: #ef4444;
+  --cal-orange: #fbbf24;
+  --cal-teal: #14b8a6;
+
   /* Radius */
   --radius-sm: 6px;
   --radius-md: 10px;
@@ -99,4 +105,39 @@
           #96b8ff 65%,
           #314884 100%
   );
+}
+/* Role Theme Overrides */
+.theme-teacher {
+  --admin-primary: #14b8a6;
+  --admin-primary-hover: #0f766e;
+  --admin-primary-soft: #f0fdfa;
+  --admin-border: #ccfbf1;
+  --admin-border-strong: #99f6e4;
+  --admin-text-primary: #0f766e;
+  --admin-text-secondary: #0d9488;
+  --admin-focus-ring: rgba(20, 184, 166, 0.2);
+  --admin-shadow-sm: 0 2px 6px rgba(20, 184, 166, 0.06);
+  --admin-shadow-md: 0 10px 24px rgba(20, 184, 166, 0.12);
+
+  /* High Contrast Event Overrides for Teacher */
+  --cal-blue: #2563eb;   /* Vibrant Royal Blue */
+  --cal-teal: #059669;   /* Deep Emerald (contrasts with Teal background) */
+  --cal-red: #f43f5e;    /* Rose/Red pop */
+  --cal-orange: #f59e0b; /* Amber pop */
+}
+
+.theme-admin {
+  --admin-primary: #1e2f5a;
+  --admin-primary-hover: #172547;
+  --admin-primary-soft: #e9efff;
+  --admin-border: #dce5f7;
+  --admin-border-strong: #c3d2ef;
+  --admin-text-primary: #1e2f5a;
+  --admin-text-secondary: #4d5f82;
+
+  /* High Contrast Event Overrides for Admin */
+  --cal-blue: #3b82f6;   /* Bright Blue */
+  --cal-teal: #06b6d4;   /* Cyan (contrasts with Navy background) */
+  --cal-red: #ef4444;
+  --cal-orange: #fbbf24;
 }

@@ -126,7 +126,12 @@ export default function Select({
             aria-haspopup="listbox"
             aria-expanded={isOpen}
           >
-            <span>{selectedOption?.label || placeholder || "Chọn"}</span>
+            <div className="custom-dropdown-trigger-content">
+              {selectedOption?.color && (
+                <span className={`event-calendar__legend-color event-calendar__event--${selectedOption.color}`} style={{ width: '12px', height: '12px', borderRadius: '3px', flexShrink: 0 }}></span>
+              )}
+              <span>{selectedOption?.label || placeholder || "Chọn"}</span>
+            </div>
             <FiChevronDown className="dropdown-arrow" />
           </button>
 
@@ -159,6 +164,9 @@ export default function Select({
                         setSearchTerm("");
                       }}
                     >
+                      {option.color && (
+                        <span className={`event-calendar__legend-color event-calendar__event--${option.color}`} style={{ width: '12px', height: '12px', borderRadius: '3px', flexShrink: 0 }}></span>
+                      )}
                       <span>{option.label}</span>
                       {isActive ? <FiCheck /> : null}
                     </button>

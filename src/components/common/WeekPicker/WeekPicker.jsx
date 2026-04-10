@@ -4,7 +4,7 @@ import "./WeekPicker.css";
 function getDefaultWeeks(totalWeeks = 35) {
   return Array.from({ length: totalWeeks }, (_, index) => ({
 	value: index + 1,
-	label: `Tuan ${index + 1}`,
+	label: `Tuần ${index + 1}`,
   }));
 }
 
@@ -13,7 +13,7 @@ export default function WeekPicker({
   onChange,
   totalWeeks = 35,
   weeks,
-  label = "Tuan hoc",
+  label = "Tuần học",
 }) {
   const options = weeks?.length ? weeks : getDefaultWeeks(totalWeeks);
 
@@ -43,7 +43,7 @@ export default function WeekPicker({
 		  className="common-week-picker__nav"
 		  onClick={handlePrev}
 		  disabled={value <= 1}
-		  aria-label="Tuan truoc"
+		  aria-label="Tuần trước"
 		>
 		  <FiChevronLeft />
 		</button>
@@ -65,7 +65,7 @@ export default function WeekPicker({
 		  className="common-week-picker__nav"
 		  onClick={handleNext}
 		  disabled={value >= options.length}
-		  aria-label="Tuan sau"
+		  aria-label="Tuần sau"
 		>
 		  <FiChevronRight />
 		</button>

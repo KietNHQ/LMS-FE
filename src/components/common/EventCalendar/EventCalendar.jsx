@@ -1,18 +1,14 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { createPortal } from "react-dom";
 import { FiPlus, FiChevronLeft, FiChevronRight } from "react-icons/fi";
 import Select from "../../ui/Select/Select";
 import "./EventCalendar.css";
 
 const DEFAULT_EVENT_TYPES = [
   { value: "blue", label: "Ngày kiểm tra", description: "Thông báo kiểm tra" },
+  { value: "purple", label: "Sự kiện lớp", description: "Sự kiện cấp lớp" },
   { value: "red", label: "Ngày lễ", description: "Thông báo lễ" },
   { value: "orange", label: "Ngày nghỉ", description: "Thông báo nghỉ" },
-];
-
-const DEFAULT_EVENTS = [
-  { startDay: 10, endDay: 10, title: "Kiểm tra định kỳ", content: "Kiểm tra 1 tiết", color: "blue" },
-  { startDay: 15, endDay: 15, title: "Lễ trường", content: "Sinh hoạt chào mừng", color: "red" },
-  { startDay: 25, endDay: 25, title: "Nghỉ", content: "Thông báo nghỉ", color: "orange" },
 ];
 
 const DEFAULT_POLICY = {
@@ -42,12 +38,17 @@ const dayNames = ["CN", "T2", "T3", "T4", "T5", "T6", "T7"];
 const getDaysInMonth = (date) => new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
 const getFirstDayOfMonth = (date) => new Date(date.getFullYear(), date.getMonth(), 1).getDay();
 
+const DEFAULT_EVENTS = []; // Clear defaults to allow props the full control
+
 const EventCalendar = ({
   title = "Lịch Sự Kiện",
   initialDate,
   initialEvents = DEFAULT_EVENTS,
   eventTypes = DEFAULT_EVENT_TYPES,
   rolePolicy = DEFAULT_POLICY,
+  themeClass = "theme-admin", // Default to admin navy
+  userRole = "teacher", // 'admin' or 'teacher'
+  currentUser = "", // The name/ID of the current logged-in user
 }) => {
   const today = initialDate || new Date();
   const [currentDate, setCurrentDate] = useState(today);
@@ -55,19 +56,29 @@ const EventCalendar = ({
   const [modalMode, setModalMode] = useState(null);
   const [selectedDay, setSelectedDay] = useState(null);
   const [selectedEvent, setSelectedEvent] = useState(null);
+  const [eventIndex, setEventIndex] = useState(0);
   const [newEvent, setNewEvent] = useState({
     date: "",
     endDate: "",
     isMultiDay: false,
     title: "",
     content: "",
+    target: "all", // New field for teacher: 'all', '10A1', etc.
     color: eventTypes[0]?.value || "blue",
   });
 
+  // Sync events with props when they change
+  useEffect(() => {
+    if (initialEvents) setEvents(initialEvents);
+  }, [initialEvents]);
+
   const canCreate = rolePolicy?.canCreate ?? true;
   const canViewDetails = rolePolicy?.canViewDetails ?? true;
-  const canEdit = rolePolicy?.canEdit ?? true;
-  const canDelete = rolePolicy?.canDelete ?? false;
+  
+  // Permission logic: Admin can modify anything. Teacher only their own.
+  const isOwner = (event) => userRole === "admin" || event?.createdBy === currentUser;
+  const canEdit = (event) => (rolePolicy?.canEdit ?? true) && isOwner(event);
+  const canDelete = (event) => (rolePolicy?.canDelete ?? false) && isOwner(event);
 
   const minDate = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, "0")}-01`;
   const maxDate = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, "0")}-${String(getDaysInMonth(currentDate)).padStart(2, "0")}`;
@@ -93,17 +104,17 @@ const EventCalendar = ({
     };
   };
 
+  // Group events by date (supporting multiple events per day)
   const eventsByDate = useMemo(() => {
-    const dayMap = {};
-
+    const map = {};
     events.forEach((event) => {
-      const { startDay, endDay } = getEventRange(event);
-      for (let day = startDay; day <= endDay; day += 1) {
-        dayMap[day] = event;
+      const range = getEventRange(event);
+      for (let d = range.startDay; d <= range.endDay; d++) {
+        if (!map[d]) map[d] = [];
+        map[d].push(event);
       }
     });
-
-    return dayMap;
+    return map;
   }, [events]);
 
   const toCurrentMonthDate = (day) => {
@@ -133,28 +144,49 @@ const EventCalendar = ({
       isMultiDay: false,
       title: "",
       content: "",
+      target: "all",
       color: eventTypes[0]?.value || "blue",
     });
     setModalMode("create");
   };
 
   const openEventDetailModal = (day, eventItem) => {
-    if (!canViewDetails) {
-      return;
-    }
+    if (!canViewDetails) return;
+
+    const dayEvents = eventsByDate[day] || [];
+    const eventIndex = dayEvents.findIndex(e => e === eventItem);
+    
     setSelectedDay(day);
     setSelectedEvent(eventItem);
+    setEventIndex(eventIndex >= 0 ? eventIndex : 0);
     setModalMode("details");
   };
 
-  const handleDayClick = (day) => {
-    if (!day) {
-      return;
+  const handleNextEvent = () => {
+    const dayEvents = eventsByDate[selectedDay] || [];
+    if (eventIndex < dayEvents.length - 1) {
+      const nextIdx = eventIndex + 1;
+      setEventIndex(nextIdx);
+      setSelectedEvent(dayEvents[nextIdx]);
     }
+  };
 
-    const eventItem = eventsByDate[day];
-    if (eventItem) {
-      openEventDetailModal(day, eventItem);
+  const handlePrevEvent = () => {
+    const dayEvents = eventsByDate[selectedDay] || [];
+    if (eventIndex > 0) {
+      const prevIdx = eventIndex - 1;
+      setEventIndex(prevIdx);
+      setSelectedEvent(dayEvents[prevIdx]);
+    }
+  };
+
+  const handleDayClick = (day) => {
+    if (!day) return;
+
+    const dayEvents = eventsByDate[day];
+    if (dayEvents && dayEvents.length > 0) {
+      // If day has events, open the first one by default when clicking the cell
+      openEventDetailModal(day, dayEvents[0]);
       return;
     }
 
@@ -182,6 +214,7 @@ const EventCalendar = ({
       endDay: normalizedEndDay,
       title: newEvent.title,
       content: newEvent.content,
+      target: newEvent.target,
       color: newEvent.color,
     };
 
@@ -199,6 +232,7 @@ const EventCalendar = ({
       isMultiDay: false,
       title: "",
       content: "",
+      target: "all",
       color: eventTypes[0]?.value || "blue",
     });
     closeModal();
@@ -271,11 +305,18 @@ const EventCalendar = ({
               <>
                 <div className="event-calendar__day-number">{day}</div>
                 {eventsByDate[day] && (
-                  <div
-                    className={`event-calendar__event event-calendar__event--${eventsByDate[day].color}`}
-                    title={eventsByDate[day].title}
-                  >
-                    {eventsByDate[day].title}
+                  <div className="event-calendar__events-dots">
+                    {eventsByDate[day].map((event, idx) => (
+                      <div
+                        key={`${day}-${idx}`}
+                        className={`event-calendar__dot event-calendar__event--${event.color}`}
+                        title={event.title}
+                        onClick={(e) => {
+                          e.stopPropagation(); // Prevent triggering the day click
+                          openEventDetailModal(day, event);
+                        }}
+                      ></div>
+                    ))}
                   </div>
                 )}
               </>
@@ -293,9 +334,11 @@ const EventCalendar = ({
         ))}
       </div>
 
-      {modalMode && (
-        <div className="event-calendar__modal-overlay" onClick={closeModal}>
-          <div className="event-calendar__modal" onClick={(e) => e.stopPropagation()}>
+      {modalMode && createPortal(
+        <div className={themeClass}>
+          <div className="event-calendar__modal-overlay" onClick={closeModal}>
+            <div className="event-calendar__modal" onClick={(e) => e.stopPropagation()}>
+              {/* Modal content ... */}
             {modalMode === "create" ? (
               <>
                 <h3>Tạo Sự Kiện Mới</h3>
@@ -348,13 +391,14 @@ const EventCalendar = ({
                     options={eventTypes.map((type) => ({
                       value: type.value,
                       label: type.label,
+                      color: type.value, // Pass color for the UI hint
                     }))}
                     variant="custom"
                     placeholder="Chọn loại sự kiện"
                   />
                 </div>
                 <div className="event-calendar__modal-group">
-                  <label>Tên sự kiện:</label>
+                  <label>Tiêu đề sự kiện:</label>
                   <input
                     type="text"
                     value={newEvent.title}
@@ -363,7 +407,21 @@ const EventCalendar = ({
                   />
                 </div>
                 <div className="event-calendar__modal-group">
-                  <label>Nội dung:</label>
+                  <label>Đối tượng:</label>
+                  <Select
+                    value={newEvent.target}
+                    onChange={(e) => setNewEvent({ ...newEvent, target: e.target.value })}
+                    options={[
+                      { value: "all", label: "Tất cả lớp giảng dạy" },
+                      { value: "homeroom", label: "Lớp chủ nhiệm" },
+                      { value: "10A1", label: "Lớp 10A1" },
+                      { value: "11B2", label: "Lớp 11B2" },
+                    ]}
+                    variant="custom"
+                  />
+                </div>
+                <div className="event-calendar__modal-group">
+                  <label>Nội dung chi tiết:</label>
                   <textarea
                     value={newEvent.content}
                     onChange={(e) => setNewEvent({ ...newEvent, content: e.target.value })}
@@ -382,7 +440,30 @@ const EventCalendar = ({
               </>
             ) : (
               <>
-                <h3>Chi Tiết Sự Kiện</h3>
+                <div className="event-calendar__modal-header">
+                  <h3>Chi Tiết Sự Kiện</h3>
+                  {eventsByDate[selectedDay]?.length > 1 && (
+                    <div className="event-calendar__modal-nav">
+                      <button 
+                        className="event-calendar__nav-btn" 
+                        onClick={handlePrevEvent}
+                        disabled={eventIndex === 0}
+                      >
+                        <FiChevronLeft />
+                      </button>
+                      <span className="event-calendar__nav-counter">
+                        {eventIndex + 1} / {eventsByDate[selectedDay].length}
+                      </span>
+                      <button 
+                        className="event-calendar__nav-btn" 
+                        onClick={handleNextEvent}
+                        disabled={eventIndex === eventsByDate[selectedDay].length - 1}
+                      >
+                        <FiChevronRight />
+                      </button>
+                    </div>
+                  )}
+                </div>
                 <div className="event-calendar__detail-row">
                   <span className="event-calendar__detail-label">Ngày</span>
                   <span className="event-calendar__detail-value">
@@ -410,11 +491,23 @@ const EventCalendar = ({
                   <span className="event-calendar__detail-label">Nội dung</span>
                   <span className="event-calendar__detail-value">{selectedEvent?.content || "Không có nội dung"}</span>
                 </div>
+                {selectedEvent?.createdBy && (
+                  <div className="event-calendar__detail-row">
+                    <span className="event-calendar__detail-label">Người tạo</span>
+                    <span className="event-calendar__detail-value">{selectedEvent.createdBy}</span>
+                  </div>
+                )}
+                {selectedEvent?.createdRole && (
+                  <div className="event-calendar__detail-row">
+                    <span className="event-calendar__detail-label">Vai trò</span>
+                    <span className="event-calendar__detail-value">{selectedEvent.createdRole}</span>
+                  </div>
+                )}
                 <div className="event-calendar__modal-actions">
                   <button className="event-calendar__modal-btn event-calendar__modal-btn--cancel" onClick={closeModal}>
                     Đóng
                   </button>
-                  {canDelete && (
+                  {canDelete(selectedEvent) && (
                     <button
                       className="event-calendar__modal-btn event-calendar__modal-btn--danger"
                       onClick={handleDeleteEvent}
@@ -422,7 +515,7 @@ const EventCalendar = ({
                       Xóa
                     </button>
                   )}
-                  {canEdit && canCreate && (
+                  {canEdit(selectedEvent) && canCreate && (
                     <button
                       className="event-calendar__modal-btn event-calendar__modal-btn--save"
                       onClick={() => {
@@ -446,7 +539,9 @@ const EventCalendar = ({
             )}
           </div>
         </div>
-      )}
+      </div>,
+      document.body
+    )}
     </div>
   );
 };

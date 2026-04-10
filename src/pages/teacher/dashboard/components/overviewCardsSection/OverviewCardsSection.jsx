@@ -12,25 +12,18 @@ const OverviewCardsSection = () => {
       bg: "#d1fae5",
     },
     {
-      title: "Học sinh",
-      value: 99,
+      title: "Lớp chủ nhiệm kỳ này",
+      value: 3,
       icon: <Users />,
       color: "#3b82f6",
       bg: "#dbeafe",
     },
     {
-      title: "Bài học",
-      value: 2,
+      title: "Điểm chuyên cần tuần này",
+      value: "95%",
       icon: <BookOpen />,
       color: "#8b5cf6",
       bg: "#ede9fe",
-    },
-    {
-      title: "Quiz đã tạo",
-      value: 2,
-      icon: <ClipboardList />,
-      color: "#f97316",
-      bg: "#ffedd5",
     },
   ];
 
