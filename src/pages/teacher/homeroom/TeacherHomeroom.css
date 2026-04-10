@@ -1,4 +1,10 @@
 .teacher-homeroom-page {
+  --tc-primary: #0d9488;
+  --tc-primary-strong: #0f766e;
+  --tc-primary-soft: #f0fdfa;
+  --tc-border: #5eead4;
+  --tc-text-main: #134e4a;
+  --tc-text-subtle: #115e59;
   padding: 24px;
   max-width: 1200px;
   margin: 0 auto;
@@ -27,15 +33,21 @@
 
 .homeroom-stat-card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.025);
+  box-shadow: 0 12px 20px -8px rgba(14, 116, 106, 0.45);
+  border-color: #0f766e;
+}
+
+.homeroom-stat-card:hover .stat-icon {
+  background-color: #0f766e;
+  color: #ffffff;
 }
 
 .stat-icon {
   width: 56px;
   height: 56px;
   border-radius: 16px;
-  background-color: var(--color-teacher-light, #e0f2f1);
-  color: var(--color-teacher, #00897b);
+  background-color: rgba(79, 209, 197, 0.18);
+  color: var(--teacher-color, #4fd1c5);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -66,7 +78,7 @@
   margin-bottom: 24px;
 }
 
-.section-switch-btn {
+.teacher-homeroom-page .section-switch-btn {
   background: transparent;
   border: none;
   padding: 12px 24px;
@@ -75,29 +87,32 @@
   color: var(--text-secondary, #6b7280);
   cursor: pointer;
   position: relative;
+  border-radius: 10px 10px 0 0;
   transition: all 0.2s ease;
 }
 
-.section-switch-btn:hover {
-  color: var(--text-primary, #111827);
-  background-color: var(--bg-hover, #f3f4f6);
-  border-radius: 8px 8px 0 0;
+.teacher-homeroom-page .section-switch-btn:hover {
+  color: #0f766e;
+  background-color: rgba(15, 118, 110, 0.18);
+  box-shadow: inset 0 -3px 0 #0f766e;
 }
 
-.section-switch-btn.active {
-  color: var(--color-teacher, #00897b);
-  font-weight: 600;
+.teacher-homeroom-page .section-switch-btn.active {
+  color: #ffffff;
+  background-color: #0f766e;
+  font-weight: 700;
+  box-shadow: 0 6px 14px -8px rgba(15, 118, 110, 0.75);
 }
 
-.section-switch-btn.active::after {
+.teacher-homeroom-page .section-switch-btn.active::after {
   content: '';
   position: absolute;
-  bottom: -2px;
-  left: 0;
-  right: 0;
+  bottom: 2px;
+  left: 14px;
+  right: 14px;
   height: 2px;
-  background-color: var(--color-teacher, #00897b);
-  border-radius: 2px 2px 0 0;
+  background-color: rgba(255, 255, 255, 0.95);
+  border-radius: 2px;
 }
 
 /* Make sure the nested Students list feels integrated */

@@ -165,7 +165,11 @@
   font-style: italic;
 }
 
-.attendance-status-select,
+.attendance-status-select {
+  width: 100%;
+}
+
+.attendance-status-select .custom-dropdown-trigger,
 .attendance-note-input {
   width: 100%;
   min-height: 34px;
@@ -175,6 +179,58 @@
   font-size: 13px;
   color: var(--text-primary, #111827);
   background: #ffffff;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+}
+
+.attendance-status-select .custom-dropdown-trigger {
+  justify-content: space-between;
+  border-color: rgba(15, 118, 110, 0.35);
+  box-shadow: none;
+  background: #ffffff;
+  font-weight: 600;
+}
+
+.attendance-status-select .custom-dropdown-trigger:hover {
+  border-color: #0f766e;
+  background-color: #f0fdfa;
+  box-shadow: none;
+}
+
+.attendance-status-select .custom-dropdown-trigger.open {
+  border-color: #0f766e;
+  box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.2);
+  background: #ffffff;
+}
+
+.attendance-status-select .dropdown-arrow {
+  color: #0f766e;
+}
+
+.attendance-status-select .custom-dropdown-menu {
+  margin-top: 0;
+  border-color: rgba(15, 118, 110, 0.35);
+  border-radius: 10px;
+  padding: 6px;
+  box-shadow: 0 12px 24px rgba(15, 118, 110, 0.18);
+}
+
+.attendance-status-select .custom-dropdown-item {
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #134e4a;
+}
+
+.attendance-status-select .custom-dropdown-item:hover {
+  background-color: #ccfbf1;
+  color: #0f766e;
+  transform: none;
+}
+
+.attendance-status-select .custom-dropdown-item.active {
+  background: #0f766e;
+  color: #ffffff;
 }
 
 .attendance-note-input {

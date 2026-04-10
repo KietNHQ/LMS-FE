@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { FiCheckCircle, FiXCircle, FiClock, FiCalendar } from "react-icons/fi";
+import { Select } from "../../../../../components/ui";
 import "./HomeroomAttendanceSection.css";
 
 const STATUS_LABELS = {
@@ -7,6 +8,12 @@ const STATUS_LABELS = {
     absent: "Vắng mặt",
     late: "Đi trễ",
 };
+
+const ATTENDANCE_STATUS_OPTIONS = [
+    { value: "present", label: "Có mặt" },
+    { value: "absent", label: "Vắng mặt" },
+    { value: "late", label: "Đi trễ" },
+];
 
 const DEFAULT_NOTES = {
     present: "",
@@ -164,9 +171,11 @@ export default function HomeroomAttendanceSection({ data }) {
                                     </td>
                                     <td>
                                         {isEditing ? (
-                                            <select
+                                            <Select
+                                                variant="custom"
                                                 className="attendance-status-select"
                                                 value={editDraft.status}
+                                                options={ATTENDANCE_STATUS_OPTIONS}
                                                 onChange={(e) => {
                                                     const nextStatus = e.target.value;
                                                     setEditDraft((prev) => ({
@@ -175,11 +184,7 @@ export default function HomeroomAttendanceSection({ data }) {
                                                         note: prev.note || DEFAULT_NOTES[nextStatus],
                                                     }));
                                                 }}
-                                            >
-                                                <option value="present">Có mặt</option>
-                                                <option value="absent">Vắng mặt</option>
-                                                <option value="late">Đi trễ</option>
-                                            </select>
+                                            />
                                         ) : (
                                             <span className={`status-pill ${student.attendanceStatus}`}>
                                                 {STATUS_LABELS[student.attendanceStatus]}

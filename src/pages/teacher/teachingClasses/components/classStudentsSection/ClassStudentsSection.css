@@ -103,8 +103,8 @@
   min-height: 40px;
   padding: 0 18px;
   border-radius: 12px;
-  border: 1px solid rgba(13, 148, 136, 0.9);
-  background: var(--tc-primary-strong);
+  border: 1px solid var(--tc-primary-strong, #0f766e);
+  background: linear-gradient(180deg, var(--tc-primary, #0d9488) 0%, var(--tc-primary-strong, #0f766e) 100%);
   color: #ffffff;
   font-size: 13px;
   font-weight: 800;
@@ -116,7 +116,7 @@
 }
 
 .tc-open-form-btn:hover {
-  filter: brightness(1.03);
+  filter: brightness(1.05);
   box-shadow: 0 14px 28px rgba(13, 148, 136, 0.28);
   transform: translateY(-1px);
 }
