@@ -9,6 +9,7 @@ export default function NotificationHeader({
   setFilter,
   classList,
   getClassLabel,
+  onOpenCompose
 }) {
   return (
     <div className="teacher-notification-header">
@@ -25,11 +26,17 @@ export default function NotificationHeader({
           getClassLabel={getClassLabel}
         />
 
-        <div className="teacher-notification-bell" onClick={onMarkAllRead} role="button" tabIndex={0}>
-          <Bell className="teacher-notification-bell-icon" size={22} />
-          {unreadCount > 0 && (
-            <span className="teacher-notification-bell-badge">{unreadCount > 9 ? "9+" : unreadCount}</span>
-          )}
+        <div className="teacher-notification-header-buttons">
+          <button className="teacher-notification-btn-primary" onClick={onOpenCompose}>
+            + Soạn tin
+          </button>
+
+          <div className="teacher-notification-bell" onClick={onMarkAllRead} role="button" tabIndex={0}>
+            <Bell className="teacher-notification-bell-icon" size={22} />
+            {unreadCount > 0 && (
+              <span className="teacher-notification-bell-badge">{unreadCount > 9 ? "9+" : unreadCount}</span>
+            )}
+          </div>
         </div>
       </div>
     </div>

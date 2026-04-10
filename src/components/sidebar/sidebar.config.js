@@ -69,7 +69,6 @@ export const sidebarConfig = {
         { label: "Quản Lý Điểm", icon: FiAward, path: "/teacher/grades" },
         { label: "Bài Kiểm Tra", icon: FiFileText, path: "/teacher/quiz" },
         { label: "Thời Khóa Biểu", icon: FiCalendar, path: "/teacher/schedule" },
-        { label: "Yêu Cầu", icon: FiMessageSquare, path: "/teacher/request" },
         { label: "Thông Báo", icon: FiBell, path: "/teacher/notifications" },
         { label: "Hỗ Trợ", icon: FiHelpCircle, path: "/teacher/support" },
     ],

@@ -179,7 +179,6 @@ export default function AppRoutes() {
         <Route path="quiz/create"      element={<TeacherCreateQuiz />} />
         <Route path="quiz/:quizId/submissions" element={<TeacherQuizSubmissions />} />
         <Route path="schedule"         element={<TeacherSchedule />} />
-        <Route path="request"          element={<TeacherRequest />} />
         <Route path="notifications"    element={<TeacherNotifications />} />
         <Route path="support"          element={<TeacherSupport />} />
       </Route>

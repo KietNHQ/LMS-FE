@@ -32,11 +32,56 @@
   min-width: 320px;
 }
 
+.teacher-notification-header-buttons {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.teacher-notification-btn-primary,
+.teacher-notification-btn-secondary {
+  height: 44px;
+  padding: 0 20px;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.teacher-notification-btn-primary {
+  background: linear-gradient(135deg, #11c7b6, #04a094);
+  color: white;
+  border: none;
+  box-shadow: 0 4px 12px rgba(17, 181, 164, 0.25);
+}
+
+.teacher-notification-btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(17, 181, 164, 0.35);
+  background: linear-gradient(135deg, #2fd6c7, #059e92);
+}
+
+.teacher-notification-btn-secondary {
+  background: white;
+  color: #64748b;
+  border: 1px solid #cbd5e1;
+}
+
+.teacher-notification-btn-secondary:hover {
+  background: #f8fafc;
+  color: #334155;
+  border-color: #94a3b8;
+}
+
 .teacher-notification-bell {
   position: relative;
-  width: 56px;
-  height: 56px;
-  border-radius: 18px;
+  width: 44px; /* adjusted to match button height */
+  height: 44px;
+  border-radius: 12px;
   background: #ffffff;
   border: 1px solid #cdecea;
   display: flex;
@@ -44,7 +89,7 @@
   justify-content: center;
   cursor: pointer;
   flex-shrink: 0;
-  box-shadow: 0 8px 20px rgba(20, 28, 45, 0.05);
+  box-shadow: 0 4px 12px rgba(20, 28, 45, 0.05); /* Match button shadow feel */
   transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease, border-color 0.2s ease;
 }
 

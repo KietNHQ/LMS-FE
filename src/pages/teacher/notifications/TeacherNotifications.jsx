@@ -4,6 +4,7 @@ import "./TeacherNotifications.css";
 import NotificationHeader from "./components/NotificationHeader/NotificationHeader";
 import NotificationDialog from "./components/NotificationDialog/NotificationDialog";
 import NotificationList from "./components/NotificationList/NotificationList";
+import CreateNotificationForm from "./components/CreateNotificationForm/CreateNotificationForm";
 
 const CHILDREN = [
   { name: "Nguyen Van B", class: "10A1" },
@@ -132,6 +133,8 @@ export default function TeacherNotifications() {
     setSelected(null);
   };
 
+  const [isComposeOpen, setIsComposeOpen] = useState(false);
+
   return(
 
     <div className="teacher-notification-page">
@@ -145,6 +148,7 @@ export default function TeacherNotifications() {
           setFilter={setFilter}
           classList={classList}
           getClassLabel={getClassLabel}
+          onOpenCompose={() => setIsComposeOpen(true)}
         />
 
         <NotificationList
@@ -156,6 +160,14 @@ export default function TeacherNotifications() {
       </div>
 
       {selected && <NotificationDialog notification={selected} onClose={closeDialog} />}
+
+      {isComposeOpen && (
+        <div className="teacher-notification-dialog-overlay" onClick={() => setIsComposeOpen(false)}>
+          <div onClick={(e) => e.stopPropagation()}>
+            <CreateNotificationForm onClose={() => setIsComposeOpen(false)} />
+          </div>
+        </div>
+      )}
 
     </div>
   );
