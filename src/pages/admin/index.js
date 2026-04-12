@@ -1,8 +1,5 @@
 export { default as AdminDashboard } from "./dashboard/AdminDashboard";
 export { default as AdminUsers } from "./users/AdminUsers";
-export { default as AdminStudents } from "./students/AdminStudents";
-export { default as AdminTeachers } from "./teachers/AdminTeachers";
-export { default as AdminParents } from "./parents/AdminParents";
 export { default as AdminQuiz } from "./quiz/AdminQuiz";
 export { default as AdminCreateQuiz } from "./quiz/create/AdminCreateQuiz";
 export { default as AdminClasses } from "./classes/AdminClasses";

@@ -49,9 +49,6 @@ export const sidebarConfig = {
     admin: [
         { label: "Trang chủ", icon: FiGrid, path: "/admin/dashboard" },
         { label: "Người Dùng", icon: LuUserCog, path: "/admin/users" },
-        { label: "Giáo Viên", icon: FaChalkboardTeacher, path: "/admin/teachers" },
-        { label: "Học Sinh", icon: PiStudentBold, path: "/admin/students" },
-        { label: "Phụ Huynh", icon: RiParentFill, path: "/admin/parents" },
         { label: "Lớp Học", icon: FiBookOpen, path: "/admin/classes" },
         { label: "Điểm thi đua", icon: FiStar, path: "/admin/competition" },
         { label: "Bài Kiểm Tra", icon: FiFileText, path: "/admin/quiz" },

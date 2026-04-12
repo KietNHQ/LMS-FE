@@ -1,117 +1,88 @@
-.admin-users-page {
-    padding: 0;
-    box-sizing: border-box;
+.admin-users-hub {
     display: flex;
     flex-direction: column;
-    gap: 1rem;
-    min-width: 0;
-}
-
-.admin-users-page button {
-    transition: transform 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease;
-}
-
-.admin-users-page button:hover {
-    filter: brightness(0.98);
-}
-
-.admin-users-pagination-row {
-    display: flex;
-    justify-content: center;
-    align-items: center;
+    gap: 0;
     width: 100%;
-    margin-top: 0.1rem;
-    padding-top: 0.6rem;
-    border-top: 1px solid #edf1f7;
+    animation: hubFadeIn 0.5s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.admin-users-pagination {
+@keyframes hubFadeIn {
+    from { opacity: 0; transform: translateY(15px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Tab Switcher Style inspired by Homeroom Class */
+.admin-users-hub__tabs {
     display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 0.6rem;
+    gap: 8px;
+    border-bottom: 2px solid #e5e7eb;
+    margin-bottom: 24px;
+    padding: 0 24px;
+    background: transparent;
 }
 
-.admin-users-page-btn {
-    width: 2.75rem;
-    height: 2.75rem;
-    border: 1px solid #dbe4f5;
-    border-radius: 0.85rem;
-    background: #f5f8ff;
-    color: #3458c4;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
+.admin-users-hub__tab {
+    background: transparent;
+    border: none;
+    padding: 12px 24px;
+    font-size: 15px;
+    font-weight: 500;
+    color: #6b7280;
     cursor: pointer;
-    transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+    position: relative;
+    border-radius: 10px 10px 0 0;
+    transition: all 0.2s ease;
+    white-space: nowrap;
 }
 
-.admin-users-page-btn svg {
-    font-size: 1.2rem;
-    line-height: 1;
+.admin-users-hub__tab:hover {
+    color: #1e2f5a;
+    background-color: rgba(30, 47, 90, 0.1);
 }
 
-.admin-users-page-btn:hover:not(:disabled) {
-    background: #eaf1ff;
-    border-color: #9db9ff;
-    box-shadow: 0 10px 20px rgba(95, 134, 245, 0.14);
-    transform: translateY(-2px);
-}
-
-.admin-users-page-btn:disabled {
-    background: #f3f5f9;
-    color: #a3adbb;
-    cursor: not-allowed;
-    box-shadow: none;
-}
-
-.admin-users-page-indicator {
-    display: flex;
-    align-items: flex-end;
-    justify-content: center;
-    gap: 0.25rem;
-    min-width: 4.5rem;
-    margin: 0;
-    color: #6f7c91;
-}
-
-.admin-users-page-indicator span {
-    font-size: 1.55rem;
-    line-height: 1;
-    font-weight: 800;
-    color: #3458c4;
-}
-
-.admin-users-page-indicator small {
-    font-size: 0.95rem;
+.admin-users-hub__tab.active {
+    color: #ffffff;
+    background-color: #1e2f5a;
     font-weight: 700;
-    color: #8a97aa;
+    box-shadow: 0 6px 14px -8px rgba(30, 47, 90, 0.75);
 }
 
-@media (max-width: 1240px) {
-    .admin-users-page {
-        gap: 0.85rem;
-    }
+.admin-users-hub__tab.active::after {
+    content: '';
+    position: absolute;
+    bottom: 2px;
+    left: 14px;
+    right: 14px;
+    height: 2px;
+    background-color: rgba(255, 255, 255, 0.95);
+    border-radius: 2px;
+}
 
-    .admin-users-pagination-row {
-        padding-top: 0.75rem;
-    }
+.admin-users-hub__content {
+    animation: contentFade 0.4s ease-out;
+    padding: 0 24px;
+}
 
-    .admin-users-page-btn {
-        width: 2.35rem;
-        height: 2.35rem;
-        border-radius: 0.7rem;
-    }
+@keyframes contentFade {
+    from { opacity: 0; filter: blur(4px); }
+    to { opacity: 1; filter: blur(0); }
+}
 
-    .admin-users-page-btn svg {
-        font-size: 1.05rem;
+@media (max-width: 768px) {
+    .admin-users-hub__tabs {
+        width: 100%;
+        overflow-x: auto;
+        padding-left: 12px;
+        padding-right: 12px;
+        scrollbar-width: none;
     }
-
-    .admin-users-page-indicator span {
-        font-size: 1.35rem;
+    
+    .admin-users-hub__tabs::-webkit-scrollbar {
+        display: none;
     }
-
-    .admin-users-page-indicator small {
-        font-size: 0.84rem;
+    
+    .admin-users-hub__tab {
+        padding: 10px 16px;
+        font-size: 14px;
     }
 }
