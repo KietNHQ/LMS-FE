@@ -42,72 +42,72 @@ const AdminCompetitionDetail = lazy(() => import("../pages/admin/competition/Adm
 /* STUDENT PAGES */
 const StudentLayout = lazy(() => import("../layouts/student/StudentLayout"));
 const StudentDashboard = lazy(
-  () => import("../pages/admin/users/portals/student/dashboard/StudentDashboard")
+  () => import("../pages/student/dashboard/StudentDashboard")
 );
 const StudentClasses = lazy(
-  () => import("../pages/admin/users/portals/student/classes/StudentClasses")
+  () => import("../pages/student/classes/StudentClasses")
 );
 const ClassDetailView = lazy(
-  () => import("../pages/admin/users/portals/student/classes/components/ClassDetailView/ClassDetailView")
+  () => import("../pages/student/classes/components/ClassDetailView/ClassDetailView")
 );
-const StudentGrades = lazy(() => import("../pages/admin/users/portals/student/grades/StudentGrades"));
-const StudentQuiz = lazy(() => import("../pages/admin/users/portals/student/quiz/StudentQuiz"));
+const StudentGrades = lazy(() => import("../pages/student/grades/StudentGrades"));
+const StudentQuiz = lazy(() => import("../pages/student/quiz/StudentQuiz"));
 const StudentNotifications = lazy(
-  () => import("../pages/admin/users/portals/student/notification/StudentNotifications")
+  () => import("../pages/student/notification/StudentNotifications")
 );
 const StudentSchedule = lazy(
-  () => import("../pages/admin/users/portals/student/schedule/StudentSchedule")
+  () => import("../pages/student/schedule/StudentSchedule")
 );
-const StudentSupport = lazy(() => import("../pages/admin/users/portals/student/support/StudentSupport"));
+const StudentSupport = lazy(() => import("../pages/student/support/StudentSupport"));
 
 // const StudentProfile = lazy(() => import("../pages/student/profile/StudentProfile"));
 
 /* TEACHER PAGES */
 const TeacherLayout = lazy(() => import("../layouts/teacher/TeacherLayout"));
 const TeacherDashboard = lazy(
-  () => import("../pages/admin/users/portals/teacher/dashboard/TeacherDashboard")
+  () => import("../pages/teacher/dashboard/TeacherDashboard")
 );
-const TeacherGrades = lazy(() => import("../pages/admin/users/portals/teacher/grades/TeacherGrades"));
+const TeacherGrades = lazy(() => import("../pages/teacher/grades/TeacherGrades"));
 const TeacherHomeroom = lazy(
-  () => import("../pages/admin/users/portals/teacher/homeroom/TeacherHomeroom")
+  () => import("../pages/teacher/homeroom/TeacherHomeroom")
 );
-const TeacherLessons = lazy(() => import("../pages/admin/users/portals/teacher/lessons/TeacherLessons"));
-const TeacherQuiz = lazy(() => import("../pages/admin/users/portals/teacher/quiz/TeacherQuiz"));
+const TeacherLessons = lazy(() => import("../pages/teacher/lessons/TeacherLessons"));
+const TeacherQuiz = lazy(() => import("../pages/teacher/quiz/TeacherQuiz"));
 const TeacherCreateQuiz = lazy(
-  () => import("../pages/admin/users/portals/teacher/quiz/create/TeacherCreateQuiz")
+  () => import("../pages/teacher/quiz/create/TeacherCreateQuiz")
 );
 const TeacherSchedule = lazy(
-  () => import("../pages/admin/users/portals/teacher/schedule/TeacherSchedule")
+  () => import("../pages/teacher/schedule/TeacherSchedule")
 );
-const TeacherSupport = lazy(() => import("../pages/admin/users/portals/teacher/support/TeacherSupport"));
+const TeacherSupport = lazy(() => import("../pages/teacher/support/TeacherSupport"));
 const TeacherTeachingClasses = lazy(
-  () => import("../pages/admin/users/portals/teacher/teachingClasses/TeacherTeachingClasses")
+  () => import("../pages/teacher/teachingClasses/TeacherTeachingClasses")
 );
 const TeacherQuizSubmissions = lazy(
-  () => import("../pages/admin/users/portals/teacher/quiz/submissions/TeacherQuizSubmissions")
+  () => import("../pages/teacher/quiz/submissions/TeacherQuizSubmissions")
 );
 const TeacherTeachingClassDetail = lazy(
-  () => import("../pages/admin/users/portals/teacher/teachingClasses/TeacherTeachingClassDetail")
+  () => import("../pages/teacher/teachingClasses/TeacherTeachingClassDetail")
 );
 const TeacherNotifications = lazy(
-  () => import("../pages/admin/users/portals/teacher/notifications/TeacherNotifications")
+  () => import("../pages/teacher/notifications/TeacherNotifications")
 );
 
 
 /* PARENT PAGES */
 const ParentLayout = lazy(() => import("../layouts/parent/ParentLayout"));
 const ParentDashboard = lazy(
-  () => import("../pages/admin/users/portals/parent/dashboard/ParentDashboard")
+  () => import("../pages/parent/dashboard/ParentDashboard")
 );
 const ParentChildrenOverview = lazy(
-  () => import("../pages/admin/users/portals/parent/children-overview/ParentChildrenOverview")
+  () => import("../pages/parent/children-overview/ParentChildrenOverview")
 );
 const ParentNotifications = lazy(
-  () => import("../pages/admin/users/portals/parent/notifications/ParentNotifications")
+  () => import("../pages/parent/notifications/ParentNotifications")
 );
-const ParentMessages = lazy(() => import("../pages/admin/users/portals/parent/messages/ParentMessages"));
-const ParentPayments = lazy(() => import("../pages/admin/users/portals/parent/payments/ParentPayments"));
-const ParentSupport = lazy(() => import("../pages/admin/users/portals/parent/support/ParentSupport"));
+const ParentMessages = lazy(() => import("../pages/parent/messages/ParentMessages"));
+const ParentPayments = lazy(() => import("../pages/parent/payments/ParentPayments"));
+const ParentSupport = lazy(() => import("../pages/parent/support/ParentSupport"));
 
 
 

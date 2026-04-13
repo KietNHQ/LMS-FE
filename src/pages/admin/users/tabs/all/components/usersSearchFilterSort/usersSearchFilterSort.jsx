@@ -1,5 +1,6 @@
-import React from "react";
-import { FiSearch, FiChevronDown } from "react-icons/fi";
+import React, { useMemo } from "react";
+import { FiSearch } from "react-icons/fi";
+import Select from "../../../../../../../components/ui/Select/Select";
 import "./UsersSearchFilterSort.css";
 
 const tabs = ["Tất cả", "Admin", "Giáo viên", "Học sinh", "Phụ huynh"];
@@ -11,6 +12,13 @@ export default function UsersSearchFilterSort({
     onQuickRoleChange,
     children,
 }) {
+    const roleOptions = useMemo(() => 
+        tabs.map(tab => ({
+            value: tab,
+            label: tab === "Tất cả" ? "Tất cả vai trò" : tab
+        })), []
+    );
+
     return (
         <div className="users-toolbar-card">
             <div className="users-search-box">
@@ -24,19 +32,13 @@ export default function UsersSearchFilterSort({
             </div>
 
             <div className="users-filter-group">
-                <div className="users-custom-select">
-                    <select 
-                        value={quickRole} 
-                        onChange={(e) => onQuickRoleChange(e.target.value)}
-                    >
-                        {tabs.map((tab) => (
-                            <option key={tab} value={tab}>
-                                {tab === "Tất cả" ? "Tất cả vai trò" : tab}
-                            </option>
-                        ))}
-                    </select>
-                    <FiChevronDown className="users-select-arrow" />
-                </div>
+                <Select
+                    variant="custom"
+                    value={quickRole}
+                    onChange={(e) => onQuickRoleChange(e.target.value)}
+                    options={roleOptions}
+                    className="users-quick-role-select"
+                />
                 
                 {children}
             </div>

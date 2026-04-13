@@ -52,45 +52,64 @@
     gap: 1rem;
 }
 
-.users-custom-select {
-    position: relative;
-    min-width: 160px;
-    height: 2.5rem;
+/* Custom Select Styling */
+.users-quick-role-select {
+    min-width: 180px;
 }
 
-.users-custom-select select {
-    width: 100%;
-    height: 100%;
-    padding: 0 2.2rem 0 1rem;
-    appearance: none;
+.users-quick-role-select .custom-dropdown-trigger {
+    height: 2.75rem;
     background: #ffffff;
     border: 1.5px solid #e2e8f0;
     border-radius: 8px;
-    font-size: 0.88rem;
+    font-size: 0.9rem;
     font-weight: 600;
-    color: #334155;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    outline: none;
+    color: #1e2f5a;
+    box-shadow: none;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.users-custom-select select:hover {
+.users-quick-role-select .custom-dropdown-trigger:hover {
     border-color: #cbd5e1;
+    background: #fbfcfe;
 }
 
-.users-custom-select select:focus {
-    border-color: #3f6fdb;
-    box-shadow: 0 0 0 4px rgba(63, 111, 219, 0.1);
+.users-quick-role-select .custom-dropdown-trigger.open {
+    border-color: #1e2f5a;
+    background: #ffffff;
+    box-shadow: 0 0 0 4px rgba(30, 47, 90, 0.08);
 }
 
-.users-select-arrow {
-    position: absolute;
-    right: 1.2rem;
-    top: 50%;
-    transform: translateY(-50%);
-    color: #64748b;
-    pointer-events: none;
-    font-size: 1.2rem;
+.users-quick-role-select .dropdown-arrow {
+    color: #94a3b8;
+    font-size: 1.1rem;
+}
+
+.users-quick-role-select .custom-dropdown-menu {
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 12px 30px rgba(30, 47, 90, 0.15);
+    padding: 6px;
+    margin-top: 4px;
+}
+
+.users-quick-role-select .custom-dropdown-item {
+    font-size: 0.88rem;
+    padding: 10px 12px;
+    border-radius: 8px;
+    color: #334155;
+}
+
+.users-quick-role-select .custom-dropdown-item:hover {
+    background: #f1f5f9;
+    color: #1e2f5a;
+    transform: none;
+}
+
+.users-quick-role-select .custom-dropdown-item.active {
+    background: #eef2ff;
+    color: #1e2f5a;
+    font-weight: 700;
 }
 
 /* Global Button Style for Admin Users */
