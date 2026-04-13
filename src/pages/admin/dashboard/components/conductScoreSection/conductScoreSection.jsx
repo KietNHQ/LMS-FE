@@ -25,7 +25,7 @@ const ConductScoreSection = ({
     const rawData = competitionData.map((item, i) => ({
       ...item, // includes id, label, score
       grade: extractGradeFromClassName(item.label),
-      trend: i % 3 === 0 ? "up" : i % 3 === 1 ? "down" : "stable"
+      trend: item?.trend || (i % 3 === 0 ? "up" : i % 3 === 1 ? "down" : "stable"),
     }));
 
     if (selectedClass === "all") {
@@ -121,7 +121,7 @@ const ConductScoreSection = ({
                 </div>
                 <div className="leaderboard-info-col">
                   <span className="class-name">Lớp {item.label}</span>
-                  <span className="teacher-name">Thầy/Cô phụ trách</span>
+                  <span className="teacher-name">{item.teacherName || "Thầy/Cô phụ trách"}</span>
                 </div>
                 <div className="leaderboard-trend-col">
                   {getTrendIcon(item.trend)}

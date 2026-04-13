@@ -24,6 +24,10 @@ export default function ParentListSection({ parents, onView, onEdit, onDelete })
                             </tr>
                         ) : (
                             parents.map((parent) => (
+                                (() => {
+                                    const displayName = String(parent?.name || parent?.email || "Phụ huynh").trim();
+                                    const avatarLetter = displayName.charAt(0).toUpperCase() || "P";
+                                    return (
                                 <tr
                                     key={parent.id}
                                     onClick={() => onView(parent)}
@@ -38,11 +42,11 @@ export default function ParentListSection({ parents, onView, onEdit, onDelete })
                                     <td>
                                         <div className="parent-main-info">
                                             <div className="parent-avatar">
-                                                {parent.name.charAt(0).toUpperCase()}
+                                                {avatarLetter}
                                             </div>
                                             <div className="parent-name-wrap">
-                                                <h4>{parent.name}</h4>
-                                                <p>{parent.email}</p>
+                                                <h4>{displayName}</h4>
+                                                <p>{parent.email || "—"}</p>
                                             </div>
                                         </div>
                                     </td>
@@ -73,6 +77,8 @@ export default function ParentListSection({ parents, onView, onEdit, onDelete })
                                         </div>
                                     </td>
                                 </tr>
+                                    );
+                                })()
                             ))
                         )}
                     </tbody>

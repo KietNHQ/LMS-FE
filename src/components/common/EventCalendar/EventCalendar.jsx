@@ -74,7 +74,7 @@ const EventCalendar = ({
 
   const canCreate = rolePolicy?.canCreate ?? true;
   const canViewDetails = rolePolicy?.canViewDetails ?? true;
-  
+
   // Permission logic: Admin can modify anything. Teacher only their own.
   const isOwner = (event) => userRole === "admin" || event?.createdBy === currentUser;
   const canEdit = (event) => (rolePolicy?.canEdit ?? true) && isOwner(event);
@@ -155,7 +155,7 @@ const EventCalendar = ({
 
     const dayEvents = eventsByDate[day] || [];
     const eventIndex = dayEvents.findIndex(e => e === eventItem);
-    
+
     setSelectedDay(day);
     setSelectedEvent(eventItem);
     setEventIndex(eventIndex >= 0 ? eventIndex : 0);
@@ -339,209 +339,209 @@ const EventCalendar = ({
           <div className="event-calendar__modal-overlay" onClick={closeModal}>
             <div className="event-calendar__modal" onClick={(e) => e.stopPropagation()}>
               {/* Modal content ... */}
-            {modalMode === "create" ? (
-              <>
-                <h3>Tạo Sự Kiện Mới</h3>
-                <div className="event-calendar__modal-group">
-                  <label>Ngày:</label>
-                  <input
-                    type="date"
-                    min={minDate}
-                    max={maxDate}
-                    value={newEvent.date}
-                    onChange={(e) => setNewEvent({ ...newEvent, date: e.target.value })}
-                    className="event-calendar__date-input"
-                  />
-                </div>
-                <div className="event-calendar__modal-group event-calendar__modal-group--inline">
-                  <label className="event-calendar__checkbox-label">
-                    <input
-                      type="checkbox"
-                      checked={newEvent.isMultiDay}
-                      onChange={(e) => {
-                        const checked = e.target.checked;
-                        setNewEvent((prev) => ({
-                          ...prev,
-                          isMultiDay: checked,
-                          endDate: checked ? (prev.endDate || prev.date) : prev.date,
-                        }));
-                      }}
-                    />
-                    Chọn nhiều ngày
-                  </label>
-                </div>
-                {newEvent.isMultiDay && (
+              {modalMode === "create" ? (
+                <>
+                  <h3>Tạo Sự Kiện Mới</h3>
                   <div className="event-calendar__modal-group">
-                    <label>Đến ngày:</label>
+                    <label>Ngày:</label>
                     <input
                       type="date"
-                      min={newEvent.date || minDate}
+                      min={minDate}
                       max={maxDate}
-                      value={newEvent.endDate || newEvent.date}
-                      onChange={(e) => setNewEvent({ ...newEvent, endDate: e.target.value })}
+                      value={newEvent.date}
+                      onChange={(e) => setNewEvent({ ...newEvent, date: e.target.value })}
                       className="event-calendar__date-input"
                     />
                   </div>
-                )}
-                <div className="event-calendar__modal-group">
-                  <label>Loại sự kiện:</label>
-                  <Select
-                    value={newEvent.color}
-                    onChange={(e) => setNewEvent({ ...newEvent, color: e.target.value })}
-                    options={eventTypes.map((type) => ({
-                      value: type.value,
-                      label: type.label,
-                      color: type.value, // Pass color for the UI hint
-                    }))}
-                    variant="custom"
-                    placeholder="Chọn loại sự kiện"
-                  />
-                </div>
-                <div className="event-calendar__modal-group">
-                  <label>Tiêu đề sự kiện:</label>
-                  <input
-                    type="text"
-                    value={newEvent.title}
-                    onChange={(e) => setNewEvent({ ...newEvent, title: e.target.value })}
-                    placeholder="Nhập tên sự kiện"
-                  />
-                </div>
-                <div className="event-calendar__modal-group">
-                  <label>Đối tượng:</label>
-                  <Select
-                    value={newEvent.target}
-                    onChange={(e) => setNewEvent({ ...newEvent, target: e.target.value })}
-                    options={[
-                      { value: "all", label: "Tất cả lớp giảng dạy" },
-                      { value: "homeroom", label: "Lớp chủ nhiệm" },
-                      { value: "10A1", label: "Lớp 10A1" },
-                      { value: "11B2", label: "Lớp 11B2" },
-                    ]}
-                    variant="custom"
-                  />
-                </div>
-                <div className="event-calendar__modal-group">
-                  <label>Nội dung chi tiết:</label>
-                  <textarea
-                    value={newEvent.content}
-                    onChange={(e) => setNewEvent({ ...newEvent, content: e.target.value })}
-                    placeholder="Nhập nội dung chi tiết"
-                    rows={3}
-                  />
-                </div>
-                <div className="event-calendar__modal-actions">
-                  <button className="event-calendar__modal-btn event-calendar__modal-btn--cancel" onClick={closeModal}>
-                    Hủy
-                  </button>
-                  <button className="event-calendar__modal-btn event-calendar__modal-btn--save" onClick={handleAddEvent}>
-                    Tạo Sự Kiện
-                  </button>
-                </div>
-              </>
-            ) : (
-              <>
-                <div className="event-calendar__modal-header">
-                  <h3>Chi Tiết Sự Kiện</h3>
-                  {eventsByDate[selectedDay]?.length > 1 && (
-                    <div className="event-calendar__modal-nav">
-                      <button 
-                        className="event-calendar__nav-btn" 
-                        onClick={handlePrevEvent}
-                        disabled={eventIndex === 0}
-                      >
-                        <FiChevronLeft />
-                      </button>
-                      <span className="event-calendar__nav-counter">
-                        {eventIndex + 1} / {eventsByDate[selectedDay].length}
-                      </span>
-                      <button 
-                        className="event-calendar__nav-btn" 
-                        onClick={handleNextEvent}
-                        disabled={eventIndex === eventsByDate[selectedDay].length - 1}
-                      >
-                        <FiChevronRight />
-                      </button>
+                  <div className="event-calendar__modal-group event-calendar__modal-group--inline">
+                    <label className="event-calendar__checkbox-label">
+                      <input
+                        type="checkbox"
+                        checked={newEvent.isMultiDay}
+                        onChange={(e) => {
+                          const checked = e.target.checked;
+                          setNewEvent((prev) => ({
+                            ...prev,
+                            isMultiDay: checked,
+                            endDate: checked ? (prev.endDate || prev.date) : prev.date,
+                          }));
+                        }}
+                      />
+                      Chọn nhiều ngày
+                    </label>
+                  </div>
+                  {newEvent.isMultiDay && (
+                    <div className="event-calendar__modal-group">
+                      <label>Đến ngày:</label>
+                      <input
+                        type="date"
+                        min={newEvent.date || minDate}
+                        max={maxDate}
+                        value={newEvent.endDate || newEvent.date}
+                        onChange={(e) => setNewEvent({ ...newEvent, endDate: e.target.value })}
+                        className="event-calendar__date-input"
+                      />
                     </div>
                   )}
-                </div>
-                <div className="event-calendar__detail-row">
-                  <span className="event-calendar__detail-label">Ngày</span>
-                  <span className="event-calendar__detail-value">
-                    {(() => {
-                      const range = getEventRange(selectedEvent || {});
-                      if (range.startDay !== range.endDay) {
-                        return `${range.startDay} - ${range.endDay}/${currentDate.getMonth() + 1}/${currentDate.getFullYear()}`;
-                      }
-                      return `${range.startDay}/${currentDate.getMonth() + 1}/${currentDate.getFullYear()}`;
-                    })()}
-                  </span>
-                </div>
-                <div className="event-calendar__detail-row">
-                  <span className="event-calendar__detail-label">Loại</span>
-                  <span className="event-calendar__detail-value event-calendar__detail-value--type">
-                    <span className={`event-calendar__type-dot event-calendar__event--${selectedEvent?.color || "blue"}`}></span>
-                    {eventTypes.find((item) => item.value === selectedEvent?.color)?.label || "Sự kiện"}
-                  </span>
-                </div>
-                <div className="event-calendar__detail-row">
-                  <span className="event-calendar__detail-label">Tiêu đề</span>
-                  <span className="event-calendar__detail-value">{selectedEvent?.title}</span>
-                </div>
-                <div className="event-calendar__detail-row">
-                  <span className="event-calendar__detail-label">Nội dung</span>
-                  <span className="event-calendar__detail-value">{selectedEvent?.content || "Không có nội dung"}</span>
-                </div>
-                {selectedEvent?.createdBy && (
-                  <div className="event-calendar__detail-row">
-                    <span className="event-calendar__detail-label">Người tạo</span>
-                    <span className="event-calendar__detail-value">{selectedEvent.createdBy}</span>
+                  <div className="event-calendar__modal-group">
+                    <label>Loại sự kiện:</label>
+                    <Select
+                      value={newEvent.color}
+                      onChange={(e) => setNewEvent({ ...newEvent, color: e.target.value })}
+                      options={eventTypes.map((type) => ({
+                        value: type.value,
+                        label: type.label,
+                        color: type.value, // Pass color for the UI hint
+                      }))}
+                      variant="custom"
+                      placeholder="Chọn loại sự kiện"
+                    />
                   </div>
-                )}
-                {selectedEvent?.createdRole && (
-                  <div className="event-calendar__detail-row">
-                    <span className="event-calendar__detail-label">Vai trò</span>
-                    <span className="event-calendar__detail-value">{selectedEvent.createdRole}</span>
+                  <div className="event-calendar__modal-group">
+                    <label>Tiêu đề sự kiện:</label>
+                    <input
+                      type="text"
+                      value={newEvent.title}
+                      onChange={(e) => setNewEvent({ ...newEvent, title: e.target.value })}
+                      placeholder="Nhập tên sự kiện"
+                    />
                   </div>
-                )}
-                <div className="event-calendar__modal-actions">
-                  <button className="event-calendar__modal-btn event-calendar__modal-btn--cancel" onClick={closeModal}>
-                    Đóng
-                  </button>
-                  {canDelete(selectedEvent) && (
-                    <button
-                      className="event-calendar__modal-btn event-calendar__modal-btn--danger"
-                      onClick={handleDeleteEvent}
-                    >
-                      Xóa
+                  <div className="event-calendar__modal-group">
+                    <label>Đối tượng:</label>
+                    <Select
+                      value={newEvent.target}
+                      onChange={(e) => setNewEvent({ ...newEvent, target: e.target.value })}
+                      options={[
+                        { value: "all", label: "Tất cả lớp giảng dạy" },
+                        { value: "homeroom", label: "Lớp chủ nhiệm" },
+                        { value: "10A1", label: "Lớp 10A1" },
+                        { value: "11B2", label: "Lớp 11B2" },
+                      ]}
+                      variant="custom"
+                    />
+                  </div>
+                  <div className="event-calendar__modal-group">
+                    <label>Nội dung chi tiết:</label>
+                    <textarea
+                      value={newEvent.content}
+                      onChange={(e) => setNewEvent({ ...newEvent, content: e.target.value })}
+                      placeholder="Nhập nội dung chi tiết"
+                      rows={3}
+                    />
+                  </div>
+                  <div className="event-calendar__modal-actions">
+                    <button className="event-calendar__modal-btn event-calendar__modal-btn--cancel" onClick={closeModal}>
+                      Hủy
                     </button>
-                  )}
-                  {canEdit(selectedEvent) && canCreate && (
-                    <button
-                      className="event-calendar__modal-btn event-calendar__modal-btn--save"
-                      onClick={() => {
+                    <button className="event-calendar__modal-btn event-calendar__modal-btn--save" onClick={handleAddEvent}>
+                      Tạo Sự Kiện
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="event-calendar__modal-header">
+                    <h3>Chi Tiết Sự Kiện</h3>
+                    {eventsByDate[selectedDay]?.length > 1 && (
+                      <div className="event-calendar__modal-nav">
+                        <button
+                          className="event-calendar__nav-btn"
+                          onClick={handlePrevEvent}
+                          disabled={eventIndex === 0}
+                        >
+                          <FiChevronLeft />
+                        </button>
+                        <span className="event-calendar__nav-counter">
+                          {eventIndex + 1} / {eventsByDate[selectedDay].length}
+                        </span>
+                        <button
+                          className="event-calendar__nav-btn"
+                          onClick={handleNextEvent}
+                          disabled={eventIndex === eventsByDate[selectedDay].length - 1}
+                        >
+                          <FiChevronRight />
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                  <div className="event-calendar__detail-row">
+                    <span className="event-calendar__detail-label">Ngày</span>
+                    <span className="event-calendar__detail-value">
+                      {(() => {
                         const range = getEventRange(selectedEvent || {});
-                        setNewEvent({
-                          date: toCurrentMonthDate(range.startDay || selectedDay || today.getDate()),
-                          endDate: toCurrentMonthDate(range.endDay || selectedDay || today.getDate()),
-                          isMultiDay: range.startDay !== range.endDay,
-                          title: selectedEvent?.title || "",
-                          content: selectedEvent?.content || "",
-                          color: selectedEvent?.color || eventTypes[0]?.value || "blue",
-                        });
-                        setModalMode("create");
-                      }}
-                    >
-                      Chỉnh Sửa
-                    </button>
+                        if (range.startDay !== range.endDay) {
+                          return `${range.startDay} - ${range.endDay}/${currentDate.getMonth() + 1}/${currentDate.getFullYear()}`;
+                        }
+                        return `${range.startDay}/${currentDate.getMonth() + 1}/${currentDate.getFullYear()}`;
+                      })()}
+                    </span>
+                  </div>
+                  <div className="event-calendar__detail-row">
+                    <span className="event-calendar__detail-label">Loại</span>
+                    <span className="event-calendar__detail-value event-calendar__detail-value--type">
+                      <span className={`event-calendar__type-dot event-calendar__event--${selectedEvent?.color || "blue"}`}></span>
+                      {eventTypes.find((item) => item.value === selectedEvent?.color)?.label || "Sự kiện"}
+                    </span>
+                  </div>
+                  <div className="event-calendar__detail-row">
+                    <span className="event-calendar__detail-label">Tiêu đề</span>
+                    <span className="event-calendar__detail-value">{selectedEvent?.title}</span>
+                  </div>
+                  <div className="event-calendar__detail-row">
+                    <span className="event-calendar__detail-label">Nội dung</span>
+                    <span className="event-calendar__detail-value">{selectedEvent?.content || "Không có nội dung"}</span>
+                  </div>
+                  {selectedEvent?.createdBy && (
+                    <div className="event-calendar__detail-row">
+                      <span className="event-calendar__detail-label">Người tạo</span>
+                      <span className="event-calendar__detail-value">{selectedEvent.createdBy}</span>
+                    </div>
                   )}
-                </div>
-              </>
-            )}
+                  {selectedEvent?.createdRole && (
+                    <div className="event-calendar__detail-row">
+                      <span className="event-calendar__detail-label">Vai trò</span>
+                      <span className="event-calendar__detail-value">{selectedEvent.createdRole}</span>
+                    </div>
+                  )}
+                  <div className="event-calendar__modal-actions">
+                    <button className="event-calendar__modal-btn event-calendar__modal-btn--cancel" onClick={closeModal}>
+                      Đóng
+                    </button>
+                    {canDelete(selectedEvent) && (
+                      <button
+                        className="event-calendar__modal-btn event-calendar__modal-btn--danger"
+                        onClick={handleDeleteEvent}
+                      >
+                        Xóa
+                      </button>
+                    )}
+                    {canEdit(selectedEvent) && canCreate && (
+                      <button
+                        className="event-calendar__modal-btn event-calendar__modal-btn--save"
+                        onClick={() => {
+                          const range = getEventRange(selectedEvent || {});
+                          setNewEvent({
+                            date: toCurrentMonthDate(range.startDay || selectedDay || today.getDate()),
+                            endDate: toCurrentMonthDate(range.endDay || selectedDay || today.getDate()),
+                            isMultiDay: range.startDay !== range.endDay,
+                            title: selectedEvent?.title || "",
+                            content: selectedEvent?.content || "",
+                            color: selectedEvent?.color || eventTypes[0]?.value || "blue",
+                          });
+                          setModalMode("create");
+                        }}
+                      >
+                        Chỉnh Sửa
+                      </button>
+                    )}
+                  </div>
+                </>
+              )}
+            </div>
           </div>
-        </div>
-      </div>,
-      document.body
-    )}
+        </div>,
+        document.body
+      )}
     </div>
   );
 };

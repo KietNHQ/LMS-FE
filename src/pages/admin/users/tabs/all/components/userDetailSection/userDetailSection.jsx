@@ -6,6 +6,7 @@ function getRoleClass(role) {
     if (role === "Admin") return "admin";
     if (role === "Giáo viên") return "teacher";
     if (role === "Học sinh") return "student";
+    if (role === "Phụ huynh") return "parent";
     return "parent";
 }
 

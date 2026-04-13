@@ -64,7 +64,7 @@ const RevenueSection = ({
       </div>
 
       <div className="admin-dashboard__revenue-chart-wrap">
-        <ResponsiveContainer>
+        <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={220}>
           <BarChart
             data={comparisonData}
             margin={{ top: 20, right: 30, left: 0, bottom: 0 }}
