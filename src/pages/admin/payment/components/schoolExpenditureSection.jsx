@@ -1,6 +1,7 @@
 import React from "react";
-import { FiPlus, FiChevronLeft, FiChevronRight, FiTag, FiFileText, FiDollarSign, FiUser, FiX } from "react-icons/fi";
+import { FiPlus, FiTag, FiFileText, FiDollarSign, FiUser, FiX } from "react-icons/fi";
 import "./schoolExpenditureSection.css";
+import { Pagination } from "../../../../components/common";
 
 const ITEMS_PER_PAGE = 5;
 
@@ -98,30 +99,14 @@ export default function SchoolExpenditureSection({ expenditureData }) {
                 </table>
             </div>
 
-            {totalPages > 1 && (
                 <div className="payment-pagination-row">
-                    <div className="payment-pagination">
-                        <button 
-                            className="payment-page-btn" 
-                            disabled={currentPage === 1}
-                            onClick={() => handlePageChange(currentPage - 1)}
-                        >
-                            <FiChevronLeft />
-                        </button>
-                        <div className="payment-page-indicator">
-                            <span>{currentPage}</span>
-                            <small>/ {totalPages}</small>
-                        </div>
-                        <button 
-                            className="payment-page-btn" 
-                            disabled={currentPage === totalPages}
-                            onClick={() => handlePageChange(currentPage + 1)}
-                        >
-                            <FiChevronRight />
-                        </button>
-                    </div>
+                    <Pagination
+                        currentPage={currentPage}
+                        totalPages={totalPages}
+                        onPageChange={setCurrentPage}
+                        ariaLabel="Phân trang chi tiêu"
+                    />
                 </div>
-            )}
             {/* Add Expenditure Modal */}
             {showAddModal && (
                 <div className="payment-modal-overlay">

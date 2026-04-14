@@ -1,11 +1,11 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { PageHeader, SchoolYearTermSelector } from "../../../components/common";
-import { useSchoolYearTerm } from "../../../hooks/useSchoolYearTerm";
 import CompetitionFilterSection from "./components/competitionFilterSection/competitionFilterSection";
 import ClassCompetitionCard from "./components/classCompetitionCard/classCompetitionCard";
 import CompetitionRulesModal from "./components/competitionRulesModal/competitionRulesModal";
-import { FiSettings, FiChevronLeft, FiChevronRight } from "react-icons/fi";
+import { FiSettings } from "react-icons/fi";
+import { PageHeader, SchoolYearTermSelector, Pagination } from "../../../components/common";
+import { useSchoolYearTerm } from "../../../hooks/useSchoolYearTerm";
 import {
     adminCompetitionService,
     DEFAULT_COMPETITION_RULES,
@@ -166,34 +166,14 @@ const AdminCompetition = () => {
                 )}
             </div>
 
-            {totalPages > 1 && (
-                <div className="admin-competition-pagination-row">
-                    <div className="admin-competition-pagination">
-                        <button
-                            type="button"
-                            className="admin-competition-page-btn"
-                            onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
-                            disabled={currentPage <= 1}
-                        >
-                            <FiChevronLeft />
-                        </button>
-
-                        <p className="admin-competition-page-indicator">
-                            <span>{currentPage}</span>
-                            <small>/ {totalPages}</small>
-                        </p>
-
-                        <button
-                            type="button"
-                            className="admin-competition-page-btn"
-                            onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
-                            disabled={currentPage >= totalPages}
-                        >
-                            <FiChevronRight />
-                        </button>
-                    </div>
+            <div className="admin-competition-pagination-row">
+                    <Pagination
+                        currentPage={currentPage}
+                        totalPages={totalPages}
+                        onPageChange={setCurrentPage}
+                        ariaLabel="Phân trang thi đua"
+                    />
                 </div>
-            )}
 
             {isRulesModalOpen && (
                 <CompetitionRulesModal 

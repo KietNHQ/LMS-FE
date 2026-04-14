@@ -115,6 +115,10 @@ export default function AdminTeachers({ onCountChange }) {
     });
   }, [teachers, searchTerm, selectedStatus, selectedSubject]);
 
+  const hasFilteredTeachers = filteredTeachers.length > 0;
+  const shouldRenderDataSection = !isLoading && !loadError;
+  const emptyMessage = teachers.length === 0 ? "Chưa có dữ liệu giáo viên." : "Không tìm thấy giáo viên phù hợp.";
+
   const totalPages = Math.max(1, Math.ceil(filteredTeachers.length / ITEMS_PER_PAGE));
 
   const paginatedTeachers = useMemo(() => {
@@ -343,22 +347,29 @@ export default function AdminTeachers({ onCountChange }) {
       {loadError && <div className="teacher-empty-row">{loadError}</div>}
       {isLoading && <div className="teacher-empty-row">Đang tải danh sách giáo viên...</div>}
 
-      <TeacherListSection
-        teachers={paginatedTeachers}
-        onSelectTeacher={handleShowTeacherDetail}
-        onView={handleViewTeacher}
-        onEdit={handleEditTeacher}
-        onDelete={handleDeleteTeacher}
-      />
+      {shouldRenderDataSection && (
+        <>
+          <TeacherListSection
+            teachers={paginatedTeachers}
+            emptyMessage={emptyMessage}
+            onSelectTeacher={handleShowTeacherDetail}
+            onView={handleViewTeacher}
+            onEdit={handleEditTeacher}
+            onDelete={handleDeleteTeacher}
+          />
 
-      <div className="admin-teachers-pagination-row">
-        <Pagination
-          currentPage={currentPage}
-          totalPages={totalPages}
-          onPageChange={setCurrentPage}
-          ariaLabel="Phân trang giáo viên"
-        />
-      </div>
+          {hasFilteredTeachers && totalPages > 1 && (
+            <div className="admin-teachers-pagination-row">
+              <Pagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={setCurrentPage}
+                ariaLabel="Phân trang giáo viên"
+              />
+            </div>
+          )}
+        </>
+      )}
 
       {activeModalMode && (
         <TeacherInformationSection
