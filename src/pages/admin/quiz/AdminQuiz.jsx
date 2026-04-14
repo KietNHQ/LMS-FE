@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Modal } from "../../../components/ui";
 import "./AdminQuiz.css";
@@ -11,93 +11,18 @@ import {
     DEFAULT_GRADE_FILTER_OPTIONS,
     formatDurationLabel,
     normalizeGrade,
-    parseDurationMinutes,
+    quizService,
 } from "../../../services/shared/quiz/quizService";
 
 const ITEMS_PER_PAGE = 4;
-
-const initialQuizzes = [
-    {
-        id: 1,
-        title: "Toán 10 - Kiểm tra giữa kỳ",
-        description: "Bài kiểm tra giữa kỳ toán lớp 10",
-        subject: "Toán",
-        grade: "Khối 10",
-        questions: 20,
-        duration: 45,
-        durationLabel: "1 tiết (45 phút)",
-        status: "open",
-        createdAt: "2024-03-20",
-        createdByRole: "admin",
-        createdByName: "Quản trị viên",
-        examType: "Giữa kỳ",
-        submissionCount: 12,
-        gradingAssignment: {
-            required: true,
-            source: "random",
-            assignedTeacherName: "Lê Minh Hoàng",
-        },
-        gradingStatus: "in-progress",
-    },
-    {
-        id: 2,
-        title: "Vật Lý 10 - Kiểm tra 15 phút Chương 1",
-        description: "Bài kiểm tra chương 1 vật lý lớp 10",
-        subject: "Vật Lý",
-        grade: "Khối 10",
-        questions: 15,
-        duration: 15,
-        durationLabel: "15 phút",
-        status: "open",
-        createdAt: "2024-03-19",
-        createdByRole: "teacher",
-        createdByName: "Lê Minh Hoàng",
-        examType: "Thường xuyên",
-        submissionCount: 8,
-        gradingStatus: "ready",
-    },
-    {
-        id: 3,
-        title: "Hóa Học 10 - Cuối kỳ Chương 2",
-        description: "Bài kiểm tra cuối kỳ hóa học lớp 10",
-        subject: "Hóa Học",
-        grade: "Khối 10",
-        questions: 18,
-        duration: 45,
-        durationLabel: "1 tiết (45 phút)",
-        status: "hidden",
-        createdAt: "2024-03-18",
-        createdByRole: "admin",
-        createdByName: "Quản trị viên",
-        examType: "Cuối kỳ",
-        submissionCount: 0,
-        gradingAssignment: {
-            required: false,
-            source: "none",
-            assignedTeacherName: "",
-        },
-        gradingStatus: "no-submission",
-    },
-];
 
 export default function AdminQuiz() {
     const { selectedSchoolYear, selectedTerm, handleYearArrow, handleTermChange } = useSchoolYearTerm();
     const navigate = useNavigate();
     const location = useLocation();
-    const createdQuizFromState = location.state?.createdQuiz;
-
-    const [quizzes, setQuizzes] = useState(() =>
-        createdQuizFromState
-            ? [{
-                ...createdQuizFromState,
-                duration: parseDurationMinutes(createdQuizFromState.duration),
-                durationLabel: formatDurationLabel(createdQuizFromState.durationLabel || createdQuizFromState.duration),
-                examType: createdQuizFromState.examType || "Thường xuyên",
-                submissionCount: createdQuizFromState.submissionCount || 0,
-                gradingStatus: createdQuizFromState.gradingStatus || "no-submission",
-            }, ...initialQuizzes]
-            : initialQuizzes
-    );
+    const [quizzes, setQuizzes] = useState([]);
+    const [assignmentOptions, setAssignmentOptions] = useState([]);
+    const [isLoading, setIsLoading] = useState(false);
     const [currentPage, setCurrentPage] = useState(1);
     const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
     const [pendingDeleteQuizId, setPendingDeleteQuizId] = useState(null);
@@ -106,6 +31,39 @@ export default function AdminQuiz() {
     const [searchTerm, setSearchTerm] = useState("");
     const [selectedSubject, setSelectedSubject] = useState("Tất cả môn");
     const [selectedGrade, setSelectedGrade] = useState("Tất cả khối");
+
+    const loadQuizzes = async () => {
+        setIsLoading(true);
+        try {
+            const result = await quizService.listQuizzes();
+            setQuizzes(result.items || []);
+        } catch (error) {
+            alert(error?.response?.data?.error || "Không tải được danh sách bài kiểm tra.");
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const loadAssignmentOptions = async () => {
+        try {
+            const options = await quizService.listClassTeacherSubjects();
+            setAssignmentOptions(options);
+        } catch {
+            setAssignmentOptions([]);
+        }
+    };
+
+    useEffect(() => {
+        loadQuizzes();
+        loadAssignmentOptions();
+    }, []);
+
+    useEffect(() => {
+        if (location.state?.refreshList) {
+            loadQuizzes();
+            navigate(location.pathname, { replace: true, state: {} });
+        }
+    }, [location.pathname, location.state, navigate]);
 
     const subjectOptions = useMemo(() => {
         const subjects = new Set(quizzes.map((q) => q.subject));
@@ -154,31 +112,39 @@ export default function AdminQuiz() {
         setPendingDeleteQuizId(null);
     };
 
-    const handleConfirmDeleteQuiz = () => {
+    const handleConfirmDeleteQuiz = async () => {
         if (pendingDeleteQuizId == null) return;
 
-        setQuizzes((prev) => {
-            const nextQuizzes = prev.filter((q) => q.id !== pendingDeleteQuizId);
-            const nextTotalPages = Math.max(
-                1,
-                Math.ceil(nextQuizzes.length / ITEMS_PER_PAGE)
-            );
-
-            setCurrentPage((prevPage) => Math.min(prevPage, nextTotalPages));
-            return nextQuizzes;
-        });
-
-        setPendingDeleteQuizId(null);
+        try {
+            await quizService.deleteQuiz(pendingDeleteQuizId);
+            setQuizzes((prev) => {
+                const nextQuizzes = prev.filter((q) => q.id !== pendingDeleteQuizId);
+                const nextTotalPages = Math.max(1, Math.ceil(nextQuizzes.length / ITEMS_PER_PAGE));
+                setCurrentPage((prevPage) => Math.min(prevPage, nextTotalPages));
+                return nextQuizzes;
+            });
+            setPendingDeleteQuizId(null);
+        } catch (error) {
+            alert(error?.response?.data?.error || "Không xóa được bài kiểm tra.");
+        }
     };
 
     const pendingDeleteQuiz = quizzes.find((quiz) => quiz.id === pendingDeleteQuizId);
 
-    const handleStatusChange = (quizId, newStatus) => {
-        setQuizzes((prev) =>
-            prev.map((q) =>
-                q.id === quizId ? { ...q, status: newStatus } : q
-            )
-        );
+    const handleStatusChange = async (quizId, newStatus) => {
+        try {
+            if (newStatus === "open") {
+                await quizService.publishQuiz(quizId);
+            } else {
+                await quizService.unpublishQuiz(quizId);
+            }
+
+            setQuizzes((prev) =>
+                prev.map((q) => (q.id === quizId ? { ...q, status: newStatus } : q))
+            );
+        } catch (error) {
+            alert(error?.response?.data?.error || "Không đổi được trạng thái bài kiểm tra.");
+        }
     };
 
     const handlePageChange = (nextPage) => {
@@ -207,10 +173,12 @@ export default function AdminQuiz() {
     const handleOpenQuizQuestions = (quiz) => {
         navigate("/admin/quiz/create", {
             state: {
+                quizId: quiz.id,
                 quizMeta: {
                     title: quiz.title,
                     subject: quiz.subject,
                     grade: quiz.grade,
+                    classTeacherSubjectId: quiz.classTeacherSubjectId,
                     duration: quiz.durationLabel || formatDurationLabel(quiz.duration),
                     examFormat: quiz.examFormat || "Trắc nghiệm",
                     examType: quiz.examType || "Thường xuyên",
@@ -227,35 +195,25 @@ export default function AdminQuiz() {
         setIsCreateDialogOpen(true);
     };
 
-    const handleSubmitQuizMeta = (quizMeta) => {
+    const handleSubmitQuizMeta = async (quizMeta) => {
         if (editingQuizId == null) {
             handleCreateQuiz(quizMeta);
             return;
         }
 
-        setQuizzes((prev) =>
-            prev.map((quiz) =>
-                quiz.id === editingQuizId
-                    ? {
-                        ...quiz,
-                        title: quizMeta.title,
-                        subject: quizMeta.subject,
-                        grade: quizMeta.grade,
-                        duration: parseDurationMinutes(quizMeta.duration || quiz.duration),
-                        durationLabel: formatDurationLabel(quizMeta.duration || quiz.durationLabel),
-                        examFormat: quizMeta.examFormat,
-                        examType: quizMeta.examType || "Thường xuyên",
-                        createdByRole: quizMeta.createdByRole,
-                        createdByName:
-                            quizMeta.createdByRole === "teacher"
-                                ? quizMeta.createdByName
-                                : "Quản trị viên",
-                    }
-                    : quiz
-            )
-        );
+        try {
+            await quizService.updateQuiz(editingQuizId, {
+                title: quizMeta.title,
+                description: quizMeta.description,
+                duration: quizMeta.duration,
+                examType: quizMeta.examType,
+            });
 
-        handleCloseCreateDialog();
+            await loadQuizzes();
+            handleCloseCreateDialog();
+        } catch (error) {
+            alert(error?.response?.data?.error || "Không cập nhật được bài kiểm tra.");
+        }
     };
 
     const editingQuiz = quizzes.find((quiz) => quiz.id === editingQuizId) || null;
@@ -296,7 +254,11 @@ export default function AdminQuiz() {
             </div>
 
             <div className="admin-quiz__body">
-                {filteredQuizzes.length === 0 ? (
+                {isLoading ? (
+                    <div style={{ textAlign: "center", color: "#666", marginTop: "2rem" }}>
+                        Đang tải dữ liệu...
+                    </div>
+                ) : filteredQuizzes.length === 0 ? (
                     <div style={{ textAlign: 'center', color: '#666', marginTop: '2rem' }}>
                         Không có bài kiểm tra nào phù hợp với bộ lọc.
                     </div>
@@ -329,10 +291,13 @@ export default function AdminQuiz() {
                 onSubmit={handleSubmitQuizMeta}
                 title={editingQuiz ? "Sửa thông tin bài kiểm tra" : "Tạo bài kiểm tra mới"}
                 submitLabel={editingQuiz ? "Lưu thông tin" : "Tạo"}
+                assignmentOptions={assignmentOptions}
+                requireAssignment={!editingQuiz}
                 initialValues={editingQuiz ? {
                     title: editingQuiz.title,
                     subject: editingQuiz.subject,
                     grade: editingQuiz.grade,
+                    classTeacherSubjectId: editingQuiz.classTeacherSubjectId,
                     duration: editingQuiz.durationLabel || formatDurationLabel(editingQuiz.duration),
                     examFormat: editingQuiz.examFormat || "Trắc nghiệm",
                     examType: editingQuiz.examType || "Thường xuyên",
