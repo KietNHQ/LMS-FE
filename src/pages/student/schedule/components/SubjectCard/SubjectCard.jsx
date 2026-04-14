@@ -1,56 +1,35 @@
 import AccessTimeRoundedIcon from "@mui/icons-material/AccessTimeRounded";
 import SchoolRoundedIcon from "@mui/icons-material/SchoolRounded";
 import "./SubjectCard.css";
-
-const subjectViMap = {
-    Mathematics: "Toán học",
-    Physics: "Vật lý",
-    Chemistry: "Hóa học",
-    Literature: "Ngữ văn",
-    English: "Tiếng Anh",
-    Art: "Mỹ thuật",
-    "Physical Education": "Thể dục",
-    Music: "Âm nhạc",
-    Informatics: "Tin học",
-    Biology: "Sinh học",
-    History: "Lịch sử",
-    Geography: "Địa lý",
-    "Civic Education": "Giáo dục công dân",
-};
-
-const assessmentViMap = {
-    "No assessment": "Không đánh giá",
-    "Oral check": "Kiểm tra miệng",
-    "15-minute quiz": "Kiểm tra 15 phút",
-    "One-period test": "Kiểm tra 1 tiết",
-    "Practical test": "Kiểm tra thực hành",
-    "Project review": "Đánh giá dự án",
-    "Project presentation": "Thuyết trình dự án",
-    "Portfolio review": "Đánh giá hồ sơ",
-    "Performance test": "Đánh giá biểu diễn",
-    "Essay review": "Đánh giá bài viết",
-    "Presentation review": "Đánh giá thuyết trình",
-};
-
-function toVietnameseSubject(subject) {
-    return subjectViMap[subject] || subject;
+function getStatusTone(status = "") {
+    const normalized = String(status).toLowerCase();
+    if (normalized.includes("huy")) return "cancelled";
+    if (normalized.includes("doi")) return "rescheduled";
+    if (normalized.includes("nghi")) return "holiday";
+    if (normalized.includes("bu")) return "makeup";
+    return "normal";
 }
 
-function toVietnameseAssessment(assessment) {
-    return assessmentViMap[assessment] || assessment;
+function getStatusLabel(status = "") {
+    const normalized = String(status).toLowerCase();
+    if (normalized.includes("huy")) return "Hủy";
+    if (normalized.includes("doi")) return "Đổi lịch";
+    if (normalized.includes("nghi")) return "Nghỉ lễ";
+    if (normalized.includes("bu")) return "Học bù";
+    return "Bình thường";
 }
 
 export default function SubjectCard({ lesson, getAssessmentIcon }) {
-    const displaySubject = toVietnameseSubject(lesson.subject);
-    const displayAssessment = toVietnameseAssessment(lesson.assessment);
+    const statusTone = getStatusTone(lesson.status);
+    const timeRange = lesson.timeRange || `${lesson.start} - ${lesson.end}`;
 
     return (
-        <div className={`lesson-pill ${lesson.color}`}>
+        <div className={`lesson-pill ${lesson.color} lesson-pill--${statusTone}`}>
             <div className="lesson-header">
-                <div className="lesson-subject">{displaySubject}</div>
-                {getAssessmentIcon(displayAssessment)}
+                <div className="lesson-subject">{lesson.subject}</div>
+                <span className={`lesson-status status-${statusTone}`}>{getStatusLabel(lesson.status)}</span>
             </div>
-            <div className="lesson-room">{lesson.room}</div>
+            <div className="lesson-room">Phòng {lesson.room}</div>
 
             <div className="lesson-extra">
                 <span>
@@ -59,21 +38,33 @@ export default function SubjectCard({ lesson, getAssessmentIcon }) {
                 </span>
                 <span>
                     <AccessTimeRoundedIcon />
-                    {lesson.start} - {lesson.end}
+                    {timeRange}
                 </span>
+                {lesson.className && (
+                    <span>
+                        <SchoolRoundedIcon />
+                        {lesson.className}
+                    </span>
+                )}
             </div>
 
-            <div className="lesson-tooltip">
-                <p>
-                    <strong>Chủ đề:</strong> {lesson.lessonTopic}
-                </p>
-                <p>
-                    <strong>Hoạt động lớp:</strong> {lesson.activity}
-                </p>
-                <p>
-                    <strong>Kiểm tra:</strong> {displayAssessment}
-                </p>
-            </div>
+            <div className="lesson-note">{lesson.note || "Không có ghi chú"}</div>
+
+            {lesson.lessonTopic || lesson.activity || getAssessmentIcon ? (
+                <div className="lesson-tooltip">
+                    {lesson.lessonTopic ? (
+                        <p>
+                            <strong>Chủ đề:</strong> {lesson.lessonTopic}
+                        </p>
+                    ) : null}
+                    {lesson.activity ? (
+                        <p>
+                            <strong>Hoạt động:</strong> {lesson.activity}
+                        </p>
+                    ) : null}
+                    {getAssessmentIcon ? <p className="lesson-tooltip-muted">Tiết học chỉ xem</p> : null}
+                </div>
+            ) : null}
         </div>
     );
 }

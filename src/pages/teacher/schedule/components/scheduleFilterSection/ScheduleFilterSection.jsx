@@ -2,8 +2,9 @@ import React, { useRef } from "react";
 import "./ScheduleFilterSection.css";
 import { ChevronLeft, ChevronRight, Calendar } from "lucide-react";
 import Select from "../../../../../components/ui/Select/Select";
+import { CLASS_OPTIONS } from "../../../../../utils/timetableShared";
 
-const classes = ["Tất cả", "10A1", "10A2", "11B1", "11B2", "12A1"];
+const classes = ["Tất cả", ...CLASS_OPTIONS];
 const quickDays = [
   { value: -1, label: "Hôm qua" },
   { value: 0, label: "Hôm nay" },

@@ -4,24 +4,24 @@
 	min-width: 0;
 	overflow-x: auto;
 	overflow-y: hidden;
-	border-radius: 22px;
-	box-shadow: 0 4px 16px rgba(31, 45, 61, 0.04);
+	border-radius: 24px;
+	box-shadow: 0 10px 30px rgba(15, 23, 42, 0.05);
 }
 .schedule-board {
 	width: 100%;
 	min-width: 980px;
 	background: #ffffff;
-	border: 1px solid #e8ebf1;
-	border-radius: 20px;
+	border: 1px solid #edf2f7;
+	border-radius: 24px;
 	position: relative;
 	z-index: 1;
 	overflow: hidden;
 }
 
 .schedule-grid { display: grid; grid-template-columns: 120px repeat(5, 1fr); align-items: stretch; }
-.schedule-grid-header { background: #ffffff; border-bottom: 1px solid #edf0f5; border-top-left-radius: 20px; border-top-right-radius: 20px; overflow: hidden; }
-.grid-head { padding: 13px 12px; font-size: 13px; font-weight: 800; color: #6a7383; text-transform: uppercase; }
-.time-head { padding-left: 14px; }
+.schedule-grid-header { background: #ffffff; border-bottom: 1px solid #edf0f5; border-top-left-radius: 24px; border-top-right-radius: 24px; overflow: hidden; }
+.grid-head { padding: 14px 12px; font-size: 13px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 1px; }
+.time-head { padding-left: 14px; background: #f8fafc; }
 .schedule-grid-row { border-bottom: 1px solid #edf0f5; }
 .schedule-grid-row:last-child { border-bottom: none; }
 
@@ -45,11 +45,29 @@
 .morning-chip .session-div-badge { background: #ffe9a0; color: #8a5e00; }
 .afternoon-chip .session-div-badge { background: #ddeaff; color: #1e4bb5; }
 
-.time-cell { padding: 9px 7px 9px 10px; display: flex; flex-direction: column; justify-content: center; color: #5c6678; }
-.period-label { font-size: 12px; font-weight: 700; color: #5d687b; margin-bottom: 2px; }
-.period-time { font-size: 11px; color: #6f798b; }
-.lesson-cell { padding: 2px; display: flex; align-items: center; justify-content: center; min-height: 92px; box-sizing: border-box; position: relative; min-width: 0; }
-.lesson-empty { width: 100%; height: 84px; border-radius: 14px; background: #f7f8fa; color: #c7ccd5; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+.time-cell {
+	padding: 10px 8px 10px 12px;
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	color: #5c6678;
+	background: #f8fafc;
+}
+
+.period-label { font-size: 12px; font-weight: 700; color: #1e2f5a; margin-bottom: 2px; }
+.period-time { font-size: 11px; color: #64748b; }
+.lesson-cell { padding: 4px; display: flex; align-items: stretch; justify-content: stretch; min-height: 124px; box-sizing: border-box; position: relative; min-width: 0; background: #ffffff; }
+.lesson-empty { width: 100%; height: 118px; border-radius: 16px; background: #f8fafc; color: #c7ccd5; display: flex; align-items: center; justify-content: center; font-size: 18px; border: 1px dashed #e2e8f0; }
+
+@media (max-width: 768px) {
+	.schedule-board-scroller {
+		border-radius: 18px;
+	}
+
+	.schedule-board {
+		border-radius: 18px;
+	}
+}
 
 @media (max-width: 1024px) {
 	.schedule-board {

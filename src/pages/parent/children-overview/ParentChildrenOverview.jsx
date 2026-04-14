@@ -327,7 +327,13 @@ export default function ParentChildrenOverview() {
 
                     <div className="overview-triple-grid">
                         <AttendanceSection data={attendanceData} compact />
-                        <CalendarSection schedule={scheduleData} events={upcomingEvents} compact />
+                        <CalendarSection
+                            schedule={scheduleData}
+                            events={upcomingEvents}
+                            compact
+                            classNameValue={childData.className}
+                            selectedChildId={selectedChildId}
+                        />
                         <LeaveRequestSection requests={leaveRequests.slice(0, 3)} compact />
                     </div>
                 </div>
@@ -338,7 +344,12 @@ export default function ParentChildrenOverview() {
             )}
 
             {activeTab === "calendar" && (
-                <CalendarSection schedule={scheduleData} events={upcomingEvents} />
+                <CalendarSection
+                    schedule={scheduleData}
+                    events={upcomingEvents}
+                    classNameValue={childData.className}
+                    selectedChildId={selectedChildId}
+                />
             )}
 
             {activeTab === "grades" && (
