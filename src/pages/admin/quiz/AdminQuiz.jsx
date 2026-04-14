@@ -1,12 +1,11 @@
 import React, { useState, useMemo } from "react";
-import { FiChevronLeft, FiChevronRight } from "react-icons/fi";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Modal } from "../../../components/ui";
 import "./AdminQuiz.css";
 import QuizListSection from "./components/quizListSection/quizListSection";
 import CreateQuizDialog from "./components/createQuizDialog/CreateQuizDialog";
 import QuizToolbar from "./components/quizToolbar/QuizToolbar";
-import { SchoolYearTermSelector } from "../../../components/common";
+import { SchoolYearTermSelector, Pagination } from "../../../components/common";
 import { useSchoolYearTerm } from "../../../hooks/useSchoolYearTerm";
 import {
     DEFAULT_GRADE_FILTER_OPTIONS,
@@ -183,14 +182,8 @@ export default function AdminQuiz() {
     };
 
     const handlePageChange = (nextPage) => {
-        if (nextPage < 1 || nextPage > totalPages) {
-            return;
-        }
         setCurrentPage(nextPage);
     };
-
-    const goPrevPage = () => handlePageChange(currentPage - 1);
-    const goNextPage = () => handlePageChange(currentPage + 1);
 
     const handleOpenCreateDialog = () => {
         setEditingQuizId(null);
@@ -318,31 +311,13 @@ export default function AdminQuiz() {
                 )}
 
                 {filteredQuizzes.length > 0 && (
-                    <div className="admin-quiz-pagination">
-                        <button
-                            type="button"
-                            className="admin-quiz-page-btn"
-                            onClick={goPrevPage}
-                            disabled={currentPage === 1}
-                            aria-label="Trang trước"
-                        >
-                            <FiChevronLeft />
-                        </button>
-
-                        <div className="admin-quiz-page-indicator">
-                            <span>{currentPage}</span>
-                            <small>/ {totalPages}</small>
-                        </div>
-
-                        <button
-                            type="button"
-                            className="admin-quiz-page-btn"
-                            onClick={goNextPage}
-                            disabled={currentPage === totalPages}
-                            aria-label="Trang sau"
-                        >
-                            <FiChevronRight />
-                        </button>
+                    <div className="admin-quiz-pagination-row">
+                        <Pagination
+                            currentPage={currentPage}
+                            totalPages={totalPages}
+                            onPageChange={handlePageChange}
+                            ariaLabel="Phân trang bài kiểm tra"
+                        />
                     </div>
                 )}
             </div>

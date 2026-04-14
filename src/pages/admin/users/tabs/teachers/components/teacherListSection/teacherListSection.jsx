@@ -9,6 +9,7 @@ function getAvatarLetter(name) {
 
 export default function TeacherListSection({
 	teachers,
+	emptyMessage = "Không tìm thấy giáo viên phù hợp.",
 	onSelectTeacher,
 	onView,
 	onEdit,
@@ -33,7 +34,7 @@ export default function TeacherListSection({
 						{teachers.length === 0 ? (
 							<tr>
 								<td colSpan="5" className="teacher-empty-row">
-									Không tìm thấy giáo viên phù hợp.
+									{emptyMessage}
 								</td>
 							</tr>
 						) : (

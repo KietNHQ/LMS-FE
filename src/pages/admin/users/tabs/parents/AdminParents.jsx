@@ -97,6 +97,10 @@ export default function AdminParents({ onCountChange }) {
     });
   }, [parents, searchTerm, selectedStatus, selectedClass]);
 
+  const hasFilteredParents = filteredParents.length > 0;
+  const shouldRenderDataSection = !isLoading && !loadError;
+  const emptyMessage = parents.length === 0 ? "Chưa có dữ liệu phụ huynh." : "Không tìm thấy tài khoản phụ huynh nào.";
+
   const totalPages = Math.max(1, Math.ceil(filteredParents.length / ITEMS_PER_PAGE));
 
   const paginatedParents = useMemo(() => {
@@ -273,21 +277,28 @@ export default function AdminParents({ onCountChange }) {
       {loadError && <div className="parent-empty-row">{loadError}</div>}
       {isLoading && <div className="parent-empty-row">Đang tải danh sách phụ huynh...</div>}
 
-      <ParentListSection
-        parents={paginatedParents}
-        onView={handleViewParent}
-        onEdit={handleEditParent}
-        onDelete={handleDeleteParent}
-      />
+      {shouldRenderDataSection && (
+        <>
+          <ParentListSection
+            parents={paginatedParents}
+            emptyMessage={emptyMessage}
+            onView={handleViewParent}
+            onEdit={handleEditParent}
+            onDelete={handleDeleteParent}
+          />
 
-      <div className="admin-parents-pagination-row">
-        <Pagination
-          currentPage={currentPage}
-          totalPages={totalPages}
-          onPageChange={setCurrentPage}
-          ariaLabel="Phân trang phụ huynh"
-        />
-      </div>
+          {hasFilteredParents && totalPages > 1 && (
+            <div className="admin-parents-pagination-row">
+              <Pagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={setCurrentPage}
+                ariaLabel="Phân trang phụ huynh"
+              />
+            </div>
+          )}
+        </>
+      )}
 
       {activeModalMode && (
         <ParentInformationSection

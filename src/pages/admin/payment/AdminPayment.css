@@ -170,64 +170,11 @@
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
 
-/* SHARED PAGINATION STYLES */
 .payment-pagination-row {
     display: flex;
     justify-content: center;
-    padding: 1.25rem 1.5rem;
-    background: #ffffff;
-    border-top: 1px solid #f1f5f9;
-}
-
-.payment-pagination {
-    display: flex;
     align-items: center;
-    gap: 1.5rem;
-}
-
-.payment-page-indicator {
-    display: flex;
-    align-items: baseline;
-    gap: 0.2rem;
-}
-
-.payment-page-indicator span {
-    font-size: 1.5rem;
-    font-weight: 800;
-    color: #1e2f5a;
-    line-height: 1;
-}
-
-.payment-page-indicator small {
-    font-size: 0.9rem;
-    font-weight: 700;
-    color: #94a3b8;
-}
-
-.payment-page-btn {
-    width: 2.75rem;
-    height: 2.75rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: #ffffff;
-    border: 1px solid #e2e8f0;
-    border-radius: 12px;
-    color: #1e2f5a;
-    cursor: pointer;
-    transition: all 0.2s;
-    font-size: 1.25rem;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-}
-
-.payment-page-btn:hover:not(:disabled) {
-    background: #1e2f5a;
-    color: #ffffff;
-    border-color: #1e2f5a;
-}
-
-.payment-page-btn:disabled {
-    opacity: 0.3;
-    background: #f8fafc;
-    cursor: not-allowed;
+    width: 100%;
+    margin-top: 1rem;
+    padding-top: 0.6rem;
 }

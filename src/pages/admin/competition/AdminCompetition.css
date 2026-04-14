@@ -72,74 +72,13 @@
     box-shadow: 0 25px 50px -12px rgba(59, 130, 246, 0.25);
 }
 
-/* Standard Pagination (Navy/Blue Style) */
 .admin-competition-pagination-row {
     display: flex;
     justify-content: center;
     align-items: center;
     width: 100%;
-    margin-top: 2rem;
-    padding-top: 1.5rem;
-    border-top: 1px solid #edf1f7;
-}
-
-.admin-competition-pagination {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 0.8rem;
-}
-
-.admin-competition-page-btn {
-    width: 3rem;
-    height: 3rem;
-    border: 1px solid #dbe4f5;
-    border-radius: 1rem;
-    background: #f5f8ff;
-    color: #3458c4;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    font-size: 1.2rem;
-}
-
-.admin-competition-page-btn:hover:not(:disabled) {
-    background: #eaf1ff;
-    border-color: #9db9ff;
-    box-shadow: 0 10px 20px rgba(52, 88, 196, 0.15);
-    transform: translateY(-2px);
-}
-
-.admin-competition-page-btn:disabled {
-    background: #f3f5f9;
-    color: #a3adbb;
-    cursor: not-allowed;
-    border-color: #e2e8f0;
-}
-
-.admin-competition-page-indicator {
-    display: flex;
-    align-items: flex-end;
-    gap: 0.25rem;
-    min-width: 5rem;
-    justify-content: center;
-    margin: 0;
-}
-
-.admin-competition-page-indicator span {
-    font-size: 1.75rem;
-    font-weight: 850;
-    color: #3458c4;
-    line-height: 1;
-}
-
-.admin-competition-page-indicator small {
-    font-size: 1rem;
-    font-weight: 700;
-    color: #8a97aa;
-    margin-bottom: 2px;
+    margin-top: 1rem;
+    padding-top: 0.6rem;
 }
 
 /* Config Button */
