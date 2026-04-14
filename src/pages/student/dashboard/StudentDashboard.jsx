@@ -9,7 +9,8 @@ import {
 } from "react-icons/hi2";
 import WelcomeHeader from "./components/WelcomeHeader/WelcomeHeader";
 import StatsCards from "./components/StatsCards/StatsCards";
-import StudyProgressChart from "./components/StudyProgressChart/StudyProgressChart";
+import EventCalendar from "../../../components/common/EventCalendar/EventCalendar";
+import { INITIAL_CALENDAR_EVENTS, CALENDAR_EVENT_TYPES } from "../../../components/common/EventCalendar/eventData";
 import SubjectRadar from "./components/SubjectRadar/SubjectRadar";
 import YearProgress from "./components/YearProgress/YearProgress";
 import UpcomingTests from "./components/UpcomingTests/UpcomingTests";
@@ -209,9 +210,26 @@ export default function StudentDashboard() {
             <StatsCards cards={statsCards} />
 
             <div className="student-dashboard-grid student-dashboard-grid-top">
-                <StudyProgressChart data={progressData} />
+                <div className="student-dashboard-calendar-card">
+                  <EventCalendar 
+                    title="Lịch Sự Kiện"
+                    themeClass="theme-student"
+                    userRole="student"
+                    isCompact={true}
+                    eventTypes={CALENDAR_EVENT_TYPES}
+                    initialEvents={INITIAL_CALENDAR_EVENTS}
+
+                    rolePolicy={{
+                      canCreate: false,
+                      canViewDetails: true,
+                      canEdit: false,
+                      canDelete: false
+                    }}
+                  />
+                </div>
                 <SubjectRadar data={subjectData} />
             </div>
+
 
             <div className="student-dashboard-grid student-dashboard-grid-bottom">
                 <YearProgress

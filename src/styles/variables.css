@@ -62,11 +62,11 @@
   --warning-color: #f59e0b;
   --info-color: #0ea5e9;
 
-  /* Calendar Event Palette (Default) */
-  --cal-blue: #0ea5e9;
-  --cal-red: #ef4444;
-  --cal-orange: #fbbf24;
-  --cal-teal: #14b8a6;
+  /* Calendar Event Palette (High Contrast) */
+  --cal-blue: #3b82f6;   /* Vibrant Blue */
+  --cal-red: #ef4444;    /* Bright Red */
+  --cal-orange: #f59e0b; /* Amber */
+  --cal-teal: #16a34a;   /* Forest Green (Clear from Teal) */
 
   /* Radius */
   --radius-sm: 6px;
@@ -108,22 +108,22 @@
 }
 /* Role Theme Overrides */
 .theme-teacher {
-  --admin-primary: #14b8a6;
+  --admin-primary: #0d9488; /* Teal 600 */
   --admin-primary-hover: #0f766e;
   --admin-primary-soft: #f0fdfa;
   --admin-border: #ccfbf1;
   --admin-border-strong: #99f6e4;
-  --admin-text-primary: #0f766e;
+  --admin-text-primary: #134e4a;
   --admin-text-secondary: #0d9488;
-  --admin-focus-ring: rgba(20, 184, 166, 0.2);
-  --admin-shadow-sm: 0 2px 6px rgba(20, 184, 166, 0.06);
-  --admin-shadow-md: 0 10px 24px rgba(20, 184, 166, 0.12);
+  --admin-focus-ring: rgba(13, 148, 136, 0.2);
+  --admin-shadow-sm: 0 2px 6px rgba(13, 148, 136, 0.06);
+  --admin-shadow-md: 0 10px 24px rgba(13, 148, 136, 0.12);
 
   /* High Contrast Event Overrides for Teacher */
-  --cal-blue: #2563eb;   /* Vibrant Royal Blue */
-  --cal-teal: #059669;   /* Deep Emerald (contrasts with Teal background) */
-  --cal-red: #f43f5e;    /* Rose/Red pop */
-  --cal-orange: #f59e0b; /* Amber pop */
+  --cal-blue: #3b82f6;
+  --cal-teal: #16a34a;
+  --cal-red: #ef4444;
+  --cal-orange: #f59e0b;
 }
 
 .theme-admin {
@@ -135,9 +135,45 @@
   --admin-text-primary: #1e2f5a;
   --admin-text-secondary: #4d5f82;
 
-  /* High Contrast Event Overrides for Admin */
-  --cal-blue: #3b82f6;   /* Bright Blue */
-  --cal-teal: #06b6d4;   /* Cyan (contrasts with Navy background) */
+  --cal-blue: #3b82f6;
+  --cal-teal: #16a34a;
   --cal-red: #ef4444;
-  --cal-orange: #fbbf24;
+  --cal-orange: #f59e0b;
 }
+
+.theme-student {
+  --admin-primary: #4338ca; /* Indigo 700 */
+  --admin-primary-hover: #3730a3;
+  --admin-primary-soft: #eef2ff;
+  --admin-border: #e0e7ff;
+  --admin-border-strong: #c7d2fe;
+  --admin-text-primary: #312e81;
+  --admin-text-secondary: #4338ca;
+  --admin-focus-ring: rgba(67, 56, 202, 0.2);
+  --admin-shadow-sm: 0 2px 6px rgba(67, 56, 202, 0.06);
+  --admin-shadow-md: 0 10px 24px rgba(67, 56, 202, 0.12);
+
+  --cal-blue: #3b82f6;
+  --cal-teal: #16a34a;
+  --cal-red: #ef4444;
+  --cal-orange: #f59e0b;
+}
+
+.theme-parent {
+  --admin-primary: #7c3aed; /* Violet 600 */
+  --admin-primary-hover: #6d28d9;
+  --admin-primary-soft: #f5f3ff;
+  --admin-border: #ede9fe;
+  --admin-border-strong: #ddd6fe;
+  --admin-text-primary: #4c1d95;
+  --admin-text-secondary: #6d28d9;
+  --admin-focus-ring: rgba(124, 58, 237, 0.2);
+  --admin-shadow-sm: 0 2px 6px rgba(124, 58, 237, 0.06);
+  --admin-shadow-md: 0 10px 24px rgba(124, 58, 237, 0.12);
+
+  --cal-blue: #3b82f6;
+  --cal-teal: #16a34a;
+  --cal-red: #ef4444;
+  --cal-orange: #f59e0b;
+}
+

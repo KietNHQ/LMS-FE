@@ -6,7 +6,7 @@ const roleToApi = {
   Admin: "admin",
   "Giáo viên": "teacher",
   "Học sinh": "student",
-  "Phụ huynh": "parent",
+  "Phụ huynh": "guardian",
 };
 
 const roleFromApi = {

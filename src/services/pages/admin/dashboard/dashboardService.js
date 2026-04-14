@@ -84,6 +84,41 @@ const normalizeRankingItem = (item, index) => {
   };
 };
 
+const formatDate = (date) => {
+  const year = date.getFullYear();
+  const month = `${date.getMonth() + 1}`.padStart(2, "0");
+  const day = `${date.getDate()}`.padStart(2, "0");
+  return `${year}-${month}-${day}`;
+};
+
+const getDateRangeByWeek = ({ schoolYear, term, week }) => {
+  const weekNumber = Number(week);
+  if (!Number.isFinite(weekNumber) || weekNumber <= 0) {
+    return null;
+  }
+
+  const [startRaw, endRaw] = `${schoolYear || ""}`.split("-");
+  const startYear = Number(startRaw);
+  const endYear = Number(endRaw);
+  if (!Number.isFinite(startYear) || !Number.isFinite(endYear)) {
+    return null;
+  }
+
+  const termStart = term === "hk2" ? new Date(endYear, 0, 1) : new Date(startYear, 7, 1);
+  termStart.setHours(0, 0, 0, 0);
+
+  const startDate = new Date(termStart);
+  startDate.setDate(startDate.getDate() + (weekNumber - 1) * 7);
+
+  const endDate = new Date(startDate);
+  endDate.setDate(endDate.getDate() + 6);
+
+  return {
+    startDate: formatDate(startDate),
+    endDate: formatDate(endDate),
+  };
+};
+
 export const adminDashboardService = {
   getDashboardSummary: async () => {
     const response = await axiosClient.get("/dashboard/admin");
@@ -110,13 +145,18 @@ export const adminDashboardService = {
     };
   },
 
-  getConductRanking: async ({ week } = {}) => {
+  getConductRanking: async ({ week, schoolYear, term } = {}) => {
     const candidateEndpoints = ["/discipline/class/rankings", "/discipline/class-ranking"];
+    const dateRange = getDateRangeByWeek({ week, schoolYear, term });
+    const params = {
+      ...(week ? { week } : {}),
+      ...(dateRange || {}),
+    };
 
     for (const endpoint of candidateEndpoints) {
       try {
         const response = await axiosClient.get(endpoint, {
-          params: week ? { week } : undefined,
+          params: Object.keys(params).length > 0 ? params : undefined,
         });
         const payload = getPayload(response);
         const rows = Array.isArray(payload)

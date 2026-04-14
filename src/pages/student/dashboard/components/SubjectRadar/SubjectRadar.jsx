@@ -12,8 +12,8 @@ export default function SubjectRadar({ data }) {
             <h3>Điểm theo môn học</h3>
 
             <div className="student-radar-wrap">
-                <ResponsiveContainer width="100%" height={340}>
-                    <RadarChart cx="50%" cy="50%" outerRadius="82%" data={data}>
+                <ResponsiveContainer width="100%" height="100%">
+                    <RadarChart cx="50%" cy="50%" outerRadius="80%" data={data}>
                         <PolarGrid />
                         <PolarAngleAxis dataKey="subject" tick={{ fontSize: 12 }} />
                         <Radar

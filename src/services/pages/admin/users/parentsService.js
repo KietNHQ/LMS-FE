@@ -81,7 +81,7 @@ const parseParent = (item = {}) => {
 
 export const parentsService = {
   listParents: async () => {
-    const userRoleCandidates = ["parent", "guardian"];
+    const userRoleCandidates = ["guardian", "parent"];
 
     for (const role of userRoleCandidates) {
       try {
@@ -112,7 +112,7 @@ export const parentsService = {
     const payload = {
       email: formData.email,
       fullName: formData.name,
-      role: "parent",
+      role: "guardian",
       phone: formData.phone === "—" ? "" : formData.phone,
       dob: formData.dob || null,
       profile: formData.profile || {},

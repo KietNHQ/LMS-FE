@@ -4,7 +4,8 @@ import { useState } from "react";
 import ChildSwitcher from "./components/ChildSwitcher/ChildSwitcher";
 import OverviewCards from "./components/OverviewCards/OverviewCards";
 import PaymentSummary from "./components/PaymentSummary/PaymentSummary";
-import ProgressSnapshot from "./components/ProgressSnapshot/ProgressSnapshot";
+import EventCalendar from "../../../components/common/EventCalendar/EventCalendar";
+import { INITIAL_CALENDAR_EVENTS, CALENDAR_EVENT_TYPES } from "../../../components/common/EventCalendar/eventData";
 import UpcomingSchedule from "./components/UpcomingSchedule/UpcomingSchedule";
 // import RecentNotifications from "./components/RecentNotifications/RecentNotifications";
 
@@ -22,7 +23,14 @@ const childrenData = [
         { subject: "Hóa học", oral: 8, test15: 7, midterm: 8, final: 8, average: 7.8 },
         { subject: "Sinh học", oral: 9, test15: 8, midterm: 9, final: 9, average: 8.8 },
         { subject: "Lịch sử", oral: 7, test15: 7, midterm: 6, final: 7, average: 6.8 },
-        { subject: "Tin học", oral: 10, test15: 9, midterm: 9, final: 10, average: 9.5 }
+        { subject: "Tin học", oral: 10, test15: 9, midterm: 9, final: 10, average: 9.5 },
+        { subject: "Địa lý", oral: 8, test15: 8, midterm: 7, final: 8, average: 7.8 },
+        { subject: "GDCD", oral: 9, test15: 9, midterm: 9, final: 9, average: 9.0 },
+        { subject: "Công nghệ", oral: 8, test15: 7, midterm: 8, final: 8, average: 7.8 },
+        { subject: "Âm nhạc", oral: 9, test15: 9, midterm: 10, final: 9, average: 9.2 },
+        { subject: "Mỹ thuật", oral: 8, test15: 8, midterm: 9, final: 8, average: 8.2 },
+        { subject: "Thể dục", oral: 10, test15: 10, midterm: 10, final: 10, average: 10 },
+        { subject: "GDQP-AN", oral: 9, test15: 9, midterm: 8, final: 9, average: 8.8 }
       ],
       hk2: [
         { subject: "Toán học", oral: 9, test15: 8, midterm: 9, final: 9, average: 8.8 },
@@ -32,7 +40,14 @@ const childrenData = [
         { subject: "Hóa học", oral: 8, test15: 8, midterm: 8, final: 9, average: 1.2 },
         { subject: "Sinh học", oral: 9, test15: 9, midterm: 9, final: 1, average: 9.3 },
         { subject: "Lịch sử", oral: 1, test15: 7, midterm: 7, final: 7, average: 7 },
-        { subject: "Tin học", oral: 1, test15: 10, midterm: 9, final: 10, average: 9.7 }
+        { subject: "Tin học", oral: 1, test15: 10, midterm: 9, final: 10, average: 9.7 },
+        { subject: "Địa lý", oral: 8, test15: 8, midterm: 8, final: 8, average: 8.0 },
+        { subject: "GDCD", oral: 9, test15: 9, midterm: 9, final: 9, average: 9.0 },
+        { subject: "Công nghệ", oral: 8, test15: 8, midterm: 8, final: 9, average: 8.5 },
+        { subject: "Âm nhạc", oral: 9, test15: 9, midterm: 9, final: 9, average: 9.0 },
+        { subject: "Mỹ thuật", oral: 8, test15: 8, midterm: 8, final: 8, average: 8.0 },
+        { subject: "Thể dục", oral: 10, test15: 10, midterm: 10, final: 10, average: 10 },
+        { subject: "GDQP-AN", oral: 9, test15: 9, midterm: 9, final: 9, average: 9.0 }
       ],
       year: [
         { subject:"Toán học", oral:1.5, test15:8.5, midterm:8.5, final:1.5, average:1.5 },
@@ -42,7 +57,14 @@ const childrenData = [
         { subject:"Hóa học", oral:1, test15:2, midterm:1, final:8, average:1 },
         { subject:"Sinh học", oral:1, test15:1, midterm:1, final:9, average:9 },
         { subject:"Lịch sử", oral:1.9, test15:1.9, midterm:1.9, final:6.9, average:6.9 },
-        { subject:"Tin học", oral:1.6, test15:1.6, midterm:9.6, final:9.6, average:9.6 }
+        { subject:"Tin học", oral:1.6, test15:1.6, midterm:9.6, final:9.6, average:9.6 },
+        { subject:"Địa lý", oral:8.0, test15:8.0, midterm:8.0, final:8.0, average:8.0 },
+        { subject:"GDCD", oral:9.0, test15:9.0, midterm:9.0, final:9.0, average:9.0 },
+        { subject:"Công nghệ", oral:8.2, test15:8.2, midterm:8.2, final:8.2, average:8.2 },
+        { subject:"Âm nhạc", oral:9.1, test15:9.1, midterm:9.1, final:9.1, average:9.1 },
+        { subject:"Mỹ thuật", oral:8.1, test15:8.1, midterm:8.1, final:8.1, average:8.1 },
+        { subject:"Thể dục", oral:10, test15:10, midterm:10, final:10, average:10 },
+        { subject:"GDQP-AN", oral:8.9, test15:8.9, midterm:8.9, final:8.9, average:8.9 }
       ]
     }
   },
@@ -60,7 +82,11 @@ const childrenData = [
         { subject: "Hóa học", oral: 9, test15: 8, midterm: 9, final: 9, average: 8.8 },
         { subject: "Sinh học", oral: 9, test15: 9, midterm: 10, final: 10, average: 9.5 },
         { subject: "Lịch sử", oral: 7, test15: 8, midterm: 7, final: 8, average: 7.5 },
-        { subject: "Tin học", oral: 10, test15: 10, midterm: 10, final: 10, average: 10 }
+        { subject: "Tin học", oral: 10, test15: 10, midterm: 10, final: 10, average: 10 },
+        { subject: "Địa lý", oral: 9, test15: 9, midterm: 9, final: 9, average: 9.0 },
+        { subject: "GDCD", oral: 10, test15: 10, midterm: 10, final: 10, average: 10 },
+        { subject: "Công nghệ", oral: 9, test15: 9, midterm: 9, final: 9, average: 9.0 },
+        { subject: "Âm nhạc", oral: 10, test15: 10, midterm: 10, final: 10, average: 10 }
       ],
       hk2: [
         { subject: "Toán học", oral: 9, test15: 9, midterm: 9, final: 10, average: 9.3 },
@@ -70,7 +96,11 @@ const childrenData = [
         { subject: "Hóa học", oral: 9, test15: 9, midterm: 9, final: 9, average: 9 },
         { subject: "Sinh học", oral: 10, test15: 10, midterm: 10, final: 10, average: 10 },
         { subject: "Lịch sử", oral: 8, test15: 8, midterm: 8, final: 8, average: 8 },
-        { subject: "Tin học", oral: 10, test15: 10, midterm: 10, final: 10, average: 10 }
+        { subject: "Tin học", oral: 10, test15: 10, midterm: 10, final: 10, average: 10 },
+        { subject: "Địa lý", oral: 9, test15: 9, midterm: 9, final: 9, average: 9 },
+        { subject: "GDCD", oral: 10, test15: 10, midterm: 10, final: 10, average: 10 },
+        { subject: "Công nghệ", oral: 9, test15: 9, midterm: 9, final: 9, average: 9 },
+        { subject: "Âm nhạc", oral: 10, test15: 10, midterm: 10, final: 10, average: 10 }
       ],
       year: [
         { subject:"Toán học", oral:9.3, test15:9.3, midterm:9.3, final:9.3, average:9.3 },
@@ -80,7 +110,11 @@ const childrenData = [
         { subject:"Hóa học", oral:8.9, test15:8.9, midterm:8.9, final:8.9, average:8.9 },
         { subject:"Sinh học", oral:9.7, test15:9.7, midterm:9.7, final:9.7, average:9.7 },
         { subject:"Lịch sử", oral:7.7, test15:7.7, midterm:7.7, final:7.7, average:7.7 },
-        { subject:"Tin học", oral:10, test15:10, midterm:10, final:10, average:10 }
+        { subject:"Tin học", oral:10, test15:10, midterm:10, final:10, average:10 },
+        { subject:"Địa lý", oral:9.0, test15:9.0, midterm:9.0, final:9.0, average:9.0 },
+        { subject:"GDCD", oral:10, test15:10, midterm:10, final:10, average:10 },
+        { subject:"Công nghệ", oral:9.0, test15:9.0, midterm:9.0, final:9.0, average:9.0 },
+        { subject:"Âm nhạc", oral:10, test15:10, midterm:10, final:10, average:10 }
       ]
     }
   }
@@ -102,11 +136,7 @@ export default function ParentDashboard() {
   const hk2Avg = calculateAverage(selectedChild.gradesBySemester.hk2);
   const yearAvg = calculateAverage(selectedChild.gradesBySemester.year);
 
-  const chartData = [
-    { name: "HK1", value: parseFloat(hk1Avg) },
-    { name: "HK2", value: parseFloat(hk2Avg) },
-    { name: "Cả năm", value: parseFloat(yearAvg) }
-  ];
+
 
   return (
     <div className="dashboard">
@@ -123,9 +153,27 @@ export default function ParentDashboard() {
 
       <OverviewCards yearAvg={yearAvg} hk1Avg={hk1Avg} />
 
-      <ProgressSnapshot chartData={chartData} />
+      <div className="parent-dashboard-grid-top">
+        <div className="parent-dashboard-calendar-card">
+          <EventCalendar 
+            title="Lịch Sự Kiện Hệ Thống"
+            themeClass="theme-parent"
+            userRole="parent"
+            isCompact={true}
+            eventTypes={CALENDAR_EVENT_TYPES}
+            initialEvents={INITIAL_CALENDAR_EVENTS}
 
-      <UpcomingSchedule gradesBySemester={selectedChild.gradesBySemester} />
+            rolePolicy={{
+              canCreate: false,
+              canViewDetails: true,
+              canEdit: false,
+              canDelete: false
+            }}
+          />
+        </div>
+
+        <UpcomingSchedule gradesBySemester={selectedChild.gradesBySemester} />
+      </div>
 
       {/* <RecentNotifications /> */}
     </div>

@@ -1,4 +1,5 @@
 import EventCalendar from "../../../../../components/common/EventCalendar/EventCalendar";
+import { INITIAL_CALENDAR_EVENTS, CALENDAR_EVENT_TYPES } from "../../../../../components/common/EventCalendar/eventData";
 
 const adminCalendarPolicy = {
   canCreate: true,
@@ -7,30 +8,19 @@ const adminCalendarPolicy = {
   canDelete: true,
 };
 
-const adminEventTypes = [
-  { value: "blue", label: "Ngày kiểm tra", description: "Thông báo kiểm tra" },
-  { value: "red", label: "Ngày lễ", description: "Thông báo lễ" },
-  { value: "orange", label: "Ngày nghỉ", description: "Thông báo nghỉ" },
-  { value: "teal", label: "Sự kiện lớp", description: "Sự kiện cấp lớp" },
-];
-
-const adminInitialEvents = [
-  { date: 10, title: "Kế hoạch HK2", content: "Rà soát tiến độ dạy học học kỳ 2", color: "red", createdBy: "Trần Gia Bảo", createdRole: "Quản trị viên" },
-  { date: 15, title: "Mốc HK1", content: "Đối soát hồ sơ học kỳ 1", color: "blue", createdBy: "Trần Gia Bảo", createdRole: "Quản trị viên" },
-  { date: 25, title: "Thông báo nghỉ hè", content: "Cập nhật lịch nghỉ hè toàn trường", color: "orange", createdBy: "Trần Gia Bảo", createdRole: "Quản trị viên" },
-];
-
 const EventCalendarSection = () => (
   <EventCalendar
     title="Lịch Sự Kiện"
     initialDate={new Date(2026, 3, 1)}
     themeClass="theme-admin"
     userRole="admin"
+    isCompact={true}
     rolePolicy={adminCalendarPolicy}
-    eventTypes={adminEventTypes}
-    initialEvents={adminInitialEvents}
+    eventTypes={CALENDAR_EVENT_TYPES}
+    initialEvents={INITIAL_CALENDAR_EVENTS}
   />
 );
 
 export default EventCalendarSection;
+
 

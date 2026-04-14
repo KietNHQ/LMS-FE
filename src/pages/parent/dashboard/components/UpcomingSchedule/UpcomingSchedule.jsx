@@ -45,43 +45,45 @@ export default function UpcomingSchedule({ gradesBySemester }) {
       </div>
 
       {/* ===== GRID (GIỮ NGUYÊN UI CỦA BẠN) ===== */}
-      <div className="subject-grid">
-        {gradesBySemester?.year?.map((subject, i) => {
+      <div className="subject-scroll-area">
+        <div className="subject-grid">
+          {gradesBySemester?.year?.map((subject, i) => {
 
-          const hk1 = gradesBySemester.hk1.find(
-            s => s.subject === subject.subject
-          );
+            const hk1 = gradesBySemester.hk1.find(
+              s => s.subject === subject.subject
+            );
 
-          const hk2 = gradesBySemester.hk2.find(
-            s => s.subject === subject.subject
-          );
+            const hk2 = gradesBySemester.hk2.find(
+              s => s.subject === subject.subject
+            );
 
-          const avg = subject.average;
-          const rank = getRank(avg);
+            const avg = subject.average;
+            const rank = getRank(avg);
 
-          return (
-            <div
-              className="subject-card"
-              key={i}
-              onClick={() => handleOpen(subject.subject)}
-            >
-              <div className="subject-left">
-                <h4>{subject.subject}</h4>
-                <p>
-                  HK1: {hk1?.average ?? "-"} • HK2: {hk2?.average ?? "-"}
-                </p>
+            return (
+              <div
+                className="subject-card"
+                key={i}
+                onClick={() => handleOpen(subject.subject)}
+              >
+                <div className="subject-left">
+                  <h4>{subject.subject}</h4>
+                  <p>
+                    HK1: {hk1?.average ?? "-"} • HK2: {hk2?.average ?? "-"}
+                  </p>
+                </div>
+
+                <div className="subject-right">
+                  <div className="score">{avg}</div>
+
+                  <span className={`badge ${rank.class}`}>
+                    {rank.label}
+                  </span>
+                </div>
               </div>
-
-              <div className="subject-right">
-                <div className="score">{avg}</div>
-
-                <span className={`badge ${rank.class}`}>
-                  {rank.label}
-                </span>
-              </div>
-            </div>
-          );
-        })}
+            );
+          })}
+        </div>
       </div>
 
       {/* ===== DIALOG ===== */}
