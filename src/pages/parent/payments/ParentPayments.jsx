@@ -1,9 +1,22 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import "./ParentPayments.css";
 import Modal from "../../../components/ui/Modal/Modal";
 import PaymentSummaryCard from "./components/PaymentSummaryCard/PaymentSummaryCard";
 import PaymentTable from "./components/PaymentTable/PaymentTable";
 import InvoiceHistory from "./components/InvoiceHistory/InvoiceHistory";
+import StatusBadge from "../../../components/common/StatusBadge/StatusBadge";
+import {
+    PAYMENT_STORAGE_KEYS,
+    buildBreakdownFromItems,
+    formatDateVi,
+    formatVnd,
+    getDueStatus,
+    loadJson,
+    mapFeeCategory,
+    normalizeDate,
+    roundMoney,
+    saveJson,
+} from "../../../services/shared/payment/paymentShared";
 
 const BANK_INFO = {
     accountNumber: "0000000000",
@@ -19,78 +32,196 @@ const DISCOUNT_RULES = {
 };
 
 function formatCurrency(amount) {
-    return `${Number(amount).toLocaleString("vi-VN")} ₫`;
+    return formatVnd(roundMoney(amount));
 }
 
 function getToday() {
     return new Date().toISOString().slice(0, 10);
 }
 
-export default function ParentPayments() {
-    const [paymentList, setPaymentList] = useState([
+function getFallbackPayments() {
+    return [
         {
             id: 1,
-            title: "Học phí HK1",
+            title: "Hoc phi HK1",
+            term: "Học kỳ 1",
+            schoolYear: "2025-2026",
+            grade: "Khoi 10",
             className: "10A1",
-            childName: "Nguyễn Văn B",
-            deadline: "2024-09-30",
-            originalAmount: 5000000,
-            discountAmount: 0,
-            finalAmount: 5000000,
+            childName: "Nguyen Van B",
+            deadline: "2025-09-30",
+            feeItems: [
+                { id: "f-1", name: "Hoc phi", note: "Bat buoc", amount: 3800000 },
+                { id: "f-2", name: "Ban tru", note: "Bat buoc", amount: 700000 },
+                { id: "f-3", name: "Dich vu xe dua don", note: "Dich vu", amount: 350000 },
+                { id: "f-4", name: "Dong phuc", note: "Phat sinh", amount: 150000 },
+            ],
+            description: "Khoan thu hoc ky 1 duoc tao tu danh muc thu cua nha truong.",
             discountCode: "",
+            discountAmount: 0,
             status: "paid",
-            paidDate: "2024-09-25",
-            invoiceCode: "INV-HK1-2024",
+            paidDate: "2025-09-25",
+            paidAmount: 5000000,
+            invoiceCode: "INV-HK1-2025-10A1-01",
         },
         {
             id: 2,
-            title: "Học phí HK2",
+            title: "Hoc phi HK2",
+            term: "Học kỳ 2",
+            schoolYear: "2025-2026",
+            grade: "Khoi 10",
             className: "10A1",
-            childName: "Nguyễn Văn B",
-            deadline: "2025-02-28",
-            originalAmount: 5000000,
-            discountAmount: 500000,
-            finalAmount: 4500000,
+            childName: "Nguyen Van B",
+            deadline: "2026-02-28",
+            feeItems: [
+                { id: "f-5", name: "Hoc phi", note: "Bat buoc", amount: 3600000 },
+                { id: "f-6", name: "Ban tru", note: "Bat buoc", amount: 700000 },
+                { id: "f-7", name: "Dich vu CLB", note: "Dich vu", amount: 200000 },
+            ],
+            description: "Khoan thu hoc ky 2, se cap nhat theo xac nhan tu admin.",
             discountCode: "FIX500",
+            discountAmount: 500000,
             status: "unpaid",
             paidDate: "",
-            invoiceCode: "INV-HK2-2025",
+            paidAmount: 0,
+            invoiceCode: "INV-HK2-2026-10A1-01",
         },
-    ]);
+    ];
+}
 
-    const [invoiceHistory, setInvoiceHistory] = useState([
-        {
-            id: 1,
-            invoiceCode: "INV-HK1-2024",
-            semester: "Học phí HK1",
-            date: "2024-09-25",
-            amount: "5.000.000 ₫",
-            method: "Chuyển khoản",
-            status: "Đã thanh toán",
-        },
-        {
-            id: 2,
-            invoiceCode: "INV-HK2-2025",
-            semester: "Học phí HK2",
-            date: "2025-02-20",
-            amount: "4.500.000 ₫",
-            method: "Chưa thanh toán",
-            status: "Chờ thanh toán",
-        },
-    ]);
+function recomputePayment(record) {
+    const feeSummary = {
+        tuition: 0,
+        boarding: 0,
+        service: 0,
+        extra: 0,
+        deduction: 0,
+    };
+
+    (record.feeItems || []).forEach((item) => {
+        const amount = roundMoney(item.amount);
+        const category = mapFeeCategory(item.name, item.note);
+        if (category === "deduction") {
+            feeSummary.deduction += Math.abs(amount);
+        } else {
+            feeSummary[category] += amount;
+        }
+    });
+
+    feeSummary.deduction += roundMoney(record.discountAmount || 0);
+    const payableBeforePaid = Math.max(
+        feeSummary.tuition + feeSummary.boarding + feeSummary.service + feeSummary.extra - feeSummary.deduction,
+        0
+    );
+    const paidAmount = record.status === "paid" ? roundMoney(record.paidAmount || payableBeforePaid) : 0;
+    const breakdown = buildBreakdownFromItems(record.feeItems || [], paidAmount).map((item) => {
+        if (item.key === "deduction") {
+            return { ...item, amount: roundMoney(feeSummary.deduction) };
+        }
+        if (item.key === "remaining") {
+            return { ...item, amount: Math.max(roundMoney(payableBeforePaid - paidAmount), 0) };
+        }
+        return item;
+    });
+
+    return {
+        ...record,
+        deadline: normalizeDate(record.deadline),
+        discountAmount: roundMoney(record.discountAmount || 0),
+        paidAmount,
+        breakdown,
+        originalAmount: roundMoney(feeSummary.tuition + feeSummary.boarding + feeSummary.service + feeSummary.extra),
+        finalAmount: roundMoney(payableBeforePaid),
+        month: (normalizeDate(record.deadline) || "").slice(0, 7),
+    };
+}
+
+function normalizePaymentList(list) {
+    return (list || []).map((item) => recomputePayment(item));
+}
+
+export default function ParentPayments() {
+    const [paymentList, setPaymentList] = useState(() => {
+        const stored = loadJson(PAYMENT_STORAGE_KEYS.PARENT_RECORDS, []);
+        const initial = stored.length ? stored : getFallbackPayments();
+        const normalized = normalizePaymentList(initial);
+        saveJson(PAYMENT_STORAGE_KEYS.PARENT_RECORDS, normalized);
+        return normalized;
+    });
 
     const [selectedPaymentId, setSelectedPaymentId] = useState(null);
+    const [selectedDetailId, setSelectedDetailId] = useState(null);
     const [discountCodeInput, setDiscountCodeInput] = useState("");
     const [discountError, setDiscountError] = useState("");
     const [isDiscountDialogOpen, setIsDiscountDialogOpen] = useState(false);
     const [isQrDialogOpen, setIsQrDialogOpen] = useState(false);
+    const [childFilter, setChildFilter] = useState("all");
+    const [termFilter, setTermFilter] = useState("all");
+    const [monthFilter, setMonthFilter] = useState("all");
+    const [sortByDeadline, setSortByDeadline] = useState("asc");
 
     const selectedPayment = paymentList.find((item) => item.id === selectedPaymentId) || null;
+    const selectedDetailPayment = paymentList.find((item) => item.id === selectedDetailId) || null;
+
+    useEffect(() => {
+        const handleSync = () => {
+            const stored = loadJson(PAYMENT_STORAGE_KEYS.PARENT_RECORDS, []);
+            if (stored.length) {
+                setPaymentList(normalizePaymentList(stored));
+            }
+        };
+
+        window.addEventListener("admin-payment-records-updated", handleSync);
+        return () => window.removeEventListener("admin-payment-records-updated", handleSync);
+    }, []);
+
+    const childOptions = useMemo(
+        () => ["all", ...Array.from(new Set(paymentList.map((item) => item.childName)))],
+        [paymentList]
+    );
+    const termOptions = useMemo(
+        () => ["all", ...Array.from(new Set(paymentList.map((item) => item.term || item.title)))],
+        [paymentList]
+    );
+    const monthOptions = useMemo(
+        () => ["all", ...Array.from(new Set(paymentList.map((item) => item.month).filter(Boolean)))],
+        [paymentList]
+    );
+
+    const filteredPaymentList = useMemo(() => {
+        const filtered = paymentList.filter((item) => {
+            const childPass = childFilter === "all" || item.childName === childFilter;
+            const termPass = termFilter === "all" || (item.term || item.title) === termFilter;
+            const monthPass = monthFilter === "all" || item.month === monthFilter;
+            return childPass && termPass && monthPass;
+        });
+
+        return filtered.sort((a, b) => {
+            const aTime = new Date(a.deadline).getTime();
+            const bTime = new Date(b.deadline).getTime();
+            return sortByDeadline === "asc" ? aTime - bTime : bTime - aTime;
+        });
+    }, [paymentList, childFilter, termFilter, monthFilter, sortByDeadline]);
+
+    const invoiceHistory = useMemo(
+        () =>
+            paymentList.map((item) => ({
+                id: item.id,
+                invoiceCode: item.invoiceCode,
+                semester: item.term || item.title,
+                date: item.paidDate || "--",
+                amount: formatCurrency(item.finalAmount),
+                method: item.status === "paid" ? "Chuyen khoan QR" : "Chua thanh toan",
+                dueStatus: getDueStatus(item),
+                status: item.status,
+            })),
+        [paymentList]
+    );
 
     const summaryData = useMemo(() => {
         const paidAmount = paymentList
             .filter((item) => item.status === "paid")
-            .reduce((sum, item) => sum + item.finalAmount, 0);
+            .reduce((sum, item) => sum + item.paidAmount, 0);
 
         const unpaidAmount = paymentList
             .filter((item) => item.status !== "paid")
@@ -118,6 +249,10 @@ export default function ParentPayments() {
         setIsQrDialogOpen(true);
     };
 
+    const openDetailDialog = (paymentId) => {
+        setSelectedDetailId(paymentId);
+    };
+
     const applyDiscountCode = () => {
         if (!selectedPayment) return;
 
@@ -138,21 +273,20 @@ export default function ParentPayments() {
                 ? Math.round((selectedPayment.originalAmount * rule.value) / 100)
                 : rule.value;
 
-        const appliedDiscount = Math.min(discountAmount, selectedPayment.originalAmount);
-        const finalAmount = Math.max(selectedPayment.originalAmount - appliedDiscount, 0);
+        const appliedDiscount = Math.min(roundMoney(discountAmount), selectedPayment.originalAmount);
 
-        setPaymentList((prev) =>
-            prev.map((item) =>
-                item.id === selectedPayment.id
-                    ? {
-                        ...item,
-                        discountCode: normalizedCode,
-                        discountAmount: appliedDiscount,
-                        finalAmount,
-                    }
-                    : item
-            )
-        );
+        setPaymentList((prev) => {
+            const next = prev.map((item) => {
+                if (item.id !== selectedPayment.id) return item;
+                return recomputePayment({
+                    ...item,
+                    discountCode: normalizedCode,
+                    discountAmount: appliedDiscount,
+                });
+            });
+            saveJson(PAYMENT_STORAGE_KEYS.PARENT_RECORDS, next);
+            return next;
+        });
 
         setIsDiscountDialogOpen(false);
     };
@@ -170,31 +304,19 @@ export default function ParentPayments() {
 
         const paidDate = getToday();
 
-        setPaymentList((prev) =>
-            prev.map((item) =>
-                item.id === selectedPayment.id
-                    ? {
-                        ...item,
-                        status: "paid",
-                        paidDate,
-                    }
-                    : item
-            )
-        );
-
-        setInvoiceHistory((prev) =>
-            prev.map((invoice) =>
-                invoice.invoiceCode === selectedPayment.invoiceCode
-                    ? {
-                        ...invoice,
-                        date: paidDate,
-                        amount: formatCurrency(selectedPayment.finalAmount),
-                        method: "Chuyển khoản QR",
-                        status: "Đã thanh toán",
-                    }
-                    : invoice
-            )
-        );
+        setPaymentList((prev) => {
+            const next = prev.map((item) => {
+                if (item.id !== selectedPayment.id) return item;
+                return recomputePayment({
+                    ...item,
+                    status: "paid",
+                    paidDate,
+                    paidAmount: item.finalAmount,
+                });
+            });
+            saveJson(PAYMENT_STORAGE_KEYS.PARENT_RECORDS, next);
+            return next;
+        });
 
         setIsQrDialogOpen(false);
     };
@@ -227,7 +349,7 @@ export default function ParentPayments() {
       <tr><td>Lop</td><td>${payment.className}</td></tr>
       <tr><td>Hoc phi goc</td><td>${formatCurrency(payment.originalAmount)}</td></tr>
       <tr><td>Giam gia</td><td>${formatCurrency(payment.discountAmount)}</td></tr>
-      <tr><td>Tong da dong</td><td>${formatCurrency(payment.finalAmount)}</td></tr>
+      <tr><td>Tong phai thu</td><td>${formatCurrency(payment.finalAmount)}</td></tr>
       <tr><td>Ngay thanh toan</td><td>${payment.paidDate}</td></tr>
       <tr><td>Phuong thuc</td><td>Chuyen khoan QR</td></tr>
     </table>
@@ -245,8 +367,31 @@ export default function ParentPayments() {
         <div className="parent-payments-page">
             <div className="parent-payments-header">
                 <h1>Học phí</h1>
-                <p>Chi tiết hóa đơn, mã giảm giá và luồng thanh toán QR cho phụ huynh.</p>
+                <p>Dong bo khoan thu tu admin, theo doi han nop va chi tiet hoa don.</p>
             </div>
+
+            <div className="payment-filter-row">
+                <select value={childFilter} onChange={(event) => setChildFilter(event.target.value)}>
+                    {childOptions.map((item) => (
+                        <option key={item} value={item}>{item === "all" ? "Tat ca hoc sinh" : item}</option>
+                    ))}
+                </select>
+                <select value={termFilter} onChange={(event) => setTermFilter(event.target.value)}>
+                    {termOptions.map((item) => (
+                        <option key={item} value={item}>{item === "all" ? "Tat ca ky" : item}</option>
+                    ))}
+                </select>
+                <select value={monthFilter} onChange={(event) => setMonthFilter(event.target.value)}>
+                    {monthOptions.map((item) => (
+                        <option key={item} value={item}>{item === "all" ? "Tat ca thang" : item}</option>
+                    ))}
+                </select>
+                <select value={sortByDeadline} onChange={(event) => setSortByDeadline(event.target.value)}>
+                    <option value="asc">Han nop gan nhat</option>
+                    <option value="desc">Han nop xa nhat</option>
+                </select>
+            </div>
+
             <div className="payment-summary-grid">
                 {summaryData.map((item) => (
                     <PaymentSummaryCard key={item.id} item={item} />
@@ -254,20 +399,23 @@ export default function ParentPayments() {
             </div>
 
             <div className="payment-table-list">
-                {paymentList.map((item) => (
+                {filteredPaymentList.map((item) => {
+                    const dueStatus = getDueStatus(item);
+                    return (
                     <PaymentTable
                         key={item.id}
                         payment={{
                             ...item,
-                            originalFee: formatCurrency(item.originalAmount),
-                            discount: item.discountAmount > 0 ? `- ${formatCurrency(item.discountAmount)}` : "—",
-                            finalAmountText: formatCurrency(item.finalAmount),
+                            deadlineLabel: formatDateVi(item.deadline),
+                            dueStatus,
                         }}
                         onOpenDiscount={() => openDiscountDialog(item.id)}
                         onOpenPayment={() => openQrDialog(item.id)}
                         onExportPdf={() => exportPdf(item)}
+                        onOpenDetail={() => openDetailDialog(item.id)}
                     />
-                ))}
+                );
+                })}
             </div>
 
             <InvoiceHistory invoices={invoiceHistory} />
@@ -335,6 +483,58 @@ export default function ParentPayments() {
                             <button type="button" className="dialog-btn primary" onClick={confirmPaid}>
                                 Tôi đã chuyển khoản
                             </button>
+                        </div>
+                    </div>
+                ) : null}
+            </Modal>
+
+            <Modal
+                open={!!selectedDetailPayment}
+                title="Chi tiet hoa don"
+                onClose={() => setSelectedDetailId(null)}
+                className="payment-detail-modal"
+            >
+                {selectedDetailPayment ? (
+                    <div className="parent-payment-dialog-content">
+                        <p>
+                            <strong>{selectedDetailPayment.invoiceCode}</strong> - {selectedDetailPayment.childName} ({selectedDetailPayment.className})
+                        </p>
+                        <p>{selectedDetailPayment.description}</p>
+                        <p>
+                            <strong>Trang thai:</strong>{" "}
+                            <StatusBadge status={getDueStatus(selectedDetailPayment).badgeStatus}>
+                                {getDueStatus(selectedDetailPayment).label}
+                            </StatusBadge>
+                        </p>
+
+                        <div className="invoice-detail-fee-table-wrap">
+                            <table className="invoice-detail-fee-table">
+                                <thead>
+                                    <tr>
+                                        <th>Khoan thu</th>
+                                        <th>Mo ta</th>
+                                        <th>So tien</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {(selectedDetailPayment.feeItems || []).map((fee) => (
+                                        <tr key={fee.id}>
+                                            <td>{fee.name}</td>
+                                            <td>{fee.note || "--"}</td>
+                                            <td>{formatCurrency(fee.amount)}</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div className="invoice-detail-breakdown-grid">
+                            {selectedDetailPayment.breakdown.map((line) => (
+                                <div key={line.key} className="invoice-detail-breakdown-item">
+                                    <span>{line.label}</span>
+                                    <strong>{formatCurrency(line.amount)}</strong>
+                                </div>
+                            ))}
                         </div>
                     </div>
                 ) : null}

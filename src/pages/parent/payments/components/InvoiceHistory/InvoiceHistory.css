@@ -56,6 +56,10 @@
     word-break: break-word;
 }
 
+.invoice-history-table td .common-status-badge {
+    white-space: nowrap;
+}
+
 .invoice-status {
     display: inline-flex;
     align-items: center;

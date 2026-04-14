@@ -8,33 +8,39 @@ import SchoolExpenditureSection from "./components/schoolExpenditureSection";
 import "./AdminPayment.css";
 
 // --- MOCK DATA ---
+const resolveTermKeyByLabel = (term) => {
+    if (term === "Học kỳ 1" || term === "hk1") return "hk1";
+    if (term === "Học kỳ 2" || term === "hk2") return "hk2";
+    return term;
+};
+
 const MOCK_TUITION = {
     "10": {
-        "Học kỳ 1": [
+        hk1: [
             { name: "Học phí (Tiết chuẩn)", amount: 3000000, note: "Bắt buộc" },
             { name: "Sách giáo khoa", amount: 500000, note: "Bắt buộc" },
             { name: "Bảo hiểm y tế", amount: 800000, note: "Bắt buộc" }
         ],
-        "Học kỳ 2": [
+        hk2: [
             { name: "Học phí (Tiết chuẩn)", amount: 1500000, note: "Bắt buộc" },
             { name: "Phi kỹ năng sống", amount: 400000, note: "Tự nguyện" }
         ]
     },
     "11": {
-        "Học kỳ 1": [
+        hk1: [
             { name: "Học phí (Tiết chuẩn)", amount: 3000000, note: "Bắt buộc" },
             { name: "Đồng phục thể dục", amount: 600000, note: "Phát sinh" }
         ],
-        "Học kỳ 2": [
+        hk2: [
             { name: "Học phí (Tiết chuẩn)", amount: 1500000, note: "Bắt buộc" }
         ]
     },
     "12": {
-        "Học kỳ 1": [
+        hk1: [
             { name: "Học phí (Tiết chuẩn)", amount: 3000000, note: "Bắt buộc" },
             { name: "Lệ phí thi tốt nghiệp", amount: 1000000, note: "Bắt buộc" }
         ],
-        "Học kỳ 2": [
+        hk2: [
             { name: "Học phí (Tiết chuẩn)", amount: 1500000, note: "Bắt buộc" }
         ]
     }
@@ -54,7 +60,8 @@ const MOCK_SCHOOL_EXPENDITURE = [
 
 const AdminPayment = () => {
     const { selectedSchoolYear, selectedTerm, handleYearArrow, handleTermChange } = useSchoolYearTerm();
-    
+    const selectedTermKey = resolveTermKeyByLabel(selectedTerm);
+
     // States for filter
     const [selectedGrade, setSelectedGrade] = useState("Tất cả khối");
     const gradeOptions = ["Tất cả khối", "Khối 10", "Khối 11", "Khối 12"];
@@ -126,9 +133,11 @@ const AdminPayment = () => {
             <div className="payment-tab-content">
                 {activeTab === 'tuition' && (
                     <TuitionFeeSection 
-                        tuitionData={filteredTuition} 
+                        key={`${selectedSchoolYear}-${selectedTerm}-${selectedGrade}`}
+                        tuitionData={filteredTuition}
                         selectedGrade={selectedGrade} 
                         selectedTerm={selectedTerm}
+                        selectedTermKey={selectedTermKey}
                         selectedSchoolYear={selectedSchoolYear}
                     />
                 )}
