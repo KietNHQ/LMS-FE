@@ -3,13 +3,26 @@ import { PageHeader } from "../../../components/common";
 import HomeroomOverviewSection from "./components/homeroomOverviewSection/HomeroomOverviewSection";
 import ClassStudentsSection from "../teachingClasses/components/classStudentsSection/ClassStudentsSection";
 import HomeroomAttendanceSection from "./components/homeroomAttendanceSection/HomeroomAttendanceSection";
+import HomeroomParentChatSection from "./components/homeroomParentChatSection/HomeroomParentChatSection";
 import { homeroomData } from "./data/homeroomData";
 import { FiUsers, FiAward, FiCalendar } from "react-icons/fi";
 import "./TeacherHomeroom.css";
 
 export default function TeacherHomeroom() {
     const [activeSection, setActiveSection] = useState("overview");
+    const [hasUnreadMessages, setHasUnreadMessages] = useState(true); // Mock unread state
     const classData = homeroomData;
+
+    // Handle clearing notifications when entering chat
+    const handleSectionChange = (section) => {
+        setActiveSection(section);
+        if (section === "parent-chat") {
+            setHasUnreadMessages(false);
+            // Notify Sidebar to clear its dot
+            const event = new CustomEvent("teacher-homeroom-read");
+            window.dispatchEvent(event);
+        }
+    };
 
     return (
         <div className="teacher-homeroom-page">
@@ -67,9 +80,17 @@ export default function TeacherHomeroom() {
                 <button
                     type="button"
                     className={`section-switch-btn ${activeSection === "attendance" ? "active" : ""}`}
-                    onClick={() => setActiveSection("attendance")}
+                    onClick={() => handleSectionChange("attendance")}
                 >
                     Theo dõi chuyên cần
+                </button>
+                <button
+                    type="button"
+                    className={`section-switch-btn ${activeSection === "parent-chat" ? "active" : ""}`}
+                    onClick={() => handleSectionChange("parent-chat")}
+                >
+                    Trò chuyện phụ huynh
+                    {hasUnreadMessages && <span className="unread-dot-tab"></span>}
                 </button>
             </div>
 
@@ -77,6 +98,7 @@ export default function TeacherHomeroom() {
                 {activeSection === "overview" && <HomeroomOverviewSection data={classData} />}
                 {activeSection === "students" && <ClassStudentsSection students={classData.students} />}
                 {activeSection === "attendance" && <HomeroomAttendanceSection data={classData} />}
+                {activeSection === "parent-chat" && <HomeroomParentChatSection data={classData} />}
             </div>
         </div>
     );

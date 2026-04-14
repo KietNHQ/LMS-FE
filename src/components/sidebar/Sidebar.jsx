@@ -42,9 +42,10 @@ export default function Sidebar({
     return Number.isFinite(saved) ? saved : 0;
   });
   const [teacherUnreadCount, setTeacherUnreadCount] = useState(() => {
-  const saved = Number(localStorage.getItem(TEACHER_UNREAD_COUNT_KEY));
-  return Number.isFinite(saved) ? saved : 0;
-});
+    const saved = Number(localStorage.getItem(TEACHER_UNREAD_COUNT_KEY));
+    return Number.isFinite(saved) ? saved : 0;
+  });
+  const [homeroomUnread, setHomeroomUnread] = useState(true); // Mock for GVCN chat dot
   // Hiển thị badge số thông báo cho admin
   const [adminUnreadCount, setAdminUnreadCount] = useState(0);
 
@@ -153,12 +154,20 @@ export default function Sidebar({
     window.addEventListener("storage", handleStorage);
     window.addEventListener(STUDENT_UNREAD_COUNT_EVENT, handleStudentCustomUpdate);
     window.addEventListener(PARENT_UNREAD_COUNT_EVENT, handleParentCustomUpdate);
-window.addEventListener(TEACHER_UNREAD_COUNT_EVENT, handleTeacherCustomUpdate);
+    window.addEventListener(TEACHER_UNREAD_COUNT_EVENT, handleTeacherCustomUpdate);
+
     return () => {
       window.removeEventListener("storage", handleStorage);
       window.removeEventListener(STUDENT_UNREAD_COUNT_EVENT, handleStudentCustomUpdate);
       window.removeEventListener(PARENT_UNREAD_COUNT_EVENT, handleParentCustomUpdate);
+      window.removeEventListener(TEACHER_UNREAD_COUNT_EVENT, handleTeacherCustomUpdate);
     };
+  }, []);
+
+  useEffect(() => {
+    const handleHomeroomRead = () => setHomeroomUnread(false);
+    window.addEventListener("teacher-homeroom-read", handleHomeroomRead);
+    return () => window.removeEventListener("teacher-homeroom-read", handleHomeroomRead);
   }, []);
 
   useEffect(() => {
@@ -191,6 +200,10 @@ window.addEventListener(TEACHER_UNREAD_COUNT_EVENT, handleTeacherCustomUpdate);
     }
      if (role === "teacher" && itemPath === "/teacher/notifications") {
       return teacherUnreadCount;
+    }
+    
+    if (role === "teacher" && itemPath === "/teacher/homeroom" && homeroomUnread) {
+        return 1; // Show a dot/count for new chat messages
     }
 
     return 0;
