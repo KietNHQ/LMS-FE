@@ -10,6 +10,10 @@
     border: 0.0625rem solid #f1d88f;
 }
 
+.payment-item-card.paid {
+    border: 0.0625rem solid #ccebd5;
+}
+
 .payment-item-header {
     display: flex;
     align-items: flex-start;
@@ -33,31 +37,13 @@
     line-height: 1.4;
 }
 
-.payment-status-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    border-radius: 62.4375rem;
-    padding: 0.5rem 0.875rem;
-    font-size: clamp(0.8125rem, 0.78rem + 0.15vw, 0.875rem);
-    font-weight: 600;
-    white-space: nowrap;
+.payment-status-wrap {
     flex-shrink: 0;
 }
 
-.payment-status-badge.paid {
-    background: #ddf7e4;
-    color: #16a34a;
-}
-
-.payment-status-badge.unpaid {
-    background: #fff3c9;
-    color: #c58a11;
-}
-
-.payment-item-grid {
+.payment-breakdown-grid {
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 0.875rem;
 }
 
@@ -87,24 +73,17 @@
     word-break: break-word;
 }
 
-.discount-text {
-    color: #16a34a !important;
+.payment-info-box.line-deduction strong {
+    color: #16a34a;
 }
 
-.final-box.paid {
-    background: #dff0f0;
+.payment-info-box.line-remaining {
+    background: #eef4ff;
+    border: 1px solid #d5e2ff;
 }
 
-.final-box.paid strong {
-    color: #0f766e;
-}
-
-.final-box.unpaid {
-    background: #f4ecd8;
-}
-
-.final-box.unpaid strong {
-    color: #d97706;
+.payment-info-box.line-remaining strong {
+    color: #1e2f5a;
 }
 
 .payment-item-footer {
@@ -129,6 +108,9 @@
     font-weight: 500;
     line-height: 1.4;
     text-align: right;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
 }
 
 .pay-now-btn {
@@ -152,7 +134,8 @@
 }
 
 .discount-btn,
-.export-pdf-btn {
+.export-pdf-btn,
+.detail-btn {
     border: 0.0625rem solid #d9c8f5;
     background: #f6f1ff;
     color: #6b46c1;
@@ -164,29 +147,33 @@
     transition: background 0.2s ease, transform 0.2s ease, border-color 0.2s ease;
 }
 
+.detail-btn {
+    border-color: #d4ddea;
+    background: #f8fafc;
+    color: #475569;
+}
+
 .discount-btn:hover,
-.export-pdf-btn:hover {
+.export-pdf-btn:hover,
+.detail-btn:hover {
     border-color: #c2a7f1;
     background: #ede3ff;
 }
 
 .discount-btn:active,
-.export-pdf-btn:active {
+.export-pdf-btn:active,
+.detail-btn:active {
     transform: scale(0.98);
 }
 
 @media (max-width: 62rem) {
-    .payment-item-grid {
-        grid-template-columns: 1fr;
+    .payment-breakdown-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
     .payment-item-header {
         flex-direction: column;
         align-items: flex-start;
-    }
-
-    .payment-status-badge {
-        white-space: normal;
     }
 }
 
@@ -194,6 +181,10 @@
     .payment-item-card {
         padding: 1rem;
         border-radius: 1rem;
+    }
+
+    .payment-breakdown-grid {
+        grid-template-columns: 1fr;
     }
 
     .payment-info-box {

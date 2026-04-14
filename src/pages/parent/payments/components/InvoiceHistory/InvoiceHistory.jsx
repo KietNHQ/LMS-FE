@@ -1,5 +1,6 @@
 import React from "react";
 import "./InvoiceHistory.css";
+import StatusBadge from "../../../../../components/common/StatusBadge/StatusBadge";
 
 export default function InvoiceHistory({ invoices }) {
     return (
@@ -30,13 +31,9 @@ export default function InvoiceHistory({ invoices }) {
                             <td>{invoice.amount}</td>
                             <td>{invoice.method}</td>
                             <td>
-                  <span
-                      className={`invoice-status ${
-                          invoice.status === "Đã thanh toán" ? "paid" : "pending"
-                      }`}
-                  >
-                    {invoice.status}
-                  </span>
+                                <StatusBadge status={invoice.dueStatus?.badgeStatus || "default"}>
+                                    {invoice.dueStatus?.label || "Chưa xác định"}
+                                </StatusBadge>
                             </td>
                         </tr>
                     ))}
