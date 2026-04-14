@@ -161,7 +161,11 @@ const AdminDashboard = () => {
 
     const fetchConductRanking = async () => {
       try {
-        const ranking = await adminDashboardService.getConductRanking({ week: selectedWeek });
+        const ranking = await adminDashboardService.getConductRanking({
+          week: selectedWeek,
+          schoolYear: selectedSchoolYear,
+          term: selectedTerm,
+        });
         if (isMounted) {
           setCompetitionData(ranking);
         }

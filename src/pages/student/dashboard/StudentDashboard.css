@@ -221,7 +221,13 @@
     margin-top: var(--space-lg);
 }
 
-.student-dashboard-grid-top,
+.student-dashboard-grid-top {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-md);
+    align-items: stretch; /* Match heights */
+}
+
 .student-dashboard-grid-bottom {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -229,7 +235,8 @@
     align-items: start;
 }
 
-.student-dashboard-card {
+.student-dashboard-card,
+.student-dashboard-calendar-card {
     padding: var(--space-xl);
     border-radius: var(--radius-lg);
     background: #ffffff;
@@ -262,14 +269,14 @@
     justify-content: center;
 }
 
-/* RADAR */
 .student-dashboard-card-radar {
-    overflow: hidden;
+    display: flex;
+    flex-direction: column;
 }
 
 .student-radar-wrap {
     flex: 1;
-    min-height: 21rem;
+    min-height: 25rem; /* Increased min-height to match calendar */
     display: flex;
     align-items: center;
     justify-content: center;

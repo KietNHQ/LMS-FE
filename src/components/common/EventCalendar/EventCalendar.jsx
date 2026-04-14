@@ -49,6 +49,7 @@ const EventCalendar = ({
   themeClass = "theme-admin", // Default to admin navy
   userRole = "teacher", // 'admin' or 'teacher'
   currentUser = "", // The name/ID of the current logged-in user
+  isCompact = false, // If true, apply more condensed styling
 }) => {
   const today = initialDate || new Date();
   const [currentDate, setCurrentDate] = useState(today);
@@ -260,7 +261,7 @@ const EventCalendar = ({
   );
 
   return (
-    <div className="event-calendar">
+    <div className={`event-calendar ${isCompact ? "event-calendar--compact" : ""} ${themeClass}`}>
       <div className="event-calendar__header">
         <div className="event-calendar__title">
           <h3>{title}</h3>

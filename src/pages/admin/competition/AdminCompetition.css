@@ -18,6 +18,19 @@
     flex: 1; /* Allow grid to expand */
 }
 
+.competition-empty-state {
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 220px;
+    border: 1px dashed #cbd5e1;
+    border-radius: 16px;
+    background: #f8fafc;
+    color: #475569;
+    font-weight: 600;
+}
+
 /* Card Interaction Refinements */
 .class-competition-card.clickable {
     cursor: pointer;

@@ -1,58 +1,28 @@
-import React, { useMemo, useState } from "react";
+import React, { useState } from "react";
 import { PageHeader } from "../../../components/common";
 import HomeroomOverviewSection from "./components/homeroomOverviewSection/HomeroomOverviewSection";
 import ClassStudentsSection from "../teachingClasses/components/classStudentsSection/ClassStudentsSection";
 import HomeroomAttendanceSection from "./components/homeroomAttendanceSection/HomeroomAttendanceSection";
+import HomeroomParentChatSection from "./components/homeroomParentChatSection/HomeroomParentChatSection";
 import { homeroomData } from "./data/homeroomData";
 import { FiUsers, FiAward, FiCalendar } from "react-icons/fi";
-import HomeroomActionDialog from "./components/homeroomActionDialog/HomeroomActionDialog";
 import "./TeacherHomeroom.css";
 
 export default function TeacherHomeroom() {
     const [activeSection, setActiveSection] = useState("overview");
-    const [classData, setClassData] = useState(() => ({
-        ...homeroomData,
-        extraOfficers: homeroomData.extraOfficers || [],
-    }));
-    const [actionDialog, setActionDialog] = useState({ open: false, mode: "officer" });
+    const [hasUnreadMessages, setHasUnreadMessages] = useState(true); // Mock unread state
+    const classData = homeroomData;
 
-    const openOfficerDialog = () => setActionDialog({ open: true, mode: "officer" });
-    const openActivityDialog = () => setActionDialog({ open: true, mode: "activity" });
-
-    const closeActionDialog = () => setActionDialog({ open: false, mode: "officer" });
-
-    const handleSaveAction = (payload) => {
-        if (actionDialog.mode === "activity") {
-            const nextActivity = {
-                title: payload.title,
-                type: payload.type,
-                time: payload.time,
-                location: payload.location,
-                status: "upcoming",
-                note: payload.note,
-            };
-
-            setClassData((prev) => ({
-                ...prev,
-                activities: [...(prev.activities || []), nextActivity],
-            }));
-        } else {
-            const nextOfficer = {
-                name: payload.name,
-                role: payload.role,
-                note: payload.note,
-            };
-
-            setClassData((prev) => ({
-                ...prev,
-                extraOfficers: [...(prev.extraOfficers || []), nextOfficer],
-            }));
+    // Handle clearing notifications when entering chat
+    const handleSectionChange = (section) => {
+        setActiveSection(section);
+        if (section === "parent-chat") {
+            setHasUnreadMessages(false);
+            // Notify Sidebar to clear its dot
+            const event = new CustomEvent("teacher-homeroom-read");
+            window.dispatchEvent(event);
         }
-
-        closeActionDialog();
     };
-
-    const overviewData = useMemo(() => classData, [classData]);
 
     return (
         <div className="teacher-homeroom-page">
@@ -110,30 +80,26 @@ export default function TeacherHomeroom() {
                 <button
                     type="button"
                     className={`section-switch-btn ${activeSection === "attendance" ? "active" : ""}`}
-                    onClick={() => setActiveSection("attendance")}
+                    onClick={() => handleSectionChange("attendance")}
                 >
                     Theo dõi chuyên cần
+                </button>
+                <button
+                    type="button"
+                    className={`section-switch-btn ${activeSection === "parent-chat" ? "active" : ""}`}
+                    onClick={() => handleSectionChange("parent-chat")}
+                >
+                    Trò chuyện phụ huynh
+                    {hasUnreadMessages && <span className="unread-dot-tab"></span>}
                 </button>
             </div>
 
             <div className="homeroom-section-content">
-                {activeSection === "overview" && (
-                    <HomeroomOverviewSection
-                        data={overviewData}
-                        onAddOfficersClick={openOfficerDialog}
-                        onCreateActivityClick={openActivityDialog}
-                    />
-                )}
+                {activeSection === "overview" && <HomeroomOverviewSection data={classData} />}
                 {activeSection === "students" && <ClassStudentsSection students={classData.students} />}
                 {activeSection === "attendance" && <HomeroomAttendanceSection data={classData} />}
+                {activeSection === "parent-chat" && <HomeroomParentChatSection data={classData} />}
             </div>
-
-            <HomeroomActionDialog
-                open={actionDialog.open}
-                mode={actionDialog.mode}
-                onClose={closeActionDialog}
-                onSubmit={handleSaveAction}
-            />
         </div>
     );
 }
