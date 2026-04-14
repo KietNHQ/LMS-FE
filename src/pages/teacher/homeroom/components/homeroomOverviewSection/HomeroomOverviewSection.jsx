@@ -1,13 +1,25 @@
 import React from "react";
-import { FiStar, FiClock, FiMapPin, FiInfo, FiActivity, FiTrendingUp, FiCheckCircle } from "react-icons/fi";
+import { FiStar, FiClock, FiMapPin, FiInfo, FiActivity, FiTrendingUp, FiCheckCircle, FiPlus } from "react-icons/fi";
 import "./HomeroomOverviewSection.css";
 
-export default function HomeroomOverviewSection({ data }) {
+export default function HomeroomOverviewSection({ data, onAddOfficersClick, onCreateActivityClick }) {
     if (!data) return null;
 
     const totalStudents = data.students.length;
     const academic = data.academicStats;
-    
+    const officers = [
+        { name: data.monitor, role: "Lớp trưởng", avatar: "M", gradient: "monitor-gradient" },
+        { name: data.viceMonitor, role: "Lớp phó học tập", avatar: "V", gradient: "vice-gradient" },
+        { name: data.secretary, role: "Bí thư chi đoàn", avatar: "S", gradient: "secretary-gradient" },
+        ...(data.extraOfficers || []).map((officer, index) => ({
+            name: officer.name,
+            role: officer.role,
+            avatar: officer.name?.split(" ").pop().charAt(0) || String(index + 1),
+            gradient: index % 3 === 0 ? "monitor-gradient" : index % 3 === 1 ? "vice-gradient" : "secretary-gradient",
+            note: officer.note,
+        })),
+    ].filter((officer) => officer.name);
+
     // Calculate percentages
     const excPct = (academic.excellent / totalStudents) * 100;
     const goodPct = (academic.good / totalStudents) * 100;
@@ -141,50 +153,51 @@ export default function HomeroomOverviewSection({ data }) {
 
                 {/* Officers Column */}
                 <div className="overview-card officers-card modern-shadow">
-                    <div className="card-header">
+                    <div className="card-header card-header-with-action">
                         <div className="header-icon gradient-orange">
                             <FiStar />
                         </div>
                         <h2>Ban Cán Sự Lớp</h2>
+                        <button
+                            type="button"
+                            className="overview-header-action-btn"
+                            onClick={() => onAddOfficersClick?.(data)}
+                        >
+                            <FiPlus />
+                            <span>Thêm ban cán sự</span>
+                        </button>
                     </div>
                     <div className="card-content officers-list">
-                        <div className="officer-item">
-                            <div className="officer-avatar monitor-gradient">
-                                {data.monitor?.split(' ').pop().charAt(0) || "M"}
+                        {officers.map((officer, index) => (
+                            <div key={`${officer.name}-${index}`} className="officer-item">
+                                <div className={`officer-avatar ${officer.gradient}`}>
+                                    {officer.avatar}
+                                </div>
+                                <div className="officer-info">
+                                    <h4>{officer.name}</h4>
+                                    <span>{officer.role}</span>
+                                    {officer.note ? <small>{officer.note}</small> : null}
+                                </div>
                             </div>
-                            <div className="officer-info">
-                                <h4>{data.monitor || "Chưa cập nhật"}</h4>
-                                <span>Lớp trưởng</span>
-                            </div>
-                        </div>
-                        <div className="officer-item">
-                            <div className="officer-avatar vice-gradient">
-                                {data.viceMonitor?.split(' ').pop().charAt(0) || "V"}
-                            </div>
-                            <div className="officer-info">
-                                <h4>{data.viceMonitor || "Chưa cập nhật"}</h4>
-                                <span>Lớp phó học tập</span>
-                            </div>
-                        </div>
-                        <div className="officer-item">
-                            <div className="officer-avatar secretary-gradient">
-                                {data.secretary?.split(' ').pop().charAt(0) || "S"}
-                            </div>
-                            <div className="officer-info">
-                                <h4>{data.secretary || "Chưa cập nhật"}</h4>
-                                <span>Bí thư chi đoàn</span>
-                            </div>
-                        </div>
+                        ))}
                     </div>
                 </div>
 
                 {/* Activities Column */}
                 <div className="overview-card activities-card modern-shadow">
-                    <div className="card-header">
+                    <div className="card-header card-header-with-action">
                         <div className="header-icon gradient-red">
                             <FiActivity />
                         </div>
                         <h2>Kế hoạch & Hoạt động</h2>
+                        <button
+                            type="button"
+                            className="overview-header-action-btn"
+                            onClick={() => onCreateActivityClick?.(data)}
+                        >
+                            <FiPlus />
+                            <span>Tạo hoạt động</span>
+                        </button>
                     </div>
                     <div className="card-content">
                         {data.activities && data.activities.length > 0 ? (
