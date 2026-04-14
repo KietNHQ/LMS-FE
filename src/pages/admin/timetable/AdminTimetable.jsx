@@ -7,26 +7,16 @@ import Modal from "../../../components/ui/Modal/Modal";
 import { SchoolYearTermSelector } from "../../../components/common";
 import { useSchoolYearTerm } from "../../../hooks/useSchoolYearTerm";
 import { FiUsers, FiCalendar, FiClock, FiBook, FiUser, FiMapPin, FiActivity, FiX, FiCheckCircle, FiSave, FiPlus } from "react-icons/fi";
+import { buildAdminInitialSessions, CLASS_OPTIONS, WEEK_DAYS, STATUS_META, MODE_META, getPeriodRangeLabel } from "../../../utils/timetableShared";
 
-const classOptions = ["10A1", "10A2", "11B1", "11B2", "12C1", "12C2"];
+const classOptions = CLASS_OPTIONS;
 // Tạo blockOptions từ classOptions (lấy ký tự đầu, loại trùng)
 const blockOptions = Array.from(new Set(classOptions.map((c) => c.slice(0, 2))));
-const dayOptions = ["Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6", "Thứ 7"];
+const dayOptions = WEEK_DAYS.map((item) => item.label);
 const periodOptions = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 
 
-const initialSessions = [
-    { id: 1, year: "2025-2026", term: "Học kỳ 2", className: "10A1", day: "Thứ 2", period: 1, subject: "Toán", teacher: "Trần Thị Hương", room: "P201", status: "Đã chốt" },
-    { id: 2, year: "2025-2026", term: "Học kỳ 2", className: "10A1", day: "Thứ 2", period: 2, subject: "Ngữ văn", teacher: "Phạm Văn Long", room: "P105", status: "Đã chốt" },
-    { id: 3, year: "2025-2026", term: "Học kỳ 2", className: "10A1", day: "Thứ 3", period: 1, subject: "Tiếng Anh", teacher: "Nguyễn Thị Mai", room: "P302", status: "Đã chốt" },
-    { id: 4, year: "2025-2026", term: "Học kỳ 2", className: "10A1", day: "Thứ 4", period: 3, subject: "Vật lý", teacher: "Đỗ Hải Yến", room: "P205", status: "Đã chốt" },
-    { id: 5, year: "2025-2026", term: "Học kỳ 2", className: "10A2", day: "Thứ 2", period: 1, subject: "Toán", teacher: "Trần Thị Hương", room: "P202", status: "Đã chốt" },
-    { id: 6, year: "2025-2026", term: "Học kỳ 2", className: "10A2", day: "Thứ 2", period: 2, subject: "Ngữ văn", teacher: "Phạm Văn Long", room: "P105", status: "Đã chốt" },
-    { id: 7, year: "2025-2026", term: "Học kỳ 2", className: "11B1", day: "Thứ 2", period: 1, subject: "Hóa học", teacher: "Lê Văn Minh", room: "P301", status: "Đã chốt" },
-    { id: 8, year: "2025-2026", term: "Học kỳ 2", className: "11B2", day: "Thứ 2", period: 1, subject: "Toán", teacher: "Trần Thị Hương", room: "P201", status: "Đã chốt" },
-    { id: 9, year: "2025-2026", term: "Học kỳ 2", className: "12C1", day: "Thứ 5", period: 4, subject: "Sinh học", teacher: "Phạm Thị Lan", room: "P401", status: "Chờ duyệt" },
-    { id: 10, year: "2025-2026", term: "Học kỳ 2", className: "12C2", day: "Thứ 6", period: 5, subject: "Địa lý", teacher: "Võ Văn Khánh", room: "P110", status: "Đã chốt" },
-];
+const initialSessions = buildAdminInitialSessions();
 
 const teacherCatalog = Array.from(
     new Map(initialSessions.map((item) => [item.teacher, item.subject])).entries()
@@ -51,10 +41,13 @@ const emptyForm = {
     className: "10A1",
     day: "Thứ 2",
     period: 1,
+    periodEnd: 1,
     subject: defaultSubject,
     teacher: defaultTeacher,
     room: "",
-    status: "Đã chốt",
+    status: STATUS_META.normal.label,
+    note: "",
+    mode: MODE_META.offline,
 };
 
 function normalizeText(value) {
@@ -114,6 +107,17 @@ function LessonModal({ mode, formData, subjectOptions, onChange, onClose, onSubm
                         </div>
 
                         <div className="exp-form-item">
+                            <label className="exp-label"><FiClock /> Đến tiết</label>
+                            <div className="exp-input-wrapper">
+                                <select className="exp-select" name="periodEnd" value={formData.periodEnd} onChange={onChange}>
+                                    {periodOptions.filter((item) => item >= formData.period).map((item) => (
+                                        <option key={item} value={item}>{item}</option>
+                                    ))}
+                                </select>
+                            </div>
+                        </div>
+
+                        <div className="exp-form-item">
                             <label className="exp-label"><FiBook /> Môn học</label>
                             <div className="exp-input-wrapper">
                                 <select className="exp-select" name="subject" value={formData.subject} onChange={onChange}>
@@ -162,9 +166,34 @@ function LessonModal({ mode, formData, subjectOptions, onChange, onClose, onSubm
                             <label className="exp-label"><FiActivity /> Trạng thái</label>
                             <div className="exp-input-wrapper">
                                 <select className="exp-select" name="status" value={formData.status} onChange={onChange}>
-                                    <option value="Đã chốt">Đã chốt</option>
-                                    <option value="Chờ duyệt">Chờ duyệt</option>
+                                    {Object.values(STATUS_META).map((status) => (
+                                        <option key={status.label} value={status.label}>{status.label}</option>
+                                    ))}
                                 </select>
+                            </div>
+                        </div>
+
+                        <div className="exp-form-item">
+                            <label className="exp-label"><FiActivity /> Hình thức</label>
+                            <div className="exp-input-wrapper">
+                                <select className="exp-select" name="mode" value={formData.mode} onChange={onChange}>
+                                    {Object.values(MODE_META).map((mode) => (
+                                        <option key={mode} value={mode}>{mode}</option>
+                                    ))}
+                                </select>
+                            </div>
+                        </div>
+
+                        <div className="exp-form-item full-width">
+                            <label className="exp-label"><FiActivity /> Ghi chú</label>
+                            <div className="exp-input-wrapper">
+                                <input
+                                    className="exp-input"
+                                    name="note"
+                                    value={formData.note}
+                                    onChange={onChange}
+                                    placeholder="Noi dung tiet hoc"
+                                />
                             </div>
                         </div>
                     </div>
@@ -185,7 +214,7 @@ function LessonModal({ mode, formData, subjectOptions, onChange, onClose, onSubm
 export default function AdminTimetable() {
     const { 
         selectedSchoolYear = "2025-2026", 
-        selectedTerm = "Học kỳ 1", 
+        selectedTerm = "hk1", 
         handleYearArrow, 
         handleTermChange 
     } = useSchoolYearTerm() || {};
@@ -314,7 +343,10 @@ export default function AdminTimetable() {
     const slotsMap = useMemo(() => {
         const map = new Map();
         timetableSessions.forEach((item) => {
-            map.set(`${item.day}-${item.period}`, item);
+            const periodEnd = item.periodEnd || item.period;
+            for (let period = item.period; period <= periodEnd; period += 1) {
+                map.set(`${item.day}-${period}`, item);
+            }
         });
         return map;
     }, [timetableSessions]);
@@ -325,13 +357,14 @@ export default function AdminTimetable() {
             className: selectedClass,
             day: "Thứ 2",
             period: visiblePeriods[0] || 1,
+            periodEnd: visiblePeriods[0] || 1,
         });
         setActiveSessionId(null);
         setActiveModalMode("create");
     };
 
     const openCreateFromSlot = (day, period) => {
-        setFormData({ ...emptyForm, className: selectedClass, day, period });
+        setFormData({ ...emptyForm, className: selectedClass, day, period, periodEnd: period });
         setActiveSessionId(null);
         setActiveModalMode("create");
     };
@@ -346,10 +379,13 @@ export default function AdminTimetable() {
             className: session.className,
             day: session.day,
             period: session.period,
+            periodEnd: session.periodEnd || session.period,
             subject: session.subject,
             teacher: safeTeacher,
             room: session.room,
             status: session.status,
+            note: session.note || "",
+            mode: session.mode || MODE_META.offline,
         });
         setActiveSessionId(session.id);
         setActiveModalMode("edit");
@@ -376,7 +412,7 @@ export default function AdminTimetable() {
 
             return {
                 ...prev,
-                [name]: name === "period" ? Number(value) : value,
+                [name]: name === "period" || name === "periodEnd" ? Number(value) : value,
             };
         });
     };
@@ -393,6 +429,11 @@ export default function AdminTimetable() {
             return;
         }
 
+        if (formData.periodEnd < formData.period) {
+            window.alert("Tiet ket thuc phai lon hon hoac bang tiet bat dau.");
+            return;
+        }
+
         const validTeachers = getTeachersBySubject(formData.subject);
         if (!validTeachers.includes(formData.teacher)) {
             window.alert("Giáo viên không thuộc môn đã chọn. Vui lòng chọn lại.");
@@ -404,7 +445,7 @@ export default function AdminTimetable() {
             item.term === selectedTerm &&
             item.className === formData.className &&
             item.day === formData.day &&
-            item.period === formData.period &&
+            ((item.period <= formData.periodEnd && (item.periodEnd || item.period) >= formData.period)) &&
             item.id !== activeSessionId
         ));
 
@@ -416,12 +457,26 @@ export default function AdminTimetable() {
         if (activeModalMode === "edit" && activeSessionId) {
             setSessions((prev) => prev.map((item) => (
                 item.id === activeSessionId
-                    ? { ...item, ...formData, year: selectedSchoolYear, term: selectedTerm }
+                    ? {
+                        ...item,
+                        ...formData,
+                        year: selectedSchoolYear,
+                        term: selectedTerm,
+                        start: getPeriodRangeLabel(formData.period, formData.period).split(" - ")[0],
+                        end: getPeriodRangeLabel(formData.period, formData.periodEnd).split(" - ")[1],
+                    }
                     : item
             )));
         } else {
             setSessions((prev) => [
-                { id: Date.now(), year: selectedSchoolYear, term: selectedTerm, ...formData },
+                {
+                    id: Date.now(),
+                    year: selectedSchoolYear,
+                    term: selectedTerm,
+                    ...formData,
+                    start: getPeriodRangeLabel(formData.period, formData.period).split(" - ")[0],
+                    end: getPeriodRangeLabel(formData.period, formData.periodEnd).split(" - ")[1],
+                },
                 ...prev,
             ]);
         }

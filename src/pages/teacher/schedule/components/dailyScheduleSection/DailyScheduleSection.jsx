@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import "./DailyScheduleSection.css";
 import { MapPin, Users, Clock, BookOpen, ChevronRight, FileText, BookMarked, Pencil, BarChart3 } from "lucide-react";
+import { getStartOfIsoWeek, getTeacherWeekLessons } from "../../../../../utils/timetableShared";
 
 const PERIOD_TIME = {
   1: "07:00 - 07:45",
@@ -15,43 +16,9 @@ const PERIOD_TIME = {
   10: "16:25 - 17:10",
 };
 
-const SCHEDULE_DATA = {
-  0: [
-    { period: 1, subject: "Toán", class: "10A1", room: "P.201", students: 35, color: "teal", note: "Chương 3: Hàm số bậc nhất" },
-    { period: 2, subject: "Toán", class: "10A1", room: "P.201", students: 35, color: "teal", note: "Chương 3: Hàm số bậc nhất" },
-    { period: 5, subject: "Toán nâng cao", class: "11B2", room: "P.305", students: 30, color: "purple", note: "Lượng giác - Bài tập" },
-  ],
-  1: [
-    { period: 3, subject: "Toán", class: "10A2", room: "P.102", students: 33, color: "blue", note: "Chương 3: Hàm số" },
-    { period: 4, subject: "Toán", class: "10A2", room: "P.102", students: 33, color: "blue", note: "Chương 3: Hàm số" },
-    { period: 7, subject: "Toán", class: "12A1", room: "P.401", students: 38, color: "orange", note: "Ôn tập tích phân" },
-    { period: 8, subject: "Toán", class: "12A1", room: "P.401", students: 38, color: "orange", note: "Ôn tập tích phân" },
-  ],
-  2: [
-    { period: 1, subject: "Toán", class: "11B1", room: "P.203", students: 34, color: "pink", note: "Tổ hợp - Xác suất" },
-    { period: 2, subject: "Toán", class: "11B1", room: "P.203", students: 34, color: "pink", note: "Tổ hợp - Xác suất" },
-    { period: 6, subject: "Toán", class: "10A1", room: "P.201", students: 35, color: "teal", note: "Kiểm tra 15 phút" },
-  ],
-  3: [
-    { period: 3, subject: "Toán nâng cao", class: "11B2", room: "P.305", students: 30, color: "purple", note: "Lượng giác" },
-    { period: 4, subject: "Toán nâng cao", class: "11B2", room: "P.305", students: 30, color: "purple", note: "Lượng giác" },
-    { period: 8, subject: "Toán", class: "10A2", room: "P.102", students: 33, color: "blue", note: "Phương trình - Bất phương trình" },
-  ],
-  4: [
-    { period: 1, subject: "Toán", class: "12A1", room: "P.401", students: 38, color: "orange", note: "Đạo hàm - Ứng dụng" },
-    { period: 2, subject: "Toán", class: "12A1", room: "P.401", students: 38, color: "orange", note: "Đạo hàm - Ứng dụng" },
-    { period: 5, subject: "Toán", class: "11B1", room: "P.203", students: 34, color: "pink", note: "Xác suất - Bài tập" },
-    { period: 6, subject: "Toán", class: "11B1", room: "P.203", students: 34, color: "pink", note: "Xác suất - Bài tập" },
-  ],
-  5: [],
-  6: [],
-};
-
 function getWeekDates(offset = 0) {
-  const now = new Date();
-  const dayOfWeek = now.getDay();
-  const monday = new Date(now);
-  monday.setDate(now.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1) + offset * 7);
+  const monday = getStartOfIsoWeek(new Date());
+  monday.setDate(monday.getDate() + offset * 7);
   const days = [];
   for (let i = 0; i < 7; i++) {
     const d = new Date(monday);
@@ -101,11 +68,25 @@ export default function DailyScheduleSection({ weekOffset, selectedDay, selected
 
   const days = getWeekDates(weekOffset);
   const date = days[selectedDay];
+  const weekStart = days[0];
+  const allLessons = getTeacherWeekLessons(weekStart, selectedClass);
+  const dayKey = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"][selectedDay];
 
-  let lessons = SCHEDULE_DATA[selectedDay] || [];
-  if (selectedClass !== "Tất cả") {
-    lessons = lessons.filter((l) => l.class === selectedClass);
-  }
+  const lessons = allLessons
+    .filter((item) => item.day === dayKey)
+    .sort((a, b) => a.periodStart - b.periodStart)
+    .map((item) => ({
+      period: item.periodStart,
+      subject: item.subject,
+      class: item.className,
+      room: item.room,
+      students: 35,
+      color: item.color,
+      note: item.note,
+      periodEnd: item.periodEnd,
+      status: item.status,
+      timeRange: item.timeRange,
+    }));
 
   const groupedLessons = groupLessonsByClass(lessons);
   const classCount = Object.keys(groupedLessons).length;
@@ -130,7 +111,7 @@ export default function DailyScheduleSection({ weekOffset, selectedDay, selected
       month: "2-digit",
       year: "numeric",
     }),
-    timeRange: PERIOD_TIME[lesson.period],
+    timeRange: lesson.timeRange || PERIOD_TIME[lesson.period],
     session: lesson.period <= 5 ? "Sáng" : "Chiều",
     lessonType:
       getLessonStatus(lesson.note) === "quiz"
