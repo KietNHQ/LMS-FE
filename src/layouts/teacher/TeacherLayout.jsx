@@ -7,7 +7,7 @@ export default function TeacherLayout() {
     const [isCollapsed, setIsCollapsed] = useState(false);
 
     return (
-        <div className={`teacher-layout ${isCollapsed ? "collapsed" : ""}`}>
+        <div className={`teacher-layout theme-teacher ${isCollapsed ? "collapsed" : ""}`}>
             <Sidebar
                 role="teacher"
                 userName="Lê Minh Hoàng"

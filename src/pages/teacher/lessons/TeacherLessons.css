@@ -1,30 +1,10 @@
 .teacher-lessons {
-	--teacher-primary: #11c7b6;
-	--teacher-primary-dark: #04a094;
-	--teacher-primary-soft: #e9fbf8;
-	--teacher-border-soft: #b6ebe5;
-	--teacher-text-main: #0f172a;
-	--teacher-text-sub: #47606a;
-	--teacher-shadow: 0 8px 22px rgba(4, 160, 148, 0.08);
 	padding: 24px;
 	display: flex;
 	flex-direction: column;
 	gap: 16px;
 	min-height: 100vh;
-	background: linear-gradient(180deg, #f2fcfb 0%, #f8fbfd 38%, #ffffff 100%);
-}
-
-.teacher-lessons-page .common-page-header {
-	padding: 14px;
-	border: 1px solid var(--teacher-border-soft);
-	border-radius: 14px;
-	box-shadow: var(--teacher-shadow);
-	background: linear-gradient(120deg, rgba(17, 199, 182, 0.1) 0%, rgba(255, 255, 255, 1) 54%);
-}
-
-.teacher-lessons-page .common-page-header__eyebrow {
-	background: #e9fbf8;
-	color: #0f7065;
+	
 }
 
 .teacher-lessons-header-actions {
@@ -47,8 +27,8 @@
 	font-size: 14px;
 	font-weight: 700;
 	color: #ffffff;
-	background: linear-gradient(180deg, #11c7b6 0%, #04a094 100%);
-	box-shadow: 0 10px 20px rgba(4, 160, 148, 0.28);
+	background: linear-gradient(180deg, var(--teacher-primary) 0%, var(--teacher-primary-dark) 100%);
+	box-shadow: 0 10px 20px color-mix(in srgb, var(--teacher-primary) 36%, transparent 64%);
 	cursor: pointer;
 	transition: transform 0.16s ease, box-shadow 0.2s ease;
 	white-space: nowrap;
@@ -57,7 +37,7 @@
 
 .teacher-create-lesson-btn:hover {
 	transform: translateY(-1px);
-	box-shadow: 0 14px 24px rgba(4, 160, 148, 0.32);
+	box-shadow: 0 14px 24px color-mix(in srgb, var(--teacher-primary) 42%, transparent 58%);
 }
 
 .teacher-create-lesson-btn:active {
@@ -67,21 +47,25 @@
 .teacher-create-lesson-modal {
 	width: min(1220px, calc(100vw - 28px));
 	max-height: 92vh;
-	border: 1px solid #b5e9e3;
+	border: 1px solid var(--teacher-border-soft);
 }
 
 .teacher-create-lesson-modal .ui-modal__header {
-	background: #f2fcfb;
-	border-bottom: 1px solid #d2efeb;
+	background: var(--teacher-primary-soft);
+	border-bottom: 1px solid var(--teacher-border-soft);
 }
 
 .teacher-create-lesson-modal .ui-modal__title {
-	color: #0d6d63;
+	color: var(--teacher-primary);
 }
 
 .teacher-create-lesson-modal .ui-modal__body {
 	padding: 14px;
-	background: linear-gradient(180deg, #f4fdfc 0%, #ffffff 100%);
+	background: linear-gradient(
+		180deg,
+		color-mix(in srgb, var(--teacher-primary-soft) 48%, #ffffff 52%) 0%,
+		#ffffff 100%
+	);
 }
 
 @media (max-width: 768px) {

@@ -272,8 +272,6 @@ export default function TeacherLessons() {
         handleCloseCreate();
     };
 
-    const selectedTermLabel = selectedTerm === "hk2" ? "Học kỳ 2" : "Học kỳ 1";
-
     return (
         <div className="teacher-lessons-page teacher-lessons">
             <PageHeader

@@ -3,6 +3,7 @@ import WeeklyScheduleSection from "./components/weeklyScheduleSection/WeeklySche
 import DailyScheduleSection from "./components/dailyScheduleSection/DailyScheduleSection";
 import ScheduleFilterSection from "./components/scheduleFilterSection/ScheduleFilterSection";
 import Modal from "../../../components/ui/Modal/Modal";
+import { PageHeader } from "../../../components/common";
 import "./TeacherSchedule.css";
 
 const PERIOD_TIME = {
@@ -75,9 +76,10 @@ export default function TeacherSchedule() {
 
   return (
     <div className="teacher-schedule">
-      <div className="teacher-schedule-header">
-        <h1>Thời khóa biểu</h1>
-      </div>
+      <PageHeader
+        title="Thời khóa biểu"
+        eyebrow="Lịch dạy"
+      />
 
       <ScheduleFilterSection
         weekOffset={weekOffset}

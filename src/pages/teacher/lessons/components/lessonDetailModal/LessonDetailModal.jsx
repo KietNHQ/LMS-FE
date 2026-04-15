@@ -18,6 +18,14 @@ export default function LessonDetailModal({ lesson, onClose, onEdit }) {
             className="lesson-detail-modal"
         >
             <div className="lesson-detail-content">
+                <section className="lesson-detail-quick-meta">
+                    <span className="meta-chip">Lớp {lesson.className}</span>
+                    <span className="meta-chip">Ngày {lesson.date}</span>
+                    <span className="meta-chip">{lesson.period}</span>
+                    <span className="meta-chip">{lesson.room}</span>
+                    <span className="meta-chip status-chip">{lesson.status}</span>
+                </section>
+
                 <section className="lesson-detail-section lesson-basic-grid">
                     <h4>Thông tin cơ bản</h4>
                     <div>

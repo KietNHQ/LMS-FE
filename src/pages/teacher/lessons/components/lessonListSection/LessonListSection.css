@@ -2,16 +2,23 @@
     border: 1px solid var(--teacher-border-soft);
     background: #ffffff;
     border-radius: 14px;
-    padding: 16px;
+    padding: 18px;
     display: flex;
     flex-direction: column;
-    gap: 14px;
+    gap: 16px;
     box-shadow: var(--teacher-shadow);
+}
+
+.lesson-list-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
 }
 
 .lesson-list-head h2 {
     margin: 0;
-    font-size: 18px;
+    font-size: 20px;
     color: var(--teacher-text-main);
 }
 
@@ -19,6 +26,31 @@
     margin: 6px 0 0;
     color: var(--teacher-text-sub);
     font-size: 14px;
+}
+
+.lesson-sort-control {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    color: #35515c;
+    font-size: 12px;
+    font-weight: 700;
+    min-width: 196px;
+}
+
+.lesson-sort-control select {
+    border: 1px solid #c9e7e2;
+    border-radius: 9px;
+    padding: 8px 10px;
+    font-size: 13px;
+    color: #183947;
+    background: #ffffff;
+}
+
+.lesson-sort-control select:focus {
+    outline: none;
+    border-color: var(--teacher-primary);
+    box-shadow: 0 0 0 3px rgba(17, 199, 182, 0.16);
 }
 
 .lesson-summary-grid {
@@ -31,7 +63,7 @@
     border: 1px solid #b9e8e2;
     background: linear-gradient(180deg, #f2fcfb 0%, #ffffff 100%);
     border-radius: 10px;
-    padding: 10px;
+    padding: 12px;
 }
 
 .summary-card p {
@@ -43,27 +75,30 @@
 .summary-card h3 {
     margin: 6px 0 0;
     color: #0a7b70;
-    font-size: 20px;
+    font-size: 22px;
 }
 
 .lesson-table-wrap {
-    overflow-x: auto;
+    overflow: hidden;
+    border: 1px solid #d4eeea;
+    border-radius: 12px;
 }
 
 .lesson-table {
     width: 100%;
     border-collapse: collapse;
-    min-width: 900px;
+    table-layout: fixed;
 }
 
 .lesson-table th,
 .lesson-table td {
     border-bottom: 1px solid #d9efec;
-    padding: 10px;
+    padding: 12px;
     text-align: left;
     vertical-align: top;
     font-size: 13px;
     color: #334155;
+    line-height: 1.45;
 }
 
 .lesson-table th {
@@ -75,12 +110,18 @@
 .lesson-table td strong {
     color: #15313c;
     font-size: 14px;
+    display: block;
+    line-height: 1.4;
 }
 
 .lesson-table td p {
     margin: 4px 0 0;
     color: #64748b;
-    line-height: 1.45;
+    line-height: 1.5;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
 }
 
 .lesson-status {
@@ -104,7 +145,7 @@
 
 .lesson-action-btn {
     border: 1px solid #bfe9e4;
-    border-radius: 8px;
+    border-radius: 9px;
     padding: 6px;
     font-size: 12px;
     font-weight: 700;
@@ -112,15 +153,22 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    min-width: 32px;
-    min-height: 32px;
-    width: 32px;
-    height: 32px;
-    transition: all 0.2s ease;
+    min-width: 36px;
+    min-height: 36px;
+    width: 36px;
+    height: 36px;
+    transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease,
+        filter 0.18s ease;
 }
 
 .lesson-action-btn:hover {
-    transform: scale(1.05);
+    transform: translateY(-1px);
+    box-shadow: 0 8px 16px rgba(15, 23, 42, 0.12);
+}
+
+.lesson-action-btn:focus-visible {
+    outline: 2px solid #0ea69a;
+    outline-offset: 2px;
 }
 
 .lesson-action-btn.action-view {
@@ -143,30 +191,108 @@
     filter: brightness(1.1);
 }
 
+.lesson-action-btn:active {
+    transform: translateY(0);
+    box-shadow: none;
+}
+
 .status-published {
-    background: #d7f7f2;
-    color: #0a786d;
+    background: var(--teacher-status-published-bg);
+    color: var(--teacher-status-published-fg);
+    border: 1px solid var(--teacher-status-published-border);
 }
 
 .status-draft {
-    background: #fff4d8;
-    color: #9a5b13;
+    background: var(--teacher-status-draft-bg);
+    color: var(--teacher-status-draft-fg);
+    border: 1px solid var(--teacher-status-draft-border);
 }
 
 .status-pending {
-    background: #e3f7f4;
-    color: #0b8f82;
+    background: var(--teacher-status-pending-bg);
+    color: var(--teacher-status-pending-fg);
+    border: 1px solid var(--teacher-status-pending-border);
 }
 
 .empty-row {
     text-align: center !important;
     color: #64748b !important;
-    padding: 18px !important;
+    padding: 22px !important;
+}
+
+.lesson-mobile-list {
+    display: none;
+}
+
+.lesson-mobile-card {
+    border: 1px solid #d4eeea;
+    border-radius: 12px;
+    background: #ffffff;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.lesson-mobile-card-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 10px;
+}
+
+.lesson-mobile-card-head h3 {
+    margin: 0;
+    font-size: 15px;
+    color: #15313c;
+}
+
+.lesson-mobile-objective {
+    margin: 0;
+    color: #64748b;
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+.lesson-mobile-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.lesson-mobile-meta span {
+    border: 1px solid #d8ece8;
+    border-radius: 999px;
+    padding: 4px 9px;
+    font-size: 12px;
+    color: #32545f;
+    background: #f7fdfc;
 }
 
 @media (max-width: 900px) {
+    .lesson-list-head {
+        flex-direction: column;
+    }
+
+    .lesson-sort-control {
+        width: 100%;
+        min-width: 0;
+    }
+
     .lesson-summary-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 768px) {
+    .lesson-table-wrap {
+        display: none;
+    }
+
+    .lesson-mobile-list {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
     }
 }
 
