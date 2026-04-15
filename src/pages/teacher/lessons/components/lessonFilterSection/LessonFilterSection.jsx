@@ -7,14 +7,13 @@ export default function LessonFilterSection({
     classes,
     statusOptions,
     onChangeFilter,
+    selectedSchoolYear,
+    selectedTerm,
 }) {
+    const termLabel = selectedTerm === "hk2" ? "Học kỳ 2" : "Học kỳ 1";
+
     return (
         <div className="lesson-filter-section">
-            <div className="lesson-filter-head">
-                <h2>Bộ lọc bài học</h2>
-                <span className="lesson-filter-tag">1 giáo viên - 1 môn học</span>
-            </div>
-
             <div className="lesson-subject-card" aria-label="Môn học được phân công">
                 <div>
                     <p className="subject-label">Môn được phân công</p>
@@ -23,7 +22,10 @@ export default function LessonFilterSection({
                         Mã môn: {subject.code} | Giáo viên: {subject.teacherName}
                     </p>
                 </div>
-                <span className="subject-lock">Đã khóa</span>
+                <div className="subject-tag-group">
+                    <span className="lesson-filter-tag">Năm học {selectedSchoolYear}</span>
+                    <span className="subject-lock">{termLabel}</span>
+                </div>
             </div>
 
             <div className="lesson-filter-grid">

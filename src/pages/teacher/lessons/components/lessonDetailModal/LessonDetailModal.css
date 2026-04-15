@@ -1,0 +1,135 @@
+.lesson-detail-modal {
+    width: min(980px, calc(100vw - 28px));
+    border: 1px solid #b5e9e3;
+}
+
+.lesson-detail-modal .ui-modal__body {
+    background: linear-gradient(180deg, #f4fdfc 0%, #ffffff 100%);
+}
+
+.lesson-detail-content {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.lesson-detail-section {
+    border: 1px solid #d6efec;
+    border-radius: 10px;
+    background: #ffffff;
+    padding: 12px;
+}
+
+.lesson-detail-section h4 {
+    margin: 0 0 10px;
+    color: #0f6f65;
+    font-size: 15px;
+}
+
+.lesson-detail-section p {
+    margin: 0;
+    color: #344b56;
+    line-height: 1.5;
+}
+
+.lesson-basic-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+
+.lesson-basic-grid h4 {
+    grid-column: 1 / -1;
+}
+
+.detail-attachment-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.detail-attachment-list li {
+    border: 1px solid #d8ece8;
+    border-radius: 8px;
+    padding: 8px 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+}
+
+.detail-attachment-list li p {
+    margin-top: 2px;
+    font-size: 12px;
+    color: #63808b;
+}
+
+.detail-attachment-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.detail-attachment-actions button {
+    border: 1px solid #bfe7e1;
+    border-radius: 8px;
+    padding: 6px 10px;
+    background: #edf9f7;
+    color: #0f7b70;
+    font-weight: 700;
+    font-size: 12px;
+    cursor: pointer;
+}
+
+.detail-attachment-actions .is-danger {
+    border-color: #fecaca;
+    color: #b91c1c;
+    background: #fef2f2;
+}
+
+.lesson-detail-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+}
+
+.detail-status {
+    border-radius: 999px;
+    background: #e7fbf7;
+    border: 1px solid #beece6;
+    color: #0a756a;
+    padding: 6px 10px;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.detail-edit-btn {
+    border: none;
+    border-radius: 8px;
+    padding: 9px 12px;
+    font-size: 13px;
+    font-weight: 700;
+    color: #ffffff;
+    background: linear-gradient(180deg, #11c7b6 0%, #04a094 100%);
+    box-shadow: 0 10px 18px rgba(4, 160, 148, 0.26);
+    cursor: pointer;
+}
+
+@media (max-width: 768px) {
+    .lesson-detail-modal {
+        width: min(980px, calc(100vw - 16px));
+    }
+
+    .lesson-basic-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .detail-attachment-list li,
+    .lesson-detail-footer {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+}

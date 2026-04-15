@@ -19,8 +19,25 @@ export default function CreateEditLessonSection({
     formValues,
     classes,
     onChangeForm,
+    attachedFiles = [],
+    onFileChange,
+    onRemoveFile,
+    onSaveDraft,
+    onPublish,
     isDialog = false,
 }) {
+    const handleAttachmentInput = (event) => {
+        if (typeof onFileChange === "function") {
+            onFileChange(event.target.files);
+        }
+        event.target.value = "";
+    };
+
+    const formatFileSize = (size = 0) => {
+        if (size >= 1024 * 1024) return `${(size / (1024 * 1024)).toFixed(2)} MB`;
+        return `${(size / 1024).toFixed(1)} KB`;
+    };
+
     return (
         <div className={`create-edit-lesson-section ${isDialog ? "is-dialog" : ""}`}>
             <div className="create-lesson-head">
@@ -144,11 +161,48 @@ export default function CreateEditLessonSection({
                 </label>
             </div>
 
+            <div className="create-lesson-attachments">
+                <div className="attachment-header">
+                    <h3>Tệp đính kèm</h3>
+                    <p>Hỗ trợ: PDF, DOCX, PPTX, PNG, JPG. Tối đa 5 tệp, mỗi tệp ≤ 10MB.</p>
+                </div>
+
+                <label className="attachment-drop-zone">
+                    <input
+                        type="file"
+                        multiple
+                        accept=".pdf,.doc,.docx,.ppt,.pptx,.png,.jpg,.jpeg"
+                        onChange={handleAttachmentInput}
+                    />
+                    <span>Kéo thả hoặc bấm để chọn tệp</span>
+                </label>
+
+                {attachedFiles.length > 0 ? (
+                    <ul className="attachment-file-list">
+                        {attachedFiles.map((file, index) => (
+                            <li key={`${file.name}-${index}`}>
+                                <div>
+                                    <strong>{file.name}</strong>
+                                    <p>{formatFileSize(file.size)}</p>
+                                </div>
+                                <button
+                                    type="button"
+                                    onClick={() => onRemoveFile?.(index)}
+                                    aria-label="Xóa tệp"
+                                >
+                                    Xóa
+                                </button>
+                            </li>
+                        ))}
+                    </ul>
+                ) : null}
+            </div>
+
             <div className="create-lesson-actions">
-                <button type="button" className="btn btn-secondary">
+                <button type="button" className="btn btn-secondary" onClick={onSaveDraft}>
                     Lưu nháp
                 </button>
-                <button type="button" className="btn btn-primary">
+                <button type="button" className="btn btn-primary" onClick={onPublish}>
                     Xuất bản bài học
                 </button>
             </div>
