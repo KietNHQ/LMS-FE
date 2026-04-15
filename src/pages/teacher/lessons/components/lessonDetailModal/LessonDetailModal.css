@@ -13,6 +13,28 @@
     gap: 12px;
 }
 
+.lesson-detail-quick-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.meta-chip {
+    border-radius: 999px;
+    border: 1px solid #cae8e2;
+    background: #f3fbf9;
+    color: #20515b;
+    padding: 5px 10px;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.status-chip {
+    border-color: #fdba74;
+    background: #ffedd5;
+    color: #c2410c;
+}
+
 .lesson-detail-section {
     border: 1px solid #d6efec;
     border-radius: 10px;

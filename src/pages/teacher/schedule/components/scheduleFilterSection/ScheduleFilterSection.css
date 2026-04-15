@@ -74,11 +74,11 @@
   align-items: center;
   gap: 8px;
   min-width: 180px;
-  color: var(--teacher-color);
+  color: var(--admin-primary);
 }
 
 .class-filter-wrapper > svg {
-  color: var(--teacher-color);
+  color: var(--admin-primary);
   flex-shrink: 0;
 }
 
@@ -97,40 +97,40 @@
 
 .class-filter-wrapper .schedule-admin-select .custom-dropdown-trigger {
   height: 40px;
-  border: 1px solid #d7deeb;
+  border: 1px solid var(--admin-border);
   border-radius: 12px;
-  background: #f7f8fc;
+  background: var(--admin-surface-soft);
   box-shadow: none;
   padding: 0 12px;
   font-size: 15px;
   font-weight: 700;
-  color: var(--teacher-color);
+  color: var(--admin-primary);
 }
 
 .class-filter-wrapper .schedule-admin-select .custom-dropdown-trigger:hover {
-  border-color: rgba(79, 209, 197, 0.55);
-  background: #f0fdfa;
-  box-shadow: 0 6px 16px rgba(79, 209, 197, 0.08);
+  border-color: var(--admin-border-strong);
+  background: var(--admin-primary-soft);
+  box-shadow: var(--admin-shadow-sm);
 }
 
 .class-filter-wrapper .schedule-admin-select .custom-dropdown-trigger.open {
-  border-color: var(--teacher-color) !important;
-  background: #f0fdfa !important;
-  box-shadow: 0 0 0 3px rgba(79, 209, 197, 0.12), 0 6px 16px rgba(79, 209, 197, 0.08) !important;
+  border-color: var(--admin-primary) !important;
+  background: var(--admin-primary-soft) !important;
+  box-shadow: 0 0 0 3px var(--admin-focus-ring), var(--admin-shadow-sm) !important;
 }
 
 .class-filter-wrapper .schedule-admin-select .dropdown-arrow {
-  color: var(--teacher-color) !important;
+  color: var(--admin-primary) !important;
 }
 
 .class-filter-wrapper .schedule-admin-select .custom-dropdown-menu {
   top: calc(100% + 7px);
-  border: 1px solid rgba(79, 209, 197, 0.18);
+  border: 1px solid var(--admin-border);
   border-radius: 12px;
   padding: 6px;
-  box-shadow: 0 10px 30px rgba(79, 209, 197, 0.12);
+  box-shadow: var(--admin-shadow-md);
   backdrop-filter: none;
-  background: #ffffff;
+  background: var(--admin-surface);
 }
 
 .class-filter-wrapper .schedule-admin-select .custom-dropdown-item {
@@ -143,20 +143,20 @@
 }
 
 .class-filter-wrapper .schedule-admin-select .custom-dropdown-item:hover {
-  background: var(--teacher-color) !important;
+  background: var(--admin-primary) !important;
   color: #ffffff !important;
   transform: none;
 }
 
 .class-filter-wrapper .schedule-admin-select .custom-dropdown-item.active {
-  background: #ccfbf1 !important;
-  color: #0f766e !important;
+  background: var(--admin-primary-soft) !important;
+  color: var(--admin-primary) !important;
   font-weight: 700;
 }
 
 .class-filter-wrapper .schedule-admin-select .custom-dropdown-item.active:hover {
-  background: #ccfbf1 !important;
-  color: #0f766e !important;
+  background: var(--admin-primary-soft) !important;
+  color: var(--admin-primary) !important;
 }
 
 .class-filter-wrapper .schedule-admin-select .custom-dropdown-item svg {
@@ -169,34 +169,34 @@
 
 .schedule-quick-select .custom-dropdown-trigger {
   height: 40px;
-  border: 1px solid #d7deeb;
+  border: 1px solid var(--admin-border);
   border-radius: 12px;
-  background: #f7f8fc;
+  background: var(--admin-surface-soft);
   box-shadow: none;
   padding: 0 12px;
   font-size: 15px;
   font-weight: 700;
-  color: var(--teacher-color);
+  color: var(--admin-primary);
 }
 
 .schedule-quick-select .custom-dropdown-trigger:hover,
 .schedule-quick-select .custom-dropdown-trigger.open {
-  border-color: rgba(79, 209, 197, 0.55);
-  background: #f0fdfa;
-  box-shadow: 0 6px 16px rgba(79, 209, 197, 0.08);
+  border-color: var(--admin-border-strong);
+  background: var(--admin-primary-soft);
+  box-shadow: var(--admin-shadow-sm);
 }
 
 .schedule-quick-select .dropdown-arrow {
-  color: var(--teacher-color);
+  color: var(--admin-primary);
 }
 
 .schedule-quick-select .custom-dropdown-menu {
   top: calc(100% + 7px);
-  border: 1px solid rgba(79, 209, 197, 0.18);
+  border: 1px solid var(--admin-border);
   border-radius: 12px;
   padding: 6px;
-  box-shadow: 0 10px 30px rgba(79, 209, 197, 0.12);
-  background: #ffffff;
+  box-shadow: var(--admin-shadow-md);
+  background: var(--admin-surface);
 }
 
 .schedule-quick-select .custom-dropdown-item {
@@ -209,14 +209,14 @@
 }
 
 .schedule-quick-select .custom-dropdown-item:hover {
-  background: var(--teacher-color) !important;
+  background: var(--admin-primary) !important;
   color: #ffffff !important;
   transform: none;
 }
 
 .schedule-quick-select .custom-dropdown-item.active {
-  background: #ccfbf1 !important;
-  color: #0f766e !important;
+  background: var(--admin-primary-soft) !important;
+  color: var(--admin-primary) !important;
   font-weight: 700;
 }
 

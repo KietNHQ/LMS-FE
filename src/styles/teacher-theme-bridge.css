@@ -1,0 +1,47 @@
+.theme-teacher {
+  --teacher-primary: var(--admin-primary);
+  --teacher-primary-dark: var(--admin-primary-hover);
+  --teacher-primary-soft: var(--admin-primary-soft);
+  --teacher-border-soft: var(--admin-border);
+  --teacher-border-strong: var(--admin-border-strong);
+  --teacher-text-main: var(--admin-text-primary);
+  --teacher-text-sub: var(--admin-text-secondary);
+  --teacher-shadow: var(--admin-shadow-md);
+  --teacher-surface: var(--admin-surface);
+  --teacher-surface-soft: var(--admin-primary-soft);
+
+  --teacher-status-published-bg: #dcfce7;
+  --teacher-status-published-fg: #166534;
+  --teacher-status-published-border: #86efac;
+
+  --teacher-status-draft-bg: #fef3c7;
+  --teacher-status-draft-fg: #92400e;
+  --teacher-status-draft-border: #fcd34d;
+
+  --teacher-status-pending-bg: #ffedd5;
+  --teacher-status-pending-fg: #c2410c;
+  --teacher-status-pending-border: #fdba74;
+}
+
+.theme-teacher .common-page-header {
+  border: 1px solid var(--teacher-border-soft);
+  border-radius: 14px;
+  padding: 14px;
+  background: linear-gradient(
+    120deg,
+    color-mix(in srgb, var(--teacher-primary-soft) 88%, #ffffff 12%) 0%,
+    #ffffff 60%
+  );
+  box-shadow: var(--admin-shadow-sm);
+}
+
+.theme-teacher .common-page-header__eyebrow {
+  background: var(--teacher-primary-soft);
+  color: var(--teacher-primary);
+}
+
+.theme-teacher .teacher-lessons,
+.theme-teacher .teacher-grades-page,
+.theme-teacher .teacher-schedule {
+  color: var(--teacher-text-main);
+}

@@ -28,6 +28,28 @@
     font-size: 14px;
 }
 
+.lesson-form-block {
+    border: 1px solid #d8efeb;
+    border-radius: 12px;
+    background: #fcfefe;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.lesson-form-block-head h3 {
+    margin: 0;
+    font-size: 15px;
+    color: #0f6f65;
+}
+
+.lesson-form-block-head p {
+    margin: 4px 0 0;
+    color: #56707a;
+    font-size: 12px;
+}
+
 .create-lesson-grid {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -163,6 +185,12 @@
     display: flex;
     justify-content: flex-end;
     gap: 10px;
+    position: sticky;
+    bottom: 0;
+    z-index: 2;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.86) 0%, #ffffff 34%);
+    padding-top: 10px;
+    border-top: 1px solid #d9efec;
 }
 
 .btn {
@@ -195,6 +223,11 @@
 .btn-secondary:hover {
     background: #dff7f3;
     transform: translateY(-1px);
+}
+
+.btn:focus-visible {
+    outline: 2px solid #0ea69a;
+    outline-offset: 2px;
 }
 
 .btn:active {
