@@ -1,0 +1,142 @@
+.vp-competition {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    padding-bottom: 2rem;
+}
+
+.comp-toolbar {
+    background: #ffffff;
+    border-radius: 0.75rem;
+    padding: 1.5rem;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 1px 3px 0 rgba(0,0,0,0.1), 0 1px 2px -1px rgba(0,0,0,0.1);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.comp-filter {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+}
+
+.comp-select {
+    padding: 0.625rem 2rem 0.625rem 1rem;
+    border: 1px solid #cbd5e1;
+    border-radius: 0.5rem;
+    outline: none;
+    font-size: 0.875rem;
+    background: #fff;
+    color: #334155;
+    cursor: pointer;
+    appearance: none;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 0.7rem center;
+    background-size: 1em;
+}
+
+.comp-content {
+    display: grid;
+    grid-template-columns: 1fr 300px;
+    gap: 1.5rem;
+    align-items: start;
+}
+
+.comp-panel {
+    background: #ffffff;
+    border-radius: 0.75rem;
+    padding: 1.5rem;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 1px 3px 0 rgba(0,0,0,0.1), 0 1px 2px -1px rgba(0,0,0,0.1);
+}
+.comp-panel-header {
+    margin: 0 0 1.25rem 0;
+    font-size: 1.125rem;
+    color: #0f172a;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+/* ── RANK TABLE ── */
+.rank-table-wrap {
+    width: 100%;
+    overflow-x: auto;
+}
+
+.rank-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.rank-table th {
+    background: #f8fafc;
+    color: #475569;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    font-weight: 600;
+    text-align: left;
+    padding: 1rem;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.rank-table td {
+    padding: 1rem;
+    border-bottom: 1px solid #e2e8f0;
+    color: #334155;
+    font-size: 0.95rem;
+    vertical-align: middle;
+}
+.rank-table tr:hover { background: #f8fafc; }
+
+.rank-number {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 0.9rem;
+    background: #f1f5f9;
+    color: #475569;
+}
+.rank-number.top-1 { background: #fef08a; color: #854d0e; } /* Gold */
+.rank-number.top-2 { background: #e2e8f0; color: #475569; } /* Silver */
+.rank-number.top-3 { background: #fed7aa; color: #9a3412; } /* Bronze */
+
+.trend-up { color: #16a34a; font-weight: 600; display: flex; align-items: center; gap: 0.2rem; }
+.trend-down { color: #dc2626; font-weight: 600; display: flex; align-items: center; gap: 0.2rem; }
+.trend-flat { color: #94a3b8; font-weight: 600; display: flex; align-items: center; gap: 0.2rem; }
+
+/* ── TOP/BOTTOM SUMMARY PANELS ── */
+.summary-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+.summary-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem;
+    border: 1px solid #e2e8f0;
+    border-radius: 0.5rem;
+    background: #f8fafc;
+}
+.summary-item.good { border-left: 4px solid #10b981; }
+.summary-item.bad { border-left: 4px solid #ef4444; }
+
+.summary-info strong { display: block; font-size: 0.9rem; color: #0f172a; }
+.summary-info span { font-size: 0.75rem; color: #64748b; }
+.summary-points { font-weight: 700; color: #0f172a; }
+
+@media (max-width: 1024px) {
+    .comp-content { grid-template-columns: 1fr; }
+}

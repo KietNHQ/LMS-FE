@@ -1,0 +1,159 @@
+.academic-personnel {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    padding-bottom: 2rem;
+}
+
+/* ── Tabs ── */
+.personnel-tabs {
+    display: flex;
+    border-bottom: 1px solid #e2e8f0;
+    gap: 1.5rem;
+}
+
+.personnel-tab-btn {
+    background: none;
+    border: none;
+    color: #64748b;
+    font-weight: 500;
+    font-size: 0.95rem;
+    padding: 0.75rem 0.5rem;
+    cursor: pointer;
+    transition: color 0.2s, border-color 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    border-bottom: 2px solid transparent;
+}
+.personnel-tab-btn svg { font-size: 1.1rem; }
+.personnel-tab-btn:hover { color: #0f172a; }
+.personnel-tab-btn.active {
+    color: #1d4ed8;
+    border-bottom-color: #1d4ed8;
+    font-weight: 600;
+}
+
+/* ── Content ── */
+.personnel-content {
+    background: #ffffff;
+    border-radius: 0.75rem;
+    padding: 1.5rem;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 1px 3px 0 rgba(0,0,0,0.1), 0 1px 2px -1px rgba(0,0,0,0.1);
+}
+
+.personnel-toolbar {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+}
+
+.personnel-search-input {
+    flex: 1;
+    min-width: 250px;
+    padding: 0.625rem 1rem;
+    border: 1px solid #cbd5e1;
+    border-radius: 0.5rem;
+    outline: none;
+    font-size: 0.875rem;
+    color: #334155;
+    transition: all 0.2s;
+}
+.personnel-search-input:focus {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 2px rgba(59,130,246,0.1);
+}
+
+.personnel-filter-select {
+    padding: 0.625rem 2rem 0.625rem 1rem;
+    border: 1px solid #cbd5e1;
+    border-radius: 0.5rem;
+    outline: none;
+    font-size: 0.875rem;
+    background: #fff;
+    color: #334155;
+    cursor: pointer;
+    appearance: none;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 0.7rem center;
+    background-size: 1em;
+}
+
+/* Base Buttons */
+.btn-primary {
+    background: #2563eb;
+    color: #ffffff;
+    border: none;
+    padding: 0.625rem 1.25rem;
+    border-radius: 0.5rem;
+    font-weight: 500;
+    font-size: 0.875rem;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    box-shadow: 0 1px 2px rgba(37,99,235,0.2);
+    transition: all 0.2s;
+}
+.btn-primary:hover { background: #1d4ed8; }
+
+.btn-secondary {
+    background: #f8fafc;
+    color: #334155;
+    border: 1px solid #cbd5e1;
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
+    font-weight: 500;
+    font-size: 0.875rem;
+    cursor: pointer;
+}
+.btn-secondary:hover { background: #f1f5f9; }
+
+/* ── TABLE ── */
+.personnel-table-wrap {
+    width: 100%;
+    overflow-x: auto;
+}
+
+.personnel-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.personnel-table th {
+    background: #f8fafc;
+    color: #64748b;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-weight: 600;
+    text-align: left;
+    padding: 0.875rem 1rem;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.personnel-table td {
+    padding: 1rem;
+    border-bottom: 1px solid #e2e8f0;
+    color: #334155;
+    font-size: 0.875rem;
+    vertical-align: middle;
+}
+
+.personnel-table tbody tr:hover {
+    background: #f8fafc;
+}
+
+.status-badge {
+    padding: 0.25rem 0.6rem;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    display: inline-block;
+}
+.status-badge.missing { background: #fee2e2; color: #991b1b; }
+.status-badge.ok { background: #dcfce7; color: #166534; }
+.status-badge.warning { background: #fef08a; color: #854d0e; }

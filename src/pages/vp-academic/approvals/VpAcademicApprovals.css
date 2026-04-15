@@ -1,0 +1,162 @@
+.vp-approvals {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    padding-bottom: 2rem;
+}
+
+.approvals-panel {
+    background: #ffffff;
+    border-radius: 0.75rem;
+    padding: 1.5rem;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 1px 3px 0 rgba(0,0,0,0.1), 0 1px 2px -1px rgba(0,0,0,0.1);
+}
+
+.approvals-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid #e2e8f0;
+}
+.approvals-header h3 {
+    margin: 0;
+    font-size: 1.125rem;
+    color: #0f172a;
+    font-weight: 600;
+}
+
+.request-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.req-item {
+    padding: 1.25rem;
+    border: 1px solid #e2e8f0;
+    border-radius: 0.5rem;
+    display: flex;
+    gap: 1rem;
+    align-items: flex-start;
+    background: #f8fafc;
+    transition: all 0.2s;
+}
+.req-item:hover {
+    border-color: #cbd5e1;
+    background: #ffffff;
+    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+}
+
+.req-icon {
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    flex-shrink: 0;
+}
+.req-icon.unlock { background: #ffedd5; color: #ea580c; }
+.req-icon.submit { background: #dbeafe; color: #2563eb; }
+
+.req-content {
+    flex: 1;
+}
+.req-title {
+    margin: 0 0 0.5rem 0;
+    font-size: 1.05rem;
+    color: #0f172a;
+    font-weight: 600;
+}
+.req-desc {
+    margin: 0 0 0.75rem 0;
+    font-size: 0.875rem;
+    color: #475569;
+    line-height: 1.5;
+}
+
+.req-meta {
+    display: flex;
+    gap: 1.5rem;
+    font-size: 0.8rem;
+    color: #64748b;
+    margin-bottom: 1rem;
+}
+.rm-item {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+}
+.rm-item strong { color: #334155; }
+
+.req-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.btn-approve, .btn-reject {
+    padding: 0.5rem 1.25rem;
+    border-radius: 0.5rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    border: none;
+    transition: all 0.2s;
+}
+.btn-approve {
+    background: #10b981;
+    color: #ffffff;
+    box-shadow: 0 1px 2px rgba(16,185,129,0.2);
+}
+.btn-approve:hover { background: #059669; }
+
+.btn-reject {
+    background: #ffffff;
+    color: #dc2626;
+    border: 1px solid #fecaca;
+}
+.btn-reject:hover {
+    background: #fef2f2;
+    border-color: #ef4444;
+}
+
+/* History Box */
+.history-wrap {
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px dashed #cbd5e1;
+}
+.history-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+.history-table th {
+    background: #f1f5f9;
+    color: #475569;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    font-weight: 600;
+    text-align: left;
+    padding: 0.75rem 1rem;
+}
+.history-table td {
+    padding: 0.875rem 1rem;
+    border-bottom: 1px solid #e2e8f0;
+    font-size: 0.85rem;
+    color: #334155;
+}
+.badge-status {
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.25rem;
+    font-weight: 600;
+    font-size: 0.75rem;
+}
+.badge-status.approved { background: #dcfce7; color: #166534; }
+.badge-status.rejected { background: #fee2e2; color: #991b1b; }

@@ -1,0 +1,212 @@
+.academic-notifications {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    padding-bottom: 2rem;
+}
+
+/* ── Tabs ── */
+.notif-tabs {
+    display: flex;
+    border-bottom: 1px solid #e2e8f0;
+    gap: 1.5rem;
+}
+
+.notif-tab-btn {
+    background: none;
+    border: none;
+    color: #64748b;
+    font-weight: 500;
+    font-size: 0.95rem;
+    padding: 0.75rem 0.5rem;
+    cursor: pointer;
+    transition: color 0.2s, border-color 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    border-bottom: 2px solid transparent;
+}
+.notif-tab-btn svg { font-size: 1.1rem; }
+.notif-tab-btn:hover { color: #0f172a; }
+.notif-tab-btn.active {
+    color: #1d4ed8;
+    border-bottom-color: #1d4ed8;
+    font-weight: 600;
+}
+
+/* ── Content Container ── */
+.notif-content {
+    background: #ffffff;
+    border-radius: 0.75rem;
+    padding: 1.5rem;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 1px 3px 0 rgba(0,0,0,0.1), 0 1px 2px -1px rgba(0,0,0,0.1);
+}
+
+/* ── Notification List ── */
+.notif-list-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+.notif-list-header h3 {
+    margin: 0;
+    font-size: 1.125rem;
+    color: #0f172a;
+    font-weight: 600;
+}
+
+.btn-mark-all {
+    background: transparent;
+    color: #1d4ed8;
+    border: 1px solid #bfdbfe;
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
+    font-weight: 500;
+    font-size: 0.875rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: all 0.2s;
+}
+.btn-mark-all:hover {
+    background: #eff6ff;
+    border-color: #93c5fd;
+}
+
+.notif-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.notif-item {
+    padding: 1.25rem;
+    border: 1px solid #e2e8f0;
+    border-radius: 0.5rem;
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    transition: background 0.2s;
+    background: #ffffff;
+}
+.notif-item.unread {
+    background: #f8fafc;
+    border-left: 3px solid #2563eb;
+}
+
+.notif-icon {
+    width: 2.5rem;
+    height: 2.5rem;
+    background: #dbeafe;
+    color: #1d4ed8;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    flex-shrink: 0;
+}
+.notif-item.unread .notif-icon {
+    background: #2563eb;
+    color: #ffffff;
+}
+
+.notif-body { flex: 1; }
+.notif-body h4 {
+    margin: 0 0 0.25rem 0;
+    font-size: 1rem;
+    color: #0f172a;
+    font-weight: 600;
+}
+.notif-desc {
+    margin: 0 0 0.5rem 0;
+    font-size: 0.875rem;
+    color: #475569;
+    line-height: 1.5;
+}
+.notif-meta {
+    font-size: 0.75rem;
+    color: #64748b;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+.meta-item {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+/* ── Send Form ── */
+.notif-form-header { margin-bottom: 1.5rem; }
+.notif-form-header h3 {
+    margin: 0 0 0.5rem 0;
+    font-size: 1.125rem;
+    color: #0f172a;
+    font-weight: 600;
+}
+.notif-form-header p {
+    margin: 0;
+    font-size: 0.875rem;
+    color: #64748b;
+}
+
+.notif-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    max-width: 800px;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+.form-group label {
+    font-size: 0.875rem;
+    color: #334155;
+    font-weight: 500;
+}
+
+.form-input, .form-select, .form-textarea {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border: 1px solid #cbd5e1;
+    border-radius: 0.5rem;
+    font-size: 0.875rem;
+    color: #0f172a;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    font-family: inherit;
+}
+.form-textarea {
+    resize: vertical;
+    min-height: 120px;
+}
+.form-input:focus, .form-select:focus, .form-textarea:focus {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 2px rgba(59,130,246,0.1);
+}
+
+.btn-send {
+    background: #1e3a8a;
+    color: #ffffff;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.5rem;
+    font-weight: 500;
+    font-size: 0.875rem;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    transition: background 0.2s;
+    width: max-content;
+}
+.btn-send:hover { background: #1e40af; }

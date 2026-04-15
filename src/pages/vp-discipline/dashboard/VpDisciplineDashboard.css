@@ -1,0 +1,167 @@
+.vp-dashboard {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    padding-bottom: 2rem;
+}
+
+/* ── STATS GRID ── */
+.vp-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1.25rem;
+}
+
+.vp-stat-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 0.75rem;
+    padding: 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    box-shadow: 0 1px 3px 0 rgba(0,0,0,0.1), 0 1px 2px -1px rgba(0,0,0,0.1);
+    transition: transform 0.2s;
+}
+.vp-stat-card:hover { transform: translateY(-2px); }
+
+.vp-stat-icon {
+    font-size: 1.5rem;
+    width: 3rem;
+    height: 3rem;
+    border-radius: 0.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+.vp-stat-card.danger .vp-stat-icon { background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; }
+.vp-stat-card.warning .vp-stat-icon { background: #fffbeb; color: #d97706; border: 1px solid #fde68a; }
+.vp-stat-card.success .vp-stat-icon { background: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0; }
+.vp-stat-card.primary .vp-stat-icon { background: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe; }
+
+.vp-stat-body { display: flex; flex-direction: column; }
+.vp-stat-label { margin: 0; font-size: 0.8125rem; color: #64748b; font-weight: 500; }
+.vp-stat-value { margin: 0.2rem 0 0 0; font-size: 1.25rem; font-weight: 700; color: #0f172a; }
+
+/* ── PANELS ── */
+.vp-panels {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+}
+
+.vp-panel {
+    background: #ffffff;
+    border-radius: 0.75rem;
+    padding: 1.5rem;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 1px 3px 0 rgba(0,0,0,0.1);
+    display: flex;
+    flex-direction: column;
+}
+.vp-panel-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 1.25rem;
+}
+.vp-panel-header h3 {
+    margin: 0;
+    font-size: 1.125rem;
+    color: #0f172a;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+/* ── CẢNH BÁO ALERT LIST ── */
+.vp-panel.urgent {
+    background: #fff5f5;
+    border-color: #fecaca;
+}
+.vp-panel.urgent .vp-panel-header h3 {
+    color: #b91c1c;
+}
+
+.alert-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+.alert-item {
+    background: #ffffff;
+    border-left: 4px solid #ef4444;
+    padding: 1rem;
+    border-radius: 0.5rem;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.alert-info strong { display: block; color: #7f1d1d; font-size: 0.95rem; margin-bottom: 0.2rem; }
+.alert-info span { font-size: 0.85rem; color: #991b1b; }
+
+.btn-resolve {
+    background: #ef4444;
+    color: #ffffff;
+    border: none;
+    padding: 0.4rem 0.8rem;
+    border-radius: 0.35rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+.btn-resolve:hover { background: #dc2626; }
+
+/* ── MINI CHART (CSS) ── */
+.mock-chart {
+    display: flex;
+    align-items: flex-end;
+    gap: 1rem;
+    height: 200px;
+    padding-top: 2rem;
+    border-bottom: 1px solid #e2e8f0;
+    border-left: 1px solid #e2e8f0;
+    padding-left: 1rem;
+    padding-bottom: 0.5rem;
+    margin-top: auto;
+}
+.chart-bar-wrap {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 0.5rem;
+    height: 100%;
+}
+.chart-bar {
+    width: 60%;
+    background: #3b82f6;
+    border-radius: 0.25rem 0.25rem 0 0;
+    position: relative;
+    transition: height 0.3s;
+}
+.chart-bar:hover { background: #2563eb; }
+.chart-bar span {
+    position: absolute;
+    top: -1.5rem;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #475569;
+}
+.chart-label {
+    font-size: 0.75rem;
+    color: #64748b;
+    font-weight: 500;
+}
+
+@media (max-width: 1024px) {
+    .vp-panels { grid-template-columns: 1fr; }
+    .vp-stats-grid { grid-template-columns: repeat(2, 1fr); }
+}
