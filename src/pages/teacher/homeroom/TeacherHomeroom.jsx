@@ -1,15 +1,17 @@
 import React, { useState } from "react";
-import { PageHeader } from "../../../components/common";
+import { PageHeader, SchoolYearTermSelector } from "../../../components/common";
 import HomeroomOverviewSection from "./components/homeroomOverviewSection/HomeroomOverviewSection";
 import ClassStudentsSection from "../teachingClasses/components/classStudentsSection/ClassStudentsSection";
 import HomeroomAttendanceSection from "./components/homeroomAttendanceSection/HomeroomAttendanceSection";
 import HomeroomParentChatSection from "./components/homeroomParentChatSection/HomeroomParentChatSection";
 import HomeroomActionDialog from "./components/homeroomActionDialog/HomeroomActionDialog";
 import { homeroomData } from "./data/homeroomData";
+import { useSchoolYearTerm } from "../../../hooks/useSchoolYearTerm";
 import { FiUsers, FiAward, FiCalendar } from "react-icons/fi";
 import "./TeacherHomeroom.css";
 
 export default function TeacherHomeroom() {
+    const { selectedSchoolYear, selectedTerm, handleYearArrow, handleTermChange } = useSchoolYearTerm();
     const [activeSection, setActiveSection] = useState("overview");
     const [hasUnreadMessages, setHasUnreadMessages] = useState(true); // Mock unread state
     const [classData, setClassData] = useState(() => ({
@@ -68,7 +70,14 @@ export default function TeacherHomeroom() {
         <div className="teacher-homeroom-page">
             <PageHeader
                 title={`Lớp chủ nhiệm: ${classData.name}`}
-                eyebrow={`Khối ${classData.grade} • Năm học ${classData.year}`}
+                actions={
+                    <SchoolYearTermSelector
+                        selectedSchoolYear={selectedSchoolYear}
+                        selectedTerm={selectedTerm}
+                        onYearChange={handleYearArrow}
+                        onTermChange={handleTermChange}
+                    />
+                }
             />
 
             {/* Header info cards similar to admin dashboard */}

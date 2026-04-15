@@ -56,10 +56,6 @@ export default function TuitionFeeSection({ tuitionData, selectedGrade, selected
 
     const getDueDateKey = (grade, term) => `${selectedSchoolYear}__${grade}__${resolveTermKey(term)}`;
 
-    const getDueDateByKey = (grade, term) => {
-        const key = getDueDateKey(grade, term);
-        return dueDateMap[key] || DEFAULT_DUE_DATE_BY_TERM[term] || "";
-    };
 
     const upsertParentPaymentRecords = ({ grade, term, tuitionItems, dueDate }) => {
         const records = loadJson(PAYMENT_STORAGE_KEYS.PARENT_RECORDS, []);
@@ -124,6 +120,11 @@ export default function TuitionFeeSection({ tuitionData, selectedGrade, selected
         return nextDueDates;
     });
     const [dueDateHistoryMap, setDueDateHistoryMap] = useState(() => loadJson(PAYMENT_STORAGE_KEYS.ADMIN_DUE_DATE_HISTORY, {}));
+
+    const getDueDateByKey = (grade, term) => {
+        const key = getDueDateKey(grade, term);
+        return dueDateMap[key] || DEFAULT_DUE_DATE_BY_TERM[resolveTermKey(term)] || "";
+    };
 
     const formatCurrency = (amount) => formatVnd(roundMoney(amount));
 

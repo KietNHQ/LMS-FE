@@ -12,17 +12,18 @@
 .page-title-block {
     display: flex;
     align-items: center;
-    gap: 1rem;
+    justify-content: space-between;
+    gap: 0.75rem;
     flex-wrap: wrap;
     margin: 0;
 }
 
 .page-title-block h1 {
     margin: 0;
-    font-size: clamp(1.85rem, 1.55rem + 0.9vw, 2.35rem);
+    font-size: clamp(1.75rem, 1.4rem + 0.9vw, 2.2rem);
     line-height: 1.1;
     color: #202636;
-    font-weight: 700;
+    font-weight: 800;
     flex-shrink: 0;
 }
 
@@ -33,6 +34,36 @@
     line-height: 1.45;
     flex: 1;
     min-width: 16rem;
+}
+
+.parent-children-overview-header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+    padding: 0;
+}
+
+.parent-children-overview-top-panel {
+    border: 0.0625rem solid #e9eef8;
+    border-radius: 1rem;
+    background: #ffffff;
+    box-shadow: 0 0.22rem 0.85rem rgba(20, 28, 45, 0.045);
+    padding: 1rem 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.9rem;
+}
+
+.parent-children-overview-top-panel .child-switcher {
+    background: transparent;
+    border: 0;
+    box-shadow: none;
+    padding: 0;
+    border-top: 0.0625rem solid #edf1f7;
+    border-radius: 0;
+    padding-top: 0.9rem;
 }
 
 /* ===== OVERALL FLOW ===== */
@@ -155,6 +186,22 @@
     .overview-triple-grid {
         gap: 0.9rem;
     }
+
+    .parent-children-overview-header {
+        align-items: stretch;
+        gap: 0.75rem;
+    }
+
+    .parent-children-overview-top-panel {
+        padding: 0.9rem 1rem;
+        gap: 0.75rem;
+    }
+
+    .parent-children-overview-toolbar {
+        width: 100%;
+        margin-left: 0;
+        justify-content: flex-start;
+    }
 }
 
 /* ===== MOBILE ===== */
@@ -164,24 +211,48 @@
         gap: 0.85rem;
     }
 
+    .parent-children-overview-header {
+        gap: 0.65rem;
+    }
+
+    .parent-children-overview-top-panel {
+        padding: 0.85rem;
+        border-radius: 0.875rem;
+        gap: 0.65rem;
+    }
+
     .page-title-block {
         flex-direction: column;
         align-items: flex-start;
-        gap: 0.25rem;
+        gap: 0.3rem;
     }
 
     .page-title-block h1 {
-        font-size: clamp(1.5rem, 1.3rem + 0.8vw, 1.9rem);
+        font-size: clamp(1.45rem, 1.3rem + 0.6vw, 1.75rem);
     }
 
-    .page-title-block p {
-        min-width: 0;
-        font-size: 0.9rem;
-        line-height: 1.4;
+    .parent-children-overview-toolbar {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        padding-bottom: 0.125rem;
     }
+}
 
-    .overview-tab-content,
-    .overview-triple-grid {
-        gap: 0.85rem;
-    }
+.parent-children-overview-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    width: auto;
+    margin-left: auto;
+}
+
+.parent-children-overview-toolbar .school-year-term-selector {
+    gap: 0.85rem;
+    justify-content: flex-end;
+}
+
+.parent-children-overview-toolbar .school-year-term-selector__label {
+    font-size: 1rem;
+    color: #37517e;
 }

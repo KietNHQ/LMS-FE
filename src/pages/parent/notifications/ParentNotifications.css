@@ -2,7 +2,7 @@
 .parent-notification-page {
   width: 100%;
   min-height: 100%;
-  padding: 16px 20px 20px;
+  padding: 12px 14px 16px;
   box-sizing: border-box;
 }
 
@@ -11,7 +11,7 @@
   min-height: 0;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
 }
 
 .parent-notification-dialog-overlay {
@@ -21,43 +21,45 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 16px;
+  padding: 10px;
   z-index: 999;
 }
 
 .parent-notification-dialog-box {
-  width: min(480px, 100%);
+  width: min(360px, 100%);
   background: #ffffff;
-  border-radius: 16px;
-  padding: 20px;
-  box-shadow: 0 14px 30px rgba(17, 24, 39, 0.14);
+  border-radius: 12px;
+  padding: 14px;
+  max-height: calc(100vh - 32px);
+  overflow-y: auto;
+  box-shadow: 0 8px 18px rgba(17, 24, 39, 0.1);
   border: 1px solid #ebe6f7;
 }
 
 .parent-notification-dialog-box h2 {
-  margin: 0 0 10px;
-  font-size: 22px;
+  margin: 0 0 6px;
+  font-size: 16px;
   color: #1d2f56;
 }
 
 .parent-notification-dialog-content {
-  margin: 0 0 10px;
-  font-size: 15px;
-  line-height: 1.6;
+  margin: 0 0 6px;
+  font-size: 13px;
+  line-height: 1.45;
   color: #4b5a72;
 }
 
 .parent-notification-dialog-date {
-  font-size: 13px;
+  font-size: 11px;
   font-weight: 600;
   color: #93a0b4;
-  margin-bottom: 12px;
+  margin-bottom: 8px;
 }
 
 .parent-notification-dialog-close {
   border: none;
-  padding: 10px 18px;
-  border-radius: 10px;
+  padding: 7px 12px;
+  border-radius: 8px;
   font-weight: 700;
   color: white;
   background: linear-gradient(135deg, #b68af8, #885def);
@@ -68,7 +70,26 @@
 .parent-notification-dialog-close:hover {
   background: linear-gradient(135deg, #c59cff, #9a6eff);
   transform: translateY(-1px);
-  box-shadow: 0 5px 12px rgba(136, 93, 239, 0.3);
+  box-shadow: 0 4px 8px rgba(136, 93, 239, 0.18);
+}
+
+@media (max-width: 480px) {
+  .parent-notification-dialog-overlay {
+    padding: 8px;
+  }
+
+  .parent-notification-dialog-box {
+    width: min(100%, 340px);
+    padding: 12px;
+  }
+
+  .parent-notification-dialog-box h2 {
+    font-size: 15px;
+  }
+
+  .parent-notification-dialog-content {
+    font-size: 12px;
+  }
 }
 
 .parent-notification-dialog-close:active {
