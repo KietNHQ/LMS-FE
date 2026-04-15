@@ -14,32 +14,33 @@
 	background: linear-gradient(180deg, #f2fcfb 0%, #f8fbfd 38%, #ffffff 100%);
 }
 
-.teacher-lessons-header {
-	background: linear-gradient(120deg, rgba(17, 199, 182, 0.12) 0%, rgba(255, 255, 255, 1) 50%);
+.teacher-lessons-page .common-page-header {
+	padding: 14px;
 	border: 1px solid var(--teacher-border-soft);
 	border-radius: 14px;
-	padding: 18px;
 	box-shadow: var(--teacher-shadow);
+	background: linear-gradient(120deg, rgba(17, 199, 182, 0.1) 0%, rgba(255, 255, 255, 1) 54%);
+}
+
+.teacher-lessons-page .common-page-header__eyebrow {
+	background: #e9fbf8;
+	color: #0f7065;
+}
+
+.teacher-lessons-header-actions {
 	display: flex;
-	flex-direction: column;
+	align-items: center;
 	gap: 10px;
+	flex-wrap: wrap;
 }
 
-.teacher-lessons-header h1 {
-	margin: 0;
-	font-size: 24px;
-	color: var(--teacher-text-main);
-}
-
-.teacher-lessons-header p {
-	margin: 8px 0 0;
+.teacher-lessons-term-note {
+	margin: -2px 0 0;
 	color: var(--teacher-text-sub);
-	line-height: 1.5;
-	font-size: 14px;
+	font-size: 13px;
 }
 
 .teacher-create-lesson-btn {
-	align-self: flex-start;
 	border: none;
 	border-radius: 10px;
 	padding: 11px 16px;
@@ -50,6 +51,8 @@
 	box-shadow: 0 10px 20px rgba(4, 160, 148, 0.28);
 	cursor: pointer;
 	transition: transform 0.16s ease, box-shadow 0.2s ease;
+	white-space: nowrap;
+	flex-shrink: 0;
 }
 
 .teacher-create-lesson-btn:hover {
@@ -86,8 +89,10 @@
 		padding: 16px;
 	}
 
-	.teacher-lessons-header h1 {
-		font-size: 20px;
+	.teacher-lessons-header-actions {
+		width: 100%;
+		flex-direction: column;
+		align-items: stretch;
 	}
 
 	.teacher-create-lesson-btn {

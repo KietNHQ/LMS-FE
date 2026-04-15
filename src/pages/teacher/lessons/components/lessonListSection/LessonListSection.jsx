@@ -1,4 +1,5 @@
 import React from "react";
+import { FiEye, FiEdit2 } from "react-icons/fi";
 import "./LessonListSection.css";
 
 function statusClassName(status) {
@@ -7,7 +8,7 @@ function statusClassName(status) {
     return "status-pending";
 }
 
-export default function LessonListSection({ lessons, summary }) {
+export default function LessonListSection({ lessons, summary, onViewDetail, onEditLesson }) {
     return (
         <div className="lesson-list-section">
             <div className="lesson-list-head">
@@ -45,6 +46,7 @@ export default function LessonListSection({ lessons, summary }) {
                             <th>Tiết</th>
                             <th>Phòng</th>
                             <th>Trạng thái</th>
+                            <th>Hành động</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -65,11 +67,33 @@ export default function LessonListSection({ lessons, summary }) {
                                             {lesson.status}
                                         </span>
                                     </td>
+                                    <td>
+                                        <div className="lesson-row-actions">
+                                            <button
+                                                type="button"
+                                                className="lesson-action-btn action-view"
+                                                onClick={() => onViewDetail?.(lesson)}
+                                                title="Xem chi tiết"
+                                                aria-label="Xem chi tiết bài học"
+                                            >
+                                                <FiEye size={16} />
+                                            </button>
+                                            <button
+                                                type="button"
+                                                className="lesson-action-btn action-edit"
+                                                onClick={() => onEditLesson?.(lesson.id)}
+                                                title="Chỉnh sửa"
+                                                aria-label="Chỉnh sửa bài học"
+                                            >
+                                                <FiEdit2 size={16} />
+                                            </button>
+                                        </div>
+                                    </td>
                                 </tr>
                             ))
                         ) : (
                             <tr>
-                                <td colSpan="7" className="empty-row">
+                                <td colSpan="8" className="empty-row">
                                     Không có bài học nào phù hợp bộ lọc hiện tại.
                                 </td>
                             </tr>

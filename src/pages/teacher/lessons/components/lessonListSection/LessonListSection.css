@@ -94,6 +94,55 @@
     white-space: nowrap;
 }
 
+.lesson-row-actions {
+    display: flex;
+    flex-direction: row;
+    gap: 8px;
+    min-width: auto;
+    align-items: center;
+}
+
+.lesson-action-btn {
+    border: 1px solid #bfe9e4;
+    border-radius: 8px;
+    padding: 6px;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 32px;
+    min-height: 32px;
+    width: 32px;
+    height: 32px;
+    transition: all 0.2s ease;
+}
+
+.lesson-action-btn:hover {
+    transform: scale(1.05);
+}
+
+.lesson-action-btn.action-view {
+    background: #edf9f7;
+    color: #0d7d72;
+}
+
+.lesson-action-btn.action-view:hover {
+    background: #ddf4f1;
+    border-color: #0d7d72;
+}
+
+.lesson-action-btn.action-edit {
+    background: linear-gradient(180deg, #11c7b6 0%, #04a094 100%);
+    color: #ffffff;
+    border-color: transparent;
+}
+
+.lesson-action-btn.action-edit:hover {
+    filter: brightness(1.1);
+}
+
 .status-published {
     background: #d7f7f2;
     color: #0a786d;
