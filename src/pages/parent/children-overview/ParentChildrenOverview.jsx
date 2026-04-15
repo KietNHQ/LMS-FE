@@ -1,5 +1,7 @@
-import React, { useState } from "react"
+import React, { useEffect, useState } from "react"
 import "./ParentChildrenOverview.css"
+import { SchoolYearTermSelector } from "../../../components/common"
+import { useSchoolYearTerm } from "../../../hooks/useSchoolYearTerm"
 import ChildHeader from "./components/childHeader/ChildHeader"
 import ChildTabs from "./components/ChildTabs/ChildTabs"
 import AttendanceSection from "./components/attendanceSection/AttendanceSection"
@@ -9,14 +11,19 @@ import LeaveRequestSection from "./components/LeaveRequestSection/LeaveRequestSe
 import ChildSwitcher from "./components/ChildSwitcher/ChildSwitcher"
 
 export default function ParentChildrenOverview() {
-    const [activeTab, setActiveTab] = useState("overview")
-    const [selectedSemester, setSelectedSemester] = useState("hk1")
-    const [selectedChildId, setSelectedChildId] = useState("child1")
-
     const getCurrentSemesterKey = () => {
         const month = new Date().getMonth() + 1
         return month >= 1 && month <= 6 ? "hk2" : "hk1"
     }
+
+    const [activeTab, setActiveTab] = useState("overview")
+    const [selectedSemester, setSelectedSemester] = useState(getCurrentSemesterKey)
+    const [selectedChildId, setSelectedChildId] = useState("child1")
+    const { selectedSchoolYear, selectedTerm, handleYearArrow, handleTermChange } = useSchoolYearTerm()
+
+    useEffect(() => {
+        setSelectedSemester(selectedTerm)
+    }, [selectedTerm])
 
     const buildAttendanceSummary = (label, records) => {
         const base = { present: 0, absent: 0, late: 0 }
@@ -276,20 +283,20 @@ export default function ParentChildrenOverview() {
         allMonthlyRecords,
         records: weeklyRecords
     }
-    const currentSemesterKey = getCurrentSemesterKey()
-    const overviewCurrentSemesterGrades = gradesBySemester?.[currentSemesterKey] || []
-    const overviewSemesterLabel = currentSemesterKey === "hk2" ? "Học kỳ II" : "Học kỳ I"
+    const overviewCurrentSemesterGrades = gradesBySemester?.[selectedTerm] || []
+    const overviewSemesterLabel = selectedTerm === "hk2" ? "Học kỳ II" : "Học kỳ I"
 
     const handleOverviewCardClick = (semesterKey) => {
         if (!semesterKey) return
         setSelectedSemester(semesterKey)
+        handleTermChange(semesterKey)
         setActiveTab("grades")
     }
 
     const handleChildSwitch = (id) => {
         setSelectedChildId(id)
         setActiveTab("overview")
-        setSelectedSemester("hk1")
+        setSelectedSemester(selectedTerm)
     }
 
     const allChildren = [
@@ -299,15 +306,31 @@ export default function ParentChildrenOverview() {
 
     return (
         <div className="parent-children-overview-page">
-            <div className="page-title-block">
-                <h1>Tổng quan con em</h1>
-            </div>
+            <div className="parent-children-overview-top-panel">
+                <div className="parent-children-overview-header">
+                    <div className="page-title-block">
+                        <h1>Tổng quan con em</h1>
+                    </div>
 
-            <ChildSwitcher
-                children={allChildren}
-                selectedId={selectedChildId}
-                onSelect={handleChildSwitch}
-            />
+                    <div className="parent-children-overview-toolbar">
+                        <SchoolYearTermSelector
+                            selectedSchoolYear={selectedSchoolYear}
+                            selectedTerm={selectedTerm}
+                            onYearChange={handleYearArrow}
+                            onTermChange={(term) => {
+                                setSelectedSemester(term)
+                                handleTermChange(term)
+                            }}
+                        />
+                    </div>
+                </div>
+
+                <ChildSwitcher
+                    children={allChildren}
+                    selectedId={selectedChildId}
+                    onSelect={handleChildSwitch}
+                />
+            </div>
 
             <ChildHeader child={childData} onStatClick={handleOverviewCardClick} />
 
@@ -319,7 +342,7 @@ export default function ParentChildrenOverview() {
                         <GradesSection
                             compact
                             grades={overviewCurrentSemesterGrades}
-                            selectedSemester={currentSemesterKey}
+                            selectedSemester={selectedTerm}
                             semesterNoteText={overviewSemesterLabel}
                             highlightSemesterNote
                         />
@@ -356,7 +379,10 @@ export default function ParentChildrenOverview() {
                 <GradesSection
                     gradesBySemester={gradesBySemester}
                     selectedSemester={selectedSemester}
-                    onSemesterChange={setSelectedSemester}
+                    onSemesterChange={(semester) => {
+                        setSelectedSemester(semester)
+                        handleTermChange(semester)
+                    }}
                 />
             )}
 

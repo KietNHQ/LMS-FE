@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import "./ParentPayments.css";
 import Modal from "../../../components/ui/Modal/Modal";
+import { SchoolYearTermSelector } from "../../../components/common";
+import { useSchoolYearTerm } from "../../../hooks/useSchoolYearTerm";
 import PaymentSummaryCard from "./components/PaymentSummaryCard/PaymentSummaryCard";
 import PaymentTable from "./components/PaymentTable/PaymentTable";
 import InvoiceHistory from "./components/InvoiceHistory/InvoiceHistory";
@@ -37,6 +39,10 @@ function formatCurrency(amount) {
 
 function getToday() {
     return new Date().toISOString().slice(0, 10);
+}
+
+function normalizeSchoolYearKey(value = "") {
+    return String(value).replace(/\s+/g, "").trim();
 }
 
 function getFallbackPayments() {
@@ -86,7 +92,71 @@ function getFallbackPayments() {
             paidAmount: 0,
             invoiceCode: "INV-HK2-2026-10A1-01",
         },
+        {
+            id: 3,
+            title: "Hoc phi HK1",
+            term: "Học kỳ 1",
+            schoolYear: "2025-2026",
+            grade: "Khoi 12",
+            className: "12A2",
+            childName: "Nguyen Thi Ngoc Ha",
+            deadline: "2025-09-30",
+            feeItems: [
+                { id: "f-8", name: "Hoc phi", note: "Bat buoc", amount: 4300000 },
+                { id: "f-9", name: "Ban tru", note: "Bat buoc", amount: 800000 },
+                { id: "f-10", name: "Dich vu bo tro", note: "Dich vu", amount: 300000 },
+            ],
+            description: "Khoan thu hoc ky 1 cho hoc sinh lop 12A2.",
+            discountCode: "GIAM10",
+            discountAmount: 540000,
+            status: "paid",
+            paidDate: "2025-09-26",
+            paidAmount: 4860000,
+            invoiceCode: "INV-HK1-2025-12A2-01",
+        },
+        {
+            id: 4,
+            title: "Hoc phi HK2",
+            term: "Học kỳ 2",
+            schoolYear: "2025-2026",
+            grade: "Khoi 12",
+            className: "12A2",
+            childName: "Nguyen Thi Ngoc Ha",
+            deadline: "2026-02-28",
+            feeItems: [
+                { id: "f-11", name: "Hoc phi", note: "Bat buoc", amount: 4200000 },
+                { id: "f-12", name: "Ban tru", note: "Bat buoc", amount: 800000 },
+                { id: "f-13", name: "Dich vu CLB", note: "Dich vu", amount: 250000 },
+            ],
+            description: "Khoan thu hoc ky 2 cho hoc sinh lop 12A2.",
+            discountCode: "",
+            discountAmount: 0,
+            status: "unpaid",
+            paidDate: "",
+            paidAmount: 0,
+            invoiceCode: "INV-HK2-2026-12A2-01",
+        },
     ];
+}
+
+function upgradeLegacySingleChildDemoData(list) {
+    const normalizedList = Array.isArray(list) ? list : [];
+    const isLegacySingleChildDemo =
+        normalizedList.length > 0
+        && normalizedList.length <= 2
+        && normalizedList.every((item) => item.childName === "Nguyen Van B" && item.className === "10A1")
+        && normalizedList.every((item) => !item.namespace);
+
+    if (!isLegacySingleChildDemo) return normalizedList;
+
+    const existingInvoiceCodes = new Set(normalizedList.map((item) => item.invoiceCode));
+    const childTwoRecords = getFallbackPayments().filter((item) => item.childName === "Nguyen Thi Ngoc Ha");
+    const merged = [
+        ...normalizedList,
+        ...childTwoRecords.filter((item) => !existingInvoiceCodes.has(item.invoiceCode)),
+    ];
+
+    return normalizePaymentList(merged);
 }
 
 function recomputePayment(record) {
@@ -141,12 +211,14 @@ function normalizePaymentList(list) {
 }
 
 export default function ParentPayments() {
+    const { selectedSchoolYear, selectedTerm, handleYearArrow, handleTermChange } = useSchoolYearTerm();
     const [paymentList, setPaymentList] = useState(() => {
         const stored = loadJson(PAYMENT_STORAGE_KEYS.PARENT_RECORDS, []);
         const initial = stored.length ? stored : getFallbackPayments();
         const normalized = normalizePaymentList(initial);
-        saveJson(PAYMENT_STORAGE_KEYS.PARENT_RECORDS, normalized);
-        return normalized;
+        const upgraded = upgradeLegacySingleChildDemoData(normalized);
+        saveJson(PAYMENT_STORAGE_KEYS.PARENT_RECORDS, upgraded);
+        return upgraded;
     });
 
     const [selectedPaymentId, setSelectedPaymentId] = useState(null);
@@ -189,11 +261,17 @@ export default function ParentPayments() {
     );
 
     const filteredPaymentList = useMemo(() => {
+        const selectedYearKey = normalizeSchoolYearKey(selectedSchoolYear);
+        const selectedTermLabel = selectedTerm === "hk2" ? "Học kỳ 2" : "Học kỳ 1";
+
         const filtered = paymentList.filter((item) => {
+            const itemYearKey = normalizeSchoolYearKey(item.schoolYear);
             const childPass = childFilter === "all" || item.childName === childFilter;
-            const termPass = termFilter === "all" || (item.term || item.title) === termFilter;
+            const termFromSelectorPass = (item.term || item.title) === selectedTermLabel;
+            const termPass = termFilter === "all" ? termFromSelectorPass : (item.term || item.title) === termFilter;
             const monthPass = monthFilter === "all" || item.month === monthFilter;
-            return childPass && termPass && monthPass;
+            const schoolYearPass = !selectedYearKey || itemYearKey === selectedYearKey;
+            return childPass && termPass && monthPass && schoolYearPass;
         });
 
         return filtered.sort((a, b) => {
@@ -201,7 +279,7 @@ export default function ParentPayments() {
             const bTime = new Date(b.deadline).getTime();
             return sortByDeadline === "asc" ? aTime - bTime : bTime - aTime;
         });
-    }, [paymentList, childFilter, termFilter, monthFilter, sortByDeadline]);
+    }, [paymentList, childFilter, termFilter, monthFilter, sortByDeadline, selectedSchoolYear, selectedTerm]);
 
     const invoiceHistory = useMemo(
         () =>
@@ -235,6 +313,47 @@ export default function ParentPayments() {
             { id: 3, type: "discount", title: "Tổng giảm giá", amount: formatCurrency(discountAmount) },
         ];
     }, [paymentList]);
+
+    const paymentCaseStats = useMemo(() => {
+        const initialCases = {
+            paidOnTime: { key: "paidOnTime", label: "Đã thanh toán đúng hạn", count: 0, amount: 0 },
+            paidLate: { key: "paidLate", label: "Đã thanh toán trễ hạn", count: 0, amount: 0 },
+            upcoming: { key: "upcoming", label: "Chưa đến hạn", count: 0, amount: 0 },
+            dueSoon: { key: "dueSoon", label: "Sắp đến hạn", count: 0, amount: 0 },
+            overdue: { key: "overdue", label: "Quá hạn chưa đóng", count: 0, amount: 0 },
+        };
+
+        filteredPaymentList.forEach((item) => {
+            const dueStatus = getDueStatus(item);
+            const paidDateTime = item.paidDate ? new Date(item.paidDate).getTime() : null;
+            const deadlineTime = item.deadline ? new Date(item.deadline).getTime() : null;
+
+            if (item.status === "paid") {
+                const paidOnTime = paidDateTime && deadlineTime ? paidDateTime <= deadlineTime : true;
+                const targetKey = paidOnTime ? "paidOnTime" : "paidLate";
+                initialCases[targetKey].count += 1;
+                initialCases[targetKey].amount += roundMoney(item.paidAmount || item.finalAmount || 0);
+                return;
+            }
+
+            if (dueStatus.key === "overdue") {
+                initialCases.overdue.count += 1;
+                initialCases.overdue.amount += roundMoney(item.finalAmount || 0);
+                return;
+            }
+
+            if (dueStatus.key === "due_soon") {
+                initialCases.dueSoon.count += 1;
+                initialCases.dueSoon.amount += roundMoney(item.finalAmount || 0);
+                return;
+            }
+
+            initialCases.upcoming.count += 1;
+            initialCases.upcoming.amount += roundMoney(item.finalAmount || 0);
+        });
+
+        return Object.values(initialCases);
+    }, [filteredPaymentList]);
 
     const openDiscountDialog = (paymentId) => {
         const payment = paymentList.find((item) => item.id === paymentId);
@@ -365,31 +484,47 @@ export default function ParentPayments() {
 
     return (
         <div className="parent-payments-page">
-            <div className="parent-payments-header">
-                <h1>Học phí</h1>
-                <p>Dong bo khoan thu tu admin, theo doi han nop va chi tiet hoa don.</p>
-            </div>
+            <div className="parent-payments-top-panel">
+                <div className="parent-payments-header">
+                    <div className="parent-payments-header__title">
+                        <h1>Học phí</h1>
+                        <p>Dong bo khoan thu tu admin, theo doi han nop va chi tiet hoa don.</p>
+                    </div>
 
-            <div className="payment-filter-row">
-                <select value={childFilter} onChange={(event) => setChildFilter(event.target.value)}>
-                    {childOptions.map((item) => (
-                        <option key={item} value={item}>{item === "all" ? "Tat ca hoc sinh" : item}</option>
-                    ))}
-                </select>
-                <select value={termFilter} onChange={(event) => setTermFilter(event.target.value)}>
-                    {termOptions.map((item) => (
-                        <option key={item} value={item}>{item === "all" ? "Tat ca ky" : item}</option>
-                    ))}
-                </select>
-                <select value={monthFilter} onChange={(event) => setMonthFilter(event.target.value)}>
-                    {monthOptions.map((item) => (
-                        <option key={item} value={item}>{item === "all" ? "Tat ca thang" : item}</option>
-                    ))}
-                </select>
-                <select value={sortByDeadline} onChange={(event) => setSortByDeadline(event.target.value)}>
-                    <option value="asc">Han nop gan nhat</option>
-                    <option value="desc">Han nop xa nhat</option>
-                </select>
+                    <div className="parent-payments-header__selector">
+                        <SchoolYearTermSelector
+                            selectedSchoolYear={selectedSchoolYear}
+                            selectedTerm={selectedTerm}
+                            onYearChange={handleYearArrow}
+                            onTermChange={(term) => {
+                                handleTermChange(term);
+                                setTermFilter(term === "hk2" ? "Học kỳ 2" : "Học kỳ 1");
+                            }}
+                        />
+                    </div>
+                </div>
+
+                <div className="payment-filter-row">
+                    <select value={childFilter} onChange={(event) => setChildFilter(event.target.value)}>
+                        {childOptions.map((item) => (
+                            <option key={item} value={item}>{item === "all" ? "Tat ca hoc sinh" : item}</option>
+                        ))}
+                    </select>
+                    <select value={termFilter} onChange={(event) => setTermFilter(event.target.value)}>
+                        {termOptions.map((item) => (
+                            <option key={item} value={item}>{item === "all" ? "Tat ca ky" : item}</option>
+                        ))}
+                    </select>
+                    <select value={monthFilter} onChange={(event) => setMonthFilter(event.target.value)}>
+                        {monthOptions.map((item) => (
+                            <option key={item} value={item}>{item === "all" ? "Tat ca thang" : item}</option>
+                        ))}
+                    </select>
+                    <select value={sortByDeadline} onChange={(event) => setSortByDeadline(event.target.value)}>
+                        <option value="asc">Han nop gan nhat</option>
+                        <option value="desc">Han nop xa nhat</option>
+                    </select>
+                </div>
             </div>
 
             <div className="payment-summary-grid">
@@ -397,6 +532,19 @@ export default function ParentPayments() {
                     <PaymentSummaryCard key={item.id} item={item} />
                 ))}
             </div>
+
+            <section className="payment-case-section">
+                <h3>Các trường hợp đóng tiền</h3>
+                <div className="payment-case-grid">
+                    {paymentCaseStats.map((item) => (
+                        <article key={item.key} className="payment-case-item">
+                            <p>{item.label}</p>
+                            <strong>{item.count} hóa đơn</strong>
+                            <span>{formatCurrency(item.amount)}</span>
+                        </article>
+                    ))}
+                </div>
+            </section>
 
             <div className="payment-table-list">
                 {filteredPaymentList.map((item) => {
