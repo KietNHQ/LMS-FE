@@ -1,4 +1,129 @@
 .lesson-list-section {
-    padding: 1rem;
+    border: 1px solid var(--teacher-border-soft);
+    background: #ffffff;
+    border-radius: 14px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    box-shadow: var(--teacher-shadow);
+}
+
+.lesson-list-head h2 {
+    margin: 0;
+    font-size: 18px;
+    color: var(--teacher-text-main);
+}
+
+.lesson-list-head p {
+    margin: 6px 0 0;
+    color: var(--teacher-text-sub);
+    font-size: 14px;
+}
+
+.lesson-summary-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 10px;
+}
+
+.summary-card {
+    border: 1px solid #b9e8e2;
+    background: linear-gradient(180deg, #f2fcfb 0%, #ffffff 100%);
+    border-radius: 10px;
+    padding: 10px;
+}
+
+.summary-card p {
+    margin: 0;
+    color: #475569;
+    font-size: 13px;
+}
+
+.summary-card h3 {
+    margin: 6px 0 0;
+    color: #0a7b70;
+    font-size: 20px;
+}
+
+.lesson-table-wrap {
+    overflow-x: auto;
+}
+
+.lesson-table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 900px;
+}
+
+.lesson-table th,
+.lesson-table td {
+    border-bottom: 1px solid #d9efec;
+    padding: 10px;
+    text-align: left;
+    vertical-align: top;
+    font-size: 13px;
+    color: #334155;
+}
+
+.lesson-table th {
+    color: #0e5f59;
+    font-weight: 700;
+    background: #f0faf8;
+}
+
+.lesson-table td strong {
+    color: #15313c;
+    font-size: 14px;
+}
+
+.lesson-table td p {
+    margin: 4px 0 0;
+    color: #64748b;
+    line-height: 1.45;
+}
+
+.lesson-status {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    font-weight: 700;
+    font-size: 12px;
+    padding: 4px 10px;
+    white-space: nowrap;
+}
+
+.status-published {
+    background: #d7f7f2;
+    color: #0a786d;
+}
+
+.status-draft {
+    background: #fff4d8;
+    color: #9a5b13;
+}
+
+.status-pending {
+    background: #e3f7f4;
+    color: #0b8f82;
+}
+
+.empty-row {
+    text-align: center !important;
+    color: #64748b !important;
+    padding: 18px !important;
+}
+
+@media (max-width: 900px) {
+    .lesson-summary-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 560px) {
+    .lesson-summary-grid {
+        grid-template-columns: 1fr;
+    }
 }
 

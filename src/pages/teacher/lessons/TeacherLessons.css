@@ -1,0 +1,100 @@
+.teacher-lessons {
+	--teacher-primary: #11c7b6;
+	--teacher-primary-dark: #04a094;
+	--teacher-primary-soft: #e9fbf8;
+	--teacher-border-soft: #b6ebe5;
+	--teacher-text-main: #0f172a;
+	--teacher-text-sub: #47606a;
+	--teacher-shadow: 0 8px 22px rgba(4, 160, 148, 0.08);
+	padding: 24px;
+	display: flex;
+	flex-direction: column;
+	gap: 16px;
+	min-height: 100vh;
+	background: linear-gradient(180deg, #f2fcfb 0%, #f8fbfd 38%, #ffffff 100%);
+}
+
+.teacher-lessons-header {
+	background: linear-gradient(120deg, rgba(17, 199, 182, 0.12) 0%, rgba(255, 255, 255, 1) 50%);
+	border: 1px solid var(--teacher-border-soft);
+	border-radius: 14px;
+	padding: 18px;
+	box-shadow: var(--teacher-shadow);
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+}
+
+.teacher-lessons-header h1 {
+	margin: 0;
+	font-size: 24px;
+	color: var(--teacher-text-main);
+}
+
+.teacher-lessons-header p {
+	margin: 8px 0 0;
+	color: var(--teacher-text-sub);
+	line-height: 1.5;
+	font-size: 14px;
+}
+
+.teacher-create-lesson-btn {
+	align-self: flex-start;
+	border: none;
+	border-radius: 10px;
+	padding: 11px 16px;
+	font-size: 14px;
+	font-weight: 700;
+	color: #ffffff;
+	background: linear-gradient(180deg, #11c7b6 0%, #04a094 100%);
+	box-shadow: 0 10px 20px rgba(4, 160, 148, 0.28);
+	cursor: pointer;
+	transition: transform 0.16s ease, box-shadow 0.2s ease;
+}
+
+.teacher-create-lesson-btn:hover {
+	transform: translateY(-1px);
+	box-shadow: 0 14px 24px rgba(4, 160, 148, 0.32);
+}
+
+.teacher-create-lesson-btn:active {
+	transform: translateY(0);
+}
+
+.teacher-create-lesson-modal {
+	width: min(1220px, calc(100vw - 28px));
+	max-height: 92vh;
+	border: 1px solid #b5e9e3;
+}
+
+.teacher-create-lesson-modal .ui-modal__header {
+	background: #f2fcfb;
+	border-bottom: 1px solid #d2efeb;
+}
+
+.teacher-create-lesson-modal .ui-modal__title {
+	color: #0d6d63;
+}
+
+.teacher-create-lesson-modal .ui-modal__body {
+	padding: 14px;
+	background: linear-gradient(180deg, #f4fdfc 0%, #ffffff 100%);
+}
+
+@media (max-width: 768px) {
+	.teacher-lessons {
+		padding: 16px;
+	}
+
+	.teacher-lessons-header h1 {
+		font-size: 20px;
+	}
+
+	.teacher-create-lesson-btn {
+		width: 100%;
+	}
+
+	.teacher-create-lesson-modal {
+		width: min(1220px, calc(100vw - 16px));
+	}
+}

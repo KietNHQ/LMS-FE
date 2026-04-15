@@ -1,4 +1,127 @@
 .lesson-filter-section {
-    padding: 1rem;
+    border: 1px solid var(--teacher-border-soft);
+    background: #ffffff;
+    border-radius: 14px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    box-shadow: var(--teacher-shadow);
+}
+
+.lesson-filter-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+}
+
+.lesson-filter-head h2 {
+    margin: 0;
+    color: var(--teacher-text-main);
+    font-size: 18px;
+}
+
+.lesson-filter-tag {
+    font-size: 12px;
+    font-weight: 700;
+    color: #0c7469;
+    background: var(--teacher-primary-soft);
+    border: 1px solid #bfeee8;
+    border-radius: 999px;
+    padding: 5px 10px;
+}
+
+.lesson-subject-card {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    border: 1px dashed #89d8cf;
+    border-radius: 12px;
+    padding: 12px;
+    background: linear-gradient(160deg, #f0fcfa 0%, #f8fbfd 100%);
+}
+
+.subject-label {
+    margin: 0;
+    font-size: 12px;
+    color: #64748b;
+}
+
+.lesson-subject-card h3 {
+    margin: 4px 0;
+    color: var(--teacher-text-main);
+    font-size: 18px;
+}
+
+.subject-meta {
+    margin: 0;
+    color: var(--teacher-text-sub);
+    font-size: 13px;
+}
+
+.subject-lock {
+    white-space: nowrap;
+    font-weight: 700;
+    color: #0b766a;
+    background: #def8f4;
+    border: 1px solid #a9e8df;
+    padding: 6px 10px;
+    border-radius: 8px;
+    font-size: 12px;
+}
+
+.lesson-filter-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.lesson-filter-grid label {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    font-size: 13px;
+    color: #2c4650;
+    font-weight: 600;
+}
+
+.lesson-filter-grid select,
+.lesson-filter-grid input {
+    border: 1px solid #c6e5e1;
+    border-radius: 8px;
+    padding: 9px 10px;
+    font-size: 14px;
+    color: #1b3440;
+    background: #ffffff;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.lesson-filter-grid input:focus,
+.lesson-filter-grid select:focus {
+    outline: none;
+    border-color: var(--teacher-primary);
+    box-shadow: 0 0 0 3px rgba(17, 199, 182, 0.18);
+}
+
+.filter-keyword {
+    grid-column: span 1;
+}
+
+@media (max-width: 900px) {
+    .lesson-filter-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .lesson-filter-head {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .lesson-subject-card {
+        flex-direction: column;
+        align-items: flex-start;
+    }
 }
 
