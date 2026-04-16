@@ -190,6 +190,13 @@
     gap: 0.25rem;
 }
 
+.tt-slot-note {
+    margin: 0.5rem 0 0;
+    font-size: 0.78rem;
+    color: #334155;
+    line-height: 1.35;
+}
+
 .meta-item {
     font-size: 0.85rem;
     font-weight: 600;
@@ -221,6 +228,10 @@
 
 .status-ok { background: #ecfdf5; color: #059669; }
 .status-pending { background: #fffbeb; color: #d97706; }
+.status-rescheduled { background: #ffedd5; color: #9a3412; }
+.status-cancelled { background: #fee2e2; color: #991b1b; }
+.status-holiday { background: #fef3c7; color: #92400e; }
+.status-makeup { background: #dbeafe; color: #1e3a8a; }
 
 .tt-slot-actions {
     display: flex;

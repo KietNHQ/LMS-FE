@@ -1,10 +1,30 @@
-import React, { useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import "./CalendarSection.css";
+import { UnifiedTimetable } from "../../../../../components/common";
+import {
+    getClassWeekLessons,
+    getStartOfIsoWeek,
+    shiftWeek,
+} from "../../../../../utils/timetableShared";
 
-export default function CalendarSection({ schedule, events, compact = false }) {
+export default function CalendarSection({ events, compact = false, classNameValue, selectedChildId }) {
     const [activeView, setActiveView] = useState("schedule");
     const [activeScheduleIndex, setActiveScheduleIndex] = useState(0);
     const [activeEventIndex, setActiveEventIndex] = useState(0);
+    const [weekStart, setWeekStart] = useState(() => getStartOfIsoWeek(new Date()));
+
+    useEffect(() => {
+        setActiveScheduleIndex(0);
+        setActiveEventIndex(0);
+        setWeekStart(getStartOfIsoWeek(new Date()));
+    }, [selectedChildId]);
+
+    const lessons = useMemo(
+        () => (classNameValue ? getClassWeekLessons(classNameValue, weekStart) : []),
+        [classNameValue, weekStart]
+    );
+
+    const compactLessons = useMemo(() => lessons.slice(0, 4), [lessons]);
 
     return (
         <div className={`calendar-card ${compact ? "compact" : ""}`}>
@@ -31,22 +51,22 @@ export default function CalendarSection({ schedule, events, compact = false }) {
                 </button>
             </div>
 
-            {activeView === "schedule" && (
+            {activeView === "schedule" && compact && (
                 <div className="calendar-sub-block">
                     <h4>Lịch học hàng tuần</h4>
 
                     <div className="calendar-list">
-                        {schedule.map((item, index) => (
+                        {compactLessons.map((item, index) => (
                             <button
                                 type="button"
-                                key={`${item.subject}-${index}`}
+                                key={`${item.id}-${index}`}
                                 className={`calendar-list-item ${activeScheduleIndex === index ? "active" : ""}`}
                                 onClick={() => setActiveScheduleIndex(index)}
                             >
                                 <div className="calendar-item-main">
                                     <strong>{item.subject}</strong>
                                     <p>
-                                        {item.day} • {item.time}
+                                        Tiết {item.periodStart}{item.periodEnd > item.periodStart ? `-${item.periodEnd}` : ""} • {item.timeRange}
                                     </p>
                                 </div>
 
@@ -57,6 +77,19 @@ export default function CalendarSection({ schedule, events, compact = false }) {
                         ))}
                     </div>
                 </div>
+            )}
+
+            {activeView === "schedule" && !compact && (
+                <UnifiedTimetable
+                    title="Thoi khoa bieu phu huynh"
+                    weekStart={weekStart}
+                    lessons={lessons}
+                    classNameValue={classNameValue}
+                    onPrevWeek={() => setWeekStart((prev) => shiftWeek(prev, -1))}
+                    onNextWeek={() => setWeekStart((prev) => shiftWeek(prev, 1))}
+                    onResetWeek={() => setWeekStart(getStartOfIsoWeek(new Date()))}
+                    compact
+                />
             )}
 
             {activeView === "events" && (

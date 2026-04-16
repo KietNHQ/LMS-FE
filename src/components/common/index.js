@@ -10,3 +10,4 @@ export { default as CreateUserDialog } from "./Dialog/Admin/CreateUserDialog/Cre
 export { default as EventCalendar } from "./EventCalendar/EventCalendar.jsx";
 export { default as SchoolYearTermSelector } from "./SchoolYearTermSelector/SchoolYearTermSelector.jsx";
 export { default as Pagination } from "./Pagination/Pagination.jsx";
+export { default as UnifiedTimetable } from "./UnifiedTimetable/UnifiedTimetable.jsx";

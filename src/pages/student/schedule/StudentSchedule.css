@@ -1,8 +1,9 @@
 .student-schedule-page {
     width: 100%;
     min-width: 0;
-    padding: 28px 24px 32px;
+    padding: 24px;
     box-sizing: border-box;
+    /* background: linear-gradient(180deg, #f8fbff 0%, #ffffff 32%); */
 }
 
 @media (max-width: 768px) {

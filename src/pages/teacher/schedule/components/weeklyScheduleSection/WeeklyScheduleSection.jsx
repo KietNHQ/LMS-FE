@@ -4,6 +4,7 @@ import { BsFillSunFill } from "react-icons/bs";
 import SchoolRoundedIcon from "@mui/icons-material/SchoolRounded";
 import AccessTimeRoundedIcon from "@mui/icons-material/AccessTimeRounded";
 import "./WeeklyScheduleSection.css";
+import { getTeacherWeekLessons, getStartOfIsoWeek } from "../../../../../utils/timetableShared";
 
 const DAY_NAMES = ["Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6", "Thứ 7", "CN"];
 const PERIODS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
@@ -31,44 +32,9 @@ function getLessonStatus(note) {
   return { key: "lesson", label: "Bài mới" };
 }
 
-// Mock schedule data: { dayIndex (0=Mon): [{ period, subject, class, room, color }] }
-const SCHEDULE_DATA = {
-  0: [
-    { period: 1, subject: "Toán", class: "10A1", room: "P.201", students: 35, color: "teal", note: "Chương 3: Hàm số bậc nhất" },
-    { period: 2, subject: "Toán", class: "10A1", room: "P.201", students: 35, color: "teal", note: "Chương 3: Hàm số bậc nhất" },
-    { period: 5, subject: "Toán nâng cao", class: "11B2", room: "P.305", students: 30, color: "purple", note: "Lượng giác - Bài tập" },
-  ],
-  1: [
-    { period: 3, subject: "Toán", class: "10A2", room: "P.102", students: 33, color: "blue", note: "Chương 3: Hàm số" },
-    { period: 4, subject: "Toán", class: "10A2", room: "P.102", students: 33, color: "blue", note: "Chương 3: Hàm số" },
-    { period: 7, subject: "Toán", class: "12A1", room: "P.401", students: 38, color: "orange", note: "Ôn tập tích phân" },
-    { period: 8, subject: "Toán", class: "12A1", room: "P.401", students: 38, color: "orange", note: "Ôn tập tích phân" },
-  ],
-  2: [
-    { period: 1, subject: "Toán", class: "11B1", room: "P.203", students: 34, color: "pink", note: "Tổ hợp - Xác suất" },
-    { period: 2, subject: "Toán", class: "11B1", room: "P.203", students: 34, color: "pink", note: "Tổ hợp - Xác suất" },
-    { period: 6, subject: "Toán", class: "10A1", room: "P.201", students: 35, color: "teal", note: "Kiểm tra 15 phút" },
-  ],
-  3: [
-    { period: 3, subject: "Toán nâng cao", class: "11B2", room: "P.305", students: 30, color: "purple", note: "Lượng giác" },
-    { period: 4, subject: "Toán nâng cao", class: "11B2", room: "P.305", students: 30, color: "purple", note: "Lượng giác" },
-    { period: 8, subject: "Toán", class: "10A2", room: "P.102", students: 33, color: "blue", note: "Phương trình - Bất phương trình" },
-  ],
-  4: [
-    { period: 1, subject: "Toán", class: "12A1", room: "P.401", students: 38, color: "orange", note: "Đạo hàm - Ứng dụng" },
-    { period: 2, subject: "Toán", class: "12A1", room: "P.401", students: 38, color: "orange", note: "Đạo hàm - Ứng dụng" },
-    { period: 5, subject: "Toán", class: "11B1", room: "P.203", students: 34, color: "pink", note: "Xác suất - Bài tập" },
-    { period: 6, subject: "Toán", class: "11B1", room: "P.203", students: 34, color: "pink", note: "Xác suất - Bài tập" },
-  ],
-  5: [],
-  6: [],
-};
-
 function getWeekDates(offset = 0) {
-  const now = new Date();
-  const dayOfWeek = now.getDay();
-  const monday = new Date(now);
-  monday.setDate(now.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1) + offset * 7);
+  const monday = getStartOfIsoWeek(new Date());
+  monday.setDate(monday.getDate() + offset * 7);
   const days = [];
   for (let i = 0; i < 7; i++) {
     const d = new Date(monday);
@@ -86,13 +52,28 @@ function isToday(date) {
 export default function WeeklyScheduleSection({ weekOffset, selectedClass, onSelectDay, onLessonSelect }) {
   const [sessionView, setSessionView] = useState("morning");
   const days = getWeekDates(weekOffset);
+  const weekStart = days[0];
+  const lessons = getTeacherWeekLessons(weekStart, selectedClass);
 
   const getCellLesson = (dayIdx, period) => {
-    const dayLessons = SCHEDULE_DATA[dayIdx] || [];
-    const lesson = dayLessons.find((l) => l.period === period);
+    const dayKey = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"][dayIdx];
+    const lesson = lessons.find((l) => l.day === dayKey && l.periodStart <= period && l.periodEnd >= period);
     if (!lesson) return null;
-    if (selectedClass !== "Tất cả" && lesson.class !== selectedClass) return null;
-    return lesson;
+    return {
+      period,
+      subject: lesson.subject,
+      class: lesson.className,
+      room: lesson.room,
+      students: 35,
+      color: lesson.color,
+      note: lesson.note,
+      teacher: lesson.teacher,
+      status: lesson.status,
+      periodStart: lesson.periodStart,
+      periodEnd: lesson.periodEnd,
+      start: lesson.start,
+      end: lesson.end,
+    };
   };
 
   const isMorning = sessionView === "morning";
@@ -113,6 +94,7 @@ export default function WeeklyScheduleSection({ weekOffset, selectedClass, onSel
       timeRange: PERIOD_TIME[period],
       session: period <= 5 ? "Sáng" : "Chiều",
       lessonType: getLessonStatus(lesson.note).label,
+      status: lesson.status,
     };
   };
 

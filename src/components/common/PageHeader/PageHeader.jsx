@@ -5,6 +5,7 @@ export default function PageHeader({
   title,
   description,
   actions = null,
+  actionRight = null,
   eyebrow = null,
   breadcrumbs = [],
 }) {
@@ -30,7 +31,10 @@ export default function PageHeader({
         </div>
       </div>
 
-      {actions ? <div className="common-page-header__actions">{actions}</div> : null}
+      <div className="common-page-header__right">
+        {actions ? <div className="common-page-header__actions">{actions}</div> : null}
+        {actionRight ? <div className="common-page-header__action-right">{actionRight}</div> : null}
+      </div>
     </div>
   );
 }

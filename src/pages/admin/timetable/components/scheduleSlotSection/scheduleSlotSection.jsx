@@ -1,8 +1,16 @@
 import { FiEdit2, FiPlus, FiTrash2, FiUser, FiMapPin, FiAlertTriangle } from "react-icons/fi";
-import { MdWbSunny, MdWbTwilight } from "react-icons/md";
 import { BsFillSunFill } from "react-icons/bs";
 import { FaRegMoon } from "react-icons/fa";
 import "./scheduleSlotSection.css";
+
+function getStatusClass(status) {
+    const normalized = String(status || "").trim().toLowerCase();
+    if (normalized.includes("huy")) return "status-cancelled";
+    if (normalized.includes("doi")) return "status-rescheduled";
+    if (normalized.includes("nghi")) return "status-holiday";
+    if (normalized.includes("bu")) return "status-makeup";
+    return "status-ok";
+}
 
 function SlotCard({ session, onEditSlot, onDeleteSlot }) {
     if (!session) return null;
@@ -14,10 +22,14 @@ function SlotCard({ session, onEditSlot, onDeleteSlot }) {
                 <div className="tt-slot-meta">
                     <span className="meta-item"><FiUser /> {session.teacher}</span>
                     <span className="meta-item"><FiMapPin /> Phòng {session.room}</span>
+                    <span className="meta-item">Tiết {session.period}{(session.periodEnd || session.period) > session.period ? `-${session.periodEnd}` : ""}</span>
+                    <span className="meta-item">{session.start} - {session.end}</span>
+                    <span className="meta-item">{session.mode || "Offline"}</span>
                 </div>
+                {session.note ? <p className="tt-slot-note">{session.note}</p> : null}
             </div>
             <div className="tt-slot-footer">
-                <div className={`tt-status-pill ${session.status === "Đã chốt" ? "status-ok" : "status-pending"}`}>
+                <div className={`tt-status-pill ${getStatusClass(session.status)}`}>
                     {session.status}
                 </div>
                 <div className="tt-slot-actions" onClick={(e) => e.stopPropagation()}>
