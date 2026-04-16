@@ -1,0 +1,260 @@
+.principal-dashboard {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    padding-bottom: 2rem;
+}
+
+/* ── ATTENTION BOX ── */
+.principal-attention {
+    background: #fff1f2;
+    border-left: 5px solid #e11d48;
+    padding: 1.25rem;
+    border-radius: 0.5rem;
+    margin-bottom: 0.5rem;
+    box-shadow: 0 4px 15px rgba(225, 29, 72, 0.08);
+}
+.principal-attention__title {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #9f1239;
+    font-size: 1rem;
+    font-weight: 700;
+    margin: 0 0 0.75rem 0;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+.principal-attention__list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+}
+.principal-attention__item {
+    font-size: 0.95rem;
+    color: #be123c;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.principal-attention__action {
+    color: #e11d48;
+    font-weight: 600;
+    font-size: 0.85rem;
+    cursor: pointer;
+    text-decoration: underline;
+    transition: opacity 0.2s;
+}
+.principal-attention__action:hover { opacity: 0.8; }
+
+/* ── STATS CARDS ── */
+.principal-dashboard__stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.25rem;
+}
+@media (min-width: 1200px) {
+    .principal-dashboard__stats {
+        grid-template-columns: repeat(6, 1fr);
+    }
+}
+
+.pstat-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 1rem;
+    padding: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    transition: all 0.2s ease-in-out;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+}
+.pstat-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    border-color: #cbd5e1;
+}
+
+.pstat-card__icon {
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 0.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+}
+.pstat-card__icon--students { background: #eff6ff; color: #2563eb; }
+.pstat-card__icon--teachers { background: #f0fdf4; color: #16a34a; }
+.pstat-card__icon--classes { background: #fdf2ff; color: #a855f7; }
+.pstat-card__icon--rate { background: #fffbe6; color: #d4a017; }
+.pstat-card__icon--good { background: #fff7ed; color: #ea580c; }
+.pstat-card__icon--attendance { background: #f0fdfa; color: #0d9488; }
+
+.pstat-card__body { display: flex; flex-direction: column; }
+.pstat-card__label { margin: 0; font-size: 0.8rem; font-weight: 600; color: #64748b; text-transform: uppercase; }
+.pstat-card__value { margin: 0.2rem 0 0 0; font-size: 1.25rem; font-weight: 800; color: #0f172a; }
+
+/* ── PANELS ── */
+.principal-dashboard__panels {
+    display: grid;
+    grid-template-columns: 1.5fr 1fr;
+    gap: 1.5rem;
+}
+@media (max-width: 1024px) {
+    .principal-dashboard__panels { grid-template-columns: 1fr; }
+}
+
+.principal-panel {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 1.25rem;
+    padding: 1.5rem;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.principal-panel__head {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+.principal-panel__title {
+    margin: 0;
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: #1e293b;
+}
+.principal-panel__sub {
+    font-size: 0.85rem;
+    color: #64748b;
+}
+
+/* Grade Progress UI */
+.grade-progress-summary {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    padding: 1.5rem;
+    background: #f8fafc;
+    border-radius: 1rem;
+    border: 1px solid #f1f5f9;
+}
+.grade-progress-bar-wrap {
+    height: 1.25rem;
+    background: #e2e8f0;
+    border-radius: 999px;
+    overflow: hidden;
+}
+.grade-progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, #3b82f6 0%, #2563eb 100%);
+    border-radius: 999px;
+    transition: width 0.6s ease-out;
+}
+.grade-progress-label {
+    font-size: 1.25rem;
+    font-weight: 800;
+    color: #1e3a8a;
+    margin: 0;
+    text-align: center;
+}
+
+.grade-progress-breakdown {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+}
+.gpb-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.75rem;
+    border-radius: 0.75rem;
+}
+.gpb-dot { width: 8px; height: 8px; border-radius: 50%; }
+.gpb-item--draft { background: #f1f5f9; }
+.gpb-item--draft .gpb-dot { background: #94a3b8; }
+.gpb-item--pending { background: #fffbeb; }
+.gpb-item--pending .gpb-dot { background: #f59e0b; }
+.gpb-item--finalized { background: #f0fdf4; }
+.gpb-item--finalized .gpb-dot { background: #10b981; }
+
+.gpb-item span { font-size: 0.75rem; color: #64748b; font-weight: 600; }
+.gpb-item strong { font-size: 1rem; color: #0f172a; }
+
+.principal-panel__actions {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+}
+.principal-btn {
+    padding: 0.75rem 1.25rem;
+    border-radius: 0.75rem;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    border: none;
+}
+.principal-btn--primary {
+    background: #1e3a8a;
+    color: #ffffff;
+}
+.principal-btn--primary:hover { background: #172554; }
+.principal-btn--ghost {
+    background: transparent;
+    color: #334155;
+    text-decoration: none;
+}
+.principal-btn--ghost:hover { color: #1e3a8a; background: #f1f5f9; }
+
+/* Quick Links UI */
+.principal-quick-links {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+}
+.pql-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 1rem;
+    text-decoration: none;
+    color: #334155;
+    transition: all 0.2s;
+}
+.pql-item:hover {
+    background: #eff6ff;
+    border-color: #3b82f6;
+    transform: translateX(4px);
+}
+.pql-item__icon {
+    width: 2.25rem;
+    height: 2.25rem;
+    background: #f1f5f9;
+    color: #1e293b;
+    border-radius: 0.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+}
+.pql-item:hover .pql-item__icon {
+    background: #3b82f6;
+    color: #ffffff;
+}
+.pql-item span { font-size: 0.95rem; font-weight: 600; }

@@ -1,0 +1,224 @@
+.academic-dashboard {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    padding-bottom: 2rem;
+}
+
+/* ── THỐNG KÊ NHANH ── */
+.ac-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1.25rem;
+}
+
+.ac-stat-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 0.75rem;
+    padding: 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    box-shadow: 0 1px 3px 0 rgba(0,0,0,0.1), 0 1px 2px -1px rgba(0,0,0,0.1);
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.ac-stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -2px rgba(0,0,0,0.1);
+}
+
+.ac-stat-icon {
+    font-size: 1.5rem;
+    width: 3rem;
+    height: 3rem;
+    border-radius: 0.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    background: #f1f5f9;
+    color: #475569;
+    border: 1px solid #e2e8f0;
+}
+
+.ac-stat-card.success .ac-stat-icon {
+    background: #ecfdf5;
+    color: #059669;
+    border-color: #a7f3d0;
+}
+.ac-stat-card.primary .ac-stat-icon {
+    background: #eff6ff;
+    color: #2563eb;
+    border-color: #bfdbfe;
+}
+
+.ac-stat-body {
+    display: flex;
+    flex-direction: column;
+}
+.ac-stat-label {
+    margin: 0;
+    font-size: 0.8125rem;
+    color: #64748b;
+    font-weight: 500;
+}
+.ac-stat-value {
+    margin: 0.2rem 0 0 0;
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #0f172a;
+}
+
+/* ── PANELS (VIỆC CẦN XỬ LÝ & TRẠNG THÁI) ── */
+.ac-panels-grid {
+    display: grid;
+    grid-template-columns: 1fr 1.5fr;
+    gap: 1.5rem;
+}
+
+.ac-panel {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 0.75rem;
+    padding: 1.5rem;
+    box-shadow: 0 1px 3px 0 rgba(0,0,0,0.1), 0 1px 2px -1px rgba(0,0,0,0.1);
+    display: flex;
+    flex-direction: column;
+}
+
+.ac-panel-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 1.25rem;
+}
+.ac-panel-header h3 {
+    margin: 0;
+    font-size: 1.125rem;
+    color: #0f172a;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+/* THẺ VIỆC CẦN LÀM (URGENT) */
+.ac-panel.urgent-tasks {
+    background: #fef2f2;
+    border-color: #fecaca;
+}
+.ac-panel.urgent-tasks .ac-panel-header h3 {
+    color: #991b1b;
+}
+
+.urgent-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.urgent-item {
+    background: #ffffff;
+    padding: 1rem;
+    border-radius: 0.5rem;
+    border-left: 4px solid #ef4444;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+.urgent-item-info strong {
+    display: block;
+    color: #7f1d1d;
+    font-size: 0.9rem;
+    margin-bottom: 0.2rem;
+}
+.urgent-item-info span {
+    font-size: 0.8rem;
+    color: #991b1b;
+}
+
+.btn-resolve {
+    background: #ef4444;
+    color: #ffffff;
+    border: none;
+    padding: 0.4rem 0.8rem;
+    border-radius: 0.35rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+    text-decoration: none;
+}
+.btn-resolve:hover {
+    background: #dc2626;
+}
+
+/* TRẠNG THÁI DỮ LIỆU & TIẾN ĐỘ */
+.data-health-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.25rem;
+}
+
+.dh-box {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 0.5rem;
+    padding: 1rem;
+}
+
+.dh-box h4 {
+    margin: 0 0 0.75rem 0;
+    font-size: 0.95rem;
+    color: #334155;
+    font-weight: 600;
+}
+
+.dh-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.6rem 0;
+    border-bottom: 1px dashed #cbd5e1;
+    font-size: 0.875rem;
+}
+.dh-item:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+.dh-label {
+    color: #475569;
+}
+.dh-val {
+    font-weight: 600;
+}
+.dh-val.danger { color: #dc2626; }
+.dh-val.warning { color: #d97706; }
+.dh-val.success { color: #16a34a; }
+
+/* Progress Bar mini */
+.mini-progress-bar {
+    margin-top: 0.5rem;
+    width: 100%;
+    height: 6px;
+    background: #e2e8f0;
+    border-radius: 999px;
+    overflow: hidden;
+}
+.mini-progress-fill {
+    height: 100%;
+    background: #2563eb;
+    border-radius: 999px;
+}
+
+@media (max-width: 1024px) {
+    .ac-panels-grid { grid-template-columns: 1fr; }
+    .ac-stats-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 640px) {
+    .data-health-grid { grid-template-columns: 1fr; }
+}

@@ -136,6 +136,78 @@
     font-weight: 800;
 }
 
+.tuition-due-date-panel {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 0.9rem;
+    margin-bottom: 0.75rem;
+    background: #f1f5ff;
+    border: 1px solid #dbe7ff;
+    border-radius: 0.75rem;
+}
+
+.tuition-due-date-main {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+}
+
+.tuition-due-date-main span {
+    font-size: 0.78rem;
+    color: #64748b;
+    font-weight: 700;
+}
+
+.tuition-due-date-main strong {
+    font-size: 0.95rem;
+    color: #1e2f5a;
+}
+
+.tuition-due-history-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    margin-bottom: 0.9rem;
+}
+
+.tuition-due-history-list > p {
+    margin: 0;
+    font-size: 0.78rem;
+    color: #64748b;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+}
+
+.tuition-due-history-item {
+    display: flex;
+    justify-content: space-between;
+    gap: 0.75rem;
+    align-items: center;
+    background: #ffffff;
+    border: 1px solid #e6ecf8;
+    border-radius: 0.6rem;
+    padding: 0.55rem 0.7rem;
+}
+
+.tuition-due-history-item span {
+    font-size: 0.84rem;
+    color: #1e2f5a;
+    font-weight: 700;
+}
+
+.tuition-due-history-item small {
+    color: #64748b;
+    font-size: 0.78rem;
+}
+
+.tuition-due-history-empty {
+    font-size: 0.82rem;
+    color: #94a3b8;
+}
+
 .tuition-subtable {
     width: 100%;
     border-collapse: collapse;
@@ -521,6 +593,34 @@
     color: #6366f1;
     font-size: 1.2rem;
     font-weight: 800;
+}
+
+.summary-due-date {
+    margin-top: -0.25rem;
+    margin-bottom: 0.9rem;
+    font-size: 0.9rem;
+    color: #334155;
+}
+
+.due-date-edit-grid {
+    display: grid;
+    gap: 0.5rem;
+}
+
+.due-date-input {
+    width: 100%;
+    height: 42px;
+    border: 1.5px solid #dbe3f1;
+    border-radius: 0.7rem;
+    padding: 0 0.75rem;
+    font-size: 0.9rem;
+    color: #1e293b;
+    outline: none;
+}
+
+.due-date-input:focus {
+    border-color: #1e2f5a;
+    box-shadow: 0 0 0 3px rgba(30, 47, 90, 0.12);
 }
 
 .modal-footer {

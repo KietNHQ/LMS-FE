@@ -1,41 +1,132 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { FiChevronDown, FiChevronUp, FiEdit2, FiSave, FiX, FiMinus, FiPlus, FiCheckCircle } from "react-icons/fi";
+import {
+    PAYMENT_STORAGE_KEYS,
+    buildBreakdownFromItems,
+    buildDueDateHistoryEntry,
+    formatDateVi,
+    formatVnd,
+    loadJson,
+    roundMoney,
+    saveJson,
+} from "../../../../services/shared/payment/paymentShared";
 
 import "./tuitionFeeSection.css";
 
 const STEP_VALUE = 50000;
+const MOCK_STUDENTS_BY_GRADE = {
+    "10": ["Nguyen Van B", "Tran Thi C", "Le Minh D", "Pham Quynh E", "Vo Gia H"] ,
+    "11": ["Nguyen Huu K", "Tran Anh T", "Le Thi P", "Do Minh Q", "Phan Bao U"],
+    "12": ["Nguyen Khanh M", "Tran Thi N", "Le Quoc O", "Pham Thanh R", "Vo Minh S"],
+};
 
-export default function TuitionFeeSection({ tuitionData, selectedGrade, selectedTerm, selectedSchoolYear }) {
-    const [expandedRow, setExpandedRow] = useState(null);
-    const [localData, setLocalData] = useState({});
+const DEFAULT_DUE_DATE_BY_TERM = {
+    hk1: "2025-09-30",
+    hk2: "2026-02-28",
+};
+
+const getDefaultDueDateForTerm = (term = "") => {
+    const normalized = String(term).toLowerCase();
+    if (normalized.includes("1")) return DEFAULT_DUE_DATE_BY_TERM.hk1;
+    if (normalized.includes("2")) return DEFAULT_DUE_DATE_BY_TERM.hk2;
+    return "";
+};
+
+export default function TuitionFeeSection({ tuitionData, selectedGrade, selectedTerm, selectedTermKey, selectedSchoolYear }) {
+    const [expandedRow, setExpandedRow] = useState(() => {
+        if (selectedGrade && selectedGrade !== "Tất cả khối") {
+            return selectedGrade.replace("Khối ", "");
+        }
+        return null;
+    });
+    const [localData, setLocalData] = useState(() => JSON.parse(JSON.stringify(tuitionData || {})));
     const [editingGrade, setEditingGrade] = useState(null);
     const [editForm, setEditForm] = useState([]);
     const [showConfirmModal, setShowConfirmModal] = useState(false);
     const [pendingConfirm, setPendingConfirm] = useState(null);
     const [notiContent, setNotiContent] = useState("");
+    const [isDueDateModalOpen, setIsDueDateModalOpen] = useState(false);
+    const [dueDateDraft, setDueDateDraft] = useState({ key: "", grade: "", term: "", dueDate: "", reason: "" });
 
-
-
-
-    useEffect(() => {
-        if (tuitionData) {
-            setLocalData(JSON.parse(JSON.stringify(tuitionData)));
-        }
-    }, [tuitionData]);
-
-    // Auto-expand logic based on selectedGrade button
-    useEffect(() => {
-        if (selectedGrade && selectedGrade !== "Tất cả khối") {
-            const numericGrade = selectedGrade.replace("Khối ", "");
-            setExpandedRow(numericGrade);
-        } else if (selectedGrade === "Tất cả khối") {
-            setExpandedRow(null);
-        }
-    }, [selectedGrade]);
-
-    const formatCurrency = (amount) => {
-        return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
+    const resolveTermKey = (termLabelOrKey) => {
+        if (termLabelOrKey === "Học kỳ 1" || termLabelOrKey === "hk1") return "hk1";
+        if (termLabelOrKey === "Học kỳ 2" || termLabelOrKey === "hk2") return "hk2";
+        return termLabelOrKey;
     };
+
+    const getDueDateKey = (grade, term) => `${selectedSchoolYear}__${grade}__${resolveTermKey(term)}`;
+
+
+    const upsertParentPaymentRecords = ({ grade, term, tuitionItems, dueDate }) => {
+        const records = loadJson(PAYMENT_STORAGE_KEYS.PARENT_RECORDS, []);
+        const namespace = `${selectedSchoolYear}-${grade}-${term}`;
+        const nextRecords = records.filter((item) => item.namespace !== namespace);
+
+        const students = MOCK_STUDENTS_BY_GRADE[grade] || [];
+        const generated = students.map((studentName, index) => {
+            const breakdown = buildBreakdownFromItems(tuitionItems, 0);
+            const remaining = breakdown.find((item) => item.key === "remaining")?.amount || 0;
+            const deduction = breakdown.find((item) => item.key === "deduction")?.amount || 0;
+
+            return {
+                id: Date.now() + index,
+                namespace,
+                title: `Khoan thu ${term}`,
+                term,
+                schoolYear: selectedSchoolYear,
+                month: dueDate ? dueDate.slice(0, 7) : "",
+                grade: `Khoi ${grade}`,
+                className: `${grade}A1`,
+                childName: studentName,
+                deadline: dueDate,
+                description: `Danh sach khoan thu duoc tao tu admin cho Khoi ${grade} - ${term}.`,
+                feeItems: tuitionItems.map((fee, feeIdx) => ({
+                    id: `${namespace}-${index}-${feeIdx}`,
+                    name: fee.name,
+                    note: fee.note,
+                    amount: roundMoney(fee.amount),
+                })),
+                breakdown,
+                originalAmount: remaining + deduction,
+                discountAmount: deduction,
+                finalAmount: remaining,
+                status: "unpaid",
+                paidDate: "",
+                invoiceCode: `INV-${grade}-${term.replace(/\s+/g, "").toUpperCase()}-${index + 1}`,
+            };
+        });
+
+        saveJson(PAYMENT_STORAGE_KEYS.PARENT_RECORDS, [...nextRecords, ...generated]);
+        window.dispatchEvent(new Event("admin-payment-records-updated"));
+    };
+
+
+
+
+    const [dueDateMap, setDueDateMap] = useState(() => {
+        const storedDueDates = loadJson(PAYMENT_STORAGE_KEYS.ADMIN_DUE_DATES, {});
+        const nextDueDates = { ...storedDueDates };
+
+        Object.entries(tuitionData || {}).forEach(([grade, semesters]) => {
+            Object.keys(semesters || {}).forEach((term) => {
+                    const key = `${selectedSchoolYear}__${grade}__${resolveTermKey(term)}`;
+                if (!nextDueDates[key]) {
+                    nextDueDates[key] = getDefaultDueDateForTerm(term);
+                }
+            });
+        });
+
+        saveJson(PAYMENT_STORAGE_KEYS.ADMIN_DUE_DATES, nextDueDates);
+        return nextDueDates;
+    });
+    const [dueDateHistoryMap, setDueDateHistoryMap] = useState(() => loadJson(PAYMENT_STORAGE_KEYS.ADMIN_DUE_DATE_HISTORY, {}));
+
+    const getDueDateByKey = (grade, term) => {
+        const key = getDueDateKey(grade, term);
+        return dueDateMap[key] || DEFAULT_DUE_DATE_BY_TERM[resolveTermKey(term)] || "";
+    };
+
+    const formatCurrency = (amount) => formatVnd(roundMoney(amount));
 
     // Helper for formatting input with dots
     const formatInputNumber = (val) => {
@@ -61,12 +152,66 @@ export default function TuitionFeeSection({ tuitionData, selectedGrade, selected
 
     const startEditing = (grade, term) => {
         setEditingGrade(grade);
-        const data = localData[grade]?.[term] || [];
+        const data = localData[grade]?.[resolveTermKey(term)] || [];
         setEditForm(JSON.parse(JSON.stringify(data)));
     };
 
     const cancelEditing = () => {
         setEditingGrade(null);
+    };
+
+    const openDueDateModal = (grade, term) => {
+        const key = getDueDateKey(grade, term);
+        setDueDateDraft({
+            key,
+            grade,
+            term,
+            dueDate: dueDateMap[key] || getDefaultDueDateForTerm(term),
+            reason: "",
+        });
+        setIsDueDateModalOpen(true);
+    };
+
+    const saveDueDateChange = () => {
+        if (!dueDateDraft.dueDate) {
+            window.alert("Vui long chon han nop.");
+            return;
+        }
+
+        const previousDate = dueDateMap[dueDateDraft.key] || "";
+        const nextDate = dueDateDraft.dueDate;
+
+        const nextDueDateMap = {
+            ...dueDateMap,
+            [dueDateDraft.key]: nextDate,
+        };
+
+        const historyEntry = buildDueDateHistoryEntry({
+            oldDate: previousDate,
+            newDate: nextDate,
+            reason: dueDateDraft.reason || "Cap nhat han nop",
+            updatedBy: "Admin Payment",
+        });
+
+        const currentHistory = dueDateHistoryMap[dueDateDraft.key] || [];
+        const nextHistory = {
+            ...dueDateHistoryMap,
+            [dueDateDraft.key]: [historyEntry, ...currentHistory],
+        };
+
+        setDueDateMap(nextDueDateMap);
+        setDueDateHistoryMap(nextHistory);
+        saveJson(PAYMENT_STORAGE_KEYS.ADMIN_DUE_DATES, nextDueDateMap);
+        saveJson(PAYMENT_STORAGE_KEYS.ADMIN_DUE_DATE_HISTORY, nextHistory);
+
+        upsertParentPaymentRecords({
+            grade: dueDateDraft.grade,
+            term: dueDateDraft.term,
+            tuitionItems: localData[dueDateDraft.grade]?.[dueDateDraft.term] || [],
+            dueDate: nextDate,
+        });
+
+        setIsDueDateModalOpen(false);
     };
 
     const handleAmountChange = (index, value) => {
@@ -117,8 +262,9 @@ export default function TuitionFeeSection({ tuitionData, selectedGrade, selected
     };
 
     const handleConfirmAndNotify = (grade, term) => {
-        const currentItems = localData[grade]?.[term] || [];
+        const currentItems = localData[grade]?.[resolveTermKey(term)] || [];
         const total = currentItems.reduce((sum, item) => sum + item.amount, 0);
+        const dueDate = getDueDateByKey(grade, term);
 
         // Check if previously confirmed
         const lastConfirmedRaw = localStorage.getItem("admin_last_confirmed_tuition");
@@ -126,16 +272,16 @@ export default function TuitionFeeSection({ tuitionData, selectedGrade, selected
         const key = `${grade}_${selectedSchoolYear}_${term}`;
         const prevData = lastConfirmed[key];
 
-        let defaultMsg = "";
+        let defaultMsg;
         if (!prevData) {
-            defaultMsg = `Nhà trường thông báo học phí Khối ${grade} (Năm học ${selectedSchoolYear} - ${term}). Tổng cộng: ${formatCurrency(total)}. Phụ huynh vui lòng xem chi tiết và đóng phí đúng hạn.`;
+            defaultMsg = `Nha truong thong bao hoc phi Khoi ${grade} (${selectedSchoolYear} - ${term}). Tong: ${formatCurrency(total)}. Han nop: ${formatDateVi(dueDate)}.`;
         } else {
             const diff = total - prevData.total;
             const diffText = diff > 0 ? `tăng thêm ${formatCurrency(diff)}` : `giảm ${formatCurrency(Math.abs(diff))}`;
-            defaultMsg = `Nhà trường thông báo ĐIỀU CHỈNH học phí Khối ${grade} (Năm học ${selectedSchoolYear} - ${term}). Tổng mới: ${formatCurrency(total)} (${diffText}).`;
+            defaultMsg = `Nha truong thong bao DIEU CHINH hoc phi Khoi ${grade} (${selectedSchoolYear} - ${term}). Tong moi: ${formatCurrency(total)} (${diffText}). Han nop: ${formatDateVi(dueDate)}.`;
         }
 
-        setPendingConfirm({ grade, term, year: selectedSchoolYear, total });
+        setPendingConfirm({ grade, term, year: selectedSchoolYear, total, dueDate, items: currentItems });
         setNotiContent(defaultMsg);
         setShowConfirmModal(true);
     };
@@ -143,10 +289,10 @@ export default function TuitionFeeSection({ tuitionData, selectedGrade, selected
     const processNotification = () => {
         if (!pendingConfirm) return;
 
-        const { grade, term, year, total } = pendingConfirm;
+        const { grade, term, year, total, dueDate, items } = pendingConfirm;
         const notification = {
             id: Date.now(),
-            title: `Thông báo học phí Khối ${grade}`,
+            title: `Thong bao hoc phi Khoi ${grade}`,
             content: notiContent,
             type: `Phụ huynh Lớp ${grade}`,
             date: new Date().toISOString().slice(0, 10),
@@ -165,10 +311,17 @@ export default function TuitionFeeSection({ tuitionData, selectedGrade, selected
         lastConfirmed[key] = { total: total, date: new Date().toISOString() };
         localStorage.setItem("admin_last_confirmed_tuition", JSON.stringify(lastConfirmed));
 
+        upsertParentPaymentRecords({
+            grade,
+            term,
+            tuitionItems: items,
+            dueDate,
+        });
+
         // Dispatch event
         window.dispatchEvent(new Event("admin-notifications-updated"));
 
-        window.alert(`Đã gửi thông báo học phí Khối ${grade} - Năm học ${year} - ${term}`);
+        window.alert(`Da gui thong bao hoc phi Khoi ${grade} - ${year} - ${term}`);
 
         setShowConfirmModal(false);
         setPendingConfirm(null);
@@ -193,7 +346,7 @@ export default function TuitionFeeSection({ tuitionData, selectedGrade, selected
                         {Object.entries(localData).map(([grade, semesters]) => {
                             const isExpanded = expandedRow === grade;
                             const isEditing = editingGrade === grade;
-                            const currentList = semesters[selectedTerm] || [];
+                            const currentList = semesters[resolveTermKey(selectedTermKey || selectedTerm)] || [];
                             const totalAmount = currentList.reduce((sum, item) => sum + item.amount, 0);
                             
                             return (
@@ -243,7 +396,37 @@ export default function TuitionFeeSection({ tuitionData, selectedGrade, selected
                                                             )}
                                                         </div>
                                                     </div>
-                                                    
+
+                                                    <div className="tuition-due-date-panel">
+                                                        <div className="tuition-due-date-main">
+                                                            <span>Han nop hien tai</span>
+                                                            <strong>{formatDateVi(getDueDateByKey(grade, selectedTerm))}</strong>
+                                                        </div>
+                                                        <button
+                                                            type="button"
+                                                            className="tuition-action-btn edit-standard"
+                                                            onClick={(event) => {
+                                                                event.stopPropagation();
+                                                                openDueDateModal(grade, selectedTerm);
+                                                            }}
+                                                        >
+                                                            <FiEdit2 /> Chinh han nop
+                                                        </button>
+                                                    </div>
+
+                                                    <div className="tuition-due-history-list">
+                                                        <p>Lich su thay doi han nop</p>
+                                                        {(dueDateHistoryMap[getDueDateKey(grade, selectedTerm)] || []).slice(0, 3).map((entry) => (
+                                                            <div key={entry.id} className="tuition-due-history-item">
+                                                                    <span>{formatDateVi(entry.oldDate)} {"->"} {formatDateVi(entry.newDate)}</span>
+                                                                <small>{entry.reason}</small>
+                                                            </div>
+                                                        ))}
+                                                        {!(dueDateHistoryMap[getDueDateKey(grade, selectedTerm)] || []).length ? (
+                                                            <div className="tuition-due-history-empty">Chua co lich su thay doi.</div>
+                                                        ) : null}
+                                                    </div>
+
                                                     <table className="tuition-subtable">
                                                         <thead>
                                                             <tr>
@@ -352,6 +535,9 @@ export default function TuitionFeeSection({ tuitionData, selectedGrade, selected
                                 <span>Khối: <strong>{pendingConfirm?.grade}</strong> <span className="mx-2">|</span> {pendingConfirm?.year} - {pendingConfirm?.term}</span>
                                 <span className="total-amount">{formatCurrency(pendingConfirm?.total)}</span>
                             </div>
+                             <div className="summary-due-date">
+                                 Han nop: <strong>{formatDateVi(pendingConfirm?.dueDate)}</strong>
+                             </div>
 
                             {/* NOTIFICATION CONTENT AT THE END */}
                             <div className="noti-content-editor">
@@ -370,6 +556,44 @@ export default function TuitionFeeSection({ tuitionData, selectedGrade, selected
                         <div className="modal-footer">
                             <button className="modal-btn cancel" onClick={() => setShowConfirmModal(false)}>Hủy</button>
                             <button className="modal-btn confirm" onClick={processNotification}>Xác nhận & Gửi</button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {isDueDateModalOpen && (
+                <div className="payment-modal-overlay">
+                    <div className="payment-modal-card">
+                        <div className="modal-header">
+                            <FiEdit2 className="modal-icon" />
+                            <h3>Cap nhat han nop</h3>
+                        </div>
+                        <div className="modal-body">
+                            <p>
+                                Khoi {dueDateDraft.grade} - {dueDateDraft.term} ({selectedSchoolYear})
+                            </p>
+                            <div className="due-date-edit-grid">
+                                <label className="input-label" htmlFor="due-date-value">Han nop moi</label>
+                                <input
+                                    id="due-date-value"
+                                    type="date"
+                                    className="due-date-input"
+                                    value={dueDateDraft.dueDate}
+                                    onChange={(event) => setDueDateDraft((prev) => ({ ...prev, dueDate: event.target.value }))}
+                                />
+                                <label className="input-label" htmlFor="due-date-reason">Ly do thay doi</label>
+                                <textarea
+                                    id="due-date-reason"
+                                    className="noti-textarea"
+                                    value={dueDateDraft.reason}
+                                    onChange={(event) => setDueDateDraft((prev) => ({ ...prev, reason: event.target.value }))}
+                                    placeholder="Vi du: Dieu chinh lich thu do thay doi ke hoach hoc ky"
+                                />
+                            </div>
+                        </div>
+                        <div className="modal-footer">
+                            <button className="modal-btn cancel" onClick={() => setIsDueDateModalOpen(false)}>Huy</button>
+                            <button className="modal-btn confirm" onClick={saveDueDateChange}>Luu han nop</button>
                         </div>
                     </div>
                 </div>

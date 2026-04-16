@@ -1,0 +1,154 @@
+.fin-fee {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    padding-bottom: 2rem;
+}
+
+.fee-panel {
+    background: #ffffff;
+    border-radius: 0.75rem;
+    padding: 1.5rem;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 1px 3px 0 rgba(0,0,0,0.1), 0 1px 2px -1px rgba(0,0,0,0.1);
+}
+
+.fee-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+.fee-header h3 {
+    margin: 0;
+    font-size: 1.125rem;
+    color: #0f172a;
+    font-weight: 600;
+}
+
+.fee-toolbar {
+    display: flex;
+    gap: 0.75rem;
+}
+.fee-select, .fee-input {
+    padding: 0.5rem 0.75rem;
+    border: 1px solid #cbd5e1;
+    border-radius: 0.35rem;
+    outline: none;
+    font-size: 0.875rem;
+    color: #334155;
+}
+
+.btn-primary {
+    background: #10b981;
+    color: #ffffff;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 0.35rem;
+    font-weight: 500;
+    font-size: 0.875rem;
+    cursor: pointer;
+    box-shadow: 0 1px 2px rgba(16,185,129,0.2);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: background 0.2s;
+}
+.btn-primary:hover { background: #059669; }
+
+.btn-secondary {
+    background: #f8fafc;
+    color: #334155;
+    border: 1px solid #cbd5e1;
+    padding: 0.5rem 1rem;
+    border-radius: 0.35rem;
+    font-weight: 500;
+    font-size: 0.875rem;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: background 0.2s;
+}
+.btn-secondary:hover { background: #f1f5f9; }
+
+/* ── TABLE ── */
+.fee-table-wrap {
+    width: 100%;
+    overflow-x: auto;
+}
+.fee-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+.fee-table th {
+    background: #f8fafc;
+    color: #475569;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    font-weight: 600;
+    text-align: left;
+    padding: 0.875rem 1rem;
+    border-bottom: 1px solid #e2e8f0;
+}
+.fee-table td {
+    padding: 1rem;
+    border-bottom: 1px solid #e2e8f0;
+    color: #334155;
+    font-size: 0.875rem;
+    vertical-align: middle;
+}
+.fee-table tr:hover { background: #f8fafc; }
+
+.td-money { font-weight: 600; color: #0f172a; }
+
+.status-badge {
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.25rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+.status-badge.paid { background: #dcfce7; color: #166534; }
+.status-badge.unpaid { background: #fef08a; color: #854d0e; }
+.status-badge.overdue { background: #fee2e2; color: #991b1b; }
+
+/* ── MODAL ── */
+.fee-modal-overlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(15,23,42,0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 999;
+}
+.fee-modal {
+    background: #ffffff;
+    width: 400px;
+    border-radius: 0.75rem;
+    box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05);
+    display: flex;
+    flex-direction: column;
+}
+.fee-modal-header {
+    padding: 1.25rem;
+    border-bottom: 1px solid #e2e8f0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.fee-modal-header h3 { margin: 0; font-size: 1.125rem; color: #0f172a; }
+.fee-modal-body { padding: 1.25rem; display: flex; flex-direction: column; gap: 1rem; }
+
+.fm-row { display: flex; justify-content: space-between; font-size: 0.9rem; }
+.fm-row strong { color: #0f172a; }
+
+.fee-modal-footer {
+    padding: 1.25rem;
+    border-top: 1px solid #e2e8f0;
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5rem;
+}

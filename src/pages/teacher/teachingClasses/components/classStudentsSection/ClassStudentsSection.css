@@ -69,13 +69,8 @@
   min-height: 40px;
   padding: 0 18px;
   border-radius: 12px;
-<<<<<<< HEAD
   border: 1px solid var(--tc-primary-strong, #0f766e);
   background: linear-gradient(180deg, var(--tc-primary, #0d9488) 0%, var(--tc-primary-strong, #0f766e) 100%);
-=======
-  border: 1px solid #04a094;
-  background: var(--tc-gradient);
->>>>>>> 250d23b87fa79a7da02c1bc4866fb22543ad5844
   color: #ffffff;
   font-size: 13px;
   font-weight: 800;
@@ -97,7 +92,6 @@
   box-shadow: 0 8px 18px rgba(13, 148, 136, 0.2);
 }
 
-<<<<<<< HEAD
 .tc-open-form-btn:focus-visible,
 .review-icon-btn:focus-visible,
 .page-btn:focus-visible,
@@ -1135,8 +1129,6 @@
 }
 
 /* Responsive */
-=======
->>>>>>> 250d23b87fa79a7da02c1bc4866fb22543ad5844
 @media (max-width: 1024px) {
   .students-card {
     padding: 20px;
@@ -1178,7 +1170,6 @@
     width: 100%;
     justify-content: center;
   }
-<<<<<<< HEAD
 
   .lesson-history-header {
     flex-direction: column;
@@ -1290,6 +1281,3 @@
     font-size: 11px;
   }
 }
-=======
-}
->>>>>>> 250d23b87fa79a7da02c1bc4866fb22543ad5844

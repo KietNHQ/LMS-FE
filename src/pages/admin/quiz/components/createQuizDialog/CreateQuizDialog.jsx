@@ -1,9 +1,10 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import { Modal, Select } from "../../../../../components/ui";
 import { parseDurationMinutes } from "../../../../../services/shared/quiz/quizService";
 import "./CreateQuizDialog.css";
 
 const defaultForm = {
+    classTeacherSubjectId: "",
     title: "",
     subject: "",
     grade: "",
@@ -39,8 +40,15 @@ export default function CreateQuizDialog({
     title = "Tạo bài kiểm tra",
     submitLabel = "Tạo",
     initialValues,
+    assignmentOptions = [],
+    requireAssignment = true,
 }) {
+    const assignmentMap = useMemo(() => {
+        return new Map(assignmentOptions.map((option) => [String(option.value), option]));
+    }, [assignmentOptions]);
+
     const [formData, setFormData] = useState(() => ({
+        classTeacherSubjectId: String(initialValues?.classTeacherSubjectId || defaultForm.classTeacherSubjectId),
         title: initialValues?.title || defaultForm.title,
         subject: initialValues?.subject || defaultForm.subject,
         grade: initialValues?.grade || defaultForm.grade,
@@ -55,11 +63,22 @@ export default function CreateQuizDialog({
     }));
 
     const handleChange = (key, value) => {
+        if (key === "classTeacherSubjectId") {
+            const selected = assignmentMap.get(String(value));
+            setFormData((prev) => ({
+                ...prev,
+                classTeacherSubjectId: String(value),
+                subject: selected?.subject || prev.subject,
+                grade: selected?.grade || prev.grade,
+            }));
+            return;
+        }
         setFormData((prev) => ({ ...prev, [key]: value }));
     };
 
     const handleSubmit = () => {
         const payload = {
+            classTeacherSubjectId: formData.classTeacherSubjectId ? Number(formData.classTeacherSubjectId) : null,
             title: formData.title.trim(),
             subject: formData.subject.trim(),
             grade: formData.grade.trim(),
@@ -70,7 +89,14 @@ export default function CreateQuizDialog({
             createdByName: "Quản trị viên",
         };
 
-        if (!payload.title || !payload.subject || !payload.grade || !formData.duration || !payload.examType) {
+        if (
+            (requireAssignment && !payload.classTeacherSubjectId) ||
+            !payload.title ||
+            !payload.subject ||
+            !payload.grade ||
+            !formData.duration ||
+            !payload.examType
+        ) {
             alert("Vui lòng điền đầy đủ tên bài kiểm tra, môn học, thời gian, khối và loại bài kiểm tra.");
             return;
         }
@@ -98,6 +124,22 @@ export default function CreateQuizDialog({
                 </div>
 
                 <div className="create-quiz-dialog__row">
+                    <div className="create-quiz-dialog__field">
+                        <Select
+                            label="Lớp - môn - giáo viên"
+                            variant="custom"
+                            className="create-quiz-dialog__select"
+                            id="admin-quiz-assignment"
+                            name="admin-quiz-assignment"
+                            options={assignmentOptions}
+                            placeholder="Chọn phân công giảng dạy"
+                            searchable
+                            searchPlaceholder="Tìm lớp hoặc môn..."
+                            value={formData.classTeacherSubjectId}
+                            onChange={(event) => handleChange("classTeacherSubjectId", event.target.value)}
+                        />
+                    </div>
+
                     <div className="create-quiz-dialog__field">
                         <Select
                             label="Môn học"

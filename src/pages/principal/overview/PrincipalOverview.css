@@ -1,0 +1,135 @@
+.principal-overview {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    padding-bottom: 2rem;
+}
+
+/* ── TABS ── */
+.overview-tabs {
+    display: flex;
+    gap: 0.5rem;
+    background: #ffffff;
+    padding: 0.5rem;
+    border-radius: 1rem;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+
+.overview-tab-btn {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.875rem;
+    border: none;
+    background: transparent;
+    color: #64748b;
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+    border-radius: 0.75rem;
+    transition: all 0.2s;
+}
+.overview-tab-btn:hover { background: #f8fafc; color: #1e3a8a; }
+.overview-tab-btn.active {
+    background: #1e3a8a;
+    color: #ffffff;
+    box-shadow: 0 4px 6px -1px rgba(30,58,138,0.25);
+}
+
+/* ── GRID LAYOUT ── */
+.ot-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+}
+@media (max-width: 1024px) {
+    .ot-grid { grid-template-columns: 1fr; }
+}
+
+.ot-section {
+    background: #ffffff;
+    border-radius: 1rem;
+    padding: 1.5rem;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+}
+
+.ot-section__title {
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #1e293b;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+.ot-section__title.danger { color: #e11d48; }
+
+/* ── STAT LIST ── */
+.ot-stat-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+.ot-stat-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    background: #f8fafc;
+    border-radius: 0.75rem;
+    border: 1px solid #f1f5f9;
+}
+.ot-stat-label { font-weight: 600; color: #475569; font-size: 0.925rem; }
+.ot-stat-value { font-weight: 800; color: #1e3a8a; font-size: 1.05rem; }
+
+/* ── WARN LIST ── */
+.ot-warn-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+.ot-warn-item {
+    background: #ffffff;
+    padding: 1rem;
+    border-radius: 0.75rem;
+    border: 1px solid #fee2e2;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+.ot-warn-title { font-weight: 700; color: #9f1239; font-size: 0.95rem; }
+.ot-warn-desc { font-size: 0.875rem; color: #be123c; }
+
+/* Specific enhancements for tab content */
+.ot-section.finance { background: #f0fdf4; border-color: #bbf7d0; }
+.ot-section.finance .ot-stat-item { background: #ffffff; border-color: #dcfce7; }
+
+.ot-section.at-risk { background: #fff1f2; border-color: #fecaca; }
+.ot-section.at-risk .ot-warn-item { background: #ffffff; }
+
+/* Table enhancement if needed inside overview */
+.ot-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+.ot-table th {
+    text-align: left;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    color: #64748b;
+    padding: 0.75rem;
+    border-bottom: 2px solid #e2e8f0;
+}
+.ot-table td {
+    padding: 0.875rem 0.75rem;
+    font-size: 0.875rem;
+    color: #334155;
+    border-bottom: 1px solid #f1f5f9;
+}

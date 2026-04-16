@@ -2,7 +2,13 @@ import React from "react";
 import { FiEdit2, FiTrash2 } from "react-icons/fi";
 import "./parentListSection.css";
 
-export default function ParentListSection({ parents, onView, onEdit, onDelete }) {
+export default function ParentListSection({
+    parents,
+    emptyMessage = "Không tìm thấy tài khoản phụ huynh nào.",
+    onView,
+    onEdit,
+    onDelete,
+}) {
     return (
         <section className="parent-list-card">
             <div className="parent-list-table-wrap">
@@ -19,7 +25,7 @@ export default function ParentListSection({ parents, onView, onEdit, onDelete })
                         {(!parents || parents.length === 0) ? (
                             <tr>
                                 <td colSpan="4" className="parent-empty-row">
-                                    Không tìm thấy tài khoản phụ huynh nào.
+                                    {emptyMessage}
                                 </td>
                             </tr>
                         ) : (

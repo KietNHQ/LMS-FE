@@ -1,0 +1,231 @@
+.academic-class-mgmt {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    padding-bottom: 2rem;
+}
+
+/* ── Tabs ── */
+.mgmt-tabs {
+    display: flex;
+    border-bottom: 1px solid #e2e8f0;
+    gap: 1.5rem;
+}
+
+.mgmt-tab-btn {
+    background: none;
+    border: none;
+    color: #64748b;
+    font-weight: 500;
+    font-size: 0.95rem;
+    padding: 0.75rem 0.5rem;
+    cursor: pointer;
+    transition: color 0.2s, border-color 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    border-bottom: 2px solid transparent;
+}
+.mgmt-tab-btn svg { font-size: 1.1rem; }
+.mgmt-tab-btn:hover { color: #0f172a; }
+.mgmt-tab-btn.active {
+    color: #1d4ed8;
+    border-bottom-color: #1d4ed8;
+    font-weight: 600;
+}
+
+/* ── Panels ── */
+.mgmt-content {
+    background: #ffffff;
+    border-radius: 0.75rem;
+    padding: 1.5rem;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 1px 3px 0 rgba(0,0,0,0.1), 0 1px 2px -1px rgba(0,0,0,0.1);
+}
+
+.mgmt-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+.mgmt-header h3 {
+    margin: 0;
+    font-size: 1.125rem;
+    color: #0f172a;
+    font-weight: 600;
+}
+
+/* Base Buttons */
+.btn-primary, .btn-secondary {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    border: none;
+    transition: all 0.2s;
+}
+.btn-primary {
+    background: #2563eb;
+    color: #ffffff;
+    box-shadow: 0 1px 2px rgba(37,99,235,0.2);
+}
+.btn-primary:hover { background: #1d4ed8; }
+.btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.btn-secondary {
+    background: #f8fafc;
+    color: #334155;
+    border: 1px solid #cbd5e1;
+}
+.btn-secondary:hover { background: #f1f5f9; }
+
+/* ── TABLE ── */
+.mgmt-table-wrap {
+    width: 100%;
+    overflow-x: auto;
+}
+
+.mgmt-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.mgmt-table th {
+    background: #f8fafc;
+    color: #64748b;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-weight: 600;
+    text-align: left;
+    padding: 0.875rem 1rem;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.mgmt-table td {
+    padding: 1rem;
+    border-bottom: 1px solid #e2e8f0;
+    color: #334155;
+    font-size: 0.875rem;
+    vertical-align: middle;
+}
+.mgmt-table tbody tr:hover {
+    background: #f8fafc;
+}
+
+/* ── ASSIGNMENT SPLIT LAYOUT (XẾP LỚP) ── */
+.assignment-split {
+    display: grid;
+    grid-template-columns: 1fr 60px 1fr;
+    gap: 1rem;
+    align-items: stretch;
+}
+
+.split-panel {
+    border: 1px solid #e2e8f0;
+    border-radius: 0.5rem;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.split-panel-header {
+    background: #f8fafc;
+    padding: 1rem;
+    border-bottom: 1px solid #e2e8f0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.split-panel-header h4 {
+    margin: 0;
+    font-size: 0.95rem;
+    color: #0f172a;
+}
+.split-panel-header select {
+    padding: 0.35rem 0.5rem;
+    border: 1px solid #cbd5e1;
+    border-radius: 0.25rem;
+    outline: none;
+}
+
+.split-list {
+    flex: 1;
+    overflow-y: auto;
+    max-height: 400px;
+    padding: 0;
+    margin: 0;
+    list-style: none;
+}
+
+.split-list li {
+    padding: 0.85rem 1rem;
+    border-bottom: 1px solid #f1f5f9;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    cursor: pointer;
+    transition: background 0.15s;
+}
+.split-list li:hover {
+    background: #f8fafc;
+}
+.split-list li:last-child {
+    border-bottom: none;
+}
+
+.split-list li input[type="checkbox"] {
+    width: 1.1rem;
+    height: 1.1rem;
+    cursor: pointer;
+}
+
+.split-controls {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.btn-transfer {
+    background: #eff6ff;
+    color: #2563eb;
+    border: 1px solid #bfdbfe;
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 1.25rem;
+    transition: all 0.2s;
+}
+.btn-transfer:hover {
+    background: #2563eb;
+    color: #ffffff;
+    box-shadow: 0 2px 4px rgba(37,99,235,0.3);
+}
+
+/* ── SELECT COMPONENTS (PHÂN CÔNG GV) ── */
+.teacher-select {
+    padding: 0.4rem 0.6rem;
+    border: 1px solid #cbd5e1;
+    border-radius: 0.35rem;
+    color: #0f172a;
+    font-size: 0.85rem;
+    width: 100%;
+    max-width: 250px;
+}
+
+.teacher-unassigned {
+    color: #dc2626;
+    background: #fee2e2;
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.25rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+}

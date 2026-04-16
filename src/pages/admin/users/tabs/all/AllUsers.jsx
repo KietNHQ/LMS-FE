@@ -85,6 +85,10 @@ export default function AllUsers({ onCountChange }) {
         });
     }, [users, searchValue, quickRole]);
 
+    const hasFilteredUsers = filteredUsers.length > 0;
+    const shouldRenderDataSection = !isLoadingUsers && !loadError;
+    const emptyMessage = users.length === 0 ? "Chưa có dữ liệu người dùng." : "Không có người dùng phù hợp.";
+
     const totalPages = Math.max(1, Math.ceil(filteredUsers.length / ITEMS_PER_PAGE));
 
     const paginatedUsers = useMemo(() => {
@@ -226,21 +230,28 @@ export default function AllUsers({ onCountChange }) {
             {loadError && <div className="user-detail-empty">{loadError}</div>}
             {isLoadingUsers && <div className="user-detail-empty">Đang tải danh sách người dùng...</div>}
 
-            <UserDetailSection
-                users={paginatedUsers}
-                onEdit={setEditingUser}
-                onToggleStatus={setStatusTarget}
-                onDelete={handleDeleteUser}
-            />
+            {shouldRenderDataSection && (
+                <>
+                    <UserDetailSection
+                        users={paginatedUsers}
+                        emptyMessage={emptyMessage}
+                        onEdit={setEditingUser}
+                        onToggleStatus={setStatusTarget}
+                        onDelete={handleDeleteUser}
+                    />
 
-            <div className="admin-users-pagination-row">
-                <Pagination
-                    currentPage={currentPage}
-                    totalPages={totalPages}
-                    onPageChange={setCurrentPage}
-                    ariaLabel="Phân trang người dùng"
-                />
-            </div>
+                    {hasFilteredUsers && totalPages > 1 && (
+                        <div className="admin-users-pagination-row">
+                            <Pagination
+                                currentPage={currentPage}
+                                totalPages={totalPages}
+                                onPageChange={setCurrentPage}
+                                ariaLabel="Phân trang người dùng"
+                            />
+                        </div>
+                    )}
+                </>
+            )}
 
             {isCreateOpen && (
                 <CreateUserDialog

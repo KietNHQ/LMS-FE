@@ -1,13 +1,35 @@
 .payment-item-card {
     background: #ffffff;
     border-radius: 1.375rem;
-    padding: 1.375rem;
+    padding: 1rem 1.125rem;
     box-shadow: 0 0.25rem 1.125rem rgba(20, 28, 45, 0.06);
     border: 0.0625rem solid #ececf3;
+    cursor: pointer;
+}
+
+.payment-item-card:focus-visible {
+    outline: 0.1875rem solid rgba(124, 90, 203, 0.25);
+    outline-offset: 0.125rem;
+}
+
+.payment-item-toggle {
+    width: 100%;
+    border: 0;
+    background: transparent;
+    padding: 0;
+    text-align: left;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    gap: 0.625rem;
 }
 
 .payment-item-card.unpaid {
     border: 0.0625rem solid #f1d88f;
+}
+
+.payment-item-card.paid {
+    border: 0.0625rem solid #ccebd5;
 }
 
 .payment-item-header {
@@ -15,7 +37,7 @@
     align-items: flex-start;
     justify-content: space-between;
     gap: 1rem;
-    margin-bottom: 1.125rem;
+    margin-bottom: 0;
 }
 
 .payment-item-header h2 {
@@ -33,32 +55,60 @@
     line-height: 1.4;
 }
 
-.payment-status-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    border-radius: 62.4375rem;
-    padding: 0.5rem 0.875rem;
-    font-size: clamp(0.8125rem, 0.78rem + 0.15vw, 0.875rem);
-    font-weight: 600;
-    white-space: nowrap;
+.payment-status-wrap {
     flex-shrink: 0;
 }
 
-.payment-status-badge.paid {
-    background: #ddf7e4;
-    color: #16a34a;
+.payment-item-compact-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
 }
 
-.payment-status-badge.unpaid {
-    background: #fff3c9;
-    color: #c58a11;
+.payment-item-compact-amount {
+    display: flex;
+    flex-direction: column;
+    gap: 0.125rem;
 }
 
-.payment-item-grid {
+.payment-item-compact-amount span {
+    font-size: 0.8125rem;
+    color: #7b879c;
+    font-weight: 600;
+}
+
+.payment-item-compact-amount strong {
+    font-size: 1.375rem;
+    line-height: 1.2;
+    color: #1e2f5a;
+    font-weight: 800;
+}
+
+.payment-item-toggle-icon {
+    width: 2rem;
+    height: 2rem;
+    border-radius: 999rem;
+    border: 1px solid #dde4f3;
+    background: #f8faff;
+    color: #4a5d82;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.05rem;
+    flex-shrink: 0;
+}
+
+.payment-item-card.expanded .payment-item-toggle-icon {
+    background: #eef4ff;
+    color: #1e2f5a;
+}
+
+.payment-breakdown-grid {
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 0.875rem;
+    margin-top: 0.875rem;
 }
 
 .payment-info-box {
@@ -87,31 +137,26 @@
     word-break: break-word;
 }
 
-.discount-text {
-    color: #16a34a !important;
+.payment-info-box.line-deduction strong {
+    color: #16a34a;
 }
 
-.final-box.paid {
-    background: #dff0f0;
+.payment-info-box.line-remaining {
+    background: #eef4ff;
+    border: 1px solid #d5e2ff;
 }
 
-.final-box.paid strong {
-    color: #0f766e;
-}
-
-.final-box.unpaid {
-    background: #f4ecd8;
-}
-
-.final-box.unpaid strong {
-    color: #d97706;
+.payment-info-box.line-remaining strong {
+    color: #1e2f5a;
 }
 
 .payment-item-footer {
     display: flex;
     justify-content: flex-end;
     align-items: center;
-    margin-top: 0.875rem;
+    margin-top: 0.75rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid #edf1f7;
 }
 
 .payment-action-wrap,
@@ -129,6 +174,9 @@
     font-weight: 500;
     line-height: 1.4;
     text-align: right;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
 }
 
 .pay-now-btn {
@@ -152,7 +200,8 @@
 }
 
 .discount-btn,
-.export-pdf-btn {
+.export-pdf-btn,
+.detail-btn {
     border: 0.0625rem solid #d9c8f5;
     background: #f6f1ff;
     color: #6b46c1;
@@ -164,20 +213,28 @@
     transition: background 0.2s ease, transform 0.2s ease, border-color 0.2s ease;
 }
 
+.detail-btn {
+    border-color: #d4ddea;
+    background: #f8fafc;
+    color: #475569;
+}
+
 .discount-btn:hover,
-.export-pdf-btn:hover {
+.export-pdf-btn:hover,
+.detail-btn:hover {
     border-color: #c2a7f1;
     background: #ede3ff;
 }
 
 .discount-btn:active,
-.export-pdf-btn:active {
+.export-pdf-btn:active,
+.detail-btn:active {
     transform: scale(0.98);
 }
 
 @media (max-width: 62rem) {
-    .payment-item-grid {
-        grid-template-columns: 1fr;
+    .payment-breakdown-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
     .payment-item-header {
@@ -185,8 +242,8 @@
         align-items: flex-start;
     }
 
-    .payment-status-badge {
-        white-space: normal;
+    .payment-item-compact-footer {
+        width: 100%;
     }
 }
 
@@ -196,12 +253,20 @@
         border-radius: 1rem;
     }
 
+    .payment-breakdown-grid {
+        grid-template-columns: 1fr;
+    }
+
     .payment-info-box {
         padding: 1rem;
     }
 
     .payment-item-footer {
         justify-content: flex-start;
+    }
+
+    .payment-item-compact-amount strong {
+        font-size: 1.2rem;
     }
 
     .payment-action-wrap,

@@ -80,68 +80,13 @@
     line-height: 1;
 }
 
-.admin-quiz-pagination {
+.admin-quiz-pagination-row {
     display: flex;
     justify-content: center;
     align-items: center;
-    gap: 10px;
-    margin-top: 15px;
-    padding-top: 10px;
-    border-top: 1px solid #edf1f7;
-}
-
-.admin-quiz-page-btn {
-    width: 44px;
-    height: 44px;
-    border: 1px solid #dbe4f5;
-    border-radius: 14px;
-    background: #f5f8ff;
-    color: #3458c4;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
-}
-
-.admin-quiz-page-btn svg {
-    font-size: 20px;
-}
-
-.admin-quiz-page-btn:hover:not(:disabled) {
-    background: #eaf1ff;
-    border-color: #9db9ff;
-    box-shadow: 0 10px 20px rgba(95, 134, 245, 0.14);
-    transform: translateY(-2px);
-}
-
-.admin-quiz-page-btn:disabled {
-    background: #f3f5f9;
-    color: #a3adbb;
-    cursor: not-allowed;
-    box-shadow: none;
-}
-
-.admin-quiz-page-indicator {
-    display: flex;
-    align-items: flex-end;
-    justify-content: center;
-    gap: 4px;
-    min-width: 74px;
-    color: #6f7c91;
-}
-
-.admin-quiz-page-indicator span {
-    font-size: 26px;
-    line-height: 1;
-    font-weight: 800;
-    color: #3458c4;
-}
-
-.admin-quiz-page-indicator small {
-    font-size: 15px;
-    font-weight: 700;
-    color: #8a97aa;
+    width: 100%;
+    margin-top: 1rem;
+    padding-top: 0.6rem;
 }
 
 .admin-quiz-delete-confirm {

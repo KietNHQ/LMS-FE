@@ -21,6 +21,7 @@ function formatDate(dateString) {
 
 export default function UserDetailSection({
                                               users,
+                                              emptyMessage = "Không có người dùng phù hợp.",
                                               onEdit,
                                               onToggleStatus,
                                               onDelete,
@@ -37,7 +38,7 @@ export default function UserDetailSection({
             </div>
 
             {users.length === 0 ? (
-                <div className="user-detail-empty">Không có người dùng phù hợp.</div>
+                <div className="user-detail-empty">{emptyMessage}</div>
             ) : (
                 users.map((user) => (
                     <div

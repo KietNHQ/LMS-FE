@@ -9,6 +9,7 @@ import CreateQuizDialog from "../createQuizDialog/CreateQuizDialog";
 import {
     formatDurationLabel,
     parseDurationMinutes,
+    quizService,
 } from "../../../../../services/shared/quiz/quizService";
 import "./CreateQuizPage.css";
 
@@ -30,7 +31,8 @@ const emptyForm = {
 };
 
 const createQuizFromMeta = (meta = {}) => ({
-    id: Date.now(),
+    id: meta.id || null,
+    classTeacherSubjectId: meta.classTeacherSubjectId || null,
     title: meta.title || "Bài kiểm tra mới",
     subject: meta.subject || "",
     className: meta.grade || "",
@@ -44,6 +46,29 @@ const createQuizFromMeta = (meta = {}) => ({
             : "Quản trị viên",
     questions: [],
 });
+
+const toEditorQuestion = (question = {}) => {
+    const mappedAnswers = { A: "", B: "", C: "", D: "" };
+    let correctAnswer = "A";
+
+    (question.answers || []).slice(0, 4).forEach((answer, index) => {
+        const key = ["A", "B", "C", "D"][index];
+        mappedAnswers[key] = answer.answerText || "";
+        if (answer.isCorrect) {
+            correctAnswer = key;
+        }
+    });
+
+    return {
+        id: question.id,
+        type: question.questionType || "multiple-choice",
+        question: question.questionText || "",
+        questionImage: "",
+        answers: mappedAnswers,
+        correctAnswer,
+        score: Number(question.points || 0.25),
+    };
+};
 
 const getQuestionScoreValue = (score) => {
     const parsed = Number.parseFloat(score);
@@ -81,9 +106,12 @@ export default function CreateQuizPage() {
     const location = useLocation();
     const navigate = useNavigate();
     const routeQuizMeta = location.state?.quizMeta;
+    const routeQuizId = location.state?.quizId;
 
     const [quiz, setQuiz] = useState(() => createQuizFromMeta(routeQuizMeta));
-    const [showSetupDialog, setShowSetupDialog] = useState(!routeQuizMeta);
+    const [showSetupDialog, setShowSetupDialog] = useState(!routeQuizMeta && !routeQuizId);
+    const [assignmentOptions, setAssignmentOptions] = useState([]);
+    const [isSaving, setIsSaving] = useState(false);
     const [formData, setFormData] = useState(emptyForm);
     const [questionType, setQuestionType] = useState(() => getDefaultQuestionType(routeQuizMeta?.examFormat));
     const [editingQuestionId, setEditingQuestionId] = useState(null);
@@ -105,6 +133,43 @@ export default function CreateQuizPage() {
             }
         };
     }, []);
+
+    useEffect(() => {
+        const loadInitialData = async () => {
+            try {
+                const options = await quizService.listClassTeacherSubjects();
+                setAssignmentOptions(options);
+            } catch {
+                setAssignmentOptions([]);
+            }
+
+            if (!routeQuizId) {
+                return;
+            }
+
+            try {
+                const quizDetail = await quizService.getQuizById(routeQuizId);
+                const questionRows = await quizService.listQuestions(routeQuizId);
+
+                setQuiz((prev) => ({
+                    ...prev,
+                    id: quizDetail.id,
+                    classTeacherSubjectId: quizDetail.classTeacherSubjectId,
+                    title: quizDetail.title || prev.title,
+                    subject: quizDetail.subject || prev.subject,
+                    className: quizDetail.grade || prev.className,
+                    duration: quizDetail.durationLabel || prev.duration,
+                    examType: quizDetail.examType || prev.examType,
+                    questions: questionRows.map(toEditorQuestion),
+                }));
+                setShowSetupDialog(false);
+            } catch (error) {
+                alert(error?.response?.data?.error || "Không tải được dữ liệu bài kiểm tra.");
+            }
+        };
+
+        loadInitialData();
+    }, [routeQuizId]);
 
     useEffect(() => {
         const mainScrollContainer = document.querySelector(".admin-layout__main");
@@ -244,19 +309,75 @@ export default function CreateQuizPage() {
         return true;
     };
 
-    const saveQuizAndReturnCard = ({ showSuccessAlert = true } = {}) => {
+    const saveQuizAndReturnCard = async ({ showSuccessAlert = true } = {}) => {
         if (!validateQuizBeforeSave()) {
             return null;
         }
 
-        const nextSavedCard = buildQuizCardPayload(quiz, savedQuizCardPayload?.id);
-        setSavedQuizCardPayload(nextSavedCard);
+        setIsSaving(true);
+        try {
+            let targetQuizId = quiz.id;
 
-        if (showSuccessAlert) {
-            alert("Đã lưu bài kiểm tra thành công.");
+            if (!targetQuizId) {
+                const created = await quizService.createQuiz({
+                    classTeacherSubjectId: quiz.classTeacherSubjectId,
+                    title: quiz.title,
+                    description: `Bài kiểm tra ${quiz.subject || ""}`.trim(),
+                    duration: quiz.duration,
+                    examType: quiz.examType,
+                });
+                targetQuizId = created?.data?.id || created?.id;
+            } else {
+                await quizService.updateQuiz(targetQuizId, {
+                    title: quiz.title,
+                    description: `Bài kiểm tra ${quiz.subject || ""}`.trim(),
+                    duration: quiz.duration,
+                    examType: quiz.examType,
+                });
+            }
+
+            const existingQuestions = await quizService.listQuestions(targetQuizId);
+            await Promise.all(
+                existingQuestions.map((item) => quizService.deleteQuestion(targetQuizId, item.id))
+            );
+
+            for (const item of quiz.questions) {
+                const createdQuestion = await quizService.addQuestion(targetQuizId, {
+                    question: item.question,
+                    type: item.type,
+                    score: item.score,
+                });
+                const questionId = createdQuestion?.data?.id || createdQuestion?.id;
+
+                if (item.type === "multiple-choice" && questionId) {
+                    const answerEntries = Object.entries(item.answers || {}).filter(([, value]) => value);
+                    for (const [key, text] of answerEntries) {
+                        await quizService.addAnswer(targetQuizId, questionId, {
+                            text,
+                            isCorrect: item.correctAnswer === key,
+                        });
+                    }
+                }
+            }
+
+            const nextSavedCard = buildQuizCardPayload(
+                { ...quiz, id: targetQuizId },
+                savedQuizCardPayload?.id || targetQuizId
+            );
+            setSavedQuizCardPayload(nextSavedCard);
+            setQuiz((prev) => ({ ...prev, id: targetQuizId }));
+
+            if (showSuccessAlert) {
+                alert("Đã lưu bài kiểm tra thành công.");
+            }
+
+            return nextSavedCard;
+        } catch (error) {
+            alert(error?.response?.data?.error || "Không lưu được bài kiểm tra.");
+            return null;
+        } finally {
+            setIsSaving(false);
         }
-
-        return nextSavedCard;
     };
 
     const handleAddOrUpdateQuestion = () => {
@@ -433,7 +554,7 @@ export default function CreateQuizPage() {
         excelInputRef.current?.click();
     };
 
-    const handleUploadExcelFile = (event) => {
+    const handleUploadExcelFile = async (event) => {
         const file = event.target.files?.[0];
         if (!file) return;
 
@@ -447,7 +568,21 @@ export default function CreateQuizPage() {
             return;
         }
 
-        alert(`Đã tải lên file: ${file.name}. Hệ thống sẽ hỗ trợ đọc file ở bước tiếp theo.`);
+        try {
+            if (quiz.id) {
+                await quizService.importQuestionsFromExcel(quiz.id, file, "append");
+            } else {
+                await quizService.importQuizFromExcel(file, {
+                    classTeacherSubjectId: quiz.classTeacherSubjectId,
+                    title: quiz.title,
+                    quizType: "practice",
+                });
+            }
+
+            alert(`Đã import file: ${file.name}.`);
+        } catch (error) {
+            alert(error?.response?.data?.error || "Import file thất bại.");
+        }
         event.target.value = "";
     };
 
@@ -468,6 +603,7 @@ export default function CreateQuizPage() {
     const handleSetupQuiz = (quizMeta) => {
         setQuiz((prev) => ({
             ...prev,
+            classTeacherSubjectId: quizMeta.classTeacherSubjectId || prev.classTeacherSubjectId,
             title: quizMeta.title,
             subject: quizMeta.subject,
             className: quizMeta.grade,
@@ -483,13 +619,13 @@ export default function CreateQuizPage() {
         setShowSetupDialog(false);
     };
 
-    const handleBackToQuizList = () => {
-        const savedCard = saveQuizAndReturnCard({ showSuccessAlert: false });
+    const handleBackToQuizList = async () => {
+        const savedCard = await saveQuizAndReturnCard({ showSuccessAlert: false });
         if (!savedCard) return;
 
         navigate("/admin/quiz", {
             state: {
-                createdQuiz: savedCard,
+                refreshList: true,
             },
         });
     };
@@ -549,6 +685,7 @@ export default function CreateQuizPage() {
                         type="button"
                         className="admin-create-quiz__back-btn"
                         onClick={handleBackToQuizList}
+                        disabled={isSaving}
                     >
                         <FiArrowLeft aria-hidden="true" />
                         <span>Quay lại</span>
@@ -562,6 +699,7 @@ export default function CreateQuizPage() {
                         type="button"
                         className="admin-create-quiz__cancel-btn"
                         onClick={handleCancelCreateQuiz}
+                        disabled={isSaving}
                     >
                         <FiX aria-hidden="true" />
                         <span>Huỷ</span>
@@ -707,6 +845,8 @@ export default function CreateQuizPage() {
                 onClose={() => navigate("/admin/quiz")}
                 onSubmit={handleSetupQuiz}
                 initialValues={routeQuizMeta}
+                assignmentOptions={assignmentOptions}
+                requireAssignment={!quiz.id}
             />
 
             <Modal

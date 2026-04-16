@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { sidebarConfig } from "./sidebar.config";
+import { sidebarConfig, roleTheme } from "./sidebar.config";
 import SidebarItem from "./SidebarItem";
 import ProfileDialog from "../common/Dialog/ProfileDialog/ProfileDialog";
 import { FiChevronLeft, FiLogOut, FiMenu, FiX } from "react-icons/fi";
@@ -61,6 +61,16 @@ export default function Sidebar({
         return "Phụ huynh";
       case "admin":
         return "Quản trị viên";
+      case "principal":
+        return "Hiệu trưởng";
+      case "vp_academic":
+        return "PHT Chuyên Môn";
+      case "vp_discipline":
+        return "PHT Nề Nếp";
+      case "academic_staff":
+        return "Giáo vụ";
+      case "finance_staff":
+        return "Kế toán";
       default:
         return "Người dùng";
     }
@@ -78,6 +88,16 @@ export default function Sidebar({
         return "parent@eduvn.edu.vn";
       case "admin":
         return "admin@eduvn.edu.vn";
+      case "principal":
+        return "principal@eduvn.edu.vn";
+      case "vp_academic":
+        return "vp.academic@eduvn.edu.vn";
+      case "vp_discipline":
+        return "vp.discipline@eduvn.edu.vn";
+      case "academic_staff":
+        return "academic@eduvn.edu.vn";
+      case "finance_staff":
+        return "finance@eduvn.edu.vn";
       default:
         return "user@eduvn.edu.vn";
     }
@@ -186,6 +206,8 @@ export default function Sidebar({
     return () => window.removeEventListener("admin-notification-count-updated", handleUpdate);
   }, []);
 
+  const ADMIN_SUB_ROLES = ["principal", "vp_academic", "vp_discipline", "academic_staff", "finance_staff"];
+
   const getNotificationBadgeCount = (itemPath) => {
     if (role === "student" && itemPath === "/student/notifications") {
       return studentUnreadCount;
@@ -198,12 +220,17 @@ export default function Sidebar({
     if (role === "admin" && itemPath === "/admin/notifications") {
       return adminUnreadCount;
     }
-     if (role === "teacher" && itemPath === "/teacher/notifications") {
+
+    if (ADMIN_SUB_ROLES.includes(role) && itemPath.endsWith("/notifications")) {
+      return adminUnreadCount;
+    }
+
+    if (role === "teacher" && itemPath === "/teacher/notifications") {
       return teacherUnreadCount;
     }
-    
+
     if (role === "teacher" && itemPath === "/teacher/homeroom" && homeroomUnread) {
-        return 1; // Show a dot/count for new chat messages
+      return 1;
     }
 
     return 0;
@@ -255,7 +282,7 @@ export default function Sidebar({
         <aside
             className={[
               "sidebar",
-              `role-${role}`,
+              roleTheme[role]?.className || `role-${role}`,
               isCollapsed ? "collapsed" : "",
               isMobile ? "mobile-mode" : "",
               isMobileOpen ? "mobile-open" : "",

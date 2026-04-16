@@ -171,66 +171,13 @@
     font-weight: 500;
 }
 
-.admin-classes-pagination {
+.admin-classes-pagination-row {
     display: flex;
     justify-content: center;
     align-items: center;
-    gap: 8px;
-    margin-top: 0.5rem;
-    padding-top: 12px;
-    border-top: 1px solid #edf1f7;
-}
-
-.admin-classes-page-btn {
-    width: 36px;
-    height: 36px;
-    border: 1px solid #d5dded;
-    border-radius: 10px;
-    background: #f4f6fa;
-    color: var(--admin-color, #1e2f5a);
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
-    font-size: 18px;
-    font-weight: 600;
-}
-
-.admin-classes-page-btn:hover:not(:disabled) {
-    background: #e9eef8;
-    border-color: #b8c4de;
-    box-shadow: 0 10px 20px rgba(30, 47, 90, 0.14);
-    transform: translateY(-2px);
-}
-
-.admin-classes-page-btn:disabled {
-    background: #f3f5f9;
-    color: #a3adbb;
-    cursor: not-allowed;
-    box-shadow: none;
-}
-
-.admin-classes-page-indicator {
-    display: flex;
-    align-items: flex-end;
-    justify-content: center;
-    gap: 4px;
-    min-width: 74px;
-    color: #6f7c91;
-}
-
-.admin-classes-page-indicator span {
-    font-size: 20px;
-    line-height: 1;
-    font-weight: 800;
-    color: var(--admin-color, #1e2f5a);
-}
-
-.admin-classes-page-indicator small {
-    font-size: 13px;
-    font-weight: 700;
-    color: #8a97aa;
+    width: 100%;
+    margin-top: 0.1rem;
+    padding-top: 0.6rem;
 }
 
 @media (max-width: 900px) {

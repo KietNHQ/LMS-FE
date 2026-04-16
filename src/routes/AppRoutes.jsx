@@ -39,6 +39,55 @@ const AdminPayment = lazy(() => import("../pages/admin/payment/AdminPayment"));
 const AdminCompetition = lazy(() => import("../pages/admin/competition/AdminCompetition"));
 const AdminCompetitionDetail = lazy(() => import("../pages/admin/competition/AdminCompetitionDetail"));
 
+/* ADMIN SUB-ROLE LAYOUTS */
+const PrincipalLayout = lazy(() => import("../layouts/principal/PrincipalLayout"));
+const VpAcademicLayout = lazy(() => import("../layouts/vp-academic/VpAcademicLayout"));
+const VpDisciplineLayout = lazy(() => import("../layouts/vp-discipline/VpDisciplineLayout"));
+const AcademicStaffLayout = lazy(() => import("../layouts/academic-staff/AcademicStaffLayout"));
+const FinanceLayout = lazy(() => import("../layouts/finance/FinanceLayout"));
+
+/* PRINCIPAL PAGES */
+const PrincipalDashboard = lazy(() => import("../pages/principal/dashboard/PrincipalDashboard"));
+const PrincipalOverview = lazy(() => import("../pages/principal/overview/PrincipalOverview"));
+const PrincipalApprovals = lazy(() => import("../pages/principal/approvals/PrincipalApprovals"));
+const PrincipalReports = lazy(() => import("../pages/principal/reports/PrincipalReports"));
+const PrincipalAuditLogs = lazy(() => import("../pages/principal/audit-logs/PrincipalAuditLogs"));
+const PrincipalNotifications = lazy(() => import("../pages/principal/notifications/PrincipalNotifications"));
+
+/* VP ACADEMIC PAGES */
+const VpAcademicDashboard = lazy(() => import("../pages/vp-academic/dashboard/VpAcademicDashboard"));
+const VpAcademicGrades = lazy(() => import("../pages/vp-academic/grades/VpAcademicGrades"));
+const VpAcademicApprovals = lazy(() => import("../pages/vp-academic/approvals/VpAcademicApprovals"));
+const VpAcademicExams = lazy(() => import("../pages/vp-academic/exams/VpAcademicExams"));
+const VpAcademicTimetable = lazy(() => import("../pages/vp-academic/timetable/VpAcademicTimetable"));
+const VpAcademicTeachingAssignment = lazy(() => import("../pages/vp-academic/teaching-assignment/VpAcademicTeachingAssignment"));
+const VpAcademicDataManagement = lazy(() => import("../pages/vp-academic/data-management/VpAcademicDataManagement"));
+const VpAcademicNotifications = lazy(() => import("../pages/vp-academic/notifications/VpAcademicNotifications"));
+
+/* VP DISCIPLINE PAGES */
+const VpDisciplineDashboard = lazy(() => import("../pages/vp-discipline/dashboard/VpDisciplineDashboard"));
+const VpDisciplineMgmt = lazy(() => import("../pages/vp-discipline/discipline-management/VpDisciplineMgmt"));
+const VpDisciplineCompetition = lazy(() => import("../pages/vp-discipline/competition/VpDisciplineCompetition"));
+const VpDisciplineAttendance = lazy(() => import("../pages/vp-discipline/attendance/VpDisciplineAttendance"));
+const VpDisciplineConduct = lazy(() => import("../pages/vp-discipline/conduct/VpDisciplineConduct"));
+const VpDisciplineNotifications = lazy(() => import("../pages/vp-discipline/notifications/VpDisciplineNotifications"));
+
+/* ACADEMIC STAFF PAGES */
+const AcademicStaffDashboard = lazy(() => import("../pages/academic-staff/dashboard/AcademicStaffDashboard"));
+const AcademicStaffPersonnel = lazy(() => import("../pages/academic-staff/personnel/AcademicStaffPersonnel"));
+const AcademicStaffClassMgmt = lazy(() => import("../pages/academic-staff/class-management/AcademicStaffClassMgmt"));
+const AcademicStaffTimetable = lazy(() => import("../pages/academic-staff/timetable/AcademicStaffTimetable"));
+const AcademicStaffAcademicRecords = lazy(() => import("../pages/academic-staff/academic-records/AcademicStaffAcademicRecords"));
+const AcademicStaffImport = lazy(() => import("../pages/academic-staff/import/AcademicStaffImport"));
+const AcademicStaffNotifications = lazy(() => import("../pages/academic-staff/notifications/AcademicStaffNotifications"));
+
+/* FINANCE PAGES */
+const FinanceDashboard = lazy(() => import("../pages/finance/dashboard/FinanceDashboard"));
+const FinanceFeeManagement = lazy(() => import("../pages/finance/fee-management/FinanceFeeManagement"));
+const FinancePaymentHub = lazy(() => import("../pages/finance/payment-hub/FinancePaymentHub"));
+const FinanceReports = lazy(() => import("../pages/finance/reports/FinanceReports"));
+const FinanceNotifications = lazy(() => import("../pages/finance/notifications/FinanceNotifications"));
+
 /* STUDENT PAGES */
 const StudentLayout = lazy(() => import("../layouts/student/StudentLayout"));
 const StudentDashboard = lazy(
@@ -140,6 +189,63 @@ export default function AppRoutes() {
         <Route path="attendance" element={<Navigate to="/admin/classes" replace />} />
         <Route path="notifications" element={<AdminNotifications />} />
         <Route path="reports" element={<AdminReports />} />
+      </Route>
+
+      {/* PRINCIPAL */}
+      <Route path="/principal" element={<PrincipalLayout />}>
+        <Route index element={<Navigate to="dashboard" replace />} />
+        <Route path="dashboard" element={<PrincipalDashboard />} />
+        <Route path="overview" element={<PrincipalOverview />} />
+        <Route path="approvals" element={<PrincipalApprovals />} />
+        <Route path="reports" element={<PrincipalReports />} />
+        <Route path="audit-logs" element={<PrincipalAuditLogs />} />
+        <Route path="notifications" element={<PrincipalNotifications />} />
+      </Route>
+
+      {/* VP ACADEMIC */}
+      <Route path="/vp-academic" element={<VpAcademicLayout />}>
+        <Route index element={<Navigate to="dashboard" replace />} />
+        <Route path="dashboard" element={<VpAcademicDashboard />} />
+        <Route path="grades" element={<VpAcademicGrades />} />
+        <Route path="approvals" element={<VpAcademicApprovals />} />
+        <Route path="exams" element={<VpAcademicExams />} />
+        <Route path="timetable" element={<VpAcademicTimetable />} />
+        <Route path="teaching-assignment" element={<VpAcademicTeachingAssignment />} />
+        <Route path="data-management" element={<VpAcademicDataManagement />} />
+        <Route path="notifications" element={<VpAcademicNotifications />} />
+      </Route>
+
+      {/* VP DISCIPLINE */}
+      <Route path="/vp-discipline" element={<VpDisciplineLayout />}>
+        <Route index element={<Navigate to="dashboard" replace />} />
+        <Route path="dashboard" element={<VpDisciplineDashboard />} />
+        <Route path="discipline-management" element={<VpDisciplineMgmt />} />
+        <Route path="competition" element={<VpDisciplineCompetition />} />
+        <Route path="attendance" element={<VpDisciplineAttendance />} />
+        <Route path="conduct" element={<VpDisciplineConduct />} />
+        <Route path="notifications" element={<VpDisciplineNotifications />} />
+      </Route>
+
+      {/* ACADEMIC STAFF */}
+      <Route path="/academic" element={<AcademicStaffLayout />}>
+        <Route index element={<Navigate to="dashboard" replace />} />
+        <Route path="dashboard" element={<AcademicStaffDashboard />} />
+        <Route path="personnel" element={<AcademicStaffPersonnel />} />
+        <Route path="class-management" element={<AcademicStaffClassMgmt />} />
+        <Route path="timetable" element={<AcademicStaffTimetable />} />
+        <Route path="academic-records" element={<AcademicStaffAcademicRecords />} />
+        <Route path="import" element={<AcademicStaffImport />} />
+        <Route path="notifications" element={<AcademicStaffNotifications />} />
+      </Route>
+
+      {/* FINANCE */}
+      <Route path="/finance" element={<FinanceLayout />}>
+        <Route index element={<Navigate to="dashboard" replace />} />
+        <Route path="dashboard" element={<FinanceDashboard />} />
+        <Route path="fee-management" element={<FinanceFeeManagement />} />
+        <Route path="payment-hub" element={<FinancePaymentHub />} />
+        <Route path="reports" element={<FinanceReports />} />
+        <Route path="notifications" element={<FinanceNotifications />} />
       </Route>
 
       {/* STUDENT */}

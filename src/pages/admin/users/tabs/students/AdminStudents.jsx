@@ -109,6 +109,10 @@ export default function AdminStudents({ onCountChange, schoolYear }) {
     });
   }, [students, searchTerm, selectedClass, selectedStatus, schoolYear]);
 
+  const hasFilteredStudents = filteredStudents.length > 0;
+  const shouldRenderDataSection = !isLoading && !loadError;
+  const emptyMessage = students.length === 0 ? "Chưa có dữ liệu học sinh." : "Không tìm thấy học sinh phù hợp.";
+
   const totalPages = Math.max(1, Math.ceil(filteredStudents.length / ITEMS_PER_PAGE));
 
   const paginatedStudents = useMemo(() => {
@@ -269,21 +273,28 @@ export default function AdminStudents({ onCountChange, schoolYear }) {
       {loadError && <div className="student-empty-row">{loadError}</div>}
       {isLoading && <div className="student-empty-row">Đang tải danh sách học sinh...</div>}
 
-      <StudentListSection
-        students={paginatedStudents}
-        onSelectStudent={handleViewStudent}
-        onEdit={handleEditStudent}
-        onDelete={handleDeleteStudent}
-      />
+      {shouldRenderDataSection && (
+        <>
+          <StudentListSection
+            students={paginatedStudents}
+            emptyMessage={emptyMessage}
+            onSelectStudent={handleViewStudent}
+            onEdit={handleEditStudent}
+            onDelete={handleDeleteStudent}
+          />
 
-      <div className="admin-students-pagination-row">
-        <Pagination
-          currentPage={currentPage}
-          totalPages={totalPages}
-          onPageChange={setCurrentPage}
-          ariaLabel="Phân trang học sinh"
-        />
-      </div>
+          {hasFilteredStudents && totalPages > 1 && (
+            <div className="admin-students-pagination-row">
+              <Pagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={setCurrentPage}
+                ariaLabel="Phân trang học sinh"
+              />
+            </div>
+          )}
+        </>
+      )}
 
       {activeModalMode && (
         <StudentInformationSection

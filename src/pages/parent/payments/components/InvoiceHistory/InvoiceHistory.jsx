@@ -1,5 +1,6 @@
 import React from "react";
 import "./InvoiceHistory.css";
+import StatusBadge from "../../../../../components/common/StatusBadge/StatusBadge";
 
 export default function InvoiceHistory({ invoices }) {
     return (
@@ -9,39 +10,25 @@ export default function InvoiceHistory({ invoices }) {
                 <p>Theo dõi các lần thanh toán trước đó</p>
             </div>
 
-            <div className="invoice-history-table-wrapper">
-                <table className="invoice-history-table">
-                    <thead>
-                    <tr>
-                        <th>Mã hóa đơn</th>
-                        <th>Học kỳ</th>
-                        <th>Ngày</th>
-                        <th>Số tiền</th>
-                        <th>Phương thức</th>
-                        <th>Trạng thái</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    {invoices.map((invoice) => (
-                        <tr key={invoice.id}>
-                            <td>{invoice.invoiceCode}</td>
-                            <td>{invoice.semester}</td>
-                            <td>{invoice.date}</td>
-                            <td>{invoice.amount}</td>
-                            <td>{invoice.method}</td>
-                            <td>
-                  <span
-                      className={`invoice-status ${
-                          invoice.status === "Đã thanh toán" ? "paid" : "pending"
-                      }`}
-                  >
-                    {invoice.status}
-                  </span>
-                            </td>
-                        </tr>
-                    ))}
-                    </tbody>
-                </table>
+            <div className="invoice-history-list">
+                {invoices.map((invoice) => (
+                    <article key={invoice.id} className="invoice-history-item">
+                        <div className="invoice-history-item__top">
+                            <div className="invoice-history-item__code">{invoice.invoiceCode}</div>
+                            <StatusBadge status={invoice.dueStatus?.badgeStatus || "default"}>
+                                {invoice.dueStatus?.label || "Chưa xác định"}
+                            </StatusBadge>
+                        </div>
+
+                        <div className="invoice-history-item__meta">
+                            <span>{invoice.semester}</span>
+                            <span>Ngay: {invoice.date}</span>
+                            <span>{invoice.method}</span>
+                        </div>
+
+                        <div className="invoice-history-item__amount">{invoice.amount}</div>
+                    </article>
+                ))}
             </div>
         </div>
     );

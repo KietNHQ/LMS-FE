@@ -1,147 +1,104 @@
-import React, { useState, useMemo, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import { 
-    FiArrowLeft, 
-    FiSave, 
-    FiCheckCircle, 
-    FiClock, 
-    FiSearch, 
-    FiFilter, 
-    FiUser,
-    FiAlertCircle,
-    FiCheck
-} from "react-icons/fi";
-import { buildFinalScore } from "../../../../services/shared/quiz/quizService";
-import { Tooltip } from "../../../../components/ui";
+import React, { useEffect, useMemo, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import { FiArrowLeft, FiCheckCircle, FiSearch, FiUser } from "react-icons/fi";
+import { quizService } from "../../../../services/shared/quiz/quizService";
 import "./AdminQuizSubmissions.css";
 
-// Enhanced Mock Data for this view (Same as teacher for consistency)
-const MOCK_CLASS_LIST = [
-    { id: "s-1", name: "Nguyễn Văn An", status: "graded", className: "10A1" },
-    { id: "s-2", name: "Trần Mai Linh", status: "pending", className: "10A1" },
-    { id: "s-3", name: "Lê Hồng Phúc", status: "not-submitted", className: "10A1" },
-    { id: "s-4", name: "Phạm Minh Đức", status: "not-submitted", className: "10A2" },
-    { id: "s-5", name: "Hoàng Thanh Hà", status: "pending", className: "10A2" },
-    { id: "s-6", name: "Đặng Quang Huy", status: "graded", className: "10A2" },
-    { id: "s-7", name: "Bùi Thị Lan", status: "not-submitted", className: "10A3" },
-    { id: "s-8", name: "Ngô Anh Tuấn", status: "pending", className: "10A3" },
-];
+const formatStudentName = (attempt = {}) => {
+    const fromNested = `${attempt.students?.surname || ""} ${attempt.students?.given_name || ""}`.trim();
+    return fromNested || attempt.studentName || `Học sinh #${attempt.student_id || "?"}`;
+};
 
-const initialQuizzes = [
-    {
-        id: 1,
-        title: "Toán 10 - Kiểm tra 15 phút Chương 1",
-        fullQuestions: [
-            { id: 1, type: "multiple-choice", text: "1 + 1 bằng mấy?", options: ["1", "2", "3", "4"], correctAnswer: "2" },
-            { id: 2, type: "multiple-choice", text: "Căn bậc hai của 16?", options: ["2", "4", "8", "6"], correctAnswer: "4" },
-            { id: 3, type: "essay", text: "Nêu định nghĩa đạo hàm tại một điểm.", essayMaxScore: 2 },
-        ],
-        submissions: [
-            {
-                id: "s-1",
-                studentName: "Nguyễn Văn An",
-                submittedAt: "08/04/2026 08:15",
-                autoScore: 5.0,
-                essayScore: 1.25,
-                essayMaxScore: 2,
-                isEssayGraded: true,
-                answers: { 1: "2", 2: "2", 3: "Em trình bày đúng định lý và có ví dụ minh họa." }
-            },
-            {
-                id: "s-2",
-                studentName: "Trần Mai Linh",
-                submittedAt: "08/04/2026 08:22",
-                autoScore: 10.0,
-                essayScore: 0,
-                essayMaxScore: 2,
-                isEssayGraded: false,
-                answers: { 1: "2", 2: "4", 3: "Bài làm có ý chính nhưng thiếu bước biến đổi cuối." }
-            },
-            {
-                id: "s-5",
-                studentName: "Hoàng Thanh Hà",
-                submittedAt: "08/04/2026 09:10",
-                autoScore: 0.0,
-                essayScore: 0,
-                essayMaxScore: 2,
-                isEssayGraded: false,
-                answers: { 1: "1", 2: "8", 3: "Chưa hoàn thành." }
-            },
-            {
-                id: "s-6",
-                studentName: "Đặng Quang Huy",
-                submittedAt: "08/04/2026 09:45",
-                autoScore: 5.0,
-                essayScore: 2.0,
-                essayMaxScore: 2,
-                isEssayGraded: true,
-                answers: { 1: "2", 2: "8", 3: "Đầy đủ và chính xác." }
-            },
-            {
-                id: "s-8",
-                studentName: "Ngô Anh Tuấn",
-                submittedAt: "08/04/2026 10:30",
-                autoScore: 5.0,
-                essayScore: 0,
-                essayMaxScore: 2,
-                isEssayGraded: false,
-                answers: { 1: "2", 2: "6", 3: "Có nỗ lực nhưng sai công thức." }
-            }
-        ]
-    }
-];
+const normalizeStatus = (status) => {
+    if (status === "graded") return "graded";
+    if (status === "submitted" || status === "completed") return "pending";
+    return "pending";
+};
 
 export default function AdminQuizSubmissions() {
     const { quizId } = useParams();
     const navigate = useNavigate();
-    const [quiz, setQuiz] = useState(() => initialQuizzes.find(q => q.id === Number(quizId)) || initialQuizzes[0]);
-    
-    const [selectedStudentId, setSelectedStudentId] = useState("s-1");
+    const [attempts, setAttempts] = useState([]);
+    const [selectedAttemptId, setSelectedAttemptId] = useState(null);
+    const [selectedAttemptDetail, setSelectedAttemptDetail] = useState(null);
+    const [isLoading, setIsLoading] = useState(false);
     const [searchTerm, setSearchTerm] = useState("");
     const [filterStatus, setFilterStatus] = useState("all");
-    const [draftScores, setDraftScores] = useState({});
+    const [draftManualScore, setDraftManualScore] = useState(0);
 
-    const filteredStudents = useMemo(() => {
-        return MOCK_CLASS_LIST.filter(student => {
-            const matchesSearch = student.name.toLowerCase().includes(searchTerm.toLowerCase());
-            const matchesFilter = filterStatus === "all" || student.status === filterStatus;
-            return matchesSearch && matchesFilter;
-        });
-    }, [searchTerm, filterStatus]);
+    useEffect(() => {
+        const loadAttempts = async () => {
+            setIsLoading(true);
+            try {
+                const payload = await quizService.listAttempts(quizId, { page: 1, limit: 100 });
+                const rows = payload?.data?.attempts || payload?.attempts || [];
+                setAttempts(rows);
+                if (rows.length) {
+                    setSelectedAttemptId(rows[0].id);
+                }
+            } catch (error) {
+                alert(error?.response?.data?.error || "Không tải được bài nộp.");
+            } finally {
+                setIsLoading(false);
+            }
+        };
 
-    const selectedSubmission = useMemo(() => {
-        return quiz.submissions.find(s => s.id === selectedStudentId);
-    }, [quiz.submissions, selectedStudentId]);
+        loadAttempts();
+    }, [quizId]);
 
-    const selectedStudentInfo = useMemo(() => {
-        return MOCK_CLASS_LIST.find(s => s.id === selectedStudentId);
-    }, [selectedStudentId]);
-
-    const handleSaveEssayScore = (questionId, score) => {
-        const submissionId = selectedStudentId;
-        const parsedScore = parseFloat(score) || 0;
-        
-        setQuiz(prev => {
-            const nextSubmissions = prev.submissions.map(s => {
-                if (s.id !== submissionId) return s;
-                return {
-                    ...s,
-                    essayScore: parsedScore,
-                    isEssayGraded: true
-                };
-            });
-            return { ...prev, submissions: nextSubmissions };
-        });
-
-        const studentIndex = MOCK_CLASS_LIST.findIndex(s => s.id === submissionId);
-        if (studentIndex > -1) {
-            MOCK_CLASS_LIST[studentIndex].status = "graded";
+    useEffect(() => {
+        if (!selectedAttemptId) {
+            setSelectedAttemptDetail(null);
+            return;
         }
 
-        alert("Đã lưu điểm câu hỏi tự luận (Admin review).");
-    };
+        const loadDetail = async () => {
+            try {
+                const payload = await quizService.getAttemptDetail(selectedAttemptId);
+                const detail = payload?.data || payload;
+                setSelectedAttemptDetail(detail);
+                setDraftManualScore(Number(detail?.score_manual || 0));
+            } catch (error) {
+                alert(error?.response?.data?.error || "Không tải được chi tiết bài nộp.");
+            }
+        };
 
-    const getAnswerLabel = (index) => ["A", "B", "C", "D"][index];
+        loadDetail();
+    }, [selectedAttemptId]);
+
+    const filteredStudents = useMemo(() => {
+        return attempts.filter((attempt) => {
+            const studentName = formatStudentName(attempt).toLowerCase();
+            const matchesSearch = studentName.includes(searchTerm.toLowerCase());
+            const matchesFilter =
+                filterStatus === "all" || normalizeStatus(attempt.status) === filterStatus;
+            return matchesSearch && matchesFilter;
+        });
+    }, [attempts, filterStatus, searchTerm]);
+
+    const selectedSubmission = selectedAttemptDetail;
+
+    const handleSaveManualScore = async () => {
+        if (!selectedAttemptId) return;
+        try {
+            await quizService.gradeAttempt(selectedAttemptId, {
+                scoreManual: draftManualScore,
+                teacherComment: "Admin review",
+            });
+
+            setAttempts((prev) =>
+                prev.map((item) =>
+                    item.id === selectedAttemptId ? { ...item, status: "graded" } : item
+                )
+            );
+
+            const refreshed = await quizService.getAttemptDetail(selectedAttemptId);
+            setSelectedAttemptDetail(refreshed?.data || refreshed);
+            alert("Đã lưu điểm tự luận.");
+        } catch (error) {
+            alert(error?.response?.data?.error || "Không lưu được điểm tự luận.");
+        }
+    };
 
     return (
         <div className="admin-quiz-subs">
@@ -152,7 +109,7 @@ export default function AdminQuizSubmissions() {
                     </button>
                     <div className="title-section">
                         <h1>Chi tiết bài nộp (Admin)</h1>
-                        <span className="quiz-tag">{quiz.title}</span>
+                        <span className="quiz-tag">Quiz #{quizId}</span>
                     </div>
                 </div>
             </header>
@@ -183,129 +140,118 @@ export default function AdminQuizSubmissions() {
                     </div>
 
                     <div className="student-list">
-                        {filteredStudents.map(student => (
-                            <div 
-                                key={student.id} 
-                                className={`student-item ${selectedStudentId === student.id ? "selected" : ""}`}
-                                onClick={() => setSelectedStudentId(student.id)}
+                        {isLoading ? <p>Đang tải...</p> : null}
+                        {filteredStudents.map((attempt) => {
+                            const studentName = formatStudentName(attempt);
+                            const status = normalizeStatus(attempt.status);
+                            return (
+                            <div
+                                key={attempt.id}
+                                className={`student-item ${selectedAttemptId === attempt.id ? "selected" : ""}`}
+                                onClick={() => setSelectedAttemptId(attempt.id)}
                             >
                                 <div className="student-avatar">
                                     <FiUser />
                                 </div>
                                 <div className="student-meta">
-                                    <span className="student-name">{student.name}</span>
-                                    <span className={`status-text ${student.status}`}>
-                                        {student.status === "graded" && "Đã chấm"}
-                                        {student.status === "pending" && "Chờ chấm"}
-                                        {student.status === "not-submitted" && "Chưa nộp"}
+                                    <span className="student-name">{studentName}</span>
+                                    <span className={`status-text ${status}`}>
+                                        {status === "graded" ? "Đã chấm" : "Chờ chấm"}
                                     </span>
                                 </div>
                                 <div className="student-status-right">
-                                    <span className="student-class-badge">{student.className}</span>
-                                    {student.status === "graded" && <FiCheckCircle className="graded-icon" />}
+                                    <span className="student-class-badge">#{attempt.id}</span>
+                                    {status === "graded" && <FiCheckCircle className="graded-icon" />}
                                 </div>
                             </div>
-                        ))}
+                            );
+                        })}
                     </div>
                 </aside>
 
                 {/* Main: Submission Detail */}
                 <main className="submission-detail">
-                    {selectedStudentInfo?.status === "not-submitted" ? (
+                    {!selectedSubmission ? (
                         <div className="empty-state">
-                            <FiAlertCircle size={48} />
-                            <h2>Học sinh chưa nộp bài</h2>
-                            <p>Phần này hiển thị bài gửi ngay khi học sinh hoàn tất bài kiểm tra.</p>
+                            <FiUser size={48} />
+                            <h2>Chọn học sinh để xem chi tiết</h2>
+                            <p>Danh sách bên trái hiển thị các bài nộp đã có.</p>
                         </div>
-                    ) : selectedSubmission ? (
+                    ) : (
                         <div className="detail-content">
                             <div className="student-summary-header">
                                 <div className="summary-info">
                                     <div className="summary-name-row">
-                                        <h2>Bài làm của {selectedSubmission.studentName}</h2>
-                                        <span className="class-indicator">Lớp: {selectedStudentInfo?.className}</span>
+                                        <h2>Bài làm của {formatStudentName(selectedSubmission)}</h2>
+                                        <span className="class-indicator">Attempt: #{selectedSubmission.id}</span>
                                     </div>
-                                    <span>Nộp lúc: {selectedSubmission.submittedAt}</span>
+                                    <span>
+                                        Nộp lúc: {selectedSubmission.end_time ? new Date(selectedSubmission.end_time).toLocaleString("vi-VN") : "--"}
+                                    </span>
                                 </div>
                                 <div className="score-summary">
                                     <div className="score-box auto">
                                         <label>Trắc nghiệm</label>
-                                        <strong>{selectedSubmission.autoScore.toFixed(1)}</strong>
+                                        <strong>{Number(selectedSubmission.score_auto || 0).toFixed(1)}</strong>
                                     </div>
                                     <div className="score-box essay">
                                         <label>Tự luận</label>
-                                        <strong>{selectedSubmission.essayScore.toFixed(1)}</strong>
+                                        <strong>{Number(selectedSubmission.score_manual || 0).toFixed(1)}</strong>
                                     </div>
                                     <div className="score-box total">
                                         <label>Tổng điểm</label>
-                                        <strong>{Math.min(10, selectedSubmission.autoScore + selectedSubmission.essayScore).toFixed(1)}/10</strong>
+                                        <strong>{Number(selectedSubmission.total_score || 0).toFixed(1)}/10</strong>
                                     </div>
                                 </div>
                             </div>
 
+                            <div className="grading-control" style={{ marginBottom: "1rem" }}>
+                                <div className="input-group">
+                                    <label>Điểm tự luận tổng:</label>
+                                    <div className="input-wrapper">
+                                        <input
+                                            type="number"
+                                            step="0.25"
+                                            min="0"
+                                            max="10"
+                                            value={draftManualScore}
+                                            onChange={(e) => setDraftManualScore(Number(e.target.value || 0))}
+                                        />
+                                        <span>/ 10</span>
+                                    </div>
+                                </div>
+                                <button className="save-score-btn" onClick={handleSaveManualScore}>
+                                    Lưu điểm
+                                </button>
+                            </div>
+
                             <div className="question-review-list">
-                                {quiz.fullQuestions.map((q, idx) => {
-                                    const studentAnswer = selectedSubmission.answers[q.id];
-                                    
+                                {(selectedSubmission.responses || []).map((response, idx) => {
+                                    const questionType = response.quiz_questions?.question_type || "multiple_choice";
                                     return (
-                                        <div key={q.id} className={`review-question-item ${q.type}`}>
+                                        <div key={response.id || `${response.question_id}-${idx}`} className={`review-question-item ${questionType}`}>
                                             <div className="question-header">
                                                 <span className="q-number">Câu {idx + 1}</span>
-                                                <p className="q-text">{q.text}</p>
-                                                <span className={`q-type-badge ${q.type}`}>
-                                                    {q.type === "multiple-choice" ? "Trắc nghiệm" : "Tự luận"}
+                                                <p className="q-text">{response.quiz_questions?.question_text || "Không có nội dung"}</p>
+                                                <span className={`q-type-badge ${questionType}`}>
+                                                    {questionType === "essay" ? "Tự luận" : "Trắc nghiệm"}
                                                 </span>
                                             </div>
 
-                                            {q.type === "multiple-choice" ? (
+                                            {questionType !== "essay" ? (
                                                 <div className="options-review">
-                                                    {q.options.map((opt, oIdx) => {
-                                                        const label = getAnswerLabel(oIdx);
-                                                        const isSelected = studentAnswer === opt;
-                                                        const isRight = opt === q.correctAnswer;
-                                                        
-                                                        let optClass = "";
-                                                        if (isSelected) optClass = isRight ? "selected-correct" : "selected-wrong";
-                                                        if (isRight) optClass = "correct-option";
-
-                                                        return (
-                                                            <div key={opt} className={`review-option ${optClass}`}>
-                                                                <span className="opt-label">{label}</span>
-                                                                <span className="opt-text">{opt}</span>
-                                                                {isSelected && (isRight ? <FiCheckCircle /> : <FiAlertCircle />)}
-                                                            </div>
-                                                        );
-                                                    })}
+                                                    <div className={`review-option ${response.quiz_answers?.is_correct ? "selected-correct" : "selected-wrong"}`}>
+                                                        <span className="opt-label">Đáp án chọn</span>
+                                                        <span className="opt-text">{response.quiz_answers?.answer_text || "Không có"}</span>
+                                                    </div>
                                                 </div>
                                             ) : (
                                                 <div className="essay-grading-area">
                                                     <div className="student-answer-box">
                                                         <label>Câu trả lời của học sinh:</label>
                                                         <div className="answer-text">
-                                                            {studentAnswer || <em>Không có câu trả lời</em>}
+                                                            {response.essay_answer || <em>Không có câu trả lời</em>}
                                                         </div>
-                                                    </div>
-                                                    <div className="grading-control">
-                                                        <div className="input-group">
-                                                            <label>Chấm điểm (Tối đa {q.essayMaxScore}):</label>
-                                                            <div className="input-wrapper">
-                                                                <input 
-                                                                    type="number" 
-                                                                    defaultValue={selectedSubmission.essayScore}
-                                                                    step="0.25"
-                                                                    min="0"
-                                                                    max={q.essayMaxScore}
-                                                                    onChange={(e) => setDraftScores({...draftScores, [q.id]: e.target.value})}
-                                                                />
-                                                                <span>/ {q.essayMaxScore}</span>
-                                                            </div>
-                                                        </div>
-                                                        <button 
-                                                            className="save-score-btn"
-                                                            onClick={() => handleSaveEssayScore(q.id, draftScores[q.id] || selectedSubmission.essayScore)}
-                                                        >
-                                                            <FiSave /> Lưu điểm
-                                                        </button>
                                                     </div>
                                                 </div>
                                             )}
@@ -313,12 +259,6 @@ export default function AdminQuizSubmissions() {
                                     );
                                 })}
                             </div>
-                        </div>
-                    ) : (
-                        <div className="empty-state">
-                            <FiUser size={48} />
-                            <h2>Chọn học sinh để xem chi tiết</h2>
-                            <p>Danh sách bên trái hiển thị toàn bộ học sinh trong lớp.</p>
                         </div>
                     )}
                 </main>

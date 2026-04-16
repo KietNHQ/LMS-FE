@@ -1,0 +1,91 @@
+.fin-debt {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    padding-bottom: 2rem;
+}
+
+.debt-panel {
+    background: #ffffff;
+    border-radius: 0.75rem;
+    padding: 1.5rem;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 1px 3px 0 rgba(0,0,0,0.1);
+}
+
+.debt-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+.debt-header h3 {
+    margin: 0;
+    font-size: 1.125rem;
+    color: #0f172a;
+    font-weight: 600;
+}
+
+/* ── TABLE ── */
+.debt-table-wrap {
+    width: 100%;
+    overflow-x: auto;
+}
+.debt-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+.debt-table th {
+    background: #f8fafc;
+    color: #475569;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    font-weight: 600;
+    text-align: left;
+    padding: 0.875rem 1rem;
+    border-bottom: 1px solid #e2e8f0;
+}
+.debt-table td {
+    padding: 1rem;
+    border-bottom: 1px solid #e2e8f0;
+    color: #334155;
+    font-size: 0.875rem;
+    vertical-align: middle;
+}
+
+.debt-row.overdue {
+    background: #fef2f2;
+}
+.debt-row.near-due {
+    background: #fffbeb;
+}
+.debt-row:hover { opacity: 0.95; }
+
+.debt-amt {
+    font-weight: 700;
+}
+.debt-row.overdue .debt-amt { color: #dc2626; }
+.debt-row.near-due .debt-amt { color: #d97706; }
+
+.btn-remind {
+    background: #ef4444;
+    color: #ffffff;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 0.35rem;
+    font-weight: 500;
+    font-size: 0.8rem;
+    cursor: pointer;
+    box-shadow: 0 1px 2px rgba(239,68,68,0.2);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    transition: background 0.2s;
+}
+.btn-remind:hover { background: #dc2626; }
+
+.btn-remind.yellow {
+    background: #f59e0b;
+    box-shadow: 0 1px 2px rgba(245,158,11,0.2);
+}
+.btn-remind.yellow:hover { background: #d97706; }

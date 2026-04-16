@@ -5,7 +5,7 @@ import "./AdminClasses.css";
 
 import ClassListSection from "./components/classListSection/classListSection";
 import ClassInfoSection from "./components/classInfoSection/classInfoSection";
-import { SchoolYearTermSelector, PageHeader } from "../../../components/common";
+import { SchoolYearTermSelector, PageHeader, Pagination } from "../../../components/common";
 import { useSchoolYearTerm } from "../../../hooks/useSchoolYearTerm";
 import { classesService } from "../../../services/pages/admin/classes";
 
@@ -136,14 +136,6 @@ export default function AdminClasses() {
     setSearchParams(nextParams);
   };
 
-  const goPrevPage = () => {
-    setCurrentPage((prev) => Math.max(1, Math.min(prev, totalPages) - 1));
-  };
-
-  const goNextPage = () => {
-    setCurrentPage((prev) => Math.min(totalPages, prev + 1));
-  };
-
   const handleOpenEdit = (classItem) => {
     setSelectedClass(classItem);
     setIsEditOpen(true);
@@ -260,32 +252,14 @@ export default function AdminClasses() {
             <p>Thử đổi bộ lọc khối hoặc từ khóa tìm kiếm.</p>
           </div>
         )}
-
-        <div className="admin-classes-pagination">
-          <button
-            type="button"
-            className="admin-classes-page-btn"
-            onClick={goPrevPage}
-            disabled={safeCurrentPage === 1}
-            aria-label="Trang trước"
-          >
-            ‹
-          </button>
-
-          <div className="admin-classes-page-indicator">
-            <span>{safeCurrentPage}</span>
-            <small>/ {totalPages}</small>
-          </div>
-
-          <button
-            type="button"
-            className="admin-classes-page-btn"
-            onClick={goNextPage}
-            disabled={safeCurrentPage === totalPages}
-            aria-label="Trang sau"
-          >
-            ›
-          </button>
+        
+        <div className="admin-classes-pagination-row">
+            <Pagination
+                currentPage={safeCurrentPage}
+                totalPages={totalPages}
+                onPageChange={setCurrentPage}
+                ariaLabel="Phân trang lớp học"
+            />
         </div>
       </div>
 

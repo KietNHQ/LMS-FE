@@ -28,6 +28,7 @@ function getStatusClass(status) {
 
 export default function StudentListSection({
     students,
+    emptyMessage = "Không tìm thấy học sinh phù hợp.",
     onSelectStudent,
     onEdit,
     onDelete,
@@ -51,7 +52,7 @@ export default function StudentListSection({
                         {students.length === 0 ? (
                             <tr>
                                 <td colSpan="6" className="student-empty-row">
-                                    Không tìm thấy học sinh phù hợp.
+                                    {emptyMessage}
                                 </td>
                             </tr>
                         ) : (
