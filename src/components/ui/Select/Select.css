@@ -239,57 +239,61 @@
 /* TEACHER - Teal/Cyan */
 .teacher-layout .ui-select__field:focus,
 .teacher-layout .custom-dropdown-trigger.open {
-  border-color: #4fd1c5;
-  box-shadow: 0 0 0 3px rgba(79, 209, 197, 0.12);
+  border-color: #0d9488;
+  box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.15);
 }
 
 .teacher-layout .ui-select__field:hover,
 .teacher-layout .custom-dropdown-trigger:hover {
-  border-color: #7dddd5;
-  box-shadow: 0 10px 24px rgba(79, 209, 197, 0.12);
+  border-color: #5eead4;
+  background-color: #f0fdfa;
+  box-shadow: 0 10px 24px rgba(13, 148, 136, 0.1);
 }
 
 .teacher-layout .ui-select.is-focused .ui-select__chevron,
 .teacher-layout .custom-dropdown-trigger.open .dropdown-arrow {
-  color: #4fd1c5;
+  color: #0d9488;
 }
 
 .teacher-layout .custom-dropdown-item:hover {
-  background: #e0f9f7;
-  color: #4fd1c5;
+  background: #f0fdfa;
+  color: #0d9488;
 }
 
 .teacher-layout .custom-dropdown-item.active {
-  background: linear-gradient(135deg, rgba(79, 209, 197, 0.12) 0%, rgba(79, 209, 197, 0.08) 100%);
-  color: #4fd1c5;
+  background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%);
+  color: #ffffff;
+  font-weight: 700;
 }
 
 /* PARENT - Purple */
 .parent-layout .ui-select__field:focus,
 .parent-layout .custom-dropdown-trigger.open {
-  border-color: #d8c8ff;
-  box-shadow: 0 0 0 3px rgba(216, 200, 255, 0.12);
+  border-color: #885def;
+  box-shadow: 0 0 0 3px rgba(136, 93, 239, 0.15);
 }
 
 .parent-layout .ui-select__field:hover,
 .parent-layout .custom-dropdown-trigger:hover {
-  border-color: #e0d4ff;
-  box-shadow: 0 10px 24px rgba(216, 200, 255, 0.12);
+  border-color: #b68af8;
+  background-color: #fdf9ff;
+  box-shadow: 0 10px 24px rgba(136, 93, 239, 0.1);
 }
 
 .parent-layout .ui-select.is-focused .ui-select__chevron,
 .parent-layout .custom-dropdown-trigger.open .dropdown-arrow {
-  color: #d8c8ff;
+  color: #885def;
 }
 
 .parent-layout .custom-dropdown-item:hover {
-  background: #f5f0ff;
-  color: #d8c8ff;
+  background: #f3eeff;
+  color: #885def;
 }
 
 .parent-layout .custom-dropdown-item.active {
-  background: linear-gradient(135deg, rgba(216, 200, 255, 0.12) 0%, rgba(216, 200, 255, 0.08) 100%);
-  color: #d8c8ff;
+  background: linear-gradient(135deg, #885def 0%, #7c3aed 100%);
+  color: #ffffff;
+  font-weight: 700;
 }
 
 /* STUDENT - Light Blue (default - already uses CSS variables) */

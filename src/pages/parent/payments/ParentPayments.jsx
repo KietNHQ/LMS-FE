@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import "./ParentPayments.css";
 import Modal from "../../../components/ui/Modal/Modal";
+import { Select } from "../../../components/ui";
 import { SchoolYearTermSelector } from "../../../components/common";
 import { useSchoolYearTerm } from "../../../hooks/useSchoolYearTerm";
 import PaymentSummaryCard from "./components/PaymentSummaryCard/PaymentSummaryCard";
@@ -230,7 +231,6 @@ export default function ParentPayments() {
     const [childFilter, setChildFilter] = useState("all");
     const [termFilter, setTermFilter] = useState("all");
     const [monthFilter, setMonthFilter] = useState("all");
-    const [sortByDeadline, setSortByDeadline] = useState("asc");
 
     const selectedPayment = paymentList.find((item) => item.id === selectedPaymentId) || null;
     const selectedDetailPayment = paymentList.find((item) => item.id === selectedDetailId) || null;
@@ -277,9 +277,9 @@ export default function ParentPayments() {
         return filtered.sort((a, b) => {
             const aTime = new Date(a.deadline).getTime();
             const bTime = new Date(b.deadline).getTime();
-            return sortByDeadline === "asc" ? aTime - bTime : bTime - aTime;
+            return aTime - bTime;
         });
-    }, [paymentList, childFilter, termFilter, monthFilter, sortByDeadline, selectedSchoolYear, selectedTerm]);
+    }, [paymentList, childFilter, termFilter, monthFilter, selectedSchoolYear, selectedTerm]);
 
     const invoiceHistory = useMemo(
         () =>
@@ -488,7 +488,6 @@ export default function ParentPayments() {
                 <div className="parent-payments-header">
                     <div className="parent-payments-header__title">
                         <h1>Học phí</h1>
-                        <p>Dong bo khoan thu tu admin, theo doi han nop va chi tiet hoa don.</p>
                     </div>
 
                     <div className="parent-payments-header__selector">
@@ -505,25 +504,24 @@ export default function ParentPayments() {
                 </div>
 
                 <div className="payment-filter-row">
-                    <select value={childFilter} onChange={(event) => setChildFilter(event.target.value)}>
-                        {childOptions.map((item) => (
-                            <option key={item} value={item}>{item === "all" ? "Tat ca hoc sinh" : item}</option>
-                        ))}
-                    </select>
-                    <select value={termFilter} onChange={(event) => setTermFilter(event.target.value)}>
-                        {termOptions.map((item) => (
-                            <option key={item} value={item}>{item === "all" ? "Tat ca ky" : item}</option>
-                        ))}
-                    </select>
-                    <select value={monthFilter} onChange={(event) => setMonthFilter(event.target.value)}>
-                        {monthOptions.map((item) => (
-                            <option key={item} value={item}>{item === "all" ? "Tat ca thang" : item}</option>
-                        ))}
-                    </select>
-                    <select value={sortByDeadline} onChange={(event) => setSortByDeadline(event.target.value)}>
-                        <option value="asc">Han nop gan nhat</option>
-                        <option value="desc">Han nop xa nhat</option>
-                    </select>
+                    <Select
+                        variant="custom"
+                        value={childFilter}
+                        options={childOptions.map(item => ({ value: item, label: item === "all" ? "Tất cả học sinh" : item }))}
+                        onChange={(e) => setChildFilter(e.target.value)}
+                    />
+                    <Select
+                        variant="custom"
+                        value={termFilter}
+                        options={termOptions.map(item => ({ value: item, label: item === "all" ? "Tất cả kỳ" : item }))}
+                        onChange={(e) => setTermFilter(e.target.value)}
+                    />
+                    <Select
+                        variant="custom"
+                        value={monthFilter}
+                        options={monthOptions.map(item => ({ value: item, label: item === "all" ? "Tất cả tháng" : item }))}
+                        onChange={(e) => setMonthFilter(e.target.value)}
+                    />
                 </div>
             </div>
 

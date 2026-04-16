@@ -4,6 +4,7 @@ import TimetableFiltersSection from "./components/timetableFiltersSection/timeta
 import ScheduleSlotSection from "./components/scheduleSlotSection/scheduleSlotSection";
 import ConflictCheckSection from "./components/conflictCheckSection/conflictCheckSection";
 import Modal from "../../../components/ui/Modal/Modal";
+import { Select } from "../../../components/ui";
 import { SchoolYearTermSelector } from "../../../components/common";
 import { useSchoolYearTerm } from "../../../hooks/useSchoolYearTerm";
 import { FiUsers, FiCalendar, FiClock, FiBook, FiUser, FiMapPin, FiActivity, FiX, FiCheckCircle, FiSave, FiPlus } from "react-icons/fi";
@@ -57,15 +58,14 @@ function normalizeText(value) {
 function LessonModal({ mode, formData, subjectOptions, onChange, onClose, onSubmit }) {
     const teacherOptionsBySubject = getTeachersBySubject(formData.subject);
 
+    // Helper để tạo synthetic event tương thích với handleFormChange
+    const emit = (name, value) => onChange({ target: { name, value } });
+
     return (
         <div className="admin-timetable-modal-overlay">
             <div className="admin-timetable-modal exp-modal-card lesson-modal-wide">
                 <div className="modal-header exp-header">
-                    <div className="modal-icon-circle">
-                        {mode === "edit" ? <FiCheckCircle /> : <FiPlus />}
-                    </div>
                     <h3>{mode === "edit" ? "Cập nhật tiết học" : "Thêm tiết học mới"}</h3>
-                    <p>Chỉnh sửa thông tin chi tiết cho khung giờ đã chọn.</p>
                     <button className="modal-close-btn" onClick={onClose}>
                         <FiX />
                     </button>
@@ -73,117 +73,112 @@ function LessonModal({ mode, formData, subjectOptions, onChange, onClose, onSubm
 
                 <div className="modal-body exp-body">
                     <div className="exp-form-grid">
+                        {/* Row 1: Lớp + Thứ */}
                         <div className="exp-form-item">
                             <label className="exp-label"><FiUsers /> Lớp</label>
-                            <div className="exp-input-wrapper">
-                                <select className="exp-select" name="className" value={formData.className} onChange={onChange}>
-                                    {classOptions.map((item) => (
-                                        <option key={item} value={item}>{item}</option>
-                                    ))}
-                                </select>
-                            </div>
+                            <Select
+                                variant="custom"
+                                value={formData.className}
+                                options={classOptions.map((item) => ({ value: item, label: item }))}
+                                onChange={(e) => emit("className", e.target.value)}
+                            />
                         </div>
 
                         <div className="exp-form-item">
                             <label className="exp-label"><FiCalendar /> Thứ</label>
-                            <div className="exp-input-wrapper">
-                                <select className="exp-select" name="day" value={formData.day} onChange={onChange}>
-                                    {dayOptions.map((item) => (
-                                        <option key={item} value={item}>{item}</option>
-                                    ))}
-                                </select>
-                            </div>
+                            <Select
+                                variant="custom"
+                                value={formData.day}
+                                options={dayOptions.map((item) => ({ value: item, label: item }))}
+                                onChange={(e) => emit("day", e.target.value)}
+                            />
+                        </div>
+
+                        {/* Row 2: Tiết + Đến tiết */}
+                        <div className="exp-form-item">
+                            <label className="exp-label"><FiClock /> Tiết bắt đầu</label>
+                            <Select
+                                variant="custom"
+                                value={String(formData.period)}
+                                options={periodOptions.map((item) => ({ value: String(item), label: `Tiết ${item}` }))}
+                                onChange={(e) => emit("period", Number(e.target.value))}
+                            />
                         </div>
 
                         <div className="exp-form-item">
-                            <label className="exp-label"><FiClock /> Tiết</label>
-                            <div className="exp-input-wrapper">
-                                <select className="exp-select" name="period" value={formData.period} onChange={onChange}>
-                                    {periodOptions.map((item) => (
-                                        <option key={item} value={item}>{item}</option>
-                                    ))}
-                                </select>
-                            </div>
+                            <label className="exp-label"><FiClock /> Tiết kết thúc</label>
+                            <Select
+                                variant="custom"
+                                value={String(formData.periodEnd)}
+                                options={periodOptions
+                                    .filter((item) => item >= formData.period)
+                                    .map((item) => ({ value: String(item), label: `Tiết ${item}` }))}
+                                onChange={(e) => emit("periodEnd", Number(e.target.value))}
+                            />
                         </div>
 
-                        <div className="exp-form-item">
-                            <label className="exp-label"><FiClock /> Đến tiết</label>
-                            <div className="exp-input-wrapper">
-                                <select className="exp-select" name="periodEnd" value={formData.periodEnd} onChange={onChange}>
-                                    {periodOptions.filter((item) => item >= formData.period).map((item) => (
-                                        <option key={item} value={item}>{item}</option>
-                                    ))}
-                                </select>
-                            </div>
-                        </div>
-
+                        {/* Row 3: Môn học + Phòng học */}
                         <div className="exp-form-item">
                             <label className="exp-label"><FiBook /> Môn học</label>
-                            <div className="exp-input-wrapper">
-                                <select className="exp-select" name="subject" value={formData.subject} onChange={onChange}>
-                                    {subjectOptions.map((item) => (
-                                        <option key={item} value={item}>{item}</option>
-                                    ))}
-                                </select>
-                            </div>
-                        </div>
-
-                        <div className="exp-form-item full-width">
-                            <label className="exp-label"><FiUser /> Giáo viên giảng dạy</label>
-                            <div className="exp-input-wrapper">
-                                <select 
-                                    className="exp-select"
-                                    name="teacher"
-                                    value={formData.teacher}
-                                    onChange={onChange}
-                                    disabled={teacherOptionsBySubject.length === 0}
-                                >
-                                    {teacherOptionsBySubject.length === 0 ? (
-                                        <option value="">Không có giáo viên cho môn này</option>
-                                    ) : (
-                                        teacherOptionsBySubject.map((item) => (
-                                            <option key={item} value={item}>{item}</option>
-                                        ))
-                                    )}
-                                </select>
-                            </div>
+                            <Select
+                                variant="custom"
+                                value={formData.subject}
+                                options={subjectOptions.map((item) => ({ value: item, label: item }))}
+                                onChange={(e) => emit("subject", e.target.value)}
+                            />
                         </div>
 
                         <div className="exp-form-item">
                             <label className="exp-label"><FiMapPin /> Phòng học</label>
                             <div className="exp-input-wrapper">
-                                <input 
+                                <input
                                     className="exp-input"
-                                    name="room" 
-                                    value={formData.room} 
-                                    onChange={onChange} 
-                                    placeholder="VD: P201" 
+                                    name="room"
+                                    value={formData.room}
+                                    onChange={onChange}
+                                    placeholder="VD: P201"
                                 />
                             </div>
                         </div>
 
+                        {/* Row 4: Giáo viên - full width */}
+                        <div className="exp-form-item full-width">
+                            <label className="exp-label"><FiUser /> Giáo viên giảng dạy</label>
+                            <Select
+                                variant="custom"
+                                value={formData.teacher}
+                                options={
+                                    teacherOptionsBySubject.length === 0
+                                        ? [{ value: "", label: "Không có giáo viên cho môn này" }]
+                                        : teacherOptionsBySubject.map((item) => ({ value: item, label: item }))
+                                }
+                                disabled={teacherOptionsBySubject.length === 0}
+                                onChange={(e) => emit("teacher", e.target.value)}
+                            />
+                        </div>
+
+                        {/* Row 5: Trạng thái + Hình thức */}
                         <div className="exp-form-item">
                             <label className="exp-label"><FiActivity /> Trạng thái</label>
-                            <div className="exp-input-wrapper">
-                                <select className="exp-select" name="status" value={formData.status} onChange={onChange}>
-                                    {Object.values(STATUS_META).map((status) => (
-                                        <option key={status.label} value={status.label}>{status.label}</option>
-                                    ))}
-                                </select>
-                            </div>
+                            <Select
+                                variant="custom"
+                                value={formData.status}
+                                options={Object.values(STATUS_META).map((s) => ({ value: s.label, label: s.label }))}
+                                onChange={(e) => emit("status", e.target.value)}
+                            />
                         </div>
 
                         <div className="exp-form-item">
                             <label className="exp-label"><FiActivity /> Hình thức</label>
-                            <div className="exp-input-wrapper">
-                                <select className="exp-select" name="mode" value={formData.mode} onChange={onChange}>
-                                    {Object.values(MODE_META).map((mode) => (
-                                        <option key={mode} value={mode}>{mode}</option>
-                                    ))}
-                                </select>
-                            </div>
+                            <Select
+                                variant="custom"
+                                value={formData.mode}
+                                options={Object.values(MODE_META).map((m) => ({ value: m, label: m }))}
+                                onChange={(e) => emit("mode", e.target.value)}
+                            />
                         </div>
 
+                        {/* Row 6: Ghi chú - full width */}
                         <div className="exp-form-item full-width">
                             <label className="exp-label"><FiActivity /> Ghi chú</label>
                             <div className="exp-input-wrapper">
@@ -192,7 +187,7 @@ function LessonModal({ mode, formData, subjectOptions, onChange, onClose, onSubm
                                     name="note"
                                     value={formData.note}
                                     onChange={onChange}
-                                    placeholder="Noi dung tiet hoc"
+                                    placeholder="Nội dung tiết học"
                                 />
                             </div>
                         </div>

@@ -235,10 +235,10 @@ function buildScore(baseScores, offset) {
 
 function buildRecords(classConfig, subject, semester, overrides = {}) {
     const baseScores = classConfig.subjectBases[subject]?.[semester];
+    if (!baseScores) return [];
 
-    if (!baseScores) {
-        return [];
-    }
+    const hk1Base = classConfig.subjectBases[subject]?.hk1;
+    const hk2Base = classConfig.subjectBases[subject]?.hk2;
 
     return classConfig.students.map((student, index) => {
         const recordKey = `${classConfig.label}-${subject}-${semester}-${student.id}`;
@@ -251,6 +251,15 @@ function buildRecords(classConfig, subject, semester, overrides = {}) {
         const average = calculateAverage(scores);
         const rank = getRank(average);
 
+        let fullYearAverage = null;
+        if (semester === "hk2" && hk1Base && hk2Base) {
+            const hk1Key = `${classConfig.label}-${subject}-hk1-${student.id}`;
+            const hk1Raw = overrides[hk1Key] || buildScore(hk1Base, SCORE_OFFSETS[index % SCORE_OFFSETS.length]);
+            const hk1Scores = hk1Raw.oralScores ? hk1Raw : createDraftFromScores(hk1Raw);
+            const hk1Avg = calculateAverage(hk1Scores);
+            fullYearAverage = round1((hk1Avg + average * 2) / 3);
+        }
+
         return {
             ...student,
             recordKey,
@@ -261,6 +270,7 @@ function buildRecords(classConfig, subject, semester, overrides = {}) {
             test15,
             oneTiet,
             average,
+            fullYearAverage,
             rank,
             status: average >= 5 ? "Đạt" : "Chưa đạt",
             note: override?.note || "",

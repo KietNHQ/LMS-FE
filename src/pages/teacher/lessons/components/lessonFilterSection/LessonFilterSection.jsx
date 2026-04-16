@@ -1,5 +1,6 @@
 import React from "react";
 import "./LessonFilterSection.css";
+import { Select } from "../../../../../components/ui";
 
 export default function LessonFilterSection({
     subject,
@@ -31,30 +32,22 @@ export default function LessonFilterSection({
             <div className="lesson-filter-grid">
                 <label>
                     Lớp học
-                    <select
+                    <Select
+                        variant="custom"
                         value={filters.className}
-                        onChange={(event) => onChangeFilter("className", event.target.value)}
-                    >
-                        {classes.map((classItem) => (
-                            <option key={classItem} value={classItem}>
-                                {classItem}
-                            </option>
-                        ))}
-                    </select>
+                        options={classes.map((c) => ({ value: c, label: c }))}
+                        onChange={(e) => onChangeFilter("className", e.target.value)}
+                    />
                 </label>
 
                 <label>
                     Trạng thái
-                    <select
+                    <Select
+                        variant="custom"
                         value={filters.status}
-                        onChange={(event) => onChangeFilter("status", event.target.value)}
-                    >
-                        {statusOptions.map((status) => (
-                            <option key={status} value={status}>
-                                {status}
-                            </option>
-                        ))}
-                    </select>
+                        options={statusOptions.map((s) => ({ value: s, label: s }))}
+                        onChange={(e) => onChangeFilter("status", e.target.value)}
+                    />
                 </label>
 
                 <label className="filter-keyword">

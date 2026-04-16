@@ -119,3 +119,29 @@
     flex: 1;
   }
 }
+
+/* ===== TEACHER LAYOUT - Teal override ===== */
+.teacher-layout .school-year-term-selector__term-btn.is-active {
+  background: #11c7b6;
+  color: #ffffff;
+}
+
+.teacher-layout .school-year-term-selector__term-btn:hover {
+  color: #0d6d63;
+  background: #e9fbf8;
+}
+
+.teacher-layout .school-year-term-selector__arrow-btn:hover {
+  background: #e9fbf8;
+  border-color: #b6ebe5;
+  color: #11c7b6;
+}
+
+.teacher-layout .school-year-term-selector__term-toggle {
+  border-color: #b6ebe5;
+}
+
+.teacher-layout .school-year-term-selector__year-input {
+  border-color: #b6ebe5;
+  color: #0d6d63;
+}

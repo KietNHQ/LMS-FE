@@ -14,10 +14,6 @@
 	color: var(--teacher-primary);
 }
 
-.teacher-grades-page .school-year-term-selector__term-btn.is-active {
-	background: linear-gradient(135deg, var(--teacher-primary) 0%, var(--teacher-primary-dark) 100%);
-}
-
 .teacher-grades-hero {
 	background: linear-gradient(135deg, #11c7b6 0%, #04a094 100%);
 	color: #ffffff;
@@ -464,7 +460,6 @@
 	border: 1px solid #dce5f7;
 	border-radius: 16px;
 	box-shadow: 0 2px 6px rgba(30, 47, 90, 0.05);
-	overflow: hidden;
 }
 
 .teacher-grades-top-panel .teacher-grades-toolbar {
