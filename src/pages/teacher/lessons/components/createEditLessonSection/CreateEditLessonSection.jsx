@@ -16,8 +16,9 @@ const PERIOD_OPTIONS = [
 
 export default function CreateEditLessonSection({
     subject,
+    blockOptions,
+    classesByBlock,
     formValues,
-    classes,
     onChangeForm,
     attachedFiles = [],
     onFileChange,
@@ -26,6 +27,8 @@ export default function CreateEditLessonSection({
     onPublish,
     isDialog = false,
 }) {
+    const classOptions = classesByBlock?.[formValues.gradeBlock] || [];
+
     const handleAttachmentInput = (event) => {
         if (typeof onFileChange === "function") {
             onFileChange(event.target.files);
@@ -41,8 +44,12 @@ export default function CreateEditLessonSection({
     return (
         <div className={`create-edit-lesson-section ${isDialog ? "is-dialog" : ""}`}>
             <div className="create-lesson-head">
-                <h2>Tạo và chỉnh sửa bài học</h2>
-                <p>Thông tin cần thiết để lên kế hoạch giảng dạy cho môn {subject.name}.</p>
+                <div>
+                    <h2>Tạo và chỉnh sửa bài học</h2>
+                    <p>Giáo viên có thể tạo bài học cho nhiều khối 10, 11, 12 từ cùng một form.</p>
+                </div>
+
+                <span className="lesson-form-block-tag">{formValues.gradeBlock}</span>
             </div>
 
             <section className="lesson-form-block">
@@ -58,12 +65,26 @@ export default function CreateEditLessonSection({
                     </label>
 
                     <label>
-                        Lớp học
+                        Khối phụ trách
+                        <select
+                            value={formValues.gradeBlock}
+                            onChange={(event) => onChangeForm("gradeBlock", event.target.value)}
+                        >
+                            {blockOptions.map((block) => (
+                                <option key={block} value={block}>
+                                    {block}
+                                </option>
+                            ))}
+                        </select>
+                    </label>
+
+                    <label>
+                        Lớp
                         <select
                             value={formValues.className}
                             onChange={(event) => onChangeForm("className", event.target.value)}
                         >
-                            {classes.map((className) => (
+                            {classOptions.map((className) => (
                                 <option key={className} value={className}>
                                     {className}
                                 </option>

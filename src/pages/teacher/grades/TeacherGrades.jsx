@@ -496,6 +496,7 @@ export default function TeacherGrades() {
         <div className="teacher-grades-page">
             <PageHeader
                 title="Quản lý điểm học sinh"
+                description="Theo dõi điểm theo lớp, mở cảnh báo sớm và chỉnh sửa theo học kỳ hiện tại."
                 eyebrow={`Tổng cộng: ${currentClass.students.length} học sinh`}
                 actions={
                     <SchoolYearTermSelector

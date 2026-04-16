@@ -1,7 +1,7 @@
 .create-edit-lesson-section {
     border: 1px solid var(--teacher-border-soft);
     background: #ffffff;
-    border-radius: 14px;
+    border-radius: 18px;
     padding: 16px;
     display: flex;
     flex-direction: column;
@@ -18,7 +18,7 @@
 
 .create-lesson-head h2 {
     margin: 0;
-    font-size: 18px;
+    font-size: 20px;
     color: var(--teacher-text-main);
 }
 
@@ -28,11 +28,31 @@
     font-size: 14px;
 }
 
+.create-lesson-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.lesson-form-block-tag {
+    width: fit-content;
+    border-radius: 999px;
+    border: 1px solid var(--teacher-border-soft);
+    background: var(--teacher-primary-soft);
+    color: var(--teacher-primary);
+    padding: 5px 10px;
+    font-size: 12px;
+    font-weight: 800;
+    white-space: nowrap;
+}
+
 .lesson-form-block {
     border: 1px solid #d8efeb;
-    border-radius: 12px;
-    background: #fcfefe;
-    padding: 12px;
+    border-radius: 14px;
+    background: #ffffff;
+    padding: 14px;
     display: flex;
     flex-direction: column;
     gap: 12px;
@@ -74,8 +94,8 @@
 .create-lesson-grid select,
 .create-lesson-textareas textarea {
     border: 1px solid #c6e5e1;
-    border-radius: 8px;
-    padding: 9px 10px;
+    border-radius: 10px;
+    padding: 10px 12px;
     font-size: 14px;
     color: #1b3440;
     background: #ffffff;
@@ -84,8 +104,8 @@
 }
 
 .create-lesson-grid input:disabled {
-    background: #eefaf8;
-    color: #39606a;
+    background: #f7fafc;
+    color: #4b6670;
 }
 
 .create-lesson-grid input:focus,
@@ -104,9 +124,9 @@
 
 .create-lesson-attachments {
     border: 1px dashed #a6dfd7;
-    border-radius: 12px;
-    background: #f7fdfc;
-    padding: 12px;
+    border-radius: 14px;
+    background: #ffffff;
+    padding: 14px;
     display: flex;
     flex-direction: column;
     gap: 10px;
@@ -126,9 +146,9 @@
 
 .attachment-drop-zone {
     border: 1px solid #bde6e1;
-    border-radius: 10px;
-    background: #ffffff;
-    padding: 12px;
+    border-radius: 12px;
+    background: var(--teacher-primary-soft);
+    padding: 14px;
     color: #0f6f65;
     font-size: 13px;
     font-weight: 600;
@@ -150,7 +170,7 @@
 
 .attachment-file-list li {
     border: 1px solid #cde8e3;
-    border-radius: 8px;
+    border-radius: 12px;
     background: #ffffff;
     padding: 8px 10px;
     display: flex;
@@ -172,7 +192,7 @@
 
 .attachment-file-list button {
     border: 1px solid #cce8e4;
-    border-radius: 8px;
+    border-radius: 10px;
     background: #edf9f7;
     color: #0e7a6f;
     font-size: 12px;
@@ -188,7 +208,7 @@
     position: sticky;
     bottom: 0;
     z-index: 2;
-    background: linear-gradient(180deg, rgba(255, 255, 255, 0.86) 0%, #ffffff 34%);
+    background: #ffffff;
     padding-top: 10px;
     border-top: 1px solid #d9efec;
 }
@@ -250,6 +270,10 @@
 
     .btn {
         flex: 1;
+    }
+
+    .create-lesson-head {
+        flex-direction: column;
     }
 
     .attachment-file-list li {

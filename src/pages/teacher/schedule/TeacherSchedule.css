@@ -4,12 +4,34 @@
   display: flex;
   flex-direction: column;
   gap: 16px;
-  background: linear-gradient(
-    180deg,
-    color-mix(in srgb, var(--teacher-primary-soft) 68%, #ffffff 32%) 0%,
-    #ffffff 40%,
-    #ffffff 100%
-  );
+  background: linear-gradient(180deg, color-mix(in srgb, var(--teacher-primary-soft) 54%, #ffffff 46%) 0%, #f8fbfd 100%);
+  max-width: 1440px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+.teacher-schedule .common-page-header {
+  padding: 18px 18px 16px;
+  border: 1px solid var(--teacher-border-soft);
+  border-radius: 18px;
+  background: linear-gradient(120deg, color-mix(in srgb, var(--teacher-primary-soft) 86%, #ffffff 14%) 0%, #ffffff 64%);
+  box-shadow: var(--teacher-shadow);
+}
+
+.teacher-schedule .common-page-header__title-container {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+}
+
+.teacher-schedule .common-page-header h1 {
+  font-size: clamp(28px, 2.6vw, 40px);
+  letter-spacing: -0.03em;
+}
+
+.teacher-schedule .common-page-header p {
+  max-width: 720px;
+  line-height: 1.55;
 }
 
 .teacher-schedule-content {
@@ -39,7 +61,7 @@
 }
 
 .teacher-daily-modal .daily-schedule-section {
-  box-shadow: var(--admin-shadow-md);
+  box-shadow: var(--teacher-shadow);
   margin: 0;
   border-radius: 16px;
 }
@@ -60,7 +82,7 @@
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  border-bottom: 1px solid var(--admin-border);
+  border-bottom: 1px solid var(--teacher-border-soft);
   padding-bottom: 12px;
   gap: 12px;
 }
@@ -68,14 +90,14 @@
 .modal-header-info h3 {
   font-size: 19px;
   font-weight: 700;
-  color: var(--admin-text-primary);
+  color: var(--teacher-text-main);
   margin: 0;
 }
 
 .modal-header-subtitle {
   margin: 6px 0 0;
   font-size: 13px;
-  color: var(--admin-text-secondary);
+  color: var(--teacher-text-sub);
 }
 
 .modal-header-badges {
@@ -95,8 +117,8 @@
 .modal-type-badge {
   padding: 4px 10px;
   border-radius: 999px;
-  background: var(--admin-info-bg);
-  color: var(--admin-info-fg);
+  background: var(--teacher-primary-soft);
+  color: var(--teacher-primary);
   font-size: 12px;
   font-weight: 700;
 }
@@ -108,10 +130,10 @@
 }
 
 .modal-info-card {
-  border: 1px solid var(--admin-border);
+  border: 1px solid var(--teacher-border-soft);
   border-radius: 10px;
   padding: 10px 12px;
-  background: var(--admin-primary-soft);
+  background: var(--teacher-surface);
 }
 
 .modal-info-card-wide {
@@ -122,13 +144,13 @@
   margin: 0 0 8px;
   font-size: 14px;
   font-weight: 700;
-  color: var(--admin-text-primary);
+  color: var(--teacher-text-main);
 }
 
 .modal-info-card p {
   margin: 0 0 6px;
   font-size: 13px;
-  color: var(--admin-text-secondary);
+  color: var(--teacher-text-sub);
   line-height: 1.45;
 }
 
@@ -137,7 +159,7 @@
 }
 
 .modal-info-card strong {
-  color: var(--admin-text-primary);
+  color: var(--teacher-text-main);
   font-weight: 600;
 }
 
@@ -151,7 +173,7 @@
 
 .modal-reminder-list li {
   font-size: 13px;
-  color: var(--admin-text-secondary);
+  color: var(--teacher-text-sub);
 }
 
 @media (max-width: 680px) {
@@ -167,13 +189,13 @@
 }
 
 .modal-badge.color-blue {
-  background: var(--admin-info-bg);
-  color: var(--admin-info-fg);
+  background: var(--teacher-primary-soft);
+  color: var(--teacher-primary);
 }
 
 .modal-badge.color-purple {
-  background: var(--admin-primary-soft);
-  color: var(--admin-primary);
+  background: var(--teacher-primary-soft);
+  color: var(--teacher-primary-dark);
 }
 
 .modal-badge.color-orange {
@@ -182,6 +204,16 @@
 }
 
 .modal-badge.color-pink {
-  background: var(--admin-danger-bg);
-  color: var(--admin-danger-fg);
+  background: #ffe4e6;
+  color: #be123c;
+}
+
+@media (max-width: 768px) {
+  .teacher-schedule {
+    padding: 16px;
+  }
+
+  .teacher-schedule .common-page-header {
+    padding: 16px;
+  }
 }
