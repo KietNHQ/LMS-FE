@@ -126,3 +126,46 @@
 @media (max-width: 1024px) {
     .report-charts { grid-template-columns: 1fr; }
 }
+
+/* ── NEW REPORT STYLES ── */
+.rp-header-row {
+    margin-bottom: 1.5rem;
+}
+
+.report-table-wrap {
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 0.5rem;
+    overflow: hidden;
+}
+
+.report-table th {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    color: #475569;
+    letter-spacing: 0.025em;
+}
+
+.compliance-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.5rem;
+}
+
+.compliance-card {
+    transition: transform 0.2s, box-shadow 0.2s;
+    border-top: 4px solid #3b82f6;
+}
+.compliance-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
+}
+
+.invoice-filters .rp-select {
+    border: 1px solid #cbd5e1;
+    border-radius: 0.35rem;
+    padding: 0.5rem;
+    font-size: 0.85rem;
+    outline: none;
+}
+

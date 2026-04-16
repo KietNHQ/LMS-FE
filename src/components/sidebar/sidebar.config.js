@@ -148,10 +148,13 @@ export const sidebarConfig = {
     finance_staff: [
         { label: "Trang chủ",           icon: FiGrid,       path: "/finance/dashboard" },
         { label: "Quản Lý Thu Phí",    icon: FiCreditCard, path: "/finance/fee-management" },
-        { label: "Thanh Toán & Hóa Đơn",icon: FiRepeat,     path: "/finance/payment-hub" },
+        { label: "Công nợ & Thanh toán",icon: FiRepeat,     path: "/finance/payment-hub" },
+        { label: "Phê Duyệt",           icon: FiCheckSquare, path: "/finance/approvals" },
         { label: "Báo Cáo Tài Chính",   icon: FiBarChart2,  path: "/finance/reports" },
+        { label: "Nhật Ký Kiểm Toán",    icon: FiShield,     path: "/finance/audit-log" },
         { label: "Thông Báo",           icon: FiBell,       path: "/finance/notifications" },
     ],
+
 
     teacher: [
         { label: "Trang chủ", icon: FiGrid, path: "/teacher/dashboard" },

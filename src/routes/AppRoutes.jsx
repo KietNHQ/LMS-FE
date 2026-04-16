@@ -87,6 +87,9 @@ const FinanceFeeManagement = lazy(() => import("../pages/finance/fee-management/
 const FinancePaymentHub = lazy(() => import("../pages/finance/payment-hub/FinancePaymentHub"));
 const FinanceReports = lazy(() => import("../pages/finance/reports/FinanceReports"));
 const FinanceNotifications = lazy(() => import("../pages/finance/notifications/FinanceNotifications"));
+const FinanceApprovals = lazy(() => import("../pages/finance/approvals/FinanceApprovals"));
+const FinanceAuditLog = lazy(() => import("../pages/finance/settings/FinanceAuditLog"));
+
 
 /* STUDENT PAGES */
 const StudentLayout = lazy(() => import("../layouts/student/StudentLayout"));
@@ -245,8 +248,11 @@ export default function AppRoutes() {
         <Route path="fee-management" element={<FinanceFeeManagement />} />
         <Route path="payment-hub" element={<FinancePaymentHub />} />
         <Route path="reports" element={<FinanceReports />} />
+        <Route path="approvals" element={<FinanceApprovals />} />
+        <Route path="audit-log" element={<FinanceAuditLog />} />
         <Route path="notifications" element={<FinanceNotifications />} />
       </Route>
+
 
       {/* STUDENT */}
       <Route path="/student" element={<StudentLayout />}>
