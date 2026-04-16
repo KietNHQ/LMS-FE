@@ -10,20 +10,16 @@
 	color: var(--teacher-primary);
 }
 
-.teacher-grades-page .common-page-header h1 {
-	color: var(--teacher-primary);
-}
-
 .teacher-grades-page .school-year-term-selector__term-btn.is-active {
 	background: linear-gradient(135deg, var(--teacher-primary) 0%, var(--teacher-primary-dark) 100%);
 }
 
 .teacher-grades-hero {
-	background: linear-gradient(135deg, #11c7b6 0%, #04a094 100%);
+	background: linear-gradient(135deg, var(--teacher-primary) 0%, var(--teacher-primary-dark) 100%);
 	color: #ffffff;
 	border-radius: 22px;
 	padding: 22px 24px;
-	box-shadow: 0 18px 36px rgba(4, 160, 148, 0.18);
+	box-shadow: 0 18px 36px color-mix(in srgb, var(--teacher-primary-dark) 18%, transparent 82%);
 	display: flex;
 	justify-content: space-between;
 	align-items: flex-start;
@@ -118,11 +114,11 @@
 	justify-content: flex-start;
 	gap: 0.85rem;
 	flex-wrap: wrap;
-	background: #ffffff;
+	background: var(--teacher-surface);
 	padding: 0.85rem 1.1rem;
 	border-radius: 14px;
 	border: 1px solid var(--teacher-border-soft);
-	box-shadow: var(--admin-shadow-sm);
+	box-shadow: var(--teacher-shadow);
 }
 
 .teacher-grades-toolbar__group {
@@ -177,7 +173,7 @@
 }
 
 .teacher-grades-select .ui-select__label {
-	color: #4d5f82;
+	color: var(--teacher-text-sub);
 	font-size: 13px;
 	font-weight: 700;
 }
@@ -185,19 +181,19 @@
 .teacher-grades-select .custom-dropdown-trigger,
 .teacher-grades-select .ui-select__field {
 	min-height: 44px;
-	border: 1.5px solid #dbe4f5;
+	border: 1.5px solid var(--teacher-border-soft);
 	border-radius: 12px;
-	background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+	background: linear-gradient(180deg, var(--teacher-surface) 0%, var(--teacher-primary-soft) 100%);
 	color: var(--teacher-primary);
 	font-weight: 700;
-	box-shadow: var(--admin-shadow-sm);
+	box-shadow: var(--teacher-shadow);
 	transition: all 0.2s ease;
 }
 
 .teacher-grades-select .custom-dropdown-trigger:hover,
 .teacher-grades-select .ui-select__field:hover {
 	border-color: var(--teacher-border-strong);
-	box-shadow: var(--admin-shadow-md);
+	box-shadow: var(--teacher-shadow);
 }
 
 .teacher-grades-select .custom-dropdown-trigger.open,
@@ -218,7 +214,7 @@
 
 .teacher-grades-select .custom-dropdown-menu {
 	border: 1px solid var(--teacher-border-soft);
-	box-shadow: var(--admin-shadow-md);
+	box-shadow: var(--teacher-shadow);
 	background: rgba(255, 255, 255, 0.98);
 }
 
@@ -244,7 +240,7 @@
 
 .teacher-grades-summary-header {
 	padding: 18px 20px 14px;
-	border-bottom: 1px solid #e8eefb;
+	border-bottom: 1px solid var(--teacher-border-soft);
 }
 
 .teacher-grades-summary-row {
@@ -322,9 +318,9 @@
 .teacher-grade-edit-meta span {
 	padding: 6px 10px;
 	border-radius: 999px;
-	background: #f0fbfa;
-	border: 1px solid #cdecea;
-	color: #0f766e;
+	background: var(--teacher-primary-soft);
+	border: 1px solid var(--teacher-border-soft);
+	color: var(--teacher-primary);
 	font-size: 12px;
 	font-weight: 800;
 }
@@ -353,12 +349,12 @@
 .teacher-grade-edit-note input,
 .teacher-grade-edit-note textarea {
 	width: 100%;
-	border: 1px solid #dbe4f5;
+	border: 1px solid var(--teacher-border-soft);
 	border-radius: 12px;
 	padding: 0 14px;
 	min-height: 44px;
-	background: #ffffff;
-	color: #1d2f56;
+	background: var(--teacher-surface);
+	color: var(--teacher-text-main);
 	outline: none;
 	transition: all 0.2s ease;
 }
@@ -375,8 +371,8 @@
 .teacher-grade-edit-note input:focus,
 .teacher-grade-edit-note textarea:hover,
 .teacher-grade-edit-note textarea:focus {
-	border-color: #9ee3dc;
-	box-shadow: 0 0 0 3px rgba(4, 160, 148, 0.12);
+	border-color: var(--teacher-border-strong);
+	box-shadow: 0 0 0 3px var(--admin-focus-ring);
 }
 
 .teacher-grade-edit-actions {
@@ -396,13 +392,13 @@
 }
 
 .teacher-grade-edit-btn.is-ghost {
-	background: #ffffff;
-	border-color: #dbe4f5;
-	color: #3559b7;
+	background: var(--teacher-surface);
+	border-color: var(--teacher-border-soft);
+	color: var(--teacher-primary);
 }
 
 .teacher-grade-edit-btn.is-primary {
-	background: linear-gradient(135deg, #11c7b6 0%, #04a094 100%);
+	background: linear-gradient(135deg, var(--teacher-primary) 0%, var(--teacher-primary-dark) 100%);
 	color: #ffffff;
 }
 
@@ -421,8 +417,8 @@
 
 .teacher-grade-risk-item {
 	width: 100%;
-	border: 1px solid #dbe4f5;
-	background: #ffffff;
+	border: 1px solid var(--teacher-border-soft);
+	background: var(--teacher-surface);
 	border-radius: 12px;
 	padding: 10px 12px;
 	display: flex;
@@ -435,13 +431,13 @@
 
 .teacher-grade-risk-item strong {
 	font-size: 14px;
-	color: #1d2f56;
+	color: var(--teacher-text-main);
 	font-weight: 800;
 }
 
 .teacher-grade-risk-item span {
 	font-size: 12px;
-	color: #6f7c91;
+	color: var(--teacher-text-sub);
 	font-weight: 700;
 }
 
@@ -453,17 +449,17 @@
 
 .teacher-grade-risk-item:hover,
 .teacher-grade-risk-item:focus-visible {
-	border-color: #9ee3dc;
-	background: #f0fbfa;
-	box-shadow: 0 8px 16px rgba(4, 160, 148, 0.12);
+	border-color: var(--teacher-border-strong);
+	background: var(--teacher-primary-soft);
+	box-shadow: var(--teacher-shadow);
 	outline: none;
 }
 
 .teacher-grades-top-panel {
-	background: #ffffff;
-	border: 1px solid #dce5f7;
+	background: var(--teacher-surface);
+	border: 1px solid var(--teacher-border-soft);
 	border-radius: 16px;
-	box-shadow: 0 2px 6px rgba(30, 47, 90, 0.05);
+	box-shadow: var(--teacher-shadow);
 	overflow: hidden;
 }
 
@@ -474,8 +470,8 @@
 	border-radius: 0;
 	padding: 0.85rem 1.1rem;
 	margin: 0;
-	border-top: 1px solid #e8eefb;
-	border-bottom: 1px solid #e8eefb;
+	border-top: 1px solid var(--teacher-border-soft);
+	border-bottom: 1px solid var(--teacher-border-soft);
 }
 
 .teacher-grades-top-panel .teacher-grades-summary-row {

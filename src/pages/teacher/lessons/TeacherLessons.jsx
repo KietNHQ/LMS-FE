@@ -1,7 +1,6 @@
 import React, { useMemo, useState } from "react";
 import LessonListSection from "./components/lessonListSection/LessonListSection";
 import CreateEditLessonSection from "./components/createEditLessonSection/CreateEditLessonSection";
-import LessonFilterSection from "./components/lessonFilterSection/LessonFilterSection";
 import Modal from "../../../components/ui/Modal/Modal";
 import LessonDetailModal from "./components/lessonDetailModal/LessonDetailModal";
 import { PageHeader, SchoolYearTermSelector } from "../../../components/common";
@@ -10,9 +9,16 @@ import "./TeacherLessons.css";
 
 const ASSIGNED_SUBJECT = {
     id: "math-10",
-    code: "MATH10",
-    name: "Toán 10",
+    code: "MATH",
+    name: "Toán",
     teacherName: "Nguyễn Văn A",
+};
+
+const TEACHING_BLOCKS = ["Khối 10", "Khối 11", "Khối 12"];
+const CLASSES_BY_BLOCK = {
+    "Khối 10": ["10A1", "10A2", "10A3", "10A4"],
+    "Khối 11": ["11A1", "11A2", "11A3", "11A4"],
+    "Khối 12": ["12A1", "12A2", "12A3", "12A4"],
 };
 
 const LESSONS_MOCK = [
@@ -21,12 +27,14 @@ const LESSONS_MOCK = [
         schoolYear: "2025-2026",
         term: "hk2",
         title: "Hàm số bậc nhất",
+        gradeBlock: "Khối 10",
         className: "10A1",
         chapter: "Chương 1",
         date: "2026-04-18",
         period: "Tiết 2",
         room: "Phòng B203",
         status: "Đã xuất bản",
+        isPinned: true,
         objective: "Học sinh nhớ được định nghĩa và nhận dạng đồ thị hàm số bậc nhất.",
         content: "Giới thiệu dạng hàm số, phân tích hệ số a và b, luyện tập vẽ đồ thị qua 4 ví dụ cơ bản.",
         materials: "Slide chương 1, phiếu học tập số 03, bảng phụ nhóm.",
@@ -41,7 +49,8 @@ const LESSONS_MOCK = [
         schoolYear: "2025-2026",
         term: "hk2",
         title: "Bài tập ứng dụng hàm số",
-        className: "10A2",
+        gradeBlock: "Khối 11",
+        className: "11A2",
         chapter: "Chương 1",
         date: "2026-04-20",
         period: "Tiết 4",
@@ -58,7 +67,8 @@ const LESSONS_MOCK = [
         schoolYear: "2025-2026",
         term: "hk1",
         title: "Ôn tập chương 1",
-        className: "10A1",
+        gradeBlock: "Khối 12",
+        className: "12A1",
         chapter: "Chương 1",
         date: "2026-04-23",
         period: "Tiết 1",
@@ -75,12 +85,14 @@ const LESSONS_MOCK = [
         schoolYear: "2025-2026",
         term: "hk2",
         title: "Hàm số bậc hai - giới thiệu",
+        gradeBlock: "Khối 10",
         className: "10A3",
         chapter: "Chương 2",
         date: "2026-04-25",
         period: "Tiết 3",
         room: "Phòng B210",
         status: "Đã xuất bản",
+        isPinned: true,
         objective: "Học sinh hiểu dạng tổng quát và nhận dạng hệ số a, b, c.",
         content: "Khởi động bằng tình huống thực tế, trình bày dạng chuẩn, thực hành nhận diện nhanh.",
         materials: "Slide chương 2, phiếu ôn tập nhanh cuối tiết.",
@@ -92,7 +104,8 @@ const LESSONS_MOCK = [
         schoolYear: "2025-2026",
         term: "hk1",
         title: "Khảo sát hàm số cơ bản",
-        className: "10A2",
+        gradeBlock: "Khối 11",
+        className: "11A1",
         chapter: "Chương 1",
         date: "2025-10-21",
         period: "Tiết 5",
@@ -109,7 +122,8 @@ const LESSONS_MOCK = [
 function createEmptyForm() {
     return {
         title: "",
-        className: "10A1",
+        gradeBlock: TEACHING_BLOCKS[0],
+        className: CLASSES_BY_BLOCK[TEACHING_BLOCKS[0]][0],
         chapter: "Chương 1",
         date: "",
         period: "Tiết 1",
@@ -137,8 +151,11 @@ export default function TeacherLessons() {
     } = useSchoolYearTerm() || {};
 
     const [lessons, setLessons] = useState(LESSONS_MOCK);
+    const [pinnedLessonIds, setPinnedLessonIds] = useState(() =>
+        LESSONS_MOCK.filter((lesson) => lesson.isPinned).map((lesson) => lesson.id)
+    );
     const [filters, setFilters] = useState({
-        className: "Tất cả",
+        gradeBlock: "Tất cả khối",
         status: "Tất cả",
         keyword: "",
     });
@@ -146,9 +163,11 @@ export default function TeacherLessons() {
     const [isCreateLessonOpen, setIsCreateLessonOpen] = useState(false);
     const [editingLessonId, setEditingLessonId] = useState(null);
     const [selectedLesson, setSelectedLesson] = useState(null);
+    const [reviewLesson, setReviewLesson] = useState(null);
     const [attachedFiles, setAttachedFiles] = useState([]);
 
     const [formValues, setFormValues] = useState(createEmptyForm());
+    const pinnedLessonSet = useMemo(() => new Set(pinnedLessonIds), [pinnedLessonIds]);
 
     const termLessons = useMemo(() => {
         return lessons.filter(
@@ -158,12 +177,8 @@ export default function TeacherLessons() {
         );
     }, [lessons, selectedSchoolYear, selectedTerm]);
 
-    const classes = useMemo(() => {
-        const unique = new Set(termLessons.map((lesson) => lesson.className));
-        return ["Tất cả", ...unique];
-    }, [termLessons]);
-
     const statusOptions = ["Tất cả", "Đã xuất bản", "Bản nháp", "Chờ duyệt"];
+    const blockOptions = ["Tất cả khối", ...TEACHING_BLOCKS];
 
     const summary = useMemo(() => {
         const total = termLessons.length;
@@ -175,7 +190,8 @@ export default function TeacherLessons() {
 
     const filteredLessons = useMemo(() => {
         return termLessons.filter((lesson) => {
-            const byClass = filters.className === "Tất cả" || lesson.className === filters.className;
+            const byBlock =
+                filters.gradeBlock === "Tất cả khối" || lesson.gradeBlock === filters.gradeBlock;
             const byStatus = filters.status === "Tất cả" || lesson.status === filters.status;
             const normalizedKeyword = filters.keyword.trim().toLowerCase();
             const byKeyword =
@@ -183,7 +199,7 @@ export default function TeacherLessons() {
                 lesson.title.toLowerCase().includes(normalizedKeyword) ||
                 lesson.chapter.toLowerCase().includes(normalizedKeyword);
 
-            return byClass && byStatus && byKeyword;
+            return byBlock && byStatus && byKeyword;
         });
     }, [filters, termLessons]);
 
@@ -192,7 +208,19 @@ export default function TeacherLessons() {
     };
 
     const handleFormChange = (field, value) => {
-        setFormValues((prev) => ({ ...prev, [field]: value }));
+        setFormValues((prev) => {
+            if (field === "gradeBlock") {
+                const nextClasses = CLASSES_BY_BLOCK[value] || [];
+                const keepCurrentClass = nextClasses.includes(prev.className);
+                return {
+                    ...prev,
+                    gradeBlock: value,
+                    className: keepCurrentClass ? prev.className : nextClasses[0] || "",
+                };
+            }
+
+            return { ...prev, [field]: value };
+        });
     };
 
     const handleOpenCreate = () => {
@@ -209,7 +237,9 @@ export default function TeacherLessons() {
         setEditingLessonId(lesson.id);
         setFormValues({
             title: lesson.title,
-            className: lesson.className,
+            gradeBlock: lesson.gradeBlock || TEACHING_BLOCKS[0],
+            className:
+                lesson.className || CLASSES_BY_BLOCK[lesson.gradeBlock || TEACHING_BLOCKS[0]]?.[0] || "",
             chapter: lesson.chapter,
             date: lesson.date,
             period: lesson.period,
@@ -221,6 +251,30 @@ export default function TeacherLessons() {
         });
         setAttachedFiles(lesson.attachments || []);
         setIsCreateLessonOpen(true);
+    };
+
+    const handleDuplicateLesson = (lessonId) => {
+        const lesson = lessons.find((item) => item.id === lessonId);
+        if (!lesson) return;
+
+        const duplicatedLesson = {
+            ...lesson,
+            id: Date.now(),
+            title: `Bản sao - ${lesson.title}`,
+            status: "Bản nháp",
+            isPinned: false,
+            attachments: (lesson.attachments || []).map((file) => ({ ...file })),
+        };
+
+        setLessons((prev) => [duplicatedLesson, ...prev]);
+    };
+
+    const handleTogglePin = (lessonId) => {
+        setPinnedLessonIds((prev) =>
+            prev.includes(lessonId)
+                ? prev.filter((item) => item !== lessonId)
+                : [lessonId, ...prev]
+        );
     };
 
     const handleCloseCreate = () => {
@@ -264,6 +318,7 @@ export default function TeacherLessons() {
                 {
                     id: Date.now(),
                     ...payload,
+                    isPinned: false,
                 },
                 ...prev,
             ]);
@@ -276,7 +331,7 @@ export default function TeacherLessons() {
         <div className="teacher-lessons-page teacher-lessons">
             <PageHeader
                 title="Quản lý bài học"
-                eyebrow={`Môn: ${ASSIGNED_SUBJECT.name} | ${summary.total} bài học`}
+                eyebrow={`Môn ${ASSIGNED_SUBJECT.code} • ${summary.total} bài trong học kỳ hiện tại`}
                 actions={
                     <div className="teacher-lessons-header-actions">
                         <SchoolYearTermSelector
@@ -298,22 +353,21 @@ export default function TeacherLessons() {
                 }
             />
 
-            <LessonFilterSection
-                subject={ASSIGNED_SUBJECT}
-                filters={filters}
-                classes={classes}
-                statusOptions={statusOptions}
-                onChangeFilter={handleFilterChange}
-                selectedSchoolYear={selectedSchoolYear}
-                selectedTerm={selectedTerm}
-            />
-
-            <LessonListSection
-                lessons={filteredLessons}
-                summary={summary}
-                onViewDetail={setSelectedLesson}
-                onEditLesson={handleOpenEdit}
-            />
+            <section className="teacher-lessons-unified-panel" aria-label="Bộ lọc và danh sách bài học">
+                <LessonListSection
+                    lessons={filteredLessons}
+                    summary={summary}
+                    filters={filters}
+                    blockOptions={blockOptions}
+                    statusOptions={statusOptions}
+                    onChangeFilter={handleFilterChange}
+                    onViewDetail={setSelectedLesson}
+                    onEditLesson={handleOpenEdit}
+                    onDuplicateLesson={handleDuplicateLesson}
+                    onTogglePin={handleTogglePin}
+                    isLessonPinned={(lessonId) => pinnedLessonSet.has(lessonId)}
+                />
+            </section>
 
             <Modal
                 open={isCreateLessonOpen}
@@ -323,8 +377,9 @@ export default function TeacherLessons() {
             >
                 <CreateEditLessonSection
                     subject={ASSIGNED_SUBJECT}
+                    blockOptions={TEACHING_BLOCKS}
+                    classesByBlock={CLASSES_BY_BLOCK}
                     formValues={formValues}
-                    classes={classes.filter((item) => item !== "Tất cả")}
                     onChangeForm={handleFormChange}
                     attachedFiles={attachedFiles}
                     onFileChange={handleFileChange}
@@ -342,7 +397,31 @@ export default function TeacherLessons() {
                     setSelectedLesson(null);
                     handleOpenEdit(lessonId);
                 }}
+                onOpenReview={(lesson) => setReviewLesson(lesson)}
             />
+
+            <Modal
+                open={!!reviewLesson}
+                title="Nhắc lại cho học sinh"
+                onClose={() => setReviewLesson(null)}
+                className="teacher-lesson-review-modal"
+            >
+                {reviewLesson ? (
+                    <div className="teacher-lesson-review-content">
+                        <p className="teacher-lesson-review-lead">
+                            Đây là phần tóm tắt ngắn để học sinh xem lại nhanh trước khi học tiếp.
+                        </p>
+                        <ul className="teacher-lesson-review-list">
+                            <li><strong>Bài học:</strong> {reviewLesson.title}</li>
+                            <li><strong>Ý chính:</strong> {reviewLesson.objective || "Đang cập nhật."}</li>
+                            <li><strong>Cần nhớ:</strong> {reviewLesson.homework || "Xem lại nội dung đã ghi chú trên lớp."}</li>
+                        </ul>
+                        <p className="teacher-lesson-review-note">
+                            Chỉ cần 3 ý ngắn như vậy là đủ để học sinh hiểu lại bài, không cần viết dài.
+                        </p>
+                    </div>
+                ) : null}
+            </Modal>
         </div>
     );
 }
