@@ -1,7 +1,10 @@
 import { useState } from "react";
 import { PageHeader, SchoolYearTermSelector } from "../../../components/common";
 import { useSchoolYearTerm } from "../../../hooks/useSchoolYearTerm";
-import { FiUnlock, FiFileText, FiUser, FiClock, FiCheckCircle, FiXCircle } from "react-icons/fi";
+import { 
+    FiUnlock, FiFileText, FiUser, FiClock, 
+    FiCheckCircle, FiXCircle, FiPaperclip, FiInfo, FiAlertTriangle 
+} from "react-icons/fi";
 import { toast } from "react-toastify";
 import "./VpAcademicApprovals.css";
 
@@ -10,41 +13,56 @@ export default function VpAcademicApprovals() {
 
     const [requests, setRequests] = useState([
         { 
-            id: "REQ001",
+            id: "REQ-2026-001",
             type: "unlock",
             title: "Yêu cầu mở khóa bảng điểm",
             desc: "Giáo viên yêu cầu mở khóa sổ điểm môn Toán lớp 10A1 để sửa điểm kiểm tra 15p do nhập sai lệch hệ số.",
-            sender: "GV. Nguyễn Y",
+            sender: "GV. Nguyễn Văn A",
             time: "15 phút trước",
-            subject: "Toán Học"
+            subject: "Toán Học - 10A1",
+            evidence: "phuc_khao_toan_10a1.pdf",
+            slaStatus: "normal"
         },
         { 
-            id: "REQ002",
-            type: "submit",
-            title: "Xin phê duyệt chốt sổ điểm học kỳ",
-            desc: "Lớp 12A2 đã hoàn thiện nhập điểm tất cả các môn. Xin phép Ban Giám Hiệu duyệt để khóa sổ và in điểm.",
-            sender: "GVCN. Lê C",
-            time: "2 giờ trước",
-            subject: "Tất cả"
+            id: "REQ-2026-002",
+            type: "grade_change",
+            title: "Chỉnh sửa điểm sau khi đã chốt sổ",
+            desc: "Điều chỉnh điểm từ 7.5 thành 8.5 cho HS. Lê Thị D do sai sót trong quá trình cộng điểm thành phần.",
+            sender: "GV. Trần Thị B",
+            time: "25 giờ trước",
+            subject: "Ngữ Văn - 12A2",
+            evidence: "bien_ban_doi_chieu.pdf",
+            slaStatus: "warning"
+        },
+        { 
+            id: "REQ-2026-003",
+            type: "unlock",
+            title: "Yêu cầu mở khóa chốt học bạ",
+            desc: "Cần bổ sung thành tích HSG cấp Tỉnh của HS khối 11 vào học bạ trước khi in ấn.",
+            sender: "GVCN. Lê Văn C",
+            time: "74 giờ trước",
+            subject: "Khối 11",
+            evidence: "quyet_dinh_hsg_tinh.pdf",
+            slaStatus: "danger"
         }
     ]);
 
     const history = [
-        { id: "HIS099", action: "Đã duyệt mở khóa sổ", target: "Môn Văn - 11A5", time: "Hôm qua", by: "PHT Chuyên Môn", status: "approved" },
-        { id: "HIS098", action: "Đã từ chối chốt sổ", target: "Lớp 10A2", time: "Hôm qua", by: "PHT Chuyên Môn", status: "rejected" },
+        { id: "HIS099", action: "Đã duyệt mở khóa sổ", target: "Môn Văn - 11A5", time: "Hôm qua", by: "PHT. Minh (approved_as_vp)", status: "approved" },
+        { id: "HIS098", action: "Đã từ chối chốt sổ", target: "Lớp 10A2", time: "Hôm qua", by: "PHT. Minh (approved_as_vp)", status: "rejected" },
     ];
 
     const handleAction = (id, action) => {
         setRequests(requests.filter(r => r.id !== id));
-        if(action === 'approve') toast.success(`Đã phê duyệt yêu cầu ${id}`);
-        if(action === 'reject') toast.error(`Đã từ chối yêu cầu ${id}`);
+        if(action === 'approve') toast.success(`Đã phê duyệt yêu cầu ${id} và lưu nhật ký hệ thống.`);
+        if(action === 'reject') toast.error(`Đã từ chối yêu cầu ${id}.`);
     };
 
     return (
-        <div className="vp-approvals">
+        <div className="vp-approvals-premium">
             <PageHeader
-                title="Phê Duyệt & Mở Khóa"
-                eyebrow="Khung kiểm duyệt các yêu cầu về sổ điểm từ Giáo viên"
+                title="Quản lý Phê Duyệt & Mở Khóa"
+                eyebrow="Phó Hiệu trưởng điều hành tác nghiệp học vụ (SLA Tracking)"
                 actions={
                     <SchoolYearTermSelector
                         selectedSchoolYear={selectedSchoolYear}
@@ -55,76 +73,87 @@ export default function VpAcademicApprovals() {
                 }
             />
 
-            <div className="approvals-panel">
-                <div className="approvals-header">
-                    <h3>Yêu Cầu Chờ Duyệt ({requests.length})</h3>
-                </div>
+            <div className="approvals-grid">
+                <div className="requests-section">
+                    <div className="section-header-vpa">
+                        <h3>Hàng chờ yêu cầu ({requests.length})</h3>
+                        <div className="sla-legend">
+                            <span className="dot normal"></span> &lt; 24h
+                            <span className="dot warning"></span> 24h - 72h
+                            <span className="dot danger"></span> &gt; 72h
+                        </div>
+                    </div>
 
-                <div className="request-list">
-                    {requests.length === 0 ? (
-                        <div style={{textAlign: 'center', padding: '2rem', color: '#64748b'}}>Không có yêu cầu nào chờ duyệt.</div>
-                    ) : (
-                        requests.map(req => (
-                            <div className="req-item" key={req.id}>
-                                <div className={`req-icon ${req.type}`}>
-                                    {req.type === 'unlock' ? <FiUnlock /> : <FiFileText />}
-                                </div>
-                                <div className="req-content">
-                                    <h4 className="req-title">{req.title}</h4>
-                                    <p className="req-desc">{req.desc}</p>
-                                    <div className="req-meta">
-                                        <div className="rm-item">
-                                            <FiUser /> Người gửi: <strong>{req.sender}</strong>
+                    <div className="request-cards-vpa">
+                        {requests.length === 0 ? (
+                            <div className="empty-vpa">
+                                <FiCheckCircle />
+                                <p>Đã hoàn thành toàn bộ yêu cầu trong hàng chờ.</p>
+                            </div>
+                        ) : (
+                            requests.map(req => (
+                                <div className={`req-card-vpa sla-${req.slaStatus}`} key={req.id}>
+                                    <div className="req-card-header">
+                                        <div className="req-type">
+                                            {req.type === 'unlock' ? <FiUnlock /> : <FiFileText />}
+                                            <span>{req.id}</span>
                                         </div>
-                                        <div className="rm-item">
-                                            <FiClock /> Thời gian: <strong>{req.time}</strong>
-                                        </div>
-                                        <div className="rm-item">
-                                            <FiFileText /> Áp dụng: <strong>{req.subject}</strong>
+                                        <div className={`sla-badge ${req.slaStatus}`}>
+                                            <FiClock /> {req.time}
+                                            {req.slaStatus === 'danger' && <FiAlertTriangle className="pulsing" />}
                                         </div>
                                     </div>
-                                    <div className="req-actions">
-                                        <button className="btn-approve" onClick={() => handleAction(req.id, 'approve')}>
-                                            <FiCheckCircle /> Đồng ý / Mở khóa
+
+                                    <div className="req-card-body">
+                                        <h4>{req.title}</h4>
+                                        <p className="req-desc">{req.desc}</p>
+                                        
+                                        <div className="req-info-grid">
+                                            <div className="req-info-item">
+                                                <FiUser /> <span>{req.sender}</span>
+                                            </div>
+                                            <div className="req-info-item">
+                                                <FiFileText /> <span>{req.subject}</span>
+                                            </div>
+                                            <div className="req-info-item evidence">
+                                                <FiPaperclip /> <a href="#">{req.evidence}</a>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="req-card-footer">
+                                        <button className="btn-vpa-approve" onClick={() => handleAction(req.id, 'approve')}>
+                                            <FiCheckCircle /> Duyệt & Ghi Log
                                         </button>
-                                        <button className="btn-reject" onClick={() => handleAction(req.id, 'reject')}>
+                                        <button className="btn-vpa-reject" onClick={() => handleAction(req.id, 'reject')}>
                                             <FiXCircle /> Từ chối
                                         </button>
                                     </div>
                                 </div>
-                            </div>
-                        ))
-                    )}
+                            ))
+                        )}
+                    </div>
                 </div>
 
-                <div className="history-wrap">
-                    <h3 style={{margin: '0 0 1rem 0', fontSize: '1rem', color: '#0f172a'}}>Lịch sử phê duyệt gần đây</h3>
-                    <table className="history-table">
-                        <thead>
-                            <tr>
-                                <th>Thao tác</th>
-                                <th>Đối tượng</th>
-                                <th>Thời gian</th>
-                                <th>Người duyệt</th>
-                                <th>Kết quả</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {history.map(item => (
-                                <tr key={item.id}>
-                                    <td><strong>{item.action}</strong></td>
-                                    <td>{item.target}</td>
-                                    <td>{item.time}</td>
-                                    <td>{item.by}</td>
-                                    <td>
-                                        <span className={`badge-status ${item.status}`}>
-                                            {item.status === 'approved' ? 'Đã duyệt' : 'Từ chối'}
-                                        </span>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
+                <div className="history-section-vpa">
+                    <div className="section-header-vpa">
+                        <h3>Nhật ký thẩm quyền (Audit Log)</h3>
+                    </div>
+                    <div className="history-list-vpa">
+                        {history.map(item => (
+                            <div className="history-item-vpa" key={item.id}>
+                                <div className={`history-status ${item.status}`}></div>
+                                <div className="history-info">
+                                    <strong>{item.action}</strong>
+                                    <span>Đối tượng: {item.target}</span>
+                                    <small>{item.time} • Bởi: {item.by}</small>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                    <div className="history-footer">
+                        <FiInfo /> Nhật ký phê duyệt có hiệu lực pháp lý theo Thông tư 42.
+                    </div>
                 </div>
             </div>
         </div>

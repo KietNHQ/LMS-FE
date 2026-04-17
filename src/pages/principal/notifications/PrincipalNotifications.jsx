@@ -10,8 +10,8 @@ export default function PrincipalNotifications() {
     const [activeTab, setActiveTab] = useState("list");
 
     const [notifications, setNotifications] = useState([
-        { id: 1, title: "Hệ thống báo lỗi thiếu điểm khối 10", desc: "Phát hiện 12 lớp chưa hoàn tất chốt điểm học lực HK1. Vui lòng kiểm tra mục Phê duyệt.", type: "system", isRead: false, time: "15 phút trước", audience: "Ban Giám Hiệu" },
-        { id: 2, title: "Báo cáo doanh thu kỳ 1", desc: "Phòng Tài Chính đã hoàn tất trích xuất báo cáo doanh thu tháng 10. Đã sẵn sàng trình ký.", type: "finance", isRead: false, time: "3 giờ trước", audience: "Ban Giám Hiệu" },
+        { id: 1, title: "Hệ thống báo lỗi thiếu điểm khối 10", desc: "Phát hiện 12 lớp chưa hoàn tất chốt điểm học lực HK1. Vui lòng kiểm tra mục Phê duyệt.", type: "system", isRead: false, time: "15 phút trước", audience: "Hiệu Trưởng" },
+        { id: 2, title: "Báo cáo doanh thu kỳ 1", desc: "Phòng Tài Chính đã hoàn tất trích xuất báo cáo doanh thu tháng 10. Đã sẵn sàng trình ký.", type: "finance", isRead: false, time: "3 giờ trước", audience: "Hiệu Trưởng" },
         { id: 3, title: "Thông báo lịch nghỉ Lễ Nhà Giáo Việt Nam", desc: "Hệ thống đã gửi thông báo nghỉ lễ 20/11 tới toàn bộ GV, HS và Phụ huynh theo kế hoạch.", type: "general", isRead: true, time: "Hôm qua", audience: "Toàn trường" },
     ]);
 

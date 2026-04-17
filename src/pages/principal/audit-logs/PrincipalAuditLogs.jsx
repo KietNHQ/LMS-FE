@@ -64,7 +64,7 @@ export default function PrincipalAuditLogs() {
                         onChange={(e) => setFilterRole(e.target.value)}
                     >
                         <option value="All">Phân loại Vai trò</option>
-                        <option value="Admin">Ban Giám Hiệu / Admin</option>
+                        <option value="Admin">Hiệu Trưởng / Admin</option>
                         <option value="Teacher">Giáo Viên</option>
                         <option value="Student">Học Sinh / Phụ Huynh</option>
                     </select>

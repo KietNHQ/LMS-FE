@@ -1,13 +1,18 @@
 import { useState } from "react";
 import { PageHeader, SchoolYearTermSelector } from "../../../components/common";
 import { useSchoolYearTerm } from "../../../hooks/useSchoolYearTerm";
-import { FiCheckCircle, FiClock, FiAlertCircle, FiLock, FiDownload, FiEye, FiAlertTriangle } from "react-icons/fi";
+import { 
+    FiCheckCircle, FiClock, FiAlertCircle, FiLock, 
+    FiDownload, FiEye, FiAlertTriangle, FiSearch, 
+    FiFilter, FiMail, FiBarChart2 
+} from "react-icons/fi";
 import { toast } from "react-toastify";
 import "./VpAcademicGrades.css";
 
 export default function VpAcademicGrades() {
     const { selectedSchoolYear, selectedTerm, handleYearArrow, handleTermChange } = useSchoolYearTerm();
     const [selectedClass, setSelectedClass] = useState(null);
+    const [filterGrade, setFilterGrade] = useState("all");
 
     // Mock Status Data for Classes
     const classList = [
@@ -15,7 +20,12 @@ export default function VpAcademicGrades() {
         { id: "10A2", grade: "10", studentCount: 40, status: "pending", statusLabel: "Chờ phê duyệt", warning: false },
         { id: "11A5", grade: "11", studentCount: 38, status: "progress", statusLabel: "Đang nhập (7/12 môn)", warning: true, warnMsg: "Điểm liệt môn Toán" },
         { id: "12A2", grade: "12", studentCount: 35, status: "missing", statusLabel: "Chưa nhập điểm", warning: true, warnMsg: "Trễ deadline 2 ngày" },
+        { id: "12A3", grade: "12", studentCount: 36, status: "locked", statusLabel: "Đã chốt sổ", warning: false },
     ];
+
+    const filteredClasses = filterGrade === "all" 
+        ? classList 
+        : classList.filter(c => c.grade === filterGrade);
 
     const getStatusIcon = (status) => {
         switch(status) {
@@ -29,16 +39,21 @@ export default function VpAcademicGrades() {
 
     // Mock detail data for 10A2
     const studentGrades = [
-        { id: "HS001", name: "Nguyễn Văn A", math: 8.5, lit: 7.0, eng: 9.0, phy: 8.0, avg: 8.1 },
-        { id: "HS002", name: "Trần Thị B", math: 4.5, lit: 6.5, eng: 5.0, phy: 4.0, avg: 5.0 }, // warning
-        { id: "HS003", name: "Lê C", math: null, lit: 8.0, eng: 7.5, phy: null, avg: null }, // missing
+        { id: "HS-2026-001", name: "Nguyễn Trung Hiếu", math: 8.5, lit: 7.0, eng: 9.0, phy: 8.0, avg: 8.1 },
+        { id: "HS-2026-002", name: "Trần Mai Anh", math: 4.5, lit: 6.5, eng: 5.0, phy: 4.0, avg: 5.0 }, 
+        { id: "HS-2026-003", name: "Lý Hải Anh", math: null, lit: 8.0, eng: 7.5, phy: null, avg: null },
+        { id: "HS-2026-004", name: "Phạm Bình Minh", math: 9.0, lit: 8.5, eng: 8.0, phy: 9.5, avg: 8.8 },
     ];
 
+    const handleRemindTeacher = (classId) => {
+        toast.info(`Đã gửi thông báo nhắc nhở đến GVCN và GV bộ môn lớp ${classId}`);
+    };
+
     return (
-        <div className="vp-grades">
+        <div className="vp-grades-premium">
             <PageHeader
-                title="Quản Lý Điểm Số"
-                eyebrow="Theo dõi tiến trình nhập điểm và điểm số trung bình các lớp"
+                title="Giám sát Điểm số & Chất lượng"
+                eyebrow="Thanh tra học vụ và kiểm soát tiến độ đánh giá toàn trường"
                 actions={
                     <SchoolYearTermSelector
                         selectedSchoolYear={selectedSchoolYear}
@@ -49,35 +64,43 @@ export default function VpAcademicGrades() {
                 }
             />
 
-            <div className="grades-layout">
-                {/* Lớp Sidebar */}
-                <div className="grades-sidebar">
-                    <div className="gs-header">
-                        <h3>Danh sách Lớp học</h3>
+            <div className="grades-grid-vpa">
+                {/* ── LEFT: CLASS INSPECTOR ── */}
+                <div className="class-inspector-sidebar">
+                    <div className="inspector-search">
+                        <div className="search-wrap-vpa">
+                            <FiSearch />
+                            <input type="text" placeholder="Tìm lớp..." />
+                        </div>
+                        <div className="filter-wrap-vpa">
+                            <FiFilter />
+                            <select value={filterGrade} onChange={e => setFilterGrade(e.target.value)}>
+                                <option value="all">Tất cả khối</option>
+                                <option value="10">Khối 10</option>
+                                <option value="11">Khối 11</option>
+                                <option value="12">Khối 12</option>
+                            </select>
+                        </div>
                     </div>
-                    <select className="gs-filter">
-                        <option>Tất cả khối học</option>
-                        <option>Khối 10</option>
-                        <option>Khối 11</option>
-                        <option>Khối 12</option>
-                    </select>
 
-                    <div className="gs-list">
-                        {classList.map(cls => (
+                    <div className="inspector-list">
+                        {filteredClasses.map(cls => (
                             <div 
                                 key={cls.id} 
-                                className={`class-item ${selectedClass?.id === cls.id ? 'active' : ''}`}
+                                className={`inspector-item ${selectedClass?.id === cls.id ? 'active' : ''} ${cls.status}`}
                                 onClick={() => setSelectedClass(cls)}
                             >
-                                <div className="ci-top">
-                                    <strong>{cls.id}</strong>
-                                    <span>{cls.studentCount} HS</span>
-                                </div>
-                                <div className={`ci-status status-${cls.status}`}>
-                                    {getStatusIcon(cls.status)} {cls.statusLabel}
+                                <div className="ii-main">
+                                    <div className="ii-title">
+                                        <strong>{cls.id}</strong>
+                                        <span className="ii-badge">{cls.studentCount} HS</span>
+                                    </div>
+                                    <div className="ii-status">
+                                        {getStatusIcon(cls.status)} {cls.statusLabel}
+                                    </div>
                                 </div>
                                 {cls.warning && (
-                                    <div style={{color: '#dc2626', fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.2rem', marginTop: '0.2rem', fontWeight: 600}}>
+                                    <div className="ii-warning-tag">
                                         <FiAlertTriangle /> {cls.warnMsg}
                                     </div>
                                 )}
@@ -86,73 +109,70 @@ export default function VpAcademicGrades() {
                     </div>
                 </div>
 
-                {/* Chi tiết Lớp */}
-                <div className="grades-content">
+                {/* ── RIGHT: DETAILED ANALYTICS ── */}
+                <div className="grades-analytics-content">
                     {!selectedClass ? (
-                        <div className="gc-placeholder">
-                            Bấm chọn một lớp bên trái để xem bảng điểm và tiến độ chi tiết.
+                        <div className="empty-selection-vpa">
+                            <FiBarChart2 className="large-icon" />
+                            <p>Chọn một lớp học để thực hiện drill-down và phân tích chất lượng</p>
                         </div>
                     ) : (
-                        <>
-                            <div className="gc-header">
-                                <div className="gc-title">
-                                    <h2>Bảng Điểm Lớp {selectedClass.id}</h2>
-                                    <p>Sĩ số: {selectedClass.studentCount} học sinh | Trạng thái: <strong>{selectedClass.statusLabel}</strong></p>
+                        <div className="vpa-content-animate">
+                            <div className="content-header-vpa">
+                                <div className="ch-title">
+                                    <h3>Bảng điểm chi tiết Lớp {selectedClass.id}</h3>
+                                    <span className={`status-pill ${selectedClass.status}`}>
+                                        {selectedClass.statusLabel}
+                                    </span>
                                 </div>
-                                <div className="gc-actions">
-                                    <button className="btn-secondary" onClick={() => toast.info("Đang tải dữ liệu báo cáo...")}>
-                                        <FiDownload /> Tải Bảng Điểm
+                                <div className="ch-actions">
+                                    <button className="btn-vpa-secondary" onClick={() => handleRemindTeacher(selectedClass.id)}>
+                                        <FiMail /> Nhắc giáo viên
+                                    </button>
+                                    <button className="btn-vpa-secondary">
+                                        <FiDownload /> Xuất XLSX
                                     </button>
                                     {selectedClass.status === 'pending' && (
-                                        <button className="btn-primary" onClick={() => toast.success("Đã phê duyệt!")}>
-                                            <FiCheckCircle /> Phê duyệt sổ điểm
+                                        <button className="btn-vpa-primary" onClick={() => toast.success("Đã phê duyệt sổ điểm!")}>
+                                            <FiCheckCircle /> Duyệt chốt sổ
                                         </button>
                                     )}
                                 </div>
                             </div>
 
-                            <div style={{marginBottom: '1rem', padding: '1rem', background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '0.5rem', color: '#991b1b', fontSize: '0.875rem', display: 'flex', gap: '0.5rem', alignItems: 'center'}}>
-                                <FiAlertTriangle size={18} /> Lớp đang có nhiều Học sinh bị điểm Khống (Dưới 5). Yêu cầu GVCN nhắc nhở.
+                            <div className="quality-alert-box">
+                                <FiAlertCircle />
+                                <span>Phát hiện 12 đầu điểm chưa nhập và sụt giảm GPA môn Vật Lý (-0.5).</span>
                             </div>
 
-                            <div className="gc-table-wrap">
-                                <table className="gc-table">
+                            <div className="vpa-table-wrap">
+                                <table className="vpa-table">
                                     <thead>
                                         <tr>
-                                            <th>Mã HS / Họ Tên</th>
+                                            <th>Học sinh</th>
                                             <th>Toán</th>
                                             <th>Ngữ Văn</th>
                                             <th>Ngoại Ngữ</th>
                                             <th>Vật Lý</th>
-                                            <th>TB Môn</th>
-                                            <th>Chi tiết</th>
+                                            <th>TB Học Kỳ</th>
+                                            <th>Audit</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         {studentGrades.map((s, i) => (
                                             <tr key={i}>
+                                                <td className="st-info">
+                                                    <strong>{s.name}</strong>
+                                                    <span>{s.id}</span>
+                                                </td>
+                                                <td className={`sc-cell ${s.math < 5 ? 'danger' : ''}`}>{s.math ?? '-'}</td>
+                                                <td className={`sc-cell ${s.lit < 5 ? 'danger' : ''}`}>{s.lit ?? '-'}</td>
+                                                <td className={`sc-cell ${s.eng < 5 ? 'danger' : ''}`}>{s.eng ?? '-'}</td>
+                                                <td className={`sc-cell ${s.phy < 5 ? 'danger' : ''}`}>{s.phy ?? '-'}</td>
+                                                <td className="sc-cell-gpa">{s.avg ?? '---'}</td>
                                                 <td>
-                                                    <div style={{fontWeight: 500}}>{s.name}</div>
-                                                    <div style={{fontSize: '0.75rem', color: '#64748b'}}>{s.id}</div>
-                                                </td>
-                                                <td className={`score-cell ${s.math === null ? 'missing' : (s.math < 5 ? 'danger' : '')}`}>
-                                                    {s.math ?? 'Chưa nhập'}
-                                                </td>
-                                                <td className={`score-cell ${s.lit === null ? 'missing' : (s.lit < 5 ? 'danger' : '')}`}>
-                                                    {s.lit ?? 'Chưa nhập'}
-                                                </td>
-                                                <td className={`score-cell ${s.eng === null ? 'missing' : (s.eng < 5 ? 'danger' : '')}`}>
-                                                    {s.eng ?? 'Chưa nhập'}
-                                                </td>
-                                                <td className={`score-cell ${s.phy === null ? 'missing' : (s.phy < 5 ? 'danger' : '')}`}>
-                                                    {s.phy ?? 'Chưa nhập'}
-                                                </td>
-                                                <td className={`score-cell ${s.avg === null ? 'missing' : ''}`} style={{background: '#f8fafc'}}>
-                                                    {s.avg ?? '---'}
-                                                </td>
-                                                <td>
-                                                    <button className="btn-secondary" style={{padding: '0.35rem 0.6rem'}}>
-                                                        <FiEye /> Xem
+                                                    <button className="btn-vpa-mini" title="Xem lịch sử chỉnh sửa">
+                                                        <FiClock />
                                                     </button>
                                                 </td>
                                             </tr>
@@ -160,7 +180,7 @@ export default function VpAcademicGrades() {
                                     </tbody>
                                 </table>
                             </div>
-                        </>
+                        </div>
                     )}
                 </div>
             </div>

@@ -1,48 +1,44 @@
+import React from "react";
 import { PageHeader, SchoolYearTermSelector } from "../../../components/common";
 import { useSchoolYearTerm } from "../../../hooks/useSchoolYearTerm";
-import { FiUsers, FiUserCheck, FiHome, FiCheckCircle, FiAlertTriangle, FiArrowRight, FiDatabase, FiAward } from "react-icons/fi";
+import { 
+    FiUsers, FiUserPlus, FiRepeat, FiBookOpen, 
+    FiActivity, FiBookmark, FiAward, FiShield,
+    FiAlertTriangle, FiArrowRight, FiDatabase, FiTrendingUp
+} from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
+import AcademicTimeline from "./components/AcademicTimeline";
+import SOPWidget from "./components/SOPWidget";
 import "./AcademicStaffDashboard.css";
 
 export default function AcademicStaffDashboard() {
     const { selectedSchoolYear, selectedTerm, handleYearArrow, handleTermChange } = useSchoolYearTerm();
     const navigate = useNavigate();
 
-    // Mock Business Data
-    const quickStats = {
-        totalStudents: 1250,
-        totalTeachers: 85,
-        totalClasses: 35,
-        classesAssigned: 32 // 32/35 classes have home room teachers
-    };
-
-    const toDos = [
-        { id: 1, title: "20 học sinh chưa được xếp lớp", desc: "Học sinh mới chuyển đến hoặc chưa phân ban", path: "/academic/class-management?tab=assign-students" },
-        { id: 2, title: "3 lớp trống giáo viên chủ nhiệm", desc: "10A5, 11A2, 12A3 cần phân bổ GVCN", path: "/academic/class-management?tab=teaching-assignment" },
-        { id: 3, title: "10 học sinh thiếu hồ sơ đầu vào", desc: "Chưa cập nhật ngày sinh hoặc CCCD", path: "/academic/personnel?filter=missing-info" },
+    // 8 Core Tasks (Tám đường việc)
+    const coreTasks = [
+        { id: 1, title: "Hồ sơ & Dữ liệu", icon: <FiDatabase />, color: "#4f46e5", desc: "Quản lý hồ sơ gốc, Sổ đăng bộ", path: "/academic/personnel" },
+        { id: 2, title: "Tuyển sinh lớp 10", icon: <FiUserPlus />, color: "#0891b2", desc: "Tiếp nhận hồ sơ, nhập học", path: "/academic/class-management?tab=admissions" },
+        { id: 3, title: "Chuyển trường", icon: <FiRepeat />, color: "#7c3aed", desc: "Tiếp nhận & chuyển đi", path: "/academic/class-management?tab=transfers" },
+        { id: 4, title: "Xếp lớp & TKB", icon: <FiBookOpen />, color: "#2563eb", desc: "Phân lớp, Thời khóa biểu", path: "/academic/timetable" },
+        { id: 5, title: "Sĩ số & Chuyên cần", icon: <FiActivity />, color: "#db2777", desc: "Theo dõi vắng học, nghỉ phép", path: "/academic/class-management" },
+        { id: 6, title: "Học bạ & Điểm", icon: <FiBookmark />, color: "#d97706", desc: "Khóa sổ, In học bạ điện tử", path: "/academic/academic-records" },
+        { id: 7, title: "Thi & Tốt nghiệp", icon: <FiAward />, color: "#059669", desc: "Xét tốt nghiệp, Trả bằng", path: "/academic/academic-records?tab=graduation" },
+        { id: 8, title: "Khen thưởng & Kỷ luật", icon: <FiShield />, color: "#dc2626", desc: "Hồ sơ sự vụ, hỗ trợ giáo dục", path: "/academic/academic-records?tab=discipline" },
     ];
 
-    const dataHealthStats = {
-        unassignedStudents: 20,
-        missingDataStudents: 10,
-        classesNoTeacher: 3,
-        classesNoSubjectTeachers: 5 // thiếu gv bộ môn
-    };
-
-    const recordProgress = {
-        entered: 25,
-        total: 35,
-        missingRecordClasses: "10A1, 10A5, 11A2..."
-    };
-
-    const assignmentProgress = Math.round((quickStats.classesAssigned / quickStats.totalClasses) * 100);
-    const gradeProgressPercent = Math.round((recordProgress.entered / recordProgress.total) * 100);
+    const quickStats = [
+        { label: "Tổng học sinh", value: "1,250", change: "+12", icon: <FiUsers />, trend: "up" },
+        { label: "Lớp học", value: "35", change: "0", icon: <FiHomeIcon />, trend: "stable" },
+        { label: "HS chưa xếp lớp", value: "20", change: "-5", icon: <FiAlertTriangle />, trend: "down", urgent: true },
+        { label: "Tiến độ học bạ", value: "75%", change: "+15%", icon: <FiTrendingUp />, trend: "up" },
+    ];
 
     return (
-        <div className="academic-dashboard">
+        <div className="academic-dashboard-premium">
             <PageHeader
-                title="Bảng Điều Khiển Giáo Vụ"
-                eyebrow="Tổ chức & Điều phối Dữ liệu học tập"
+                title="Cổng Điều Hành Giáo Vụ"
+                eyebrow="Quản trị Học vụ & Hồ sơ Pháp lý"
                 actions={
                     <SchoolYearTermSelector
                         selectedSchoolYear={selectedSchoolYear}
@@ -53,108 +49,74 @@ export default function AcademicStaffDashboard() {
                 }
             />
 
-            {/* Thống kê nhanh */}
-            <div className="ac-stats-grid">
-                <div className="ac-stat-card primary">
-                    <div className="ac-stat-icon"><FiUsers /></div>
-                    <div className="ac-stat-body">
-                        <p className="ac-stat-label">Tổng học sinh</p>
-                        <h3 className="ac-stat-value">{quickStats.totalStudents}</h3>
-                    </div>
-                </div>
-                <div className="ac-stat-card primary">
-                    <div className="ac-stat-icon"><FiUserCheck /></div>
-                    <div className="ac-stat-body">
-                        <p className="ac-stat-label">Tổng giáo viên</p>
-                        <h3 className="ac-stat-value">{quickStats.totalTeachers}</h3>
-                    </div>
-                </div>
-                <div className="ac-stat-card primary">
-                    <div className="ac-stat-icon"><FiHome /></div>
-                    <div className="ac-stat-body">
-                        <p className="ac-stat-label">Tổng số lớp</p>
-                        <h3 className="ac-stat-value">{quickStats.totalClasses}</h3>
-                    </div>
-                </div>
-                <div className="ac-stat-card success">
-                    <div className="ac-stat-icon"><FiCheckCircle /></div>
-                    <div className="ac-stat-body">
-                        <p className="ac-stat-label">Tiến độ xếp lớp (GVCN)</p>
-                        <h3 className="ac-stat-value">{assignmentProgress}%</h3>
-                        <div className="mini-progress-bar">
-                            <div className="mini-progress-fill" style={{width: `${assignmentProgress}%`, background: '#059669'}}></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div className="ac-panels-grid">
-                {/* Việc cần xử lý */}
-                <div className="ac-panel urgent-tasks">
-                    <div className="ac-panel-header">
-                        <h3><FiAlertTriangle /> Việc Cần Xử Lý Ngay</h3>
-                    </div>
-                    <div className="urgent-list">
-                        {toDos.map(task => (
-                            <div key={task.id} className="urgent-item">
-                                <div className="urgent-item-info">
-                                    <strong>{task.title}</strong>
-                                    <span>{task.desc}</span>
+            <div className="dashboard-layout-grid">
+                {/* LEFT COLUMN: MAIN OPS */}
+                <div className="dashboard-main-col">
+                    {/* 1. Quick Stats */}
+                    <div className="premium-stats-grid">
+                        {quickStats.map((stat, i) => (
+                            <div key={i} className={`p-stat-card ${stat.urgent ? 'urgent' : ''}`}>
+                                <div className="p-stat-icon" style={{color: stat.urgent ? '#dc2626' : '#1e2f5a'}}>{stat.icon}</div>
+                                <div className="p-stat-info">
+                                    <span className="p-stat-label">{stat.label}</span>
+                                    <div className="p-stat-value-group">
+                                        <h3 className="p-stat-value">{stat.value}</h3>
+                                        <span className={`p-stat-change ${stat.trend}`}>
+                                            {stat.change}
+                                        </span>
+                                    </div>
                                 </div>
-                                <button className="btn-resolve" onClick={() => navigate(task.path)}>
-                                    Xử lý ngay <FiArrowRight />
-                                </button>
                             </div>
                         ))}
                     </div>
+
+                    {/* 2. Core Task Grid (Tám đường việc) */}
+                    <div className="section-title">
+                        <h3>Tám Đường Việc Cốt Lõi</h3>
+                        <p>Điều phối vận hành học vụ và hồ sơ</p>
+                    </div>
+                    <div className="task-command-grid">
+                        {coreTasks.map(task => (
+                            <div 
+                                key={task.id} 
+                                className="task-card"
+                                onClick={() => navigate(task.path)}
+                                style={{"--accent-color": task.color}}
+                            >
+                                <div className="task-card-icon">{task.icon}</div>
+                                <div className="task-card-body">
+                                    <h4>{task.title}</h4>
+                                    <p>{task.desc}</p>
+                                </div>
+                                <div className="task-card-arrow"><FiArrowRight /></div>
+                            </div>
+                        ))}
+                    </div>
+
+                    {/* 3. Academic Timeline */}
+                    <AcademicTimeline />
                 </div>
 
-                {/* Tình trạng dữ liệu & Điểm số */}
-                <div className="ac-panel">
-                    <div className="ac-panel-header">
-                        <h3><FiDatabase /> Trạng thái Dữ liệu Học vụ</h3>
-                    </div>
+                {/* RIGHT COLUMN: SOP & LEGAL */}
+                <div className="dashboard-side-col">
+                    <SOPWidget />
                     
-                    <div className="data-health-grid">
-                        <div className="dh-box">
-                            <h4><FiUsers /> Lớp học & Giáo viên</h4>
-                            <div className="dh-item">
-                                <span className="dh-label">Học sinh chưa xếp lớp</span>
-                                <span className={`dh-val ${dataHealthStats.unassignedStudents > 0 ? 'danger' : 'success'}`}>
-                                    {dataHealthStats.unassignedStudents} HS
-                                </span>
-                            </div>
-                            <div className="dh-item">
-                                <span className="dh-label">Lớp thiếu GV Chủ nhiệm</span>
-                                <span className={`dh-val ${dataHealthStats.classesNoTeacher > 0 ? 'danger' : 'success'}`}>
-                                    {dataHealthStats.classesNoTeacher} Lớp
-                                </span>
-                            </div>
-                            <div className="dh-item">
-                                <span className="dh-label">Lớp thiếu GV Bộ môn</span>
-                                <span className={`dh-val ${dataHealthStats.classesNoSubjectTeachers > 0 ? 'warning' : 'success'}`}>
-                                    {dataHealthStats.classesNoSubjectTeachers} Lớp
-                                </span>
-                            </div>
-                        </div>
-
-                        <div className="dh-box">
-                            <h4><FiAward /> Tiến độ Cập nhật Học bạ</h4>
-                            <div className="dh-item">
-                                <span className="dh-label">Lớp đã chốt điểm</span>
-                                <span className="dh-val success">{recordProgress.entered} / {recordProgress.total}</span>
-                            </div>
-                            <div className="mini-progress-bar" style={{marginBottom: '0.75rem'}}>
-                                <div className="mini-progress-fill" style={{width: `${gradeProgressPercent}%`, background: '#2563eb'}}></div>
-                            </div>
-                            <div className="dh-item" style={{border: 'none', flexDirection: 'column', alignItems: 'flex-start', gap: '0.25rem'}}>
-                                <span className="dh-label">Các lớp đang chậm tiến độ:</span>
-                                <span className="dh-val danger" style={{fontSize: '0.8rem'}}>{recordProgress.missingRecordClasses}</span>
-                            </div>
-                        </div>
+                    <div className="emergency-contact-box">
+                        <h4>Hỗ trợ Kỹ thuật & Nghiệp vụ</h4>
+                        <p>Liên hệ Admin CNTT khi có sự cố dữ liệu hoặc cần mở khóa sổ điểm.</p>
+                        <button className="btn-contact">Gửi yêu cầu hỗ trợ</button>
                     </div>
                 </div>
             </div>
         </div>
+    );
+}
+
+function FiHomeIcon() {
+    return (
+        <svg stroke="currentColor" fill="none" strokeWidth="2" viewBox="0 0 24 24" strokeLinecap="round" strokeLinejoin="round" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg">
+            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+            <polyline points="9 22 9 12 15 12 15 22"></polyline>
+        </svg>
     );
 }

@@ -10,7 +10,7 @@ export default function PrincipalLayout() {
         <div className={`principal-layout ${isCollapsed ? "collapsed" : ""}`}>
             <Sidebar
                 role="principal"
-                userName="Ban Giám Hiệu"
+                userName="Hiệu Trưởng"
                 isCollapsed={isCollapsed}
                 setIsCollapsed={setIsCollapsed}
             />

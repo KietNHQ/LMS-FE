@@ -127,9 +127,13 @@ export const sidebarConfig = {
     vp_discipline: [
         { label: "Trang chủ",       icon: FiGrid,          path: "/vp-discipline/dashboard" },
         { label: "Quản Lý Nề Nếp",  icon: FiAlertTriangle, path: "/vp-discipline/discipline-management" },
+        { label: "Hồ Sơ Vi Phạm",   icon: FiFileText,      path: "/vp-discipline/discipline" },
+        { label: "Sự Vụ",           icon: FiAlertCircle,   path: "/vp-discipline/incidents" },
         { label: "Xếp Hạng Thi Đua",icon: FiStar,          path: "/vp-discipline/competition" },
         { label: "Chuyên Cần",      icon: FiActivity,      path: "/vp-discipline/attendance" },
         { label: "Hạnh Kiểm",       icon: FiAward,         path: "/vp-discipline/conduct" },
+        { label: "Phê Duyệt",       icon: FiCheckSquare,   path: "/vp-discipline/approvals" },
+        { label: "Báo Cáo",         icon: FiBarChart2,     path: "/vp-discipline/reports" },
         { label: "Thông Báo",       icon: FiBell,          path: "/vp-discipline/notifications" },
     ],
 
