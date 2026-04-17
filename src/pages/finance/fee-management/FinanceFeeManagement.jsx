@@ -32,7 +32,6 @@ export default function FinanceFeeManagement() {
         <div className="fin-fee">
             <PageHeader
                 title="Quản Lý Thu Phí"
-                eyebrow="Tổ chức biểu phí & Vận hành doanh thu"
                 actions={
                     <SchoolYearTermSelector
                         selectedSchoolYear={selectedSchoolYear}

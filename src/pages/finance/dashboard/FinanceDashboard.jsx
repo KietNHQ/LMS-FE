@@ -1,8 +1,8 @@
 import { PageHeader, SchoolYearTermSelector } from "../../../components/common";
 import { useSchoolYearTerm } from "../../../hooks/useSchoolYearTerm";
-import { 
-    FiDollarSign, FiAlertCircle, FiTrendingUp, FiUsers, FiCheckSquare, 
-    FiInfo, FiExternalLink, FiShield, FiPlus, FiZap, FiDownload, FiActivity 
+import {
+    FiDollarSign, FiAlertCircle, FiTrendingUp, FiUsers, FiCheckSquare,
+    FiInfo, FiExternalLink, FiShield, FiPlus, FiZap, FiDownload, FiActivity
 } from "react-icons/fi";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -19,7 +19,7 @@ export default function FinanceDashboard() {
     const [expandedTask, setExpandedTask] = useState(null);
 
     const handleProcess = (type) => {
-        switch(type) {
+        switch (type) {
             case 'approval': navigate('/finance/approvals'); break;
             case 'reconcile': navigate('/finance/payment-hub'); break;
             case 'error': navigate('/finance/reports?tab=invoices'); break;
@@ -46,36 +46,50 @@ export default function FinanceDashboard() {
     };
 
     const dailyTasks = [
-        { 
-            id: 1, 
-            text: "Ký số hóa đơn cuối ngày", 
-            count: 25, 
-            priority: 'high',
+        {
+            id: 1,
+            text: "Ký số hóa đơn cuối ngày",
+            count: 25,
+            status: 'critical',
+            statusLabel: 'Quan trọng / Cần xử lý ngay',
             type: 'error',
             details: [
                 { id: 'e1', label: 'Batch hóa đơn học phí tháng 10', count: 25 }
             ]
         },
-        { 
-            id: 2, 
-            text: "Xử lý khoản báo có chưa đối soát", 
-            count: 12, 
-            priority: 'medium',
+        {
+            id: 2,
+            text: "Xử lý khoản báo có chưa đối soát",
+            count: 12,
+            status: 'expiring',
+            statusLabel: 'Sắp hết hạn đối soát (2 ngày)',
             type: 'reconcile',
             details: [
                 { id: 'r1', label: 'Giao dịch Vietcombank 16/10', amount: '4,500,000đ' },
                 { id: 'r2', label: 'Giao dịch BIDV 15/10', amount: '1,200,000đ' }
             ]
         },
-        { 
-            id: 3, 
-            text: "Phê duyệt hồ sơ miễn giảm mới", 
-            count: 5, 
-            priority: 'low',
+        {
+            id: 3,
+            text: "Phê duyệt hồ sơ miễn giảm mới",
+            count: 5,
+            status: 'recent',
+            statusLabel: 'Mới tạo trong tuần',
             type: 'approval',
             details: [
                 { id: 'a1', label: 'Miễn giảm hộ nghèo (K10)', status: 'Chờ duyệt' },
                 { id: 'a2', label: 'Giảm phí con thương binh (K12)', status: 'Chờ duyệt' }
+            ]
+        },
+        {
+            id: 4,
+            text: "Cập nhật định mức học phí năm sau",
+            count: 2,
+            status: 'normal',
+            statusLabel: 'Chưa đến hạn / Đang theo dõi',
+            type: 'normal',
+            details: [
+                { id: 'n1', label: 'Dự thảo mức học phí K10 năm 2027', status: 'Draft' }
             ]
         }
     ];
@@ -107,8 +121,8 @@ export default function FinanceDashboard() {
                     <div className="fin-system-status">
                         <span className={`status-dot ${isPeriodLocked ? 'locked' : 'open'}`}></span>
                         Trạng thái sổ: <strong>{isPeriodLocked ? "Đã Khóa" : "Đang Mở"}</strong>
-                        <button 
-                            className="btn-status-action" 
+                        <button
+                            className="btn-status-action"
                             onClick={() => !isPeriodLocked && setShowClosingWizard(true)}
                         >
                             {isPeriodLocked ? <FiShield /> : "Chốt sổ"}
@@ -132,7 +146,7 @@ export default function FinanceDashboard() {
                     </button>
                 </div>
                 <div className="fin-today-insight">
-                    <FiActivity /> 
+                    <FiActivity />
                     <span>Hôm nay: <strong>+120 tr</strong> đã thu | <strong>25</strong> giao dịch | <strong>3</strong> HĐ chờ ký</span>
                 </div>
             </div>
@@ -156,7 +170,7 @@ export default function FinanceDashboard() {
                     <div className="fin-stat-icon"><FiDollarSign /></div>
                     <div className="fin-stat-body">
                         <p className="fin-stat-label">Tổng Công Nợ</p>
-                        <h3 className="fin-stat-value" style={{color: '#d97706'}}>{formatCompactNumber(stats.totalDebt)} ₫</h3>
+                        <h3 className="fin-stat-value" style={{ color: '#d97706' }}>{formatCompactNumber(stats.totalDebt)} ₫</h3>
                     </div>
                 </div>
 
@@ -171,11 +185,11 @@ export default function FinanceDashboard() {
                     <div className="fin-stat-icon"><FiAlertCircle /></div>
                     <div className="fin-stat-body">
                         <p className="fin-stat-label">Số HS Còn Nợ</p>
-                        <h3 className="fin-stat-value" style={{color: '#dc2626'}}>{stats.unpaidStudents}</h3>
+                        <h3 className="fin-stat-value" style={{ color: '#dc2626' }}>{stats.unpaidStudents}</h3>
                     </div>
                 </div>
             </div>
-            
+
             <div className="fin-stacked-panels">
                 <div className="fin-panel todo-panel full-row">
                     <div className="fin-panel-header">
@@ -183,16 +197,15 @@ export default function FinanceDashboard() {
                     </div>
                     <div className="fin-todo-accordion">
                         {dailyTasks.map(t => (
-                            <div key={t.id} className={`fin-todo-row priority-${t.priority} ${expandedTask === t.id ? 'expanded' : ''}`}>
+                            <div key={t.id} className={`fin-todo-row status-${t.status} ${expandedTask === t.id ? 'expanded' : ''}`}>
                                 <div className="todo-row-main" onClick={() => toggleTask(t.id)}>
                                     <div className="todo-label">
-                                        <span className={`priority-marker ${t.priority}`}></span>
                                         <strong>{t.text}</strong>
                                         <span className="todo-count-badge">{t.count}</span>
                                     </div>
                                     <div className="todo-row-actions">
-                                        <button 
-                                            className="btn-action-mini" 
+                                        <button
+                                            className="btn-action-premium"
                                             onClick={(e) => {
                                                 e.stopPropagation();
                                                 handleProcess(t.type);
@@ -207,6 +220,10 @@ export default function FinanceDashboard() {
                                 </div>
                                 {expandedTask === t.id && (
                                     <div className="todo-row-details">
+                                        <div className={`details-priority-strip ${t.status}`}></div>
+                                        <div className="todo-status-info">
+                                            <span className={`status-badge-mini ${t.status}`}>{t.statusLabel}</span>
+                                        </div>
                                         {t.details.map((d, idx) => (
                                             <div key={idx} className="todo-detail-item">
                                                 <span>{d.label}</span>
@@ -226,8 +243,8 @@ export default function FinanceDashboard() {
                     </div>
                     <div className="fin-exception-grid">
                         {exceptions.map(e => (
-                            <div 
-                                key={e.id} 
+                            <div
+                                key={e.id}
                                 className={`fin-exception-card clickable ${e.severity}`}
                                 onClick={() => navigate(e.target)}
                             >
@@ -248,8 +265,8 @@ export default function FinanceDashboard() {
             </div>
 
             {showClosingWizard && (
-                <PeriodClosingWizard 
-                    onClose={() => setShowClosingWizard(false)} 
+                <PeriodClosingWizard
+                    onClose={() => setShowClosingWizard(false)}
                     onLockComplete={() => setIsPeriodLocked(true)}
                 />
             )}
