@@ -1,275 +1,324 @@
 import { PageHeader, SchoolYearTermSelector } from "../../../components/common";
 import { useSchoolYearTerm } from "../../../hooks/useSchoolYearTerm";
 import {
-    FiDollarSign, FiAlertCircle, FiTrendingUp, FiUsers, FiCheckSquare,
-    FiInfo, FiExternalLink, FiShield, FiPlus, FiZap, FiDownload, FiActivity
+    FiAlertCircle,
+    FiBarChart2,
+    FiCalendar,
+    FiClock,
+    FiDollarSign,
+    FiPieChart,
+    FiTarget,
+    FiTrendingUp,
+    FiUsers
 } from "react-icons/fi";
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import {
+    Bar,
+    BarChart,
+    CartesianGrid,
+    ResponsiveContainer,
+    Tooltip,
+    XAxis,
+    YAxis
+} from "recharts";
+import { Link } from "react-router-dom";
 import "./FinanceDashboard.css";
 
-// Components
-import PeriodClosingWizard from "./components/PeriodClosingWizard";
-
 export default function FinanceDashboard() {
-    const navigate = useNavigate();
     const { selectedSchoolYear, selectedTerm, handleYearArrow, handleTermChange } = useSchoolYearTerm();
-    const [isPeriodLocked, setIsPeriodLocked] = useState(false);
-    const [showClosingWizard, setShowClosingWizard] = useState(false);
-    const [expandedTask, setExpandedTask] = useState(null);
 
-    const handleProcess = (type) => {
-        switch (type) {
-            case 'approval': navigate('/finance/approvals'); break;
-            case 'reconcile': navigate('/finance/payment-hub'); break;
-            case 'error': navigate('/finance/reports?tab=invoices'); break;
-            default: break;
-        }
+    const summary = {
+        actualRevenue: "12.50T",
+        targetRevenue: "13.10T",
+        revenueGap: "600tr",
+        debt: "450tr",
+        overdueDebt: "182tr",
+        collectionRate: "96.5%",
+        refundRate: "1.8%",
+        unrecognizedRevenue: "320tr",
+        pipelineRevenue: "610tr"
     };
 
-    const stats = {
-        totalReceivable: 12950000000,
-        totalRevenue: 12500000000,
-        totalDebt: 450000000,
-        collectionRate: 96.5,
-        unpaidStudents: 52
+    const monthlyRevenue = [
+        { month: "08", actual: 1.45, unpaid: 55, debt: "55tr" },
+        { month: "09", actual: 1.62, unpaid: 48, debt: "48tr" },
+        { month: "10", actual: 1.15, unpaid: 82, debt: "82tr" },
+        { month: "11", actual: 0.98, unpaid: 124, debt: "124tr" },
+        { month: "12", actual: 1.08, unpaid: 141, debt: "141tr" },
+        { month: "01", actual: 1.32, unpaid: 96, debt: "96tr" }
+    ];
+    const chartData = monthlyRevenue.map((item) => ({
+        ...item,
+        monthLabel: `Th${item.month}`
+    }));
+
+    const formatTrillionTick = (value) => `${Number(value).toFixed(1)}T`;
+    const formatUnpaidTick = (value) => `${Math.round(Number(value))}tr`;
+
+    const customTooltip = ({ active, payload, label }) => {
+        if (!active || !payload?.length) {
+            return null;
+        }
+
+        const row = payload[0]?.payload;
+        if (!row) {
+            return null;
+        }
+
+        return (
+            <div className="fin-revenue-tooltip">
+                <p className="fin-revenue-tooltip__label">{label}</p>
+                <p className="fin-revenue-tooltip__item">
+                    <strong>Thực thu:</strong> {row.actual.toFixed(2)}T
+                </p>
+                <p className="fin-revenue-tooltip__item">
+                    <strong>Chưa đóng học phí:</strong> {row.unpaid}tr
+                </p>
+            </div>
+        );
     };
 
-    const formatCompactNumber = (number) => {
-        if (number >= 1000000000) {
-            return (number / 1000000000).toFixed(2).replace(/\.00$/, '') + " Tỷ";
-        }
-        if (number >= 1000000) {
-            return (number / 1000000).toFixed(0) + " Tr";
-        }
-        return number.toLocaleString();
-    };
-
-    const dailyTasks = [
-        {
-            id: 1,
-            text: "Ký số hóa đơn cuối ngày",
-            count: 25,
-            status: 'critical',
-            statusLabel: 'Quan trọng / Cần xử lý ngay',
-            type: 'error',
-            details: [
-                { id: 'e1', label: 'Batch hóa đơn học phí tháng 10', count: 25 }
-            ]
-        },
-        {
-            id: 2,
-            text: "Xử lý khoản báo có chưa đối soát",
-            count: 12,
-            status: 'expiring',
-            statusLabel: 'Sắp hết hạn đối soát (2 ngày)',
-            type: 'reconcile',
-            details: [
-                { id: 'r1', label: 'Giao dịch Vietcombank 16/10', amount: '4,500,000đ' },
-                { id: 'r2', label: 'Giao dịch BIDV 15/10', amount: '1,200,000đ' }
-            ]
-        },
-        {
-            id: 3,
-            text: "Phê duyệt hồ sơ miễn giảm mới",
-            count: 5,
-            status: 'recent',
-            statusLabel: 'Mới tạo trong tuần',
-            type: 'approval',
-            details: [
-                { id: 'a1', label: 'Miễn giảm hộ nghèo (K10)', status: 'Chờ duyệt' },
-                { id: 'a2', label: 'Giảm phí con thương binh (K12)', status: 'Chờ duyệt' }
-            ]
-        },
-        {
-            id: 4,
-            text: "Cập nhật định mức học phí năm sau",
-            count: 2,
-            status: 'normal',
-            statusLabel: 'Chưa đến hạn / Đang theo dõi',
-            type: 'normal',
-            details: [
-                { id: 'n1', label: 'Dự thảo mức học phí K10 năm 2027', status: 'Draft' }
-            ]
-        }
+    const revenueImpacts = [
+        { label: "Học sinh tăng/giảm", value: "+46 HS", note: "Ảnh hưởng trực tiếp đến doanh số học phí" },
+        { label: "Chi phí hư hại", value: "69tr", note: "Phát sinh từ vận hành và tài sản" },
+        { label: "Marketing", value: "420tr", note: "Kéo doanh số tuyển sinh và tái ghi danh" },
+        { label: "Lớp trống", value: "6 lớp", note: "Tác động đến công suất và doanh thu kỳ sau" },
+        { label: "Giáo viên liên quan", value: "7", note: "Ảnh hưởng phân bổ chi phí và sĩ số" },
+        { label: "Hoàn tiền", value: "36tr", note: "Làm giảm doanh số thực thu" }
     ];
 
-    const exceptions = [
-        { id: 1, title: "Lệch sổ quỹ tiền mặt", detail: "Chênh lệch 200,000đ so với thực tế kiểm kê", severity: 'high', target: '/finance/audit-log' },
-        { id: 2, title: "HS chưa có mã định danh", detail: "15 học sinh chưa thể xuất HĐĐT do thiếu thông tin", severity: 'medium', target: '/finance/reports?tab=invoices' }
+    const missingRevenueItems = [
+        { item: "Doanh số dự kiến chưa chốt", value: "610tr", status: "Cần theo dõi", owner: "Tuyển sinh + Tài chính" },
+        { item: "Doanh thu chưa ghi nhận", value: "320tr", status: "Thiếu bút toán", owner: "Kế toán tổng hợp" },
+        { item: "Hụt mục tiêu doanh số", value: "600tr", status: "Rủi ro cao", owner: "Ban tài chính" },
+        { item: "Hoàn/giảm học phí chưa đối soát", value: "86tr", status: "Chờ xác nhận", owner: "CSKH + Kế toán" },
+        { item: "Doanh thu tái ghi danh", value: "1.02T", status: "Tiềm năng", owner: "Giáo vụ + Tuyển sinh" }
     ];
 
-    const toggleTask = (id) => {
-        setExpandedTask(expandedTask === id ? null : id);
+    const costDrivers = [
+        { name: "Marketing tuyển sinh", cost: "420tr", revenue: "1.18T" },
+        { name: "Ngoại khóa học sinh", cost: "220tr", revenue: "305tr" },
+        { name: "Thi đấu trong trường", cost: "86tr", revenue: "95tr" },
+        { name: "Thi đấu ngoài trường", cost: "128tr", revenue: "244tr" }
+    ];
+
+    const capacity = {
+        classes: 42,
+        rooms: 40,
+        students: 1765,
+        standardCapacity: 1680,
+        occupancy: "105.1%",
+        shortage: "85 HS (~2 lớp)"
     };
+
+    const alerts = [
+        { title: "Nợ > 60 ngày", desc: "16 hồ sơ cần xử lý theo hoàn cảnh", link: "/finance/payment-hub" },
+        { title: "Tháng hụt doanh số", desc: "Tháng 10-12 hụt mục tiêu liên tiếp", link: "/finance/reports" },
+        { title: "Áp lực sĩ số", desc: "Công suất lớp vượt chuẩn", link: "/finance/reports" }
+    ];
 
     return (
         <div className="fin-dashboard">
-            <div className="fin-dash-header-wrap">
-                <PageHeader
-                    title="Bảng Điều Khiển Tài Chính"
-                    actions={
-                        <SchoolYearTermSelector
-                            selectedSchoolYear={selectedSchoolYear}
-                            selectedTerm={selectedTerm}
-                            onYearChange={handleYearArrow}
-                            onTermChange={handleTermChange}
-                        />
-                    }
-                />
-                <div className="fin-system-status-row">
-                    <div className="fin-system-status">
-                        <span className={`status-dot ${isPeriodLocked ? 'locked' : 'open'}`}></span>
-                        Trạng thái sổ: <strong>{isPeriodLocked ? "Đã Khóa" : "Đang Mở"}</strong>
-                        <button
-                            className="btn-status-action"
-                            onClick={() => !isPeriodLocked && setShowClosingWizard(true)}
-                        >
-                            {isPeriodLocked ? <FiShield /> : "Chốt sổ"}
-                        </button>
-                    </div>
-                </div>
-            </div>
+            <PageHeader
+                title="Bảng Điều Khiển Kế Toán"
+                actions={
+                    <SchoolYearTermSelector
+                        selectedSchoolYear={selectedSchoolYear}
+                        selectedTerm={selectedTerm}
+                        onYearChange={handleYearArrow}
+                        onTermChange={handleTermChange}
+                    />
+                }
+            />
 
-
-            {/* Quick Actions & Insights */}
-            <div className="fin-control-bar">
-                <div className="fin-quick-actions-pills">
-                    <button className="btn-pill" onClick={() => navigate('/finance/fee-management?tab=batches')}>
-                        <FiPlus /> Tạo đợt thu
-                    </button>
-                    <button className="btn-pill" onClick={() => navigate('/finance/payment-hub')}>
-                        <FiZap /> Thu tiền nhanh
-                    </button>
-                    <button className="btn-pill ghost">
-                        <FiDownload /> Xuất báo cáo nhanh
-                    </button>
-                </div>
-                <div className="fin-today-insight">
-                    <FiActivity />
-                    <span>Hôm nay: <strong>+120 tr</strong> đã thu | <strong>25</strong> giao dịch | <strong>3</strong> HĐ chờ ký</span>
-                </div>
-            </div>
-
-            <div className="fin-stats-grid v2">
-                <div className="fin-stat-card info">
-                    <div className="fin-stat-icon"><FiCheckSquare /></div>
-                    <div className="fin-stat-body">
-                        <p className="fin-stat-label">Tổng Phải Thu</p>
-                        <h3 className="fin-stat-value">{formatCompactNumber(stats.totalReceivable)} ₫</h3>
+            <section className="fin-hero-grid">
+                <div className="fin-hero-card fin-hero-primary">
+                    <div className="fin-hero-top">
+                        <h3>Tổng quan doanh số</h3>
+                        <span className="fin-badge warning">Thiếu {summary.revenueGap}</span>
                     </div>
-                </div>
-                <div className="fin-stat-card success">
-                    <div className="fin-stat-icon"><FiTrendingUp /></div>
-                    <div className="fin-stat-body">
-                        <p className="fin-stat-label">Doanh Thu Đã Thu</p>
-                        <h3 className="fin-stat-value fin-money-val">{formatCompactNumber(stats.totalRevenue)} ₫</h3>
+                    <div className="fin-kpi-row">
+                        <div><span>Thực thu</span><strong>{summary.actualRevenue}</strong></div>
+                        <div><span>Mục tiêu</span><strong>{summary.targetRevenue}</strong></div>
+                        <div><span>Tỷ lệ thu</span><strong>{summary.collectionRate}</strong></div>
+                        <div><span>Tổng nợ</span><strong>{summary.debt}</strong></div>
                     </div>
-                </div>
-                <div className="fin-stat-card warning">
-                    <div className="fin-stat-icon"><FiDollarSign /></div>
-                    <div className="fin-stat-body">
-                        <p className="fin-stat-label">Tổng Công Nợ</p>
-                        <h3 className="fin-stat-value" style={{ color: '#d97706' }}>{formatCompactNumber(stats.totalDebt)} ₫</h3>
+                    <div className="fin-progress-wrap">
+                        <div className="fin-progress-label">
+                            <span>Tiến độ tổng</span>
+                            <b>93%</b>
+                        </div>
+                        <div className="fin-progress-track">
+                            <div className="fin-progress-fill" style={{ width: "93%" }}></div>
+                        </div>
                     </div>
                 </div>
 
-                <div className="fin-stat-card primary">
-                    <div className="fin-stat-icon"><FiUsers /></div>
-                    <div className="fin-stat-body">
-                        <p className="fin-stat-label">Tỷ lệ Hoàn thành</p>
-                        <h3 className="fin-stat-value">{stats.collectionRate}%</h3>
-                    </div>
+                <div className="fin-hero-card fin-hero-side">
+                    <h4>Cần lưu ý ngay</h4>
+                    <ul>
+                        <li>Nợ quá hạn: <b>{summary.overdueDebt}</b></li>
+                        <li>Doanh thu chưa ghi nhận: <b>{summary.unrecognizedRevenue}</b></li>
+                        <li>Doanh thu dự kiến chưa chốt: <b>{summary.pipelineRevenue}</b></li>
+                        <li>Tỷ lệ hoàn tiền: <b>{summary.refundRate}</b></li>
+                    </ul>
+                    <Link to="/finance/reports" className="fin-link-action">Xem báo cáo chi tiết</Link>
                 </div>
-                <div className="fin-stat-card danger">
-                    <div className="fin-stat-icon"><FiAlertCircle /></div>
-                    <div className="fin-stat-body">
-                        <p className="fin-stat-label">Số HS Còn Nợ</p>
-                        <h3 className="fin-stat-value" style={{ color: '#dc2626' }}>{stats.unpaidStudents}</h3>
-                    </div>
-                </div>
-            </div>
+            </section>
 
-            <div className="fin-stacked-panels">
-                <div className="fin-panel todo-panel full-row">
+            <section className="fin-panels fin-main-grid">
+                <div className="fin-panel fin-chart-panel">
                     <div className="fin-panel-header">
-                        <FiCheckSquare /> Việc cần làm
+                        <FiBarChart2 /> Biểu đồ doanh số theo tháng
                     </div>
-                    <div className="fin-todo-accordion">
-                        {dailyTasks.map(t => (
-                            <div key={t.id} className={`fin-todo-row status-${t.status} ${expandedTask === t.id ? 'expanded' : ''}`}>
-                                <div className="todo-row-main" onClick={() => toggleTask(t.id)}>
-                                    <div className="todo-label">
-                                        <strong>{t.text}</strong>
-                                        <span className="todo-count-badge">{t.count}</span>
-                                    </div>
-                                    <div className="todo-row-actions">
-                                        <button
-                                            className="btn-action-premium"
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                handleProcess(t.type);
-                                            }}
-                                        >
-                                            Xử lý <FiExternalLink />
-                                        </button>
-                                        <span className="chevron-icon">
-                                            <FiInfo />
-                                        </span>
-                                    </div>
+                    <div className="fin-chart-legend">
+                        <span><i className="legend actual"></i> Thực thu</span>
+                        <span><i className="legend unpaid"></i> Chưa đóng học phí</span>
+                    </div>
+                    <div className="fin-chart-wrapper">
+                        <div className="fin-revenue-chart-wrap">
+                            <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={280}>
+                                <BarChart className="fin-revenue-bar-chart" data={chartData} margin={{ top: 14, right: 14, left: 8, bottom: 8 }} barCategoryGap="24%">
+                                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(88, 114, 158, 0.35)" vertical={true} />
+                                    <XAxis
+                                        dataKey="monthLabel"
+                                        axisLine={{ stroke: "#8fa8d5", strokeWidth: 1.5 }}
+                                        tickLine={false}
+                                        tick={{ fill: "#17345f", fontSize: 12, fontWeight: 700 }}
+                                    />
+                                    <YAxis
+                                        yAxisId="left"
+                                        tickFormatter={formatTrillionTick}
+                                        axisLine={{ stroke: "#8fa8d5", strokeWidth: 1.5 }}
+                                        tickLine={false}
+                                        tick={{ fill: "#516a8f", fontSize: 11, fontWeight: 600 }}
+                                        domain={[0, 1.8]}
+                                        width={44}
+                                    />
+                                    <YAxis
+                                        yAxisId="right"
+                                        orientation="right"
+                                        tickFormatter={formatUnpaidTick}
+                                        axisLine={{ stroke: "#8fa8d5", strokeWidth: 1.5 }}
+                                        tickLine={false}
+                                        tick={{ fill: "#8a5a10", fontSize: 11, fontWeight: 600 }}
+                                        domain={[0, 160]}
+                                        width={44}
+                                    />
+                                    <Tooltip content={customTooltip} />
+                                    <Bar yAxisId="left" dataKey="actual" fill="#2b3f6f" radius={[6, 6, 0, 0]} barSize={22} name="Thực thu" />
+                                    <Bar yAxisId="right" dataKey="unpaid" fill="#f5a623" radius={[6, 6, 0, 0]} barSize={22} name="Chưa đóng học phí" />
+                                </BarChart>
+                            </ResponsiveContainer>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="fin-panel">
+                    <div className="fin-panel-header">
+                        <FiPieChart /> Yếu tố ảnh hưởng doanh số
+                    </div>
+                    <div className="fin-impact-list">
+                        {revenueImpacts.map((item) => (
+                            <div className="fin-impact-item" key={item.label}>
+                                <div>
+                                    <strong>{item.label}</strong>
+                                    <span>{item.note}</span>
                                 </div>
-                                {expandedTask === t.id && (
-                                    <div className="todo-row-details">
-                                        <div className={`details-priority-strip ${t.status}`}></div>
-                                        <div className="todo-status-info">
-                                            <span className={`status-badge-mini ${t.status}`}>{t.statusLabel}</span>
-                                        </div>
-                                        {t.details.map((d, idx) => (
-                                            <div key={idx} className="todo-detail-item">
-                                                <span>{d.label}</span>
-                                                <span className="detail-status">{d.status || d.amount}</span>
-                                            </div>
-                                        ))}
-                                    </div>
-                                )}
+                                <b>{item.value}</b>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </section>
+
+            <section className="fin-panels secondary">
+                <div className="fin-panel fin-panel--cost">
+                    <div className="fin-panel-header">
+                        <FiTarget /> Chi phí và nguồn tạo doanh số
+                    </div>
+                    <div className="fin-table-wrap">
+                        <table className="fin-table compact">
+                            <thead>
+                                <tr>
+                                    <th>Hạng mục</th>
+                                    <th>Chi phí</th>
+                                    <th>Doanh thu</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {costDrivers.map((row) => (
+                                    <tr key={row.name}>
+                                        <td>{row.name}</td>
+                                        <td>{row.cost}</td>
+                                        <td>{row.revenue}</td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div className="fin-panel fin-panel--capacity">
+                    <div className="fin-panel-header">
+                        <FiUsers /> Công suất lớp học
+                    </div>
+                    <div className="fin-capacity-grid">
+                        <div><span>Lớp đang mở</span><b>{capacity.classes}</b></div>
+                        <div><span>Phòng khả dụng</span><b>{capacity.rooms}</b></div>
+                        <div><span>HS hiện tại</span><b>{capacity.students}</b></div>
+                        <div><span>Công suất chuẩn</span><b>{capacity.standardCapacity}</b></div>
+                        <div><span>Tỷ lệ lấp đầy</span><b>{capacity.occupancy}</b></div>
+                        <div><span>Thiếu sức chứa</span><b className="fin-negative">{capacity.shortage}</b></div>
+                    </div>
+                </div>
+            </section>
+
+            <section className="fin-panels secondary">
+                <div className="fin-panel">
+                    <div className="fin-panel-header">
+                        <FiCalendar /> Các mục doanh số còn thiếu
+                    </div>
+                    <div className="fin-missing-list compact-list">
+                        {missingRevenueItems.map((row) => (
+                            <div className="fin-missing-item" key={row.item}>
+                                <div>
+                                    <strong>{row.item}</strong>
+                                    <span>{row.owner}</span>
+                                </div>
+                                <div className="fin-missing-right">
+                                    <b>{row.value}</b>
+                                    <em className={`fin-badge ${row.status === "Rủi ro cao" ? "danger" : row.status === "Tiềm năng" ? "success" : "warning"}`}>{row.status}</em>
+                                </div>
                             </div>
                         ))}
                     </div>
                 </div>
 
-                <div className="fin-panel exception-panel footer-alert-panel">
-                    <div className="fin-panel-header urgent-header">
-                        <FiAlertCircle /> Cảnh báo ngoại lệ (Đối soát/Hệ thống)
+                <div className="fin-panel urgent">
+                    <div className="fin-panel-header">
+                        <FiAlertCircle /> Cảnh báo cần xử lý
                     </div>
-                    <div className="fin-exception-grid">
-                        {exceptions.map(e => (
-                            <div
-                                key={e.id}
-                                className={`fin-exception-card clickable ${e.severity}`}
-                                onClick={() => navigate(e.target)}
-                            >
-                                <div className="exc-icon">
-                                    <FiAlertCircle />
-                                </div>
-                                <div className="exc-body">
-                                    <strong>{e.title}</strong>
-                                    <p>{e.detail}</p>
-                                </div>
-                                <div className="btn-fix-arrow">
-                                    <FiExternalLink />
-                                </div>
+                    <div className="fin-alert-list compact-alerts">
+                        {alerts.map((item) => (
+                            <div className="fin-alert-item" key={item.title}>
+                                <strong>{item.title}</strong>
+                                <span>{item.desc}</span>
+                                <Link to={item.link} className="fin-link-action">Xử lý ngay</Link>
                             </div>
                         ))}
                     </div>
                 </div>
+            </section>
+
+            <div className="fin-panel fin-summary-note">
+                <div className="fin-panel-header">
+                    <FiClock /> Kết luận vận hành
+                </div>
+                <p>
+                    Doanh số hiện tại đang bị kéo xuống bởi nợ quá hạn, hoàn tiền và lớp trống. Tập trung ưu tiên thu hồi công nợ,
+                    đối soát khoản chưa ghi nhận, và giữ ổn định sĩ số lớp để giảm thất thoát ở kỳ tiếp theo.
+                </p>
             </div>
-
-            {showClosingWizard && (
-                <PeriodClosingWizard
-                    onClose={() => setShowClosingWizard(false)}
-                    onLockComplete={() => setIsPeriodLocked(true)}
-                />
-            )}
         </div>
     );
 }
