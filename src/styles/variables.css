@@ -109,6 +109,7 @@
 /* Role Theme Overrides */
 .theme-teacher {
   --admin-primary: #0d9488; /* Teal 600 */
+  --sidebar-bg: linear-gradient(180deg, #11c7b6 0%, #04a094 100%);
   --admin-primary-hover: #0f766e;
   --admin-primary-soft: #f0fdfa;
   --admin-border: #ccfbf1;
@@ -126,8 +127,9 @@
   --cal-orange: #f59e0b;
 }
 
-.theme-admin {
+.theme-admin, .theme-principal {
   --admin-primary: #1e2f5a;
+  --sidebar-bg: linear-gradient(180deg, #2b3f6f 0%, #152340 100%);
   --admin-primary-hover: #172547;
   --admin-primary-soft: #e9efff;
   --admin-border: #dce5f7;
@@ -141,39 +143,74 @@
   --cal-orange: #f59e0b;
 }
 
-.theme-student {
+.theme-vp_academic {
+  --admin-primary: #059669; /* Emerald 600 */
+  --sidebar-bg: linear-gradient(180deg, #10b981 0%, #059669 100%);
+  --admin-primary-hover: #047857;
+  --admin-primary-soft: #ecfdf5;
+  --admin-border: #d1fae5;
+  --admin-border-strong: #a7f3d0;
+  --admin-text-primary: #064e3b;
+  --admin-text-secondary: #059669;
+  --admin-focus-ring: rgba(5, 150, 105, 0.2);
+  --admin-shadow-sm: 0 2px 6px rgba(5, 150, 105, 0.06);
+  --admin-shadow-md: 0 10px 24px rgba(5, 150, 105, 0.12);
+}
+
+.theme-vp_discipline {
+  --admin-primary: #991b1b; /* Crimson 800 */
+  --sidebar-bg: linear-gradient(180deg, #ef4444 0%, #991b1b 100%);
+  --admin-primary-hover: #7f1d1d;
+  --admin-primary-soft: #fef2f2;
+  --admin-border: #fee2e2;
+  --admin-border-strong: #fecaca;
+  --admin-text-primary: #7f1d1d;
+  --admin-text-secondary: #991b1b;
+  --admin-focus-ring: rgba(153, 27, 27, 0.2);
+}
+
+.theme-academic_staff {
+  --admin-primary: #0369a1; /* Cerulean 700 */
+  --sidebar-bg: linear-gradient(180deg, #0ea5e9 0%, #0369a1 100%);
+  --admin-primary-hover: #075985;
+  --admin-primary-soft: #f0f9ff;
+  --admin-border: #e0f2fe;
+  --admin-border-strong: #bae6fd;
+  --admin-text-primary: #0c4a6e;
+  --admin-text-secondary: #0369a1;
+}
+
+.theme-finance_staff {
   --admin-primary: #4338ca; /* Indigo 700 */
+  --sidebar-bg: linear-gradient(180deg, #6366f1 0%, #4338ca 100%);
   --admin-primary-hover: #3730a3;
   --admin-primary-soft: #eef2ff;
   --admin-border: #e0e7ff;
   --admin-border-strong: #c7d2fe;
   --admin-text-primary: #312e81;
   --admin-text-secondary: #4338ca;
-  --admin-focus-ring: rgba(67, 56, 202, 0.2);
-  --admin-shadow-sm: 0 2px 6px rgba(67, 56, 202, 0.06);
-  --admin-shadow-md: 0 10px 24px rgba(67, 56, 202, 0.12);
+}
 
-  --cal-blue: #3b82f6;
-  --cal-teal: #16a34a;
-  --cal-red: #ef4444;
-  --cal-orange: #f59e0b;
+.theme-student {
+  --admin-primary: #2563eb; /* Blue 600 */
+  --sidebar-bg: linear-gradient(180deg, #6092e6 0%, #0c53d5 100%);
+  --admin-primary-hover: #1d4ed8;
+  --admin-primary-soft: #eff6ff;
+  --admin-border: #dbeafe;
+  --admin-border-strong: #bfdbfe;
+  --admin-text-primary: #1e3a8a;
+  --admin-text-secondary: #2563eb;
+  --admin-focus-ring: rgba(37, 99, 235, 0.2);
 }
 
 .theme-parent {
   --admin-primary: #7c3aed; /* Violet 600 */
+  --sidebar-bg: linear-gradient(180deg, #b68af8 0%, #885def 100%);
   --admin-primary-hover: #6d28d9;
   --admin-primary-soft: #f5f3ff;
   --admin-border: #ede9fe;
   --admin-border-strong: #ddd6fe;
   --admin-text-primary: #4c1d95;
   --admin-text-secondary: #6d28d9;
-  --admin-focus-ring: rgba(124, 58, 237, 0.2);
-  --admin-shadow-sm: 0 2px 6px rgba(124, 58, 237, 0.06);
-  --admin-shadow-md: 0 10px 24px rgba(124, 58, 237, 0.12);
-
-  --cal-blue: #3b82f6;
-  --cal-teal: #16a34a;
-  --cal-red: #ef4444;
-  --cal-orange: #f59e0b;
 }
 

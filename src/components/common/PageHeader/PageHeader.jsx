@@ -1,4 +1,5 @@
 import React from "react";
+import { Link } from "react-router-dom";
 import "./PageHeader.css";
 
 export default function PageHeader({
@@ -16,12 +17,22 @@ export default function PageHeader({
 
         {breadcrumbs.length > 0 ? (
           <div className="common-page-header__breadcrumbs" aria-label="Breadcrumb">
-            {breadcrumbs.map((item, index) => (
-              <React.Fragment key={`${item}-${index}`}>
-                <span>{item}</span>
-                {index < breadcrumbs.length - 1 ? <span>/</span> : null}
-              </React.Fragment>
-            ))}
+            {breadcrumbs.map((item, index) => {
+              const isLast = index === breadcrumbs.length - 1;
+              const label = typeof item === "object" ? item.label : item;
+              const path = typeof item === "object" ? item.path : null;
+
+              return (
+                <React.Fragment key={`${label}-${index}`}>
+                  {path && !isLast ? (
+                    <Link to={path} className="breadcrumb-link">{label}</Link>
+                  ) : (
+                    <span>{label}</span>
+                  )}
+                  {!isLast ? <span className="breadcrumb-separator">/</span> : null}
+                </React.Fragment>
+              );
+            })}
           </div>
         ) : null}
 

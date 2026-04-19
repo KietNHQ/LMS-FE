@@ -7,7 +7,7 @@ export default function VpDisciplineLayout() {
     const [isCollapsed, setIsCollapsed] = useState(false);
 
     return (
-        <div className={`vp-discipline-layout ${isCollapsed ? "collapsed" : ""}`}>
+        <div className={`vp-discipline-layout theme-vp_discipline ${isCollapsed ? "collapsed" : ""}`}>
             <Sidebar
                 role="vp_discipline"
                 userName="Phó Hiệu Trưởng"

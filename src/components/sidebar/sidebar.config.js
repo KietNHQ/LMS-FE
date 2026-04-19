@@ -43,47 +43,47 @@ export const roleTheme = {
     admin: {
         label: "Cổng Quản Trị",
         shortLabel: "SA",
-        className: "role-admin"
+        className: "theme-admin"
     },
     principal: {
         label: "Cổng Hiệu Trưởng",
         shortLabel: "HT",
-        className: "role-admin"
+        className: "theme-principal"
     },
     vp_academic: {
         label: "PHT Chuyên Môn",
         shortLabel: "CM",
-        className: "role-admin"
+        className: "theme-vp_academic"
     },
     vp_discipline: {
         label: "PHT Nề Nếp",
         shortLabel: "NN",
-        className: "role-admin"
+        className: "theme-vp_discipline"
     },
     academic_staff: {
         label: "Cổng Giáo Vụ",
         shortLabel: "GV",
-        className: "role-admin"
+        className: "theme-academic_staff"
     },
     finance_staff: {
         label: "Cổng Kế Toán",
         shortLabel: "KT",
-        className: "role-admin"
+        className: "theme-finance_staff"
     },
     teacher: {
         label: "Cổng Giáo Viên",
         shortLabel: "G",
-        className: "role-teacher"
+        className: "theme-teacher"
     },
     student: {
         label: "Cổng Học Sinh",
         shortLabel: "H",
-        className: "role-student"
+        className: "theme-student"
     },
     parent: {
         label: "Cổng Phụ Huynh",
         shortLabel: "P",
-        className: "role-parent"
+        className: "theme-parent"
     }
 };
 

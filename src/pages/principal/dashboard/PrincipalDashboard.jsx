@@ -5,7 +5,7 @@ import { adminDashboardService } from "../../../services/pages/admin/dashboard/d
 import { 
     FiUsers, FiUserCheck, FiHome, FiDollarSign, FiStar, FiActivity, 
     FiShield, FiBell, FiTrendingUp, FiCheckCircle, FiBarChart2, FiAlertCircle,
-    FiArrowRight
+    FiArrowRight, FiTrendingDown
 } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
 import "./PrincipalDashboard.css";
@@ -52,9 +52,30 @@ export default function PrincipalDashboard() {
     ]);
 
     const alerts = [
-        { id: 1, message: "🚨 5 lớp chưa nhập đủ điểm giữa kỳ. Hạn chót: 24h tới.", actionText: "Thúc giục ngay", path: "/principal/approvals" },
-        { id: 2, message: "📉 Lớp 11A2 có tỷ lệ chuyên cần giảm đột ngột (giảm 12%).", actionText: "Xem báo cáo", path: "/principal/overview?tab=attendance" },
-        { id: 3, message: "💰 Doanh thu học phí khối 12 đang đạt thấp hơn kỳ vọng.", actionText: "Chi tiết tài chính", path: "/principal/finance-monitoring" }
+        { 
+            id: 1, 
+            type: "danger", 
+            icon: <FiAlertCircle />, 
+            message: "5 lớp chưa nhập đủ điểm giữa kỳ. Hạn chót: 24h tới.", 
+            actionText: "Thúc giục ngay", 
+            path: "/principal/approvals" 
+        },
+        { 
+            id: 2, 
+            type: "warning", 
+            icon: <FiTrendingDown />, 
+            message: "Lớp 11A2 có tỷ lệ chuyên cần giảm đột ngột (giảm 12%).", 
+            actionText: "Xem báo cáo", 
+            path: "/principal/overview?tab=attendance" 
+        },
+        { 
+            id: 3, 
+            type: "info", 
+            icon: <FiDollarSign />, 
+            message: "Khối 12 hiện còn 15% học sinh chưa hoàn thành đóng học phí.", 
+            actionText: "Xem danh sách", 
+            path: "/principal/overview?tab=finance" 
+        }
     ];
 
     const semesterLabel = selectedTerm === "hk1" ? "Học kỳ 1" : "Học kỳ 2";
@@ -230,20 +251,41 @@ export default function PrincipalDashboard() {
             </div>
 
             {/* Premium Attention Footer */}
-            <footer className="principal-attention">
+            <footer className={`principal-attention ${alerts.length === 0 ? "principal-attention--empty" : ""}`}>
                 <div className="principal-attention__head">
-                    <FiAlertCircle className="attention-icon" />
-                    <h3 className="principal-attention__title">Chỉ số cần can thiệp</h3>
+                    {alerts.length > 0 ? (
+                        <>
+                            <FiAlertCircle className="attention-icon" />
+                            <h3 className="principal-attention__title">Chỉ số cần can thiệp</h3>
+                        </>
+                    ) : (
+                        <>
+                            <FiCheckCircle className="attention-icon--success" />
+                            <h3 className="principal-attention__title">Hệ thống ổn định</h3>
+                        </>
+                    )}
                 </div>
                 <div className="principal-attention__body">
-                    {alerts.map(alert => (
-                        <div key={alert.id} className="principal-attention__card">
-                            <span className="alert-message">{alert.message}</span>
-                            <button className="alert-action-btn" onClick={() => navigate(alert.path)}>
-                                {alert.actionText} <FiArrowRight />
-                            </button>
+                    {alerts.length > 0 ? (
+                        alerts.map(alert => (
+                            <div key={alert.id} className={`principal-attention__card principal-attention__card--${alert.type}`}>
+                                <div className="attention-card-content">
+                                    <span className="alert-icon">{alert.icon}</span>
+                                    <span className="alert-message">{alert.message}</span>
+                                </div>
+                                <button className="alert-action-btn" onClick={() => navigate(alert.path)}>
+                                    {alert.actionText} <FiArrowRight />
+                                </button>
+                            </div>
+                        ))
+                    ) : (
+                        <div className="principal-attention__complete">
+                            <p className="complete-message">
+                                Tuyệt vời! Tất cả chỉ số vận hành đang ở trạng thái ổn định. 
+                                Hiện không có vấn đề khẩn cấp cần can thiệp.
+                            </p>
                         </div>
-                    ))}
+                    )}
                 </div>
             </footer>
         </div>

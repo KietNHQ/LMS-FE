@@ -203,6 +203,7 @@ export default function AppRoutes() {
         <Route index element={<Navigate to="dashboard" replace />} />
         <Route path="dashboard" element={<PrincipalDashboard />} />
         <Route path="overview" element={<PrincipalOverview />} />
+        <Route path="classes/:classId" element={<ClassDetailSection />} />
         <Route path="approvals" element={<PrincipalApprovals />} />
         <Route path="reports" element={<PrincipalReports />} />
         <Route path="audit-logs" element={<PrincipalAuditLogs />} />

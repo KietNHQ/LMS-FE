@@ -1,9 +1,15 @@
 import { useMemo, useState } from "react";
 import { PageHeader, SchoolYearTermSelector } from "../../../components/common";
+import Select from "../../../components/ui/Select/Select";
 import { useSchoolYearTerm } from "../../../hooks/useSchoolYearTerm";
-import { FiActivity, FiCheckSquare, FiClock, FiSearch, FiFilter, FiInbox, FiAlertTriangle } from "react-icons/fi";
+import { 
+  FiActivity, FiCheckSquare, FiClock, FiSearch, FiFilter, 
+  FiInbox, FiAlertTriangle, FiX, FiCheck, FiChevronLeft, FiChevronRight 
+} from "react-icons/fi";
 import { toast } from "react-toastify";
 import "./PrincipalApprovals.css";
+
+// ... (WORK_ITEMS stays the same)
 
 const WORK_ITEMS = [
   {
@@ -14,6 +20,7 @@ const WORK_ITEMS = [
     reference: "#GR-101",
     requester: "PHT. Nguyễn Y",
     summary: "Đã kiểm tra 100% cột điểm, chờ phê duyệt để khóa sổ.",
+    description: "Toàn bộ giáo viên bộ môn của khối 10A1 đã hoàn tất việc nhập điểm và đánh giá định kỳ. Đã có sự xác nhận chéo từ phía tổ trưởng chuyên môn. Cần ký duyệt cuối cùng để hệ thống chính thức khóa sổ điểm và xuất báo cáo học kỳ.",
     time: "2 giờ trước",
     dueAt: "Trước 17:00 hôm nay",
     priority: "Cao",
@@ -27,23 +34,11 @@ const WORK_ITEMS = [
     reference: "#GR-102",
     requester: "PHT. Nguyễn Y",
     summary: "Thiếu xác nhận một số đầu điểm học kỳ.",
+    description: "Phát hiện 3 trường hợp học sinh vắng thi học kỳ nhưng chưa có biên bản xử lý đính kèm trong hồ sơ điện tử. Cần rà soát lại trước khi phê duyệt tổng thể.",
     time: "4 giờ trước",
     dueAt: "Ngày mai",
     priority: "Trung bình",
     status: "pending",
-  },
-  {
-    id: "G-103",
-    section: "grades",
-    sectionLabel: "Chuyên môn",
-    title: "Học bạ định kỳ - 12A3",
-    reference: "#GR-103",
-    requester: "Giáo vụ Lê C",
-    summary: "Đã xuất bản PDF, sẵn sàng lưu hồ sơ.",
-    time: "Hôm qua",
-    dueAt: "Đã xử lý",
-    priority: "Thấp",
-    status: "approved",
   },
   {
     id: "A-201",
@@ -53,6 +48,7 @@ const WORK_ITEMS = [
     reference: "#ACT-201",
     requester: "Kế toán trưởng",
     summary: "Dự toán chi tiết đính kèm, cần quyết định cuối cùng.",
+    description: "Đề xuất kinh phí tổ chức Hội trại truyền thống. Đã bao gồm chi phí thuê thiết bị âm thanh, ánh sáng, phần thưởng và công tác an ninh. Ngân sách dự kiến tăng 5% so với năm trước do chi phí vật liệu trang trí tăng.",
     time: "1 giờ trước",
     dueAt: "Trong ngày",
     priority: "Cao",
@@ -66,11 +62,27 @@ const WORK_ITEMS = [
     reference: "#ACT-202",
     requester: "Tổ chuyên môn Toán",
     summary: "Đề xuất lịch, kinh phí và danh sách học sinh tham gia.",
+    description: "Kế hoạch tập huấn đội tuyển dự thi cấp Thành phố. Bao gồm 12 buổi học tăng cường vào chiều thứ 7 và sáng chủ nhật. Danh sách gồm 08 học sinh xuất sắc nhất khối 12.",
     time: "5 giờ trước",
     dueAt: "Ngày mai",
     priority: "Trung bình",
     status: "pending",
   },
+  {
+    id: "G-103",
+    section: "grades",
+    sectionLabel: "Chuyên môn",
+    title: "Học bạ định kỳ - 12A3",
+    reference: "#GR-103",
+    requester: "Giáo vụ Lê C",
+    summary: "Đã xuất bản PDF, sẵn sàng lưu hồ sơ.",
+    description: "Hoàn tất số hóa học bạ cho lớp 12A3. Tất cả dữ liệu đã được đối soát với bản giấy. Cần phê duyệt để trả hồ sơ cho học sinh nộp hồ sơ xét tuyển Đại học.",
+    time: "Hôm qua",
+    dueAt: "Đã xử lý",
+    priority: "Thấp",
+    status: "approved",
+  },
+  // Extra data for pagination
   {
     id: "A-203",
     section: "activities",
@@ -78,11 +90,68 @@ const WORK_ITEMS = [
     title: "Bổ sung thiết bị phòng thực hành",
     reference: "#ACT-203",
     requester: "Tổ Tin học",
-    summary: "Đã duyệt cấp dưới, chờ chốt hạn mức từ hiệu trưởng.",
+    summary: "Chờ chốt hạn mức từ hiệu trưởng.",
+    description: "Đề xuất mua mới 20 bộ máy tính phục vụ kỳ thi nghề. Các máy cũ hiện tại đã quá thời gian khấu hao và thường xuyên gặp lỗi phần cứng.",
     time: "Hôm qua",
     dueAt: "Đã xử lý",
     priority: "Trung bình",
     status: "rejected",
+  },
+  {
+    id: "G-104",
+    section: "grades",
+    sectionLabel: "Chuyên môn",
+    title: "Xác nhận kết quả khảo sát khối 11",
+    reference: "#GR-104",
+    requester: "PHT. Trần D",
+    summary: "Kiểm tra phổ điểm kỳ thi thử năng lực.",
+    description: "Dữ liệu kết quả khảo sát đầu năm của toàn khối 11. Cần xem xét để có hướng điều chỉnh kế hoạch giảng dạy phù hợp cho giai đoạn tiếp theo.",
+    time: "3 ngày trước",
+    dueAt: "Đã xử lý",
+    priority: "Trung bình",
+    status: "approved",
+  },
+  {
+    id: "A-204",
+    section: "activities",
+    sectionLabel: "Kế hoạch & Ngân sách",
+    title: "Phê duyệt chi phí tu bổ sân bóng",
+    reference: "#ACT-204",
+    requester: "Cán bộ hành chính",
+    summary: "Thay cỏ nhân tạo và nâng cấp hệ thống thoát nước.",
+    description: "Dự án cải tạo cơ sở vật chất sân chơi. Khu vực sân bóng hiện bị đọng nước mỗi khi mưa lớn, ảnh hưởng đến hoạt động giáo dục thể chất.",
+    time: "Hôm qua",
+    dueAt: "Tuần này",
+    priority: "Thấp",
+    status: "pending",
+  },
+  {
+    id: "G-105",
+    section: "grades",
+    sectionLabel: "Chuyên môn",
+    title: "Đề xuất điều chỉnh phân phối chương trình",
+    reference: "#GR-105",
+    requester: "Tổ Ngữ Văn",
+    summary: "Thay đổi một số tiết ôn tập cho khối 12.",
+    description: "Đề xuất tăng cường các tiết rèn kỹ năng viết đoạn văn nghị luận xã hội nhằm bám sát cấu trúc đề thi mới của Bộ GD&ĐT.",
+    time: "2 giờ trước",
+    dueAt: "Ngày mai",
+    priority: "Trung bình",
+    status: "pending",
+  },
+  {
+    id: "A-205",
+    section: "activities",
+    sectionLabel: "Kế hoạch & Ngân sách",
+    title: "Ngân sách tổ chức Lễ khai giảng",
+    reference: "#ACT-205",
+    requester: "Phòng Tài vụ",
+    summary: "Các hạng mục âm thanh, khánh tiết và tiệc trà.",
+    description: "Dự toán chi tiết cho buổi lễ quan trọng nhất đầu năm học. Đã được các phòng ban chuyên môn liên quan thẩm định kỹ lưỡng.",
+    time: "Hôm qua",
+    dueAt: "Tuần sau",
+    priority: "Cao",
+    status: "pending",
   },
 ];
 
@@ -109,8 +178,78 @@ function StatusBadge({ status }) {
 function PriorityBadge({ priority }) {
   const priorityClass =
     priority === "Cao" ? "cao" : priority === "Trung bình" ? "trung-binh" : "thap";
-
   return <span className={`priority-badge priority-badge--${priorityClass}`}>{priority}</span>;
+}
+
+function ItemModal({ item, isOpen, onClose, onAction }) {
+  if (!isOpen || !item) return null;
+
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+        <div className="modal-header">
+          <div className="modal-header__info">
+            <span className="modal-ref">{item.reference}</span>
+            <h2>{item.title}</h2>
+          </div>
+          <button className="modal-close" onClick={onClose}><FiX /></button>
+        </div>
+        
+        <div className="modal-body">
+          <div className="modal-grid">
+            <div className="modal-field">
+              <label>Đơn vị trình</label>
+              <div className="modal-val">
+                <strong>{item.requester}</strong>
+                <span>{item.time}</span>
+              </div>
+            </div>
+            <div className="modal-field">
+              <label>Mức độ ưu tiên</label>
+              <div className="modal-val"><PriorityBadge priority={item.priority} /></div>
+            </div>
+            <div className="modal-field">
+              <label>Hạn xử lý</label>
+              <div className="modal-val">
+                <FiClock /> {item.dueAt}
+              </div>
+            </div>
+            <div className="modal-field">
+              <label>Trạng thái</label>
+              <div className="modal-val"><StatusBadge status={item.status} /></div>
+            </div>
+          </div>
+
+          <div className="modal-section">
+            <label>Nội dung tóm tắt</label>
+            <p className="modal-summary">{item.summary}</p>
+          </div>
+
+          <div className="modal-section">
+            <label>Chi tiết yêu cầu</label>
+            <div className="modal-description">
+              {item.description || "Không có mô tả chi tiết cho yêu cầu này."}
+            </div>
+          </div>
+        </div>
+
+        <div className="modal-footer">
+          {item.status === "pending" ? (
+            <div className="modal-actions">
+              <button className="btn-modal-reject" onClick={() => onAction(item.id, "rejected")}>
+                <FiX /> Từ chối yêu cầu
+              </button>
+              <button className="btn-modal-approve" onClick={() => onAction(item.id, "approved")}>
+                <FiCheck /> Phê duyệt ngay
+              </button>
+            </div>
+          ) : (
+            <button className="btn-modal-close" onClick={onClose}>Đóng chi tiết</button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
 }
 
 export default function PrincipalApprovals() {
@@ -119,20 +258,23 @@ export default function PrincipalApprovals() {
   const [activeStatus, setActiveStatus] = useState("pending");
   const [searchTerm, setSearchTerm] = useState("");
   const [items, setItems] = useState(WORK_ITEMS);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [selectedItem, setSelectedItem] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
+  const itemsPerPage = 6;
   const sectionLabel = selectedTerm === "hk1" ? "Học kỳ 1" : "Học kỳ 2";
 
   const metrics = useMemo(() => {
-    const total = items.length;
-    const pending = items.filter((item) => item.status === "pending").length;
-    const approved = items.filter((item) => item.status === "approved").length;
-    const rejected = items.filter((item) => item.status === "rejected").length;
-    const urgent = items.filter((item) => item.status === "pending" && item.priority === "Cao").length;
-
-    return { total, pending, approved, rejected, urgent };
+    return {
+      total: items.length,
+      pending: items.filter((item) => item.status === "pending").length,
+      urgent: items.filter((item) => item.status === "pending" && item.priority === "Cao").length,
+      resolved: items.filter((item) => item.status !== "pending").length,
+    };
   }, [items]);
 
-  const visibleItems = useMemo(() => {
+  const filteredItems = useMemo(() => {
     return items.filter((item) => {
       const matchesSection = activeSection === "all" || item.section === activeSection;
       const matchesStatus = activeStatus === "all" || item.status === activeStatus;
@@ -144,18 +286,29 @@ export default function PrincipalApprovals() {
     });
   }, [activeSection, activeStatus, items, searchTerm]);
 
+  const totalPages = Math.ceil(filteredItems.length / itemsPerPage);
+  const visibleItems = useMemo(() => {
+    const start = (currentPage - 1) * itemsPerPage;
+    return filteredItems.slice(start, start + itemsPerPage);
+  }, [filteredItems, currentPage]);
+
   const updateItemStatus = (id, status) => {
     setItems((prev) => prev.map((item) => (item.id === id ? { ...item, status } : item)));
-    toast.success(`Đã cập nhật ${id}`);
+    setIsModalOpen(false);
+    toast.success(`Đã xử lý yêu cầu ${id}`);
+  };
+
+  const openItemDetail = (item) => {
+    setSelectedItem(item);
+    setIsModalOpen(true);
   };
 
   const bulkApprove = () => {
-    const pendingVisible = visibleItems.filter((item) => item.status === "pending");
+    const pendingVisible = filteredItems.filter((item) => item.status === "pending");
     if (pendingVisible.length === 0) {
-      toast.info("Không có yêu cầu chờ duyệt trong bộ lọc hiện tại.");
+      toast.info("Không có yêu cầu chờ duyệt.");
       return;
     }
-
     const ids = new Set(pendingVisible.map((item) => item.id));
     setItems((prev) => prev.map((item) => (ids.has(item.id) ? { ...item, status: "approved" } : item)));
     toast.success(`Đã phê duyệt ${pendingVisible.length} yêu cầu.`);
@@ -165,7 +318,6 @@ export default function PrincipalApprovals() {
     <div className="principal-approvals">
       <PageHeader
         title="Trung tâm Phê duyệt & Backlog"
-        eyebrow="Danh sách công việc khả thi cho hiệu trưởng · quyết định nhanh, có truy vết"
         actions={
           <SchoolYearTermSelector
             selectedSchoolYear={selectedSchoolYear}
@@ -176,171 +328,144 @@ export default function PrincipalApprovals() {
         }
       />
 
-      <div className="approvals-hero">
-        <div className="approvals-hero__text">
-          <span className="approvals-hero__eyebrow">
-            <FiInbox /> Hàng chờ điều hành
-          </span>
-          <h2>Ưu tiên xử lý các yêu cầu cần quyết định ngay</h2>
-          <p>
-            Màn hình này gom các yêu cầu duyệt từ chuyên môn và kế hoạch/ngân sách thành một backlog
-            chung để hiệu trưởng có thể xem, lọc và xử lý nhanh.
-          </p>
+      <div className="approvals-hero-unified">
+        <div className="approvals-hero-unified__info">
+          <div className="hero-status-tag"><FiInbox /> Hàng chờ điều hành</div>
+          <h2>Danh sách phê duyệt & Backlog</h2>
+          <p>Xử lý tập trung các yêu cầu từ chuyên môn và kế hoạch ngân sách.</p>
         </div>
 
-        <div className="approvals-hero__metrics">
-          <div className="approvals-metric">
-            <span className="approvals-metric__label">Tổng công việc</span>
+        <div className="hero-metrics-grid">
+          <div className="hero-metric-card">
+            <span className="label">Tổng số</span>
             <strong>{metrics.total}</strong>
           </div>
-          <div className="approvals-metric">
-            <span className="approvals-metric__label">Chờ duyệt</span>
+          <div className="hero-metric-card focus">
+            <span className="label">Chờ duyệt</span>
             <strong>{metrics.pending}</strong>
           </div>
-          <div className="approvals-metric">
-            <span className="approvals-metric__label">Ưu tiên cao</span>
+          <div className="hero-metric-card urgent">
+            <span className="label">Ưu tiên cao</span>
             <strong>{metrics.urgent}</strong>
           </div>
-          <div className="approvals-metric">
-            <span className="approvals-metric__label">Đã xử lý</span>
-            <strong>{metrics.approved + metrics.rejected}</strong>
+          <div className="hero-metric-card">
+            <span className="label">Đã xử lý</span>
+            <strong>{metrics.resolved}</strong>
           </div>
         </div>
       </div>
 
-      <div className="approvals-controls">
-        <div className="approvals-search">
+      <div className="approvals-controls-refined">
+        <div className="search-box-wrapper">
           <FiSearch />
-          <label htmlFor="approvals-search" className="sr-only">
-            Tìm kiếm yêu cầu
-          </label>
           <input
-            id="approvals-search"
             type="search"
             value={searchTerm}
-            onChange={(event) => setSearchTerm(event.target.value)}
-            placeholder="Tìm theo mã, tiêu đề, đơn vị trình..."
+            onChange={(e) => {
+              setSearchTerm(e.target.value);
+              setCurrentPage(1);
+            }}
+            placeholder="Mã, tiêu đề, đơn vị trình..."
           />
         </div>
 
-        <div className="approvals-filters" aria-label="Bộ lọc backlog">
-          <div className="approvals-filter-group">
-            <FiFilter />
-            {SECTION_OPTIONS.map((option) => (
-              <button
-                key={option.value}
-                type="button"
-                className={`filter-chip ${activeSection === option.value ? "is-active" : ""}`}
-                onClick={() => setActiveSection(option.value)}
-              >
-                {option.label}
-              </button>
-            ))}
-          </div>
-
-          <div className="approvals-filter-group approvals-filter-group--status">
-            {STATUS_OPTIONS.map((option) => (
-              <button
-                key={option.value}
-                type="button"
-                className={`filter-chip ${activeStatus === option.value ? "is-active" : ""}`}
-                onClick={() => setActiveStatus(option.value)}
-              >
-                {option.label}
-              </button>
-            ))}
-          </div>
+        <div className="filters-row">
+          <Select
+            variant="custom"
+            options={SECTION_OPTIONS}
+            value={activeSection}
+            onChange={(e) => {
+              setActiveSection(e.target.value);
+              setCurrentPage(1);
+            }}
+            className="filter-dropdown"
+            placeholder="Luồng công việc"
+          />
+          <Select
+            variant="custom"
+            options={STATUS_OPTIONS}
+            value={activeStatus}
+            onChange={(e) => {
+              setActiveStatus(e.target.value);
+              setCurrentPage(1);
+            }}
+            className="filter-dropdown"
+            placeholder="Trạng thái"
+          />
         </div>
 
-        <button type="button" className="btn-approve-all" onClick={bulkApprove}>
-          <FiCheckSquare /> Phê duyệt hàng loạt
+        <button className="bulk-approve-btn" onClick={bulkApprove}>
+          <FiCheckSquare /> Phê duyệt nhanh
         </button>
       </div>
 
-      <div className="approvals-content">
-        <div className="approvals-header">
-          <div>
-            <h3>Backlog công việc cần xử lý</h3>
-            <p>
-              Năm học {selectedSchoolYear} · {sectionLabel} · {visibleItems.length} mục phù hợp bộ lọc
-            </p>
-          </div>
-          <div className="approvals-header__legend">
-            <span><span className="legend-dot legend-dot--pending" /> Chờ duyệt</span>
-            <span><span className="legend-dot legend-dot--approved" /> Đã duyệt</span>
-            <span><span className="legend-dot legend-dot--rejected" /> Từ chối</span>
+      <div className="approvals-table-container">
+        <div className="table-header-context">
+          <h3>
+            {activeStatus === "pending"
+              ? "Hàng chờ xử lý"
+              : activeStatus === "approved"
+              ? "Lịch sử phê duyệt"
+              : activeStatus === "rejected"
+              ? "Yêu cầu đã từ chối"
+              : "Danh sách tổng quát"}{" "}
+            ({filteredItems.length})
+          </h3>
+          <div className="table-legend">
+             <span><span className="dot pending" /> Chờ duyệt</span>
+             <span><span className="dot approved" /> Đã duyệt</span>
+             <span><span className="dot rejected" /> Từ chối</span>
           </div>
         </div>
 
-        <div className="approvals-table-wrap">
+        <div className="table-wrapper">
           {visibleItems.length === 0 ? (
-            <div className="approvals-empty">
+            <div className="empty-state">
               <FiAlertTriangle />
-              <h4>Không có yêu cầu phù hợp</h4>
-              <p>Hãy thử đổi bộ lọc theo luồng, trạng thái hoặc từ khóa tìm kiếm.</p>
+              <p>Không tìm thấy yêu cầu phù hợp.</p>
             </div>
           ) : (
-            <table className="approvals-table">
+            <table className="modern-table">
               <thead>
                 <tr>
                   <th>Ưu tiên</th>
-                  <th>Công việc</th>
+                  <th>Nội dung công việc</th>
                   <th>Đơn vị trình</th>
                   <th>Hạn xử lý</th>
                   <th>Tình trạng</th>
-                  <th>Hành động</th>
+                  <th className="text-right">Hành động</th>
                 </tr>
               </thead>
               <tbody>
                 {visibleItems.map((item) => (
-                  <tr key={item.id}>
+                  <tr key={item.id} className={item.status === "pending" ? "row-pending" : ""}>
+                    <td><PriorityBadge priority={item.priority} /></td>
                     <td>
-                      <PriorityBadge priority={item.priority} />
-                    </td>
-                    <td>
-                      <div className="approvals-item-title">{item.title}</div>
-                      <div className="approvals-item-meta">
-                        <span>{item.reference}</span>
-                        <span>{item.summary}</span>
+                      <div className="item-main-info" onClick={() => openItemDetail(item)}>
+                        <span className="title">{item.title}</span>
+                        <span className="ref">{item.reference}</span>
                       </div>
                     </td>
                     <td>
-                      <div className="approvals-source">{item.requester}</div>
-                      <div className="approvals-source-meta">{item.time}</div>
+                      <div className="requester-info">
+                        <strong>{item.requester}</strong>
+                        <span>{item.time}</span>
+                      </div>
                     </td>
                     <td>
-                      <div className="approvals-deadline">
+                      <div className="deadline-box">
                         <FiClock /> {item.dueAt}
+                        <span className="section-tag">{item.sectionLabel}</span>
                       </div>
-                      <div className="approvals-section-tag">{item.sectionLabel}</div>
                     </td>
-                    <td>
-                      <StatusBadge status={item.status} />
-                    </td>
-                    <td>
+                    <td><StatusBadge status={item.status} /></td>
+                    <td className="text-right">
                       {item.status === "pending" ? (
-                        <div className="action-btns">
-                          <button
-                            type="button"
-                            className="btn-sm-approve"
-                            onClick={() => updateItemStatus(item.id, "approved")}
-                          >
-                            Duyệt
-                          </button>
-                          <button
-                            type="button"
-                            className="btn-sm-reject"
-                            onClick={() => updateItemStatus(item.id, "rejected")}
-                          >
-                            Từ chối
-                          </button>
-                        </div>
+                        <button className="btn-table-action" onClick={() => openItemDetail(item)}>
+                          Xem & Duyệt
+                        </button>
                       ) : (
-                        <button
-                          type="button"
-                          className="btn-sm-secondary"
-                          onClick={() => toast.info(`Đã mở chi tiết ${item.id}`)}
-                        >
+                        <button className="btn-table-secondary" onClick={() => openItemDetail(item)}>
                           Xem chi tiết
                         </button>
                       )}
@@ -351,15 +476,44 @@ export default function PrincipalApprovals() {
             </table>
           )}
         </div>
+
+        {totalPages > 1 && (
+          <div className="pagination-footer">
+            <button 
+              className="page-btn" 
+              disabled={currentPage === 1}
+              onClick={() => setCurrentPage(prev => prev - 1)}
+            >
+              <FiChevronLeft />
+            </button>
+            <div className="page-numbers">
+              {[...Array(totalPages)].map((_, i) => (
+                <button
+                  key={i}
+                  className={`page-num ${currentPage === i + 1 ? "active" : ""}`}
+                  onClick={() => setCurrentPage(i + 1)}
+                >
+                  {i + 1}
+                </button>
+              ))}
+            </div>
+            <button 
+              className="page-btn" 
+              disabled={currentPage === totalPages}
+              onClick={() => setCurrentPage(prev => prev + 1)}
+            >
+              <FiChevronRight />
+            </button>
+          </div>
+        )}
       </div>
 
-      <div className="approvals-footer-note">
-        <FiActivity />
-        <span>
-          Dữ liệu đang hiển thị ở chế độ backlog giả lập. Khi BE sẵn sàng, có thể đổi trực tiếp sang hàng chờ thực,
-          giữ nguyên layout và trạng thái công việc.
-        </span>
-      </div>
+      <ItemModal 
+        item={selectedItem} 
+        isOpen={isModalOpen} 
+        onClose={() => setIsModalOpen(false)}
+        onAction={updateItemStatus}
+      />
     </div>
   );
 }

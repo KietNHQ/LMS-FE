@@ -7,7 +7,7 @@ export default function FinanceLayout() {
     const [isCollapsed, setIsCollapsed] = useState(false);
 
     return (
-        <div className={`finance-layout ${isCollapsed ? "collapsed" : ""}`}>
+        <div className={`finance-layout theme-finance_staff ${isCollapsed ? "collapsed" : ""}`}>
             <Sidebar
                 role="finance_staff"
                 userName="Kế Toán"
