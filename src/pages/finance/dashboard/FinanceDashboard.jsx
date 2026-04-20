@@ -78,12 +78,72 @@ export default function FinanceDashboard() {
     };
 
     const revenueImpacts = [
-        { label: "Học sinh tăng/giảm", value: "+46 HS", note: "Ảnh hưởng trực tiếp đến doanh số học phí" },
-        { label: "Chi phí hư hại", value: "69tr", note: "Phát sinh từ vận hành và tài sản" },
-        { label: "Marketing", value: "420tr", note: "Kéo doanh số tuyển sinh và tái ghi danh" },
-        { label: "Lớp trống", value: "6 lớp", note: "Tác động đến công suất và doanh thu kỳ sau" },
-        { label: "Giáo viên liên quan", value: "7", note: "Ảnh hưởng phân bổ chi phí và sĩ số" },
-        { label: "Hoàn tiền", value: "36tr", note: "Làm giảm doanh số thực thu" }
+        { 
+            label: "Học sinh tăng/giảm", 
+            value: "+46 HS", 
+            note: "Ảnh hưởng trực tiếp đến doanh số học phí",
+            trend: "increase",
+            periods: [
+                { period: "Tháng 10", value: "+15 HS" },
+                { period: "Tháng 11", value: "+22 HS" },
+                { period: "Tháng 12", value: "+9 HS" }
+            ]
+        },
+        { 
+            label: "Chi phí hư hại", 
+            value: "69tr", 
+            note: "Phát sinh từ vận hành và tài sản",
+            trend: "decrease",
+            periods: [
+                { period: "Tháng 10", value: "18tr" },
+                { period: "Tháng 11", value: "25tr" },
+                { period: "Tháng 12", value: "26tr" }
+            ]
+        },
+        { 
+            label: "Marketing", 
+            value: "420tr", 
+            note: "Kéo doanh số tuyển sinh và tái ghi danh",
+            trend: "increase",
+            periods: [
+                { period: "Tháng 10", value: "120tr" },
+                { period: "Tháng 11", value: "150tr" },
+                { period: "Tháng 12", value: "150tr" }
+            ]
+        },
+        { 
+            label: "Lớp trống", 
+            value: "6 lớp", 
+            note: "Tác động đến công suất và doanh thu kỳ sau",
+            trend: "decrease",
+            periods: [
+                { period: "Tháng 10", value: "8 lớp" },
+                { period: "Tháng 11", value: "7 lớp" },
+                { period: "Tháng 12", value: "6 lớp" }
+            ]
+        },
+        { 
+            label: "Giáo viên liên quan", 
+            value: "7", 
+            note: "Ảnh hưởng phân bổ chi phí và sĩ số",
+            trend: "neutral",
+            periods: [
+                { period: "Tháng 10", value: "6" },
+                { period: "Tháng 11", value: "7" },
+                { period: "Tháng 12", value: "7" }
+            ]
+        },
+        { 
+            label: "Hoàn tiền", 
+            value: "36tr", 
+            note: "Làm giảm doanh số thực thu",
+            trend: "decrease",
+            periods: [
+                { period: "Tháng 10", value: "12tr" },
+                { period: "Tháng 11", value: "15tr" },
+                { period: "Tháng 12", value: "9tr" }
+            ]
+        }
     ];
 
     const missingRevenueItems = [
@@ -219,12 +279,29 @@ export default function FinanceDashboard() {
                     </div>
                     <div className="fin-impact-list">
                         {revenueImpacts.map((item) => (
-                            <div className="fin-impact-item" key={item.label}>
+                            <div className="fin-impact-item" key={item.label} data-trend={item.trend}>
                                 <div>
                                     <strong>{item.label}</strong>
                                     <span>{item.note}</span>
                                 </div>
                                 <b>{item.value}</b>
+                                {item.periods && (
+                                    <div className="fin-impact-tooltip">
+                                        <div className="fin-impact-tooltip-title">Biến động theo tháng</div>
+                                        <table className="fin-impact-tooltip-table">
+                                            <tbody>
+                                                {item.periods.map((period) => (
+                                                    <tr key={period.period}>
+                                                        <td>{period.period}</td>
+                                                        <td className={item.trend === "increase" ? "fin-impact-tooltip-increase" : item.trend === "decrease" ? "fin-impact-tooltip-decrease" : ""}>
+                                                            {period.value}
+                                                        </td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                )}
                             </div>
                         ))}
                     </div>

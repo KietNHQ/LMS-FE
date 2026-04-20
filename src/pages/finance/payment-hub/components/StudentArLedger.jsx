@@ -11,6 +11,8 @@ const MOCK_LEDGER = [
 export default function StudentArLedger({ student, onClose }) {
     if (!student) return null;
 
+    const formatMoney = (value) => `${value.toLocaleString()} ₫`;
+
     return (
         <div className="ledger-drawer-overlay" onClick={onClose}>
             <div className="ledger-drawer" onClick={e => e.stopPropagation()}>
@@ -25,19 +27,19 @@ export default function StudentArLedger({ student, onClose }) {
                 <div className="ledger-summary-grid">
                     <div className="summary-item">
                         <span>Số dư đầu kỳ</span>
-                        <strong>0 ₫</strong>
+                        <strong>{formatMoney(0)}</strong>
                     </div>
                     <div className="summary-item">
                         <span>Tổng phát sinh</span>
-                        <strong style={{color: '#2563eb'}}>+ 4,500,000 ₫</strong>
+                        <strong className="text-info">+ {formatMoney(4500000)}</strong>
                     </div>
                     <div className="summary-item">
                         <span>Tổng đã giảm/nộp</span>
-                        <strong style={{color: '#10b981'}}>- 4,500,000 ₫</strong>
+                        <strong className="text-success">- {formatMoney(4500000)}</strong>
                     </div>
                     <div className="summary-item highlight">
                         <span>Số dư hiện tại</span>
-                        <strong style={{fontSize: '1.25rem'}}>0 ₫</strong>
+                        <strong className="text-large">{formatMoney(0)}</strong>
                     </div>
                 </div>
 
@@ -60,9 +62,9 @@ export default function StudentArLedger({ student, onClose }) {
                                     </div>
                                     <div className="t-body">
                                         <strong>{entry.type}</strong>
-                                        <div style={{display: 'flex', justifyContent: 'space-between', marginTop: '0.25rem'}}>
-                                            <span style={{fontSize: '0.8rem', color: '#64748b'}}>Chứng từ: {entry.ref}</span>
-                                            <span style={{fontSize: '0.85rem', fontWeight: 600}}>Dư: {entry.balance.toLocaleString()} ₫</span>
+                                        <div className="timeline-meta">
+                                            <span>Chứng từ: {entry.ref}</span>
+                                            <span>Dư: {entry.balance.toLocaleString()} ₫</span>
                                         </div>
                                     </div>
                                     {entry.ref !== '-' && (
@@ -80,7 +82,7 @@ export default function StudentArLedger({ student, onClose }) {
                     <button className="btn-secondary" onClick={() => window.print()}>
                         <FiFileText /> Xuất Sổ chi tiết (PDF)
                     </button>
-                    <p style={{fontSize: '0.75rem', color: '#94a3b8', marginTop: '1rem', textAlign: 'center'}}>
+                    <p className="ledger-footnote">
                         <FiClock /> Dữ liệu được cập nhật thời gian thực từ hệ thống kế toán.
                     </p>
                 </div>
