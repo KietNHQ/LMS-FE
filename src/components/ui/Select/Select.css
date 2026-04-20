@@ -252,70 +252,33 @@
 }
 
 /* TEACHER - Professional Teal */
+:root { --teacher-navy: #134e4a; }
 .teacher-layout .custom-dropdown-trigger.open {
-  border-color: var(--admin-primary);
-  box-shadow: 0 0 0 3px var(--admin-focus-ring);
+  border-color: var(--teacher-navy);
+  box-shadow: 0 0 0 4px rgba(19, 78, 74, 0.08);
 }
-
-.teacher-layout .ui-select__field:hover,
-.teacher-layout .custom-dropdown-trigger:hover {
-  border-color: var(--admin-primary-hover);
-  background-color: var(--admin-primary-soft);
-  box-shadow: var(--admin-shadow-md);
-}
-
-.teacher-layout .ui-select.is-focused .ui-select__chevron,
-.teacher-layout .custom-dropdown-trigger.open .dropdown-arrow {
-  color: var(--admin-primary);
-}
-
-.teacher-layout .custom-dropdown-item:hover {
-  background: var(--admin-primary-soft);
-  color: var(--admin-primary);
-}
-
 .teacher-layout .custom-dropdown-item.active {
-  background: linear-gradient(135deg, var(--admin-primary) 0%, var(--admin-primary-hover) 100%);
-  color: #ffffff;
-  font-weight: 700;
+  background: var(--teacher-navy);
 }
 
 /* PARENT - Royal Indigo */
+:root { --parent-navy: #312e81; }
 .parent-layout .custom-dropdown-trigger.open {
-  border-color: var(--admin-primary);
-  box-shadow: 0 0 0 3px var(--admin-focus-ring);
+  border-color: var(--parent-navy);
+  box-shadow: 0 0 0 4px rgba(49, 46, 129, 0.08);
 }
-
-.parent-layout .ui-select__field:hover,
-.parent-layout .custom-dropdown-trigger:hover {
-  border-color: var(--admin-primary-hover);
-  background-color: var(--admin-primary-soft);
-  box-shadow: var(--admin-shadow-md);
-}
-
-.parent-layout .ui-select.is-focused .ui-select__chevron,
-.parent-layout .custom-dropdown-trigger.open .dropdown-arrow {
-  color: var(--admin-primary);
-}
-
-.parent-layout .custom-dropdown-item:hover {
-  background: var(--admin-primary-soft);
-  color: var(--admin-primary);
-}
-
 .parent-layout .custom-dropdown-item.active {
-  background: linear-gradient(135deg, var(--admin-primary) 0%, var(--admin-primary-hover) 100%);
-  color: #ffffff;
-  font-weight: 700;
+  background: var(--parent-navy);
 }
 
 /* STUDENT - SaaS Blue */
+:root { --student-navy: #1e3a8a; }
 .student-layout .custom-dropdown-trigger.open {
-  border-color: var(--admin-primary);
-  box-shadow: 0 0 0 4px var(--admin-focus-ring);
+  border-color: var(--student-navy);
+  box-shadow: 0 0 0 4px rgba(30, 58, 138, 0.08);
 }
 .student-layout .custom-dropdown-item.active {
-  background: var(--admin-primary);
+  background: var(--student-navy);
 }
 
 /* Specific Adjustments for Principal Portal (usually uses admin-layout or defaults) */
