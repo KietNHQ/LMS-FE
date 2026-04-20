@@ -78,6 +78,13 @@ const upcomingQuizzes = [
         deadline: "2026-03-28",
         description: "Luyện kỹ năng đọc hiểu và phân tích nội dung văn bản.",
     },
+    {
+        title: "Kiểm tra Sinh học chương 3",
+        subject: "Sinh học",
+        meta: "45 phút - 30 câu",
+        deadline: "2026-04-02",
+        description: "Ôn tập về di truyền học và biến dị cơ bản.",
+    },
 ];
 
 const academicOverview = {
@@ -228,7 +235,10 @@ export default function StudentDashboard() {
                     }}
                   />
                 </div>
-                <SubjectRadar data={subjectData} />
+                <UpcomingTests
+                    quizzes={upcomingQuizzes}
+                    onOpenQuiz={() => navigate("/student/quiz")}
+                />
             </div>
 
 
@@ -238,10 +248,7 @@ export default function StudentDashboard() {
                     onOpenGrades={() => navigate("/student/grades")}
                 />
 
-                <UpcomingTests
-                    quizzes={upcomingQuizzes}
-                    onOpenQuiz={() => navigate("/student/quiz")}
-                />
+                <SubjectRadar data={subjectData} />
             </div>
         </div>
     );

@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { FiDollarSign, FiSearch, FiFileText, FiX, FiCheckCircle } from "react-icons/fi";
 import { toast } from "react-toastify";
 import { Pagination } from "../../../../components/common";
@@ -36,6 +36,10 @@ export default function FeeListTab() {
     const [issueEInvoice, setIssueEInvoice] = useState(true);
     const [transactionNote, setTransactionNote] = useState("");
 
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [filterStatus, filterScope, selectedGrade, selectedClass, searchQuery]);
+
     // Derived Logic: Available Classes based on Grade
     const availableClasses = useMemo(() => {
         if (!selectedGrade) return [];
@@ -64,6 +68,7 @@ export default function FeeListTab() {
         setModalData(student);
         setAmountPaid(student.reqAmount);
         setPaymentMethod("cash");
+        setIssueEInvoice(true);
         setTransactionNote("");
     };
 
@@ -72,14 +77,21 @@ export default function FeeListTab() {
         return Math.max(0, paid - (modalData?.reqAmount || 0));
     }, [amountPaid, modalData]);
 
+    const isUnderpaid = (amountPaid || 0) < (modalData?.reqAmount || 0);
+
     const handleAmountChange = (e) => {
         const val = e.target.value.replace(/\D/g, "");
         setAmountPaid(val ? parseInt(val) : 0);
     };
 
     const handleConfirmPayment = () => {
+        if (isUnderpaid) {
+            toast.error("Số tiền thu chưa đủ, vui lòng kiểm tra lại.");
+            return;
+        }
+
         setStudents(prev => prev.map(s => s.id === modalData.id ? { ...s, status: "paid" } : s));
-        toast.success(`Đã in hóa đơn và xác nhận thanh toán cho ${modalData.name}`);
+        toast.success(`Đã xác nhận thu tiền cho ${modalData.name}`);
         setModalData(null);
     };
 
@@ -171,12 +183,22 @@ export default function FeeListTab() {
                                 </td>
                                 <td>
                                     {s.status === 'paid' ? (
-                                        <button className="btn-secondary" onClick={() => toast.info("Đang tải hóa đơn PDF...")}>
-                                            <FiFileText /> Xem Hóa đơn
+                                        <button
+                                            className="fee-action-btn invoice"
+                                            onClick={() => toast.info("Đang tải hóa đơn PDF...")}
+                                            title="Xem hóa đơn"
+                                            aria-label={`Xem hóa đơn của ${s.name}`}
+                                        >
+                                            <FiFileText />
                                         </button>
                                     ) : (
-                                        <button className="btn-primary" onClick={() => handleOpenModal(s)}>
-                                            <FiDollarSign /> Thu Tiền
+                                        <button
+                                            className="fee-action-btn collect"
+                                            onClick={() => handleOpenModal(s)}
+                                            title="Thu tiền"
+                                            aria-label={`Thu tiền của ${s.name}`}
+                                        >
+                                            <FiDollarSign />
                                         </button>
                                     )}
                                 </td>
@@ -204,109 +226,93 @@ export default function FeeListTab() {
                 </div>
             )}
 
-            {/* Modal Thanh Toán Premium */}
+            {/* Modal Thu Tiền Nhanh */}
             {modalData && (
                 <div className="fee-modal-overlay">
-                    <div className="fee-modal wide">
+                    <div className="fee-modal fee-modal-quick-pay">
                         <div className="fee-modal-header">
-                            <div className="fm-title-group">
-                                <h3>Xác nhận Thanh Toán</h3>
-                                <span className="fm-subtitle">Mã chứng từ: HD-2026-{(Math.random()*10000).toFixed(0).padStart(4, '0')}</span>
+                            <div>
+                                <h3>Thu tiền học phí</h3>
+                                <p className="fm-modal-subtitle">Thao tác nhanh cho 1 học sinh</p>
                             </div>
                             <button className="btn-close-modal" onClick={() => setModalData(null)}>
                                 <FiX />
                             </button>
                         </div>
                         
-                        <div className="fee-modal-body grid-2">
-                            {/* Left Column: Info */}
-                            <div className="fm-info-section">
-                                <div className="fm-section-title">Thông tin đối tượng</div>
-                                <div className="fm-data-row">
-                                    <span>Học sinh:</span>
+                        <div className="fee-modal-body">
+                            <div className="fm-quick-head">
+                                <div className="fm-quick-student">
                                     <strong>{modalData.name}</strong>
+                                    <span>{modalData.id} | Lớp {modalData.class}</span>
                                 </div>
-                                <div className="fm-data-row">
-                                    <span>Mã HS / Lớp:</span>
-                                    <strong>{modalData.id} / {modalData.class}</strong>
-                                </div>
-                                
-                                <div className="fm-section-title" style={{ marginTop: '1.25rem' }}>Chi tiết khoản thu</div>
-                                <div className="fm-data-row">
-                                    <span>Nội dung:</span>
-                                    <strong>Học phí Học kỳ I (2026)</strong>
-                                </div>
-                                <div className="fm-data-row highlight">
-                                    <span>Tổng tiền phải thu:</span>
-                                    <strong className="text-primary">{modalData.amount} VNĐ</strong>
-                                </div>
-
-                                <div className="fm-section-title" style={{ marginTop: '1.25rem' }}>Tùy chọn</div>
-                                <div className="fm-option-row">
-                                    <label className="fm-checkbox-label">
-                                        <input 
-                                            type="checkbox" 
-                                            checked={issueEInvoice} 
-                                            onChange={(e) => setIssueEInvoice(e.target.checked)} 
-                                        />
-                                        Xuất hóa đơn điện tử
-                                    </label>
+                                <div className="fm-quick-due">
+                                    <span>Cần thu</span>
+                                    <strong>{modalData.amount} ₫</strong>
                                 </div>
                             </div>
 
-                            {/* Right Column: Collection */}
-                            <div className="fm-collect-section">
-                                <div className="fm-section-title">Thanh toán</div>
-                                
-                                <div className="fm-form-group">
-                                    <label>Phương thức thanh toán</label>
-                                    <select 
-                                        className="fee-select full-width" 
-                                        value={paymentMethod} 
-                                        onChange={(e) => setPaymentMethod(e.target.value)}
-                                    >
-                                        <option value="cash">Tiền mặt</option>
-                                        <option value="transfer">Chuyển khoản</option>
-                                        <option value="pos">Quẹt thẻ POS</option>
-                                    </select>
-                                </div>
-
-                                <div className="fm-form-group">
-                                    <label>Số tiền khách đưa <span className="required">*</span></label>
-                                    <div className="fm-input-with-label">
-                                        <input 
-                                            type="text" 
-                                            className="fee-input full-width large-text" 
-                                            value={formatMoney(amountPaid)}
-                                            onChange={handleAmountChange}
-                                        />
-                                        <span className="input-suffix">VNĐ</span>
-                                    </div>
-                                </div>
-
-                                {paymentMethod === 'cash' && (
-                                    <div className="fm-change-box">
-                                        <div className="change-label">Tiền thừa trả khách:</div>
-                                        <div className="change-value">{formatMoney(changeDue)} ₫</div>
-                                    </div>
-                                )}
-
-                                <div className="fm-form-group" style={{ marginTop: '1rem' }}>
-                                    <label>Ghi chú</label>
-                                    <textarea 
-                                        className="fee-input full-width fm-textarea" 
-                                        placeholder="Ghi chú thêm (nếu có)..."
-                                        value={transactionNote}
-                                        onChange={(e) => setTransactionNote(e.target.value)}
+                            <div className="fm-form-group">
+                                <label>Số tiền nhận <span className="required">*</span></label>
+                                <div className="fm-input-with-label">
+                                    <input
+                                        type="text"
+                                        className="fee-input full-width large-text"
+                                        value={formatMoney(amountPaid)}
+                                        onChange={handleAmountChange}
                                     />
+                                    <span className="input-suffix">VNĐ</span>
                                 </div>
+                            </div>
+
+                            <div className="fm-form-group">
+                                <label>Phương thức thanh toán</label>
+                                <div className="fm-method-grid">
+                                    {[{ value: "cash", label: "Tiền mặt" }, { value: "transfer", label: "Chuyển khoản" }, { value: "pos", label: "POS" }].map((method) => (
+                                        <button
+                                            key={method.value}
+                                            type="button"
+                                            className={`fm-method-btn ${paymentMethod === method.value ? "active" : ""}`}
+                                            onClick={() => setPaymentMethod(method.value)}
+                                        >
+                                            {method.label}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {paymentMethod === 'cash' && (
+                                <div className="fm-change-box">
+                                    <div className="change-label">Tiền thừa trả khách</div>
+                                    <div className="change-value">{formatMoney(changeDue)} ₫</div>
+                                </div>
+                            )}
+
+                            <label className="fm-checkbox-label">
+                                <input
+                                    type="checkbox"
+                                    checked={issueEInvoice}
+                                    onChange={(e) => setIssueEInvoice(e.target.checked)}
+                                />
+                                Xuất hóa đơn điện tử
+                            </label>
+
+                            <div className="fm-form-group">
+                                <label>Ghi chú (tùy chọn)</label>
+                                <input
+                                    type="text"
+                                    className="fee-input full-width"
+                                    placeholder="Ví dụ: thu đủ, phụ huynh nhận biên nhận"
+                                    value={transactionNote}
+                                    onChange={(e) => setTransactionNote(e.target.value)}
+                                />
                             </div>
                         </div>
 
                         <div className="fee-modal-footer">
                             <button className="btn-secondary" onClick={() => setModalData(null)}>Hủy bỏ</button>
-                            <button className="btn-primary" onClick={handleConfirmPayment}>
-                                <FiCheckCircle /> Xác nhận & In Biên lai
+                            <button className="btn-primary" onClick={handleConfirmPayment} disabled={isUnderpaid}>
+                                <FiCheckCircle /> Xác nhận thu tiền
                             </button>
                         </div>
                     </div>
