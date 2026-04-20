@@ -162,7 +162,8 @@ export default function ParentDashboard() {
             isCompact={true}
             eventTypes={CALENDAR_EVENT_TYPES}
             initialEvents={INITIAL_CALENDAR_EVENTS}
-
+            selectedSchoolYear="2025-2026"
+            selectedTerm={1}
             rolePolicy={{
               canCreate: false,
               canViewDetails: true,

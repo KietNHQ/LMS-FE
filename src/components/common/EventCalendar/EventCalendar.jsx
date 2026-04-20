@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import { FiPlus, FiChevronLeft, FiChevronRight } from "react-icons/fi";
 import Select from "../../ui/Select/Select";
@@ -6,9 +6,9 @@ import "./EventCalendar.css";
 
 const DEFAULT_EVENT_TYPES = [
   { value: "blue", label: "Ngày kiểm tra", description: "Thông báo kiểm tra" },
-  { value: "purple", label: "Sự kiện lớp", description: "Sự kiện cấp lớp" },
   { value: "red", label: "Ngày lễ", description: "Thông báo lễ" },
   { value: "orange", label: "Ngày nghỉ", description: "Thông báo nghỉ" },
+  { value: "teal", label: "Sự kiện lớp", description: "Sự kiện cấp lớp" },
 ];
 
 const DEFAULT_POLICY = {
@@ -50,6 +50,8 @@ const EventCalendar = ({
   userRole = "teacher", // 'admin' or 'teacher'
   currentUser = "", // The name/ID of the current logged-in user
   isCompact = false, // If true, apply more condensed styling
+  selectedSchoolYear = "",
+  selectedTerm = 1,
 }) => {
   const today = initialDate || new Date();
   const [currentDate, setCurrentDate] = useState(today);
@@ -68,10 +70,46 @@ const EventCalendar = ({
     color: eventTypes[0]?.value || "blue",
   });
 
-  // Sync events with props when they change
   useEffect(() => {
     if (initialEvents) setEvents(initialEvents);
   }, [initialEvents]);
+
+  // Jump to first month of term when it changes
+    useEffect(() => {
+    const now = new Date();
+    const currentYearStr = selectedSchoolYear ? selectedSchoolYear.split("-")[0] : String(now.getFullYear());
+    const targetYear = parseInt(currentYearStr, 10);
+    
+    let targetMonth;
+    // Handle both display names and internal state keys
+    const term = typeof selectedTerm === 'string' ? selectedTerm.toLowerCase() : selectedTerm;
+    
+    if (term === 1 || term === "hk1" || term === "học kỳ 1") {
+      targetMonth = 8; // September
+    } else if (term === 2 || term === "hk2" || term === "học kỳ 2") {
+      targetMonth = 1; // February
+    } else {
+      targetMonth = now.getMonth();
+    }
+    
+    if (!isNaN(targetYear)) {
+      const yearToSet = (term === 2 || term === "hk2" || term === "học kỳ 2") ? targetYear + 1 : targetYear;
+      setCurrentDate(new Date(yearToSet, targetMonth, 1));
+    }
+  }, [selectedTerm, selectedSchoolYear]);
+
+  // Check if current month visible in picker is in the active term
+  const isMonthInActiveTerm = useMemo(() => {
+    const month = currentDate.getMonth();
+    const term = typeof selectedTerm === 'string' ? selectedTerm.toLowerCase() : selectedTerm;
+    
+    if (term === 1 || term === "hk1" || term === "học kỳ 1") {
+      return month >= 8 || month <= 0; // Sept to Jan
+    } else if (term === 2 || term === "hk2" || term === "học kỳ 2") {
+      return month >= 1 && month <= 5; // Feb to June
+    }
+    return false;
+  }, [currentDate, selectedTerm]);
 
   const canCreate = rolePolicy?.canCreate ?? true;
   const canViewDetails = rolePolicy?.canViewDetails ?? true;
@@ -261,10 +299,21 @@ const EventCalendar = ({
   );
 
   return (
-    <div className={`event-calendar ${isCompact ? "event-calendar--compact" : ""} ${themeClass}`}>
+    <div className={`event-calendar ${isCompact ? "event-calendar--compact" : ""} ${themeClass} ${isMonthInActiveTerm ? "is-active-term" : ""}`}>
       <div className="event-calendar__header">
         <div className="event-calendar__title">
-          <h3>{title}</h3>
+          {title && <h3>{title}</h3>}
+          {selectedSchoolYear && (
+            <div className={`event-calendar__sync-badge ${isMonthInActiveTerm ? "is-active" : "is-out"}`}>
+              <div className="sync-badge__dot"></div>
+              <span>
+                {isMonthInActiveTerm 
+                  ? `${selectedTerm === 1 || selectedTerm === "hk1" || selectedTerm === "Học kỳ 1" ? "Học kỳ 1" : "Học kỳ 2"} • ${selectedSchoolYear}`
+                  : `Nằm ngoài ${selectedTerm === 1 || selectedTerm === "hk1" || selectedTerm === "Học kỳ 1" ? "Học kỳ 1" : "Học kỳ 2"}`
+                }
+              </span>
+            </div>
+          )}
         </div>
         {canCreate && (
           <button
@@ -281,9 +330,10 @@ const EventCalendar = ({
         <button onClick={() => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1))} className="event-calendar__btn-nav">
           <FiChevronLeft size={18} />
         </button>
-        <span className="event-calendar__month-year">
+        <div className="event-calendar__month-year">
           {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
-        </span>
+          {!isMonthInActiveTerm && <span className="month-year__warning"> (Ngoài kỳ học)</span>}
+        </div>
         <button onClick={() => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1))} className="event-calendar__btn-nav">
           <FiChevronRight size={18} />
         </button>

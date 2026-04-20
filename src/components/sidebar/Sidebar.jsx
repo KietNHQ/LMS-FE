@@ -3,7 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { sidebarConfig, roleTheme } from "./sidebar.config";
 import SidebarItem from "./SidebarItem";
 import ProfileDialog from "../common/Dialog/ProfileDialog/ProfileDialog";
-import { FiChevronLeft, FiLogOut, FiMenu, FiX } from "react-icons/fi";
+import PointConfigModal from "../../pages/vp-discipline/components/PointConfigModal";
+import { FiChevronLeft, FiLogOut, FiMenu, FiSettings, FiX } from "react-icons/fi";
 import { FaGraduationCap } from "react-icons/fa";
 import "./Sidebar.css";
 
@@ -33,6 +34,7 @@ export default function Sidebar({
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [isAtTop, setIsAtTop] = useState(getIsAtTop);
   const [isProfileDialogOpen, setIsProfileDialogOpen] = useState(false);
+  const [isPointConfigOpen, setIsPointConfigOpen] = useState(false);
   const [studentUnreadCount, setStudentUnreadCount] = useState(() => {
     const saved = Number(localStorage.getItem(STUDENT_UNREAD_COUNT_KEY));
     return Number.isFinite(saved) ? saved : 0;
@@ -338,18 +340,28 @@ export default function Sidebar({
                 </nav>
               </div>
 
-              <div className="sidebar-footer">
-                <button
-                    className="sidebar-logout-btn"
-                    onClick={handleLogout}
-                    type="button"
-                >
-                  <FiLogOut />
-                  <span>Đăng xuất</span>
-                </button>
+                <div className="sidebar-footer">
+                  {role === "vp_discipline" && (
+                    <button
+                        className="sidebar-config-btn"
+                        onClick={() => setIsPointConfigOpen(true)}
+                        type="button"
+                    >
+                      <FiSettings />
+                      <span>Cấu hình điểm</span>
+                    </button>
+                  )}
+                  <button
+                      className="sidebar-logout-btn"
+                      onClick={handleLogout}
+                      type="button"
+                  >
+                    <FiLogOut />
+                    <span>Đăng xuất</span>
+                  </button>
+                </div>
               </div>
             </div>
-          </div>
 
           {!isMobile && (
               <>
@@ -379,6 +391,16 @@ export default function Sidebar({
                 </div>
 
                 <div className="sidebar-footer">
+                  {role === "vp_discipline" && (
+                    <button
+                        className="sidebar-config-btn"
+                        onClick={() => setIsPointConfigOpen(true)}
+                        type="button"
+                    >
+                      <FiSettings />
+                      <span>Cấu hình điểm</span>
+                    </button>
+                  )}
                   <button
                       className="sidebar-logout-btn"
                       onClick={handleLogout}
@@ -391,6 +413,11 @@ export default function Sidebar({
               </>
           )}
         </aside>
+
+        <PointConfigModal
+          isOpen={isPointConfigOpen}
+          onClose={() => setIsPointConfigOpen(false)}
+        />
 
         <ProfileDialog
           open={isProfileDialogOpen}

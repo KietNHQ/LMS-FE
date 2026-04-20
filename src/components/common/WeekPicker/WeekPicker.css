@@ -1,61 +1,53 @@
-.common-week-picker {
+.common-week-picker.compact-pill {
   display: flex;
   align-items: center;
-  gap: 10px;
-  flex-wrap: wrap;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 30px;
+  padding: 3px;
+  gap: 6px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
 }
 
-.common-week-picker__label {
-  color: var(--text-secondary, #667085);
-  font-size: 13px;
-  font-weight: 700;
-}
-
-.common-week-picker__controls {
+.week-nav-btn.bordered {
+  width: 28px;
+  height: 28px;
   display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.common-week-picker__nav {
-  width: 34px;
-  height: 34px;
-  display: inline-flex;
   align-items: center;
   justify-content: center;
-  border-radius: 10px;
-  border: 1px solid var(--border-color, #d0d5dd);
-  background: #ffffff;
-  color: #344054;
+  border: 1px solid #eef2ff;
+  background: #f8fafc;
+  border-radius: 8px;
+  color: #475569;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  font-size: 0.9rem;
 }
 
-.common-week-picker__nav:hover:not(:disabled) {
-  border-color: #ab8bfa;
-  color: #6a45e7;
+.week-nav-btn.bordered:hover:not(:disabled) {
+  background: #eff6ff;
+  border-color: #bfdbfe;
+  color: #2563eb;
+  transform: translateY(-1px);
 }
 
-.common-week-picker__nav:disabled {
+.week-nav-btn.bordered:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.week-nav-btn.bordered:disabled {
+  opacity: 0.2;
   cursor: not-allowed;
-  opacity: 0.5;
+  background: #f1f5f9;
 }
 
-.common-week-picker__select {
-  min-width: 130px;
-  height: 34px;
-  border-radius: 10px;
-  border: 1px solid var(--border-color, #d0d5dd);
-  background: #ffffff;
-  padding: 0 10px;
-  color: #101828;
-  font-size: 14px;
-  font-weight: 600;
+.week-value-display.bold {
+  padding: 0 8px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #1e293b;
+  min-width: 90px;
+  text-align: center;
+  user-select: none;
+  letter-spacing: -0.02em;
 }
-
-.common-week-picker__select:focus {
-  outline: none;
-  border-color: #8f6cff;
-  box-shadow: 0 0 0 3px rgba(143, 108, 255, 0.14);
-}
-

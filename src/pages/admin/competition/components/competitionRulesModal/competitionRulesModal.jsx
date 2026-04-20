@@ -120,7 +120,6 @@ const CompetitionRulesModal = ({ isOpen, onClose, rules, onSave }) => {
                             <div className="rule-item highlight"><label>HSG Tỉnh/TP</label><input type="number" onFocus={(e) => { const target = e.target; setTimeout(() => target.select(), 0); }} value={localRules.academic_reward?.province || 0} onChange={(e) => updateNested('academic_reward', 'province', e.target.value)} /></div>
                             <div className="rule-item highlight"><label>HSG QG/QT</label><input type="number" onFocus={(e) => { const target = e.target; setTimeout(() => target.select(), 0); }} value={localRules.academic_reward?.national || 0} onChange={(e) => updateNested('academic_reward', 'national', e.target.value)} /></div>
                             <div className="rule-item highlight"><label>Tiến bộ rõ rệt</label><input type="number" onFocus={(e) => { const target = e.target; setTimeout(() => target.select(), 0); }} value={localRules.academic_reward?.improvement || 0} onChange={(e) => updateNested('academic_reward', 'improvement', e.target.value)} /></div>
-                            <div className="rule-item highlight"><label>Điểm TB {">"} 8.0</label><input type="number" onFocus={(e) => { const target = e.target; setTimeout(() => target.select(), 0); }} value={localRules.academic_reward?.high_avg || 0} onChange={(e) => updateNested('academic_reward', 'high_avg', e.target.value)} /></div>
                         </div>
 
                         <h5 className="sub-section-title mt-sm">Phong trào</h5>

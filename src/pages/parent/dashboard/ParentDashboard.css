@@ -26,11 +26,6 @@
 
 /* Card style for calendar */
 .parent-dashboard-calendar-card {
-  background: white;
-  padding: 24px;
-  border-radius: 20px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-  border: 1px solid var(--parent-border, #ede9fe);
   height: 100%;
   box-sizing: border-box;
 }

@@ -1,5 +1,5 @@
 import React from "react";
-import { PageHeader, SchoolYearTermSelector } from "../../../components/common";
+import { PageHeader, SchoolYearTermSelector, EventCalendar } from "../../../components/common";
 import { useSchoolYearTerm } from "../../../hooks/useSchoolYearTerm";
 import { 
     FiUsers, FiUserPlus, FiRepeat, FiBookOpen, 
@@ -9,6 +9,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import AcademicTimeline from "./components/AcademicTimeline";
 import SOPWidget from "./components/SOPWidget";
+import { INITIAL_CALENDAR_EVENTS, CALENDAR_EVENT_TYPES } from "../../../components/common/EventCalendar/eventData";
 import "./AcademicStaffDashboard.css";
 
 export default function AcademicStaffDashboard() {
@@ -35,7 +36,7 @@ export default function AcademicStaffDashboard() {
     ];
 
     return (
-        <div className="academic-dashboard-premium">
+        <div className="academic-dashboard-premium registrar-layout">
             <PageHeader
                 title="Cổng Điều Hành Giáo Vụ"
                 eyebrow="Quản trị Học vụ & Hồ sơ Pháp lý"
@@ -94,7 +95,31 @@ export default function AcademicStaffDashboard() {
                     </div>
 
                     {/* 3. Academic Timeline */}
+                    <div className="section-title" style={{marginTop: '2.5rem'}}>
+                        <h3>Chu trình học vụ hằng năm</h3>
+                        <p>Kế hoạch đào tạo và vận hành mốc thời gian</p>
+                    </div>
                     <AcademicTimeline />
+
+                    {/* 4. Registrar Operational Calendar */}
+                    <div style={{marginTop: '2.5rem'}}>
+                        <EventCalendar 
+                            title="Lịch Vận Hành Nghiệp Vụ"
+                            selectedSchoolYear={selectedSchoolYear}
+                            selectedTerm={selectedTerm}
+                            themeClass="theme-registrar"
+                            userRole="admin"
+                            isCompact={false}
+                            initialEvents={INITIAL_CALENDAR_EVENTS}
+                            eventTypes={CALENDAR_EVENT_TYPES}
+                            rolePolicy={{
+                                canCreate: false,
+                                canViewDetails: true,
+                                canEdit: false,
+                                canDelete: false
+                            }}
+                        />
+                    </div>
                 </div>
 
                 {/* RIGHT COLUMN: SOP & LEGAL */}

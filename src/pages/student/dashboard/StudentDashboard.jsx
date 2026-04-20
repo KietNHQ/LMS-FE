@@ -218,7 +218,8 @@ export default function StudentDashboard() {
                     isCompact={true}
                     eventTypes={CALENDAR_EVENT_TYPES}
                     initialEvents={INITIAL_CALENDAR_EVENTS}
-
+                    selectedSchoolYear={academicOverview.schoolYear}
+                    selectedTerm={1}
                     rolePolicy={{
                       canCreate: false,
                       canViewDetails: true,

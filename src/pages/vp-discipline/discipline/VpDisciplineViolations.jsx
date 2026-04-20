@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import { EmptyState, LoadingSpinner, PageHeader, Pagination, SchoolYearTermSelector } from "../../../components/common";
+import { EmptyState, LoadingSpinner, PageHeader, Pagination } from "../../../components/common";
+import DisciplineHeaderActions from "../components/DisciplineHeaderActions";
 import { useSchoolYearTerm } from "../../../hooks/useSchoolYearTerm";
 import { FiAlertTriangle, FiFileText, FiSearch, FiX } from "react-icons/fi";
 import { toast } from "react-toastify";
@@ -65,9 +66,8 @@ export default function VpDisciplineViolations() {
     <div className="vpd-violations">
       <PageHeader
         title="Ho so vi pham"
-        eyebrow="Tong hop va theo doi bien ban ne nep toan truong"
         actions={
-          <SchoolYearTermSelector
+          <DisciplineHeaderActions
             selectedSchoolYear={selectedSchoolYear}
             selectedTerm={selectedTerm}
             onYearChange={handleYearArrow}

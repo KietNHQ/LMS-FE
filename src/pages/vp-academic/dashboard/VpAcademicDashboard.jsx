@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { PageHeader, SchoolYearTermSelector } from "../../../components/common";
+import { PageHeader, SchoolYearTermSelector, EventCalendar } from "../../../components/common";
 import { useSchoolYearTerm } from "../../../hooks/useSchoolYearTerm";
 import { 
     FiCheckCircle, FiAlertTriangle, FiUnlock, FiTrendingDown, 
@@ -8,6 +8,7 @@ import {
 } from "react-icons/fi";
 import VpActionQueue from "./components/VpActionQueue";
 import OperationalAlerts from "./components/OperationalAlerts";
+import { INITIAL_CALENDAR_EVENTS, CALENDAR_EVENT_TYPES } from "../../../components/common/EventCalendar/eventData";
 import "./VpAcademicDashboard.css";
 
 export default function VpAcademicDashboard() {
@@ -31,7 +32,7 @@ export default function VpAcademicDashboard() {
     ];
 
     return (
-        <div className="vpa-cockpit">
+        <div className="vpa-cockpit academic-layout">
             <PageHeader
                 title="Trung Tâm Điều Hành Chuyên Môn"
                 eyebrow="Phó Hiệu trưởng Chuyên môn - Buồng lái vận hành học vụ"
@@ -125,6 +126,20 @@ export default function VpAcademicDashboard() {
 
                     {/* 4. Action Queue */}
                     <VpActionQueue />
+
+                    {/* 5. Integrated Operational Calendar */}
+                    <div style={{marginTop: '2.5rem'}}>
+                        <EventCalendar 
+                            title="Lịch Vận Hành Học Thuật"
+                            selectedSchoolYear={selectedSchoolYear}
+                            selectedTerm={selectedTerm}
+                            themeClass="theme-academic"
+                            userRole="admin"
+                            isCompact={false}
+                            initialEvents={INITIAL_CALENDAR_EVENTS}
+                            eventTypes={CALENDAR_EVENT_TYPES}
+                        />
+                    </div>
                 </div>
 
                 <div className="vpa-right-col">

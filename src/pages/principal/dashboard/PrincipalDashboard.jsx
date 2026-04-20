@@ -1,13 +1,14 @@
 import { useEffect, useState } from "react";
-import { PageHeader, SchoolYearTermSelector } from "../../../components/common";
+import { PageHeader, SchoolYearTermSelector, EventCalendar } from "../../../components/common";
 import { useSchoolYearTerm } from "../../../hooks/useSchoolYearTerm";
 import { adminDashboardService } from "../../../services/pages/admin/dashboard/dashboardService";
 import { 
     FiUsers, FiUserCheck, FiHome, FiDollarSign, FiStar, FiActivity, 
     FiShield, FiBell, FiTrendingUp, FiCheckCircle, FiBarChart2, FiAlertCircle,
-    FiArrowRight, FiTrendingDown
+    FiArrowRight, FiTrendingDown, FiCalendar
 } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
+import { INITIAL_CALENDAR_EVENTS, CALENDAR_EVENT_TYPES } from "../../../components/common/EventCalendar/eventData";
 import "./PrincipalDashboard.css";
 
 export default function PrincipalDashboard() {
@@ -248,6 +249,20 @@ export default function PrincipalDashboard() {
                         ))}
                     </div>
                 </div>
+            </div>
+            
+            {/* ── Operational Calendar ── */}
+            <div style={{marginTop: '1rem'}}>
+                <EventCalendar 
+                    title="Lịch Vận Hành Toàn Trường"
+                    selectedSchoolYear={selectedSchoolYear}
+                    selectedTerm={selectedTerm}
+                    themeClass="theme-admin"
+                    userRole="admin"
+                    isCompact={false}
+                    initialEvents={INITIAL_CALENDAR_EVENTS}
+                    eventTypes={CALENDAR_EVENT_TYPES}
+                />
             </div>
 
             {/* Premium Attention Footer */}

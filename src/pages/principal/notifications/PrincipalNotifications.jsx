@@ -89,7 +89,7 @@ export default function PrincipalNotifications() {
 
         const newNotif = {
             id: Date.now(),
-            title: `[CHỈ ĐẠO] ${formData.title}`,
+            title: formData.title,
             desc: formData.content,
             type: "directive",
             isRead: true,
@@ -245,7 +245,7 @@ export default function PrincipalNotifications() {
                         <input 
                             type="text" 
                             className="premium-input"
-                            placeholder="Vd: Chỉ đạo khẩn về công tác ôn thi..."
+                            placeholder="Ví dụ: Chỉ đạo khẩn về công tác ôn thi..."
                             value={formData.title}
                             onChange={e => setFormData({...formData, title: e.target.value})}
                         />

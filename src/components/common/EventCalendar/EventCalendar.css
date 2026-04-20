@@ -1,7 +1,76 @@
+/* THEME VARIABLES */
+.theme-admin {
+  --cal-active-bg: rgba(30, 47, 90, 0.03);
+  --cal-active-glow: rgba(30, 47, 90, 0.1);
+  --cal-active-border: rgba(30, 47, 90, 0.1);
+  --cal-active-text: #1e2f5a;
+  --cal-today-bg: #1e2f5a;
+}
+
+.theme-academic {
+  --cal-active-bg: rgba(5, 150, 105, 0.04);
+  --cal-active-glow: rgba(5, 150, 105, 0.1);
+  --cal-active-border: rgba(5, 150, 105, 0.1);
+  --cal-active-text: #059669;
+  --cal-today-bg: #059669;
+}
+
+.theme-registrar {
+  --cal-active-bg: rgba(37, 99, 235, 0.04);
+  --cal-active-glow: rgba(37, 99, 235, 0.1);
+  --cal-active-border: rgba(37, 99, 235, 0.1);
+  --cal-active-text: #2563eb;
+  --cal-today-bg: #2563eb;
+}
+
+.theme-discipline {
+  --cal-active-bg: rgba(220, 38, 38, 0.04);
+  --cal-active-glow: rgba(220, 38, 38, 0.1);
+  --cal-active-border: rgba(220, 38, 38, 0.1);
+  --cal-active-text: #dc2626;
+  --cal-today-bg: #dc2626;
+}
+
+.theme-teacher {
+  --cal-active-bg: rgba(20, 184, 166, 0.04);
+  --cal-active-glow: rgba(20, 184, 166, 0.1);
+  --cal-active-border: rgba(20, 184, 166, 0.1);
+  --cal-active-text: #14b8a6;
+  --cal-today-bg: #14b8a6;
+}
+
+.theme-student {
+  --cal-active-bg: rgba(37, 99, 235, 0.04);
+  --cal-active-glow: rgba(37, 99, 235, 0.1);
+  --cal-active-border: rgba(37, 99, 235, 0.1);
+  --cal-active-text: #2563eb;
+  --cal-today-bg: #2563eb;
+}
+
+.theme-parent {
+  --cal-active-bg: rgba(99, 102, 241, 0.04);
+  --cal-active-glow: rgba(99, 102, 241, 0.1);
+  --cal-active-border: rgba(99, 102, 241, 0.1);
+  --cal-active-text: #6366f1;
+  --cal-today-bg: #6366f1;
+}
+
 .event-calendar {
   display: flex;
   flex-direction: column;
   gap: 16px;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: 20px;
+  padding: 1.5rem;
+  background: #ffffff;
+  border: 1px solid var(--admin-border, #dce5f7);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+}
+
+.event-calendar.is-active-term {
+  box-shadow: 0 10px 25px var(--cal-active-glow, rgba(30, 47, 90, 0.05));
+  background: #ffffff;
+  border: 1px solid var(--cal-active-border, rgba(30, 47, 90, 0.2));
 }
 
 .event-calendar__header {
@@ -23,7 +92,7 @@
   width: 40px;
   height: 40px;
   border-radius: 8px;
-  background: var(--admin-primary, #14b8a6);
+  background: var(--cal-today-bg, #1e2f5a);
   color: white;
   border: none;
   display: flex;
@@ -65,12 +134,90 @@
   border-color: var(--admin-border-strong, #c3d2ef);
 }
 
+.event-calendar__title {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.event-calendar__sync-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 10px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #64748b;
+  width: fit-content;
+  transition: all 0.3s ease;
+}
+
+.event-calendar__sync-badge.is-active {
+  background: var(--cal-active-bg, rgba(20, 184, 166, 0.05));
+  border-color: var(--cal-active-border, rgba(20, 184, 166, 0.2));
+  color: var(--cal-active-text, #14b8a6);
+}
+
+.event-calendar__sync-badge.is-out {
+  background: rgba(241, 245, 249, 0.5);
+  border-style: dashed;
+  color: #94a3b8;
+  opacity: 0.8;
+}
+
+.sync-badge__dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  box-shadow: 0 0 8px currentColor;
+}
+
+.event-calendar__sync-badge.is-active .sync-badge__dot {
+  animation: pulse-sync 2s infinite;
+}
+
+@keyframes pulse-sync {
+  0% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.5); opacity: 0.5; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
 .event-calendar__month-year {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
   font-weight: 700;
   font-size: clamp(14px, 1vw, 18px);
   color: var(--admin-text-primary, #1e2f5a);
   flex: 1;
   text-align: center;
+  transition: all 0.3s ease;
+}
+
+.month-year__warning {
+  color: #ef4444;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+/* FOCUS MODE: Blur/Fade out-of-term content */
+.event-calendar:not(.is-active-term) .event-calendar__grid,
+.event-calendar:not(.is-active-term) .event-calendar__weekdays {
+  filter: grayscale(0.9) opacity(0.35) blur(0.4px);
+  transition: all 0.5s ease;
+}
+
+.event-calendar.is-active-term .event-calendar__month-year {
+  color: var(--cal-active-text, #14b8a6);
+  text-shadow: 0 0 10px var(--cal-active-glow, rgba(20, 184, 166, 0.2));
+  transform: scale(1.05);
 }
 
 .event-calendar__weekdays {
@@ -97,9 +244,9 @@
 .event-calendar__day {
   min-height: clamp(60px, 8vh, 100px); /* Flexible height instead of aspect-ratio */
   background: #ffffff;
-  border: 1px solid var(--admin-border, #dce5f7);
+  border: 1px solid #f1f5f9;
   border-radius: clamp(6px, 0.8vw, 12px);
-  padding: 8px 4px; /* Increased padding */
+  padding: 8px 4px;
   position: relative;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -149,8 +296,8 @@
 }
 
 .event-calendar__day--today {
-  border: 2px solid var(--admin-primary, #14b8a6);
-  background: var(--admin-primary, #14b8a6);
+  border: 2px solid var(--cal-today-bg, #1e2f5a);
+  background: var(--cal-today-bg, #1e2f5a);
   font-weight: 800;
 }
 
@@ -161,6 +308,12 @@
 .event-calendar__day:hover:not(.event-calendar__day--empty) {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   transform: translateY(-2px);
+  border-color: var(--admin-primary, #14b8a6);
+}
+
+.is-active-term .event-calendar__day:not(.event-calendar__day--empty):not(.event-calendar__day--today) {
+  background: var(--cal-active-bg, rgba(30, 47, 90, 0.05));
+  border-color: var(--cal-active-border, rgba(30, 47, 90, 0.1));
 }
 
 .event-calendar__day-number {
@@ -199,16 +352,20 @@
   background: var(--cal-blue);
 }
 
+.event-calendar__event--purple {
+  background: var(--cal-purple, #a855f7);
+}
+
 .event-calendar__event--red {
-  background: var(--cal-red);
+  background: var(--cal-red, #ef4444);
 }
 
 .event-calendar__event--orange {
-  background: var(--cal-orange);
+  background: var(--cal-orange, #f59e0b);
 }
 
 .event-calendar__event--teal {
-  background: var(--cal-teal);
+  background: var(--cal-teal, #14b8a6);
 }
 
 .event-calendar__legend {

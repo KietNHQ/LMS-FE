@@ -1,76 +1,47 @@
-import { FiChevronLeft, FiChevronRight } from "react-icons/fi";
+import { IoCaretBack, IoCaretForward } from "react-icons/io5";
 import "./WeekPicker.css";
-
-function getDefaultWeeks(totalWeeks = 35) {
-  return Array.from({ length: totalWeeks }, (_, index) => ({
-	value: index + 1,
-	label: `Tuần ${index + 1}`,
-  }));
-}
 
 export default function WeekPicker({
   value = 1,
   onChange,
   totalWeeks = 35,
-  weeks,
-  label = "Tuần học",
+  label = "Tuần",
 }) {
-  const options = weeks?.length ? weeks : getDefaultWeeks(totalWeeks);
-
-  const handleWeekChange = (newValue) => {
-	if (typeof onChange === "function") {
-	  onChange(newValue);
-	}
-  };
-
   const handlePrev = () => {
-	if (value <= 1) return;
-	handleWeekChange(value - 1);
+    if (value <= 1) return;
+    onChange(value - 1);
   };
 
   const handleNext = () => {
-	if (value >= options.length) return;
-	handleWeekChange(value + 1);
+    if (value >= totalWeeks) return;
+    onChange(value + 1);
   };
 
   return (
-	<div className="common-week-picker" aria-label="Bo chon tuan">
-	  <span className="common-week-picker__label">{label}</span>
+    <div className="common-week-picker compact-pill">
+      <button
+        type="button"
+        className="week-nav-btn bordered"
+        onClick={handlePrev}
+        disabled={value <= 1}
+        aria-label="Tuần trước"
+      >
+        <IoCaretBack />
+      </button>
 
-	  <div className="common-week-picker__controls">
-		<button
-		  type="button"
-		  className="common-week-picker__nav"
-		  onClick={handlePrev}
-		  disabled={value <= 1}
-		  aria-label="Tuần trước"
-		>
-		  <FiChevronLeft />
-		</button>
+      <div className="week-value-display bold">
+        {label} {value}/{totalWeeks}
+      </div>
 
-		<select
-		  className="common-week-picker__select"
-		  value={value}
-		  onChange={(event) => handleWeekChange(Number(event.target.value))}
-		>
-		  {options.map((option) => (
-			<option key={option.value} value={option.value}>
-			  {option.label}
-			</option>
-		  ))}
-		</select>
-
-		<button
-		  type="button"
-		  className="common-week-picker__nav"
-		  onClick={handleNext}
-		  disabled={value >= options.length}
-		  aria-label="Tuần sau"
-		>
-		  <FiChevronRight />
-		</button>
-	  </div>
-	</div>
+      <button
+        type="button"
+        className="week-nav-btn bordered"
+        onClick={handleNext}
+        disabled={value >= totalWeeks}
+        aria-label="Tuần sau"
+      >
+        <IoCaretForward />
+      </button>
+    </div>
   );
 }
-

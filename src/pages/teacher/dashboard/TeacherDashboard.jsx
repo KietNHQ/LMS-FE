@@ -52,9 +52,11 @@ const TeacherDashboard = () => {
             themeClass="theme-teacher"
             userRole="teacher"
             isCompact={true}
-            currentUser="Lê Minh Hoàng"
+            currentUser="Lê Minh hoàng"
             eventTypes={CALENDAR_EVENT_TYPES}
             initialEvents={INITIAL_CALENDAR_EVENTS}
+            selectedSchoolYear={selectedSchoolYear}
+            selectedTerm={selectedTerm}
             rolePolicy={{
               canCreate: true,
               canViewDetails: true,

@@ -1,12 +1,13 @@
 import { useState } from "react";
-import { PageHeader, SchoolYearTermSelector } from "../../../components/common";
+import { PageHeader, WeekPicker } from "../../../components/common";
+import DisciplineHeaderActions from "../components/DisciplineHeaderActions";
 import { useSchoolYearTerm } from "../../../hooks/useSchoolYearTerm";
 import { FiAward, FiArrowUp, FiArrowDown, FiMinus, FiTrendingUp, FiTrendingDown, FiDownload } from "react-icons/fi";
 import "./VpDisciplineCompetition.css";
 
 export default function VpDisciplineCompetition() {
     const { selectedSchoolYear, selectedTerm, handleYearArrow, handleTermChange } = useSchoolYearTerm();
-    const [filterTime, setFilterTime] = useState("week_12"); // mock tuần 12
+    const [selectedWeek, setSelectedWeek] = useState(12); // mock tuần 12
 
     const rankingData = [
         { rank: 1, class: "12A1", homeroom: "Nguyễn Vĩ C", points: 98.5, trend: "up", change: 2 },
@@ -20,9 +21,8 @@ export default function VpDisciplineCompetition() {
         <div className="vp-competition">
             <PageHeader
                 title="Xếp Hạng Thi Đua"
-                eyebrow="Bảng điểm nề nếp và xếp loại các lớp toàn trường"
                 actions={
-                    <SchoolYearTermSelector
+                    <DisciplineHeaderActions
                         selectedSchoolYear={selectedSchoolYear}
                         selectedTerm={selectedTerm}
                         onYearChange={handleYearArrow}
@@ -33,18 +33,18 @@ export default function VpDisciplineCompetition() {
 
             <div className="comp-toolbar">
                 <div className="comp-filter">
-                    <select className="comp-select" value={filterTime} onChange={e => setFilterTime(e.target.value)}>
-                        <option value="week_12">Tuần 12 (Hiện tại)</option>
-                        <option value="week_11">Tuần 11</option>
-                        <option value="month_10">Tháng 10</option>
-                        <option value="term_1">Học Kỳ 1</option>
-                    </select>
                     <select className="comp-select">
                         <option value="all">Tất cả Khối</option>
                         <option value="10">Khối 10</option>
                         <option value="11">Khối 11</option>
                         <option value="12">Khối 12</option>
                     </select>
+
+                    <WeekPicker 
+                        value={selectedWeek} 
+                        onChange={setSelectedWeek} 
+                        totalWeeks={35}
+                    />
                 </div>
                 <button className="btn-secondary" style={{padding: '0.625rem 1rem', background: '#f8fafc', border: '1px solid #cbd5e1', borderRadius: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem'}}>
                     <FiDownload /> Xuất báo cáo Thi Đua

@@ -1,13 +1,14 @@
 import { useState, useEffect } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
-import { PageHeader, SchoolYearTermSelector } from "../../../components/common";
+import { PageHeader, SchoolYearTermSelector, EventCalendar } from "../../../components/common";
 import { useSchoolYearTerm } from "../../../hooks/useSchoolYearTerm";
 import { 
     FiUsers, FiUserCheck, FiAward, FiDollarSign, FiAlertTriangle, 
     FiPieChart, FiTrendingUp, FiCheckCircle, FiActivity, FiArrowRight,
-    FiChevronDown, FiChevronUp, FiLogOut, FiArrowLeft
+    FiChevronDown, FiChevronUp, FiLogOut, FiArrowLeft, FiCalendar
 } from "react-icons/fi";
 import TeacherStructure from "./components/TeacherStructure";
+import { INITIAL_CALENDAR_EVENTS, CALENDAR_EVENT_TYPES } from "../../../components/common/EventCalendar/eventData";
 import "./PrincipalOverview.css";
 
 export default function PrincipalOverview() {
@@ -721,8 +722,21 @@ export default function PrincipalOverview() {
                                 </div>
                             </div>
                         </div>
-                    </div>
                 )}
+            </div>
+
+            {/* INTEGRATED OPERATIONAL CALENDAR (Full Width) */}
+            <div style={{marginTop: '2rem'}}>
+                <EventCalendar 
+                    title="Lịch Vận Hành Toàn Trường"
+                    selectedSchoolYear={selectedSchoolYear}
+                    selectedTerm={selectedTerm}
+                    themeClass="theme-admin"
+                    userRole="admin"
+                    isCompact={false}
+                    initialEvents={INITIAL_CALENDAR_EVENTS}
+                    eventTypes={CALENDAR_EVENT_TYPES}
+                />
             </div>
 
             {/* ARREARS MODAL */}

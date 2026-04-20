@@ -281,6 +281,57 @@
   background: var(--student-navy);
 }
 
+/* DISCIPLINE - Red */
+.vp-discipline-layout .custom-dropdown-trigger.open,
+.discipline-layout .custom-dropdown-trigger.open {
+  border-color: #dc2626;
+  box-shadow: 0 0 0 4px rgba(220, 38, 38, 0.08);
+}
+.vp-discipline-layout .custom-dropdown-item.active,
+.discipline-layout .custom-dropdown-item.active {
+  background: #dc2626;
+}
+
+/* ACADEMIC - Emerald */
+.vp-academic-layout .custom-dropdown-trigger.open,
+.academic-layout .custom-dropdown-trigger.open {
+  border-color: #059669;
+  box-shadow: 0 0 0 4px rgba(5, 150, 105, 0.08);
+}
+.vp-academic-layout .custom-dropdown-item.active,
+.academic-layout .custom-dropdown-item.active {
+  background: #059669;
+}
+
+/* REGISTRAR / ACADEMIC STAFF - Blue */
+.academic-staff-layout .custom-dropdown-trigger.open,
+.registrar-layout .custom-dropdown-trigger.open {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.08);
+}
+.academic-staff-layout .custom-dropdown-item.active,
+.registrar-layout .custom-dropdown-item.active {
+  background: #2563eb;
+}
+
+/* FINANCE - Indigo */
+.finance-layout .custom-dropdown-trigger.open {
+  border-color: #4f46e5;
+  box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.08);
+}
+.finance-layout .custom-dropdown-item.active {
+  background: #4f46e5;
+}
+
+/* PRINCIPAL - Deep Navy (Fallback) */
+.principal-layout .custom-dropdown-trigger.open {
+  border-color: #0f172a;
+  box-shadow: 0 0 0 4px rgba(15, 23, 42, 0.08);
+}
+.principal-layout .custom-dropdown-item.active {
+  background: #0f172a;
+}
+
 /* Specific Adjustments for Principal Portal (usually uses admin-layout or defaults) */
 .principal-approvals .ui-select {
   flex-shrink: 0;

@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
-import { PageHeader, SchoolYearTermSelector } from "../../../components/common";
+import { PageHeader } from "../../../components/common";
+import DisciplineHeaderActions from "../components/DisciplineHeaderActions";
 import { useSchoolYearTerm } from "../../../hooks/useSchoolYearTerm";
 import {
   FiClock,
@@ -274,9 +275,8 @@ export default function VpDisciplineAttendance() {
     <div className="vp-attendance">
       <PageHeader
         title="Quản lý Chuyên cần"
-        eyebrow="Theo dõi sĩ số, bất thường và xử lý nhanh trong ngày"
         actions={
-          <SchoolYearTermSelector
+          <DisciplineHeaderActions
             selectedSchoolYear={selectedSchoolYear}
             selectedTerm={selectedTerm}
             onYearChange={handleYearArrow}

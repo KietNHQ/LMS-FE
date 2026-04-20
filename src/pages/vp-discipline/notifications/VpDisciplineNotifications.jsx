@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { PageHeader, SchoolYearTermSelector } from "../../../components/common";
+import { PageHeader } from "../../../components/common";
+import DisciplineHeaderActions from "../components/DisciplineHeaderActions";
 import { useSchoolYearTerm } from "../../../hooks/useSchoolYearTerm";
 import { FiBell, FiEdit3, FiCheck, FiClock, FiSend, FiUsers } from "react-icons/fi";
 import { toast } from "react-toastify";
@@ -52,9 +53,8 @@ export default function VpDisciplineNotifications() {
         <div className="vp-notifications">
             <PageHeader
                 title="Thông Báo Nề Nếp & Kỷ Luật"
-                eyebrow="Gửi thông báo vi phạm, thi đua đến học sinh và giáo viên"
                 actions={
-                    <SchoolYearTermSelector
+                    <DisciplineHeaderActions
                         selectedSchoolYear={selectedSchoolYear}
                         selectedTerm={selectedTerm}
                         onYearChange={handleYearArrow}
@@ -117,7 +117,7 @@ export default function VpDisciplineNotifications() {
                                 <input 
                                     type="text" 
                                     className="form-input" 
-                                    placeholder="Vd: Chấn chỉnh tác phong đồng phục tuần 12"
+                                    placeholder="Ví dụ: Chấn chỉnh tác phong đồng phục tuần 12"
                                     value={formData.title}
                                     onChange={e => setFormData({...formData, title: e.target.value})}
                                 />

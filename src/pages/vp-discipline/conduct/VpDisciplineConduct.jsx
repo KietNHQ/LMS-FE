@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { PageHeader, SchoolYearTermSelector } from "../../../components/common";
+import { PageHeader } from "../../../components/common";
+import DisciplineHeaderActions from "../components/DisciplineHeaderActions";
 import { useSchoolYearTerm } from "../../../hooks/useSchoolYearTerm";
 import { FiAward, FiAlertCircle } from "react-icons/fi";
 import { toast } from "react-toastify";
@@ -32,9 +33,8 @@ export default function VpDisciplineConduct() {
         <div className="vp-conduct">
             <PageHeader
                 title="Đánh Giá Hạnh Kiểm"
-                eyebrow="Xét duyệt và quản lý hạnh kiểm học sinh"
                 actions={
-                    <SchoolYearTermSelector
+                    <DisciplineHeaderActions
                         selectedSchoolYear={selectedSchoolYear}
                         selectedTerm={selectedTerm}
                         onYearChange={handleYearArrow}
