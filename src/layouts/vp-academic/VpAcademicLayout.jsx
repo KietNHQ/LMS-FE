@@ -7,7 +7,7 @@ export default function VpAcademicLayout() {
     const [isCollapsed, setIsCollapsed] = useState(false);
 
     return (
-        <div className={`vp-academic-layout ${isCollapsed ? "collapsed" : ""}`}>
+        <div className={`vp-academic-layout theme-vp_academic ${isCollapsed ? "collapsed" : ""}`}>
             <Sidebar
                 role="vp_academic"
                 userName="Phó Hiệu Trưởng"

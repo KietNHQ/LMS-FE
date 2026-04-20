@@ -7,7 +7,7 @@ export default function AcademicStaffLayout() {
     const [isCollapsed, setIsCollapsed] = useState(false);
 
     return (
-        <div className={`academic-staff-layout ${isCollapsed ? "collapsed" : ""}`}>
+        <div className={`academic-staff-layout theme-academic_staff ${isCollapsed ? "collapsed" : ""}`}>
             <Sidebar
                 role="academic_staff"
                 userName="Giáo Vụ"

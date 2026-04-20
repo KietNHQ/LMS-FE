@@ -43,47 +43,47 @@ export const roleTheme = {
     admin: {
         label: "Cổng Quản Trị",
         shortLabel: "SA",
-        className: "role-admin"
+        className: "theme-admin"
     },
     principal: {
         label: "Cổng Hiệu Trưởng",
         shortLabel: "HT",
-        className: "role-admin"
+        className: "theme-principal"
     },
     vp_academic: {
         label: "PHT Chuyên Môn",
         shortLabel: "CM",
-        className: "role-admin"
+        className: "theme-vp_academic"
     },
     vp_discipline: {
         label: "PHT Nề Nếp",
         shortLabel: "NN",
-        className: "role-admin"
+        className: "theme-vp_discipline"
     },
     academic_staff: {
         label: "Cổng Giáo Vụ",
         shortLabel: "GV",
-        className: "role-admin"
+        className: "theme-academic_staff"
     },
     finance_staff: {
         label: "Cổng Kế Toán",
         shortLabel: "KT",
-        className: "role-admin"
+        className: "theme-finance_staff"
     },
     teacher: {
         label: "Cổng Giáo Viên",
         shortLabel: "G",
-        className: "role-teacher"
+        className: "theme-teacher"
     },
     student: {
         label: "Cổng Học Sinh",
         shortLabel: "H",
-        className: "role-student"
+        className: "theme-student"
     },
     parent: {
         label: "Cổng Phụ Huynh",
         shortLabel: "P",
-        className: "role-parent"
+        className: "theme-parent"
     }
 };
 
@@ -127,9 +127,13 @@ export const sidebarConfig = {
     vp_discipline: [
         { label: "Trang chủ",       icon: FiGrid,          path: "/vp-discipline/dashboard" },
         { label: "Quản Lý Nề Nếp",  icon: FiAlertTriangle, path: "/vp-discipline/discipline-management" },
+        { label: "Hồ Sơ Vi Phạm",   icon: FiFileText,      path: "/vp-discipline/discipline" },
+        { label: "Sự Vụ",           icon: FiAlertCircle,   path: "/vp-discipline/incidents" },
         { label: "Xếp Hạng Thi Đua",icon: FiStar,          path: "/vp-discipline/competition" },
         { label: "Chuyên Cần",      icon: FiActivity,      path: "/vp-discipline/attendance" },
         { label: "Hạnh Kiểm",       icon: FiAward,         path: "/vp-discipline/conduct" },
+        { label: "Phê Duyệt",       icon: FiCheckSquare,   path: "/vp-discipline/approvals" },
+        { label: "Báo Cáo",         icon: FiBarChart2,     path: "/vp-discipline/reports" },
         { label: "Thông Báo",       icon: FiBell,          path: "/vp-discipline/notifications" },
     ],
 
@@ -148,10 +152,13 @@ export const sidebarConfig = {
     finance_staff: [
         { label: "Trang chủ",           icon: FiGrid,       path: "/finance/dashboard" },
         { label: "Quản Lý Thu Phí",    icon: FiCreditCard, path: "/finance/fee-management" },
-        { label: "Thanh Toán & Hóa Đơn",icon: FiRepeat,     path: "/finance/payment-hub" },
+        { label: "Công nợ & Thanh toán",icon: FiRepeat,     path: "/finance/payment-hub" },
+        { label: "Phê Duyệt",           icon: FiCheckSquare, path: "/finance/approvals" },
         { label: "Báo Cáo Tài Chính",   icon: FiBarChart2,  path: "/finance/reports" },
+        { label: "Nhật Ký Kiểm Toán",    icon: FiShield,     path: "/finance/audit-log" },
         { label: "Thông Báo",           icon: FiBell,       path: "/finance/notifications" },
     ],
+
 
     teacher: [
         { label: "Trang chủ", icon: FiGrid, path: "/teacher/dashboard" },

@@ -16,6 +16,7 @@
   top: 0;
   left: 0;
   overflow: visible;
+  background: var(--sidebar-bg, #1e2f5a);
   transition:
           width 0.3s ease,
           padding 0.3s ease,
@@ -90,22 +91,7 @@
   background: transparent;
 }
 
-/* ===== ROLE COLORS ===== */
-.sidebar.role-admin {
-  background: linear-gradient(180deg, #2b3f6f 0%, #152340 100%);
-}
-
-.sidebar.role-teacher {
-  background: linear-gradient(180deg, #11c7b6 0%, #04a094 100%);
-}
-
-.sidebar.role-student {
-  background: linear-gradient(180deg, #6092e6 0%, #0c53d5 100%);
-}
-
-.sidebar.role-parent {
-  background: linear-gradient(180deg, #b68af8 0%, #885def 100%);
-}
+/* Roles theme is now handled via --sidebar-bg in variables.css */
 
 /* ===== TOGGLE BUTTON ===== */
 .sidebar-toggle-btn {
@@ -158,18 +144,6 @@
   transform: rotate(180deg);
 }
 
-.sidebar.role-admin .sidebar-toggle-btn svg {
-  color: #1e2f5a;
-}
-
-.sidebar.role-teacher .sidebar-toggle-btn svg {
-  color: #0d9488;
-}
-
-.sidebar.role-student .sidebar-toggle-btn svg {
-  color: #588fef;
-}
-
-.sidebar.role-parent .sidebar-toggle-btn svg {
-  color: #b899e6;
+.sidebar-toggle-btn svg {
+  color: var(--admin-primary);
 }

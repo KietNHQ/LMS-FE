@@ -1,131 +1,219 @@
-.academic-records {
+.academic-records-premium {
+    animation: fadeIn 0.4s ease-out;
+}
+
+.records-main-content {
+    background: #fff;
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--admin-border);
+    box-shadow: var(--admin-shadow-sm);
+    margin-top: 1.5rem;
+    overflow: hidden;
+    min-height: 600px;
+}
+
+/* Split View for Transcripts */
+.records-split-view {
     display: flex;
-    flex-direction: column;
-    gap: 1.5rem;
-    padding-bottom: 2rem;
+    height: 600px;
 }
 
-.records-grid {
-    display: grid;
-    grid-template-columns: 300px 1fr;
-    gap: 1.5rem;
-    align-items: start;
-}
-
-/* ── Left Sidebar (Class/Student List) ── */
 .records-sidebar {
-    background: #ffffff;
-    border-radius: 0.75rem;
-    padding: 1.5rem;
-    border: 1px solid #e2e8f0;
-    box-shadow: 0 1px 3px 0 rgba(0,0,0,0.1), 0 1px 2px -1px rgba(0,0,0,0.1);
+    width: 300px;
+    border-right: 1px solid var(--admin-border);
     display: flex;
     flex-direction: column;
-    gap: 1rem;
+    background: var(--admin-surface-soft);
 }
-.rs-header h3 {
-    margin: 0 0 0.5rem 0;
-    font-size: 1rem;
-    color: #0f172a;
+
+.rs-filter {
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    border-bottom: 1px solid var(--admin-border);
 }
-.rs-select {
-    width: 100%;
-    padding: 0.625rem 1rem;
-    border: 1px solid #cbd5e1;
-    border-radius: 0.5rem;
+
+.search-box-mini {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: #fff;
+    border: 1px solid var(--admin-border);
+    padding: 0.5rem 0.75rem;
+    border-radius: var(--radius-md);
+}
+
+.search-box-mini input {
+    border: none;
     outline: none;
-    font-size: 0.875rem;
+    font-size: 0.85rem;
+    width: 100%;
+}
+
+.rs-select-mini {
+    padding: 0.5rem;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--admin-border);
+    font-size: 0.85rem;
 }
 
 .student-list {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-    max-height: 400px;
+    flex: 1;
     overflow-y: auto;
 }
-.student-item {
-    padding: 0.75rem 1rem;
-    border: 1px solid #e2e8f0;
-    border-radius: 0.5rem;
-    cursor: pointer;
-    transition: all 0.2s;
-    background: #f8fafc;
-}
-.student-item:hover {
-    background: #eff6ff;
-    border-color: #bfdbfe;
-}
-.student-item.active {
-    background: #1e3a8a;
-    color: #ffffff;
-    border-color: #1e3a8a;
-}
-.student-item.active .si-id { color: #bfdbfe; }
-.si-name { font-weight: 500; font-size: 0.9rem; margin-bottom: 0.2rem; }
-.si-id { font-size: 0.75rem; color: #64748b; }
 
-/* ── Right Content (Details & Grades) ── */
-.records-content {
-    background: #ffffff;
-    border-radius: 0.75rem;
-    padding: 1.5rem;
-    border: 1px solid #e2e8f0;
-    box-shadow: 0 1px 3px 0 rgba(0,0,0,0.1), 0 1px 2px -1px rgba(0,0,0,0.1);
+.student-item-card {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border-bottom: 1px solid rgba(0,0,0,0.03);
 }
-.rc-placeholder {
+
+.student-item-card:hover {
+    background: #fff;
+}
+
+.student-item-card.active {
+    background: #fff;
+    border-left: 4px solid var(--admin-primary);
+    box-shadow: var(--admin-shadow-sm);
+}
+
+.si-avatar {
+    width: 2.5rem;
+    height: 2.5rem;
+    background: var(--admin-primary);
+    color: #fff;
+    border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    height: 300px;
-    color: #94a3b8;
-    font-size: 0.9rem;
+    font-weight: 800;
 }
 
-.rc-header {
+.si-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.si-name {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--admin-text-primary);
+}
+
+.si-meta {
+    font-size: 0.75rem;
+    color: var(--admin-text-muted);
+}
+
+.records-details {
+    flex: 1;
+    overflow-y: auto;
+    background: #fff;
+}
+
+.empty-selection {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: var(--admin-text-muted);
+    text-align: center;
+    padding: 2rem;
+}
+
+.empty-icon {
+    font-size: 4rem;
+    opacity: 0.1;
+    margin-bottom: 1rem;
+}
+
+/* Transcript Styles */
+.transcript-preview {
+    padding: 2rem;
+}
+
+.tp-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 1.5rem;
+    margin-bottom: 2rem;
     padding-bottom: 1rem;
-    border-bottom: 1px solid #e2e8f0;
-}
-.rc-student-info h2 {
-    margin: 0 0 0.25rem 0;
-    font-size: 1.25rem;
-    color: #0f172a;
-}
-.rc-student-info p {
-    margin: 0;
-    font-size: 0.875rem;
-    color: #64748b;
+    border-bottom: 2px solid var(--admin-surface-soft);
 }
 
-.table-wrap { width: 100%; overflow-x: auto; }
-.grades-table {
+.tp-student h3 {
+    margin: 0 0 0.25rem;
+    font-size: 1.5rem;
+    color: var(--admin-text-primary);
+}
+
+.tp-student span {
+    font-size: 0.9rem;
+    color: var(--admin-text-muted);
+}
+
+.tp-actions {
+    display: flex;
+    gap: 0.75rem;
+}
+
+/* Modules (Graduation / Discipline) */
+.graduation-module, .discipline-module {
+    padding: 1.5rem;
+}
+
+.status-badge {
+    padding: 0.25rem 0.6rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 700;
+}
+
+.status-badge.Trúng\ tuyển { background: #e0f2fe; color: #0369a1; }
+.status-badge.Đã\ nhập\ học { background: #dcfce7; color: #15803d; }
+.status-badge.Đang\ chờ { background: #fef3c7; color: #b45309; }
+
+/* Table overrides */
+.premium-table {
     width: 100%;
     border-collapse: collapse;
 }
-.grades-table th {
-    background: #f8fafc;
-    color: #475569;
-    font-size: 0.75rem;
-    text-transform: uppercase;
-    font-weight: 600;
-    padding: 0.75rem 1rem;
-    border-bottom: 1px solid #e2e8f0;
-    text-align: left;
-}
-.grades-table td {
-    padding: 0.875rem 1rem;
-    border-bottom: 1px solid #e2e8f0;
-    color: #334155;
-    font-size: 0.875rem;
-}
-.grades-table tr:hover { background: #f8fafc; }
-.grade-val { font-weight: 600; }
-.grade-val.danger { color: #dc2626; }
 
-@media (max-width: 1024px) {
-    .records-grid { grid-template-columns: 1fr; }
+.premium-table th {
+    text-align: left;
+    padding: 1rem;
+    background: var(--admin-surface-soft);
+    color: var(--admin-text-secondary);
+    font-size: 0.85rem;
+    font-weight: 700;
+    text-transform: uppercase;
 }
+
+.premium-table td {
+    padding: 1rem;
+    border-bottom: 1px solid var(--admin-border);
+    font-size: 0.9rem;
+    color: var(--admin-text-primary);
+}
+
+.gpa-cell {
+    font-weight: 800;
+    color: var(--admin-primary);
+}
+
+.type-tag {
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+}
+
+.type-tag.success { background: #dcfce7; color: #15803d; }
+.type-tag.danger { background: #fee2e2; color: #b91c1c; }

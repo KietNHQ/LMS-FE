@@ -7,10 +7,10 @@ export default function PrincipalLayout() {
     const [isCollapsed, setIsCollapsed] = useState(false);
 
     return (
-        <div className={`principal-layout ${isCollapsed ? "collapsed" : ""}`}>
+        <div className={`principal-layout theme-principal ${isCollapsed ? "collapsed" : ""}`}>
             <Sidebar
                 role="principal"
-                userName="Ban Giám Hiệu"
+                userName="Hiệu Trưởng"
                 isCollapsed={isCollapsed}
                 setIsCollapsed={setIsCollapsed}
             />

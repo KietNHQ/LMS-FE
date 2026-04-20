@@ -1,0 +1,167 @@
+.vp-action-queue {
+    background: #fff;
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--admin-border);
+    padding: 1.5rem;
+    box-shadow: var(--admin-shadow-sm);
+}
+
+.queue-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
+.queue-header h3 {
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: var(--admin-text-primary);
+}
+
+.queue-count {
+    font-size: 0.8rem;
+    background: var(--admin-primary-soft);
+    color: var(--admin-primary);
+    padding: 0.25rem 0.6rem;
+    border-radius: var(--radius-pill);
+    font-weight: 700;
+}
+
+.queue-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.queue-item {
+    display: flex;
+    gap: 1.25rem;
+    padding: 1.25rem;
+    border-radius: var(--radius-md);
+    background: var(--admin-surface-soft);
+    border-left: 4px solid #cbd5e1;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.queue-item:hover {
+    transform: translateX(5px);
+    background: #fff;
+    box-shadow: var(--admin-shadow-md);
+}
+
+/* SLA Status */
+.queue-item.sla-normal { border-left-color: #10b981; }
+.queue-item.sla-warning { border-left-color: #f59e0b; }
+.queue-item.sla-danger { 
+    border-left-color: #ef4444; 
+    background: #fff5f5;
+}
+
+.task-icon-wrap {
+    width: 2.5rem;
+    height: 2.5rem;
+    background: #fff;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--admin-primary);
+    box-shadow: var(--admin-shadow-sm);
+    flex-shrink: 0;
+}
+
+.task-main {
+    flex: 1;
+}
+
+.task-top {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.25rem;
+}
+
+.task-id {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--admin-text-muted);
+}
+
+.task-time {
+    font-size: 0.75rem;
+    color: var(--admin-text-muted);
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.queue-item.sla-danger .task-time {
+    color: #ef4444;
+    font-weight: 700;
+}
+
+.task-main h4 {
+    margin: 0 0 0.4rem;
+    font-size: 0.95rem;
+    color: var(--admin-text-primary);
+}
+
+.task-sender, .task-reason {
+    margin: 0;
+    font-size: 0.8rem;
+    line-height: 1.4;
+}
+
+.task-sender { color: var(--admin-text-secondary); margin-bottom: 0.25rem; }
+.task-reason { color: var(--admin-text-muted); }
+
+.task-actions-vpa {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: flex-end;
+}
+
+.sla-alert {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-size: 0.7rem;
+    color: #ef4444;
+    font-weight: 800;
+    text-transform: uppercase;
+}
+
+.btn-group-vpa {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.vpa-btn {
+    border: none;
+    padding: 0.5rem 0.75rem;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    font-size: 0.8rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    transition: all 0.2s;
+}
+
+.vpa-btn.approve {
+    background: #10b981;
+    color: #fff;
+}
+
+.vpa-btn.approve:hover { background: #059669; }
+
+.vpa-btn.reject {
+    background: #fff;
+    color: #b91c1c;
+    border: 1px solid #fee2e2;
+}
+
+.vpa-btn.reject:hover { background: #fee2e2; }

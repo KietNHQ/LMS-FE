@@ -70,6 +70,10 @@ const VpDisciplineMgmt = lazy(() => import("../pages/vp-discipline/discipline-ma
 const VpDisciplineCompetition = lazy(() => import("../pages/vp-discipline/competition/VpDisciplineCompetition"));
 const VpDisciplineAttendance = lazy(() => import("../pages/vp-discipline/attendance/VpDisciplineAttendance"));
 const VpDisciplineConduct = lazy(() => import("../pages/vp-discipline/conduct/VpDisciplineConduct"));
+const VpDisciplineApprovals = lazy(() => import("../pages/vp-discipline/approvals/VpDisciplineApprovals"));
+const VpDisciplineViolations = lazy(() => import("../pages/vp-discipline/discipline/VpDisciplineViolations"));
+const VpDisciplineIncidents = lazy(() => import("../pages/vp-discipline/incidents/VpDisciplineIncidents"));
+const VpDisciplineReports = lazy(() => import("../pages/vp-discipline/reports/VpDisciplineReports"));
 const VpDisciplineNotifications = lazy(() => import("../pages/vp-discipline/notifications/VpDisciplineNotifications"));
 
 /* ACADEMIC STAFF PAGES */
@@ -87,6 +91,9 @@ const FinanceFeeManagement = lazy(() => import("../pages/finance/fee-management/
 const FinancePaymentHub = lazy(() => import("../pages/finance/payment-hub/FinancePaymentHub"));
 const FinanceReports = lazy(() => import("../pages/finance/reports/FinanceReports"));
 const FinanceNotifications = lazy(() => import("../pages/finance/notifications/FinanceNotifications"));
+const FinanceApprovals = lazy(() => import("../pages/finance/approvals/FinanceApprovals"));
+const FinanceAuditLog = lazy(() => import("../pages/finance/settings/FinanceAuditLog"));
+
 
 /* STUDENT PAGES */
 const StudentLayout = lazy(() => import("../layouts/student/StudentLayout"));
@@ -196,6 +203,7 @@ export default function AppRoutes() {
         <Route index element={<Navigate to="dashboard" replace />} />
         <Route path="dashboard" element={<PrincipalDashboard />} />
         <Route path="overview" element={<PrincipalOverview />} />
+        <Route path="classes/:classId" element={<ClassDetailSection />} />
         <Route path="approvals" element={<PrincipalApprovals />} />
         <Route path="reports" element={<PrincipalReports />} />
         <Route path="audit-logs" element={<PrincipalAuditLogs />} />
@@ -220,9 +228,13 @@ export default function AppRoutes() {
         <Route index element={<Navigate to="dashboard" replace />} />
         <Route path="dashboard" element={<VpDisciplineDashboard />} />
         <Route path="discipline-management" element={<VpDisciplineMgmt />} />
+        <Route path="discipline" element={<VpDisciplineViolations />} />
+        <Route path="incidents" element={<VpDisciplineIncidents />} />
         <Route path="competition" element={<VpDisciplineCompetition />} />
         <Route path="attendance" element={<VpDisciplineAttendance />} />
         <Route path="conduct" element={<VpDisciplineConduct />} />
+        <Route path="approvals" element={<VpDisciplineApprovals />} />
+        <Route path="reports" element={<VpDisciplineReports />} />
         <Route path="notifications" element={<VpDisciplineNotifications />} />
       </Route>
 
@@ -245,8 +257,11 @@ export default function AppRoutes() {
         <Route path="fee-management" element={<FinanceFeeManagement />} />
         <Route path="payment-hub" element={<FinancePaymentHub />} />
         <Route path="reports" element={<FinanceReports />} />
+        <Route path="approvals" element={<FinanceApprovals />} />
+        <Route path="audit-log" element={<FinanceAuditLog />} />
         <Route path="notifications" element={<FinanceNotifications />} />
       </Route>
+
 
       {/* STUDENT */}
       <Route path="/student" element={<StudentLayout />}>

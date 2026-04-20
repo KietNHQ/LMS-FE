@@ -1,31 +1,40 @@
+import React, { useState } from "react";
 import { PageHeader, SchoolYearTermSelector } from "../../../components/common";
 import { useSchoolYearTerm } from "../../../hooks/useSchoolYearTerm";
-import { FiBookOpen, FiCheckCircle, FiAlertTriangle, FiAlertCircle, FiArrowRight, FiUnlock, FiCalendar } from "react-icons/fi";
-import { useNavigate } from "react-router-dom";
+import { 
+    FiCheckCircle, FiAlertTriangle, FiUnlock, FiTrendingDown, 
+    FiDatabase, FiBell, FiShield, FiMoreHorizontal,
+    FiClock, FiCalendar, FiActivity
+} from "react-icons/fi";
+import VpActionQueue from "./components/VpActionQueue";
+import OperationalAlerts from "./components/OperationalAlerts";
 import "./VpAcademicDashboard.css";
 
 export default function VpAcademicDashboard() {
     const { selectedSchoolYear, selectedTerm, handleYearArrow, handleTermChange } = useSchoolYearTerm();
-    const navigate = useNavigate();
+    const [cycle, setCycle] = useState("daily"); // daily, weekly, monthly
 
-    const stats = {
-        totalClasses: 35,
-        totalSubjects: 12,
-        unenteredClasses: 10,
-        completedPercent: 65,
-    };
+    // Top 4 Primary KPIs
+    const primaryStats = [
+        { label: "Tiến độ Nhập Điểm", value: "92.5%", trend: "+2.1%", status: "success", icon: <FiCheckCircle /> },
+        { label: "Lớp/Môn Quá Hạn", value: "08", trend: "-2", status: "danger", icon: <FiAlertTriangle /> },
+        { label: "Yêu cầu Chờ Duyệt", value: "05", trend: "+3", status: "warning", icon: <FiUnlock /> },
+        { label: "Sụt giảm Chất lượng", value: "03", trend: "+1", status: "danger", icon: <FiTrendingDown /> },
+    ];
 
-    const alerts = [
-        { id: 1, title: "⚠️ 10 lớp chưa nhập điểm", desc: "Hạn chót là ngày mai. Các lớp: 12A1, 11A5...", path: "/vp-academic/grades?filter=missing" },
-        { id: 2, title: "⚠️ 3 lớp có điểm TB rất thấp (<5.0)", desc: "Cần rà soát chất lượng môn Toán ở 10A1, 10A2.", path: "/vp-academic/grades?filter=low_avg" },
-        { id: 3, title: "⚠️ Môn Hóa học chưa có dữ liệu", desc: "Giáo viên bộ môn chưa tải điểm lên hệ thống.", path: "/vp-academic/teaching-assignment" }
+    // Secondary Management KPIs
+    const secondaryStats = [
+        { label: "Môn chưa có dữ liệu", value: "02", icon: <FiDatabase /> },
+        { label: "% Chốt sổ học kỳ", value: "65%", icon: <FiShield /> },
+        { label: "Sửa điểm sau khóa", value: "12", icon: <FiActivity /> },
+        { label: "Phụ huynh chưa báo", value: "15%", icon: <FiBell /> },
     ];
 
     return (
-        <div className="vp-aca-dashboard">
+        <div className="vpa-cockpit">
             <PageHeader
-                title="Bảng Điều Khiển Chuyên Môn"
-                eyebrow="Kiểm soát tiến độ giảng dạy và điểm số toàn trường"
+                title="Trung Tâm Điều Hành Chuyên Môn"
+                eyebrow="Phó Hiệu trưởng Chuyên môn - Buồng lái vận hành học vụ"
                 actions={
                     <SchoolYearTermSelector
                         selectedSchoolYear={selectedSchoolYear}
@@ -36,89 +45,101 @@ export default function VpAcademicDashboard() {
                 }
             />
 
-            <div className="vpa-stats-grid">
-                <div className="vpa-stat-card primary">
-                    <div className="vpa-stat-icon"><FiBookOpen /></div>
-                    <div className="vpa-stat-body">
-                        <p className="vpa-stat-label">Tổng số Lớp & Môn</p>
-                        <h3 className="vpa-stat-value">{stats.totalClasses} Lớp - {stats.totalSubjects} Môn</h3>
+            {/* 1. Primary Cockpit Stats */}
+            <div className="vpa-stats-grid-premium">
+                {primaryStats.map((stat, i) => (
+                    <div key={i} className={`vpa-stat-card-premium ${stat.status}`}>
+                        <div className="vpa-card-top">
+                            <div className="vpa-card-icon">{stat.icon}</div>
+                            <span className="vpa-card-trend">{stat.trend}</span>
+                        </div>
+                        <div className="vpa-card-body">
+                            <h3 className="vpa-card-value text-glow">{stat.value}</h3>
+                            <p className="vpa-card-label">{stat.label}</p>
+                        </div>
+                        <div className="vpa-card-footer">
+                            <button className="vpa-card-action">Xử lý ngay</button>
+                        </div>
                     </div>
-                </div>
-                <div className="vpa-stat-card success">
-                    <div className="vpa-stat-icon"><FiCheckCircle /></div>
-                    <div className="vpa-stat-body">
-                        <p className="vpa-stat-label">Tiến độ Lên Điểm</p>
-                        <h3 className="vpa-stat-value">{stats.completedPercent}%</h3>
-                    </div>
-                </div>
-                <div className="vpa-stat-card danger">
-                    <div className="vpa-stat-icon"><FiAlertTriangle /></div>
-                    <div className="vpa-stat-body">
-                        <p className="vpa-stat-label">Lớp rỗng điểm (Trễ hạn)</p>
-                        <h3 className="vpa-stat-value">{stats.unenteredClasses} Lớp</h3>
-                    </div>
-                </div>
+                ))}
             </div>
 
-            <div className="vpa-progress-panel">
-                <div className="vpa-progress-header">
-                    <h3>Tiến độ Chốt Sổ Điểm Học Kỳ 1</h3>
-                    <span>22 Lớp hoàn thành / 35 Tổng số</span>
-                </div>
-                
-                <div className="giant-progress-bar">
-                    <div className="gp-segment done" style={{width: '60%'}}>60% Chốt sổ</div>
-                    <div className="gp-segment pending" style={{width: '15%'}}>15% Chờ Duyệt</div>
-                    <div className="gp-segment empty" style={{width: '25%'}}></div>
-                </div>
-                
-                <div className="gp-legend">
-                    <div className="legend-item"><div className="legend-dot done"></div> Đã Chốt sổ</div>
-                    <div className="legend-item"><div className="legend-dot pending"></div> Đang xin duyệt mở khóa/chốt điểm</div>
-                    <div className="legend-item"><div className="legend-dot empty"></div> Chưa hoàn tất nhập liệu</div>
-                </div>
-            </div>
-
-            <div className="vpa-panels">
-                {/* Panel 1: Top Cảnh báo Mức Đỏ */}
-                <div className="vpa-panel urgent">
-                    <div className="vpa-panel-header">
-                        <FiAlertCircle /> Top Cảnh Báo Chất Lượng
-                    </div>
-                    <div className="vpa-alert-list">
-                        {alerts.map(alert => (
-                            <div className="vpa-alert-item" key={alert.id}>
-                                <div className="vpa-alert-info">
-                                    <strong>{alert.title}</strong>
-                                    <span>{alert.desc}</span>
+            <div className="vpa-main-layout">
+                <div className="vpa-left-col">
+                    {/* 2. Secondary Mini Stats */}
+                    <div className="vpa-secondary-grid">
+                        {secondaryStats.map((stat, i) => (
+                            <div key={i} className="vpa-mini-card">
+                                <div className="mini-card-icon">{stat.icon}</div>
+                                <div className="mini-card-info">
+                                    <span className="mini-card-value">{stat.value}</span>
+                                    <span className="mini-card-label">{stat.label}</span>
                                 </div>
-                                <button className="btn-resolve" onClick={() => navigate(alert.path)}>
-                                    Kiểm tra <FiArrowRight />
-                                </button>
                             </div>
                         ))}
                     </div>
+
+                    {/* 3. Operational Cycle View */}
+                    <div className="vpa-cycle-panel">
+                        <div className="vpa-panel-header-v2">
+                            <div className="header-text-v2">
+                                <h3>Trình tự Nghiệp vụ</h3>
+                                <p>Phối hợp điều hành theo chu trình thời gian</p>
+                            </div>
+                            <div className="cycle-tabs">
+                                <button className={cycle === 'daily' ? 'active' : ''} onClick={() => setCycle('daily')}>Ngày</button>
+                                <button className={cycle === 'weekly' ? 'active' : ''} onClick={() => setCycle('weekly')}>Tuần</button>
+                                <button className={cycle === 'monthly' ? 'active' : ''} onClick={() => setCycle('monthly')}>Tháng</button>
+                            </div>
+                        </div>
+                        
+                        <div className="cycle-content">
+                            <div className="cycle-todo-list">
+                                {cycle === 'daily' && (
+                                    <>
+                                        <div className="cycle-todo-item urgent">
+                                            <FiClock /> <span>Nhắc giáo viên 12A1 nộp điểm kiểm tra bù trước 17:00</span>
+                                            <button className="btn-vpa-sm">Thực hiện</button>
+                                        </div>
+                                        <div className="cycle-todo-item">
+                                            <FiUnlock /> <span>Duyệt yêu cầu mở khóa 10A2 (Đã trễ 2h)</span>
+                                            <button className="btn-vpa-sm">Xử lý</button>
+                                        </div>
+                                    </>
+                                )}
+                                {cycle === 'weekly' && (
+                                    <div className="cycle-todo-item">
+                                        <FiCalendar /> <span>Review báo cáo tuần và gửi Hiệu trưởng</span>
+                                        <button className="btn-vpa-sm">Gửi</button>
+                                    </div>
+                                )}
+                                {cycle === 'monthly' && (
+                                    <div className="cycle-todo-item">
+                                        <FiShield /> <span>Chốt dữ liệu học bạ tháng 04/2026</span>
+                                        <button className="btn-vpa-sm">Xem hồ sơ</button>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* 4. Action Queue */}
+                    <VpActionQueue />
                 </div>
 
-                {/* Panel 2: Liên kết nhanh */}
-                <div className="vpa-panel">
-                    <div className="vpa-panel-header">
-                        Truy Cập Nhanh
-                    </div>
-                    <div className="link-grid">
-                        <button className="quick-link-btn" onClick={() => navigate("/vp-academic/approvals")}>
-                            <FiUnlock /> Duyệt / Mở Khóa Điểm
+                <div className="vpa-right-col">
+                    <OperationalAlerts />
+                    
+                    <div className="vpa-quick-ops">
+                        <button className="btn-action-primary">
+                            <FiCheckCircle /> Tạo gói trình ký Hiệu trưởng
                         </button>
-                        <button className="quick-link-btn" onClick={() => navigate("/vp-academic/exams")}>
-                            <FiCalendar /> Lịch Kỳ Thi
-                        </button>
-                        <button className="quick-link-btn" onClick={() => navigate("/vp-academic/grades")}>
-                            <FiBookOpen /> Xem Học Bạ
+                        <button className="btn-action-secondary">
+                            <FiDatabase /> Đồng bộ CSDL Sở GD
                         </button>
                     </div>
                 </div>
             </div>
-
         </div>
     );
 }
