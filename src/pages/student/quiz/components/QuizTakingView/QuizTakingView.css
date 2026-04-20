@@ -1,6 +1,6 @@
 .quiz-taking-view {
     display: grid;
-    gap: 1.25rem;
+    gap: 1rem;
 }
 
 .quiz-back-btn {
@@ -44,17 +44,17 @@
 
 .quiz-floating-widget {
     display: grid;
-    gap: 0.85rem;
-    padding: 1rem;
-    border-radius: 1.4rem;
+    gap: 0.75rem;
+    padding: 12px;
+    border-radius: 1.25rem;
     background: #ffffff;
     border: 1px solid #dfe7f6;
     box-shadow: 0 12px 26px rgba(37, 64, 143, 0.08);
 }
 
 .quiz-progress-card {
-    padding: 0.9rem 1rem;
-    border-radius: 1rem;
+    padding: 8px 12px;
+    border-radius: 10px;
     background: #f8fbff;
     border: 1px solid #dfe7f6;
     text-align: left;
@@ -63,17 +63,17 @@
 .quiz-progress-card span {
     display: block;
     color: #667085;
-    font-size: 0.88rem;
+    font-size: 0.82rem;
 }
 
 .quiz-progress-card strong {
     color: #17306b;
-    font-size: 1.1rem;
+    font-size: 1rem;
 }
 
 .quiz-timer-card {
-    padding: 0.9rem 1rem;
-    border-radius: 1rem;
+    padding: 8px 12px;
+    border-radius: 10px;
     background: #f7fbff;
     border: 1px solid #dfe7f6;
 }
@@ -81,17 +81,17 @@
 .quiz-timer-card__label {
     display: inline-flex;
     align-items: center;
-    gap: 0.35rem;
+    gap: 0.3rem;
     color: #667085;
-    font-size: 0.86rem;
+    font-size: 0.82rem;
     font-weight: 700;
 }
 
 .quiz-timer-card strong {
     display: block;
-    margin-top: 0.35rem;
+    margin-top: 0.25rem;
     color: #17306b;
-    font-size: 1.45rem;
+    font-size: 1.25rem;
     line-height: 1;
 }
 
@@ -118,8 +118,8 @@
     align-items: center;
     justify-content: space-between;
     gap: 1rem;
-    padding: 1.5rem;
-    border-radius: 1.8rem;
+    padding: 0.85rem 1.25rem;
+    border-radius: 1rem;
     background: linear-gradient(180deg, #ffffff 0%, #f9fbff 100%);
     border: 1px solid #dfe7f6;
     box-shadow: 0 10px 24px rgba(37, 64, 143, 0.06);
@@ -154,9 +154,10 @@
 }
 
 .quiz-taking-header h1 {
-    margin: 0 0 0.45rem;
+    margin: 0 0 0.25rem;
     color: #17306b;
-    font-size: 1.7rem;
+    font-size: 1.35rem;
+    font-weight: 800;
 }
 
 .quiz-taking-header p {
@@ -199,9 +200,9 @@
     border: none;
     outline: none;
     cursor: pointer;
-    height: 3rem;
-    padding: 0 1.3rem;
-    border-radius: 1rem;
+    height: 2.6rem;
+    padding: 0 1.2rem;
+    border-radius: 0.85rem;
     background: linear-gradient(135deg, #6f95ff 0%, #4f78eb 100%);
     color: #ffffff;
     font-weight: 700;
