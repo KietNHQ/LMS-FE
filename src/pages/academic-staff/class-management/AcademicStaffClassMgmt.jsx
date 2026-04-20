@@ -1,7 +1,10 @@
 import { useState } from "react";
 import { PageHeader, SchoolYearTermSelector } from "../../../components/common";
 import { useSchoolYearTerm } from "../../../hooks/useSchoolYearTerm";
-import { FiBookOpen, FiUserPlus, FiUserCheck, FiArrowRight, FiCheck } from "react-icons/fi";
+import { 
+    FiBookOpen, FiUserPlus, FiUserCheck, FiArrowRight, 
+    FiCheck, FiRepeat, FiFileText, FiFilter, FiDownload 
+} from "react-icons/fi";
 import { toast } from "react-toastify";
 import "./AcademicStaffClassMgmt.css";
 
@@ -17,25 +20,27 @@ export default function AcademicStaffClassMgmt() {
         { id: "12A5", grade: "12", studentsCount: 35, homeroomTeacher: "Lê Văn C" },
     ];
 
+    const [admissions, setAdmissions] = useState([
+        { id: "TS001", name: "Đặng Tiến Dũng", score: 42.5, status: "Trúng tuyển", phone: "0912xxx888" },
+        { id: "TS002", name: "Lê Mai Chi", score: 41.0, status: "Đã nhập học", phone: "0988xxx777" },
+        { id: "TS003", name: "Hoàng Gia Bảo", score: 39.5, status: "Đang chờ", phone: "0904xxx666" },
+        { id: "TS004", name: "Trần Ngọc Diệp", score: 43.0, status: "Trúng tuyển", phone: "0977xxx555" },
+    ]);
+
+    const [transfers, setTransfers] = useState([
+        { id: "CT001", name: "Phạm Anh Khoa", type: "Đến", fromSchool: "THPT Chu Văn An", status: "Hoàn tất" },
+        { id: "CT002", name: "Bùi Tuyết Mai", type: "Đi", toSchool: "THPT Phan Đình Phùng", status: "Đang xử lý" },
+    ]);
+
     // Xếp lớp states
     const [unassignedStudents, setUnassignedStudents] = useState([
         { id: "HS101", name: "Ngô Minh Tú", targetGrade: "10" },
         { id: "HS102", name: "Lý Hải Anh", targetGrade: "10" },
         { id: "HS103", name: "Phạm Bình Minh", targetGrade: "11" },
-        { id: "HS104", name: "Trịnh Thùy Linh", targetGrade: "10" },
     ]);
-    const [targetClassAssigned, setTargetClassAssigned] = useState([
-        { id: "HS100", name: "Vũ Khánh Thy" } // example already in
-    ]);
+    const [targetClassAssigned, setTargetClassAssigned] = useState([]);
     const [selectedStudentIds, setSelectedStudentIds] = useState([]);
     const [selectedTargetClass, setSelectedTargetClass] = useState("10A1");
-
-    // Phân công giảng dạy states
-    const [teachingAssignments, setTeachingAssignments] = useState([
-        { id: 1, className: "10A1", subject: "Toán", teacher: "GV_Toan_01" },
-        { id: 2, className: "10A1", subject: "Văn", teacher: "" }, // chua phan cong
-        { id: 3, className: "11A1", subject: "Vật Lý", teacher: "GV_Ly_01" },
-    ]);
 
     // === HANDLERS ===
     const handleToggleStudent = (id) => {
@@ -49,28 +54,18 @@ export default function AcademicStaffClassMgmt() {
             toast.warning("Vui lòng chọn ít nhất 1 học sinh.");
             return;
         }
-        
-        // Move students
         const studentsToMove = unassignedStudents.filter(s => selectedStudentIds.includes(s.id));
         setTargetClassAssigned([...targetClassAssigned, ...studentsToMove]);
         setUnassignedStudents(unassignedStudents.filter(s => !selectedStudentIds.includes(s.id)));
         setSelectedStudentIds([]);
-        
         toast.success(`Đã xếp ${studentsToMove.length} học sinh vào lớp ${selectedTargetClass}`);
-    };
-
-    const handleTeacherChange = (id, newTeacher) => {
-        setTeachingAssignments(prev => prev.map(a => 
-            a.id === id ? { ...a, teacher: newTeacher } : a
-        ));
-        toast.success("Đã cập nhật phân công giáo viên");
     };
 
     return (
         <div className="academic-class-mgmt">
             <PageHeader
-                title="Lớp & Giảng Dạy"
-                eyebrow="Tổ chức lớp học và phân công chuyên môn"
+                title="Quản lý Lớp & Tuyển sinh"
+                eyebrow="Tổ chức nhân sự và điều phối đầu vào học sinh"
                 actions={
                     <SchoolYearTermSelector
                         selectedSchoolYear={selectedSchoolYear}
@@ -82,33 +77,30 @@ export default function AcademicStaffClassMgmt() {
             />
 
             <div className="mgmt-tabs">
-                <button 
-                    className={`mgmt-tab-btn ${activeTab === 'class-list' ? 'active' : ''}`}
-                    onClick={() => setActiveTab('class-list')}
-                >
+                <button className={`mgmt-tab-btn ${activeTab === 'class-list' ? 'active' : ''}`} onClick={() => setActiveTab('class-list')}>
                     <FiBookOpen /> Quản lý lớp
                 </button>
-                <button 
-                    className={`mgmt-tab-btn ${activeTab === 'assign-students' ? 'active' : ''}`}
-                    onClick={() => setActiveTab('assign-students')}
-                >
-                    <FiUserPlus /> Xếp lớp
+                <button className={`mgmt-tab-btn ${activeTab === 'admissions' ? 'active' : ''}`} onClick={() => setActiveTab('admissions')}>
+                    <FiUserPlus /> Tuyển sinh lớp 10
                 </button>
-                <button 
-                    className={`mgmt-tab-btn ${activeTab === 'teaching-assignment' ? 'active' : ''}`}
-                    onClick={() => setActiveTab('teaching-assignment')}
-                >
-                    <FiUserCheck /> Phân công giảng dạy
+                <button className={`mgmt-tab-btn ${activeTab === 'transfers' ? 'active' : ''}`} onClick={() => setActiveTab('transfers')}>
+                    <FiRepeat /> Chuyển trường
+                </button>
+                <button className={`mgmt-tab-btn ${activeTab === 'assign-students' ? 'active' : ''}`} onClick={() => setActiveTab('assign-students')}>
+                    <FiUserCheck /> Xếp lớp
                 </button>
             </div>
 
             <div className="mgmt-content">
-                {/* 1. TAB QUẢN LÝ LỚP */}
+                {/* 1. TRANG CHỦ LỚP HỌC */}
                 {activeTab === 'class-list' && (
-                    <>
+                    <div className="mgmt-section-animate">
                         <div className="mgmt-header">
                             <h3>Danh sách các lớp hiện tại</h3>
-                            <button className="btn-primary">+ Tạo lớp mới</button>
+                            <div className="header-actions">
+                                <button className="btn-secondary"><FiDownload /> Xuất báo cáo</button>
+                                <button className="btn-primary">+ Tạo lớp mới</button>
+                            </div>
                         </div>
                         <div className="mgmt-table-wrap">
                             <table className="mgmt-table">
@@ -127,133 +119,134 @@ export default function AcademicStaffClassMgmt() {
                                             <td><strong>{cls.id}</strong></td>
                                             <td>Khối {cls.grade}</td>
                                             <td>{cls.studentsCount} HS</td>
-                                            <td>
-                                                {cls.homeroomTeacher === "Chưa phân công" ? 
-                                                    <span className="teacher-unassigned">Chưa phân công</span> 
-                                                    : cls.homeroomTeacher}
-                                            </td>
-                                            <td><button className="btn-secondary" style={{padding: '0.25rem 0.5rem'}}>Chi tiết</button></td>
+                                            <td>{cls.homeroomTeacher}</td>
+                                            <td><button className="btn-mini">Chi tiết</button></td>
                                         </tr>
                                     ))}
                                 </tbody>
                             </table>
                         </div>
-                    </>
+                    </div>
                 )}
 
-                {/* 2. TAB XẾP LỚP */}
-                {activeTab === 'assign-students' && (
-                    <>
+                {/* 2. TUYỂN SINH LỚP 10 */}
+                {activeTab === 'admissions' && (
+                    <div className="mgmt-section-animate">
                         <div className="mgmt-header">
-                            <h3>Công cụ phân bổ học sinh vào lớp</h3>
-                        </div>
-                        <div className="assignment-split">
-                            {/* Nguồn: HS chưa xếp lớp */}
-                            <div className="split-panel">
-                                <div className="split-panel-header">
-                                    <h4>Học sinh chưa xếp lớp ({unassignedStudents.length})</h4>
-                                </div>
-                                <ul className="split-list">
-                                    {unassignedStudents.map(student => (
-                                        <li key={student.id} onClick={() => handleToggleStudent(student.id)}>
-                                            <input 
-                                                type="checkbox" 
-                                                checked={selectedStudentIds.includes(student.id)} 
-                                                readOnly
-                                            />
-                                            <div>
-                                                <strong>{student.name}</strong> 
-                                                <span style={{color: '#64748b', fontSize: '0.8rem', marginLeft: '0.5rem'}}>
-                                                    (Đăng ký k{student.targetGrade})
-                                                </span>
-                                            </div>
-                                        </li>
-                                    ))}
-                                </ul>
+                            <h3>Hồ sơ Tuyển sinh Lớp 10 (2026 - 2027)</h3>
+                            <div className="header-actions">
+                                <button className="btn-secondary"><FiFilter /> Lọc điểm</button>
+                                <button className="btn-primary"><FiFileText /> Import từ Sở</button>
                             </div>
-
-                            {/* Nút chuyển */}
-                            <div className="split-controls">
-                                <button className="btn-transfer" onClick={handleAssignToClass} title="Chuyển vào lớp">
-                                    <FiArrowRight />
-                                </button>
-                            </div>
-
-                            {/* Đích: Chọn lớp */}
-                            <div className="split-panel">
-                                <div className="split-panel-header">
-                                    <h4 style={{display: 'flex', alignItems: 'center', gap: '0.5rem'}}>
-                                        Lớp nhận: 
-                                        <select 
-                                            value={selectedTargetClass} 
-                                            onChange={e => setSelectedTargetClass(e.target.value)}
-                                        >
-                                            {mockClasses.map(c => <option key={c.id} value={c.id}>{c.id}</option>)}
-                                        </select>
-                                    </h4>
-                                </div>
-                                <ul className="split-list">
-                                    <li style={{background: '#f8fafc', color: '#64748b', fontSize: '0.85rem'}}>Danh sách HS đã thêm (Chưa Lưu)</li>
-                                    {targetClassAssigned.map(student => (
-                                        <li key={student.id}>
-                                            <FiCheck color="#10b981" /> <strong>{student.name}</strong>
-                                        </li>
-                                    ))}
-                                </ul>
-                                <div style={{padding: '1rem', borderTop: '1px solid #e2e8f0', background: '#f8fafc', textAlign: 'right'}}>
-                                    <button className="btn-primary">Lưu Danh Sách</button>
-                                </div>
-                            </div>
-                        </div>
-                    </>
-                )}
-
-                {/* 3. TAB PHÂN CÔNG GIẢNG DẠY */}
-                {activeTab === 'teaching-assignment' && (
-                    <>
-                        <div className="mgmt-header">
-                            <h3>Phân công Giáo Viên Bộ Môn & Chủ nhiệm</h3>
-                            <button className="btn-primary">Lưu Thay Đổi</button>
                         </div>
                         <div className="mgmt-table-wrap">
                             <table className="mgmt-table">
                                 <thead>
                                     <tr>
-                                        <th>Lớp</th>
-                                        <th>Môn Học</th>
-                                        <th>Giáo viên phụ trách</th>
+                                        <th>Mã hồ sơ</th>
+                                        <th>Họ và tên</th>
+                                        <th>Điểm xét tuyển</th>
+                                        <th>Số điện thoại</th>
                                         <th>Trạng thái</th>
+                                        <th>Thao tác</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {teachingAssignments.map(assign => (
-                                        <tr key={assign.id}>
-                                            <td><strong>{assign.className}</strong></td>
-                                            <td>{assign.subject}</td>
+                                    {admissions.map(ts => (
+                                        <tr key={ts.id}>
+                                            <td>{ts.id}</td>
+                                            <td><strong>{ts.name}</strong></td>
+                                            <td>{ts.score}</td>
+                                            <td>{ts.phone}</td>
                                             <td>
-                                                <select 
-                                                    className="teacher-select"
-                                                    value={assign.teacher}
-                                                    onChange={e => handleTeacherChange(assign.id, e.target.value)}
-                                                >
-                                                    <option value="">-- Chọn giáo viên --</option>
-                                                    <option value="GV_Toan_01">Nguyễn Văn A (Toán)</option>
-                                                    <option value="GV_Van_02">Trần Thị B (Văn)</option>
-                                                    <option value="GV_Ly_01">Lê Minh C (Vật lý)</option>
-                                                </select>
+                                                <span className={`status-badge ${ts.status}`}>
+                                                    {ts.status}
+                                                </span>
                                             </td>
-                                            <td>
-                                                {!assign.teacher ? 
-                                                    <span className="teacher-unassigned">Thiếu GV</span> : 
-                                                    <span style={{color: '#10b981', fontWeight: 600}}>Đã đủ</span>
-                                                }
-                                            </td>
+                                            <td><button className="btn-mini">Nhập học</button></td>
                                         </tr>
                                     ))}
                                 </tbody>
                             </table>
                         </div>
-                    </>
+                    </div>
+                )}
+
+                {/* 3. CHUYỂN TRƯỜNG */}
+                {activeTab === 'transfers' && (
+                    <div className="mgmt-section-animate">
+                        <div className="mgmt-header">
+                            <h3>Quản lý Hồ sơ Chuyển đi / Chuyển đến</h3>
+                            <button className="btn-primary">+ Tạo mới hồ sơ</button>
+                        </div>
+                        <div className="mgmt-table-wrap">
+                            <table className="mgmt-table">
+                                <thead>
+                                    <tr>
+                                        <th>Học sinh</th>
+                                        <th>Loại</th>
+                                        <th>Trường liên quan</th>
+                                        <th>Trạng thái</th>
+                                        <th>Thao tác</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {transfers.map((ct, i) => (
+                                        <tr key={i}>
+                                            <td><strong>{ct.name}</strong></td>
+                                            <td>
+                                                <span className={`type-tag ${ct.type === 'Đến' ? 'in' : 'out'}`}>
+                                                    {ct.type === 'Đến' ? 'Chuyển đến' : 'Chuyển đi'}
+                                                </span>
+                                            </td>
+                                            <td>{ct.fromSchool || ct.toSchool}</td>
+                                            <td>{ct.status}</td>
+                                            <td><button className="btn-mini">Hồ sơ</button></td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                )}
+
+                {/* 4. XẾP LỚP */}
+                {activeTab === 'assign-students' && (
+                    <div className="mgmt-section-animate">
+                        <div className="mgmt-header">
+                            <h3>Xếp lớp Công cụ phân bổ học sinh</h3>
+                        </div>
+                        <div className="assignment-split">
+                            <div className="split-panel">
+                                <h4>Học sinh chưa xếp lớp ({unassignedStudents.length})</h4>
+                                <ul className="split-list">
+                                    {unassignedStudents.map(student => (
+                                        <li key={student.id} onClick={() => handleToggleStudent(student.id)} 
+                                            className={selectedStudentIds.includes(student.id) ? 'selected' : ''}>
+                                            <strong>{student.name}</strong> 
+                                            <span>Khối {student.targetGrade}</span>
+                                        </li>
+                                    ))}
+                                </ul>
+                            </div>
+                            <div className="split-controls">
+                                <button className="btn-transfer" onClick={handleAssignToClass}><FiArrowRight /></button>
+                            </div>
+                            <div className="split-panel">
+                                <h4>Nhận vào lớp: 
+                                    <select value={selectedTargetClass} onChange={e => setSelectedTargetClass(e.target.value)}>
+                                        {mockClasses.map(c => <option key={c.id} value={c.id}>{c.id}</option>)}
+                                    </select>
+                                </h4>
+                                <ul className="split-list">
+                                    {targetClassAssigned.map(student => (
+                                        <li key={student.id}><FiCheck /> {student.name}</li>
+                                    ))}
+                                </ul>
+                                <div className="panel-footer"><button className="btn-primary">Lưu thay đổi</button></div>
+                            </div>
+                        </div>
+                    </div>
                 )}
             </div>
         </div>

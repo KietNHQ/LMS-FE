@@ -1,0 +1,164 @@
+.operational-alerts {
+    background: #fff;
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--admin-border);
+    padding: 1.5rem;
+    box-shadow: var(--admin-shadow-sm);
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.alerts-header-vpa {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
+.alerts-header-vpa h3 {
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: var(--admin-text-primary);
+}
+
+.btn-icon-vpa {
+    background: none;
+    border: none;
+    color: var(--admin-text-muted);
+    cursor: pointer;
+    font-size: 1.25rem;
+    display: flex;
+    align-items: center;
+}
+
+.alerts-container {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    flex: 1;
+}
+
+.alert-card-vpa {
+    padding: 1.25rem;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--admin-border);
+    background: var(--admin-surface-soft);
+    position: relative;
+    transition: transform 0.2s ease;
+}
+
+.alert-card-vpa:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--admin-shadow-sm);
+}
+
+.alert-card-vpa.high {
+    border-left: 4px solid #ef4444;
+}
+
+.alert-card-vpa.medium {
+    border-left: 4px solid #f59e0b;
+}
+
+.alert-vpa-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.75rem;
+}
+
+.alert-type-badge {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.75rem;
+    font-weight: 800;
+    color: var(--admin-primary);
+    text-transform: uppercase;
+}
+
+.severity-tag {
+    font-size: 0.7rem;
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+    font-weight: 700;
+}
+
+.severity-tag.high { background: #fee2e2; color: #b91c1c; }
+.severity-tag.medium { background: #fef3c7; color: #b45309; }
+
+.alert-card-vpa h4 {
+    margin: 0 0 0.4rem;
+    font-size: 1rem;
+    color: var(--admin-text-primary);
+    line-height: 1.3;
+}
+
+.alert-card-vpa p {
+    margin: 0 0 1.25rem;
+    font-size: 0.85rem;
+    color: var(--admin-text-secondary);
+    line-height: 1.5;
+}
+
+.alert-vpa-actions {
+    display: flex;
+    gap: 0.75rem;
+}
+
+.btn-vpa-resolve {
+    padding: 0.5rem 1rem;
+    background: var(--admin-primary);
+    color: #fff;
+    border: none;
+    border-radius: var(--radius-md);
+    font-size: 0.8rem;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.btn-vpa-ignore {
+    background: none;
+    border: none;
+    color: var(--admin-text-muted);
+    font-size: 0.8rem;
+    cursor: pointer;
+    font-weight: 600;
+}
+
+/* Ticker */
+.audit-ticker {
+    margin-top: 2rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--admin-border);
+    overflow: hidden;
+}
+
+.ticker-label {
+    font-size: 0.75rem;
+    color: var(--admin-text-muted);
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.ticker-content {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+}
+
+.ticker-content span {
+    font-size: 0.75rem;
+    color: var(--admin-text-secondary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}

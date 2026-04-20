@@ -107,11 +107,33 @@
     min-width: 0;
 }
 
-.grade-list-average {
-    font-size: 20px;
-    font-weight: 900;
+.grade-list-averages-row {
+    display: flex;
+    align-items: stretch;
+    justify-content: center;
+    gap: 12px;
+    background: #f8fbff;
+    padding: 6px 12px;
+    border-radius: 10px;
+    border: 1px solid #eef4fc;
+}
+
+.grade-list-divider {
+    width: 1px;
+    background: #cdd9ed;
+    margin: 4px 0;
+}
+
+.grade-list-score .score-hk {
     color: #04a094;
-    line-height: 1;
+    font-size: 16px;
+    font-weight: 900;
+}
+
+.grade-list-score .score-cn {
+    color: #0f766e;
+    font-size: 16px;
+    font-weight: 900;
 }
 
 .grade-list-rank {

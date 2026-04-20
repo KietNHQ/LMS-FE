@@ -76,12 +76,6 @@ export default function TeacherSchedule() {
 
   return (
     <div className="teacher-schedule">
-      <PageHeader
-        title="Thời khóa biểu"
-        description="Xem lịch dạy theo tuần, lọc theo lớp và mở chi tiết tiết học trong cùng một nhịp giao diện với các trang Teacher khác."
-        eyebrow="Lịch dạy"
-      />
-
       <ScheduleFilterSection
         weekOffset={weekOffset}
         setWeekOffset={setWeekOffset}

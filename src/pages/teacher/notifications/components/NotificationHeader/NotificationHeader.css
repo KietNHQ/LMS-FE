@@ -1,9 +1,19 @@
 .teacher-notification-header {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
-  gap: 16px;
-  flex-wrap: wrap;
+  align-items: center; /* Standard middle alignment */
+  gap: 24px;
+}
+
+.teacher-notification-header-left {
+  display: flex;
+  align-items: center;
+  gap: 32px; /* Standard distance between Title and Filters */
+}
+
+.teacher-notification-header-right {
+  display: flex;
+  align-items: center;
 }
 
 .teacher-notification-header__title h1 {
@@ -21,15 +31,6 @@
   font-size: 14px;
   color: #6f7c91;
   font-weight: 600;
-}
-
-.teacher-notification-header__actions {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  flex: 1;
-  min-width: 320px;
 }
 
 .teacher-notification-header-buttons {
@@ -79,11 +80,11 @@
 
 .teacher-notification-bell {
   position: relative;
-  width: 44px; /* adjusted to match button height */
+  width: 44px;
   height: 44px;
   border-radius: 12px;
   background: #ffffff;
-  border: 1px solid #cdecea;
+  border: 1px solid #dbe4f5;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -124,6 +125,46 @@
   box-shadow: 0 4px 10px rgba(255, 77, 79, 0.22);
 }
 
+/* ===== Starred Filter Button ===== */
+.teacher-marked-filter-btn {
+  height: 44px;
+  border: 1px solid #dbe4f5;
+  border-radius: 12px;
+  background: #ffffff;
+  color: #04a094;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 16px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.teacher-marked-filter-btn strong {
+  min-width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #f0fbfa;
+  color: #03867c;
+  font-size: 11px;
+}
+
+.teacher-marked-filter-btn:hover {
+  border-color: #9ee3dc;
+  background: #f5fdff;
+}
+
+.teacher-marked-filter-btn.is-active {
+  border-color: #11c7b6;
+  background: linear-gradient(135deg, #f0fbfa 0%, #e0f6f4 100%);
+}
+
 @media (max-width: 900px) {
   .teacher-notification-header {
     flex-direction: column;
@@ -133,6 +174,7 @@
   .teacher-notification-header__actions {
     min-width: 0;
     width: 100%;
+    flex-wrap: wrap;
   }
 }
 

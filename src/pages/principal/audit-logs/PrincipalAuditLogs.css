@@ -1,99 +1,281 @@
+:root {
+  --navy-deep: #1e2f5a;
+  --navy-accent: #3b82f6;
+  --glass-bg: rgba(255, 255, 255, 0.7);
+  --glass-border: rgba(255, 255, 255, 0.4);
+}
+
 .principal-audit-logs {
-    display: flex;
-    flex-direction: column;
-    gap: 1.5rem;
-    padding-bottom: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  padding-bottom: 3rem;
+  animation: fadeIn 0.4s ease-out;
 }
 
-.audit-logs-container {
-    background: #ffffff;
-    padding: 1.5rem;
-    border-radius: 1.25rem;
-    border: 1px solid #e2e8f0;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
-.audit-logs-toolbar {
-    display: flex;
-    gap: 1rem;
-    margin-bottom: 1.5rem;
-    flex-wrap: wrap;
+/* ── HERO METRICS ── */
+.audit-hero-section {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1.25rem;
 }
 
-.audit-search-input {
-    flex: 1;
-    min-width: 300px;
-    padding: 0.75rem 1rem;
-    border: 1px solid #cbd5e1;
-    border-radius: 0.75rem;
-    outline: none;
-    font-size: 0.9rem;
-    transition: border-color 0.2s;
-    background: #f8fafc;
+.audit-metric-card {
+  background: var(--glass-bg);
+  backdrop-filter: blur(12px) saturate(180%);
+  border: 1px solid var(--glass-border);
+  padding: 1.5rem;
+  border-radius: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  box-shadow: 0 8px 32px rgba(31, 38, 135, 0.05);
+  transition: all 0.3s ease;
 }
-.audit-search-input:focus { border-color: #3b82f6; background: #fff; }
 
-.audit-filter-select {
-    padding: 0.75rem 1rem;
-    border: 1px solid #cbd5e1;
-    border-radius: 0.75rem;
-    outline: none;
-    background: #ffffff;
-    color: #334155;
-    font-size: 0.875rem;
-    cursor: pointer;
+.audit-metric-card:hover {
+  transform: translateY(-4px);
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 12px 40px rgba(31, 38, 135, 0.08);
+}
+
+.audit-metric-card .icon-label {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: #64748b;
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.audit-metric-card .icon-label svg {
+  font-size: 1.25rem;
+  color: var(--navy-accent);
+}
+
+.audit-metric-card .value {
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: var(--navy-deep);
+}
+
+.audit-metric-card.critical .icon-label svg { color: #ef4444; }
+.audit-metric-card.critical .value { color: #b91c1c; }
+
+/* ── TOOLBAR ── */
+.audit-toolbar-refined {
+  background: white;
+  padding: 1rem 1.25rem;
+  border-radius: 1.25rem;
+  border: 1px solid #e2e8f0;
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  flex-wrap: wrap;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+}
+
+.search-box-wrapper {
+  position: relative;
+  flex: 1.5;
+  min-width: 280px;
+}
+
+.search-box-wrapper svg {
+  position: absolute;
+  left: 1.25rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #94a3b8;
+  font-size: 1.1rem;
+}
+
+.search-box-wrapper input {
+  width: 100%;
+  height: 46px;
+  background: white;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 0 1.25rem 0 3rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--navy-deep);
+  transition: all 0.2s;
+  outline: none;
+}
+
+.search-box-wrapper input:focus {
+  border-color: var(--navy-accent);
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.08);
+}
+
+.filters-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex: 3;
+}
+
+.filter-item {
+  flex: 1;
+  min-width: 180px;
 }
 
 /* ── TABLE ── */
-.audit-table-wrapper {
-    overflow-x: auto;
-    border-radius: 1rem;
-    border: 1px solid #f1f5f9;
+.audit-table-container {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 1.5rem;
+  overflow: hidden;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.04);
 }
-.audit-table {
-    width: 100%;
-    border-collapse: collapse;
-}
-.audit-table th {
-    background: #f8fafc;
-    color: #475569;
-    text-align: left;
-    padding: 1rem;
-    font-size: 0.75rem;
-    text-transform: uppercase;
-    font-weight: 700;
-    border-bottom: 1px solid #e2e8f0;
-}
-.audit-table td {
-    padding: 1.25rem 1rem;
-    border-bottom: 1px solid #f1f5f9;
-    font-size: 0.9rem;
-    color: #334155;
-}
-.audit-table tr:hover { background: #f8fafc; }
 
-.log-time { color: #64748b; font-size: 0.8rem; font-weight: 500; white-space: nowrap; }
-
-.log-role {
-    font-size: 0.7rem;
-    font-weight: 700;
-    padding: 0.2rem 0.5rem;
-    border-radius: 0.25rem;
-    margin-left: 0.5rem;
-    display: inline-block;
+.modern-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
 }
-.log-role.Admin { background: #fee2e2; color: #991b1b; }
-.log-role.Teacher { background: #e0e7ff; color: #3730a3; }
-.log-role.Student { background: #f0fdf4; color: #166534; }
 
-.log-action {
-    font-size: 0.75rem;
-    font-weight: 700;
-    padding: 0.25rem 0.6rem;
-    border-radius: 999px;
-    text-transform: uppercase;
+.modern-table th {
+  background: #f8fbff;
+  padding: 1.25rem;
+  text-align: left;
+  color: #475569;
+  font-size: 0.75rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-bottom: 2px solid #e2e8f0;
 }
-.log-action.UPDATE { background: #fef3c7; color: #92400e; }
-.log-action.CREATE { background: #dcfce7; color: #166534; }
-.log-action.DELETE { background: #fee2e2; color: #991b1b; }
-.log-action.LOGIN { background: #f1f5f9; color: #475569; }
+
+.modern-table td {
+  padding: 1.25rem;
+  border-bottom: 1px solid rgba(226, 232, 240, 0.5);
+  vertical-align: middle;
+  background: white;
+}
+
+.modern-table tr:last-child td { border-bottom: none; }
+
+.modern-table tr:hover td {
+  background: #fcfdff;
+}
+
+/* ── PAGINATION OVERRIDES ── */
+.audit-table-container .common-pagination {
+  background: #f8fafc;
+  box-shadow: none;
+  border: none;
+  border-top: 1px solid #e2e8f0;
+  border-radius: 0;
+  padding: 0.75rem 1.25rem;
+  justify-content: center;
+}
+
+/* Operator Cell */
+.operator-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.operator-cell .name {
+  font-weight: 700;
+  color: var(--navy-deep);
+  font-size: 0.95rem;
+}
+
+.operator-cell .id-role {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.operator-cell .id {
+  color: #64748b;
+  font-size: 0.8rem;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+/* Time Cell */
+.time-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.time-cell .date {
+  font-weight: 700;
+  color: var(--navy-deep);
+}
+
+.time-cell .time {
+  font-size: 0.8rem;
+  color: #94a3b8;
+}
+
+/* Module Cell */
+.module-tag {
+  font-weight: 700;
+  color: #475569;
+  background: #f1f5f9;
+  padding: 0.35rem 0.75rem;
+  border-radius: 8px;
+  font-size: 0.85rem;
+}
+
+/* Log Action Badges */
+.action-badge {
+  padding: 0.4rem 0.8rem;
+  border-radius: 99px;
+  font-size: 0.7rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.action-badge.create { background: #dcfce7; color: #166534; }
+.action-badge.update { background: #fef3c7; color: #92400e; }
+.action-badge.delete { background: #fee2e2; color: #991b1b; }
+.action-badge.login { background: #f1f5f9; color: #475569; }
+
+/* Standardized Role Badges */
+.role-badge {
+  font-size: 0.65rem;
+  font-weight: 800;
+  padding: 0.15rem 0.45rem;
+  border-radius: 4px;
+  text-transform: uppercase;
+}
+
+.role-badge.admin { background: #1e2f5a; color: white; }
+.role-badge.teacher { background: #4fd1c5; color: white; }
+.role-badge.student { background: #8fb3ff; color: white; }
+.role-badge.parent { background: #d8c8ff; color: white; }
+
+/* Empty State */
+.empty-state {
+  padding: 5rem 2rem;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  color: #94a3b8;
+}
+
+.empty-state svg { font-size: 4rem; opacity: 0.3; }
+.empty-state p { font-size: 1.1rem; font-weight: 600; }
+
+@media (max-width: 1024px) {
+  .audit-hero-section { grid-template-columns: repeat(2, 1fr); }
+  .audit-toolbar-refined { flex-direction: column; align-items: stretch; }
+  .filters-row { flex-direction: column; align-items: stretch; }
+}

@@ -4,6 +4,7 @@ import NotificationItem from "../NotificationItem/NotificationItem";
 export default function NotificationList({
   notifications,
   onOpen,
+  onToggleImportant,
   getClassLabel,
 }) {
   return (
@@ -13,6 +14,7 @@ export default function NotificationList({
           key={item.id}
           item={item}
           onOpen={onOpen}
+          onToggleImportant={onToggleImportant}
           getClassLabel={getClassLabel}
         />
       ))}

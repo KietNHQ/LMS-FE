@@ -11,10 +11,11 @@ import ChangePasswordDialog from "../ChangePasswordDialog/ChangePasswordDialog";
 import { getProfileByRole, ROLE_THEME } from "./profileData";
 import "./ProfileDialog.css";
 
-export default function ProfileDialog({ open, role = "student", profile, onClose }) {
+export default function ProfileDialog({ open, role = "student", themeRole, profile, onClose }) {
     const [isPasswordDialogOpen, setIsPasswordDialogOpen] = useState(false);
 
     const roleTheme = ROLE_THEME[role] || ROLE_THEME.student;
+    const visualRole = ROLE_THEME[themeRole] ? themeRole : role;
     const resolvedProfile = useMemo(() => getProfileByRole(role, profile), [role, profile]);
 
     const basicFields = useMemo(() => {
@@ -74,7 +75,7 @@ export default function ProfileDialog({ open, role = "student", profile, onClose
     return (
         <div className="profile-dialog" onClick={onClose}>
             <div className="profile-dialog-content" onClick={(event) => event.stopPropagation()}>
-                <ProfileHeaderSection name={resolvedProfile.name} roleLabel={roleTheme.label} role={role} />
+                <ProfileHeaderSection name={resolvedProfile.name} roleLabel={roleTheme.label} role={visualRole} />
                 <div className="profile-dialog-sections">
                     <BasicInfoSection fields={basicFields} />
                     <ContactInfoSection fields={contactFields} />
@@ -84,7 +85,7 @@ export default function ProfileDialog({ open, role = "student", profile, onClose
                     <RoleDescriptionSection descriptions={resolvedProfile.roleDescription} />
                 </div>
                 <ProfileActionsSection
-                    role={role}
+                    role={visualRole}
                     onChangePassword={() => setIsPasswordDialogOpen(true)}
                     onClose={onClose}
                 />
@@ -92,7 +93,7 @@ export default function ProfileDialog({ open, role = "student", profile, onClose
 
             <ChangePasswordDialog
                 open={isPasswordDialogOpen}
-                role={role}
+                role={visualRole}
                 onClose={() => setIsPasswordDialogOpen(false)}
             />
         </div>

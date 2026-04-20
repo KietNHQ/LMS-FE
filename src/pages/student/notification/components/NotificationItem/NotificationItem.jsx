@@ -11,10 +11,10 @@ export default function NotificationItem({ item, onOpen, onToggleImportant }) {
     const displayDate = formatNotificationDate(item.date);
 
     return (
-        <div className={`notification-card ${item.unread ? "is-unread" : ""}`}>
+        <div className={`notification-card ${item.unread ? "is-unread" : ""} ${item.important ? "is-important" : ""}`}>
             <div className="notification-body" onClick={() => onOpen(item)}>
                 <div className="notification-icon-student">
-                        <Bell size={20}/>
+                    <Bell size={20} />
                 </div>
                 <div className="notification-content">
                     <div className="notification-title">

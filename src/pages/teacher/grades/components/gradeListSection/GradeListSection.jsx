@@ -129,7 +129,22 @@ export default function GradeListSection({
                         </div>
 
                         <div className="grade-list-item__summary">
-                            <span className="grade-list-average">{formatScore(record.average)}</span>
+                            <div className="grade-list-averages-row">
+                                <div className="grade-list-score">
+                                    <span>Học kỳ</span>
+                                    <strong className="score-hk">{formatScore(record.average)}</strong>
+                                </div>
+
+                                {record.fullYearAverage ? (
+                                    <>
+                                        <div className="grade-list-divider"></div>
+                                        <div className="grade-list-score">
+                                            <span>Cả năm</span>
+                                            <strong className="score-cn">{formatScore(record.fullYearAverage)}</strong>
+                                        </div>
+                                    </>
+                                ) : null}
+                            </div>
                             <span className={`grade-list-rank rank-${record.rank}`}>
                                 {RANK_LABELS[record.rank] || record.rank}
                             </span>

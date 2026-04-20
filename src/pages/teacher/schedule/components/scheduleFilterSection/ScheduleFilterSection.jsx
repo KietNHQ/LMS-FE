@@ -72,27 +72,29 @@ export default function ScheduleFilterSection({ weekOffset, setWeekOffset, selec
   return (
     <div className="schedule-filter-section">
       <div className="schedule-filter-week">
-        <div className="schedule-filter-week-nav">
-          <button className="week-nav-btn" onClick={goBack}>
-            <ChevronLeft size={18} />
-          </button>
+        <div className="schedule-filter-title-nav">
+          <h1 className="schedule-filter-title">Thời khóa biểu</h1>
+          <div className="schedule-filter-week-nav">
+            <button className="week-nav-btn" onClick={goBack}>
+              <ChevronLeft size={18} />
+            </button>
 
-          <div className="week-label" onClick={openPicker} title="Chọn ngày để chuyển tuần">
-            <Calendar size={16} />
-            <span>{formatWeekRange(days)}</span>
-            <input
-              type="date"
-              ref={dateInputRef}
-              onChange={handleDateChange}
-              style={{ position: 'absolute', opacity: 0, width: 0, padding: 0, border: 'none' }}
-              // current monday as value to indicate current selection
-              value={days[0].toISOString().split('T')[0]}
-            />
+            <div className="week-label" onClick={openPicker} title="Chọn ngày để chuyển tuần">
+              <Calendar size={16} />
+              <span>{formatWeekRange(days)}</span>
+              <input
+                type="date"
+                ref={dateInputRef}
+                onChange={handleDateChange}
+                style={{ position: 'absolute', opacity: 0, width: 0, padding: 0, border: 'none' }}
+                value={days[0].toISOString().split('T')[0]}
+              />
+            </div>
+
+            <button className="week-nav-btn" onClick={goForward}>
+              <ChevronRight size={18} />
+            </button>
           </div>
-
-          <button className="week-nav-btn" onClick={goForward}>
-            <ChevronRight size={18} />
-          </button>
         </div>
 
         <div className="schedule-filter-actions">

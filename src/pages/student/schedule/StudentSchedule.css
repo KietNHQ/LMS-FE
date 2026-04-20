@@ -1,13 +1,181 @@
 .student-schedule-page {
-    width: 100%;
-    min-width: 0;
-    padding: 24px;
-    box-sizing: border-box;
-    /* background: linear-gradient(180deg, #f8fbff 0%, #ffffff 32%); */
+  padding: 24px;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-width: 1440px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+.student-schedule-page .common-page-header {
+  padding: 18px 18px 16px;
+  border: 1px solid var(--student-border-soft, #e2e8f0);
+  border-radius: 18px;
+  background: linear-gradient(120deg, color-mix(in srgb, var(--student-primary-soft, #eff6ff) 86%, #ffffff 14%) 0%, #ffffff 64%);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.student-schedule-page .common-page-header__title-container {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+}
+
+.student-schedule-page .common-page-header h1 {
+  font-size: clamp(28px, 2.6vw, 40px);
+  letter-spacing: -0.03em;
+}
+
+.student-schedule-page .common-page-header p {
+  max-width: 720px;
+  line-height: 1.55;
+}
+
+.student-schedule-content {
+  width: 100%;
+}
+
+/* ===== Modal Styles ===== */
+.student-lesson-modal {
+  max-width: 720px;
+  width: 94vw;
+}
+
+.student-lesson-modal-content {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 4px 0;
+}
+
+.modal-header-info {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--student-border-soft, #e2e8f0);
+  padding-bottom: 12px;
+  gap: 12px;
+}
+
+.modal-header-info h3 {
+  font-size: 19px;
+  font-weight: 700;
+  color: var(--student-text-main, #1e293b);
+  margin: 0;
+}
+
+.modal-header-subtitle {
+  margin: 6px 0 0;
+  font-size: 13px;
+  color: var(--student-text-sub, #64748b);
+}
+
+.modal-header-badges {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.modal-badge {
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.modal-type-badge {
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.modal-type-badge.status-normal { background: #dcfce7; color: #166534; }
+.modal-type-badge.status-rescheduled { background: #fff7ed; color: #ea580c; }
+.modal-type-badge.status-cancelled { background: #fee2e2; color: #b91c1c; }
+.modal-type-badge.status-holiday { background: #f1f5f9; color: #475569; }
+.modal-type-badge.status-makeup { background: #eff6ff; color: #1d4ed8; }
+
+.modal-info-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.modal-info-card {
+  border: 1px solid var(--student-border-soft, #e2e8f0);
+  border-radius: 10px;
+  padding: 10px 12px;
+  background: var(--student-surface, #ffffff);
+}
+
+.modal-info-card-wide {
+  grid-column: 1 / -1;
+}
+
+.modal-info-card h4 {
+  margin: 0 0 8px;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--student-text-main, #1e293b);
+}
+
+.modal-info-card p {
+  margin: 0 0 6px;
+  font-size: 13px;
+  color: var(--student-text-sub, #64748b);
+  line-height: 1.45;
+}
+
+.modal-info-card p:last-child {
+  margin-bottom: 0;
+}
+
+.modal-info-card strong {
+  color: var(--student-text-main, #1e293b);
+  font-weight: 600;
+}
+
+@media (max-width: 680px) {
+  .modal-info-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.modal-badge.color-teal {
+  background: #ccfbf1;
+  color: #0d9488;
+}
+
+.modal-badge.color-blue {
+  background: #dbeafe;
+  color: #2563eb;
+}
+
+.modal-badge.color-purple {
+  background: #f3e8ff;
+  color: #9333ea;
+}
+
+.modal-badge.color-orange {
+  background: #ffedd5;
+  color: #ea580c;
+}
+
+.modal-badge.color-pink {
+  background: #fce7f3;
+  color: #db2777;
 }
 
 @media (max-width: 768px) {
-    .student-schedule-page {
-        padding: 20px 14px 24px;
-    }
+  .student-schedule-page {
+    padding: 16px;
+  }
+
+  .student-schedule-page .common-page-header {
+    padding: 16px;
+  }
 }

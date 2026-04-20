@@ -70,6 +70,10 @@ const VpDisciplineMgmt = lazy(() => import("../pages/vp-discipline/discipline-ma
 const VpDisciplineCompetition = lazy(() => import("../pages/vp-discipline/competition/VpDisciplineCompetition"));
 const VpDisciplineAttendance = lazy(() => import("../pages/vp-discipline/attendance/VpDisciplineAttendance"));
 const VpDisciplineConduct = lazy(() => import("../pages/vp-discipline/conduct/VpDisciplineConduct"));
+const VpDisciplineApprovals = lazy(() => import("../pages/vp-discipline/approvals/VpDisciplineApprovals"));
+const VpDisciplineViolations = lazy(() => import("../pages/vp-discipline/discipline/VpDisciplineViolations"));
+const VpDisciplineIncidents = lazy(() => import("../pages/vp-discipline/incidents/VpDisciplineIncidents"));
+const VpDisciplineReports = lazy(() => import("../pages/vp-discipline/reports/VpDisciplineReports"));
 const VpDisciplineNotifications = lazy(() => import("../pages/vp-discipline/notifications/VpDisciplineNotifications"));
 
 /* ACADEMIC STAFF PAGES */
@@ -199,6 +203,7 @@ export default function AppRoutes() {
         <Route index element={<Navigate to="dashboard" replace />} />
         <Route path="dashboard" element={<PrincipalDashboard />} />
         <Route path="overview" element={<PrincipalOverview />} />
+        <Route path="classes/:classId" element={<ClassDetailSection />} />
         <Route path="approvals" element={<PrincipalApprovals />} />
         <Route path="reports" element={<PrincipalReports />} />
         <Route path="audit-logs" element={<PrincipalAuditLogs />} />
@@ -223,9 +228,13 @@ export default function AppRoutes() {
         <Route index element={<Navigate to="dashboard" replace />} />
         <Route path="dashboard" element={<VpDisciplineDashboard />} />
         <Route path="discipline-management" element={<VpDisciplineMgmt />} />
+        <Route path="discipline" element={<VpDisciplineViolations />} />
+        <Route path="incidents" element={<VpDisciplineIncidents />} />
         <Route path="competition" element={<VpDisciplineCompetition />} />
         <Route path="attendance" element={<VpDisciplineAttendance />} />
         <Route path="conduct" element={<VpDisciplineConduct />} />
+        <Route path="approvals" element={<VpDisciplineApprovals />} />
+        <Route path="reports" element={<VpDisciplineReports />} />
         <Route path="notifications" element={<VpDisciplineNotifications />} />
       </Route>
 

@@ -27,7 +27,8 @@ export default function StudentNotifications() {
       date: "2025-01-15",
       unread: true,
       important: false,
-      priority: 0
+      priority: 0,
+      category: "Môn học"
     },
     {
       id: 2,
@@ -37,7 +38,8 @@ export default function StudentNotifications() {
       date: "2025-01-08",
       unread: true,
       important: false,
-      priority: 0
+      priority: 0,
+      category: "Môn học"
     },
     {
       id: 3,
@@ -47,7 +49,8 @@ export default function StudentNotifications() {
       date: "2025-01-18",
       unread: true,
       important: false,
-      priority: 0
+      priority: 0,
+      category: "Hệ thống"
     },
     {
       id: 4,
@@ -57,7 +60,8 @@ export default function StudentNotifications() {
       date: "2025-01-20",
       unread: true,
       important: false,
-      priority: 0
+      priority: 0,
+      category: "Hệ thống"
     },
     {
       id: 5,
@@ -217,8 +221,13 @@ export default function StudentNotifications() {
 
   const [priorityCounter, setPriorityCounter] = useState(1);
   const [selected, setSelected] = useState(null);
+  const [filter, setFilter] = useState("all");
   const [showOnlyMarked, setShowOnlyMarked] = useState(false);
   const [visibleCount, setVisibleCount] = useState(LOAD_BATCH_SIZE);
+
+  const categories = useMemo(() => {
+    return [...new Set(notifications.map(n => n.category).filter(Boolean))];
+  }, [notifications]);
 
   const unreadCount = notifications.filter(n => n.unread).length;
   const markedCount = useMemo(
@@ -237,6 +246,11 @@ export default function StudentNotifications() {
 
   const sortedNotifications = useMemo(() => {
     return [...notifications].sort((a, b) => {
+      // Important first
+      if (a.important && !b.important) return -1;
+      if (!a.important && b.important) return 1;
+
+      // Then by date descending
       const dateDiff = new Date(b.date).getTime() - new Date(a.date).getTime();
       if (dateDiff !== 0) return dateDiff;
       return b.id - a.id;
@@ -244,12 +258,18 @@ export default function StudentNotifications() {
   }, [notifications]);
 
   const filteredNotifications = useMemo(() => {
-    if (!showOnlyMarked) {
-      return sortedNotifications;
+    let result = sortedNotifications;
+
+    if (filter !== "all") {
+      result = result.filter(n => n.category === filter);
     }
 
-    return sortedNotifications.filter((item) => item.important);
-  }, [sortedNotifications, showOnlyMarked]);
+    if (showOnlyMarked) {
+      result = result.filter((item) => item.important);
+    }
+
+    return result;
+  }, [sortedNotifications, showOnlyMarked, filter]);
 
   const visibleNotifications = useMemo(() => {
     return filteredNotifications.slice(0, visibleCount);
@@ -329,6 +349,9 @@ export default function StudentNotifications() {
         <NotificationHeader
           unreadCount={unreadCount}
           onMarkAllRead={markAllRead}
+          filter={filter}
+          setFilter={setFilter}
+          categories={categories}
           showOnlyMarked={showOnlyMarked}
           onToggleMarkedFilter={() => setShowOnlyMarked((prev) => !prev)}
           markedCount={markedCount}

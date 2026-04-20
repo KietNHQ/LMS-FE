@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { FiSearch, FiChevronLeft, FiChevronRight, FiEdit2, FiUserX, FiUserCheck } from "react-icons/fi";
 import "./classDetailSection.css";
 
@@ -14,7 +14,7 @@ function formatDateDDMMYYYY(dateString) {
 const mockStudents = [
     { id: 1, name: "Nguyễn Minh Tuấn", dob: "2008-03-15", enrollmentDate: "2024-09-01", parentName: "Nguyễn Văn An", parentPhone: "0912345678", tuitionPaid: true },
     { id: 2, name: "Trần Thị Bảo Châu", dob: "2008-07-22", enrollmentDate: "2024-09-01", parentName: "Trần Văn Bình", parentPhone: "0987654321", tuitionPaid: false },
-    { id: 3, name: "Phạm Văn Hùng", dob: "2008-05-10", enrollmentDate: "2024-09-02", parentName: "Phạm Thị Hoa", parentPhone: "0923456789", tuitionPaid: true },
+    { id: 3, name: "Phạm Văn Hùng", dob: "2008-05-10", enrollmentDate: "2024-09-01", parentName: "Phạm Thị Hoa", parentPhone: "0923456789", tuitionPaid: true },
     { id: 4, name: "Hoàng Thị Hoa", dob: "2008-02-28", enrollmentDate: "2024-09-01", parentName: "Hoàng Văn Hùng", parentPhone: "0934567890", tuitionPaid: false },
     { id: 5, name: "Lê Văn Dũng", dob: "2008-08-12", enrollmentDate: "2024-09-03", parentName: "Lê Thị Linh", parentPhone: "0945678901", tuitionPaid: true },
     { id: 6, name: "Vũ Thị Trang", dob: "2008-04-05", enrollmentDate: "2024-09-01", parentName: "Vũ Văn Tuấn", parentPhone: "0956789012", tuitionPaid: false },
@@ -108,6 +108,7 @@ const mockAttendanceByStudent = {
 export default function ClassDetailSection() {
     const { classId } = useParams();
     const navigate = useNavigate();
+    const location = useLocation();
     const [searchTerm, setSearchTerm] = useState("");
     const [currentPage, setCurrentPage] = useState(1);
     const [students, setStudents] = useState(() =>
@@ -124,6 +125,9 @@ export default function ClassDetailSection() {
     const [activeSection, setActiveSection] = useState("students");
     const [selectedTimeFilter, setSelectedTimeFilter] = useState("this-week");
     const [selectedSort, setSelectedSort] = useState("attendance-asc");
+
+    // Logic to check if Principal View
+    const isPrincipalView = location.pathname.startsWith("/principal");
 
     const classData = mockClasses.find((c) => String(c.id) === String(classId)) || null;
 
@@ -226,6 +230,7 @@ export default function ClassDetailSection() {
     };
 
     const handleEditStudent = (student) => {
+        if (isPrincipalView) return; // View only
         setActiveModalMode("edit");
         setActiveStudentId(student.id);
         setEditForm({
@@ -237,7 +242,7 @@ export default function ClassDetailSection() {
     };
 
     const handleSaveEdit = () => {
-        if (!activeStudentId) return;
+        if (!activeStudentId || isPrincipalView) return;
 
         setStudents((prevStudents) =>
             prevStudents.map((student) =>
@@ -256,6 +261,7 @@ export default function ClassDetailSection() {
     };
 
     const handleOpenToggleHiddenDialog = (studentId) => {
+        if (isPrincipalView) return; // View only
         setActiveModalMode("toggle-hidden");
         setActiveStudentId(studentId);
     };
@@ -284,7 +290,7 @@ export default function ClassDetailSection() {
     };
 
     const handleConfirmToggleHidden = () => {
-        if (!activeStudentId) return;
+        if (!activeStudentId || isPrincipalView) return;
 
         setStudents((prevStudents) =>
             prevStudents.map((student) =>
@@ -296,10 +302,18 @@ export default function ClassDetailSection() {
         handleCloseModal();
     };
 
+    const handleBack = () => {
+        if (window.history.length > 1) {
+            navigate(-1);
+        } else {
+            navigate(isPrincipalView ? "/principal/overview" : "/admin/classes");
+        }
+    };
+
     if (!classData) {
         return (
             <div className="class-detail-page">
-                <button className="back-btn" onClick={() => navigate("/admin/classes")}>
+                <button className="back-btn" onClick={handleBack}>
                     ← Quay lại
                 </button>
                 <div className="empty-state">
@@ -311,17 +325,15 @@ export default function ClassDetailSection() {
 
     return (
         <div className="class-detail-page">
-            {/* Header Section */}
             <div className="class-detail-header">
                 <div className="class-detail-top">
-                    <button className="back-btn" onClick={() => navigate("/admin/classes")}>
+                    <button className="back-btn" onClick={handleBack}>
                         ← Quay lại
                     </button>
                     <div className="class-detail-title">
                         <h1>{classData.name}</h1>
                         <p>{classData.grade} • {classData.year}</p>
                     </div>
-
                 </div>
 
                 <div className="class-detail-info">
@@ -363,34 +375,33 @@ export default function ClassDetailSection() {
 
             {activeSection === "students" ? (
                 <div className="students-card">
-                <div className="students-card-header">
-                    <h2 className="students-card-title">Danh sách học sinh</h2>
-                    <div className="class-detail-search-box">
-                        <FiSearch className="class-detail-search-icon" />
-                        <input
-                            type="text"
-                            placeholder="Tìm kiếm học sinh..."
-                            value={searchTerm}
-                            onChange={handleSearchStudent}
-                        />
+                    <div className="students-card-header">
+                        <h2 className="students-card-title">Danh sách học sinh</h2>
+                        <div className="class-detail-search-box">
+                            <FiSearch className="class-detail-search-icon" />
+                            <input
+                                type="text"
+                                placeholder="Tìm kiếm học sinh..."
+                                value={searchTerm}
+                                onChange={handleSearchStudent}
+                            />
+                        </div>
                     </div>
-                </div>
 
-                <div className="table-wrapper">
-                    <table className="students-table">
-                        <thead>
-                            <tr>
-                                <th>STT</th>
-                                <th>HỌC SINH</th>
-                                <th>NGÀY NHẬP HỌC</th>
-                                <th>PHỤ HUYNH</th>
-                                <th>HỌC PHÍ</th>
-                                <th>THAO TÁC</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {paginatedStudents.map((student, index) => {
-                                return (
+                    <div className="table-wrapper">
+                        <table className="students-table">
+                            <thead>
+                                <tr>
+                                    <th>STT</th>
+                                    <th>HỌC SINH</th>
+                                    <th>NGÀY NHẬP HỌC</th>
+                                    <th>PHỤ HUYNH</th>
+                                    <th>HỌC PHÍ</th>
+                                    {!isPrincipalView && <th>THAO TÁC</th>}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {paginatedStudents.map((student, index) => (
                                     <tr key={student.id} className={student.isHidden ? "student-row-hidden" : ""}>
                                         <td className="student-index-cell">{(effectivePage - 1) * ITEMS_PER_PAGE + index + 1}</td>
                                         <td>
@@ -416,148 +427,54 @@ export default function ClassDetailSection() {
                                                 {student.tuitionPaid ? "Đã đóng" : "Chưa đóng"}
                                             </span>
                                         </td>
-                                        <td className="student-actions-cell">
-                                            <div className="student-row-actions">
-                                                <button
-                                                    className="student-action-btn edit"
-                                                    onClick={() => handleEditStudent(student)}
-                                                    title="Sửa học sinh"
-                                                    aria-label="Sửa học sinh"
-                                                >
-                                                    <FiEdit2 />
-                                                </button>
-                                                <button
-                                                    className={`student-action-btn delete ${student.isHidden ? "active" : ""}`}
-                                                    onClick={() => handleOpenToggleHiddenDialog(student.id)}
-                                                    title={student.isHidden ? "Hiện học sinh" : "Ẩn học sinh"}
-                                                    aria-label={student.isHidden ? "Hiện học sinh" : "Ẩn học sinh"}
-                                                >
-                                                    {student.isHidden ? <FiUserCheck /> : <FiUserX />}
-                                                </button>
-                                            </div>
-                                        </td>
+                                        {!isPrincipalView && (
+                                            <td className="student-actions-cell">
+                                                <div className="student-row-actions">
+                                                    <button
+                                                        className="student-action-btn edit"
+                                                        onClick={() => handleEditStudent(student)}
+                                                        title="Sửa học sinh"
+                                                    >
+                                                        <FiEdit2 />
+                                                    </button>
+                                                    <button
+                                                        className={`student-action-btn delete ${student.isHidden ? "active" : ""}`}
+                                                        onClick={() => handleOpenToggleHiddenDialog(student.id)}
+                                                        title={student.isHidden ? "Hiện học sinh" : "Ẩn học sinh"}
+                                                    >
+                                                        {student.isHidden ? <FiUserCheck /> : <FiUserX />}
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        )}
                                     </tr>
-                                );
-                            })}
-                        </tbody>
-                    </table>
+                                ))}
+                            </tbody>
+                        </table>
+                        {paginatedStudents.length === 0 && (
+                            <div className="table-empty">Không tìm thấy học sinh</div>
+                        )}
+                    </div>
 
-                    {paginatedStudents.length === 0 && (
-                        <div className="table-empty">Không tìm thấy học sinh</div>
+                    {totalPages > 1 && (
+                        <div className="table-pagination">
+                            <button className="page-btn" onClick={goPrevPage} disabled={effectivePage === 1}>
+                                <FiChevronLeft />
+                            </button>
+                            <div className="page-indicator">
+                                <span>{effectivePage}</span>
+                                <small>/ {totalPages}</small>
+                            </div>
+                            <button className="page-btn" onClick={goNextPage} disabled={effectivePage === totalPages}>
+                                <FiChevronRight />
+                            </button>
+                        </div>
                     )}
                 </div>
-
-                {totalPages > 1 && (
-                    <div className="table-pagination">
-                        <button
-                            className="page-btn"
-                            onClick={goPrevPage}
-                            disabled={effectivePage === 1}
-                            aria-label="Trang trước"
-                        >
-                            <FiChevronLeft />
-                        </button>
-
-                        <div className="page-indicator">
-                            <span>{effectivePage}</span>
-                            <small>/ {totalPages}</small>
-                        </div>
-
-                        <button
-                            className="page-btn"
-                            onClick={goNextPage}
-                            disabled={effectivePage === totalPages}
-                            aria-label="Trang sau"
-                        >
-                            <FiChevronRight />
-                        </button>
-                    </div>
-                )}
-
-                {activeModalMode === "edit" && activeStudent && (
-                    <div className="class-student-modal-overlay" onClick={handleCloseModal}>
-                        <div className="class-student-modal" onClick={(e) => e.stopPropagation()}>
-                            <h3>Chỉnh sửa học sinh</h3>
-
-                            <div className="class-student-modal-grid">
-                                <label>
-                                    <span>Họ và tên</span>
-                                    <input
-                                        type="text"
-                                        value={editForm.name}
-                                        onChange={(e) => setEditForm((prev) => ({ ...prev, name: e.target.value }))}
-                                        placeholder="Nhập họ và tên"
-                                    />
-                                </label>
-
-                                <label>
-                                    <span>Ngày sinh</span>
-                                    <input
-                                        type="date"
-                                        value={editForm.dob}
-                                        onChange={(e) => setEditForm((prev) => ({ ...prev, dob: e.target.value }))}
-                                    />
-                                </label>
-
-                                <label>
-                                    <span>Tên phụ huynh</span>
-                                    <input
-                                        type="text"
-                                        value={editForm.parentName}
-                                        onChange={(e) => setEditForm((prev) => ({ ...prev, parentName: e.target.value }))}
-                                        placeholder="Nhập tên phụ huynh"
-                                    />
-                                </label>
-
-                                <label>
-                                    <span>Số điện thoại phụ huynh</span>
-                                    <input
-                                        type="text"
-                                        value={editForm.parentPhone}
-                                        onChange={(e) => setEditForm((prev) => ({ ...prev, parentPhone: e.target.value }))}
-                                        placeholder="Nhập số điện thoại"
-                                    />
-                                </label>
-                            </div>
-
-                            <div className="class-student-modal-actions">
-                                <button className="class-student-modal-btn cancel" onClick={handleCloseModal}>
-                                    Hủy
-                                </button>
-                                <button className="class-student-modal-btn primary" onClick={handleSaveEdit}>
-                                    Lưu thay đổi
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                )}
-
-                {activeModalMode === "toggle-hidden" && activeStudent && (
-                    <div className="class-student-modal-overlay" onClick={handleCloseModal}>
-                        <div className="class-student-modal class-student-confirm-modal" onClick={(e) => e.stopPropagation()}>
-                            <h3>{activeStudent.isHidden ? "Hiện lại học sinh" : "Ẩn học sinh"}</h3>
-                            <p>
-                                Bạn có chắc muốn {activeStudent.isHidden ? "hiện lại" : "ẩn"} học sinh
-                                <strong> {activeStudent.name}</strong> không?
-                            </p>
-
-                            <div className="class-student-modal-actions">
-                                <button className="class-student-modal-btn cancel" onClick={handleCloseModal}>
-                                    Hủy
-                                </button>
-                                <button className="class-student-modal-btn primary" onClick={handleConfirmToggleHidden}>
-                                    {activeStudent.isHidden ? "Xác nhận hiện lại" : "Xác nhận ẩn"}
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                )}
-            </div>
             ) : (
                 <div className="students-card attendance-card">
                     <div className="students-card-header">
                         <h2 className="students-card-title">Theo dõi chuyên cần và điểm rèn luyện</h2>
-
                         <div className="attendance-toolbar">
                             <div className="class-detail-search-box">
                                 <FiSearch className="class-detail-search-icon" />
@@ -568,28 +485,14 @@ export default function ClassDetailSection() {
                                     onChange={handleSearchStudent}
                                 />
                             </div>
-
-                            <select
-                                className="attendance-filter-select"
-                                value={selectedTimeFilter}
-                                onChange={handleTimeFilterChange}
-                            >
+                            <select className="attendance-filter-select" value={selectedTimeFilter} onChange={handleTimeFilterChange}>
                                 {timeFilterOptions.map((option) => (
-                                    <option key={option.value} value={option.value}>
-                                        {option.label}
-                                    </option>
+                                    <option key={option.value} value={option.value}>{option.label}</option>
                                 ))}
                             </select>
-
-                            <select
-                                className="attendance-filter-select"
-                                value={selectedSort}
-                                onChange={handleSortChange}
-                            >
+                            <select className="attendance-filter-select" value={selectedSort} onChange={handleSortChange}>
                                 {sortOptions.map((option) => (
-                                    <option key={option.value} value={option.value}>
-                                        {option.label}
-                                    </option>
+                                    <option key={option.value} value={option.value}>{option.label}</option>
                                 ))}
                             </select>
                         </div>
@@ -632,9 +535,7 @@ export default function ClassDetailSection() {
                                         <td className="student-index-cell">{(effectivePage - 1) * ITEMS_PER_PAGE + index + 1}</td>
                                         <td>
                                             <div className="student-main-info">
-                                                <span className="student-avatar">
-                                                    {student.name.charAt(0).toUpperCase()}
-                                                </span>
+                                                <span className="student-avatar">{student.name.charAt(0).toUpperCase()}</span>
                                                 <div className="student-name-wrap">
                                                     <strong>{student.name}</strong>
                                                     <small>{student.parentName}</small>
@@ -649,51 +550,75 @@ export default function ClassDetailSection() {
                                         <td>
                                             <div className="attendance-absent-cell">
                                                 <strong>{student.absentDays}</strong>
-                                                <small>
-                                                    {student.excusedAbsence} có phép / {student.unexcusedAbsence} không phép
-                                                </small>
+                                                <small>{student.excusedAbsence} có phép / {student.unexcusedAbsence} không phép</small>
                                             </div>
                                         </td>
-                                        <td>
-                                            <span className="attendance-late-cell">{student.lateCount} lần</span>
-                                        </td>
+                                        <td><span className="attendance-late-cell">{student.lateCount} lần</span></td>
                                         <td className="student-date-cell">{formatDateDDMMYYYY(student.updatedAt)}</td>
                                     </tr>
                                 ))}
                             </tbody>
                         </table>
-
-                        {paginatedAttendanceRows.length === 0 && (
-                            <div className="table-empty">Không tìm thấy học sinh</div>
-                        )}
                     </div>
 
                     {totalPages > 1 && (
                         <div className="table-pagination">
-                            <button
-                                className="page-btn"
-                                onClick={goPrevPage}
-                                disabled={effectivePage === 1}
-                                aria-label="Trang trước"
-                            >
+                            <button className="page-btn" onClick={goPrevPage} disabled={effectivePage === 1}>
                                 <FiChevronLeft />
                             </button>
-
                             <div className="page-indicator">
                                 <span>{effectivePage}</span>
                                 <small>/ {totalPages}</small>
                             </div>
-
-                            <button
-                                className="page-btn"
-                                onClick={goNextPage}
-                                disabled={effectivePage === totalPages}
-                                aria-label="Trang sau"
-                            >
+                            <button className="page-btn" onClick={goNextPage} disabled={effectivePage === totalPages}>
                                 <FiChevronRight />
                             </button>
                         </div>
                     )}
+                </div>
+            )}
+
+            {/* Modals for Edit and Toggle Hidden */}
+            {activeModalMode === "edit" && activeStudent && (
+                <div className="class-student-modal-overlay" onClick={handleCloseModal}>
+                    <div className="class-student-modal" onClick={(e) => e.stopPropagation()}>
+                        <h3>Chỉnh sửa học sinh</h3>
+                        <div className="class-student-modal-grid">
+                            <label>
+                                <span>Họ và tên</span>
+                                <input type="text" value={editForm.name} onChange={(e) => setEditForm({ ...editForm, name: e.target.value })} />
+                            </label>
+                            <label>
+                                <span>Ngày sinh</span>
+                                <input type="date" value={editForm.dob} onChange={(e) => setEditForm({ ...editForm, dob: e.target.value })} />
+                            </label>
+                            <label>
+                                <span>Tên phụ huynh</span>
+                                <input type="text" value={editForm.parentName} onChange={(e) => setEditForm({ ...editForm, parentName: e.target.value })} />
+                            </label>
+                            <label>
+                                <span>Số điện thoại</span>
+                                <input type="text" value={editForm.parentPhone} onChange={(e) => setEditForm({ ...editForm, parentPhone: e.target.value })} />
+                            </label>
+                        </div>
+                        <div className="class-student-modal-actions">
+                            <button className="class-student-modal-btn cancel" onClick={handleCloseModal}>Hủy</button>
+                            <button className="class-student-modal-btn primary" onClick={handleSaveEdit}>Lưu</button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {activeModalMode === "toggle-hidden" && activeStudent && (
+                <div className="class-student-modal-overlay" onClick={handleCloseModal}>
+                    <div className="class-student-modal class-student-confirm-modal" onClick={(e) => e.stopPropagation()}>
+                        <h3>{activeStudent.isHidden ? "Hiện học sinh" : "Ẩn học sinh"}</h3>
+                        <p>Bạn có chắc muốn {activeStudent.isHidden ? "hiện lại" : "ẩn"} <strong>{activeStudent.name}</strong> không?</p>
+                        <div className="class-student-modal-actions">
+                            <button className="class-student-modal-btn cancel" onClick={handleCloseModal}>Hủy</button>
+                            <button className="class-student-modal-btn primary" onClick={handleConfirmToggleHidden}>Xác nhận</button>
+                        </div>
+                    </div>
                 </div>
             )}
         </div>
