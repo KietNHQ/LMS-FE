@@ -252,73 +252,70 @@
 }
 
 /* TEACHER - Professional Teal */
-:root { --teacher-navy: #134e4a; }
 .teacher-layout .custom-dropdown-trigger.open {
-  border-color: #0d9488;
-  box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.15);
+  border-color: var(--admin-primary);
+  box-shadow: 0 0 0 3px var(--admin-focus-ring);
 }
 
 .teacher-layout .ui-select__field:hover,
 .teacher-layout .custom-dropdown-trigger:hover {
-  border-color: #5eead4;
-  background-color: #f0fdfa;
-  box-shadow: 0 10px 24px rgba(13, 148, 136, 0.1);
+  border-color: var(--admin-primary-hover);
+  background-color: var(--admin-primary-soft);
+  box-shadow: var(--admin-shadow-md);
 }
 
 .teacher-layout .ui-select.is-focused .ui-select__chevron,
 .teacher-layout .custom-dropdown-trigger.open .dropdown-arrow {
-  color: #0d9488;
+  color: var(--admin-primary);
 }
 
 .teacher-layout .custom-dropdown-item:hover {
-  background: #f0fdfa;
-  color: #0d9488;
+  background: var(--admin-primary-soft);
+  color: var(--admin-primary);
 }
 
 .teacher-layout .custom-dropdown-item.active {
-  background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%);
+  background: linear-gradient(135deg, var(--admin-primary) 0%, var(--admin-primary-hover) 100%);
   color: #ffffff;
   font-weight: 700;
 }
 
 /* PARENT - Royal Indigo */
-:root { --parent-navy: #312e81; }
 .parent-layout .custom-dropdown-trigger.open {
-  border-color: #885def;
-  box-shadow: 0 0 0 3px rgba(136, 93, 239, 0.15);
+  border-color: var(--admin-primary);
+  box-shadow: 0 0 0 3px var(--admin-focus-ring);
 }
 
 .parent-layout .ui-select__field:hover,
 .parent-layout .custom-dropdown-trigger:hover {
-  border-color: #b68af8;
-  background-color: #fdf9ff;
-  box-shadow: 0 10px 24px rgba(136, 93, 239, 0.1);
+  border-color: var(--admin-primary-hover);
+  background-color: var(--admin-primary-soft);
+  box-shadow: var(--admin-shadow-md);
 }
 
 .parent-layout .ui-select.is-focused .ui-select__chevron,
 .parent-layout .custom-dropdown-trigger.open .dropdown-arrow {
-  color: #885def;
+  color: var(--admin-primary);
 }
 
 .parent-layout .custom-dropdown-item:hover {
-  background: #f3eeff;
-  color: #885def;
+  background: var(--admin-primary-soft);
+  color: var(--admin-primary);
 }
 
 .parent-layout .custom-dropdown-item.active {
-  background: linear-gradient(135deg, #885def 0%, #7c3aed 100%);
+  background: linear-gradient(135deg, var(--admin-primary) 0%, var(--admin-primary-hover) 100%);
   color: #ffffff;
   font-weight: 700;
 }
 
 /* STUDENT - SaaS Blue */
-:root { --student-navy: #1e3a8a; }
 .student-layout .custom-dropdown-trigger.open {
-  border-color: var(--student-navy);
-  box-shadow: 0 0 0 4px rgba(30, 58, 138, 0.08);
+  border-color: var(--admin-primary);
+  box-shadow: 0 0 0 4px var(--admin-focus-ring);
 }
 .student-layout .custom-dropdown-item.active {
-  background: var(--student-navy);
+  background: var(--admin-primary);
 }
 
 /* Specific Adjustments for Principal Portal (usually uses admin-layout or defaults) */
