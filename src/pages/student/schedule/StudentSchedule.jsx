@@ -1,83 +1,106 @@
-import React, { useMemo, useState } from "react";
+import React, { useState } from "react";
+import StudentWeeklyScheduleSection from "./components/StudentWeeklyScheduleSection/StudentWeeklyScheduleSection";
+import StudentScheduleFilterSection from "./components/StudentScheduleFilterSection/StudentScheduleFilterSection";
+import Modal from "../../../components/ui/Modal/Modal";
+import { PageHeader } from "../../../components/common";
+import { STATUS_META } from "../../../utils/timetableShared";
 import "./StudentSchedule.css";
-import ScheduleHeader from "./components/ScheduleHeader/ScheduleHeader";
-import ScheduleToolbar from "./components/ScheduleToolbar/ScheduleToolbar";
-import ScheduleGrid from "./components/ScheduleGrid/ScheduleGrid";
-import {
-    getStartOfIsoWeek,
-    getStudentWeekLessonsById,
-    shiftWeek,
-} from "../../../utils/timetableShared";
 
-const days = [
-    { key: "Monday", label: "THỨ 2" },
-    { key: "Tuesday", label: "THỨ 3" },
-    { key: "Wednesday", label: "THỨ 4" },
-    { key: "Thursday", label: "THỨ 5" },
-    { key: "Friday", label: "THỨ 6" },
-];
-
-const periods = [
-    { period: 1, start: "07:00", end: "07:45", session: "Sáng" },
-    { period: 2, start: "07:50", end: "08:35", session: "Sáng" },
-    { period: 3, start: "08:45", end: "09:30", session: "Sáng" },
-    { period: 4, start: "09:35", end: "10:20", session: "Sáng" },
-    { period: 5, start: "10:30", end: "11:15", session: "Sáng" },
-    { period: 6, start: "13:00", end: "13:45", session: "Chiều" },
-    { period: 7, start: "13:50", end: "14:35", session: "Chiều" },
-    { period: 8, start: "14:45", end: "15:30", session: "Chiều" },
-    { period: 9, start: "15:35", end: "16:20", session: "Chiều" },
-    { period: 10, start: "16:25", end: "17:10", session: "Chiều" },
-];
-
-function getWeekLabel(weekStart) {
-    const monday = getStartOfIsoWeek(weekStart);
-    const friday = new Date(monday);
-    friday.setDate(monday.getDate() + 4);
-    const formatDate = (date) => date.toLocaleDateString("vi-VN", { day: "2-digit", month: "2-digit", year: "numeric" });
-    return `${formatDate(monday)} - ${formatDate(friday)}`;
+function getTodayDayIndex() {
+  const day = new Date().getDay(); // 0=Sun
+  return day === 0 ? 6 : day - 1;
 }
 
 export default function StudentSchedule() {
-    const studentId = "STU1024";
-    const classNameValue = "10A1";
-    const [weekStart, setWeekStart] = useState(() => getStartOfIsoWeek(new Date()));
-    const [sessionView, setSessionView] = useState("morning");
+  const studentId = "STU1024"; // Mock logged-in student
+  const classNameValue = "10A1";
 
-    const lessons = useMemo(
-        () => getStudentWeekLessonsById(studentId, weekStart),
-        [studentId, weekStart]
-    );
+  const [weekOffset, setWeekOffset] = useState(0);
+  const [selectedLesson, setSelectedLesson] = useState(null);
 
-    const weekLabel = useMemo(() => getWeekLabel(weekStart), [weekStart]);
+  const handleQuickDaySelect = (offset) => {
+    const now = new Date();
+    const target = new Date(now);
+    target.setDate(now.getDate() + offset);
+    // Move weekOffset if necessary, but skipping for simplicity in quick navigation without daily view
+    // Instead of opening Daily view, we just jump to the correct week
+    const diffTime = target.getTime() - now.getTime();
+    const diffWeeks = Math.round(diffTime / (1000 * 60 * 60 * 24 * 7));
+    setWeekOffset(diffWeeks);
+  };
 
-    const visiblePeriods = useMemo(() => {
-        return periods.filter((period) => (sessionView === "morning" ? period.session === "Sáng" : period.session === "Chiều"));
-    }, [sessionView]);
+  const handleSelectDay = (idx) => {
+    // Optionally open daily view, but currently not implemented for student
+  };
 
-    const getLesson = (dayKey, period) => lessons.find((item) => item.day === dayKey && item.periodStart <= period && item.periodEnd >= period);
+  return (
+    <div className="student-schedule-page">
+      <StudentScheduleFilterSection
+        weekOffset={weekOffset}
+        setWeekOffset={setWeekOffset}
+        onQuickDaySelect={handleQuickDaySelect}
+      />
 
-    return (
-        <div className="student-schedule-page">
-            <ScheduleHeader
-                classNameValue={classNameValue}
-                sessionView={sessionView}
-                onToggleSessionView={() => setSessionView((prev) => (prev === "morning" ? "afternoon" : "morning"))}
-            />
+      <div className="student-schedule-content">
+        <StudentWeeklyScheduleSection
+          weekOffset={weekOffset}
+          studentId={studentId}
+          onSelectDay={handleSelectDay}
+          onLessonSelect={setSelectedLesson}
+        />
+      </div>
 
-            <ScheduleToolbar
-                weekLabel={weekLabel}
-                classNameValue={classNameValue}
-                onPrevWeek={() => setWeekStart((prev) => shiftWeek(prev, -1))}
-                onNextWeek={() => setWeekStart((prev) => shiftWeek(prev, 1))}
-                onToday={() => setWeekStart(getStartOfIsoWeek(new Date()))}
-            />
+      <Modal
+        open={!!selectedLesson}
+        title="Chi tiết tiết học"
+        onClose={() => setSelectedLesson(null)}
+        className="student-lesson-modal"
+      >
+        {selectedLesson && (
+          <div className="student-lesson-modal-content">
+            <div className="modal-header-info">
+              <div>
+                <h3>{selectedLesson.subject}</h3>
+                <p className="modal-header-subtitle">
+                  {selectedLesson.dayName || "Lịch học"} - {selectedLesson.dateLabel || "Chưa cập nhật ngày"}
+                </p>
+              </div>
+              <div className="modal-header-badges">
+                <span className={`modal-badge color-${selectedLesson.color}`}>
+                  {selectedLesson.timeRange}
+                </span>
+                <span className={`modal-type-badge status-${selectedLesson.status}`}>
+                  {STATUS_META[selectedLesson.status]?.label || "Bình thường"}
+                </span>
+              </div>
+            </div>
 
-            <ScheduleGrid
-                days={days}
-                periods={visiblePeriods}
-                getLesson={getLesson}
-            />
-        </div>
-    );
+            <div className="modal-info-grid">
+              <div className="modal-info-card">
+                <h4>Thông tin lớp</h4>
+                <p><strong>Lớp:</strong> {classNameValue}</p>
+                <p><strong>Phòng học:</strong> {selectedLesson.room}</p>
+                <p><strong>Giáo viên:</strong> {selectedLesson.teacher}</p>
+                <p><strong>Hình thức:</strong> {selectedLesson.mode === "online" ? "Trực tuyến" : "Trực tiếp"}</p>
+              </div>
+
+              <div className="modal-info-card">
+                <h4>Thời gian</h4>
+                <p><strong>Khung giờ:</strong> {selectedLesson.timeRange}</p>
+                <p><strong>Tiết:</strong> {selectedLesson.periodStart} - {selectedLesson.periodEnd}</p>
+                <p><strong>Buổi học:</strong> {selectedLesson.session}</p>
+              </div>
+
+              <div className="modal-info-card modal-info-card-wide">
+                <h4>Ghi chú từ giáo viên</h4>
+                <p>
+                  {selectedLesson.note || "Không có ghi chú nào cho tiết học này."}
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+      </Modal>
+    </div>
+  );
 }

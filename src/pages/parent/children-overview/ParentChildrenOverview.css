@@ -6,6 +6,10 @@
     min-width: 0;
     max-width: 100%;
     font-family: var(--font-main), sans-serif;
+    /* Override SchoolYearTermSelector active color to parent purple */
+    --admin-primary: #885def;
+    --admin-primary-soft: #f3eeff;
+    --admin-border-strong: #d4b8fc;
 }
 
 /* ===== PAGE TITLE ===== */

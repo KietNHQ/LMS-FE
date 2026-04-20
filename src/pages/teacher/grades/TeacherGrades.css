@@ -7,7 +7,11 @@
 
 .teacher-grades-page .common-page-header__eyebrow {
 	background: var(--teacher-primary-soft);
-	color: var(--teacher-primary);
+	color: var(--teacher-text-main);
+}
+
+.teacher-grades-page .common-page-header h1 {
+	color: #1e293b;
 }
 
 .teacher-grades-page .school-year-term-selector__term-btn.is-active {

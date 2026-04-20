@@ -64,8 +64,14 @@ export default function ParentNotifications() {
   );
 
   const [filter, setFilter] = useState("all");
+  const [showOnlyMarked, setShowOnlyMarked] = useState(false);
   const [notifications, setNotifications] = useState(INITIAL_NOTIFICATIONS);
   const [selected, setSelected] = useState(null);
+
+  const markedCount = useMemo(
+    () => notifications.filter((n) => n.important).length,
+    [notifications]
+  );
 
   const unreadCount = useMemo(
     () => notifications.filter((notification) => notification.unread).length,
@@ -100,12 +106,28 @@ export default function ParentNotifications() {
   }, [notifications, isVisibleForParent]);
 
   const filteredNotifications = useMemo(() => {
+    let result = notifications;
+
     if (filter === "all") {
-      return notifications.filter((notification) => isVisibleForParent(notification.class));
+      result = result.filter((notification) => isVisibleForParent(notification.class));
+    } else {
+      result = result.filter((notification) => notification.class === filter);
     }
 
-    return notifications.filter((notification) => notification.class === filter);
-  }, [filter, notifications, isVisibleForParent]);
+    if (showOnlyMarked) {
+      result = result.filter((notification) => notification.important);
+    }
+
+    // Sort by important first, then by date descending
+    return [...result].sort((a, b) => {
+      if (a.important && !b.important) return -1;
+      if (!a.important && b.important) return 1;
+
+      const dateA = new Date(a.date).getTime();
+      const dateB = new Date(b.date).getTime();
+      return dateB - dateA; // Newest first
+    });
+  }, [filter, notifications, isVisibleForParent, showOnlyMarked]);
 
   const getClassLabel = (targetClass) => {
     return CLASS_LABELS[targetClass] || "";
@@ -132,6 +154,12 @@ export default function ParentNotifications() {
     setSelected(null);
   };
 
+  const toggleImportant = (id) => {
+    setNotifications((prev) =>
+      prev.map((n) => (n.id === id ? { ...n, important: !n.important } : n))
+    );
+  };
+
   return(
 
     <div className="parent-notification-page">
@@ -145,11 +173,15 @@ export default function ParentNotifications() {
           setFilter={setFilter}
           classList={classList}
           getClassLabel={getClassLabel}
+          showOnlyMarked={showOnlyMarked}
+          onToggleMarkedFilter={() => setShowOnlyMarked(!showOnlyMarked)}
+          markedCount={markedCount}
         />
 
         <NotificationList
           notifications={filteredNotifications}
           onOpen={openNotification}
+          onToggleImportant={toggleImportant}
           getClassLabel={getClassLabel}
         />
 

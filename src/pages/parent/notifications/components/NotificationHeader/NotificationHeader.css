@@ -1,14 +1,30 @@
 .parent-notification-header {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
-  gap: 10px;
-  flex-wrap: wrap;
+  align-items: center; /* Standard middle alignment */
+  gap: 24px;
+}
+
+.parent-notification-header-left {
+  display: flex;
+  align-items: center;
+  gap: 32px; /* Standard distance between Title and Filters */
+}
+
+.parent-notification-header-right {
+  display: flex;
+  align-items: center;
+}
+
+.parent-notification-header-buttons {
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
 .parent-notification-header__title h1 {
   margin: 0;
-  font-size: clamp(22px, 2vw, 30px);
+  font-size: clamp(28px, 2.4vw, 40px);
   line-height: 1.12;
   font-weight: 800;
   color: #16233b;
@@ -17,28 +33,19 @@
 
 .parent-notification-header__title span {
   display: inline-block;
-  margin-top: 4px;
-  font-size: 12px;
+  margin-top: 6px;
+  font-size: 14px;
   color: #6f7c91;
   font-weight: 600;
-}
-
-.parent-notification-header__actions {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  flex: 1;
-  min-width: 240px;
 }
 
 .parent-notification-bell {
   position: relative;
   width: 44px;
   height: 44px;
-  border-radius: 14px;
+  border-radius: 12px;
   background: #ffffff;
-  border: 1px solid #e7def8;
+  border: 1px solid #dbe4f5;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -79,6 +86,47 @@
   box-shadow: 0 4px 10px rgba(255, 77, 79, 0.22);
 }
 
+/* ===== Starred Filter Button ===== */
+.parent-marked-filter-btn {
+  height: 44px;
+  border: 1px solid #dbe4f5;
+  border-radius: 12px;
+  background: #ffffff;
+  color: #885def;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 16px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.parent-marked-filter-btn strong {
+  min-width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #f5edff;
+  color: #6d4ab8;
+  font-size: 11px;
+}
+
+.parent-marked-filter-btn:hover {
+  border-color: #d8c3fb;
+  background: #faf7ff;
+}
+
+.parent-marked-filter-btn.is-active {
+  border-color: #885def;
+  background: linear-gradient(135deg, #f5edff 0%, #ede1ff 100%);
+}
+
+
 @media (max-width: 900px) {
   .parent-notification-header {
     flex-direction: column;
@@ -88,6 +136,7 @@
   .parent-notification-header__actions {
     min-width: 0;
     width: 100%;
+    flex-wrap: wrap;
   }
 }
 

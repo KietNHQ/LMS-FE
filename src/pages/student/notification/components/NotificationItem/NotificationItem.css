@@ -21,6 +21,11 @@
   border-left: 4px solid #4f78eb;
 }
 
+.notification-card.is-important {
+  border-left: 4px solid #f59e0b;
+  background: #fffdf0;
+}
+
 .notification-body {
   display: flex;
   gap: 14px;
@@ -109,11 +114,10 @@
 
 @media (max-width: 768px) {
   .notification-card {
-	padding: 14px;
+    padding: 14px;
   }
 
   .notification-title {
-	font-size: 15px;
+    font-size: 15px;
   }
 }
-

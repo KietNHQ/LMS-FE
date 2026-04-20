@@ -1,4 +1,4 @@
-import { Bell } from "lucide-react";
+import { Bell, Star } from "lucide-react";
 import "./NotificationItem.css";
 
 function formatNotificationDate(rawDate) {
@@ -7,10 +7,10 @@ function formatNotificationDate(rawDate) {
   return date.toLocaleDateString("vi-VN");
 }
 
-export default function NotificationItem({ item, onOpen, getClassLabel }) {
+export default function NotificationItem({ item, onOpen, onToggleImportant, getClassLabel }) {
   return (
-    <div className={`parent-notification-card ${item.unread ? "is-unread" : ""}`} onClick={() => onOpen(item)}>
-      <div className="parent-notification-body">
+    <div className={`parent-notification-card ${item.unread ? "is-unread" : ""} ${item.important ? "is-important" : ""}`}>
+      <div className="parent-notification-body" onClick={() => onOpen(item)}>
         <div className="parent-notification-icon">
           <Bell size={18} />
         </div>
@@ -27,6 +27,20 @@ export default function NotificationItem({ item, onOpen, getClassLabel }) {
           <div className="parent-notification-date">{formatNotificationDate(item.date)}</div>
         </div>
       </div>
+
+      <button
+        type="button"
+        className="notif-star-box"
+        onClick={() => onToggleImportant(item.id)}
+        aria-label={item.important ? "Bỏ đánh dấu" : "Đánh dấu quan trọng"}
+        title={item.important ? "Bỏ đánh dấu" : "Đánh dấu quan trọng"}
+      >
+        <Star
+          size={18}
+          className={item.important ? "notif-star-active" : "notif-star"}
+          fill={item.important ? "currentColor" : "none"}
+        />
+      </button>
     </div>
   );
 }

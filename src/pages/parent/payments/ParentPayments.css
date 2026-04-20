@@ -1,6 +1,10 @@
 .parent-payments-page {
     padding: 1.5rem 1.75rem 2.5rem;
     min-height: 100vh;
+    /* Override SchoolYearTermSelector active color to parent purple */
+    --admin-primary: #885def;
+    --admin-primary-soft: #f3eeff;
+    --admin-border-strong: #d4b8fc;
 }
 
 .parent-payments-top-panel {
@@ -105,28 +109,26 @@
 
 .payment-filter-row {
     display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 0.75rem;
     margin-bottom: 0;
     padding-top: 0.85rem;
     border-top: 0.0625rem solid #edf1f7;
+    align-items: end;
 }
 
-.payment-filter-row select {
+.payment-filter-row .ui-select {
+    width: 100%;
+}
+
+.payment-filter-row .custom-dropdown-trigger {
     height: 42px;
-    border-radius: 12px;
-    border: 1px solid #dbdff0;
-    background: #ffffff;
-    color: #344054;
-    padding: 0 12px;
     font-size: 14px;
-    font-weight: 600;
-    outline: none;
 }
 
-.payment-filter-row select:focus {
-    border-color: #885def;
-    box-shadow: 0 0 0 3px rgba(136, 93, 239, 0.12);
+/* Remove old native select styles no longer needed */
+.payment-filter-row select {
+    display: none;
 }
 
 .payment-table-list {

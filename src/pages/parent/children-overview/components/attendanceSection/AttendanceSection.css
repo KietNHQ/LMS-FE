@@ -221,10 +221,10 @@
     justify-content: center;
     width: 2rem;
     height: 2rem;
-    border: 0.0625rem solid #dbe5ff;
+    border: 0.0625rem solid #ddd0fb;
     border-radius: 0.55rem;
     background: #ffffff;
-    color: #4c6fff;
+    color: #885def;
     font-size: 1.3rem;
     font-weight: 700;
     line-height: 1;
@@ -234,8 +234,8 @@
 }
 
 .month-nav-btn:hover {
-    background: #eaf0ff;
-    border-color: #4c6fff;
+    background: #f3eeff;
+    border-color: #885def;
 }
 
 .month-year-selects {
@@ -248,11 +248,11 @@
 .year-select {
     appearance: none;
     -webkit-appearance: none;
-    border: 0.0625rem solid #dbe5ff;
+    border: 0.0625rem solid #ddd0fb;
     border-radius: 0.6rem;
-    background: #ffffff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%234c6fff' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E") no-repeat right 0.55rem center;
+    background: #ffffff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23885def' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E") no-repeat right 0.55rem center;
     background-size: 0.75rem;
-    color: #202636;
+    color: #2d1f5e;
     font-size: 0.88rem;
     font-weight: 700;
     padding: 0.38rem 1.8rem 0.38rem 0.65rem;
@@ -261,10 +261,17 @@
     transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
+.month-select:hover,
+.year-select:hover {
+    border-color: #b68af8;
+    background-color: #fdf9ff;
+}
+
 .month-select:focus,
 .year-select:focus {
-    border-color: #4c6fff;
-    box-shadow: 0 0 0 0.2rem rgba(76, 111, 255, 0.15);
+    border-color: #885def;
+    box-shadow: 0 0 0 0.2rem rgba(136, 93, 239, 0.15);
+    background-color: #fdf9ff;
 }
 
 .month-select { min-width: 6.5rem; }
@@ -402,7 +409,7 @@
 
 .chevron-icon.open {
     transform: rotate(180deg);
-    color: #4c6fff;
+    color: #885def;
 }
 
 /* Expanded body */
