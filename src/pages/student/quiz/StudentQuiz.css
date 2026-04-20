@@ -1,13 +1,13 @@
 .student-quiz-page {
     min-height: 100vh;
-    padding: 2rem;
+    padding: 1.25rem;
     box-sizing: border-box;
 }
 
 .student-quiz-main-card.ui-card {
     background: #ffffff;
     border: 1px solid #e2e9f7;
-    border-radius: 24px;
+    border-radius: 14px;
     box-shadow: 0 8px 24px rgba(37, 64, 143, 0.05);
     position: relative;
     z-index: 1;
@@ -34,10 +34,10 @@
 }
 
 .student-quiz-page-btn {
-    width: 44px;
-    height: 44px;
+    width: 38px;
+    height: 38px;
     border: 1px solid #dbe4f5;
-    border-radius: 14px;
+    border-radius: 10px;
     background: #f5f8ff;
     color: #3458c4;
     display: inline-flex;
@@ -75,29 +75,29 @@
 }
 
 .student-quiz-page-indicator span {
-    font-size: 26px;
+    font-size: 20px;
     line-height: 1;
     font-weight: 800;
     color: #3458c4;
 }
 
 .student-quiz-page-indicator small {
-    font-size: 15px;
+    font-size: 13px;
     font-weight: 700;
     color: #8a97aa;
 }
 
 .student-quiz-grid {
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 1.25rem;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 1rem;
 }
 
 .student-quiz-empty {
-    margin-top: 1.5rem;
-    padding: 2.5rem 1rem;
+    margin-top: 1rem;
+    padding: 1.5rem 1rem;
     text-align: center;
-    border-radius: 1.5rem;
+    border-radius: 1rem;
     background: #ffffff;
     border: 1px dashed #cfd8ee;
     color: #6b7280;

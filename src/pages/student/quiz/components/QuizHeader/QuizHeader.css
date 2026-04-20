@@ -12,10 +12,11 @@
 
 .quiz-header h1 {
   margin: 0;
-  font-size: clamp(2rem, 3vw, 3rem);
-  line-height: 1.2;
-  color: #17306b;
+  font-size: clamp(28px, 2.4vw, 40px);
+  line-height: 1.12;
   font-weight: 800;
+  color: #16233b;
+  letter-spacing: -0.01em;
 }
 
 /* ===== STATS ===== */

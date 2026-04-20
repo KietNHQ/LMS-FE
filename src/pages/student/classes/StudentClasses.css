@@ -1,26 +1,26 @@
 .student-classes-page {
-  padding: 28px 24px;
+  padding: 16px;
   color: #22324a;
 }
 
 .student-classes-layout {
-  margin-top: 18px;
+  margin-top: 10px;
   display: grid;
   grid-template-columns: minmax(0, 2.3fr) minmax(300px, 1fr);
-  gap: 22px;
+  gap: 14px;
   align-items: start;
 }
 
 .student-classes-main-card.ui-card {
   background: #ffffff;
   border: 1px solid #e7edf9;
-  border-radius: 24px;
+  border-radius: 12px;
   box-shadow: 0 8px 24px rgba(20, 32, 70, 0.05);
 }
 
 .student-classes-main-card .ui-card__body,
 .student-classes-main-card__body {
-  padding: 18px;
+  padding: 11px;
 }
 
 @media (max-width: 1280px) {
