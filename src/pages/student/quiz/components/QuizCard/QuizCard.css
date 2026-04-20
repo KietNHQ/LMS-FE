@@ -1,7 +1,7 @@
 .quiz-card {
   position: relative;
-  padding: 1.35rem;
-  border-radius: 1.8rem;
+  padding: 1rem;
+  border-radius: 1rem;
   background: linear-gradient(180deg, #ffffff 0%, #fbfcff 100%);
   border: 1px solid #e2e9f7;
   box-shadow: 0 12px 28px rgba(37, 64, 143, 0.07);
@@ -17,20 +17,26 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 1rem;
-  margin-bottom: 1rem;
+  gap: 0.6rem;
+  margin-bottom: 0.75rem;
+}
+
+.quiz-card-actions-top {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
 .quiz-card-subject {
   display: inline-flex;
   align-items: center;
-  gap: 0.55rem;
-  padding: 0.55rem 0.9rem;
+  gap: 0.45rem;
+  padding: 0.45rem 0.75rem;
   border-radius: 999px;
   background: #eaf0ff;
   color: #3559b7;
   font-weight: 700;
-  font-size: 0.88rem;
+  font-size: 0.82rem;
 }
 
 .quiz-card-subject-icon {
@@ -70,32 +76,32 @@
 }
 
 .quiz-card h3 {
-  margin: 0 0 0.7rem;
+  margin: 0 0 0.5rem;
   color: #17306b;
-  font-size: 1.2rem;
+  font-size: 1.05rem;
   font-weight: 800;
   line-height: 1.4;
 }
 
 .quiz-card p {
-  margin: 0 0 1rem;
+  margin: 0 0 0.75rem;
   color: #667085;
-  line-height: 1.7;
-  min-height: 3rem;
+  line-height: 1.6;
+  min-height: 2.2rem;
 }
 
 .quiz-card-meta {
   display: grid;
-  gap: 0.7rem;
-  margin-bottom: 1rem;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
 }
 
 .quiz-card-meta-item {
   display: flex;
   align-items: center;
-  gap: 0.55rem;
+  gap: 0.45rem;
   color: #51617e;
-  font-size: 0.92rem;
+  font-size: 0.88rem;
   font-weight: 600;
 }
 
@@ -129,9 +135,9 @@
   border: none;
   outline: none;
   cursor: pointer;
-  height: 2.8rem;
-  padding: 0 1.1rem;
-  border-radius: 0.95rem;
+  height: 2.4rem;
+  padding: 0 1rem;
+  border-radius: 0.75rem;
   background: linear-gradient(135deg, #6f95ff 0%, #4f78eb 100%);
   color: #ffffff;
   font-weight: 700;
@@ -170,14 +176,13 @@
 }
 
 .quiz-card-score {
-  position: absolute;
-  top: 1rem;
-  right: 1rem;
-  transform: translateY(3.2rem);
-  padding: 0.42rem 0.75rem;
+  display: inline-flex;
+  align-items: center;
+  padding: 0.4rem 0.7rem;
   border-radius: 999px;
   background: #eef4ff;
   color: #3559b7;
-  font-size: 0.82rem;
+  font-size: 0.8rem;
   font-weight: 800;
+  white-space: nowrap;
 }

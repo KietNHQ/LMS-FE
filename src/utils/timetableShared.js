@@ -82,7 +82,7 @@ export const STUDENT_DIRECTORY = [
 
 const CLASS_TEMPLATE = {
   "10A1": [
-    { day: "Monday", periodStart: 1, periodEnd: 2, subject: "Toan", teacher: "Tran Thi Huong", room: "P201", note: "Ham so bac nhat", mode: "offline" },
+    { day: "Monday", periodStart: 1, periodEnd: 2, subject: "Toan", teacher: "Tran Thi Huong", room: "P201", note: "Kiểm tra 1 tiết - Chương hàm số", mode: "offline" },
     { day: "Monday", periodStart: 3, periodEnd: 3, subject: "NguVan", teacher: "Pham Van Long", room: "P105", note: "Van ban tu su", mode: "offline" },
     { day: "Tuesday", periodStart: 1, periodEnd: 1, subject: "TiengAnh", teacher: "Nguyen Thi Mai", room: "P302", note: "Unit 6 speaking", mode: "offline" },
     { day: "Tuesday", periodStart: 8, periodEnd: 8, subject: "TinHoc", teacher: "Vu Minh", room: "Lab3", note: "Luyen tap HTML", mode: "online" },

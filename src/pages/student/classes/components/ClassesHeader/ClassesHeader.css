@@ -7,15 +7,9 @@
 
 .student-classes-title-wrap h1 {
     margin: 0;
-    font-size: 30px;
+    font-size: clamp(28px, 2.4vw, 40px);
+    line-height: 1.12;
     font-weight: 800;
     color: #16233b;
-    line-height: 1.2;
-    letter-spacing: -0.02em;
-}
-
-@media (max-width: 768px) {
-    .student-classes-title-wrap h1 {
-        font-size: 24px;
-    }
+    letter-spacing: -0.01em;
 }

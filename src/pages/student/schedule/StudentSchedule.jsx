@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import StudentWeeklyScheduleSection from "./components/StudentWeeklyScheduleSection/StudentWeeklyScheduleSection";
 import StudentScheduleFilterSection from "./components/StudentScheduleFilterSection/StudentScheduleFilterSection";
+import StudentDailyScheduleSection from "./components/StudentDailyScheduleSection/StudentDailyScheduleSection";
 import Modal from "../../../components/ui/Modal/Modal";
 import { PageHeader } from "../../../components/common";
 import { STATUS_META } from "../../../utils/timetableShared";
@@ -17,6 +18,8 @@ export default function StudentSchedule() {
 
   const [weekOffset, setWeekOffset] = useState(0);
   const [selectedLesson, setSelectedLesson] = useState(null);
+  const [isDailyModalOpen, setIsDailyModalOpen] = useState(false);
+  const [selectedDay, setSelectedDay] = useState(getTodayDayIndex());
 
   const handleQuickDaySelect = (offset) => {
     const now = new Date();
@@ -30,7 +33,8 @@ export default function StudentSchedule() {
   };
 
   const handleSelectDay = (idx) => {
-    // Optionally open daily view, but currently not implemented for student
+    setSelectedDay(idx);
+    setIsDailyModalOpen(true);
   };
 
   return (
@@ -49,6 +53,24 @@ export default function StudentSchedule() {
           onLessonSelect={setSelectedLesson}
         />
       </div>
+
+      {/* Modal for Daily Schedule */}
+      <Modal
+        open={isDailyModalOpen}
+        onClose={() => setIsDailyModalOpen(false)}
+        className="student-daily-modal"
+      >
+        <StudentDailyScheduleSection
+          weekOffset={weekOffset}
+          selectedDay={selectedDay}
+          studentId={studentId}
+          onLessonSelect={(lesson) => {
+            setSelectedLesson(lesson);
+            // Optionally close daily modal when opening lesson detail, 
+            // but keeping it open allows easy switching between lessons
+          }}
+        />
+      </Modal>
 
       <Modal
         open={!!selectedLesson}

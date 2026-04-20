@@ -1,7 +1,7 @@
 export default function UpcomingTests({ quizzes, onOpenQuiz }) {
     return (
         <div className="student-dashboard-card student-dashboard-card-quizzes student-dashboard-card-equal">
-            <h3>Bài kiểm tra sắp tới</h3>
+            <h3>Bài kiểm tra và bài tập sắp tới</h3>
 
             <div className="student-quiz-scroll-area">
                 <div className="student-quiz-list">

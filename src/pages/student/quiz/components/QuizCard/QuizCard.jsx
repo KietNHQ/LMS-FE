@@ -96,9 +96,15 @@ export default function QuizCard({ quiz, onStart }) {
                     <span>{quiz.subject}</span>
                 </div>
 
-                <div className={`quiz-card-status ${statusInfo.className}`}>
-                    {statusInfo.icon}
-                    <span>{statusInfo.label}</span>
+                <div className="quiz-card-actions-top">
+                    <div className={`quiz-card-status ${statusInfo.className}`}>
+                        {statusInfo.icon}
+                        <span>{statusInfo.label}</span>
+                    </div>
+
+                    {quiz.score !== undefined && quiz.status === "done" && (
+                        <div className="quiz-card-score">Điểm: {quiz.score}</div>
+                    )}
                 </div>
             </div>
 
@@ -147,9 +153,6 @@ export default function QuizCard({ quiz, onStart }) {
                 )}
             </div>
 
-            {quiz.score !== undefined && quiz.status === "done" && (
-                <div className="quiz-card-score">Điểm: {quiz.score}</div>
-            )}
         </div>
     );
 }
