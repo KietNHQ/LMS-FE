@@ -14,9 +14,9 @@
   --teacher-status-published-fg: #166534;
   --teacher-status-published-border: #86efac;
 
-  --teacher-status-draft-bg: #fef3c7;
-  --teacher-status-draft-fg: #92400e;
-  --teacher-status-draft-border: #fcd34d;
+  --teacher-status-draft-bg: #e2e8f0;
+  --teacher-status-draft-fg: #334155;
+  --teacher-status-draft-border: #cbd5e1;
 
   --teacher-status-pending-bg: #ffedd5;
   --teacher-status-pending-fg: #c2410c;
@@ -35,9 +35,8 @@
   box-shadow: var(--admin-shadow-sm);
 }
 
-.theme-teacher .common-page-header__eyebrow {
-  background: var(--teacher-primary-soft);
-  color: var(--teacher-primary);
+.theme-teacher .common-page-header .common-page-header__eyebrow {
+  display: none;
 }
 
 .theme-teacher .teacher-lessons,

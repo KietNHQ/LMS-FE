@@ -1,10 +1,8 @@
 import React, { useRef } from "react";
-import "./ScheduleFilterSection.css";
+import "./StudentScheduleFilterSection.css";
 import { ChevronLeft, ChevronRight, Calendar } from "lucide-react";
 import Select from "../../../../../components/ui/Select/Select";
-import { CLASS_OPTIONS } from "../../../../../utils/timetableShared";
 
-const classes = ["Tất cả", ...CLASS_OPTIONS];
 const quickDays = [
   { value: -1, label: "Hôm qua" },
   { value: 0, label: "Hôm nay" },
@@ -31,7 +29,7 @@ function formatWeekRange(days) {
   return `${days[0].toLocaleDateString("vi-VN", opts)} - ${days[6].toLocaleDateString("vi-VN", opts)} / ${days[0].getFullYear()}`;
 }
 
-export default function ScheduleFilterSection({ weekOffset, setWeekOffset, selectedClass, setSelectedClass, onQuickDaySelect }) {
+export default function StudentScheduleFilterSection({ weekOffset, setWeekOffset, onQuickDaySelect }) {
   const days = getWeekDates(weekOffset);
   const dateInputRef = useRef(null);
 
@@ -98,15 +96,6 @@ export default function ScheduleFilterSection({ weekOffset, setWeekOffset, selec
         </div>
 
         <div className="schedule-filter-actions">
-          <div className="class-filter-wrapper">
-            <Select
-              className="schedule-admin-select"
-              variant="custom"
-              options={classes}
-              value={selectedClass}
-              onChange={(e) => setSelectedClass(e.target.value)}
-            />
-          </div>
           <Select
             className="schedule-admin-select schedule-quick-select"
             variant="custom"
@@ -126,6 +115,3 @@ export default function ScheduleFilterSection({ weekOffset, setWeekOffset, selec
     </div>
   );
 }
-
-
-

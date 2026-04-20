@@ -76,11 +76,6 @@ export default function TeacherSchedule() {
 
   return (
     <div className="teacher-schedule">
-      <PageHeader
-        title="Thời khóa biểu"
-        eyebrow="Lịch dạy"
-      />
-
       <ScheduleFilterSection
         weekOffset={weekOffset}
         setWeekOffset={setWeekOffset}

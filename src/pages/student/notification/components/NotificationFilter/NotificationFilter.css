@@ -1,0 +1,42 @@
+.student-notification-filter {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.student-notification-filter button {
+  border: none;
+  padding: 0 18px;
+  height: 44px; /* Standardized height */
+  border-radius: 999px;
+  background: #ffffff;
+  color: #4b5a72;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  border: 1px solid #e4ebf8;
+  box-shadow: 0 4px 14px rgba(20, 28, 45, 0.04);
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.student-notification-filter button:hover {
+  background: #edf3ff;
+  color: #3559b7;
+  border-color: #9db9ff;
+  box-shadow: 0 8px 18px rgba(53, 89, 183, 0.12);
+}
+
+.student-notification-filter .active {
+  background: linear-gradient(135deg, #4f78eb, #3559b7);
+  color: #ffffff;
+  border-color: transparent;
+  box-shadow: 0 4px 12px rgba(53, 89, 183, 0.25);
+}
+
+.student-notification-filter .active:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(53, 89, 183, 0.35);
+}

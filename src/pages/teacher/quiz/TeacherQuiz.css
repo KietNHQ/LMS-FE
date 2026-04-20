@@ -24,10 +24,10 @@
 
 .teacher-quiz__content h1 {
     margin: 0;
-    font-size: 24px;
+    font-size: clamp(28px, 2.6vw, 40px);
     line-height: 1.2;
     font-weight: 800;
-    color: var(--text-heading);
+    color: #1e293b;
 }
 
 .teacher-quiz__title-row {
@@ -57,20 +57,20 @@
     min-height: 52px;
     padding: 0 22px;
     border-radius: 18px;
-    background: var(--teacher-color);
+    background: linear-gradient(135deg, var(--teacher-primary, #11c7b6) 0%, var(--teacher-primary-dark, #0d9488) 100%);
     color: #ffffff;
     display: inline-flex;
     align-items: center;
     gap: 10px;
     font-size: 15px;
     font-weight: 700;
-    box-shadow: 0 10px 24px rgba(79, 209, 197, 0.25);
+    box-shadow: 0 10px 24px rgba(13, 148, 136, 0.35);
     transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .teacher-quiz__create-btn:hover {
     transform: translateY(-1px);
-    box-shadow: 0 14px 28px rgba(79, 209, 197, 0.3);
+    box-shadow: 0 14px 28px rgba(13, 148, 136, 0.45);
 }
 
 .teacher-quiz__create-btn span {

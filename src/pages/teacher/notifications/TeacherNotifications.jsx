@@ -65,8 +65,14 @@ export default function TeacherNotifications() {
   );
 
   const [filter, setFilter] = useState("all");
+  const [showOnlyMarked, setShowOnlyMarked] = useState(false);
   const [notifications, setNotifications] = useState(INITIAL_NOTIFICATIONS);
   const [selected, setSelected] = useState(null);
+
+  const markedCount = useMemo(
+    () => notifications.filter((n) => n.important).length,
+    [notifications]
+  );
 
   const unreadCount = useMemo(
     () => notifications.filter((notification) => notification.unread).length,
@@ -101,12 +107,28 @@ export default function TeacherNotifications() {
   }, [notifications, isVisibleForTeacher]);
 
   const filteredNotifications = useMemo(() => {
+    let result = notifications;
+
     if (filter === "all") {
-      return notifications.filter((notification) => isVisibleForTeacher(notification.class));
+      result = result.filter((notification) => isVisibleForTeacher(notification.class));
+    } else {
+      result = result.filter((notification) => notification.class === filter);
     }
 
-    return notifications.filter((notification) => notification.class === filter);
-  }, [filter, notifications, isVisibleForTeacher]);
+    if (showOnlyMarked) {
+      result = result.filter((notification) => notification.important);
+    }
+
+    // Sort by important first, then by date descending
+    return [...result].sort((a, b) => {
+      if (a.important && !b.important) return -1;
+      if (!a.important && b.important) return 1;
+      
+      const dateA = new Date(a.date).getTime();
+      const dateB = new Date(b.date).getTime();
+      return dateB - dateA; // Newest first
+    });
+  }, [filter, notifications, isVisibleForTeacher, showOnlyMarked]);
 
   const getClassLabel = (targetClass) => {
     return CLASS_LABELS[targetClass] || "";
@@ -133,6 +155,12 @@ export default function TeacherNotifications() {
     setSelected(null);
   };
 
+  const toggleImportant = (id) => {
+    setNotifications((prev) =>
+      prev.map((n) => (n.id === id ? { ...n, important: !n.important } : n))
+    );
+  };
+
   const [isComposeOpen, setIsComposeOpen] = useState(false);
 
   return(
@@ -149,11 +177,15 @@ export default function TeacherNotifications() {
           classList={classList}
           getClassLabel={getClassLabel}
           onOpenCompose={() => setIsComposeOpen(true)}
+          showOnlyMarked={showOnlyMarked}
+          onToggleMarkedFilter={() => setShowOnlyMarked(!showOnlyMarked)}
+          markedCount={markedCount}
         />
 
         <NotificationList
           notifications={filteredNotifications}
           onOpen={openNotification}
+          onToggleImportant={toggleImportant}
           getClassLabel={getClassLabel}
         />
 

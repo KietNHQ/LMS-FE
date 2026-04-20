@@ -3,40 +3,21 @@ import "./LessonFilterSection.css";
 import { Select } from "../../../../../components/ui";
 
 export default function LessonFilterSection({
-    subject,
+    blockOptions,
     filters,
-    classes,
     statusOptions,
     onChangeFilter,
-    selectedSchoolYear,
-    selectedTerm,
 }) {
-    const termLabel = selectedTerm === "hk2" ? "Học kỳ 2" : "Học kỳ 1";
-
     return (
         <div className="lesson-filter-section">
-            <div className="lesson-subject-card" aria-label="Môn học được phân công">
-                <div>
-                    <p className="subject-label">Môn được phân công</p>
-                    <h3>{subject.name}</h3>
-                    <p className="subject-meta">
-                        Mã môn: {subject.code} | Giáo viên: {subject.teacherName}
-                    </p>
-                </div>
-                <div className="subject-tag-group">
-                    <span className="lesson-filter-tag">Năm học {selectedSchoolYear}</span>
-                    <span className="subject-lock">{termLabel}</span>
-                </div>
-            </div>
-
             <div className="lesson-filter-grid">
                 <label>
-                    Lớp học
+                    Khối
                     <Select
                         variant="custom"
-                        value={filters.className}
-                        options={classes.map((c) => ({ value: c, label: c }))}
-                        onChange={(e) => onChangeFilter("className", e.target.value)}
+                        value={filters.gradeBlock}
+                        options={blockOptions.map((b) => ({ value: b, label: b }))}
+                        onChange={(e) => onChangeFilter("gradeBlock", e.target.value)}
                     />
                 </label>
 
