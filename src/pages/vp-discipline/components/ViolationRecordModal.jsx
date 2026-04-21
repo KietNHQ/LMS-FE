@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { FiX, FiCheck, FiUser, FiCalendar, FiPlus, FiAlertCircle, FiInfo, FiSearch, FiLayers, FiAlertOctagon } from "react-icons/fi";
+import { FiX, FiCheck, FiUser, FiCalendar, FiPlus, FiAlertCircle, FiInfo, FiSearch, FiLayers, FiAlertOctagon, FiActivity, FiEdit2 } from "react-icons/fi";
 import { toast } from "react-toastify";
 import Select from "../../../components/ui/Select/Select";
 import "./ViolationRecordModal.css";
@@ -20,22 +20,47 @@ const VIOLATION_CATEGORIES = [
     { value: "academic", label: "Học tập", types: ["Không làm bài tập", "Không mang sách vở", "Gian lận thi cử", "Không tham gia ngoại khóa"] },
 ];
 
-export default function ViolationRecordModal({ isOpen, onClose, onSuccess, incidents = [] }) {
+export default function ViolationRecordModal({ isOpen, onClose, onSuccess, incidents = [], editData = null }) {
     const [selectedGrade, setSelectedGrade] = useState("10");
     const [selectedClass, setSelectedClass] = useState("");
     const [selectedStudentId, setSelectedStudentId] = useState("");
     const [selectedCategory, setSelectedCategory] = useState("attendance");
     const [selectedType, setSelectedType] = useState("");
+    const [selectedLevel, setSelectedLevel] = useState("low");
     const [comment, setComment] = useState("");
 
+    const isEdit = !!editData;
+
+    // Reset or Populate form
     const resetForm = () => {
-        setSelectedGrade("10");
-        setSelectedClass("");
-        setSelectedStudentId("");
-        setSelectedCategory("attendance");
-        setSelectedType("");
-        setComment("");
+        if (editData) {
+            setSelectedGrade(editData.grade || "10");
+            setSelectedClass(editData.class || "");
+            // In a real app we'd find the student ID by name/class
+            // For mock, we'll try to find student by name
+            const student = MOCK_STUDENTS.find(s => s.name === editData.student && s.class === editData.class);
+            setSelectedStudentId(student?.id || "");
+            
+            // Map category back from type if possible, else default
+            const category = VIOLATION_CATEGORIES.find(c => c.types.includes(editData.type))?.value || "attendance";
+            setSelectedCategory(category);
+            setSelectedType(editData.type || "");
+            setSelectedLevel(editData.level || "low");
+            setComment(editData.comment || "");
+        } else {
+            setSelectedGrade("10");
+            setSelectedClass("");
+            setSelectedStudentId("");
+            setSelectedCategory("attendance");
+            setSelectedType("");
+            setSelectedLevel("low");
+            setComment("");
+        }
     };
+
+    useEffect(() => {
+        if (isOpen) resetForm();
+    }, [isOpen, editData]);
 
     // Reset Class when Grade changes
     useEffect(() => {
@@ -86,6 +111,13 @@ export default function ViolationRecordModal({ isOpen, onClose, onSuccess, incid
         return { level, count: historyCount };
     }, [selectedStudent, selectedCategory, incidents]);
 
+    // Auto-update level when severity info changes
+    useEffect(() => {
+        if (severityInfo.level) {
+            setSelectedLevel(severityInfo.level);
+        }
+    }, [severityInfo.level]);
+
     if (!isOpen) return null;
 
     const handleSubmit = (e) => {
@@ -96,19 +128,20 @@ export default function ViolationRecordModal({ isOpen, onClose, onSuccess, incid
         }
 
         const newInc = {
-            id: Date.now(),
+            id: isEdit ? editData.id : Date.now(),
             student: selectedStudent.name,
             class: selectedStudent.class,
             grade: selectedStudent.grade,
             type: selectedType,
-            level: severityInfo.level,
-            date: new Date().toLocaleDateString('vi-VN'),
-            reporter: "PHT Nề nếp (Tôi)",
-            comment: comment
+            level: selectedLevel,
+            date: isEdit ? editData.date : new Date().toLocaleDateString('vi-VN'),
+            reporter: isEdit ? editData.reporter : "PHT Nề nếp (Tôi)",
+            comment: comment,
+            status: isEdit ? editData.status : "Mới"
         };
 
-        onSuccess(newInc);
-        toast.success(`Đã ghi nhận vi phạm cho ${selectedStudent.name}!`);
+        onSuccess(newInc, isEdit);
+        toast.success(isEdit ? "Đã cập nhật thông tin vi phạm!" : `Đã ghi nhận vi phạm cho ${selectedStudent.name}!`);
         
         resetForm();
         onClose();
@@ -123,10 +156,10 @@ export default function ViolationRecordModal({ isOpen, onClose, onSuccess, incid
         <div className="vrm-overlay vp-discipline-layout" onClick={onClose}>
             <div className="vrm-container" onClick={e => e.stopPropagation()}>
                 <div className="vrm-header">
-                    <div className="header-icon"><FiPlus /></div>
+                    <div className="header-icon">{isEdit ? <FiEdit2 /> : <FiPlus />}</div>
                     <div className="header-text">
-                        <h2>Ghi Nhận Vi Phụ Mới</h2>
-                        <p>Hệ thống tự động tra cứu lịch sử và định mức vi phạm</p>
+                        <h2>{isEdit ? "Cập Nhật Hồ Sơ Vi Phạm" : "Ghi Nhận Vi Phạm Mới"}</h2>
+                        <p>{isEdit ? `Đang chỉnh sửa mã hồ sơ: #${editData.id}` : "Hệ thống tự động tra cứu lịch sử và định mức vi phạm"}</p>
                     </div>
                     <button className="vrm-close" onClick={onClose}><FiX /></button>
                 </div>
@@ -221,16 +254,36 @@ export default function ViolationRecordModal({ isOpen, onClose, onSuccess, incid
                         </div>
                     </div>
 
-                    {/* AUTO SEVERITY INDICATOR */}
-                    {selectedStudent && (
-                        <div className={`vrm-severity-indicator ${severityInfo.level}`}>
-                            <FiInfo />
-                            <div className="severity-text">
-                                <p>Mức độ tự động: <strong>{severityInfo.level === 'high' ? 'Nghiêm trọng' : (severityInfo.level === 'med' ? 'Vừa (Cảnh cáo)' : 'Nhẹ (Nhắc nhở)')}</strong></p>
-                                <span>(Dựa trên {severityInfo.count} lượt vi phạm trước đó của học sinh này)</span>
-                            </div>
+                    {/* SEVERITY SELECTION */}
+                    <div className="vrm-divider"></div>
+                    <div className="vrm-section-title"><FiActivity /> 3. Mức độ & Xử lý</div>
+                    
+                    <div className="vrm-grid">
+                        <div className="vrm-field">
+                            <label>Mức độ vi phạm</label>
+                            <Select 
+                                variant="custom"
+                                value={selectedLevel} 
+                                onChange={e => setSelectedLevel(e.target.value)}
+                                options={[
+                                    { value: "low", label: "Nhẹ (Nhắc nhở)" },
+                                    { value: "med", label: "Vừa (Cảnh cáo)" },
+                                    { value: "high", label: "Nghiêm trọng (Kỷ luật)" }
+                                ]}
+                            />
                         </div>
-                    )}
+                        <div className="vrm-field">
+                            {selectedStudent && (
+                                <div className={`vrm-severity-indicator-compact ${severityInfo.level}`}>
+                                    <FiInfo />
+                                    <div className="severity-text">
+                                        <p>Gợi ý hệ thống: <strong>{severityInfo.level === 'high' ? 'Nghiêm trọng' : (severityInfo.level === 'med' ? 'Vừa' : 'Nhẹ')}</strong></p>
+                                        <span>(Vi phạm lần {severityInfo.count + 1})</span>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    </div>
 
                     <div className="vrm-field full-width mt-md">
                         <label>Mô tả chi tiết sự vụ (nếu có)</label>
@@ -245,7 +298,7 @@ export default function ViolationRecordModal({ isOpen, onClose, onSuccess, incid
                     <div className="vrm-footer">
                         <button type="button" className="btn-vrm-secondary" onClick={handleCancel}>Hủy bỏ</button>
                         <button type="submit" className="btn-vrm-primary">
-                            <FiCheck /> Lưu Hồ Sơ
+                            {isEdit ? <FiCheck /> : <FiCheck />} {isEdit ? "Cập nhật Hồ sơ" : "Lưu Hồ Sơ"}
                         </button>
                     </div>
                 </form>

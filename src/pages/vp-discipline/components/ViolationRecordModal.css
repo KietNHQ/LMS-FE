@@ -213,6 +213,32 @@
 .vrm-severity-indicator.high { background: #fef2f2; color: #991b1b; border: 1px solid #fecaca; }
 .vrm-severity-indicator.high svg { color: #ef4444; }
 
+.vrm-severity-indicator-compact {
+    padding: 10px 14px;
+    border-radius: 12px;
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    height: 44px; /* Align with select box */
+    margin-top: 20px; /* Align with select box label + gap */
+}
+
+.vrm-severity-indicator-compact.low { background: #f0fdf4; color: #166534; border: 1px solid #bbfcce; }
+.vrm-severity-indicator-compact.med { background: #fff7ed; color: #9a3412; border: 1px solid #ffedd5; }
+.vrm-severity-indicator-compact.high { background: #fef2f2; color: #991b1b; border: 1px solid #fecaca; }
+
+.vrm-severity-indicator-compact .severity-text p {
+    font-size: 0.8rem;
+    font-weight: 700;
+    margin: 0;
+}
+
+.vrm-severity-indicator-compact .severity-text span {
+    font-size: 0.7rem;
+    display: block;
+    opacity: 0.8;
+}
+
 .vrm-textarea {
     width: 100%;
     min-height: 80px;
