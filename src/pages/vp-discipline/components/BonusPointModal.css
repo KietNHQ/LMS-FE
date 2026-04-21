@@ -1,0 +1,398 @@
+.bonus-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(15, 23, 42, 0.75);
+    backdrop-filter: blur(8px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 20px;
+}
+
+.bonus-modal-content {
+    background: #ffffff;
+    width: 100%;
+    max-width: 700px;
+    border-radius: 20px;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Header */
+.bonus-modal-header {
+    background: linear-gradient(135deg, #7f1d1d 0%, #450a0a 100%);
+    padding: 1.5rem 2rem;
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+    position: relative;
+    color: white;
+}
+
+
+.header-icon-ring {
+    width: 48px;
+    height: 48px;
+    background: rgba(245, 158, 11, 0.15);
+    border: 2px solid rgba(245, 158, 11, 0.4);
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    color: #f59e0b; /* Amber Gold for Reward */
+    box-shadow: 0 0 20px rgba(245, 158, 11, 0.2);
+}
+
+
+.header-text h3 {
+    margin: 0;
+    font-size: 1.25rem;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+}
+
+.header-text p {
+    margin: 2px 0 0;
+    font-size: 0.875rem;
+    color: rgba(255, 255, 255, 0.6);
+}
+
+.bonus-modal-header .close-btn {
+    position: absolute;
+    top: 1.5rem;
+    right: 1.5rem;
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
+    color: white;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.bonus-modal-header .close-btn:hover {
+    background: #991b1b;
+    transform: rotate(90deg);
+}
+
+
+/* Body Layout Optimization */
+.bonus-modal-body {
+    padding: 1.5rem 2rem 2rem;
+    max-height: 80vh;
+    overflow-y: auto;
+}
+
+/* 0. Type Toggle (Fixed Layout & Role Colors) */
+.type-toggle-container {
+    background: #f1f5f9;
+    padding: 4px;
+    border-radius: 12px;
+    display: flex;
+    width: fit-content;
+    margin: 0 auto 1.5rem;
+    border: 1px solid #e2e8f0;
+    gap: 4px;
+}
+
+.type-toggle-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 20px;
+    border: none;
+    border-radius: 9px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: #64748b;
+    background: transparent;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+/* Collective (VP Discipline Maroon) */
+.type-toggle-btn.btn-collective.active {
+    background: #991b1b;
+    color: white;
+    box-shadow: 0 4px 12px rgba(153, 27, 27, 0.2);
+}
+
+/* Individual (Student / Secondary) */
+.type-toggle-btn.btn-individual.active {
+    background: #4d5f82;
+    color: white;
+    box-shadow: 0 4px 12px rgba(77, 95, 130, 0.2);
+}
+
+
+.type-toggle-btn:not(.active):hover {
+    background: rgba(0, 0, 0, 0.05);
+    color: #334155;
+}
+
+
+/* 1. Target Selector Row (Clean White) */
+.bonus-target-section {
+    background: #ffffff;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 1.25rem;
+    margin-bottom: 1.5rem;
+}
+
+
+.bonus-target-section .input-group-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 1rem;
+}
+
+
+/* 2. Reward Category Chips (Professional Tiles) */
+.bonus-reward-section {
+    margin-bottom: 1.5rem;
+}
+
+.category-selection-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.75rem;
+    margin-top: 0.75rem;
+}
+
+.cat-premium-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 14px 8px;
+    background: #ffffff;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.cat-premium-card .cat-icon-box {
+    font-size: 1.2rem;
+    color: #94a3b8;
+    transition: all 0.2s;
+}
+
+.cat-premium-card span {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #64748b;
+    transition: all 0.2s;
+}
+
+/* Enhanced Category Coloring */
+.cat-attendance { --cat-color: #3b82f6; --cat-bg: #eff6ff; }
+.cat-academic { --cat-color: #f59e0b; --cat-bg: #fffbeb; }
+.cat-activity { --cat-color: #10b981; --cat-bg: #ecfdf5; }
+.cat-positive { --cat-color: #ec4899; --cat-bg: #fdf2f8; }
+
+.cat-premium-card:hover {
+    border-color: var(--cat-color);
+    background: var(--cat-bg);
+}
+
+.cat-premium-card.active {
+    background: #ffffff;
+    border-color: var(--cat-color);
+    box-shadow: 0 0 0 1px var(--cat-color), 0 8px 16px -4px rgba(0, 0, 0, 0.1);
+}
+
+.cat-premium-card.active .cat-icon-box {
+    color: var(--cat-color);
+    transform: scale(1.1);
+}
+
+.cat-premium-card.active span {
+    color: var(--cat-color);
+}
+
+/* 3. Tier 3: Detail Row (Clean Alignment) */
+.reward-detail-controls {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 1.25rem;
+    padding: 1.5rem;
+    background: #ffffff;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 12px;
+    align-items: flex-end; /* Align inputs to bottom */
+}
+
+
+
+.reward-detail-controls .input-field label {
+    margin-bottom: 8px;
+    font-weight: 700;
+}
+
+/* Fix Points Input Positioning */
+.points-input-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+.points-input-wrapper input {
+    width: 100%;
+    height: 42px;
+    padding: 0 50px 0 15px !important;
+    text-align: left;
+    font-weight: 700;
+    color: #10b981;
+    border: 2px solid #10b981;
+    background: #ffffff;
+    border-radius: 10px;
+    font-size: 1.1rem;
+    outline: none;
+}
+
+/* Remove Spinners */
+.points-input-wrapper input::-webkit-outer-spin-button,
+.points-input-wrapper input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+.points-input-wrapper input[type=number] {
+    -moz-appearance: textfield;
+}
+
+.points-input-wrapper .unit {
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: #10b981;
+    pointer-events: none;
+    background: rgba(16, 185, 129, 0.1);
+    padding: 4px 8px;
+    border-radius: 6px;
+}
+
+
+
+
+/* Notes Section (Full Width) */
+.notes-section {
+    margin-top: 1.5rem;
+}
+
+.input-field textarea {
+    width: 100%;
+    height: 90px;
+    padding: 12px;
+    border-radius: 10px;
+    border: 1.5px solid #e2e8f0;
+    font-family: inherit;
+}
+
+/* Footer (Right Aligned) */
+.bonus-modal-footer {
+    padding: 1.25rem 2rem;
+    background: #ffffff;
+    border-top: 1px solid #e2e8f0;
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.75rem;
+}
+
+.btn-cancel {
+    padding: 10px 24px;
+    border-radius: 10px;
+}
+
+.btn-submit-premium {
+    padding: 10px 28px;
+    border-radius: 10px;
+    background: #10b981;
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);
+}
+
+/* Layout Scale & Animation */
+.bonus-modal-content {
+    max-width: 720px; /* Perfect balance */
+}
+
+@keyframes slideUp {
+    from { transform: translateY(20px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+
+.btn-cancel {
+    padding: 10px 20px;
+    background: white;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 10px;
+    font-weight: 600;
+    color: #64748b;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-cancel:hover {
+    background: #f1f5f9;
+    color: #334155;
+    border-color: #cbd5e1;
+}
+
+.btn-submit-premium {
+    padding: 10px 24px;
+    background: #10b981;
+    border: none;
+    border-radius: 10px;
+    font-weight: 700;
+    color: white;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    transition: all 0.3s;
+    box-shadow: 0 4px 14px rgba(16, 185, 129, 0.4);
+}
+
+.btn-submit-premium:hover {
+    background: #059669;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(5, 150, 105, 0.5);
+}
+
+
+
+/* Utils */
+.mt-md { margin-top: 1.25rem; }
+.mb-lg { margin-bottom: 2rem; }
+
+/* Animations */
+@keyframes slideUp {
+    from { transform: translateY(30px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+.animate-slide-up {
+    animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-fade-in {
+    animation: fadeIn 0.3s ease-out forwards;
+}
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}

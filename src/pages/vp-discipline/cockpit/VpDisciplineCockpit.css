@@ -1,0 +1,162 @@
+/* Cockpit Master Styles */
+.vp-cockpit {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+/* Force global PageHeader to be a clean row with title and back button */
+.vp-cockpit .common-page-header__title-container {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    gap: 1.25rem !important;
+}
+
+/* Hide breadcrumbs as requested */
+.vp-cockpit .common-page-header__breadcrumbs {
+    display: none !important;
+}
+
+/* Hide description as requested */
+.vp-cockpit .common-page-header p {
+    display: none !important;
+}
+
+.cockpit-title-row {
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+}
+
+.btn-back-square-title {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    background: #ffffff;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 12px;
+    color: #64748b;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.btn-back-square-title:hover {
+    background: #f8fafc;
+    border-color: var(--admin-primary);
+    color: var(--admin-primary);
+    transform: translateX(-3px);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.btn-back-square-title svg {
+    font-size: 1.5rem;
+}
+
+.vp-cockpit .common-page-header h1 {
+    font-size: 2.25rem !important;
+    color: #1e293b !important;
+    letter-spacing: -0.025em !important;
+    margin: 0 !important;
+    line-height: 1 !important;
+}
+
+/* ── COCKPIT TABS (ROLE-BASED & PREMIUM) ── */
+.cockpit-hub__tabs {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 2rem;
+    border-bottom: 2px solid var(--admin-border);
+    padding: 0 0.5rem;
+}
+
+.cockpit-hub__tab {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.75rem 1.75rem;
+    border: none;
+    background: transparent;
+    color: var(--admin-text-secondary);
+    font-size: 0.9rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    border-radius: 10px 10px 0 0;
+    position: relative;
+    white-space: nowrap;
+}
+
+.tab-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    transition: transform 0.2s;
+}
+
+.cockpit-hub__tab:hover {
+    color: var(--admin-primary);
+    background: var(--admin-primary-soft);
+}
+
+.cockpit-hub__tab:hover .tab-icon {
+    transform: scale(1.1);
+}
+
+.cockpit-hub__tab.active {
+    background: var(--admin-primary);
+    color: #ffffff;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.cockpit-hub__tab.active .tab-icon {
+    color: #ffffff;
+}
+
+/* Tab Content Transitions */
+.animate-fade-in {
+    animation: fadeIn 0.15s ease-out;
+}
+
+.animate-slide-up {
+    animation: slideUp 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes slideUp {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Embedded Overrides */
+.vp-cockpit .vp-discipline-layout {
+    padding: 0;
+}
+
+/* Make sure inner grids don't add extra padding */
+.cockpit-tab-content .vp-attendance,
+.cockpit-tab-content .vp-conduct {
+    gap: 1.25rem;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .cockpit-tabs-nav {
+        width: 100%;
+        overflow-x: auto;
+    }
+    
+    .cockpit-tab-item {
+        flex: 1;
+        justify-content: center;
+        white-space: nowrap;
+    }
+}

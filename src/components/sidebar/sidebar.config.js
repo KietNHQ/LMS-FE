@@ -127,9 +127,7 @@ export const sidebarConfig = {
     vp_discipline: [
         { label: "Trang chủ",       icon: FiGrid,          path: "/vp-discipline/dashboard" },
         { label: "Quản Lý Nề Nếp",  icon: FiAlertTriangle, path: "/vp-discipline/discipline-management" },
-        { label: "Xếp Hạng Thi Đua",icon: FiStar,          path: "/vp-discipline/competition" },
-        { label: "Chuyên Cần",      icon: FiActivity,      path: "/vp-discipline/attendance" },
-        { label: "Hạnh Kiểm",       icon: FiAward,         path: "/vp-discipline/conduct" },
+        { label: "Quản Lý Thi Đua",  icon: FiAward,         path: "/vp-discipline/cockpit" },
         { label: "Phê Duyệt",       icon: FiCheckSquare,   path: "/vp-discipline/approvals" },
         { label: "Báo Cáo",         icon: FiBarChart2,     path: "/vp-discipline/reports" },
         { label: "Thông Báo",       icon: FiBell,          path: "/vp-discipline/notifications" },

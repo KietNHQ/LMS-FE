@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { FiSettings } from "react-icons/fi";
+import { FiSettings, FiArrowLeft } from "react-icons/fi";
 import { SchoolYearTermSelector } from "../../../components/common";
 import PointConfigModal from "./PointConfigModal";
 import "./DisciplineHeaderActions.css";
@@ -9,6 +9,8 @@ const DisciplineHeaderActions = ({
   selectedTerm,
   onYearChange,
   onTermChange,
+  isClassView = false,
+  onBack,
 }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
 

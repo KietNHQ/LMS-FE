@@ -6,11 +6,11 @@ import { useSchoolYearTerm } from "../../../hooks/useSchoolYearTerm";
 import Select from "../../../components/ui/Select/Select";
 import { 
     FiAward, FiArrowUp, FiArrowDown, FiMinus, FiTrendingUp, FiTrendingDown, 
-    FiDownload, FiLayers, FiCalendar, FiStar, FiAlertCircle, FiActivity 
+    FiDownload, FiLayers, FiCalendar, FiStar, FiAlertCircle, FiActivity, FiArrowRight 
 } from "react-icons/fi";
 import "./VpDisciplineCompetition.css";
 
-export default function VpDisciplineCompetition() {
+export default function VpDisciplineCompetition({ isEmbedded = false, onClassClick }) {
     const navigate = useNavigate();
     const { selectedSchoolYear, selectedTerm, handleYearArrow, handleTermChange } = useSchoolYearTerm();
     const [selectedWeek, setSelectedWeek] = useState(12);
@@ -26,29 +26,35 @@ export default function VpDisciplineCompetition() {
     ];
 
     const statsCards = [
-        { title: "Lớp Dẫn Đầu", val: "12A1", sub: "98.5 điểm", icon: <FiAward />, color: "gold" },
+        { title: "Tỷ lệ hiện diện", val: "98.5%", sub: "Toàn trường hôm nay", icon: <FiActivity />, color: "primary" },
         { title: "Cần Nhắc Nhở", val: "10A3", sub: "-15.0 điểm", icon: <FiAlertCircle />, color: "danger" },
         { title: "Điểm TB Tuần", val: "82.4", sub: "Giảm 2.1 so với tuần trước", icon: <FiActivity />, color: "info" },
-        { title: "Tỷ lệ Chuyên cần", val: "97.2%", sub: "Toàn trường hôm nay", icon: <FiStar />, color: "success" },
+        { title: "Tỷ lệ Chuyên cần", val: "97.2%", sub: "Đã qua kiểm tra", icon: <FiStar />, color: "success" },
     ];
 
     const handleClassClick = (className) => {
-        navigate(`/vp-discipline/attendance?class=${className}`);
+        if (onClassClick) {
+            onClassClick(className);
+        } else {
+            navigate(`/vp-discipline/attendance?class=${className}`);
+        }
     };
 
     return (
         <div className="vp-competition vp-discipline-layout">
-            <PageHeader
-                title="Xếp Hạng Thi Đua"
-                actions={
-                    <DisciplineHeaderActions
-                        selectedSchoolYear={selectedSchoolYear}
-                        selectedTerm={selectedTerm}
-                        onYearChange={handleYearArrow}
-                        onTermChange={handleTermChange}
-                    />
-                }
-            />
+            {!isEmbedded && (
+                <PageHeader
+                    title="Xếp Hạng Thi Đua"
+                    actions={
+                        <DisciplineHeaderActions
+                            selectedSchoolYear={selectedSchoolYear}
+                            selectedTerm={selectedTerm}
+                            onYearChange={handleYearArrow}
+                            onTermChange={handleTermChange}
+                        />
+                    }
+                />
+            )}
 
             {/* KPI Metrics Bar */}
             <div className="comp-stats-grid">
@@ -66,38 +72,36 @@ export default function VpDisciplineCompetition() {
 
             {/* Integrated Toolbar */}
             <div className="dm-toolbar-integrated mb-lg">
-                <div className="dm-toolbar-content">
-                    <div className="dm-filters-complex">
-                        <div className="filter-group">
-                            <label><FiCalendar /> Tuần</label>
-                            <WeekPicker 
-                                className="dm-week-picker"
-                                value={selectedWeek} 
-                                onChange={setSelectedWeek} 
-                                totalWeeks={35}
-                            />
-                        </div>
-                        <div className="filter-group">
-                            <label><FiLayers /> Khối</label>
-                            <Select 
-                                variant="custom"
-                                value={selectedGrade}
-                                onChange={(e) => setSelectedGrade(e.target.value)}
-                                options={[
-                                    { value: "all", label: "Tất cả" },
-                                    { value: "10", label: "Khối 10" },
-                                    { value: "11", label: "Khối 11" },
-                                    { value: "12", label: "Khối 12" }
-                                ]}
-                            />
-                        </div>
+                <div className="dm-filters-complex">
+                    <div className="filter-group">
+                        <label><FiCalendar /> Tuần</label>
+                        <WeekPicker 
+                            className="dm-week-picker"
+                            value={selectedWeek} 
+                            onChange={setSelectedWeek} 
+                            totalWeeks={35}
+                        />
                     </div>
+                    <div className="filter-group">
+                        <label><FiLayers /> Khối</label>
+                        <Select 
+                            variant="custom"
+                            value={selectedGrade}
+                            onChange={(e) => setSelectedGrade(e.target.value)}
+                            options={[
+                                { value: "all", label: "Tất cả" },
+                                { value: "10", label: "Khối 10" },
+                                { value: "11", label: "Khối 11" },
+                                { value: "12", label: "Khối 12" }
+                            ]}
+                        />
+                    </div>
+                </div>
 
-                    <div className="dm-primary-actions-compact">
-                        <button className="btn-export-reports">
-                            <FiDownload /> Xuất báo cáo Thi Đua
-                        </button>
-                    </div>
+                <div className="dm-primary-actions-compact">
+                    <button className="btn-export-reports">
+                        <FiDownload /> Xuất báo cáo Thi Đua
+                    </button>
                 </div>
             </div>
 

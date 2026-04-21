@@ -1,14 +1,13 @@
 import { useState, useEffect } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
-import { PageHeader, SchoolYearTermSelector, EventCalendar } from "../../../components/common";
+import { PageHeader, SchoolYearTermSelector } from "../../../components/common";
 import { useSchoolYearTerm } from "../../../hooks/useSchoolYearTerm";
 import { 
     FiUsers, FiUserCheck, FiAward, FiDollarSign, FiAlertTriangle, 
     FiPieChart, FiTrendingUp, FiCheckCircle, FiActivity, FiArrowRight,
-    FiChevronDown, FiChevronUp, FiLogOut, FiArrowLeft, FiCalendar
+    FiChevronDown, FiChevronUp, FiLogOut, FiArrowLeft
 } from "react-icons/fi";
 import TeacherStructure from "./components/TeacherStructure";
-import { INITIAL_CALENDAR_EVENTS, CALENDAR_EVENT_TYPES } from "../../../components/common/EventCalendar/eventData";
 import "./PrincipalOverview.css";
 
 export default function PrincipalOverview() {
@@ -116,7 +115,35 @@ export default function PrincipalOverview() {
     };
 
     const mockAcademicData = {
-        // ... (keep academic data as is)
+        subjects: [
+            { name: "Toán học", avg: 7.8, trend: "+0.2", status: "up" },
+            { name: "Ngữ văn", avg: 7.2, trend: "-0.1", status: "down" },
+            { name: "Tiếng Anh", avg: 8.1, trend: "+0.5", status: "up" },
+            { name: "Vật lý", avg: 7.4, trend: "0.0", status: "neutral" },
+            { name: "Hóa học", avg: 7.6, trend: "+0.3", status: "up" },
+            { name: "Sinh học", avg: 7.9, trend: "+0.1", status: "up" },
+            { name: "Lịch sử", avg: 6.8, trend: "-0.4", status: "down" },
+            { name: "Địa lý", avg: 7.5, trend: "+0.2", status: "up" }
+        ],
+        teachers: [
+            { id: 1, name: "Lê Văn A", subject: "Toán học", avatar: "LA", score: 8.8, hk1: 7.8, hk2: 8.2, avg: 8.0 },
+            { id: 2, name: "Nguyễn Thị B", subject: "Ngữ văn", avatar: "NB", score: 9.2, hk1: 7.2, hk2: 7.1, avg: 7.15 },
+            { id: 3, name: "Trần Văn C", subject: "Tiếng Anh", avatar: "TC", score: 8.5, hk1: 8.0, hk2: 8.5, avg: 8.25 },
+            { id: 4, name: "Phạm Thị D", subject: "Vật lý", avatar: "PD", score: 7.9, hk1: 7.4, hk2: 7.4, avg: 7.4 },
+            { id: 5, name: "Hoàng Văn E", subject: "Toán học", avatar: "HE", score: 8.2, hk1: 7.5, hk2: 8.0, avg: 7.75 }
+        ],
+        students: [
+            { id: "S1", rank: 1, name: "Trần Văn X", class: "12A1", subject: "Toán học", score: 9.8, grade: "Khối 12" },
+            { id: "S2", rank: 2, name: "Nguyễn Thị Y", class: "12A1", subject: "Toán học", score: 9.6, grade: "Khối 12" },
+            { id: "S3", rank: 3, name: "Lê Văn Z", class: "12A1", subject: "Toán học", score: 9.5, grade: "Khối 12" },
+            { id: "S4", rank: 4, name: "Phạm A", class: "11A1", subject: "Toán học", score: 9.4, grade: "Khối 11" },
+            { id: "S5", rank: 5, name: "Hoàng B", class: "11A1", subject: "Toán học", score: 9.3, grade: "Khối 11" },
+            { id: "S6", rank: 6, name: "Ngô C", class: "10A1", subject: "Toán học", score: 9.2, grade: "Khối 10" },
+            { id: "S7", rank: 7, name: "Vũ D", class: "10A1", subject: "Toán học", score: 9.1, grade: "Khối 10" },
+            { id: "S8", rank: 8, name: "Bùi E", class: "12A2", subject: "Toán học", score: 9.0, grade: "Khối 12" },
+            { id: "S9", rank: 9, name: "Lý F", class: "11A2", subject: "Toán học", score: 8.9, grade: "Khối 11" },
+            { id: "S10", rank: 10, name: "Phan G", class: "10A2", subject: "Toán học", score: 8.8, grade: "Khối 10" }
+        ]
     };
 
     // DYNAMIC FINANCE DATA LOGIC
@@ -211,25 +238,29 @@ export default function PrincipalOverview() {
                     className={`overview-tab-btn ${activeTab === 'students' ? 'active' : ''}`}
                     onClick={() => handleTabChange('students')}
                 >
-                    <FiUsers /> Mạng lưới Học sinh
+                    <span className="tab-icon"><FiUsers /></span>
+                    <span className="tab-label">Mạng lưới Học sinh</span>
                 </button>
                 <button 
                     className={`overview-tab-btn ${activeTab === 'teachers' ? 'active' : ''}`}
                     onClick={() => handleTabChange('teachers')}
                 >
-                    <FiUserCheck /> Đội ngũ Giáo viên
+                    <span className="tab-icon"><FiUserCheck /></span>
+                    <span className="tab-label">Đội ngũ Giáo viên</span>
                 </button>
                 <button 
                     className={`overview-tab-btn ${activeTab === 'grades' ? 'active' : ''}`}
                     onClick={() => handleTabChange('grades')}
                 >
-                    <FiAward /> Chất lượng Học thuật
+                    <span className="tab-icon"><FiAward /></span>
+                    <span className="tab-label">Chất lượng Học thuật</span>
                 </button>
                 <button 
                     className={`overview-tab-btn ${activeTab === 'finance' ? 'active' : ''}`}
                     onClick={() => handleTabChange('finance')}
                 >
-                    <FiDollarSign /> Sức khỏe Tài chính
+                    <span className="tab-icon"><FiDollarSign /></span>
+                    <span className="tab-label">Sức khỏe Tài chính</span>
                 </button>
             </div>
 
@@ -722,22 +753,10 @@ export default function PrincipalOverview() {
                                 </div>
                             </div>
                         </div>
+                    </div>
                 )}
             </div>
 
-            {/* INTEGRATED OPERATIONAL CALENDAR (Full Width) */}
-            <div style={{marginTop: '2rem'}}>
-                <EventCalendar 
-                    title="Lịch Vận Hành Toàn Trường"
-                    selectedSchoolYear={selectedSchoolYear}
-                    selectedTerm={selectedTerm}
-                    themeClass="theme-admin"
-                    userRole="admin"
-                    isCompact={false}
-                    initialEvents={INITIAL_CALENDAR_EVENTS}
-                    eventTypes={CALENDAR_EVENT_TYPES}
-                />
-            </div>
 
             {/* ARREARS MODAL */}
             {showArrearsModal && (
