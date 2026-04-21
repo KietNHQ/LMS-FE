@@ -226,8 +226,7 @@
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 12px;
-    align-items: stretch;
-    /* Match heights */
+    align-items: stretch; /* Match heights */
 }
 
 .student-dashboard-grid-bottom {
@@ -239,17 +238,14 @@
 
 .student-dashboard-card,
 .student-dashboard-calendar-card {
-    <<<<<<< HEAD min-width: 0;
+    min-width: 0;
     box-sizing: border-box;
     overflow: visible;
-}
-
-.student-dashboard-card {
+    display: flex;
+    flex-direction: column;
     padding: var(--space-xl);
     border-radius: var(--radius-lg);
-    =======padding: 12px;
-    border-radius: 12px;
-    >>>>>>>143de87e1788a5587a36c2af8f92692f02bf081c background: #ffffff;
+    background: #ffffff;
     box-shadow: 0 0.125rem 0.625rem rgba(20, 32, 70, 0.08);
 }
 
@@ -283,8 +279,7 @@
 
 .student-radar-wrap {
     flex: 1;
-    min-height: 16rem;
-    /* Further compacted */
+    min-height: 16rem; /* Further compacted */
     display: flex;
     align-items: center;
     justify-content: center;

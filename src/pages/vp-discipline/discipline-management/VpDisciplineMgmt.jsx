@@ -1,16 +1,23 @@
 import { useState, useEffect } from "react";
-import { PageHeader, WeekPicker, Pagination } from "../../../components/common";
+import { PageHeader, WeekPicker, Pagination, StatusBadge } from "../../../components/common";
 import { useSchoolYearTerm } from "../../../hooks/useSchoolYearTerm";
 import Select from "../../../components/ui/Select/Select";
-import { FiChevronLeft, FiChevronRight, FiPlus, FiFilter, FiDownload, FiAlertOctagon, FiUser, FiBarChart2, FiSearch, FiLayers, FiActivity, FiShield, FiCalendar, FiClock, FiCheck } from "react-icons/fi";
+import { FiSearch, FiFilter, FiAward, FiAlertCircle, FiClock, FiCheckCircle, FiChevronLeft, FiChevronRight, FiPlus, FiDownload, FiCalendar, FiActivity, FiArrowRight, FiEdit2, FiTrash2, FiEyeOff, FiEye, FiUser, FiBarChart2, FiLayers, FiShield, FiCheck } from "react-icons/fi";
 import { toast } from "react-toastify";
 import DisciplineHeaderActions from "../components/DisciplineHeaderActions";
 import ViolationRecordModal from "../components/ViolationRecordModal";
+import IncidentHandleModal from "../components/IncidentHandleModal";
 import "./VpDisciplineMgmt.css";
 
 export default function VpDisciplineMgmt() {
     const { selectedSchoolYear, selectedTerm, handleYearArrow, handleTermChange } = useSchoolYearTerm();
     const [isRecordModalOpen, setIsRecordModalOpen] = useState(false);
+    const [isHandleModalOpen, setIsHandleModalOpen] = useState(false);
+    const [selectedIncident, setSelectedIncident] = useState(null);
+    const [editingIncident, setEditingIncident] = useState(null);
+    const [hiddenIncidents, setHiddenIncidents] = useState(new Set());
+    const [isViolationModalOpen, setIsViolationModalOpen] = useState(false);
+    const [searchTerm, setSearchTerm] = useState("");
     
     // Filter States
     const [selectedGrade, setSelectedGrade] = useState("all");
@@ -18,91 +25,107 @@ export default function VpDisciplineMgmt() {
     const [selectedWeek, setSelectedWeek] = useState(1);
     const [selectedViolationType, setSelectedViolationType] = useState("all");
     const [currentPage, setCurrentPage] = useState(1);
-    const itemsPerPage = 7; // Back to standard
+    const itemsPerPage = 7;
     const [selectedSeverity, setSelectedSeverity] = useState("all");
 
-    // Mock Data - Restored and balanced
+    // Mock Data
     const [incidents, setIncidents] = useState([
-        { id: 1, student: "Nguyễn Văn A", class: "10A1", grade: "10", type: "Vắng không phép", level: "med", date: "20/4/2026", reporter: "GV. Trần Y" },
-        { id: 2, student: "Lê Thị B", class: "11A5", grade: "11", type: "Sử dụng điện thoại", level: "low", date: "20/4/2026", reporter: "Lớp trưởng" },
-        { id: 3, student: "Trần Minh C", class: "12A2", grade: "12", type: "Đánh nhau", level: "high", date: "19/4/2026", reporter: "Giám thị 01" },
-        { id: 4, student: "Hoàng Anh E", class: "10A2", grade: "10", type: "Nói tục", level: "med", date: "19/4/2026", reporter: "GV. Trần Y" },
-        { id: 5, student: "Lê Văn C", class: "12A2", grade: "12", type: "Gian lận thi cử", level: "high", date: "20/04/2026", reporter: "PHT Nề nếp" },
-        { id: 6, student: "Vũ Thu F", class: "11B1", grade: "11", type: "Vẽ bậy", level: "low", date: "20/04/2026", reporter: "PHT Nề nếp" },
-        { id: 10, student: "Lê I", class: "12C3", grade: "12", type: "Bỏ tiết", level: "med", date: "18/04/2026", reporter: "Giám thị 01" },
+        { id: 1, student: "Nguyễn Văn A", class: "10A1", grade: "10", type: "Vắng không phép", level: "med", date: "20/4/2026", reporter: "GV. Trần Y", status: "new" },
+        { id: 2, student: "Lê Thị B", class: "11A5", grade: "11", type: "Sử dụng điện thoại", level: "low", date: "20/4/2026", reporter: "Lớp trưởng", status: "resolved" },
+        { id: 3, student: "Trần Minh C", class: "12A2", grade: "12", type: "Đánh nhau", level: "high", date: "19/4/2026", reporter: "Giám thị 01", status: "processing", assignedTo: "Giám thị 01" },
+        { id: 4, student: "Hoàng Anh E", class: "10A2", grade: "10", type: "Nói tục", level: "med", date: "19/4/2026", reporter: "GV. Trần Y", status: "new" },
+        { id: 5, student: "Lê Văn C", class: "12A2", grade: "12", type: "Gian lận thi cử", level: "high", date: "20/4/2026", reporter: "PHT Nề nếp", status: "processing", assignedTo: "PHT Nề nếp" },
+        { id: 6, student: "Vũ Thu F", class: "11B1", grade: "11", type: "Vẽ bậy", level: "low", date: "20/4/2026", reporter: "PHT Nề nếp", status: "resolved" },
+        { id: 10, student: "Lê I", class: "12C3", grade: "12", type: "Bỏ tiết", level: "med", date: "18/4/2026", reporter: "Giám thị 01", status: "new" },
+        { id: 11, student: "Trần Minh C", class: "12A2", grade: "12", type: "Mất trật tự", level: "med", date: "15/4/2026", reporter: "GV. Bộ môn", status: "closed" },
+        { id: 12, student: "Trần Minh C", class: "12A2", grade: "12", type: "Đi trễ", level: "low", date: "10/4/2026", reporter: "Cờ đỏ", status: "closed" },
+        { id: 13, student: "Lê Văn C", class: "12A2", grade: "12", type: "Không làm bài", level: "low", date: "15/4/2026", reporter: "GV. Bộ môn", status: "closed" },
+        { id: 14, student: "Hoàng Anh E", class: "10A2", grade: "10", type: "Đi trễ", level: "low", date: "12/4/2026", reporter: "Cờ đỏ", status: "closed" },
     ]);
 
-    // Minimalist violation analytics for clarity
     const categoryStats = [
-        { 
-            title: "Chuyên cần", 
-            icon: <FiClock />, 
-            incidents: 63,
-            detail: "12 học sinh",
-            trend: "+15%",
-            level: "Cần chú ý",
-            status: "warning"
-        },
-        { 
-            title: "Nề nếp", 
-            icon: <FiUser />, 
-            incidents: 45,
-            detail: "8 học sinh",
-            trend: "-5%",
-            level: "Ổn định",
-            status: "success"
-        },
-        { 
-            title: "Tài sản", 
-            icon: <FiLayers />, 
-            incidents: 15,
-            detail: "4 học sinh",
-            trend: "+2%",
-            level: "Bình thường",
-            status: "neutral"
-        },
-        { 
-            title: "Học tập", 
-            icon: <FiAlertOctagon />, 
-            incidents: 28,
-            detail: "9 học sinh",
-            trend: "+8%",
-            level: "Nghiêm trọng",
-            status: "critical"
-        },
+        { title: "Chuyên cần", icon: <FiClock />, incidents: 63, detail: "12 học sinh", trend: "+15%", level: "Cần chú ý", status: "warning" },
+        { title: "Nề nếp", icon: <FiUser />, incidents: 45, detail: "8 học sinh", trend: "-5%", level: "Ổn định", status: "success" },
+        { title: "Tài sản", icon: <FiLayers />, incidents: 15, detail: "4 học sinh", trend: "+2%", level: "Bình thường", status: "neutral" },
+        { title: "Học tập", icon: <FiAlertCircle />, incidents: 28, detail: "9 học sinh", trend: "+8%", level: "Nghiêm trọng", status: "critical" },
     ];
 
-    const handleAddIncidentSuccess = (newInc) => {
-        setIncidents([newInc, ...incidents]);
+    const handleAddIncident = (newInc, isEdit = false) => {
+        if (isEdit) {
+            setIncidents(prev => prev.map(inc => inc.id === newInc.id ? newInc : inc));
+        } else {
+            setIncidents(prev => [newInc, ...prev]);
+        }
+        setEditingIncident(null);
+        setIsViolationModalOpen(false);
     };
 
-    // Derived options for Class based on Grade
+    const handleEditIncident = (inc) => {
+        setEditingIncident(inc);
+        setIsViolationModalOpen(true);
+    };
+
+    const handleDeleteIncident = (id) => {
+        if (window.confirm("Bạn có chắc chắn muốn xóa hồ sơ vi phạm này? Hành động này không thể hoàn tác.")) {
+            setIncidents(prev => prev.filter(inc => inc.id !== id));
+            toast.success("Đã xóa hồ sơ vi phạm!");
+        }
+    };
+
+    const handleToggleHide = (id) => {
+        setHiddenIncidents(prev => {
+            const newSet = new Set(prev);
+            if (newSet.has(id)) newSet.delete(id);
+            else newSet.add(id);
+            return newSet;
+        });
+        toast.info("Đã thay đổi trạng thái hiển thị hồ sơ.");
+    };
+
+    const handleUpdateIncident = (updated) => {
+        setIncidents(prev => prev.map(inc => inc.id === updated.id ? updated : inc));
+    };
+
+    const handleOpenIncident = (incident) => {
+        setSelectedIncident(incident);
+        setIsHandleModalOpen(true);
+    };
+
     const classOptions = {
-        "all": [{ value: "all", label: "Tất cả lớp" }],
-        "10": [{ value: "all", label: "Tất cả lớp 10" }, { value: "10A1", label: "10A1" }, { value: "10A2", label: "10A2" }],
-        "11": [{ value: "all", label: "Tất cả lớp 11" }, { value: "11A5", label: "11A5" }, { value: "11B1", label: "11B1" }],
-        "12": [{ value: "all", label: "Tất cả lớp 12" }, { value: "12A2", label: "12A2" }, { value: "12C3", label: "12C3" }],
+        "all": [{ value: "all", label: "Tất cả" }],
+        "10": [{ value: "all", label: "Tất cả" }, { value: "10A1", label: "10A1" }, { value: "10A2", label: "10A2" }],
+        "11": [{ value: "all", label: "Tất cả" }, { value: "11A5", label: "11A5" }, { value: "11B1", label: "11B1" }],
+        "12": [{ value: "all", label: "Tất cả" }, { value: "12A2", label: "12A2" }, { value: "12C3", label: "12C3" }],
     };
 
-    // Reset to page 1 when filters change
     useEffect(() => {
         setCurrentPage(1);
-    }, [selectedGrade, selectedClass, selectedViolationType, selectedWeek, selectedSchoolYear, selectedTerm]);
+    }, [selectedGrade, selectedClass, selectedViolationType, selectedSeverity, selectedWeek, selectedSchoolYear, selectedTerm]);
 
-    // Auto-filtering logic
+    const getOccurrenceCount = (studentName, currentIncidentId, allIncidents) => {
+        const studentHistory = allIncidents
+            .filter(inc => inc.student === studentName)
+            .sort((a, b) => {
+                const dateA = new Date(a.date.split('/').reverse().join('-'));
+                const dateB = new Date(b.date.split('/').reverse().join('-'));
+                if (dateA - dateB !== 0) return dateA - dateB;
+                return a.id - b.id;
+            });
+        const index = studentHistory.findIndex(inc => inc.id === currentIncidentId);
+        return index + 1;
+    };
+
     const filteredIncidents = incidents.filter(inc => {
+        if (hiddenIncidents.has(inc.id)) return false;
         const matchGrade = selectedGrade === "all" || inc.grade === selectedGrade;
         const matchClass = selectedClass === "all" || inc.class === selectedClass;
         const matchType = selectedViolationType === "all" || inc.type.toLowerCase().includes(selectedViolationType.toLowerCase()) || (selectedViolationType === "late" && inc.type === "Đi trễ") || (selectedViolationType === "absence" && inc.type.includes("Vắng"));
-        return matchGrade && matchClass && matchType;
+        const matchSeverity = selectedSeverity === "all" || inc.level === selectedSeverity;
+        return matchGrade && matchClass && matchType && matchSeverity;
     });
 
-    // Pagination logic
     const totalPages = Math.ceil(filteredIncidents.length / itemsPerPage) || 1;
-    const paginatedIncidents = filteredIncidents.slice(
-        (currentPage - 1) * itemsPerPage,
-        currentPage * itemsPerPage
-    );
+    const paginatedIncidents = filteredIncidents.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
     return (
         <div className="vp-discipline-mgmt vp-discipline-layout discipline-layout-centered">
@@ -151,69 +174,32 @@ export default function VpDisciplineMgmt() {
                             <div className="dm-filters-complex">
                                 <div className="filter-group">
                                     <label><FiCalendar /> Tuần</label>
-                                    <WeekPicker 
-                                        className="dm-week-picker"
-                                        value={selectedWeek} 
-                                        onChange={setSelectedWeek} 
-                                        totalWeeks={35}
-                                    />
+                                    <WeekPicker className="dm-week-picker" value={selectedWeek} onChange={setSelectedWeek} totalWeeks={35} />
                                 </div>
-
                                 <div className="filter-group">
                                     <label><FiLayers /> Khối</label>
-                                    <Select 
-                                        variant="custom"
-                                        value={selectedGrade}
-                                        onChange={(e) => {
-                                            setSelectedGrade(e.target.value);
-                                            setSelectedClass("all");
-                                        }}
-                                        options={[
-                                            { value: "all", label: "Tất cả Khối" },
-                                            { value: "10", label: "Khối 10" },
-                                            { value: "11", label: "Khối 11" },
-                                            { value: "12", label: "Khối 12" }
-                                        ]}
-                                    />
+                                    <Select variant="custom" value={selectedGrade} onChange={(e) => { setSelectedGrade(e.target.value); setSelectedClass("all"); }} options={[{ value: "all", label: "Tất cả" }, { value: "10", label: "Khối 10" }, { value: "11", label: "Khối 11" }, { value: "12", label: "Khối 12" }]} />
                                 </div>
-
                                 {selectedGrade !== "all" && (
                                     <div className="filter-group animate-slide-in">
                                         <label><FiLayers /> Lớp</label>
-                                        <Select 
-                                            variant="custom"
-                                            value={selectedClass}
-                                            onChange={(e) => setSelectedClass(e.target.value)}
-                                            options={classOptions[selectedGrade]}
-                                        />
+                                        <Select variant="custom" value={selectedClass} onChange={(e) => setSelectedClass(e.target.value)} options={classOptions[selectedGrade]} />
                                     </div>
                                 )}
-
                                 <div className="filter-group">
-                                    <label><FiAlertOctagon /> Loại lỗi</label>
-                                    <Select 
-                                        variant="custom"
-                                        value={selectedViolationType}
-                                        onChange={(e) => setSelectedViolationType(e.target.value)}
-                                        options={[
-                                            { value: "all", label: "Tất cả" },
-                                            { value: "late", label: "Đi trễ" },
-                                            { value: "absence", label: "Vắng" },
-                                            { value: "uniform", label: "Đồng phục" },
-                                            { value: "behavior", label: "Thái độ" }
-                                        ]}
-                                    />
+                                    <label><FiAlertCircle /> Loại lỗi</label>
+                                    <Select variant="custom" value={selectedViolationType} onChange={(e) => setSelectedViolationType(e.target.value)} options={[{ value: "all", label: "Tất cả" }, { value: "late", label: "Đi trễ" }, { value: "absence", label: "Vắng" }, { value: "uniform", label: "Đồng phục" }, { value: "behavior", label: "Thái độ" }]} />
+                                </div>
+                                <div className="filter-group">
+                                    <label><FiActivity /> Mức độ</label>
+                                    <Select variant="custom" value={selectedSeverity} onChange={(e) => setSelectedSeverity(e.target.value)} options={[{ value: "all", label: "Tất cả" }, { value: "low", label: "Nhẹ" }, { value: "med", label: "Vừa" }, { value: "high", label: "Nghiêm trọng" }]} />
                                 </div>
                             </div>
-
                             <div className="dm-primary-actions-compact">
-                                <div className="btn-aligner-spacer"></div>
-                                <div className="btn-group-horizontal">
-                                    <button className="btn-export-reports"><FiDownload /> Báo cáo</button>
-                                    <button className="btn-add-violation-premium" onClick={() => setIsRecordModalOpen(true)}>
-                                        <FiPlus /> Ghi nhận mới
-                                    </button>
-                                </div>
+                                <button className="btn-export-reports"><FiDownload /> Báo cáo</button>
+                                <button className="btn-add-violation-premium" onClick={() => setIsViolationModalOpen(true)}>
+                                    <FiPlus /> Ghi nhận mới
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -226,28 +212,44 @@ export default function VpDisciplineMgmt() {
                                     <th>Lớp</th>
                                     <th>Loại Vi Phạm</th>
                                     <th>Mức Độ</th>
+                                    <th>Trạng Thái</th>
                                     <th>Thời Gian</th>
-                                    <th>Người ghi nhận</th>
+                                    <th className="th-actions">Thao tác</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                {paginatedIncidents.map(inc => (
-                                    <tr key={inc.id} className="row-hover-effect">
+                                {paginatedIncidents.map(incident => (
+                                    <tr key={incident.id} className="row-hover-effect">
                                         <td className="td-student">
                                             <div className="student-profile-mini">
-                                                <div className="s-avatar">{inc.student.charAt(0)}</div>
-                                                <span>{inc.student}</span>
+                                                <div className="s-avatar">{incident.student.charAt(0)}</div>
+                                                <span>{incident.student}</span>
                                             </div>
                                         </td>
-                                        <td><span className="class-badge-v2">{inc.class}</span></td>
-                                        <td><span className="violation-type">{inc.type}</span></td>
+                                        <td><span className="class-badge-v2">{incident.class}</span></td>
+                                        <td><span className="violation-type">{incident.type}</span></td>
                                         <td>
-                                            <span className={`level-pill ${inc.level}`}>
-                                                {inc.level === 'high' ? 'Nghiêm trọng' : (inc.level === 'med' ? 'Vừa' : 'Nhẹ')}
-                                            </span>
+                                            <div className="td-level-combined">
+                                                <span className={`level-pill ${incident.level}`}>
+                                                    {incident.level === 'high' ? 'Nghiêm trọng' : (incident.level === 'med' ? 'Vừa' : 'Nhẹ')}
+                                                </span>
+                                                <span className="occurrence-badge">{getOccurrenceCount(incident.student, incident.id, incidents)}</span>
+                                            </div>
                                         </td>
-                                        <td><span className="td-time">{inc.date}</span></td>
-                                        <td><span className="td-reporter">{inc.reporter}</span></td>
+                                        <td>
+                                            <StatusBadge status={incident.status || 'new'}>
+                                                {incident.status === 'processing' ? 'Đang xử lý' : (incident.status === 'resolved' ? 'Đã giải quyết' : (incident.status === 'closed' ? 'Đã đóng' : 'Mới'))}
+                                            </StatusBadge>
+                                        </td>
+                                        <td><span className="td-time">{incident.date}</span></td>
+                                        <td className="dm-td-actions">
+                                            <div className="dm-action-group">
+                                                <button className="dm-btn-action edit" title="Sửa" onClick={() => handleEditIncident(incident)}><FiEdit2 /></button>
+                                                <button className="dm-btn-action process" title="Xử lý" onClick={() => handleOpenIncident(incident)}><FiActivity /></button>
+                                                <button className="dm-btn-action hide" title="Ẩn" onClick={() => handleToggleHide(incident.id)}><FiEyeOff /></button>
+                                                <button className="dm-btn-action delete" title="Xóa" onClick={() => handleDeleteIncident(incident.id)}><FiTrash2 /></button>
+                                            </div>
+                                        </td>
                                     </tr>
                                 ))}
                             </tbody>
@@ -255,19 +257,25 @@ export default function VpDisciplineMgmt() {
                     </div>
 
                     <div className="dm-footer-pagination">
-                        <Pagination 
-                            currentPage={currentPage}
-                            totalPages={totalPages}
-                            onPageChange={(page) => setCurrentPage(page)}
-                        />
+                        <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={(page) => setCurrentPage(page)} />
                     </div>
                 </div>
             </div>
             <ViolationRecordModal 
-                isOpen={isRecordModalOpen}
-                onClose={() => setIsRecordModalOpen(false)}
-                onSuccess={handleAddIncidentSuccess}
+                isOpen={isViolationModalOpen} 
+                onClose={() => {
+                    setIsViolationModalOpen(false);
+                    setEditingIncident(null);
+                }}
+                onSuccess={handleAddIncident}
                 incidents={incidents}
+                editData={editingIncident}
+            />
+            <IncidentHandleModal 
+                isOpen={isHandleModalOpen}
+                onClose={() => setIsHandleModalOpen(false)}
+                incident={selectedIncident}
+                onUpdateIncident={handleUpdateIncident}
             />
         </div>
     );
