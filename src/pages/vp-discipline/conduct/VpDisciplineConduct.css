@@ -181,6 +181,7 @@
 }
 
 .dm-table-premium tr:hover td { background: #fdf2f2; }
+.dm-table-premium tr:last-child td { border-bottom: none; }
 
 .student-profile-mini { display: flex; align-items: center; gap: 0.75rem; }
 .s-avatar {
@@ -239,6 +240,15 @@
 .suggestion-pill svg { font-size: 1rem; }
 
 .cd-table-premium-wrap { padding: 0 1rem 1rem; }
+
+.dm-footer-pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 1.4rem 1.5rem 1.8rem;
+    border-top: 1px solid #e2e8f0;
+    background: #f8fafc;
+}
 
 @media (max-width: 768px) {
     .cd-stats-grid { grid-template-columns: 1fr; }

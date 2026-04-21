@@ -268,6 +268,7 @@
     margin: 0;
 }
 .points-input-wrapper input[type=number] {
+	appearance: textfield;
     -moz-appearance: textfield;
 }
 

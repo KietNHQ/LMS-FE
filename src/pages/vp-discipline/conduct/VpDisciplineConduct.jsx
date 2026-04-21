@@ -1,12 +1,12 @@
 import { useState, useEffect, useMemo } from "react";
 import { useSearchParams } from "react-router-dom";
-import { PageHeader, StatusBadge } from "../../../components/common";
+import { PageHeader, Pagination } from "../../../components/common";
 import DisciplineHeaderActions from "../components/DisciplineHeaderActions";
 import { useSchoolYearTerm } from "../../../hooks/useSchoolYearTerm";
 import Select from "../../../components/ui/Select/Select";
 import { 
-    FiAward, FiAlertCircle, FiCheckCircle, FiSave, FiSearch, 
-    FiFilter, FiLayers, FiActivity, FiUserCheck, FiUserX 
+    FiAlertCircle, FiCheckCircle, FiSave, FiSearch,
+    FiLayers, FiActivity, FiUserCheck, FiUserX
 } from "react-icons/fi";
 import { toast } from "react-toastify";
 import "./VpDisciplineConduct.css";
@@ -29,6 +29,8 @@ export default function VpDisciplineConduct({ isEmbedded = false }) {
     const [searchTerm, setSearchTerm] = useState("");
     const [selectedGrade, setSelectedGrade] = useState("10");
     const [selectedClass, setSelectedClass] = useState(urlClass || "10A1");
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 7;
 
 
     useEffect(() => {
@@ -56,6 +58,21 @@ export default function VpDisciplineConduct({ isEmbedded = false }) {
             return matchesGrade && matchesClass && matchesSearch;
         });
     }, [students, selectedGrade, selectedClass, searchTerm]);
+
+    const totalPages = Math.max(1, Math.ceil(studentList.length / itemsPerPage));
+
+    useEffect(() => {
+        setCurrentPage((prev) => Math.min(prev, totalPages));
+    }, [totalPages]);
+
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [students, selectedGrade, selectedClass, searchTerm]);
+
+    const paginatedStudents = useMemo(() => {
+        const startIndex = (currentPage - 1) * itemsPerPage;
+        return studentList.slice(startIndex, startIndex + itemsPerPage);
+    }, [studentList, currentPage]);
 
     const conductStats = [
         { title: "Hạnh kiểm Tốt", val: "85%", sub: "1,062 học sinh", icon: <FiUserCheck />, color: "success" },
@@ -167,7 +184,7 @@ export default function VpDisciplineConduct({ isEmbedded = false }) {
                             </tr>
                         </thead>
                         <tbody>
-                            {studentList.map(s => (
+                            {paginatedStudents.map(s => (
                                 <tr key={s.id}>
                                     <td className="td-student">
                                         <div className="student-profile-mini">
@@ -209,6 +226,10 @@ export default function VpDisciplineConduct({ isEmbedded = false }) {
                             ))}
                         </tbody>
                     </table>
+                </div>
+
+                <div className="dm-footer-pagination">
+                    <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} />
                 </div>
             </div>
         </div>

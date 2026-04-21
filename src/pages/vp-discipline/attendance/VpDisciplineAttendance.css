@@ -93,7 +93,7 @@
     }
 
     .filter-group {
-        flex: 1 1 0px !important; /* Allow shrink */
+        flex: 1 1 0 !important; /* Allow shrink */
         min-width: 100px !important;
         max-width: 200px !important;
     }
@@ -224,6 +224,15 @@
 
 .dm-table-premium tr:last-child td { border-bottom: none; }
 .dm-table-premium tr:hover td { background: #fdf2f2; }
+
+.dm-footer-pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 1.4rem 1.5rem 1.8rem;
+    border-top: 1px solid #e2e8f0;
+    background: #f8fafc;
+}
 
 .class-badge-v2 {
     background: #f1f5f9;

@@ -1,12 +1,17 @@
 import { useMemo, useState, useEffect } from "react";
-import { useSearchParams, useNavigate } from "react-router-dom";
-import { PageHeader, WeekPicker, StatusBadge } from "../../../components/common";
+import { useSearchParams } from "react-router-dom";
+import { PageHeader, WeekPicker, StatusBadge, Pagination } from "../../../components/common";
 import DisciplineHeaderActions from "../components/DisciplineHeaderActions";
 import { useSchoolYearTerm } from "../../../hooks/useSchoolYearTerm";
 import Select from "../../../components/ui/Select/Select";
 import {
-  FiClock, FiAlertCircle, FiPieChart, FiDownload, FiSearch, FiSend, 
-  FiCheckCircle, FiFileText, FiUser, FiCalendar, FiTrendingUp, FiTrendingDown, FiLayers, FiActivity, FiArrowRight
+  FiClock,
+  FiDownload,
+  FiSearch,
+  FiCalendar,
+  FiTrendingUp,
+  FiLayers,
+  FiActivity,
 } from "react-icons/fi";
 import { toast } from "react-toastify";
 import * as XLSX from "xlsx";
@@ -22,6 +27,10 @@ const ATTENDANCE_RECORDS = [
   { id: 93, studentName: "Đỗ G", className: "12A1", week: 12, dayOfWeek: 5, reason: "Trèo tường bỏ tiết 4", type: "skipping", points: -10, history: [{ date: "18/10/2026", type: "skipping", reason: "Trèo tường bỏ tiết 4" }] },
   { id: 94, studentName: "Ngô H", className: "10A1", week: 12, dayOfWeek: 2, reason: "Bỏ giờ sinh hoạt", type: "skipping", points: -10, history: [{ date: "15/10/2026", type: "skipping", reason: "Bỏ giờ sinh hoạt" }] },
   { id: 95, studentName: "Lớp 12A1", className: "12A1", week: 12, dayOfWeek: 0, reason: "Thành tích chuyên cần xuất sắc", type: "bonus", points: 10, history: [] },
+  { id: 96, studentName: "Bùi J", className: "11A5", week: 12, dayOfWeek: 3, reason: "Vắng mặt không báo trước", type: "unexcused", points: -5, history: [{ date: "16/10/2026", type: "unexcused", reason: "Vắng mặt không báo trước" }] },
+  { id: 97, studentName: "Phan K", className: "10A2", week: 12, dayOfWeek: 4, reason: "Đi học đúng giờ nhiều ngày", type: "bonus", points: 5, history: [{ date: "17/10/2026", type: "bonus", reason: "Đi học đúng giờ nhiều ngày" }] },
+  { id: 98, studentName: "Võ L", className: "12C3", week: 12, dayOfWeek: 6, reason: "Đến muộn tiết 1", type: "late", points: -2, history: [{ date: "19/10/2026", type: "late", reason: "Đến muộn tiết 1" }] },
+  { id: 99, studentName: "Đặng M", className: "11B1", week: 12, dayOfWeek: 7, reason: "Bỏ tiết tự học", type: "skipping", points: -10, history: [{ date: "20/10/2026", type: "skipping", reason: "Bỏ tiết tự học" }] },
 ];
 
 const DAYS = [
@@ -35,7 +44,6 @@ const DAYS = [
 
 export default function VpDisciplineAttendance({ isEmbedded = false }) {
   const [searchParams] = useSearchParams();
-  const navigate = useNavigate();
   const urlClass = searchParams.get("class");
   // Force update for 1-row layout refresh
 
@@ -50,6 +58,8 @@ export default function VpDisciplineAttendance({ isEmbedded = false }) {
   const [selectedClass, setSelectedClass] = useState(urlClass || "all");
   const [typeFilter, setTypeFilter] = useState("all");
   const [isBonusModalOpen, setIsBonusModalOpen] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   // Sync with URL
   useEffect(() => {
@@ -97,12 +107,20 @@ export default function VpDisciplineAttendance({ isEmbedded = false }) {
     });
   }, [weeklyRecords, selectedDay, typeFilter, searchTerm]);
 
-  const handleQuickAction = (action, recordId) => {
-    if (action === "mark-excused") {
-      setRecords((prev) => prev.map((item) => (item.id === recordId ? { ...item, type: "excused", points: -1, reason: "Đã xác minh có phép" } : item)));
-      toast.success("Đã xác minh phép thành công.");
-    }
-  };
+  const totalPages = Math.max(1, Math.ceil(filteredRecords.length / itemsPerPage));
+
+  useEffect(() => {
+    setCurrentPage((prev) => Math.min(prev, totalPages));
+  }, [totalPages]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [selectedWeek, selectedDay, selectedGrade, selectedClass, typeFilter, searchTerm]);
+
+  const paginatedRecords = useMemo(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    return filteredRecords.slice(startIndex, startIndex + itemsPerPage);
+  }, [filteredRecords, currentPage]);
 
   const handleAddBonus = () => {
     setIsBonusModalOpen(true);
@@ -225,13 +243,6 @@ export default function VpDisciplineAttendance({ isEmbedded = false }) {
           <div className="panel-header">
             <h3>Danh sách giám sát chuyên cần</h3>
             <div className="panel-header-actions">
-                <button 
-                    className="btn-navigate-discipline"
-                    onClick={() => navigate('/vp-discipline/discipline-management')}
-                    title="Sang trang Quản lý Nề nếp"
-                >
-                    <FiArrowRight /> Quản lý Nề nếp
-                </button>
                 <div className="search-box-pill">
                     <FiSearch />
                     <input placeholder="Tìm học sinh..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
@@ -253,7 +264,7 @@ export default function VpDisciplineAttendance({ isEmbedded = false }) {
 
             </thead>
             <tbody>
-              {filteredRecords.map(item => (
+              {paginatedRecords.map(item => (
                 <tr key={item.id}>
                   <td><strong>{item.studentName}</strong></td>
                   <td className="th-center"><span className="class-badge-v2">{item.className}</span></td>
@@ -278,6 +289,10 @@ export default function VpDisciplineAttendance({ isEmbedded = false }) {
               ))}
             </tbody>
           </table>
+
+          <div className="dm-footer-pagination">
+            <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} />
+          </div>
         </div>
       </div>
 
