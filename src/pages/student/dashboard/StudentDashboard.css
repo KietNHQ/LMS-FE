@@ -238,19 +238,13 @@
 
 .student-dashboard-card,
 .student-dashboard-calendar-card {
-<<<<<<< HEAD
     min-width: 0;
     box-sizing: border-box;
     overflow: visible;
-}
-
-.student-dashboard-card {
+    display: flex;
+    flex-direction: column;
     padding: var(--space-xl);
     border-radius: var(--radius-lg);
-=======
-    padding: 12px;
-    border-radius: 12px;
->>>>>>> 143de87e1788a5587a36c2af8f92692f02bf081c
     background: #ffffff;
     box-shadow: 0 0.125rem 0.625rem rgba(20, 32, 70, 0.08);
 }

@@ -71,8 +71,6 @@ const VpDisciplineCompetition = lazy(() => import("../pages/vp-discipline/compet
 const VpDisciplineAttendance = lazy(() => import("../pages/vp-discipline/attendance/VpDisciplineAttendance"));
 const VpDisciplineConduct = lazy(() => import("../pages/vp-discipline/conduct/VpDisciplineConduct"));
 const VpDisciplineApprovals = lazy(() => import("../pages/vp-discipline/approvals/VpDisciplineApprovals"));
-const VpDisciplineViolations = lazy(() => import("../pages/vp-discipline/discipline/VpDisciplineViolations"));
-const VpDisciplineIncidents = lazy(() => import("../pages/vp-discipline/incidents/VpDisciplineIncidents"));
 const VpDisciplineReports = lazy(() => import("../pages/vp-discipline/reports/VpDisciplineReports"));
 const VpDisciplineNotifications = lazy(() => import("../pages/vp-discipline/notifications/VpDisciplineNotifications"));
 
@@ -228,8 +226,8 @@ export default function AppRoutes() {
         <Route index element={<Navigate to="dashboard" replace />} />
         <Route path="dashboard" element={<VpDisciplineDashboard />} />
         <Route path="discipline-management" element={<VpDisciplineMgmt />} />
-        <Route path="discipline" element={<VpDisciplineViolations />} />
-        <Route path="incidents" element={<VpDisciplineIncidents />} />
+        <Route path="discipline" element={<Navigate to="/vp-discipline/discipline-management" replace />} />
+        <Route path="incidents" element={<Navigate to="/vp-discipline/discipline-management" replace />} />
         <Route path="competition" element={<VpDisciplineCompetition />} />
         <Route path="attendance" element={<VpDisciplineAttendance />} />
         <Route path="conduct" element={<VpDisciplineConduct />} />
