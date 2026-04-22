@@ -3,7 +3,7 @@
     --sidebar-collapsed: 5rem;
     --content-gap-expanded: 0rem;
     --content-gap-collapsed: 1rem;
-    --layout-bg: #e9edf5;
+    --layout-bg: var(--admin-primary-soft, #eef2ff);
     min-height: 100vh; height: 100vh;
     background: var(--layout-bg); overflow: hidden;
 }

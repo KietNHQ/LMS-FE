@@ -27,7 +27,7 @@ const TeacherDashboard = () => {
       {/* Header */}
       <div className="teacher-dashboard-header">
         <div className="header-left">
-          <h2>Xin chào, Hương! 👋</h2>
+          <h2>Xin chào, Hương! </h2>
         </div>
         <SchoolYearTermSelector
           selectedSchoolYear={selectedSchoolYear}
@@ -77,6 +77,7 @@ const TeacherDashboard = () => {
   );
 };
 
-export default TeacherDashboard;
+export default TeacherDashboard;
+
 
 

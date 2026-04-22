@@ -1,12 +1,12 @@
 import { useState, useEffect, useMemo } from "react";
 import { useSearchParams } from "react-router-dom";
-import { PageHeader, StatusBadge } from "../../../components/common";
+import { PageHeader, Pagination } from "../../../components/common";
 import DisciplineHeaderActions from "../components/DisciplineHeaderActions";
 import { useSchoolYearTerm } from "../../../hooks/useSchoolYearTerm";
 import Select from "../../../components/ui/Select/Select";
 import { 
-    FiAward, FiAlertCircle, FiCheckCircle, FiSave, FiSearch, 
-    FiFilter, FiLayers, FiActivity, FiUserCheck, FiUserX 
+    FiAlertCircle, FiCheckCircle, FiSave, FiSearch,
+    FiLayers, FiActivity, FiUserCheck, FiUserX
 } from "react-icons/fi";
 import { toast } from "react-toastify";
 import "./VpDisciplineConduct.css";
@@ -19,7 +19,7 @@ const MOCK_CONDUCT_STUDENTS = [
     { id: "HS005", name: "Phạm E", class: "10A1", viol: 1, grade: "Tốt", suggest: null },
 ];
 
-export default function VpDisciplineConduct() {
+export default function VpDisciplineConduct({ isEmbedded = false }) {
     const [searchParams] = useSearchParams();
     const urlClass = searchParams.get("class");
 
@@ -27,8 +27,11 @@ export default function VpDisciplineConduct() {
     
     const [students, setStudents] = useState(MOCK_CONDUCT_STUDENTS);
     const [searchTerm, setSearchTerm] = useState("");
-    const [selectedGrade, setSelectedGrade] = useState("all");
-    const [selectedClass, setSelectedClass] = useState(urlClass || "all");
+    const [selectedGrade, setSelectedGrade] = useState("10");
+    const [selectedClass, setSelectedClass] = useState(urlClass || "10A1");
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 7;
+
 
     useEffect(() => {
         if (urlClass) {
@@ -56,6 +59,21 @@ export default function VpDisciplineConduct() {
         });
     }, [students, selectedGrade, selectedClass, searchTerm]);
 
+    const totalPages = Math.max(1, Math.ceil(studentList.length / itemsPerPage));
+
+    useEffect(() => {
+        setCurrentPage((prev) => Math.min(prev, totalPages));
+    }, [totalPages]);
+
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [students, selectedGrade, selectedClass, searchTerm]);
+
+    const paginatedStudents = useMemo(() => {
+        const startIndex = (currentPage - 1) * itemsPerPage;
+        return studentList.slice(startIndex, startIndex + itemsPerPage);
+    }, [studentList, currentPage]);
+
     const conductStats = [
         { title: "Hạnh kiểm Tốt", val: "85%", sub: "1,062 học sinh", icon: <FiUserCheck />, color: "success" },
         { title: "Hạnh kiểm Yếu", val: "1.2%", sub: "15 học sinh", icon: <FiUserX />, color: "danger" },
@@ -65,17 +83,19 @@ export default function VpDisciplineConduct() {
 
     return (
         <div className="vp-conduct vp-discipline-layout">
-            <PageHeader
-                title="Đánh Giá Hạnh Kiểm"
-                actions={
-                    <DisciplineHeaderActions
-                        selectedSchoolYear={selectedSchoolYear}
-                        selectedTerm={selectedTerm}
-                        onYearChange={handleYearArrow}
-                        onTermChange={handleTermChange}
-                    />
-                }
-            />
+            {!isEmbedded && (
+                <PageHeader
+                    title="Đánh Giá Hạnh Kiểm"
+                    actions={
+                        <DisciplineHeaderActions
+                            selectedSchoolYear={selectedSchoolYear}
+                            selectedTerm={selectedTerm}
+                            onYearChange={handleYearArrow}
+                            onTermChange={handleTermChange}
+                        />
+                    }
+                />
+            )}
 
             {/* Top Metrics */}
             <div className="cd-stats-grid">
@@ -93,64 +113,64 @@ export default function VpDisciplineConduct() {
 
             {/* Integrated Toolbar */}
             <div className="dm-toolbar-integrated mb-lg">
-                <div className="dm-toolbar-content">
-                    <div className="dm-filters-complex">
-                        <div className="filter-group">
-                            <label><FiLayers /> Khối</label>
-                            <Select 
-                                variant="custom"
-                                value={selectedGrade}
-                                onChange={(e) => {
-                                    setSelectedGrade(e.target.value);
-                                    setSelectedClass("all");
-                                }}
-                                options={[
-                                    { value: "all", label: "Tất cả" },
-                                    { value: "10", label: "Khối 10" },
-                                    { value: "11", label: "Khối 11" },
-                                    { value: "12", label: "Khối 12" }
-                                ]}
-                            />
-                        </div>
-                        <div className="filter-group">
-                            <label><FiLayers /> Lớp</label>
-                            <Select 
-                                variant="custom"
-                                value={selectedClass}
-                                onChange={(e) => setSelectedClass(e.target.value)}
-                                options={[
-                                    { value: "all", label: "Tất cả" },
-                                    { value: "10A1", label: "10A1" },
-                                    { value: "10A2", label: "10A2" },
-                                    { value: "11A5", label: "11A5" }
-                                ]}
-                            />
-                        </div>
-                        <div className="filter-group" style={{minWidth: '240px'}}>
-                            <label><FiSearch /> Tìm học sinh</label>
-                            <div className="ihm-search-box" style={{margin: 0}}>
-                                <input 
-                                    placeholder="Tên học sinh..." 
-                                    value={searchTerm}
-                                    onChange={(e) => setSearchTerm(e.target.value)}
-                                />
-                            </div>
-                        </div>
-                    </div>
+                <div className="dm-filters-complex">
+                    <div className="filter-group">
+                        <label><FiLayers /> Khối</label>
+                        <Select 
+                            variant="custom"
+                            value={selectedGrade}
+                            onChange={(e) => {
+                                setSelectedGrade(e.target.value);
+                                setSelectedClass("all");
+                            }}
+                            options={[
+                                { value: "10", label: "Khối 10" },
+                                { value: "11", label: "Khối 11" },
+                                { value: "12", label: "Khối 12" }
+                            ]}
 
-                    <div className="dm-primary-actions-compact">
-                        <button className="btn-add-violation-premium" style={{width: 'auto'}} onClick={handleSaveAll}>
-                            <FiSave /> Lưu & Phê Duyệt Toàn Lớp
-                        </button>
+                        />
                     </div>
+                    <div className="filter-group">
+                        <label><FiLayers /> Lớp</label>
+                        <Select 
+                            variant="custom"
+                            value={selectedClass}
+                            onChange={(e) => setSelectedClass(e.target.value)}
+                            options={[
+                                { value: "10A1", label: "10A1" },
+                                { value: "10A2", label: "10A2" },
+                                { value: "11A5", label: "11A5" }
+                            ]}
+
+                        />
+                    </div>
+                    <div className="filter-group" style={{minWidth: '240px'}}>
+                        <label><FiSearch /> Tìm học sinh</label>
+                        <div className="ihm-search-box" style={{margin: 0}}>
+                            <input 
+                                placeholder="Tên học sinh..." 
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                            />
+                        </div>
+                    </div>
+                </div>
+
+                <div className="dm-primary-actions-compact">
+                    <button className="btn-add-violation-premium" style={{width: 'auto'}} onClick={handleSaveAll}>
+                        <FiSave /> Lưu & Phê Duyệt Toàn Lớp
+                    </button>
                 </div>
             </div>
 
             <div className="cd-main-panel animate-fade-in">
                 <div className="panel-header">
-                    <h3><FiAward /> Danh sách Đánh giá Hạnh Kiểm: {selectedClass === 'all' ? 'Toàn khối' : selectedClass}</h3>
+                    <h3>Danh sách Đánh giá Hạnh Kiểm: {selectedClass}</h3>
                     <p>Hệ thống tự động tra cứu lịch sử vi phạm để đưa ra gợi ý xếp loại</p>
                 </div>
+
+
                 
                 <div className="cd-table-premium-wrap">
                     <table className="dm-table-premium">
@@ -164,7 +184,7 @@ export default function VpDisciplineConduct() {
                             </tr>
                         </thead>
                         <tbody>
-                            {studentList.map(s => (
+                            {paginatedStudents.map(s => (
                                 <tr key={s.id}>
                                     <td className="td-student">
                                         <div className="student-profile-mini">
@@ -206,6 +226,10 @@ export default function VpDisciplineConduct() {
                             ))}
                         </tbody>
                     </table>
+                </div>
+
+                <div className="dm-footer-pagination">
+                    <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} />
                 </div>
             </div>
         </div>

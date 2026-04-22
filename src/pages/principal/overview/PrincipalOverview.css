@@ -6,37 +6,65 @@
 }
 
 /* ── TABS ── */
+/* ── TABS (ROLE-BASED & PREMIUM) ── */
 .overview-tabs {
     display: flex;
     gap: 0.5rem;
-    background: #ffffff;
-    padding: 0.5rem;
-    border-radius: 1rem;
-    border: 1px solid #e2e8f0;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    margin-bottom: 2rem;
+    border-bottom: 2px solid var(--admin-border);
+    padding: 0 0.5rem;
 }
 
 .overview-tab-btn {
-    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.75rem 1.75rem;
+    border: none;
+    background: transparent;
+    color: var(--admin-text-secondary);
+    font-size: 0.9rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    border-radius: 10px 10px 0 0;
+    position: relative;
+    white-space: nowrap;
+}
+
+.overview-tab-btn .tab-icon {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 0.5rem;
-    padding: 0.875rem;
-    border: none;
-    background: transparent;
-    color: #64748b;
-    font-weight: 600;
-    font-size: 0.9rem;
-    cursor: pointer;
-    border-radius: 0.75rem;
-    transition: all 0.2s;
+    font-size: 1.1rem;
 }
-.overview-tab-btn:hover { background: #f8fafc; color: #1e3a8a; }
+
+.overview-tab-btn:hover {
+    color: var(--admin-primary);
+    background: var(--admin-primary-soft);
+}
+
 .overview-tab-btn.active {
-    background: #1e3a8a;
+    background: var(--admin-primary);
     color: #ffffff;
-    box-shadow: 0 4px 6px -1px rgba(30,58,138,0.25);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.overview-tab-btn.active .tab-icon {
+    color: #ffffff;
+}
+
+/* Base line indicator for active tab */
+.overview-tab-btn.active::after {
+    content: '';
+    position: absolute;
+    bottom: 2px;
+    left: 10%;
+    width: 80%;
+    height: 3px;
+    background: #ffffff;
+    opacity: 0.4;
+    border-radius: 2px;
 }
 
 /* ── GRID LAYOUT ── */

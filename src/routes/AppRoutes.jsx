@@ -67,9 +67,7 @@ const VpAcademicNotifications = lazy(() => import("../pages/vp-academic/notifica
 /* VP DISCIPLINE PAGES */
 const VpDisciplineDashboard = lazy(() => import("../pages/vp-discipline/dashboard/VpDisciplineDashboard"));
 const VpDisciplineMgmt = lazy(() => import("../pages/vp-discipline/discipline-management/VpDisciplineMgmt"));
-const VpDisciplineCompetition = lazy(() => import("../pages/vp-discipline/competition/VpDisciplineCompetition"));
-const VpDisciplineAttendance = lazy(() => import("../pages/vp-discipline/attendance/VpDisciplineAttendance"));
-const VpDisciplineConduct = lazy(() => import("../pages/vp-discipline/conduct/VpDisciplineConduct"));
+const VpDisciplineCockpit = lazy(() => import("../pages/vp-discipline/cockpit/VpDisciplineCockpit"));
 const VpDisciplineApprovals = lazy(() => import("../pages/vp-discipline/approvals/VpDisciplineApprovals"));
 const VpDisciplineReports = lazy(() => import("../pages/vp-discipline/reports/VpDisciplineReports"));
 const VpDisciplineNotifications = lazy(() => import("../pages/vp-discipline/notifications/VpDisciplineNotifications"));
@@ -228,9 +226,10 @@ export default function AppRoutes() {
         <Route path="discipline-management" element={<VpDisciplineMgmt />} />
         <Route path="discipline" element={<Navigate to="/vp-discipline/discipline-management" replace />} />
         <Route path="incidents" element={<Navigate to="/vp-discipline/discipline-management" replace />} />
-        <Route path="competition" element={<VpDisciplineCompetition />} />
-        <Route path="attendance" element={<VpDisciplineAttendance />} />
-        <Route path="conduct" element={<VpDisciplineConduct />} />
+        <Route path="cockpit" element={<VpDisciplineCockpit />} />
+        <Route path="competition" element={<Navigate to="/vp-discipline/cockpit" replace />} />
+        <Route path="attendance" element={<Navigate to="/vp-discipline/cockpit?tab=attendance" replace />} />
+        <Route path="conduct" element={<Navigate to="/vp-discipline/cockpit?tab=conduct" replace />} />
         <Route path="approvals" element={<VpDisciplineApprovals />} />
         <Route path="reports" element={<VpDisciplineReports />} />
         <Route path="notifications" element={<VpDisciplineNotifications />} />
