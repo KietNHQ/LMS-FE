@@ -347,6 +347,7 @@ const gradeData = buildComputedData(rawGradeData);
 
 export default function StudentGrades() {
     const classOptions = Object.keys(gradeData);
+
     const [selectedClass, setSelectedClass] = useState(classOptions[0]);
     const [openRowId, setOpenRowId] = useState(1);
     const [activeTab, setActiveTab] = useState("hk1");

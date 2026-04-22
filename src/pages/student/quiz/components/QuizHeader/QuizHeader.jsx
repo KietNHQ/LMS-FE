@@ -2,11 +2,15 @@ import React from "react";
 import { BiBookContent, BiPlayCircle, BiCheckCircle } from "react-icons/bi";
 import "./QuizHeader.css";
 
-export default function QuizHeader({ stats }) {
+export default function QuizHeader({ stats, actions = null }) {
     return (
         <div className="quiz-header-wrap">
-            <div className="quiz-header">
-                <h1>Bài kiểm tra</h1>
+            <div className="quiz-header-top">
+                <div className="quiz-header">
+                    <h1>Bài kiểm tra</h1>
+                </div>
+
+                {actions ? <div className="quiz-header__actions">{actions}</div> : null}
             </div>
 
             <div className="quiz-header-stats">

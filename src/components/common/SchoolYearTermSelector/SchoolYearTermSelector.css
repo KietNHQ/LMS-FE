@@ -145,3 +145,78 @@
   border-color: #b6ebe5;
   color: #0d6d63;
 }
+
+.parent-layout .school-year-term-selector__term-btn.is-active {
+  background: #885def;
+  color: #ffffff;
+}
+
+.parent-layout .school-year-term-selector__term-btn:hover {
+  color: #7c3aed;
+  background: #f5f3ff;
+}
+
+.parent-layout .school-year-term-selector__arrow-btn:hover {
+  background: #f5f3ff;
+  border-color: #ddd6fe;
+  color: #885def;
+}
+
+.parent-layout .school-year-term-selector__term-toggle {
+  border-color: #e2e8f0;
+}
+
+.parent-layout .school-year-term-selector__year-input {
+  border-color: #e2e8f0;
+  color: #475569;
+}
+
+/* ===== STUDENT LAYOUT - Blue override ===== */
+.student-dashboard-content .school-year-term-selector__term-btn.is-active,
+.grades-page .school-year-term-selector__term-btn.is-active,
+.student-schedule-page .school-year-term-selector__term-btn.is-active,
+.student-classes-page .school-year-term-selector__term-btn.is-active,
+.student-quiz-page .school-year-term-selector__term-btn.is-active {
+  background: #2563ff;
+  color: #ffffff;
+}
+
+.student-dashboard-content .school-year-term-selector__term-btn:hover,
+.grades-page .school-year-term-selector__term-btn:hover,
+.student-schedule-page .school-year-term-selector__term-btn:hover,
+.student-classes-page .school-year-term-selector__term-btn:hover,
+.student-quiz-page .school-year-term-selector__term-btn:hover {
+  color: #1d4ed8;
+  background: #eaf1ff;
+}
+
+.student-dashboard-content .school-year-term-selector__arrow-btn:hover,
+.grades-page .school-year-term-selector__arrow-btn:hover,
+.student-schedule-page .school-year-term-selector__arrow-btn:hover,
+.student-classes-page .school-year-term-selector__arrow-btn:hover,
+.student-quiz-page .school-year-term-selector__arrow-btn:hover {
+  background: #eaf1ff;
+  border-color: #b7ccff;
+  color: #2563ff;
+}
+
+.student-dashboard-content .school-year-term-selector__term-toggle,
+.grades-page .school-year-term-selector__term-toggle,
+.student-schedule-page .school-year-term-selector__term-toggle,
+.student-classes-page .school-year-term-selector__term-toggle,
+.student-quiz-page .school-year-term-selector__term-toggle,
+.student-dashboard-content .school-year-term-selector__year-input,
+.grades-page .school-year-term-selector__year-input,
+.student-schedule-page .school-year-term-selector__year-input,
+.student-classes-page .school-year-term-selector__year-input,
+.student-quiz-page .school-year-term-selector__year-input {
+  border-color: #b7ccff;
+}
+
+.student-dashboard-content .school-year-term-selector__year-input,
+.grades-page .school-year-term-selector__year-input,
+.student-schedule-page .school-year-term-selector__year-input,
+.student-classes-page .school-year-term-selector__year-input,
+.student-quiz-page .school-year-term-selector__year-input {
+  color: #1d4ed8;
+}
