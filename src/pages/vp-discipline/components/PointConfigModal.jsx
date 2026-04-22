@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from "react";
-import { FiX, FiCheck, FiInfo, FiChevronRight, FiClock } from "react-icons/fi";
+import React, { useState } from "react";
+import { FiX, FiCheck, FiChevronRight, FiClock } from "react-icons/fi";
 import { toast } from "react-toastify";
 import "./PointConfigModal.css";
 
@@ -167,11 +167,6 @@ export default function PointConfigModal({ isOpen, onClose }) {
                                 <div className="rule-item reward"><label>Giúp đỡ bạn bè</label><input type="number" disabled={isPendingApproval} value={config.positive_reward.help_peers} onChange={(e) => updateNested('positive_reward', 'help_peers', e.target.value)} /></div>
                                 <div className="rule-item reward"><label>Phát hiện sai phạm</label><input type="number" disabled={isPendingApproval} value={config.positive_reward.report_violation} onChange={(e) => updateNested('positive_reward', 'report_violation', e.target.value)} /></div>
                             </div>
-                        </div>
-
-                        <div className="rules-info-banner">
-                            <FiInfo />
-                            <p>Cấu hình này sẽ được gửi cho Hiệu trưởng và PHT Nề nếp phê duyệt trước khi áp dụng chính thức.</p>
                         </div>
                     </div>
                 </div>

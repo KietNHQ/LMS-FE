@@ -29,12 +29,7 @@ export default function VpDisciplineDashboard() {
         { id: 3, title: "Các học sinh vi phạm nhiều nhất trong tháng", desc: "Nguyễn Văn A (12A2), Lê Thị B (10A1)... Cần mời phụ huynh làm việc.", path: "/vp-discipline/discipline-management?filter=serious" },
     ];
 
-    const approvals = [
-        { id: 1, title: "Biên bản lớp 11A5", subtitle: "GVCN gửi 10p trước", status: "Chờ duyệt" },
-        { id: 2, title: "Đề nghị nâng mức kỷ luật", subtitle: "Giám thị 01 gửi", status: "Chờ duyệt" },
-        { id: 3, title: "Đơn xin gỡ điểm trừ 10C2", subtitle: "Học sinh gửi 1h trước", status: "Mới" },
-        { id: 4, title: "Báo cáo nề nếp tháng 3", subtitle: "Tổ trưởng gửi", status: "Chờ duyệt" },
-    ].slice(0, 3);
+
 
     const incidents = [
         { id: 1, title: "Xô xát tại sân trường", subtitle: "Cần xử lý trước 16/10", status: "Khẩn cấp" },
@@ -175,24 +170,7 @@ export default function VpDisciplineDashboard() {
             </div>
 
             {/* ── Operational Insight Grid ── */}
-            <div className="vp-panel-grid-3">
-                {/* 1. Hàng đợi phê duyệt */}
-                <div className="vp-panel">
-                    <div className="vp-panel-header">
-                        <h3><FiClock /> Hàng đợi phê duyệt</h3>
-                    </div>
-                    <div className="mini-stat-list">
-                        {approvals.map(item => (
-                            <div key={item.id} className="m-stat-item clickable" onClick={() => navigate("/vp-discipline/approvals")}>
-                                <div className="m-stat-info">
-                                    <strong>{item.title}</strong>
-                                    <span>{item.subtitle}</span>
-                                </div>
-                                <span className={`status-chip ${item.status === 'Mới' ? 'new' : 'pending'}`}>{item.status}</span>
-                            </div>
-                        ))}
-                    </div>
-                </div>
+            <div className="vp-panel-grid-2">
 
                 {/* 2. Theo dõi Sự vụ */}
                 <div className="vp-panel">

@@ -149,11 +149,22 @@ const buildDateRange = ({ schoolYear, term, week }) => {
     return {};
   }
 
-  const termStart = term === "hk2" ? new Date(endYear, 0, 1) : new Date(startYear, 7, 1);
+  // Match FE week picker ranges: HK1 (weeks 1-18), HK2 (weeks 19-35).
+  let termStart;
+  let weekOffset;
+
+  if (term === "hk2") {
+    termStart = new Date(endYear, 0, 5);
+    weekOffset = weekNumber - 19;
+  } else {
+    termStart = new Date(startYear, 7, 25);
+    weekOffset = weekNumber - 1;
+  }
+
   termStart.setHours(0, 0, 0, 0);
 
   const startDate = new Date(termStart);
-  startDate.setDate(startDate.getDate() + (weekNumber - 1) * 7);
+  startDate.setDate(startDate.getDate() + weekOffset * 7);
 
   const endDate = new Date(startDate);
   endDate.setDate(endDate.getDate() + 6);
@@ -195,8 +206,7 @@ const requestWithEndpointFallback = async (endpoints, params) => {
 
   for (const endpoint of endpoints) {
     try {
-      const response = await axiosClient.get(endpoint, { params });
-      return response;
+      return await axiosClient.get(endpoint, { params });
     } catch (error) {
       lastError = error;
       const status = error?.response?.status;
