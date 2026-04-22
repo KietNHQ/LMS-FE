@@ -3,7 +3,8 @@ import StudentWeeklyScheduleSection from "./components/StudentWeeklyScheduleSect
 import StudentScheduleFilterSection from "./components/StudentScheduleFilterSection/StudentScheduleFilterSection";
 import StudentDailyScheduleSection from "./components/StudentDailyScheduleSection/StudentDailyScheduleSection";
 import Modal from "../../../components/ui/Modal/Modal";
-import { PageHeader } from "../../../components/common";
+import { PageHeader, SchoolYearTermSelector } from "../../../components/common";
+import { useSchoolYearTerm } from "../../../hooks/useSchoolYearTerm";
 import { STATUS_META } from "../../../utils/timetableShared";
 import "./StudentSchedule.css";
 
@@ -13,6 +14,7 @@ function getTodayDayIndex() {
 }
 
 export default function StudentSchedule() {
+  const { selectedSchoolYear, selectedTerm, handleYearArrow, handleTermChange } = useSchoolYearTerm();
   const studentId = "STU1024"; // Mock logged-in student
   const classNameValue = "10A1";
 
@@ -39,6 +41,18 @@ export default function StudentSchedule() {
 
   return (
     <div className="student-schedule-page">
+      <PageHeader
+        title="Thời khóa biểu"
+        actions={
+          <SchoolYearTermSelector
+            selectedSchoolYear={selectedSchoolYear}
+            selectedTerm={selectedTerm}
+            onYearChange={handleYearArrow}
+            onTermChange={handleTermChange}
+          />
+        }
+      />
+
       <StudentScheduleFilterSection
         weekOffset={weekOffset}
         setWeekOffset={setWeekOffset}

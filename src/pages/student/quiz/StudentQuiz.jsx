@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useMemo, useState } from "react";
 import "./StudentQuiz.css";
 import { FiChevronLeft, FiChevronRight } from "react-icons/fi";
 import { Card } from "../../../components/ui";
@@ -10,10 +10,13 @@ import QuizTakingView from "./components/QuizTakingView/QuizTakingView";
 import ResultSummary from "./components/ResultSummary/ResultSummary";
 
 import { quizList } from "./data/quizData";
+import { SchoolYearTermSelector } from "../../../components/common";
+import { useSchoolYearTerm } from "../../../hooks/useSchoolYearTerm";
 
 const ITEMS_PER_PAGE = 4;
 
 export default function StudentQuiz() {
+    const { selectedSchoolYear, selectedTerm, handleYearArrow, handleTermChange } = useSchoolYearTerm();
     const [search, setSearch] = useState("");
     const [statusFilter, setStatusFilter] = useState("all");
     const [subjectFilter, setSubjectFilter] = useState("all");
@@ -23,8 +26,7 @@ export default function StudentQuiz() {
     const [quizResult, setQuizResult] = useState(null);
 
     const subjects = useMemo(() => {
-        const uniqueSubjects = [...new Set(quizList.map((quiz) => quiz.subject))];
-        return uniqueSubjects;
+        return [...new Set(quizList.map((quiz) => quiz.subject))];
     }, []);
 
     const stats = useMemo(() => {
@@ -56,20 +58,12 @@ export default function StudentQuiz() {
         return Math.max(1, Math.ceil(filteredQuizzes.length / ITEMS_PER_PAGE));
     }, [filteredQuizzes.length]);
 
+    const visibleCurrentPage = Math.min(currentPage, totalPages);
+
     const paginatedQuizzes = useMemo(() => {
-        const start = (currentPage - 1) * ITEMS_PER_PAGE;
+        const start = (visibleCurrentPage - 1) * ITEMS_PER_PAGE;
         return filteredQuizzes.slice(start, start + ITEMS_PER_PAGE);
-    }, [filteredQuizzes, currentPage]);
-
-    useEffect(() => {
-        setCurrentPage(1);
-    }, [search, statusFilter, subjectFilter]);
-
-    useEffect(() => {
-        if (currentPage > totalPages) {
-            setCurrentPage(totalPages);
-        }
-    }, [currentPage, totalPages]);
+    }, [filteredQuizzes, visibleCurrentPage]);
 
     const handleStartQuiz = (quiz) => {
         if (quiz.status !== "open") return;
@@ -106,15 +100,34 @@ export default function StudentQuiz() {
         <div className="student-quiz-page">
             {!selectedQuiz && !quizResult && (
                 <>
-                    <QuizHeader stats={stats} />
+                    <QuizHeader
+                        stats={stats}
+                        actions={
+                            <SchoolYearTermSelector
+                                selectedSchoolYear={selectedSchoolYear}
+                                selectedTerm={selectedTerm}
+                                onYearChange={handleYearArrow}
+                                onTermChange={handleTermChange}
+                            />
+                        }
+                    />
 
                     <QuizToolbar
                         search={search}
-                        onSearchChange={setSearch}
+                        onSearchChange={(value) => {
+                            setSearch(value);
+                            setCurrentPage(1);
+                        }}
                         statusFilter={statusFilter}
-                        onStatusChange={setStatusFilter}
+                        onStatusChange={(value) => {
+                            setStatusFilter(value);
+                            setCurrentPage(1);
+                        }}
                         subjectFilter={subjectFilter}
-                        onSubjectChange={setSubjectFilter}
+                        onSubjectChange={(value) => {
+                            setSubjectFilter(value);
+                            setCurrentPage(1);
+                        }}
                         subjects={subjects}
                     />
 
@@ -150,7 +163,7 @@ export default function StudentQuiz() {
                                     </button>
 
                                     <div className="student-quiz-page-indicator">
-                                        <span>{currentPage}</span>
+                                        <span>{visibleCurrentPage}</span>
                                         <small>/ {totalPages}</small>
                                     </div>
 
@@ -158,7 +171,7 @@ export default function StudentQuiz() {
                                         type="button"
                                         className="student-quiz-page-btn"
                                         onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
-                                        disabled={currentPage === totalPages}
+                                        disabled={visibleCurrentPage === totalPages}
                                         aria-label="Trang sau"
                                     >
                                         <FiChevronRight />

@@ -8,6 +8,8 @@ import ClassToolbar from "./components/ClassToolbar/ClassToolbar";
 import ClassList from "./components/ClassList/ClassList";
 import TodoPanel from "./components/TodoPanel/TodoPanel";
 import { Card } from "../../../components/ui";
+import { SchoolYearTermSelector } from "../../../components/common";
+import { useSchoolYearTerm } from "../../../hooks/useSchoolYearTerm";
 
 const ITEMS_PER_PAGE = 4;
 const TOTAL_WEEKS = 15;
@@ -26,6 +28,7 @@ function normalizeSearchText(value) {
 
 export default function StudentClasses() {
 	const navigate = useNavigate();
+    const { selectedSchoolYear, selectedTerm, handleYearArrow, handleTermChange } = useSchoolYearTerm();
 
 	const [searchValue, setSearchValue] = useState("");
 	const [currentPage, setCurrentPage] = useState(1);
@@ -119,7 +122,17 @@ export default function StudentClasses() {
 
 	return (
 		<section className="student-classes-page">
-			<ClassesHeader title="Lớp học của tôi" />
+			<ClassesHeader
+				title="Lớp học của tôi"
+				actions={
+					<SchoolYearTermSelector
+						selectedSchoolYear={selectedSchoolYear}
+						selectedTerm={selectedTerm}
+						onYearChange={handleYearArrow}
+						onTermChange={handleTermChange}
+					/>
+				}
+			/>
 
 			<ClassStats
 				totalAssignmentsPending={totalAssignmentsPending}
