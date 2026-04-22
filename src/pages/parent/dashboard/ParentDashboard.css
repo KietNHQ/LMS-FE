@@ -1,33 +1,62 @@
 .dashboard {
-  padding: 24px;
+  padding: 20px;
   min-height: 100vh;
-
-  /* căn giữa dashboard giống UI trong hình */
   max-width: 1400px;
   margin: 0 auto;
 }
 
-/* tiêu đề */
-.dashboard h1 {
-  margin: 0;
-  font-size: 32px;
-  font-weight: 700;
+.dashboard > * {
+  margin-bottom: 20px;
 }
 
-/* khoảng cách giữa các block */
-.dashboard>* {
-  margin-bottom: 24px;
-}
-
-/* bỏ khoảng cách cuối */
-.dashboard>*:last-child {
+.dashboard > *:last-child {
   margin-bottom: 0;
 }
 
-/* Card style for calendar */
 .parent-dashboard-calendar-card {
   height: 100%;
   box-sizing: border-box;
+}
+
+.dashboard .child-switcher .school-year-term-selector {
+  justify-content: flex-end;
+  gap: 1rem;
+}
+
+.dashboard .child-switcher .school-year-term-selector__label {
+  color: #5b6475;
+  font-size: 1rem;
+}
+
+.dashboard .child-switcher .school-year-term-selector__group {
+  gap: 0.62rem;
+}
+
+.dashboard .child-switcher .school-year-term-selector__year-input-wrapper {
+  gap: 0.42rem;
+}
+
+.dashboard .child-switcher .school-year-term-selector__year-input {
+  width: 7.6rem;
+  height: 2.25rem;
+  border-radius: 0.65rem;
+}
+
+.dashboard .child-switcher .school-year-term-selector__arrow-btn {
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 0.65rem;
+}
+
+.dashboard .child-switcher .school-year-term-selector__term-toggle {
+  padding: 0.24rem;
+  border-radius: 0.9rem;
+}
+
+.dashboard .child-switcher .school-year-term-selector__term-btn {
+  min-width: 5.8rem;
+  height: 2.05rem;
+  font-size: 0.9rem;
 }
 
 .parent-dashboard-grid-top {
@@ -40,5 +69,9 @@
 @media (max-width: 1200px) {
   .parent-dashboard-grid-top {
     grid-template-columns: 1fr;
+  }
+
+  .dashboard .child-switcher .school-year-term-selector {
+    justify-content: flex-start;
   }
 }

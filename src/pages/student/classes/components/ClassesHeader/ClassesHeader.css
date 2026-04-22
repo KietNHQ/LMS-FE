@@ -3,6 +3,14 @@
     justify-content: space-between;
     align-items: flex-start;
     gap: 16px;
+    flex-wrap: wrap;
+}
+
+.student-classes-header__actions {
+    display: flex;
+    align-items: flex-start;
+    justify-content: flex-end;
+    margin-left: auto;
 }
 
 .student-classes-title-wrap h1 {

@@ -14,12 +14,8 @@ import { INITIAL_CALENDAR_EVENTS, CALENDAR_EVENT_TYPES } from "../../../componen
 import SubjectRadar from "./components/SubjectRadar/SubjectRadar";
 import YearProgress from "./components/YearProgress/YearProgress";
 import UpcomingTests from "./components/UpcomingTests/UpcomingTests";
-
-const progressData = [
-    { name: "Học kỳ 1", score: 7.29 },
-    { name: "Học kỳ 2", score: 7.8 },
-    { name: "Cả năm", score: 7.7 },
-];
+import { SchoolYearTermSelector } from "../../../components/common";
+import { useSchoolYearTerm } from "../../../hooks/useSchoolYearTerm";
 
 const subjectData = [
     { subject: "Toán", score: 8.0 },
@@ -88,7 +84,6 @@ const upcomingQuizzes = [
 ];
 
 const academicOverview = {
-    schoolYear: "2025-2026",
     totalWeeks: 35,
     completedWeeks: 18,
     semester1Average: 7.29,
@@ -120,13 +115,14 @@ function getOverviewCardData(overview) {
         value: formatScore(activeAverage),
         rank: getAcademicRank(activeAverage),
         subtitlePrefix: isFullYear
-            ? "Xếp loại học lực cả năm:"
-            : "Xếp loại học lực HK1:",
+            ? "Học lực:"
+            : "Học lực HK1:",
     };
 }
 
 export default function StudentDashboard() {
     const navigate = useNavigate();
+    const { selectedSchoolYear, selectedTerm, handleYearArrow, handleTermChange } = useSchoolYearTerm();
 
     const summaryCard = useMemo(
         () => getOverviewCardData(academicOverview),
@@ -170,7 +166,7 @@ export default function StudentDashboard() {
                 id: "weekly-progress",
                 title: "Tiến độ học theo tuần",
                 value: `${academicOverview.completedWeeks}/${academicOverview.totalWeeks}`,
-                subtitle: `Đã hoàn thành ${academicOverview.completedWeeks} tuần trong năm học`,
+                subtitle: `Xong ${academicOverview.completedWeeks} tuần`,
                 progressPercent: weekProgressPercent,
                 icon: HiOutlineCalendarDays,
                 color: "green",
@@ -185,7 +181,7 @@ export default function StudentDashboard() {
                 value: academicOverview.currentSubject,
                 subtitle: (
                     <span className="student-next-subject-text">
-            Môn tiếp theo: <strong>{academicOverview.nextSubject}</strong>
+            Tiếp theo: <strong>{academicOverview.nextSubject}</strong>
           </span>
                 ),
                 icon: HiOutlineClock,
@@ -208,11 +204,23 @@ export default function StudentDashboard() {
 
     return (
         <div className="student-dashboard-content">
-            <WelcomeHeader
-                studentName="Tuấn"
-                classNameLabel="10A1"
-                schoolYear={academicOverview.schoolYear}
-            />
+            <div className="student-dashboard-top-panel">
+                <WelcomeHeader
+                    studentName="Tuấn"
+                    classNameLabel="10A1"
+                    studentCode="HS10A1-023"
+                    homeroomTeacher="Cô Nguyễn Thị Lan"
+                />
+
+                <div className="student-dashboard-toolbar">
+                    <SchoolYearTermSelector
+                        selectedSchoolYear={selectedSchoolYear}
+                        selectedTerm={selectedTerm}
+                        onYearChange={handleYearArrow}
+                        onTermChange={handleTermChange}
+                    />
+                </div>
+            </div>
 
             <StatsCards cards={statsCards} />
 
@@ -225,8 +233,8 @@ export default function StudentDashboard() {
                     isCompact={true}
                     eventTypes={CALENDAR_EVENT_TYPES}
                     initialEvents={INITIAL_CALENDAR_EVENTS}
-                    selectedSchoolYear={academicOverview.schoolYear}
-                    selectedTerm={1}
+                    selectedSchoolYear={selectedSchoolYear}
+                    selectedTerm={selectedTerm}
                     rolePolicy={{
                       canCreate: false,
                       canViewDetails: true,
