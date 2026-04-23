@@ -35,7 +35,7 @@ export default function VpDisciplineCockpit() {
                                 <FiArrowLeft />
                             </button>
                         )}
-                        <span>{selectedClass ? `Lớp ${selectedClass}` : "Quản Lý Thi Đua"}</span>
+                        <span>{selectedClass ? `Lớp ${selectedClass}` : "Tổng Hợp Thi Đua & Nề Nếp"}</span>
                     </div>
                 }
                 actions={

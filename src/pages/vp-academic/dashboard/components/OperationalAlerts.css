@@ -6,14 +6,17 @@
     box-shadow: var(--admin-shadow-sm);
     display: flex;
     flex-direction: column;
-    height: 100%;
+    height: 550px; /* FIXED HEIGHT matched with Updates card */
+    box-sizing: border-box;
+    overflow: hidden;
 }
 
 .alerts-header-vpa {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 1.5rem;
+    margin-bottom: 1.25rem;
+    flex-shrink: 0;
 }
 
 .alerts-header-vpa h3 {
@@ -34,10 +37,30 @@
 }
 
 .alerts-container {
-    display: flex;
-    flex-direction: column;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
     gap: 1.25rem;
     flex: 1;
+    overflow-y: auto;
+    padding-right: 0.5rem;
+}
+
+/* Custom Scrollbar for alerts-container */
+.alerts-container::-webkit-scrollbar {
+    width: 6px;
+}
+
+.alerts-container::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.alerts-container::-webkit-scrollbar-thumb {
+    background: #e2e8f0;
+    border-radius: 10px;
+}
+
+.alerts-container::-webkit-scrollbar-thumb:hover {
+    background: var(--vpa-emerald);
 }
 
 .alert-card-vpa {
@@ -129,36 +152,4 @@
     font-size: 0.8rem;
     cursor: pointer;
     font-weight: 600;
-}
-
-/* Ticker */
-.audit-ticker {
-    margin-top: 2rem;
-    padding-top: 1rem;
-    border-top: 1px solid var(--admin-border);
-    overflow: hidden;
-}
-
-.ticker-label {
-    font-size: 0.75rem;
-    color: var(--admin-text-muted);
-    font-weight: 700;
-    margin-bottom: 0.5rem;
-    display: flex;
-    align-items: center;
-    gap: 0.4rem;
-}
-
-.ticker-content {
-    display: flex;
-    flex-direction: column;
-    gap: 0.4rem;
-}
-
-.ticker-content span {
-    font-size: 0.75rem;
-    color: var(--admin-text-secondary);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
 }

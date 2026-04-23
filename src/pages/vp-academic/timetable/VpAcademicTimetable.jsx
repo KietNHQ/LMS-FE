@@ -1,14 +1,25 @@
 import { PageHeader, SchoolYearTermSelector } from "../../../components/common";
 import { useSchoolYearTerm } from "../../../hooks/useSchoolYearTerm";
+import { FiCalendar, FiClock, FiActivity, FiShield, FiAlertCircle } from "react-icons/fi";
+import "./VpAcademicTimetable.css";
 
 export default function VpAcademicTimetable() {
     const { selectedSchoolYear, selectedTerm, handleYearArrow, handleTermChange } = useSchoolYearTerm();
 
+    const stats = [
+        { label: "Số tiết trong tuần", value: "1,240", icon: <FiCalendar /> },
+        { label: "Xung đột lịch", value: "0", icon: <FiShield /> },
+        { label: "Giáo viên chờ bù tiết", value: "12", icon: <FiAlertCircle /> },
+    ];
+
+    const days = ["Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6", "Thứ 7"];
+    const slots = ["Tiết 1", "Tiết 2", "Tiết 3", "Tiết 4", "Tiết 5"];
+
     return (
-        <div style={{display: 'flex', flexDirection: 'column', gap: '1.5rem', paddingBottom: '2rem'}}>
+        <div className="vp-timetable-premium">
             <PageHeader
                 title="Khung Thời Khóa Biểu Chung"
-                eyebrow="Góc nhìn kiểm soát vướng lịch, kẹt lịch của PHT Chuyên Môn"
+                eyebrow="Góc nhìn kiểm soát vướng lịch, kẹt lịch và giám sát giảng dạy toàn trường"
                 actions={
                     <SchoolYearTermSelector
                         selectedSchoolYear={selectedSchoolYear}
@@ -19,10 +30,37 @@ export default function VpAcademicTimetable() {
                 }
             />
 
-            <div style={{background: '#fff', padding: '1.5rem', borderRadius: '0.75rem', border: '1px solid #e2e8f0', boxShadow: '0 1px 3px rgba(0,0,0,0.1)'}}>
-                <div style={{background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: '0.5rem', padding: '2rem', textAlign: 'center', color: '#1e3a8a'}}>
-                    <h3 style={{margin: '0 0 0.5rem 0'}}>Mô đun TKB Toàn Trường</h3>
-                    <p style={{margin: 0, fontSize: '0.9rem', color: '#3b82f6'}}>Đã được đồng bộ với chức năng Thời khóa biểu bên Giáo Vụ. Nhấp vào các thẻ lớp bên dưới để thanh tra.</p>
+            {/* Operations Summary */}
+            <div className="timetable-ops-summary">
+                {stats.map((s, i) => (
+                    <div className="ops-card-vpa" key={i}>
+                        <div className="ops-icon-vpa">{s.icon}</div>
+                        <div className="ops-info-vpa">
+                            <h4>{s.label}</h4>
+                            <span>{s.value}</span>
+                        </div>
+                    </div>
+                ))}
+            </div>
+
+            {/* Main Grid */}
+            <div className="timetable-grid-vpa">
+                <div className="tt-header-vpa">
+                    <div className="tt-col-vpa">Thời gian</div>
+                    {days.map(day => <div key={day} className="tt-col-vpa">{day}</div>)}
+                </div>
+                
+                <div className="tt-body-vpa">
+                    {slots.map(slot => (
+                        <div key={slot} className="tt-row-vpa">
+                            <div className="tt-time-vpa">{slot}</div>
+                            {days.map(day => (
+                                <div key={day} className="tt-cell-vpa">
+                                    <div className="tt-preview-box">Trống</div>
+                                </div>
+                            ))}
+                        </div>
+                    ))}
                 </div>
             </div>
         </div>

@@ -83,8 +83,8 @@ export default function VpAcademicTeachingAssignment() {
                                 {assignments.map(a => (
                                     <tr key={a.id}>
                                         <td><strong>{a.teacher}</strong></td>
-                                        <td><span style={{background: '#eff6ff', color: '#1d4ed8', padding: '0.2rem 0.5rem', borderRadius: '0.25rem', fontSize: '0.8rem', fontWeight: 500}}>{a.subject}</span></td>
-                                        <td>{a.class}</td>
+                                        <td><span style={{background: 'rgba(5, 150, 105, 0.1)', color: '#059669', padding: '0.2rem 0.6rem', borderRadius: 'var(--radius-pill)', fontSize: '0.75rem', fontWeight: 800}}>{a.subject}</span></td>
+                                        <td><strong>{a.class}</strong></td>
                                         <td style={{textAlign: 'center'}}>
                                             <button className="btn-remove" onClick={() => handleRemove(a.id)}>
                                                 <FiTrash2 />

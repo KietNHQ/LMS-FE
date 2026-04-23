@@ -52,6 +52,8 @@ const EventCalendar = ({
   isCompact = false, // If true, apply more condensed styling
   selectedSchoolYear = "",
   selectedTerm = 1,
+  creatableTypes = null, // Optional subset of eventTypes allowed for creation
+  showTargetSelector = true, // Toggle for the 'Đối tượng' selector
 }) => {
   const today = initialDate || new Date();
   const [currentDate, setCurrentDate] = useState(today);
@@ -66,8 +68,8 @@ const EventCalendar = ({
     isMultiDay: false,
     title: "",
     content: "",
-    target: "all", // New field for teacher: 'all', '10A1', etc.
-    color: eventTypes[0]?.value || "blue",
+    target: "all",
+    color: (creatableTypes || eventTypes)[0]?.value || "blue",
   });
 
   useEffect(() => {
@@ -436,17 +438,24 @@ const EventCalendar = ({
                   )}
                   <div className="event-calendar__modal-group">
                     <label>Loại sự kiện:</label>
-                    <Select
-                      value={newEvent.color}
-                      onChange={(e) => setNewEvent({ ...newEvent, color: e.target.value })}
-                      options={eventTypes.map((type) => ({
-                        value: type.value,
-                        label: type.label,
-                        color: type.value, // Pass color for the UI hint
-                      }))}
-                      variant="custom"
-                      placeholder="Chọn loại sự kiện"
-                    />
+                    {(creatableTypes || eventTypes).length > 1 ? (
+                      <Select
+                        value={newEvent.color}
+                        onChange={(e) => setNewEvent({ ...newEvent, color: e.target.value })}
+                        options={(creatableTypes || eventTypes).map((type) => ({
+                          value: type.value,
+                          label: type.label,
+                          color: type.value,
+                        }))}
+                        variant="custom"
+                        placeholder="Chọn loại sự kiện"
+                      />
+                    ) : (
+                      <div className="event-calendar__static-value">
+                        <span className={`event-calendar__type-dot event-calendar__event--${(creatableTypes || eventTypes)[0]?.value}`}></span>
+                        {(creatableTypes || eventTypes)[0]?.label}
+                      </div>
+                    )}
                   </div>
                   <div className="event-calendar__modal-group">
                     <label>Tiêu đề sự kiện:</label>
@@ -457,20 +466,22 @@ const EventCalendar = ({
                       placeholder="Nhập tên sự kiện"
                     />
                   </div>
-                  <div className="event-calendar__modal-group">
-                    <label>Đối tượng:</label>
-                    <Select
-                      value={newEvent.target}
-                      onChange={(e) => setNewEvent({ ...newEvent, target: e.target.value })}
-                      options={[
-                        { value: "all", label: "Tất cả lớp giảng dạy" },
-                        { value: "homeroom", label: "Lớp chủ nhiệm" },
-                        { value: "10A1", label: "Lớp 10A1" },
-                        { value: "11B2", label: "Lớp 11B2" },
-                      ]}
-                      variant="custom"
-                    />
-                  </div>
+                  {showTargetSelector && (
+                    <div className="event-calendar__modal-group">
+                      <label>Đối tượng:</label>
+                      <Select
+                        value={newEvent.target}
+                        onChange={(e) => setNewEvent({ ...newEvent, target: e.target.value })}
+                        options={[
+                          { value: "all", label: "Tất cả lớp giảng dạy" },
+                          { value: "homeroom", label: "Lớp chủ nhiệm" },
+                          { value: "10A1", label: "Lớp 10A1" },
+                          { value: "11B2", label: "Lớp 11B2" },
+                        ]}
+                        variant="custom"
+                      />
+                    </div>
+                  )}
                   <div className="event-calendar__modal-group">
                     <label>Nội dung chi tiết:</label>
                     <textarea

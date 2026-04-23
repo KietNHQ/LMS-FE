@@ -7,9 +7,10 @@
 
 .teacher-support-header h1 {
   margin: 0;
-  font-size: 30px;
-  font-weight: 800;
-  color: #16233b;
+  font-size: var(--teacher-tab-heading-size, 1.85rem);
+  font-weight: var(--teacher-tab-heading-weight, 800);
+  line-height: var(--teacher-tab-heading-line-height, 1.12);
+  color: var(--teacher-tab-heading-color, #1e293b);
   letter-spacing: -0.02em;
 }
 
@@ -44,10 +45,6 @@
   .teacher-support-header {
     flex-direction: column;
     align-items: flex-start;
-  }
-
-  .teacher-support-header h1 {
-    font-size: 26px;
   }
 }
 

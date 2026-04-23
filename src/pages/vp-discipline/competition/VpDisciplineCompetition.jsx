@@ -1,13 +1,15 @@
-import { useState } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { PageHeader, WeekPicker, StatusBadge } from "../../../components/common";
+import { PageHeader, WeekPicker, Pagination } from "../../../components/common";
 import DisciplineHeaderActions from "../components/DisciplineHeaderActions";
 import { useSchoolYearTerm } from "../../../hooks/useSchoolYearTerm";
 import Select from "../../../components/ui/Select/Select";
 import { 
     FiAward, FiArrowUp, FiArrowDown, FiMinus, FiTrendingUp, FiTrendingDown, 
-    FiDownload, FiLayers, FiCalendar, FiStar, FiAlertCircle, FiActivity, FiArrowRight 
+    FiDownload, FiLayers, FiCalendar, FiStar, FiAlertCircle, FiActivity, FiArrowRight,
+    FiUserCheck, FiSearch
 } from "react-icons/fi";
+import { Trophy, Medal, Rocket, TrendingDown } from "lucide-react";
 import "./VpDisciplineCompetition.css";
 
 export default function VpDisciplineCompetition({ isEmbedded = false, onClassClick }) {
@@ -15,22 +17,72 @@ export default function VpDisciplineCompetition({ isEmbedded = false, onClassCli
     const { selectedSchoolYear, selectedTerm, handleYearArrow, handleTermChange } = useSchoolYearTerm();
     const [selectedWeek, setSelectedWeek] = useState(12);
     const [selectedGrade, setSelectedGrade] = useState("all");
+    const [searchTerm, setSearchTerm] = useState("");
+    const [conductFilter, setConductFilter] = useState("all");
+    const [currentPage, setCurrentPage] = useState(1);
+    const ITEMS_PER_PAGE = 6;
 
     const rankingData = [
-        { rank: 1, class: "12A1", homeroom: "Nguyễn Vĩ C", points: 98.5, trend: "up", change: 2, attendance: "99.2%" },
-        { rank: 2, class: "10A1", homeroom: "Trần Mai Anh", points: 96.0, trend: "flat", change: 0, attendance: "98.5%" },
-        { rank: 3, class: "11A2", homeroom: "Lê Minh H", points: 92.5, trend: "up", change: 1, attendance: "97.8%" },
-        { rank: 4, class: "10A2", homeroom: "Phạm Bình Minh", points: 89.0, trend: "down", change: 1, attendance: "95.0%" },
-        { rank: 5, class: "12C3", homeroom: "Lê I", points: 85.0, trend: "up", change: 3, attendance: "96.5%" },
-        { rank: 35, class: "10A3", homeroom: "Trịnh Thùy L", points: -15.0, trend: "down", change: 5, attendance: "82.0%" },
+        { rank: 1, class: "12A1", homeroom: "Nguyễn Vĩ C", points: 98.5, trend: "up", change: 2, attendance: "99.2%", conduct: "Tốt" },
+        { rank: 2, class: "10A1", homeroom: "Trần Mai Anh", points: 96.0, trend: "flat", change: 0, attendance: "98.5%", conduct: "Tốt" },
+        { rank: 3, class: "11A2", homeroom: "Lê Minh H", points: 92.5, trend: "up", change: 1, attendance: "97.8%", conduct: "Khá" },
+        { rank: 4, class: "10A2", homeroom: "Phạm Bình Minh", points: 89.0, trend: "down", change: 1, attendance: "95.0%", conduct: "Khá" },
+        { rank: 5, class: "12C2", homeroom: "Lê I", points: 85.0, trend: "up", change: 3, attendance: "96.5%", conduct: "Tốt" },
+        { rank: 6, class: "11B1", homeroom: "Vũ K", points: 82.0, trend: "down", change: 2, attendance: "94.0%", conduct: "Khá" },
+        { rank: 7, class: "11C1", homeroom: "Ngô Thùy D", points: 79.5, trend: "up", change: 1, attendance: "93.2%", conduct: "Khá" },
+        { rank: 35, class: "10A3", homeroom: "Trịnh Thùy L", points: -15.0, trend: "down", change: 5, attendance: "82.0%", conduct: "Trung bình" },
     ];
 
     const statsCards = [
-        { title: "Tỷ lệ hiện diện", val: "98.5%", sub: "Toàn trường hôm nay", icon: <FiActivity />, color: "primary" },
-        { title: "Cần Nhắc Nhở", val: "10A3", sub: "-15.0 điểm", icon: <FiAlertCircle />, color: "danger" },
-        { title: "Điểm TB Tuần", val: "82.4", sub: "Giảm 2.1 so với tuần trước", icon: <FiActivity />, color: "info" },
-        { title: "Tỷ lệ Chuyên cần", val: "97.2%", sub: "Đã qua kiểm tra", icon: <FiStar />, color: "success" },
+        { title: "Điểm Thi Đua TB", val: "84.2", sub: "Điểm toàn trường", icon: <FiStar />, color: "success" },
+        { title: "Lớp Dẫn Đầu", val: "12A1", sub: "98.5đ - Hạng 1", icon: <FiAward />, color: "primary" },
+        { title: "Tỷ lệ Chuyên cần", val: "97.2%", sub: "Bình quân tuần này", icon: <FiActivity />, color: "info" },
+        { title: "Hạnh Kiểm Tốt", val: "92%", sub: "Tỷ lệ Tốt / Khá", icon: <FiUserCheck />, color: "success" },
     ];
+
+    const filteredRanking = useMemo(() => {
+        return rankingData.filter(item => {
+            const matchesGrade = selectedGrade === "all" || item.class.startsWith(selectedGrade);
+            const matchesSearch = item.class.toLowerCase().includes(searchTerm.toLowerCase());
+            const matchesConduct = conductFilter === "all" || item.conduct === conductFilter;
+            return matchesGrade && matchesSearch && matchesConduct;
+        });
+    }, [rankingData, selectedGrade, searchTerm, conductFilter]);
+
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [selectedWeek, selectedGrade, searchTerm, conductFilter]);
+
+    const totalPages = Math.max(1, Math.ceil(filteredRanking.length / ITEMS_PER_PAGE));
+
+    useEffect(() => {
+        if (currentPage > totalPages) {
+            setCurrentPage(totalPages);
+        }
+    }, [currentPage, totalPages]);
+
+    const commendationClasses = useMemo(() => {
+        const topByGrade = {};
+        rankingData.forEach(item => {
+            const grade = item.class.slice(0, 2);
+            if (!topByGrade[grade] || item.rank < topByGrade[grade].rank) {
+                topByGrade[grade] = item;
+            }
+        });
+        return Object.values(topByGrade).sort((a, b) => a.class.localeCompare(b.class));
+    }, [rankingData]);
+
+    const improvementClasses = useMemo(() => {
+        return rankingData
+            .filter(item => item.trend === "down")
+            .sort((a, b) => a.points - b.points)
+            .slice(0, 3);
+    }, [rankingData]);
+
+    const paginatedRanking = useMemo(() => {
+        const start = (currentPage - 1) * ITEMS_PER_PAGE;
+        return filteredRanking.slice(start, start + ITEMS_PER_PAGE);
+    }, [filteredRanking, currentPage]);
 
     const handleClassClick = (className) => {
         if (onClassClick) {
@@ -44,7 +96,7 @@ export default function VpDisciplineCompetition({ isEmbedded = false, onClassCli
         <div className="vp-competition vp-discipline-layout">
             {!isEmbedded && (
                 <PageHeader
-                    title="Xếp Hạng Thi Đua"
+                    title="Tổng Hợp Thi Đua & Nề Nếp"
                     actions={
                         <DisciplineHeaderActions
                             selectedSchoolYear={selectedSchoolYear}
@@ -96,6 +148,30 @@ export default function VpDisciplineCompetition({ isEmbedded = false, onClassCli
                             ]}
                         />
                     </div>
+                    <div className="filter-group">
+                        <label><FiUserCheck /> Hạnh Kiểm</label>
+                        <Select 
+                            variant="custom"
+                            value={conductFilter}
+                            onChange={(e) => setConductFilter(e.target.value)}
+                            options={[
+                                { value: "all", label: "Tất cả" },
+                                { value: "Tốt", label: "Tốt" },
+                                { value: "Khá", label: "Khá" },
+                                { value: "Trung bình", label: "Trung bình" }
+                            ]}
+                        />
+                    </div>
+                    <div className="filter-group" style={{minWidth: '220px'}}>
+                        <label><FiSearch /> Tìm lớp</label>
+                        <div className="comp-search-box">
+                            <input 
+                                placeholder="Nhập tên lớp..." 
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                            />
+                        </div>
+                    </div>
                 </div>
 
                 <div className="dm-primary-actions-compact">
@@ -120,14 +196,15 @@ export default function VpDisciplineCompetition({ isEmbedded = false, onClassCli
                                     <th className="th-center">Hạng</th>
                                     <th>Lớp</th>
                                     <th>GV Chủ Nhiệm</th>
+                                    <th>Thi Đua</th>
                                     <th>Chuyên Cần</th>
-                                    <th className="th-center">Tổng Điểm</th>
+                                    <th>Hạnh Kiểm (Dự kiến)</th>
                                     <th>Xu Hướng</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                {rankingData.map(item => (
-                                    <tr 
+                                {paginatedRanking.map(item => (
+                                    <tr
                                         key={item.class} 
                                         className="clickable-row"
                                         onClick={() => handleClassClick(item.class)}
@@ -141,14 +218,19 @@ export default function VpDisciplineCompetition({ isEmbedded = false, onClassCli
                                             <span className="class-name-v2">{item.class}</span>
                                         </td>
                                         <td>{item.homeroom}</td>
+                                        <td className="td-points">
+                                            <strong className="points-accent">{item.points}đ</strong>
+                                        </td>
                                         <td>
                                             <div className="attendance-mini-bar">
                                                 <div className="bar-fill" style={{width: item.attendance}}></div>
                                                 <span>{item.attendance}</span>
                                             </div>
                                         </td>
-                                        <td className="td-center">
-                                            <strong className="points-accent">{item.points}đ</strong>
+                                        <td>
+                                            <span className={`conduct-badge ${item.conduct === 'Tốt' ? 'success' : 'warning'}`}>
+                                                {item.conduct}
+                                            </span>
                                         </td>
                                         <td>
                                             {item.trend === 'up' && <span className="trend-badge up"><FiTrendingUp /> +{item.change}</span>}
@@ -160,6 +242,15 @@ export default function VpDisciplineCompetition({ isEmbedded = false, onClassCli
                             </tbody>
                         </table>
                     </div>
+
+                    <div className="comp-pagination-row">
+                        <Pagination
+                            currentPage={currentPage}
+                            totalPages={totalPages}
+                            onPageChange={setCurrentPage}
+                            ariaLabel="Phân trang bảng xếp hạng lớp"
+                        />
+                    </div>
                 </div>
 
                 {/* Highlights Side Column */}
@@ -167,40 +258,32 @@ export default function VpDisciplineCompetition({ isEmbedded = false, onClassCli
                     <div className="highlight-card success">
                         <h4><FiTrendingUp /> Biểu Dương</h4>
                         <div className="highlight-list">
-                            <div className="h-item">
-                                <div className="h-icon">🏆</div>
-                                <div className="h-info">
-                                    <strong>Lớp 12A1</strong>
-                                    <span>Vô địch chuyên cần tuần 12</span>
+                            {commendationClasses.map(cls => (
+                                <div key={cls.class} className="h-item" onClick={() => handleClassClick(cls.class)}>
+                                    <div className="h-icon">
+                                        <Trophy size={20} className="icon-gold" />
+                                    </div>
+                                    <div className="h-info">
+                                        <strong>Lớp {cls.class}</strong>
+                                        <span>Dẫn đầu Khối {cls.class.slice(0, 2)} - {cls.points}đ</span>
+                                    </div>
                                 </div>
-                            </div>
-                            <div className="h-item">
-                                <div className="h-icon">🚀</div>
-                                <div className="h-info">
-                                    <strong>Lớp 11A2</strong>
-                                    <span>Tăng 5 bậc so với tuần trước</span>
-                                </div>
-                            </div>
+                            ))}
                         </div>
                     </div>
 
                     <div className="highlight-card danger mt-lg">
                         <h4><FiTrendingDown /> Cần Khắc Phục</h4>
                         <div className="highlight-list">
-                            <div className="h-item">
-                                <div className="h-icon">⚠️</div>
-                                <div className="h-info">
-                                    <strong>Lớp 10A3</strong>
-                                    <span>Điểm thi đua giảm sâu do nề nếp</span>
+                            {improvementClasses.map(cls => (
+                                <div key={cls.class} className="h-item" onClick={() => handleClassClick(cls.class)}>
+                                    <div className="h-icon"><TrendingDown size={20} className="icon-danger" /></div>
+                                    <div className="h-info">
+                                        <strong>Lớp {cls.class}</strong>
+                                        <span>Xu hướng giảm {cls.change} bậc - {cls.points}đ</span>
+                                    </div>
                                 </div>
-                            </div>
-                            <div className="h-item">
-                                <div className="h-icon">📉</div>
-                                <div className="h-info">
-                                    <strong>Lớp 10A2</strong>
-                                    <span>Xếp hạng thấp nhất khối 10</span>
-                                </div>
-                            </div>
+                            ))}
                         </div>
                         <button className="btn-view-incidents" onClick={() => navigate('/vp-discipline/discipline')}>
                             Xem chi tiết sai phạm <FiArrowRight />

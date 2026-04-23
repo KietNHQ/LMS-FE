@@ -59,6 +59,7 @@ const VpAcademicDashboard = lazy(() => import("../pages/vp-academic/dashboard/Vp
 const VpAcademicGrades = lazy(() => import("../pages/vp-academic/grades/VpAcademicGrades"));
 const VpAcademicApprovals = lazy(() => import("../pages/vp-academic/approvals/VpAcademicApprovals"));
 const VpAcademicExams = lazy(() => import("../pages/vp-academic/exams/VpAcademicExams"));
+const VpAcademicExamRooms = lazy(() => import("../pages/vp-academic/exams/VpAcademicExamRooms"));
 const VpAcademicTimetable = lazy(() => import("../pages/vp-academic/timetable/VpAcademicTimetable"));
 const VpAcademicTeachingAssignment = lazy(() => import("../pages/vp-academic/teaching-assignment/VpAcademicTeachingAssignment"));
 const VpAcademicDataManagement = lazy(() => import("../pages/vp-academic/data-management/VpAcademicDataManagement"));
@@ -68,7 +69,7 @@ const VpAcademicNotifications = lazy(() => import("../pages/vp-academic/notifica
 const VpDisciplineDashboard = lazy(() => import("../pages/vp-discipline/dashboard/VpDisciplineDashboard"));
 const VpDisciplineMgmt = lazy(() => import("../pages/vp-discipline/discipline-management/VpDisciplineMgmt"));
 const VpDisciplineCockpit = lazy(() => import("../pages/vp-discipline/cockpit/VpDisciplineCockpit"));
-const VpDisciplineApprovals = lazy(() => import("../pages/vp-discipline/approvals/VpDisciplineApprovals"));
+
 const VpDisciplineReports = lazy(() => import("../pages/vp-discipline/reports/VpDisciplineReports"));
 const VpDisciplineNotifications = lazy(() => import("../pages/vp-discipline/notifications/VpDisciplineNotifications"));
 
@@ -213,6 +214,7 @@ export default function AppRoutes() {
         <Route path="grades" element={<VpAcademicGrades />} />
         <Route path="approvals" element={<VpAcademicApprovals />} />
         <Route path="exams" element={<VpAcademicExams />} />
+        <Route path="exams/rooms" element={<VpAcademicExamRooms />} />
         <Route path="timetable" element={<VpAcademicTimetable />} />
         <Route path="teaching-assignment" element={<VpAcademicTeachingAssignment />} />
         <Route path="data-management" element={<VpAcademicDataManagement />} />
@@ -230,7 +232,7 @@ export default function AppRoutes() {
         <Route path="competition" element={<Navigate to="/vp-discipline/cockpit" replace />} />
         <Route path="attendance" element={<Navigate to="/vp-discipline/cockpit?tab=attendance" replace />} />
         <Route path="conduct" element={<Navigate to="/vp-discipline/cockpit?tab=conduct" replace />} />
-        <Route path="approvals" element={<VpDisciplineApprovals />} />
+
         <Route path="reports" element={<VpDisciplineReports />} />
         <Route path="notifications" element={<VpDisciplineNotifications />} />
       </Route>

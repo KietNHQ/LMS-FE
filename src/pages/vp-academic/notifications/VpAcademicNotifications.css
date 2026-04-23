@@ -1,0 +1,232 @@
+.vpa-notifications {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    padding-bottom: 3rem;
+}
+
+/* ── Metrics Bar ── */
+.notif-metrics-bar {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
+}
+
+.metric-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 1rem;
+    padding: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.metric-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.metric-icon-wrap {
+    width: 3.5rem;
+    height: 3.5rem;
+    border-radius: 0.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+}
+
+.metric-icon-wrap.primary { background: #ecfdf5; color: #059669; border: 1px solid #d1fae5; }
+.metric-icon-wrap.unread { background: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe; }
+.metric-icon-wrap.sent { background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; }
+
+.metric-info h4 {
+    margin: 0;
+    font-size: 0.8125rem;
+    color: #64748b;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.025em;
+}
+
+.metric-info .value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #0f172a;
+    margin-top: 0.25rem;
+}
+
+/* ── Action Button ── */
+.compose-btn-academic {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: #ffffff;
+    border: none;
+    padding: 0.65rem 1.25rem;
+    border-radius: 0.75rem;
+    font-weight: 600;
+    font-size: 0.875rem;
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);
+}
+
+.compose-btn-academic:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(16, 185, 129, 0.35);
+    filter: brightness(1.1);
+}
+
+/* ── Main List Card ── */
+.notif-main-card {
+    background: #ffffff;
+    border-radius: 1.25rem;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.notif-list-header {
+    padding: 1.25rem 2rem;
+    border-bottom: 1px solid #f1f5f9;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #f8fafc;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.notif-list-header h3 {
+    margin: 0;
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: #1e293b;
+}
+
+.btn-mark-all {
+    background: transparent;
+    color: #059669;
+    border: 1px solid #d1fae5;
+    padding: 0.5rem 1rem;
+    border-radius: 0.75rem;
+    font-weight: 600;
+    font-size: 0.875rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    white-space: nowrap;
+    gap: 0.5rem;
+    transition: all 0.2s ease;
+}
+
+/* ── Notification List ── */
+.notif-list {
+    display: flex;
+    flex-direction: column;
+}
+
+.notif-item {
+    padding: 1.5rem 2rem;
+    display: flex;
+    gap: 1.5rem;
+    border-bottom: 1px solid #f1f5f9;
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+.notif-item:hover { background: #f8fafc; }
+
+.notif-item.unread {
+    background: #ecfdf5;
+    position: relative;
+}
+
+.notif-item.unread::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 4px;
+    background: #10b981;
+}
+
+.notif-icon-box {
+    width: 3rem;
+    height: 3rem;
+    border-radius: 0.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    flex-shrink: 0;
+}
+
+.notif-icon-box.directive { background: #ecfdf5; color: #059669; }
+.notif-icon-box.approval { background: #eff6ff; color: #2563eb; }
+.notif-icon-box.warning { background: #fef2f2; color: #dc2626; }
+
+.notif-body { flex: 1; min-width: 0; }
+.notif-top-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.35rem; }
+.notif-title { margin: 0; font-size: 1rem; font-weight: 700; color: #1e293b; }
+.notif-time-tag { font-size: 0.75rem; color: #94a3b8; background: #f1f5f9; padding: 0.25rem 0.625rem; border-radius: 1rem; font-weight: 600; display: flex; align-items: center; gap: 0.35rem; }
+
+.notif-desc { margin: 0; font-size: 0.875rem; color: #475569; line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+
+.audience-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.25rem 0.75rem;
+    border-radius: 2rem;
+    font-size: 0.75rem;
+    font-weight: 700;
+    background: #f1f5f9;
+    color: #475569;
+    margin-top: 0.75rem;
+}
+
+/* ── Modal & Form ── */
+.academic-compose-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.premium-input, .premium-textarea {
+    width: 100%;
+    padding: 0.875rem 1rem;
+    border-radius: 0.75rem;
+    border: 1.5px solid #e2e8f0;
+    font-size: 0.95rem;
+    transition: all 0.2s ease;
+    font-family: inherit;
+}
+
+.premium-input:focus, .premium-textarea:focus {
+    border-color: #10b981;
+    outline: none;
+    box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.1);
+}
+
+.btn-send-academic {
+    background: #10b981;
+    color: white;
+    border: none;
+    padding: 0.875rem 2rem;
+    border-radius: 0.75rem;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    transition: all 0.2s ease;
+}
+
+.btn-send-academic:hover { background: #059669; }
