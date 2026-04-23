@@ -104,6 +104,46 @@ const STUDENT_QUIZZES_MOCK = [
   { id: 2, title: "Quiz Anh - Unit 5", subject: "Tiếng Anh", status: "submitted", score: 8.5 },
 ];
 
+const STUDENT_QUIZ_DETAIL_MOCK = {
+  ...STUDENT_QUIZZES_MOCK[0],
+  description: "Ôn tập hàm số bậc nhất và kỹ năng đọc đồ thị.",
+  durationMinutes: 45,
+  maxAttempts: 3,
+  passScore: 5,
+  isPublished: true,
+  questions: [
+    {
+      id: 1,
+      questionText: "Hàm số nào sau đây là hàm số bậc nhất?",
+      questionType: "multiple_choice",
+      points: 1,
+      answers: [
+        { id: 1, answerText: "y = 2x + 1", isCorrect: true },
+        { id: 2, answerText: "y = x^2 + 1", isCorrect: false },
+      ],
+    },
+  ],
+};
+
+const STUDENT_QUIZ_STATUS_MOCK = {
+  hasActiveAttempt: false,
+  canStart: true,
+  canResume: false,
+  message: "Chưa có bài làm, có thể bắt đầu",
+};
+
+const STUDENT_QUIZ_ATTEMPT_MOCK = {
+  id: "attempt-1",
+  quizId: 1,
+  quizTitle: STUDENT_QUIZ_DETAIL_MOCK.title,
+  status: "in_progress",
+  startTime: "2026-04-22T07:00:00.000Z",
+  endTime: "2026-04-22T07:45:00.000Z",
+  timeRemaining: 2700,
+  reconnectCount: 0,
+  maxReconnect: 3,
+};
+
 const STUDENT_ENDPOINTS = [
   { key: "get_student_dashboard", method: "GET", path: "/api/v1/dashboard/student", module: "dashboard", mock: () => STUDENT_DASHBOARD_MOCK },
   { key: "get_students_by_id", method: "GET", path: "/api/v1/students/:id", module: "profile", mock: () => STUDENT_PROFILE_MOCK },
@@ -118,10 +158,27 @@ const STUDENT_ENDPOINTS = [
   { key: "patch_student_notifications_by_id_read", method: "PATCH", path: "/api/v1/notifications/student/:id/read", module: "notifications", mock: (input) => ({ id: input.pathParams?.id, unread: false }) },
   { key: "get_student_support_faqs", method: "GET", path: "/api/v1/support/student/faqs", module: "support", mock: () => STUDENT_FAQS_MOCK },
   { key: "post_student_support_tickets", method: "POST", path: "/api/v1/support/student/tickets", module: "support", mock: (input) => ({ id: Date.now(), ...(input.body || {}), status: "open" }) },
-  { key: "get_student_quizzes", method: "GET", path: "/api/v1/quizzes/student", module: "quiz", mock: () => STUDENT_QUIZZES_MOCK },
-  { key: "get_student_quizzes_by_id", method: "GET", path: "/api/v1/quizzes/student/:id", module: "quiz", mock: (input) => STUDENT_QUIZZES_MOCK.find((item) => `${item.id}` === `${input.pathParams?.id}`) || null },
-  { key: "post_student_quizzes_by_id_start", method: "POST", path: "/api/v1/quizzes/student/:id/start", module: "quiz", mock: (input) => ({ id: input.pathParams?.id, status: "in_progress" }) },
-  { key: "post_student_quizzes_by_id_submit", method: "POST", path: "/api/v1/quizzes/student/:id/submit", module: "quiz", mock: (input) => ({ id: input.pathParams?.id, status: "submitted", score: 8.0 }) },
+  { key: "get_quizzes", method: "GET", path: "/api/v1/quizzes", module: "quiz", mock: () => STUDENT_QUIZZES_MOCK },
+  { key: "get_quizzes_by_id", method: "GET", path: "/api/v1/quizzes/:id", module: "quiz", mock: (input) => {
+      const matched = STUDENT_QUIZZES_MOCK.find((item) => `${item.id}` === `${input.pathParams?.id}`);
+      return matched ? { ...STUDENT_QUIZ_DETAIL_MOCK, ...matched } : null;
+    } },
+  { key: "post_quizzes_by_id_start", method: "POST", path: "/api/v1/quizzes/:id/start", module: "quiz", mock: (input) => ({
+      attemptId: "attempt-1",
+      type: "new",
+      isResume: false,
+      quiz: { ...STUDENT_QUIZ_DETAIL_MOCK, id: input.pathParams?.id },
+      attempt: { ...STUDENT_QUIZ_ATTEMPT_MOCK, quizId: input.pathParams?.id },
+      questions: STUDENT_QUIZ_DETAIL_MOCK.questions,
+      timeRemaining: STUDENT_QUIZ_ATTEMPT_MOCK.timeRemaining,
+    }) },
+  { key: "get_quizzes_by_id_status", method: "GET", path: "/api/v1/quizzes/:id/status", module: "quiz", mock: () => STUDENT_QUIZ_STATUS_MOCK },
+  { key: "get_quizzes_attempts_by_attemptid", method: "GET", path: "/api/v1/quizzes/attempts/:attemptId", module: "quiz", mock: (input) => ({ ...STUDENT_QUIZ_ATTEMPT_MOCK, id: input.pathParams?.attemptId, status: "in_progress" }) },
+  { key: "put_quizzes_attempts_by_attemptid", method: "PUT", path: "/api/v1/quizzes/attempts/:attemptId", module: "quiz", mock: (input) => ({ ...STUDENT_QUIZ_ATTEMPT_MOCK, id: input.pathParams?.attemptId, ...(input.body || {}), updated: true }) },
+  { key: "put_quizzes_attempts_by_attemptid_submit", method: "PUT", path: "/api/v1/quizzes/attempts/:attemptId/submit", module: "quiz", mock: (input) => ({ id: input.pathParams?.attemptId, status: "submitted", score: 8.0, passed: true }) },
+  { key: "put_quizzes_attempts_by_id_sync", method: "PUT", path: "/api/v1/quizzes/attempts/:id/sync", module: "quiz", mock: (input) => ({ attemptId: input.pathParams?.id, questionId: input.body?.questionId, savedAt: new Date().toISOString(), message: "Đã lưu đáp án" }) },
+  { key: "put_quizzes_attempts_by_id_heartbeat", method: "PUT", path: "/api/v1/quizzes/attempts/:id/heartbeat", module: "quiz", mock: (input) => ({ attemptId: input.pathParams?.id, timeRemaining: 1800, heartbeatAt: new Date().toISOString(), message: "Heartbeat OK" }) },
+  { key: "post_quizzes_attempts_by_id_validate", method: "POST", path: "/api/v1/quizzes/attempts/:id/validate", module: "quiz", mock: (input) => ({ attemptId: input.pathParams?.id, canSubmit: true, timeRemaining: 600, status: "in_progress" }) },
 ];
 
 const createEndpointCaller = (endpoint) => async (input = {}) => {
@@ -189,10 +246,16 @@ export const studentService = {
   markNotificationRead: (input) => endpointCallers.patch_student_notifications_by_id_read(input),
   listFaqs: (input) => endpointCallers.get_student_support_faqs(input),
   submitSupportTicket: (input) => endpointCallers.post_student_support_tickets(input),
-  listQuizzes: (input) => endpointCallers.get_student_quizzes(input),
-  getQuizById: (input) => endpointCallers.get_student_quizzes_by_id(input),
-  startQuiz: (input) => endpointCallers.post_student_quizzes_by_id_start(input),
-  submitQuiz: (input) => endpointCallers.post_student_quizzes_by_id_submit(input),
+  listQuizzes: (input) => endpointCallers.get_quizzes(input),
+  getQuizById: (input) => endpointCallers.get_quizzes_by_id(input),
+  startQuiz: (input) => endpointCallers.post_quizzes_by_id_start(input),
+  getQuizStatus: (input) => endpointCallers.get_quizzes_by_id_status(input),
+  getQuizAttemptById: (input) => endpointCallers.get_quizzes_attempts_by_attemptid(input),
+  saveQuizAttempt: (input) => endpointCallers.put_quizzes_attempts_by_attemptid(input),
+  submitQuiz: (input) => endpointCallers.put_quizzes_attempts_by_attemptid_submit(input),
+  syncQuizAttempt: (input) => endpointCallers.put_quizzes_attempts_by_id_sync(input),
+  heartbeatQuizAttempt: (input) => endpointCallers.put_quizzes_attempts_by_id_heartbeat(input),
+  validateQuizAttempt: (input) => endpointCallers.post_quizzes_attempts_by_id_validate(input),
 };
 
 export default studentService;

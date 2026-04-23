@@ -121,6 +121,27 @@
     background: #f8fafc;
 }
 
+.vpa-btn-glow {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+    border: none !important;
+    color: white !important;
+    box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3) !important;
+    transition: all 0.3s ease !important;
+    font-weight: 700 !important;
+    height: 42px !important;
+    padding: 0 1.5rem !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 0.5rem !important;
+    border-radius: 8px !important;
+}
+
+.vpa-btn-glow:hover {
+    transform: translateY(-2px) !important;
+    box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4) !important;
+    filter: brightness(1.1) !important;
+}
+
 /* ── ROOMS GRID ── */
 .rooms-grid {
     display: grid;
@@ -277,4 +298,153 @@
 @media (max-width: 1200px) {
     .rooms-grid { grid-template-columns: repeat(2, 1fr); }
     .vpa-rooms-stats { grid-template-columns: 1fr; }
+}
+
+/* Fix Modal Overflow for Dropdowns */
+.vpa-exam-room-modal {
+    overflow: visible !important;
+}
+
+.vpa-exam-room-modal .ui-modal__body {
+    overflow: visible !important;
+    overflow-y: visible !important;
+    overflow-x: visible !important;
+}
+
+/* Fix Purple Border - Refined targeting to avoid container borders */
+.vpa-exam-room-modal input:focus,
+.vpa-exam-room-modal select:focus,
+.vpa-exam-room-modal .ui-input__field:focus,
+.vpa-exam-room-modal .ui-select__field:focus {
+    border-color: var(--vpa-emerald) !important;
+    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1) !important;
+    outline: none !important;
+}
+
+/* Only target specific UI library wrapper classes if they represent the input border */
+.vpa-exam-room-modal .ui-select--focus {
+    border-color: var(--vpa-emerald) !important;
+}
+
+/* ── SUPERVISOR SELECT STYLING ── */
+.vpa-exam-room-modal .ui-select__option,
+.vpa-exam-room-modal [class*="option"] {
+    padding: 0.75rem 1rem !important;
+    font-size: 0.9rem !important;
+    font-weight: 600 !important;
+    color: #475569 !important;
+    transition: all 0.2s !important;
+    border-radius: 6px !important;
+    margin: 2px 8px !important;
+}
+
+.vpa-exam-room-modal [class*="option"]:hover {
+    background: #f0fdf4 !important;
+    color: var(--vpa-emerald) !important;
+}
+
+/* ── SCHEDULE TABLE ENHANCEMENTS ── */
+.table-toolbar-vpa {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+    padding: 0 0.5rem;
+}
+
+.table-title {
+    font-size: 1rem;
+    font-weight: 800;
+    color: var(--admin-navy);
+}
+
+.vpa-schedule-table .time-cell,
+.vpa-schedule-table .subject-cell {
+    padding: 1rem 0.75rem !important;
+}
+
+.vpa-schedule-table tr:hover {
+    background: #f8fafc;
+}
+
+.btn-icon-vpa {
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    border: 1px solid #e2e8f0;
+    background: #fff;
+    color: #64748b;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-icon-vpa:hover {
+    border-color: #3b82f6;
+    color: #3b82f6;
+    background: #eff6ff;
+}
+/* ── MODAL FORM REFINEMENTS ── */
+.vpa-room-modal-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    padding: 0.5rem 0.25rem;
+}
+
+.form-row-vpa {
+    display: flex;
+    gap: 1rem;
+    align-items: flex-end;
+}
+
+.filter-row {
+    background: #f8fafc;
+    padding: 1rem;
+    border-radius: 12px;
+    border: 1px dashed #cbd5e1;
+    margin: 0.25rem 0;
+}
+
+.filter-select-wrap {
+    flex: 1;
+    min-width: 0;
+}
+
+.grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+}
+
+.select-col {
+    min-width: 0;
+}
+
+.vpa-btn-random {
+    height: 40px !important;
+    white-space: nowrap;
+    border-radius: 8px !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 0.5rem !important;
+    font-weight: 750 !important;
+    color: var(--admin-navy) !important;
+    border-color: #cbd5e1 !important;
+    background: #fff !important;
+}
+
+.modal-footer-vpa {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+    margin-top: 0.5rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid #f1f5f9;
+}
+
+.modal-footer-vpa .vpa-btn-glow {
+    min-width: 140px;
 }

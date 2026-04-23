@@ -60,8 +60,7 @@ const VpAcademicGrades = lazy(() => import("../pages/vp-academic/grades/VpAcadem
 const VpAcademicApprovals = lazy(() => import("../pages/vp-academic/approvals/VpAcademicApprovals"));
 const VpAcademicExams = lazy(() => import("../pages/vp-academic/exams/VpAcademicExams"));
 const VpAcademicExamRooms = lazy(() => import("../pages/vp-academic/exams/VpAcademicExamRooms"));
-const VpAcademicTimetable = lazy(() => import("../pages/vp-academic/timetable/VpAcademicTimetable"));
-const VpAcademicTeachingAssignment = lazy(() => import("../pages/vp-academic/teaching-assignment/VpAcademicTeachingAssignment"));
+const VpAcademicExamRoomDetail = lazy(() => import("../pages/vp-academic/exams/VpAcademicExamRoomDetail"));
 const VpAcademicDataManagement = lazy(() => import("../pages/vp-academic/data-management/VpAcademicDataManagement"));
 const VpAcademicNotifications = lazy(() => import("../pages/vp-academic/notifications/VpAcademicNotifications"));
 
@@ -215,8 +214,7 @@ export default function AppRoutes() {
         <Route path="approvals" element={<VpAcademicApprovals />} />
         <Route path="exams" element={<VpAcademicExams />} />
         <Route path="exams/rooms" element={<VpAcademicExamRooms />} />
-        <Route path="timetable" element={<VpAcademicTimetable />} />
-        <Route path="teaching-assignment" element={<VpAcademicTeachingAssignment />} />
+        <Route path="exams/rooms/:roomId" element={<VpAcademicExamRoomDetail />} />
         <Route path="data-management" element={<VpAcademicDataManagement />} />
         <Route path="notifications" element={<VpAcademicNotifications />} />
       </Route>

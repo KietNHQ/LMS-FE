@@ -1,7 +1,6 @@
 import { useState } from "react";
-import { PageHeader, Pagination } from "../../../components/common";
-import { Modal, Select } from "../../../components/ui";
-import DisciplineHeaderActions from "../../vp-discipline/components/DisciplineHeaderActions"; // Reusing high-quality actions
+import { PageHeader, Pagination, SchoolYearTermSelector } from "../../../components/common";
+import { Modal, Select, Button } from "../../../components/ui";
 import { useSchoolYearTerm } from "../../../hooks/useSchoolYearTerm";
 import { 
     FiBell, 
@@ -63,7 +62,10 @@ export default function VpAcademicNotifications() {
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 8;
 
-    const [notifications, setNotifications] = useState(ACADEMIC_NOTIFICATIONS);
+    const [notifications, setNotifications] = useState(() => {
+        const saved = JSON.parse(localStorage.getItem('vpa_notifications') || '[]');
+        return [...saved, ...ACADEMIC_NOTIFICATIONS];
+    });
 
     const [formData, setFormData] = useState({
         title: "",
@@ -110,6 +112,9 @@ export default function VpAcademicNotifications() {
             audience: formData.audience
         };
 
+        const saved = JSON.parse(localStorage.getItem('vpa_notifications') || '[]');
+        localStorage.setItem('vpa_notifications', JSON.stringify([newNotif, ...saved]));
+
         setNotifications([newNotif, ...notifications]);
         toast.success("Chỉ đạo chuyên môn đã được ban hành thành công!");
         setFormData({ title: "", audience: "all_teachers", type: "directive", content: "" });
@@ -119,7 +124,10 @@ export default function VpAcademicNotifications() {
     const getAudienceLabel = (aud) => {
         switch(aud) {
             case 'all_teachers': return 'Toàn bộ Giáo viên';
-            case 'departments': return 'Các Tổ Chuyên môn';
+            case 'dept_heads': return 'Tổ trưởng Chuyên môn';
+            case 'homeroom_teachers': return 'Giáo viên Chủ nhiệm';
+            case 'grade10': return 'Khối 10';
+            case 'grade11': return 'Khối 11';
             case 'grade12': return 'Khối 12';
             default: return 'Khác';
         }
@@ -138,14 +146,19 @@ export default function VpAcademicNotifications() {
         <div className="vpa-notifications animate-fade-in">
             <PageHeader
                 title="Thông Báo Chỉ Đạo Chuyên Môn"
-                eyebrow="Phó Hiệu trưởng Chuyên môn - Hệ thống truyền tin học thuật"
+                eyebrow="Phó Hiệu trưởng Chuyên môn - Hệ thống điều hành học thuật"
                 actions={
-                    <DisciplineHeaderActions
-                        selectedSchoolYear={selectedSchoolYear}
-                        selectedTerm={selectedTerm}
-                        onYearChange={handleYearArrow}
-                        onTermChange={handleTermChange}
-                    />
+                    <div className="vpa-header-actions" style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+                        <SchoolYearTermSelector
+                            selectedSchoolYear={selectedSchoolYear}
+                            selectedTerm={selectedTerm}
+                            onYearChange={handleYearArrow}
+                            onTermChange={handleTermChange}
+                        />
+                        <Button className="vpa-btn-main" onClick={() => setIsComposeOpen(true)}>
+                            <FiPlus /> Ban hành chỉ đạo
+                        </Button>
+                    </div>
                 }
             />
 
@@ -185,12 +198,6 @@ export default function VpAcademicNotifications() {
                 <div className="notif-list-header">
                     <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                         <h3>Hộp thư & Lịch sử chỉ đạo</h3>
-                        <button 
-                            className="compose-btn-academic"
-                            onClick={() => setIsComposeOpen(true)}
-                        >
-                            <FiPlus /> Phát lệnh chỉ đạo chuyên môn
-                        </button>
                     </div>
                     {unreadCount > 0 && (
                         <button className="btn-mark-all" onClick={handleMarkAllRead}>
@@ -271,8 +278,11 @@ export default function VpAcademicNotifications() {
                                 variant="custom"
                                 options={[
                                     { value: "all_teachers", label: "Toàn bộ Giáo viên" },
-                                    { value: "departments", label: "Các Tổ Chuyên môn" },
-                                    { value: "grade12", label: "Riêng khối 12" }
+                                    { value: "dept_heads", label: "Tổ trưởng Chuyên môn" },
+                                    { value: "homeroom_teachers", label: "Giáo viên Chủ nhiệm" },
+                                    { value: "grade10", label: "Toàn bộ Khối 10" },
+                                    { value: "grade11", label: "Toàn bộ Khối 11" },
+                                    { value: "grade12", label: "Toàn bộ Khối 12" }
                                 ]}
                                 value={formData.audience}
                                 onChange={e => setFormData({...formData, audience: e.target.value})}
@@ -283,9 +293,9 @@ export default function VpAcademicNotifications() {
                             <Select 
                                 variant="custom"
                                 options={[
-                                    { value: "directive", label: "Lệnh Chỉ đạo" },
-                                    { value: "approval", label: "Thông báo Duyệt" },
-                                    { value: "warning", label: "Cảnh báo Học vụ" }
+                                    { value: "directive", label: "Chỉ đạo Chuyên môn" },
+                                    { value: "approval", label: "Quyết định Phê duyệt" },
+                                    { value: "warning", label: "Nhắc nhở & Cảnh báo" }
                                 ]}
                                 value={formData.type}
                                 onChange={e => setFormData({...formData, type: e.target.value})}

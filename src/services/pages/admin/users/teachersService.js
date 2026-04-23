@@ -1,7 +1,14 @@
 import axiosClient from "../../../shared/http/axiosClient";
+import { importExportService } from "../import-export/importExportService";
 
-const statusFromApi = { active: "Hoạt động", inactive: "Tạm khóa" };
-const statusToApi = { "Hoạt động": "active", "Tạm khóa": "inactive" };
+const statusFromApi = new Map([
+  ["active", "Hoạt động"],
+  ["inactive", "Tạm khóa"],
+]);
+const statusToApi = new Map([
+  ["Hoạt động", "active"],
+  ["Tạm khóa", "inactive"],
+]);
 
 const getPayload = (response) => response?.data ?? response ?? {};
 
@@ -35,7 +42,7 @@ const parseTeacher = (item = {}) => {
     subject: item.subject || item.profile?.subject || item.subject_name || "",
     homeroomClass: item.homeroomClass || item.homeroom_class || "",
     assignedClasses: item.assignedClasses || item.assigned_classes || [],
-    status: statusFromApi[item.status] || item.status || "Hoạt động",
+    status: statusFromApi.get(item.status) || item.status || "Hoạt động",
     createdAt: item.createdAt ? `${item.createdAt}`.slice(0, 10) : "",
     profile: item.profile || {},
     progress: item.progress || {
@@ -85,7 +92,7 @@ export const teachersService = {
       fullName: formData.name,
       phone: formData.phone === "—" ? "" : formData.phone,
       dob: formData.dob || null,
-      status: statusToApi[formData.status] || undefined,
+      status: statusToApi.get(formData.status) || undefined,
       profile: {
         ...(formData.profile || {}),
         subject: formData.subject || formData.profile?.subject || "",
@@ -100,14 +107,22 @@ export const teachersService = {
     return requestWithFallback(["/users", "/auth/users"], (basePath) => axiosClient.delete(`${basePath}/${id}`));
   },
 
-  importTeachers: async (file) => {
-    const formData = new FormData();
-    formData.append("file", file);
-    return requestWithFallback(["/users/import", "/auth/users/import"], (path) =>
-      axiosClient.post(path, formData, {
+  importTeachers: async (file, options = {}) => {
+    return requestWithFallback(["/imports/teachers", "/users/import", "/auth/users/import"], (path) => {
+      if (path === "/imports/teachers") {
+        return importExportService.importTeachers(file, options);
+      }
+
+      const formData = new FormData();
+      formData.append("file", file);
+      if (options && typeof options === "object" && Object.keys(options).length > 0) {
+        formData.append("options", JSON.stringify(options));
+      }
+
+      return axiosClient.post(path, formData, {
         headers: { "Content-Type": "multipart/form-data" },
-      })
-    );
+      });
+    });
   },
 
   downloadTemplate: async () => {

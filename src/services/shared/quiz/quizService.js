@@ -345,6 +345,34 @@ async function getAttemptDetail(attemptId) {
     return getPayload(response);
 }
 
+async function startQuiz(quizId, payload = {}) {
+    return axiosClient.post(`${QUIZ_ENDPOINT}/${quizId}/start`, payload);
+}
+
+async function getQuizStatus(quizId) {
+    return axiosClient.get(`${QUIZ_ENDPOINT}/${quizId}/status`);
+}
+
+async function saveQuizAttempt(attemptId, attemptData = {}) {
+    return axiosClient.put(`${QUIZ_ENDPOINT}/attempts/${attemptId}`, attemptData);
+}
+
+async function submitQuiz(attemptId, attemptData = {}) {
+    return axiosClient.put(`${QUIZ_ENDPOINT}/attempts/${attemptId}/submit`, attemptData);
+}
+
+async function syncQuizAttempt(attemptId, attemptData = {}) {
+    return axiosClient.put(`${QUIZ_ENDPOINT}/attempts/${attemptId}/sync`, attemptData);
+}
+
+async function heartbeatQuizAttempt(attemptId, attemptData = {}) {
+    return axiosClient.put(`${QUIZ_ENDPOINT}/attempts/${attemptId}/heartbeat`, attemptData);
+}
+
+async function validateQuizAttempt(attemptId, payload = {}) {
+    return axiosClient.post(`${QUIZ_ENDPOINT}/attempts/${attemptId}/validate`, payload);
+}
+
 async function gradeAttempt(attemptId, gradeData = {}) {
     const payload = {
         scoreManual: Number(gradeData.scoreManual ?? gradeData.essayScore ?? 0),
@@ -391,6 +419,8 @@ const quizService = {
     deleteQuiz,
     publishQuiz,
     unpublishQuiz,
+    startQuiz,
+    getQuizStatus,
     listQuestions,
     addQuestion,
     updateQuestion,
@@ -400,6 +430,11 @@ const quizService = {
     deleteAnswer,
     listAttempts,
     getAttemptDetail,
+    saveQuizAttempt,
+    submitQuiz,
+    syncQuizAttempt,
+    heartbeatQuizAttempt,
+    validateQuizAttempt,
     gradeAttempt,
     downloadImportTemplate,
     previewImportFile,
@@ -416,6 +451,8 @@ QUIZ_SERVICE_EXPORTS.push(
     deleteQuiz,
     publishQuiz,
     unpublishQuiz,
+    startQuiz,
+    getQuizStatus,
     listQuestions,
     addQuestion,
     updateQuestion,
@@ -425,6 +462,11 @@ QUIZ_SERVICE_EXPORTS.push(
     deleteAnswer,
     listAttempts,
     getAttemptDetail,
+    saveQuizAttempt,
+    submitQuiz,
+    syncQuizAttempt,
+    heartbeatQuizAttempt,
+    validateQuizAttempt,
     gradeAttempt,
     downloadImportTemplate,
     previewImportFile,

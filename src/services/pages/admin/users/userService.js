@@ -1,6 +1,6 @@
 import axiosClient from "../../../shared/http/axiosClient";
 
-const USER_BASE_ENDPOINTS = ["/users", "/auth/users"];
+const USER_BASE_ENDPOINTS = ["/users"];
 
 const roleToApi = {
   Admin: "admin",

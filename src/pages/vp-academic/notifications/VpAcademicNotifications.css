@@ -178,7 +178,7 @@
 .notif-title { margin: 0; font-size: 1rem; font-weight: 700; color: #1e293b; }
 .notif-time-tag { font-size: 0.75rem; color: #94a3b8; background: #f1f5f9; padding: 0.25rem 0.625rem; border-radius: 1rem; font-weight: 600; display: flex; align-items: center; gap: 0.35rem; }
 
-.notif-desc { margin: 0; font-size: 0.875rem; color: #475569; line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.notif-desc { margin: 0; font-size: 0.875rem; color: #475569; line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 
 .audience-badge {
     display: inline-flex;

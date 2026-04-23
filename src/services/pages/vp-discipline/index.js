@@ -1,0 +1,2 @@
+export { vpDisciplineService } from "./vpDisciplineService";
+

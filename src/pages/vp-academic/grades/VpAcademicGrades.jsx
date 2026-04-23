@@ -4,10 +4,11 @@ import { useSchoolYearTerm } from "../../../hooks/useSchoolYearTerm";
 import { 
     FiCheckCircle, FiClock, FiAlertCircle, FiLock, 
     FiDownload, FiEye, FiAlertTriangle, FiSearch, 
-    FiFilter, FiMail, FiBarChart2, FiTrendingUp, FiUsers, FiActivity, FiArrowUpRight, FiX, FiUserCheck, FiExternalLink
+    FiFilter, FiMail, FiBarChart2, FiTrendingUp, FiUsers, FiActivity, FiArrowUpRight, FiX, FiUserCheck, FiExternalLink,
+    FiChevronLeft, FiChevronRight, FiMenu
 } from "react-icons/fi";
 import { toast } from "react-toastify";
-import { Modal, Button, Select } from "../../../components/ui";
+import { Modal, Button, Select, Input } from "../../../components/ui";
 import { 
     ResponsiveContainer, LineChart, Line, XAxis, YAxis, 
     CartesianGrid, Tooltip, AreaChart, Area 
@@ -69,6 +70,10 @@ export default function VpAcademicGrades() {
     const [activeStudent, setActiveStudent] = useState(null);
     const [activeTableTab, setActiveTableTab] = useState("all");
     const [currentPage, setCurrentPage] = useState(1);
+    const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+    const [isRemindModalOpen, setIsRemindModalOpen] = useState(false);
+    const [remindMessage, setRemindMessage] = useState('');
+    const [remindTitle, setRemindTitle] = useState('');
     const itemsPerPage = 5;
 
     const filteredClasses = CLASS_LIST.filter(c => {
@@ -95,6 +100,39 @@ export default function VpAcademicGrades() {
         setCurrentPage(1);
     }, [activeTableTab, selectedClass]);
 
+    const handleOpenRemindModal = () => {
+        if (!selectedClass) return;
+        
+        let title = `Nhắc nhở học vụ: Lớp ${selectedClass.id}`;
+        let message = `Kính gửi GVCN lớp ${selectedClass.id},\n\n`;
+
+        if (selectedClass.warnings > 0) {
+            title = `[Cảnh báo] Vấn đề chất lượng lớp ${selectedClass.id}`;
+            message += `Hệ thống ghi nhận lớp đang có vấn đề: ${selectedClass.warnMsg}.\n\n`;
+        }
+        
+        if (selectedClass.progress < 100) {
+            message += `Tiến độ nhập điểm hiện tại chỉ mới đạt ${selectedClass.progress}%. \n\n`;
+        }
+
+        if (selectedClass.status === 'pending') {
+            message += `Lớp đã nhập đủ điểm nhưng chưa được phê duyệt sổ điểm. Vui lòng rà soát và trình phê duyệt.\n\n`;
+        }
+
+        if (selectedClass.warnings === 0 && selectedClass.progress === 100 && selectedClass.status === 'locked') {
+            title = `Thông báo học vụ: Lớp ${selectedClass.id}`;
+            message += `Tình hình học tập và điểm số của lớp đang rất ổn định. Đề nghị thầy/cô tiếp tục phát huy.\n\n`;
+        } else {
+            message += `Đề nghị thầy/cô kiểm tra, đôn đốc các giáo viên bộ môn và xử lý kịp thời.\n\n`;
+        }
+        
+        message += `Trân trọng,\nPhó Hiệu Trưởng Học Vụ`;
+
+        setRemindTitle(title);
+        setRemindMessage(message);
+        setIsRemindModalOpen(true);
+    };
+
     const handleOpenAudit = (student) => {
         setActiveStudent(student);
         setShowAudit(true);
@@ -116,10 +154,21 @@ export default function VpAcademicGrades() {
                 }
             />
 
-            <div className="vpa-grades-grid">
+            <div className={`vpa-grades-grid ${!isSidebarOpen ? 'sidebar-closed' : ''}`}>
+                {!isSidebarOpen && (
+                    <button className="btn-floating-toggle" onClick={() => setIsSidebarOpen(true)} title="Mở danh sách lớp">
+                        <FiChevronRight className="toggle-icon" />
+                    </button>
+                )}
                 {/* ── SIDEBAR: CLASS NAVIGATOR ── */}
                 <aside className="vpa-grades-sidebar">
                     <div className="sidebar-toolbar">
+                        <div className="sidebar-toggle-row">
+                            <h3 className="sidebar-title">Danh sách lớp</h3>
+                            <button className="btn-toggle-sidebar" onClick={() => setIsSidebarOpen(false)}>
+                                <FiChevronLeft />
+                            </button>
+                        </div>
                         <div className="vpa-search-box">
                             <FiSearch />
                             <input 
@@ -213,7 +262,7 @@ export default function VpAcademicGrades() {
                                 </div>
 
                                 <div className="ah-right">
-                                    <Button variant="outline" className="vpa-btn-icon"><FiMail /> Nhắc GV</Button>
+                                    <Button variant="outline" className="vpa-btn-icon" onClick={handleOpenRemindModal}><FiMail /> Nhắc GV</Button>
                                     <Button variant="outline" className="vpa-btn-icon"><FiDownload /> Xuất báo cáo</Button>
                                 </div>
                             </div>
@@ -480,6 +529,54 @@ export default function VpAcademicGrades() {
                     <div className="modal-footer-vpa">
                         <Button variant="outline" onClick={() => setShowAllSubjects(false)}>Đóng</Button>
                         <Button primary><FiDownload /> Xuất báo cáo chi tiết</Button>
+                    </div>
+                </div>
+            </Modal>
+
+            {/* ── MODALS ── */}
+            <Modal 
+                open={isRemindModalOpen} 
+                onClose={() => setIsRemindModalOpen(false)}
+                title="Nhắc nhở Giáo viên Chủ nhiệm"
+                className="vpa-remind-modal"
+            >
+                <div className="vpa-remind-form">
+                    <div className="form-group">
+                        <label>Gửi đến</label>
+                        <div className="vpa-recipient-box">
+                            <div className="recipient-avatar"><FiUserCheck /></div>
+                            <div className="recipient-info">
+                                <strong>GV. Nguyễn Văn A</strong>
+                                <span>Giáo viên chủ nhiệm lớp {selectedClass?.id}</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <Input 
+                        label="Tiêu đề"
+                        type="text" 
+                        value={remindTitle}
+                        onChange={(e) => setRemindTitle(e.target.value)}
+                    />
+
+                    <div className="form-group">
+                        <label>Nội dung thông báo</label>
+                        <textarea 
+                            className="vpa-textarea" 
+                            rows="6"
+                            value={remindMessage}
+                            onChange={(e) => setRemindMessage(e.target.value)}
+                        ></textarea>
+                    </div>
+
+                    <div className="modal-actions">
+                        <Button variant="outline" onClick={() => setIsRemindModalOpen(false)}>Hủy</Button>
+                        <Button primary className="vpa-btn-glow" onClick={() => {
+                            toast.success(`Đã gửi thông báo đến GVCN lớp ${selectedClass?.id}`);
+                            setIsRemindModalOpen(false);
+                        }}>
+                            <FiMail /> Gửi thông báo
+                        </Button>
                     </div>
                 </div>
             </Modal>
