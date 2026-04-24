@@ -6,6 +6,7 @@ import TuitionFeeSection from "./components/tuitionFeeSection";
 import TransferInfoSection from "./components/transferInfoSection";
 import SchoolExpenditureSection from "./components/schoolExpenditureSection";
 import "./AdminPayment.css";
+import paymentService from "../../../services/pages/admin/payment/paymentService";
 
 // --- MOCK DATA ---
 const resolveTermKeyByLabel = (term) => {
@@ -47,16 +48,11 @@ const MOCK_TUITION = {
 };
 
 
-const MOCK_SCHOOL_EXPENDITURE = [
-    { id: "GD001", category: "Sửa chữa", description: "Bảo trì máy chiếu phòng học 201", date: "05/10/2025", personInCharge: "Nguyễn Văn Bảo Trì", amount: 1500000 },
-    { id: "GD002", category: "Sự kiện", description: "Thuê MC khai giảng", date: "05/09/2025", personInCharge: "Lê Yến", amount: 3000000 },
-    { id: "GD003", category: "Cơ sở vật chất", description: "Nhập 50 bộ bàn ghế mới", date: "20/08/2025", personInCharge: "Trần Mua Sắm", amount: 75000000 },
-    { id: "GD004", category: "Văn phòng phẩm", description: "Mua mực in và giấy A4", date: "10/10/2025", personInCharge: "Hà Kế Toán", amount: 5000000 },
-    { id: "GD005", category: "Điện nước", description: "Thanh toán tiền điện tháng 9", date: "25/09/2025", personInCharge: "Trường Admin", amount: 15000000 },
-    { id: "GD006", category: "Vệ sinh", description: "Thuê dịch vụ dọn dẹp tổng thể", date: "01/10/2025", personInCharge: "Cô Tạp Vụ", amount: 2000000 },
-    { id: "GD007", category: "Khen thưởng", description: "Mua quà tặng HS xuất sắc", date: "20/09/2025", personInCharge: "Thầy Hiệu Trưởng", amount: 10000000 },
-    { id: "GD008", category: "Công nghệ", description: "Nâng cấp hệ thống WiFi", date: "15/10/2025", personInCharge: "Đội IT", amount: 25000000 }
-];
+const getErrorMessage = (error, fallback) => {
+    const apiError = error?.response?.data?.error;
+    const apiMessage = error?.response?.data?.message;
+    return apiMessage || apiError || fallback;
+};
 
 const AdminPayment = () => {
     const { selectedSchoolYear, selectedTerm, handleYearArrow, handleTermChange } = useSchoolYearTerm();
@@ -68,23 +64,68 @@ const AdminPayment = () => {
 
     // State for Tabs
     const [activeTab, setActiveTab] = useState("tuition");
+    const [fees, setFees] = useState([]);
+    const [bankAccounts, setBankAccounts] = useState([]);
+    const [isLoading, setIsLoading] = useState(false);
+    const [loadError, setLoadError] = useState("");
 
+    // Mock data for expenditures as Backend doesn't have it yet
+    const [expenditures] = useState([
+        { id: "GD001", category: "Sửa chữa", description: "Bảo trì máy chiếu phòng học 201", date: "05/10/2025", personInCharge: "Nguyễn Văn Bảo Trì", amount: 1500000 },
+        { id: "GD002", category: "Sự kiện", description: "Thuê MC khai giảng", date: "05/09/2025", personInCharge: "Lê Yến", amount: 3000000 },
+    ]);
 
-    // Filter logic for School Expenditure
-    const filteredExpenditures = useMemo(() => {
-        return MOCK_SCHOOL_EXPENDITURE;
+    // Fetch Fees
+    React.useEffect(() => {
+        const fetchFees = async () => {
+            setIsLoading(true);
+            setLoadError("");
+            try {
+                // In a real scenario, we'd map selectedSchoolYear/selectedTerm to IDs
+                // For now, listing all and we'll filter client-side if needed
+                const result = await paymentService.listFees();
+                setFees(result.items || []);
+            } catch (error) {
+                setLoadError(getErrorMessage(error, "Không thể tải danh sách học phí."));
+            } finally {
+                setIsLoading(false);
+            }
+        };
+        fetchFees();
+    }, [selectedSchoolYear, selectedTerm]);
+
+    // Fetch Bank Accounts
+    React.useEffect(() => {
+        const fetchBankAccounts = async () => {
+            try {
+                const accounts = await paymentService.listBankAccounts();
+                setBankAccounts(accounts);
+            } catch (error) {
+                console.error("Error fetching bank accounts:", error);
+            }
+        };
+        fetchBankAccounts();
     }, []);
 
-    // For simplicity, tuition filtering just by grade (hiding non-selected grades)
-    const filteredTuition = useMemo(() => {
-        const result = {};
-        for (const [grade, semesters] of Object.entries(MOCK_TUITION)) {
-            if (selectedGrade === "Tất cả khối" || selectedGrade === `Khối ${grade}`) {
-                result[grade] = semesters;
+    // Process fees to match UI structure (grouping by Grade is mock for now since DB doesn't have it)
+    const groupedFees = useMemo(() => {
+        // Map API items to UI structure
+        const mappedFees = fees.map(f => ({
+            name: f.name,
+            amount: f.amount,
+            note: f.is_mandatory ? "Bắt buộc" : "Tự nguyện",
+            description: f.description
+        }));
+
+        // Group by Semester
+        const result = {
+            "Chung": {
+                hk1: mappedFees.filter((_, idx) => fees[idx].semester_name?.includes("1")),
+                hk2: mappedFees.filter((_, idx) => fees[idx].semester_name?.includes("2")),
             }
-        }
+        };
         return result;
-    }, [selectedGrade]);
+    }, [fees]);
 
     return (
         <div className="admin-payment-page">
@@ -131,21 +172,29 @@ const AdminPayment = () => {
 
             {/* TABS CONTENT */}
             <div className="payment-tab-content">
-                {activeTab === 'tuition' && (
-                    <TuitionFeeSection 
-                        key={`${selectedSchoolYear}-${selectedTerm}-${selectedGrade}`}
-                        tuitionData={filteredTuition}
-                        selectedGrade={selectedGrade} 
-                        selectedTerm={selectedTerm}
-                        selectedTermKey={selectedTermKey}
-                        selectedSchoolYear={selectedSchoolYear}
-                    />
-                )}
-                {activeTab === 'expenditure' && (
-                    <SchoolExpenditureSection expenditureData={filteredExpenditures} />
-                )}
-                {activeTab === 'transfer' && (
-                    <TransferInfoSection />
+                {isLoading ? (
+                    <div style={{ textAlign: "center", padding: "2rem", color: "#666" }}>Đang tải dữ liệu...</div>
+                ) : loadError ? (
+                    <div style={{ textAlign: "center", padding: "2rem", color: "#666" }}>{loadError}</div>
+                ) : (
+                    <>
+                        {activeTab === 'tuition' && (
+                            <TuitionFeeSection 
+                                key={`${selectedSchoolYear}-${selectedTerm}-${selectedGrade}`}
+                                tuitionData={groupedFees}
+                                selectedGrade={selectedGrade} 
+                                selectedTerm={selectedTerm}
+                                selectedTermKey={selectedTermKey}
+                                selectedSchoolYear={selectedSchoolYear}
+                            />
+                        )}
+                        {activeTab === 'expenditure' && (
+                            <SchoolExpenditureSection expenditureData={expenditures} />
+                        )}
+                        {activeTab === 'transfer' && (
+                            <TransferInfoSection accounts={bankAccounts} />
+                        )}
+                    </>
                 )}
             </div>
 

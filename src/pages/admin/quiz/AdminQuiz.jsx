@@ -31,14 +31,18 @@ export default function AdminQuiz() {
     const [searchTerm, setSearchTerm] = useState("");
     const [selectedSubject, setSelectedSubject] = useState("Tất cả môn");
     const [selectedGrade, setSelectedGrade] = useState("Tất cả khối");
+    const [loadError, setLoadError] = useState("");
 
     const loadQuizzes = async () => {
         setIsLoading(true);
+        setLoadError("");
         try {
             const result = await quizService.listQuizzes();
             setQuizzes(result.items || []);
         } catch (error) {
-            alert(error?.response?.data?.error || "Không tải được danh sách bài kiểm tra.");
+            setQuizzes([]);
+            const msg = error?.response?.data?.message || error?.response?.data?.error || "Không tải được danh sách bài kiểm tra.";
+            setLoadError(msg);
         } finally {
             setIsLoading(false);
         }
@@ -125,7 +129,7 @@ export default function AdminQuiz() {
             });
             setPendingDeleteQuizId(null);
         } catch (error) {
-            alert(error?.response?.data?.error || "Không xóa được bài kiểm tra.");
+            alert(error?.response?.data?.message || error?.response?.data?.error || "Không xóa được bài kiểm tra.");
         }
     };
 
@@ -143,7 +147,7 @@ export default function AdminQuiz() {
                 prev.map((q) => (q.id === quizId ? { ...q, status: newStatus } : q))
             );
         } catch (error) {
-            alert(error?.response?.data?.error || "Không đổi được trạng thái bài kiểm tra.");
+            alert(error?.response?.data?.message || error?.response?.data?.error || "Không đổi được trạng thái bài kiểm tra.");
         }
     };
 
@@ -212,7 +216,7 @@ export default function AdminQuiz() {
             await loadQuizzes();
             handleCloseCreateDialog();
         } catch (error) {
-            alert(error?.response?.data?.error || "Không cập nhật được bài kiểm tra.");
+            alert(error?.response?.data?.message || error?.response?.data?.error || "Không cập nhật được bài kiểm tra.");
         }
     };
 
@@ -257,6 +261,10 @@ export default function AdminQuiz() {
                 {isLoading ? (
                     <div style={{ textAlign: "center", color: "#666", marginTop: "2rem" }}>
                         Đang tải dữ liệu...
+                    </div>
+                ) : loadError ? (
+                    <div style={{ textAlign: "center", color: "#666", marginTop: "2rem" }}>
+                        {loadError}
                     </div>
                 ) : filteredQuizzes.length === 0 ? (
                     <div style={{ textAlign: 'center', color: '#666', marginTop: '2rem' }}>

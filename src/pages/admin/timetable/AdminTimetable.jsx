@@ -8,7 +8,8 @@ import { Select } from "../../../components/ui";
 import { SchoolYearTermSelector } from "../../../components/common";
 import { useSchoolYearTerm } from "../../../hooks/useSchoolYearTerm";
 import { FiUsers, FiCalendar, FiClock, FiBook, FiUser, FiMapPin, FiActivity, FiX, FiCheckCircle, FiSave, FiPlus } from "react-icons/fi";
-import { buildAdminInitialSessions, CLASS_OPTIONS, WEEK_DAYS, STATUS_META, MODE_META, getPeriodRangeLabel } from "../../../utils/timetableShared";
+import { buildAdminInitialSessions, CLASS_OPTIONS, WEEK_DAYS, STATUS_META, MODE_META, getPeriodRangeLabel, SUBJECT_COLOR_MAP } from "../../../utils/timetableShared";
+import timetableService from "../../../services/pages/admin/timetable/timetableService";
 
 const classOptions = CLASS_OPTIONS;
 // Tạo blockOptions từ classOptions (lấy ký tự đầu, loại trùng)
@@ -16,6 +17,12 @@ const blockOptions = Array.from(new Set(classOptions.map((c) => c.slice(0, 2))))
 const dayOptions = WEEK_DAYS.map((item) => item.label);
 const periodOptions = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 
+
+const getErrorMessage = (error, fallback) => {
+    const apiError = error?.response?.data?.error;
+    const apiMessage = error?.response?.data?.message;
+    return apiMessage || apiError || fallback;
+};
 
 const initialSessions = buildAdminInitialSessions();
 
@@ -213,10 +220,8 @@ export default function AdminTimetable() {
         handleYearArrow, 
         handleTermChange 
     } = useSchoolYearTerm() || {};
-    const [sessions, setSessions] = useState(initialSessions);
-    // Thêm state cho selectedBlock
+    const [sessions, setSessions] = useState([]);
     const [selectedBlock, setSelectedBlock] = useState(blockOptions[0]);
-    // Khi đổi block, selectedClass sẽ là lớp đầu tiên của block đó
     const filteredClassOptions = useMemo(() => classOptions.filter((c) => c.startsWith(selectedBlock)), [selectedBlock]);
     const [selectedClass, setSelectedClass] = useState(filteredClassOptions[0]);
     const [selectedTeacher, setSelectedTeacher] = useState("Tất cả giáo viên");
@@ -228,6 +233,57 @@ export default function AdminTimetable() {
     const [activeSessionId, setActiveSessionId] = useState(null);
     const [formData, setFormData] = useState(emptyForm);
     const [isConflictModalOpen, setIsConflictModalOpen] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
+    const [loadError, setLoadError] = useState("");
+
+    // Mapping for Day of Week
+    const apiDayToLabel = ["Chủ nhật", "Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6", "Thứ 7"];
+
+    // Fetch data from API
+    React.useEffect(() => {
+        const fetchTimetable = async () => {
+            setIsLoading(true);
+            setLoadError("");
+            try {
+                const data = await timetableService.listTimetable();
+                // Map API periods to UI sessions
+                const mapped = data.map(p => {
+                    const subjectName = p.class_teacher_subject?.subject_assignments?.display_name || "Môn học";
+                    const teacherName = p.class_teacher_subject?.teachers?.fullName || p.class_teacher_subject?.teachers?.name || "Chưa phân công";
+                    const className = p.class_teacher_subject?.classes?.class_name || "Lớp";
+                    
+                    // Simple start/end time extraction
+                    const startStr = p.start_time ? String(p.start_time).slice(11, 16) : "";
+                    const endStr = p.end_time ? String(p.end_time).slice(11, 16) : "";
+
+                    return {
+                        id: p.id,
+                        year: selectedSchoolYear,
+                        term: selectedTerm,
+                        className: className,
+                        day: apiDayToLabel[p.day_of_week] || "Thứ 2",
+                        period: p.period_number || 1,
+                        periodEnd: p.period_number || 1, // API usually returns per period, so start=end
+                        subject: subjectName,
+                        teacher: teacherName,
+                        room: p.room || "—",
+                        status: STATUS_META.normal.label,
+                        note: p.note || "",
+                        mode: MODE_META.offline,
+                        color: SUBJECT_COLOR_MAP[p.class_teacher_subject?.subject_assignments?.subject_code] || "teal",
+                        start: startStr,
+                        end: endStr
+                    };
+                });
+                setSessions(mapped);
+            } catch (error) {
+                setLoadError(getErrorMessage(error, "Không thể tải thời khóa biểu."));
+            } finally {
+                setIsLoading(false);
+            }
+        };
+        fetchTimetable();
+    }, [selectedSchoolYear, selectedTerm]);
 
 
     // Khi đổi block, cập nhật selectedClass về lớp đầu tiên của block đó
@@ -510,19 +566,25 @@ export default function AdminTimetable() {
             </TimetableFiltersSection>
 
             <div className="admin-timetable-content-grid">
-                <ScheduleSlotSection
-                    selectedClass={selectedClass}
-                    sessionView={sessionView}
-                    days={selectedDay === "Tất cả thứ" ? dayOptions : [selectedDay]}
-                    periods={visiblePeriods}
-                    slotsMap={slotsMap}
-                    onCreateFromSlot={openCreateFromSlot}
-                    onEditSlot={openEditModal}
-                    onDeleteSlot={handleDeleteSession}
-                    onSessionViewChange={setSessionView}
-                    onOpenConflicts={() => setIsConflictModalOpen(true)}
-                    conflictCount={conflicts.length}
-                />
+                {isLoading ? (
+                    <div style={{ textAlign: "center", padding: "2rem", color: "#666" }}>Đang tải dữ liệu...</div>
+                ) : loadError ? (
+                    <div style={{ textAlign: "center", padding: "2rem", color: "#666" }}>{loadError}</div>
+                ) : (
+                    <ScheduleSlotSection
+                        selectedClass={selectedClass}
+                        sessionView={sessionView}
+                        days={selectedDay === "Tất cả thứ" ? dayOptions : [selectedDay]}
+                        periods={visiblePeriods}
+                        slotsMap={slotsMap}
+                        onCreateFromSlot={openCreateFromSlot}
+                        onEditSlot={openEditModal}
+                        onDeleteSlot={handleDeleteSession}
+                        onSessionViewChange={setSessionView}
+                        onOpenConflicts={() => setIsConflictModalOpen(true)}
+                        conflictCount={conflicts.length}
+                    />
+                )}
             </div>
 
             {activeModalMode && (

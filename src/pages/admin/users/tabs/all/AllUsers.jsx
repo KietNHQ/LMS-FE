@@ -13,7 +13,8 @@ const ITEMS_PER_PAGE = 7;
 const getErrorMessage = (error, fallback) => {
     const apiError = error?.response?.data?.error;
     const apiMessage = error?.response?.data?.message;
-    return apiError || apiMessage || fallback;
+    // Ưu tiên message thân thiện từ server nếu có, đặc biệt cho lỗi REQUIRE_PASSWORD_CHANGE
+    return apiMessage || apiError || fallback;
 };
 
 const buildDownloadFilename = (headers = {}) => {

@@ -28,7 +28,7 @@ const emptyTeacherForm = {
 const getErrorMessage = (error, fallback) => {
   const apiError = error?.response?.data?.error;
   const apiMessage = error?.response?.data?.message;
-  return apiError || apiMessage || fallback;
+  return apiMessage || apiError || fallback;
 };
 
 const toTeacherForm = (teacher = {}) => ({

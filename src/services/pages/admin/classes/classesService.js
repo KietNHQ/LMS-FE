@@ -8,6 +8,7 @@ const toNumber = (value, fallback = 0) => {
 const getRows = (payload) => {
   if (Array.isArray(payload)) return payload;
   if (Array.isArray(payload?.items)) return payload.items;
+  if (Array.isArray(payload?.classes)) return payload.classes;
   if (Array.isArray(payload?.data)) return payload.data;
   return [];
 };
