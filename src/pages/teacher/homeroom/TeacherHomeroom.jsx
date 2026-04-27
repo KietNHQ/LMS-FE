@@ -3,7 +3,6 @@ import { PageHeader, SchoolYearTermSelector } from "../../../components/common";
 import HomeroomOverviewSection from "./components/homeroomOverviewSection/HomeroomOverviewSection";
 import ClassStudentsSection from "../teachingClasses/components/classStudentsSection/ClassStudentsSection";
 import HomeroomAttendanceSection from "./components/homeroomAttendanceSection/HomeroomAttendanceSection";
-import HomeroomParentChatSection from "./components/homeroomParentChatSection/HomeroomParentChatSection";
 import HomeroomActionDialog from "./components/homeroomActionDialog/HomeroomActionDialog";
 import { homeroomData } from "./data/homeroomData";
 import { useSchoolYearTerm } from "../../../hooks/useSchoolYearTerm";
@@ -55,15 +54,9 @@ export default function TeacherHomeroom() {
         closeActionDialog();
     };
 
-    // Handle clearing notifications when entering chat
+    // Handle clearing notifications
     const handleSectionChange = (section) => {
         setActiveSection(section);
-        if (section === "parent-chat") {
-            setHasUnreadMessages(false);
-            // Notify Sidebar to clear its dot
-            const event = new CustomEvent("teacher-homeroom-read");
-            window.dispatchEvent(event);
-        }
     };
 
     return (
@@ -133,14 +126,6 @@ export default function TeacherHomeroom() {
                 >
                     Theo dõi chuyên cần
                 </button>
-                <button
-                    type="button"
-                    className={`section-switch-btn ${activeSection === "parent-chat" ? "active" : ""}`}
-                    onClick={() => handleSectionChange("parent-chat")}
-                >
-                    Trò chuyện phụ huynh
-                    {hasUnreadMessages && <span className="unread-dot-tab"></span>}
-                </button>
             </div>
 
             <div className="homeroom-section-content">
@@ -153,7 +138,6 @@ export default function TeacherHomeroom() {
                 )}
                 {activeSection === "students" && <ClassStudentsSection students={classData.students} />}
                 {activeSection === "attendance" && <HomeroomAttendanceSection data={classData} />}
-                {activeSection === "parent-chat" && <HomeroomParentChatSection data={classData} />}
             </div>
 
             <HomeroomActionDialog

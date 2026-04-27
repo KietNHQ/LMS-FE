@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { useSearchParams } from "react-router-dom";
 import "./AdminUsers.css";
 
@@ -11,12 +11,14 @@ import AllUsers from "./tabs/all/AllUsers";
 import AdminTeachers from "./tabs/teachers/AdminTeachers";
 import AdminStudents from "./tabs/students/AdminStudents";
 import AdminParents from "./tabs/parents/AdminParents";
+import AdminManagers from "./tabs/managers/AdminManagers";
 
 const TABS = [
-    { id: "all", label: "Tất cả", title: "Quản lý tất cả Người dùng", component: AllUsers },
-    { id: "teachers", label: "Giáo viên", title: "Quản lý Giáo viên", component: AdminTeachers },
-    { id: "students", label: "Học sinh", title: "Quản lý Học sinh", component: AdminStudents },
-    { id: "parents", label: "Phụ huynh", title: "Quản lý Phụ huynh", component: AdminParents },
+    { id: "all",      label: "Tất cả",          title: "Quản lý tất cả Người dùng",           component: AllUsers      },
+    { id: "managers", label: "Cán bộ Quản lý", title: "Danh sách Cán bộ Quản lý & Nhân sự", component: AdminManagers },
+    { id: "teachers", label: "Giáo viên",       title: "Quản lý Giáo viên",                  component: AdminTeachers },
+    { id: "students", label: "Học sinh",        title: "Quản lý Học sinh",                   component: AdminStudents },
+    { id: "parents",  label: "Phụ huynh",       title: "Quản lý Phụ huynh",                  component: AdminParents  },
 ];
 
 export default function AdminUsers() {
@@ -26,6 +28,16 @@ export default function AdminUsers() {
     // Lifted state for Header
     const { selectedSchoolYear, selectedTerm, handleYearArrow, handleTermChange } = useSchoolYearTerm();
     const [itemCount, setItemCount] = useState(0);
+
+    const currentPermissions = useMemo(() => {
+        try {
+            const user = JSON.parse(localStorage.getItem("user") || "{}");
+            // Nếu có permissions cụ thể từ BE thì dùng, không thì mặc định là admin (được giả lập trong Sidebar)
+            return user.permissions || [];
+        } catch {
+            return [];
+        }
+    }, []);
 
     const activeTab = TABS.find((tab) => tab.id === activeTabId) || TABS[0];
     const ActiveComponent = activeTab.component;
@@ -66,6 +78,7 @@ export default function AdminUsers() {
                     onCountChange={setItemCount}
                     schoolYear={selectedSchoolYear}
                     term={selectedTerm}
+                    currentPermissions={currentPermissions}
                 />
             </div>
         </div>

@@ -1,0 +1,359 @@
+.manager-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(24, 31, 42, 0.45);
+    backdrop-filter: blur(2px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1.25rem;
+    z-index: 1100;
+}
+
+.manager-modal {
+    width: 100%;
+    max-width: 34rem;
+    background: #ffffff;
+    border-radius: 1.5rem;
+    padding: 1.6rem 1.45rem;
+    box-shadow: 0 24px 60px rgba(15, 23, 42, 0.24);
+    animation: modalAppear 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes modalAppear {
+    from { opacity: 0; transform: scale(0.95) translateY(10px); }
+    to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.manager-modal-view {
+    max-width: 35rem;
+}
+
+.manager-modal h2 {
+    margin: 0 0 1.2rem;
+    font-size: 1.5rem;
+    color: #273142;
+    font-weight: 800;
+}
+
+.manager-view-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-bottom: 1.15rem;
+    margin-bottom: 0.2rem;
+}
+
+.manager-view-main {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.manager-view-header-actions {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+.manager-view-icon-btn {
+    width: 2.2rem;
+    height: 2.2rem;
+    border: none;
+    background: transparent;
+    border-radius: 0.65rem;
+    color: #7c879b;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.manager-view-icon-btn:hover {
+    background: #f1f5f9;
+    color: #2563eb;
+}
+
+.manager-view-avatar {
+    width: 4.1rem;
+    height: 4.1rem;
+    border-radius: 1.1rem;
+    background: #23386f;
+    color: #ffffff;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.8rem;
+    font-weight: 800;
+    flex-shrink: 0;
+    box-shadow: 0 8px 16px rgba(35, 56, 111, 0.15);
+}
+
+.manager-view-title-wrap h3 {
+    margin: 0;
+    font-size: 1.8rem;
+    line-height: 1.15;
+    color: #273142;
+    font-weight: 800;
+}
+
+.manager-view-title-wrap p {
+    margin: 0.35rem 0 0;
+    color: #64748b;
+    font-size: 1rem;
+    font-weight: 500;
+}
+
+.manager-modal-form {
+    display: flex;
+    flex-direction: column;
+    gap: 0.95rem;
+}
+
+.manager-form-grid.two-cols {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.8rem;
+}
+
+.manager-form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.42rem;
+}
+
+.manager-form-group.full {
+    width: 100%;
+}
+
+.manager-form-group label {
+    font-size: 0.95rem;
+    color: #334155;
+    font-weight: 700;
+}
+
+.manager-form-group input {
+    width: 100%;
+    height: 3rem;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 0.9rem;
+    padding: 0 0.9rem;
+    outline: none;
+    font-size: 0.95rem;
+    color: #1e293b;
+    background: #ffffff;
+    font-family: inherit;
+    transition: all 0.2s ease;
+}
+
+.manager-form-group input:focus {
+    border-color: #23386f;
+    box-shadow: 0 0 0 3px rgba(35, 56, 111, 0.1);
+}
+
+.manager-form-group input:read-only {
+    background: #f8fafc;
+    cursor: not-allowed;
+    color: #64748b;
+}
+
+.manager-view-list {
+    display: flex;
+    flex-direction: column;
+    border-top: 1px solid #f1f5f9;
+}
+
+.manager-view-row {
+    min-height: 3.5rem;
+    display: grid;
+    grid-template-columns: 10rem 1fr;
+    align-items: center;
+    gap: 1rem;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.manager-view-row span {
+    color: #64748b;
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.manager-view-row strong {
+    color: #1e293b;
+    font-size: 0.95rem;
+    font-weight: 700;
+}
+
+.manager-view-row.permissions {
+    align-items: flex-start;
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+}
+
+.manager-permissions-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+}
+
+.permission-tag {
+    background: #f1f5f9;
+    color: #475569;
+    padding: 0.25rem 0.65rem;
+    border-radius: 0.5rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+    border: 1px solid #e2e8f0;
+}
+
+.no-permissions {
+    color: #94a3b8;
+    font-size: 0.9rem;
+    font-style: italic;
+}
+
+.manager-status-badge {
+    padding: 0.35rem 0.75rem;
+    border-radius: 2rem;
+    font-size: 0.85rem;
+    font-weight: 700;
+}
+
+.manager-status-badge.status-active {
+    background: #ecfdf5;
+    color: #059669;
+}
+
+.manager-status-badge.status-suspended {
+    background: #fef2f2;
+    color: #dc2626;
+}
+
+.manager-modal-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.8rem;
+    margin-top: 1.5rem;
+}
+
+.manager-modal-actions.single {
+    grid-template-columns: 1fr;
+}
+
+.manager-cancel-btn,
+.manager-submit-btn {
+    height: 3.2rem;
+    border-radius: 0.9rem;
+    font-size: 0.95rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.manager-cancel-btn {
+    border: 1.5px solid #e2e8f0;
+    background: #ffffff;
+    color: #475569;
+}
+
+.manager-cancel-btn:hover {
+    background: #f8fafc;
+    border-color: #cbd5e1;
+}
+
+.manager-submit-btn {
+    border: none;
+    background: #23386f;
+    color: #ffffff;
+}
+
+.manager-submit-btn:hover {
+    background: #1a2a54;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(35, 56, 111, 0.2);
+}
+
+/* Custom Dropdown Styles */
+.manager-custom-select {
+    position: relative;
+    width: 100%;
+}
+
+.manager-custom-select-trigger {
+    width: 100%;
+    height: 3rem;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 0.9rem;
+    padding: 0 0.9rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: #1e293b;
+    background: #ffffff;
+    transition: all 0.2s ease;
+}
+
+.manager-custom-select-trigger.active {
+    border-color: #23386f;
+    box-shadow: 0 0 0 3px rgba(35, 56, 111, 0.1);
+}
+
+.manager-select-icon {
+    font-size: 1.1rem;
+    color: #64748b;
+    transition: transform 0.2s ease;
+}
+
+.manager-select-icon.open {
+    transform: rotate(180deg);
+}
+
+.manager-custom-select-options {
+    position: absolute;
+    top: calc(100% + 0.4rem);
+    left: 0;
+    right: 0;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 1rem;
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
+    z-index: 1200;
+    padding: 0.4rem;
+    max-height: 15rem;
+    overflow-y: auto;
+}
+
+.manager-custom-select-option {
+    padding: 0.7rem 0.9rem;
+    border-radius: 0.6rem;
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: #475569;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.manager-custom-select-option:hover {
+    background: #f1f5f9;
+    color: #23386f;
+}
+
+.manager-custom-select-option.active {
+    background: #f1f5f9;
+    color: #23386f;
+    font-weight: 700;
+}
+
+@media (max-width: 640px) {
+    .manager-form-grid.two-cols,
+    .manager-modal-actions {
+        grid-template-columns: 1fr;
+    }
+}

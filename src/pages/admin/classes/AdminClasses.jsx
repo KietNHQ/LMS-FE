@@ -5,7 +5,7 @@ import "./AdminClasses.css";
 
 import ClassListSection from "./components/classListSection/classListSection";
 import ClassInfoSection from "./components/classInfoSection/classInfoSection";
-import { SchoolYearTermSelector, PageHeader, Pagination } from "../../../components/common";
+import { SchoolYearTermSelector, PageHeader, Pagination, LoadingSpinner } from "../../../components/common";
 import { useSchoolYearTerm } from "../../../hooks/useSchoolYearTerm";
 import { classesService } from "../../../services/pages/admin/classes";
 
@@ -232,8 +232,8 @@ export default function AdminClasses() {
 
       <div className="admin-classes-body">
         {isLoading ? (
-          <div className="admin-classes-empty-state">
-            <h3>Đang tải danh sách lớp học...</h3>
+          <div className="ui-table-loading" style={{ margin: "1rem 0" }}>
+            <LoadingSpinner size="lg" label="Đang tải danh sách lớp học..." />
           </div>
         ) : loadError ? (
           <div className="admin-classes-empty-state">

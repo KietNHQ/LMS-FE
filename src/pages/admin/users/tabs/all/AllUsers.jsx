@@ -1,12 +1,18 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { FiPlus } from "react-icons/fi";
+import { FiPlus, FiUsers, FiUserCheck, FiLock } from "react-icons/fi";
+import { PERMISSIONS } from "../../../../../config/permissions";
 import "./AllUsers.css";
 
 import UsersSearchFilterSort from "./components/usersSearchFilterSort/UsersSearchFilterSort";
 import UserDetailSection from "./components/userDetailSection/userDetailSection";
-import { CreateUserDialog, Pagination } from "../../../../../components/common";
-import BlockUnblockUsersSection from "./components/blockUnblockUserSection/blockUnblockUserSection";
-import { userService } from "../../../../../services/pages/admin/users";
+import { CreateUserDialog, Pagination, LoadingSpinner, ConfirmationModal } from "../../../../../components/common";
+import { userService, studentsService } from "../../../../../services/pages/admin/users";
+
+// Detail Section Imports
+import TeacherInformationSection from "../teachers/components/teacherInformationSection/teacherInformationSection";
+import StudentInformationSection from "../students/components/studentInformationSection/studentInformationSection";
+import ParentInformationSection from "../parents/components/parentInformationSection/parentInformationSection";
+import ManagerInformationSection from "../managers/components/managerInformationSection/managerInformationSection";
 
 const ITEMS_PER_PAGE = 7;
 
@@ -35,7 +41,7 @@ const buildDownloadFilename = (headers = {}) => {
     }
 };
 
-export default function AllUsers({ onCountChange }) {
+export default function AllUsers({ onCountChange, currentPermissions = [] }) {
     const [users, setUsers] = useState([]);
     const [isLoadingUsers, setIsLoadingUsers] = useState(false);
     const [loadError, setLoadError] = useState("");
@@ -48,8 +54,27 @@ export default function AllUsers({ onCountChange }) {
     const [isImportingExcel, setIsImportingExcel] = useState(false);
     const [importFeedback, setImportFeedback] = useState(null);
 
+    const [activeModalMode, setActiveModalMode] = useState(null); // 'view' | 'edit'
+    const [selectedUser, setSelectedUser] = useState(null);
+    const [allClasses, setAllClasses] = useState([]);
+
     const [statusTarget, setStatusTarget] = useState(null);
     const [currentPage, setCurrentPage] = useState(1);
+
+    const [selectedUserIds, setSelectedUserIds] = useState([]);
+    const [isBulkDeleting, setIsBulkDeleting] = useState(false);
+    const [isBulkToggling, setIsBulkToggling] = useState(false);
+
+    const [confirmConfig, setConfirmConfig] = useState({
+        isOpen: false,
+        title: "",
+        message: "",
+        confirmLabel: "",
+        onConfirm: () => {},
+        variant: "primary"
+    });
+
+    const closeConfirm = () => setConfirmConfig(prev => ({ ...prev, isOpen: false }));
 
     const loadUsers = useCallback(async () => {
         setIsLoadingUsers(true);
@@ -58,6 +83,7 @@ export default function AllUsers({ onCountChange }) {
         try {
             const result = await userService.listUsers({ page: 1, limit: 500 });
             setUsers(result.items || []);
+            setSelectedUserIds([]); // Reset selection on reload
         } catch (error) {
             setLoadError(getErrorMessage(error, "Không thể tải danh sách người dùng."));
             setUsers([]);
@@ -66,9 +92,20 @@ export default function AllUsers({ onCountChange }) {
         }
     }, []);
 
+    const loadClasses = useCallback(async () => {
+        try {
+            const students = await studentsService.listStudents();
+            const classes = Array.from(new Set(students.map(s => s.className).filter(Boolean)));
+            setAllClasses(classes);
+        } catch (err) {
+            console.error("Failed to load classes for detail modals", err);
+        }
+    }, []);
+
     useEffect(() => {
         loadUsers();
-    }, [loadUsers]);
+        loadClasses();
+    }, [loadUsers, loadClasses]);
 
     useEffect(() => {
         onCountChange?.(users.length);
@@ -80,11 +117,21 @@ export default function AllUsers({ onCountChange }) {
                 user.name.toLowerCase().includes(searchValue.toLowerCase()) ||
                 user.email.toLowerCase().includes(searchValue.toLowerCase());
 
-            const matchQuickRole = quickRole === "Tất cả" ? true : user.role === quickRole;
+            const matchQuickRole = quickRole === "Tất cả" 
+                ? true 
+                : (quickRole === "Quản lý" 
+                    ? (user.role === "Quản lý" || user.role === "Quản trị viên") 
+                    : user.role === quickRole);
 
             return matchSearch && matchQuickRole;
         });
     }, [users, searchValue, quickRole]);
+
+    const stats = useMemo(() => [
+        { label: "Tổng người dùng", value: users.length, iconClass: "stat-icon--navy", Icon: FiUsers },
+        { label: "Đang hoạt động", value: users.filter(u => u.status === "Hoạt động").length, iconClass: "stat-icon--emerald", Icon: FiUserCheck },
+        { label: "Vô hiệu hóa", value: users.filter(u => u.status !== "Hoạt động").length, iconClass: "stat-icon--rose", Icon: FiLock },
+    ], [users]);
 
     const hasFilteredUsers = filteredUsers.length > 0;
     const shouldRenderDataSection = !isLoadingUsers && !loadError;
@@ -99,11 +146,145 @@ export default function AllUsers({ onCountChange }) {
 
     useEffect(() => {
         setCurrentPage(1);
+        setSelectedUserIds([]); // Reset selection on filter change
     }, [searchValue, quickRole]);
 
     useEffect(() => {
         setCurrentPage((prev) => Math.min(prev, totalPages));
     }, [totalPages]);
+
+    const handleSelectRow = (userId) => {
+        setSelectedUserIds(prev => 
+            prev.includes(userId) 
+                ? prev.filter(id => id !== userId) 
+                : [...prev, userId]
+        );
+    };
+
+    const handleSelectAll = (checked) => {
+        if (checked) {
+            setSelectedUserIds(paginatedUsers.map(u => u.id));
+        } else {
+            setSelectedUserIds([]);
+        }
+    };
+
+    const handleBulkStatusChange = async (targetStatus) => {
+        if (selectedUserIds.length === 0) return;
+        
+        const actionLabel = targetStatus === "Hoạt động" ? "KÍCH HOẠT" : "KHÓA";
+        
+        setConfirmConfig({
+            isOpen: true,
+            title: `${actionLabel} tài khoản`,
+            message: `Bạn có chắc chắn muốn ${actionLabel} ${selectedUserIds.length} tài khoản đã chọn?`,
+            confirmLabel: `Xác nhận ${actionLabel.toLowerCase()}`,
+            variant: targetStatus === "Hoạt động" ? "primary" : "warning",
+            onConfirm: async () => {
+                closeConfirm();
+                setIsBulkToggling(true);
+                try {
+                    const promises = selectedUserIds.map(id => {
+                        const user = users.find(u => u.id === id);
+                        if (!user) return Promise.resolve();
+                        return userService.updateUser(id, { ...user, status: targetStatus });
+                    });
+                    
+                    await Promise.all(promises);
+                    await loadUsers();
+                    window.alert(`Đã ${actionLabel.toLowerCase()} thành công ${selectedUserIds.length} tài khoản.`);
+                } catch (error) {
+                    window.alert(getErrorMessage(error, "Có lỗi xảy ra khi xử lý hàng loạt."));
+                } finally {
+                    setIsBulkToggling(false);
+                }
+            }
+        });
+    };
+
+    const handleBulkResetPassword = async () => {
+        if (selectedUserIds.length === 0) return;
+        
+        setConfirmConfig({
+            isOpen: true,
+            title: "Đặt lại mật khẩu",
+            message: `Bạn có chắc chắn muốn ĐẶT LẠI MẬT KHẨU cho ${selectedUserIds.length} tài khoản đã chọn?`,
+            confirmLabel: "Đặt lại mật khẩu",
+            variant: "primary",
+            onConfirm: async () => {
+                closeConfirm();
+                setIsBulkToggling(true);
+                try {
+                    const results = [];
+                    for (const id of selectedUserIds) {
+                        const user = users.find(u => u.id === id);
+                        if (!user) continue;
+                        
+                        const generatedPwd = Math.random().toString(36).slice(-10);
+                        await userService.updateUser(id, { ...user, password: generatedPwd });
+                        results.push({ name: user.name, password: generatedPwd });
+                    }
+                    
+                    await loadUsers();
+                    
+                    const resultMsg = results.map(r => `${r.name}: ${r.password}`).join("\n");
+                    window.alert(`Đặt lại mật khẩu thành công cho ${results.length} người dùng:\n\n${resultMsg}`);
+                } catch (error) {
+                    window.alert(getErrorMessage(error, "Có lỗi xảy ra khi đặt lại mật khẩu hàng loạt."));
+                } finally {
+                    setIsBulkToggling(false);
+                }
+            }
+        });
+    };
+
+    const handleResetPassword = async (user) => {
+        if (!user) return;
+        
+        setConfirmConfig({
+            isOpen: true,
+            title: "Đặt lại mật khẩu",
+            message: `Bạn có chắc chắn muốn đặt lại mật khẩu cho người dùng ${user.name}?`,
+            confirmLabel: "Đặt lại mật khẩu",
+            variant: "primary",
+            onConfirm: async () => {
+                closeConfirm();
+                try {
+                    const generatedPwd = Math.random().toString(36).slice(-10);
+                    await userService.updateUser(user.id, { ...user, password: generatedPwd });
+                    window.alert(`Đặt lại mật khẩu thành công cho ${user.name}.\nMật khẩu mới là: ${generatedPwd}`);
+                } catch (error) {
+                    window.alert(getErrorMessage(error, "Không thể đặt lại mật khẩu."));
+                }
+            }
+        });
+    };
+
+    const handleBulkDelete = async () => {
+        if (selectedUserIds.length === 0) return;
+        
+        setConfirmConfig({
+            isOpen: true,
+            title: "Xóa tài khoản",
+            message: `CẢNH BÁO: Bạn có chắc chắn muốn XÓA VĨNH VIỄN ${selectedUserIds.length} người dùng đã chọn? Hành động này không thể hoàn tác.`,
+            confirmLabel: "Xóa tài khoản",
+            variant: "danger",
+            onConfirm: async () => {
+                closeConfirm();
+                setIsBulkDeleting(true);
+                try {
+                    const promises = selectedUserIds.map(id => userService.deleteUser(id));
+                    await Promise.all(promises);
+                    await loadUsers();
+                    window.alert(`Đã xóa thành công ${selectedUserIds.length} người dùng.`);
+                } catch (error) {
+                    window.alert(getErrorMessage(error, "Có lỗi xảy ra khi xóa hàng loạt."));
+                } finally {
+                    setIsBulkDeleting(false);
+                }
+            }
+        });
+    };
 
     const handleCreateUser = async (formData) => {
         try {
@@ -118,18 +299,31 @@ export default function AllUsers({ onCountChange }) {
     };
 
     const handleSaveEdit = async (formData) => {
-        if (!editingUser?.id) {
+        const id = editingUser?.id || selectedUser?.id;
+        if (!id) {
             return;
         }
 
-        try {
-            await userService.updateUser(editingUser.id, formData);
-            setEditingUser(null);
-            await loadUsers();
-            window.alert(`Đã cập nhật người dùng ${formData.name} thành công.`);
-        } catch (error) {
-            window.alert(getErrorMessage(error, "Không thể cập nhật người dùng."));
-        }
+        setConfirmConfig({
+            isOpen: true,
+            title: "Lưu thay đổi",
+            message: `Bạn có chắc chắn muốn lưu những thay đổi cho người dùng ${formData.name}?`,
+            confirmLabel: "Lưu thay đổi",
+            variant: "primary",
+            onConfirm: async () => {
+                closeConfirm();
+                try {
+                    await userService.updateUser(id, formData);
+                    setEditingUser(null);
+                    setSelectedUser(null);
+                    setActiveModalMode(null);
+                    await loadUsers();
+                    window.alert(`Đã cập nhật người dùng ${formData.name} thành công.`);
+                } catch (error) {
+                    window.alert(getErrorMessage(error, "Không thể cập nhật người dùng."));
+                }
+            }
+        });
     };
 
     const handleToggleStatus = async () => {
@@ -149,13 +343,24 @@ export default function AllUsers({ onCountChange }) {
         }
     };
 
-    const handleDeleteUser = async (id) => {
-        try {
-            await userService.deleteUser(id);
-            await loadUsers();
-        } catch (error) {
-            window.alert(getErrorMessage(error, "Không thể xóa người dùng."));
-        }
+    const handleDeleteUser = async (userId) => {
+        setConfirmConfig({
+            isOpen: true,
+            title: "Xóa người dùng",
+            message: "Bạn có chắc chắn muốn xóa vĩnh viễn người dùng này? Hành động này không thể hoàn tác.",
+            confirmLabel: "Xóa ngay",
+            variant: "danger",
+            onConfirm: async () => {
+                closeConfirm();
+                try {
+                    await userService.deleteUser(userId);
+                    await loadUsers();
+                    window.alert("Đã xóa người dùng thành công.");
+                } catch (error) {
+                    window.alert(getErrorMessage(error, "Không thể xóa người dùng."));
+                }
+            }
+        });
     };
 
     const handleImportExcel = async (file) => {
@@ -208,6 +413,85 @@ export default function AllUsers({ onCountChange }) {
         }
     };
 
+    const handleViewUser = (user) => {
+        setSelectedUser(user);
+        setActiveModalMode("view");
+    };
+
+    const handleEditUser = (user) => {
+        setSelectedUser(user);
+        setActiveModalMode("edit");
+    };
+
+    const handleCloseModal = () => {
+        setSelectedUser(null);
+        setActiveModalMode(null);
+        setEditingUser(null);
+    };
+
+    const renderDetailModal = () => {
+        if (!selectedUser || !activeModalMode) return null;
+
+        const role = selectedUser.role;
+
+        if (role === "Giáo viên") {
+            return (
+                <TeacherInformationSection
+                    mode={activeModalMode}
+                    formData={selectedUser}
+                    classOptions={allClasses}
+                    onChange={(field, val) => setSelectedUser(prev => ({ ...prev, [field]: val }))}
+                    onClose={handleCloseModal}
+                    onSubmit={() => handleSaveEdit(selectedUser)}
+                    onRequestEdit={() => setActiveModalMode("edit")}
+                />
+            );
+        }
+
+        if (role === "Học sinh") {
+            return (
+                <StudentInformationSection
+                    mode={activeModalMode}
+                    formData={selectedUser}
+                    classOptions={allClasses}
+                    onChange={(field, val) => setSelectedUser(prev => ({ ...prev, [field]: val }))}
+                    onClose={handleCloseModal}
+                    onSubmit={() => handleSaveEdit(selectedUser)}
+                    onRequestEdit={() => setActiveModalMode("edit")}
+                />
+            );
+        }
+
+        if (role === "Phụ huynh") {
+            return (
+                <ParentInformationSection
+                    mode={activeModalMode}
+                    formData={selectedUser}
+                    onChange={(field, val) => setSelectedUser(prev => ({ ...prev, [field]: val }))}
+                    onClose={handleCloseModal}
+                    onSubmit={() => handleSaveEdit(selectedUser)}
+                    onRequestEdit={() => setActiveModalMode("edit")}
+                />
+            );
+        }
+
+        if (role === "Quản lý" || role === "Quản trị viên") {
+            return (
+                <ManagerInformationSection
+                    mode={activeModalMode}
+                    formData={selectedUser}
+                    roleOptions={["Quản trị viên", "Quản lý", "Hiệu trưởng", "Phó HT học vụ", "Phó HT nề nếp", "Giáo vụ", "Tài chính", "Tổ trưởng bộ môn"]}
+                    onChange={(field, val) => setSelectedUser(prev => ({ ...prev, [field]: val }))}
+                    onClose={handleCloseModal}
+                    onSubmit={() => handleSaveEdit(selectedUser)}
+                    onRequestEdit={() => setActiveModalMode("edit")}
+                />
+            );
+        }
+
+        return null;
+    };
+
     return (
         <div className="admin-users-page">
             <UsersSearchFilterSort
@@ -228,17 +512,41 @@ export default function AllUsers({ onCountChange }) {
                 </button>
             </UsersSearchFilterSort>
 
+            {/* Stats Row */}
+            <div className="admin-users-stats">
+                {stats.map((s) => (
+                    <div className="admin-users-stat-card" key={s.label}>
+                        <div className={`admin-users-stat-icon ${s.iconClass}`}>
+                            <s.Icon size={20} />
+                        </div>
+                        <div className="admin-users-stat-info">
+                            <p>{s.label}</p>
+                            <strong>{s.value}</strong>
+                        </div>
+                    </div>
+                ))}
+            </div>
+
             {loadError && <div className="user-detail-empty">{loadError}</div>}
-            {isLoadingUsers && <div className="user-detail-empty">Đang tải danh sách người dùng...</div>}
+            {isLoadingUsers && (
+                <div className="ui-table-loading">
+                    <LoadingSpinner size="lg" label="Đang tải danh sách người dùng..." role="admin" />
+                </div>
+            )}
 
             {shouldRenderDataSection && (
                 <>
                     <UserDetailSection
                         users={paginatedUsers}
+                        selectedUserIds={selectedUserIds}
+                        onSelectAll={handleSelectAll}
+                        onSelectRow={handleSelectRow}
                         emptyMessage={emptyMessage}
-                        onEdit={setEditingUser}
+                        onView={handleViewUser}
+                        onEdit={handleEditUser}
                         onToggleStatus={setStatusTarget}
-                        onDelete={handleDeleteUser}
+                        onResetPassword={handleResetPassword}
+                        onDelete={currentPermissions.includes(PERMISSIONS.USER_DELETE) ? handleDeleteUser : null}
                     />
 
                     {hasFilteredUsers && totalPages > 1 && (
@@ -254,12 +562,54 @@ export default function AllUsers({ onCountChange }) {
                 </>
             )}
 
+            {/* Bulk Action Bar */}
+            {selectedUserIds.length > 0 && (
+                <div className="admin-bulk-actions-bar">
+                    <div className="bulk-info">
+                        <span className="bulk-count">Đã chọn: <strong>{selectedUserIds.length}</strong></span>
+                        <button className="bulk-clear-btn" onClick={() => setSelectedUserIds([])}>Bỏ chọn</button>
+                    </div>
+                    <div className="bulk-btns">
+                        <button 
+                            className="bulk-btn lock" 
+                            onClick={() => handleBulkStatusChange("Vô hiệu hóa")}
+                            disabled={isBulkToggling}
+                        >
+                            Khóa tài khoản
+                        </button>
+                        <button 
+                            className="bulk-btn unlock" 
+                            onClick={() => handleBulkStatusChange("Hoạt động")}
+                            disabled={isBulkToggling}
+                        >
+                            Mở khóa
+                        </button>
+                        <button 
+                            className="bulk-btn reset" 
+                            onClick={handleBulkResetPassword}
+                            disabled={isBulkToggling}
+                        >
+                            Đặt lại mật khẩu
+                        </button>
+                        {currentPermissions.includes(PERMISSIONS.USER_DELETE) && (
+                            <button 
+                                className="bulk-btn delete" 
+                                onClick={handleBulkDelete}
+                                disabled={isBulkDeleting}
+                            >
+                                {isBulkDeleting ? "Đang xóa..." : "Xóa tài khoản"}
+                            </button>
+                        )}
+                    </div>
+                </div>
+            )}
+
             {isCreateOpen && (
                 <CreateUserDialog
                     mode="create"
                     title="Thêm người dùng mới"
                     submitLabel="Tạo người dùng"
-                    roleOptions={["Admin", "Phụ huynh", "Học sinh", "Giáo viên"]}
+                    roleOptions={["Quản trị viên", "Quản lý", "Phụ huynh", "Học sinh", "Giáo viên"]}
                     onClose={() => {
                         setIsCreateOpen(false);
                         setImportFeedback(null);
@@ -277,21 +627,38 @@ export default function AllUsers({ onCountChange }) {
                     mode="edit"
                     title="Chỉnh sửa người dùng"
                     submitLabel="Lưu thay đổi"
-                    roleOptions={["Admin", "Phụ huynh", "Học sinh", "Giáo viên"]}
+                    roleOptions={["Quản trị viên", "Quản lý", "Phụ huynh", "Học sinh", "Giáo viên"]}
                     initialData={editingUser}
                     onClose={() => setEditingUser(null)}
                     onSubmit={handleSaveEdit}
                 />
             )}
 
+            {renderDetailModal()}
+
             {statusTarget && (
-                <BlockUnblockUsersSection
-                    user={statusTarget}
-                    onClose={() => setStatusTarget(null)}
+                <ConfirmationModal
+                    isOpen={true}
+                    title={statusTarget.status === "Hoạt động" ? "Vô hiệu hóa người dùng" : "Kích hoạt người dùng"}
+                    message={
+                        <>Bạn có chắc muốn {statusTarget.status === "Hoạt động" ? "vô hiệu hóa" : "kích hoạt lại"} người dùng <strong>{statusTarget.name}</strong> không?</>
+                    }
+                    confirmLabel={statusTarget.status === "Hoạt động" ? "Xác nhận vô hiệu hóa" : "Xác nhận kích hoạt"}
+                    variant={statusTarget.status === "Hoạt động" ? "warning" : "primary"}
                     onConfirm={handleToggleStatus}
+                    onCancel={() => setStatusTarget(null)}
                 />
             )}
+
+            <ConfirmationModal
+                isOpen={confirmConfig.isOpen}
+                title={confirmConfig.title}
+                message={confirmConfig.message}
+                confirmLabel={confirmConfig.confirmLabel}
+                variant={confirmConfig.variant}
+                onConfirm={confirmConfig.onConfirm}
+                onCancel={closeConfirm}
+            />
         </div>
     );
 }
-

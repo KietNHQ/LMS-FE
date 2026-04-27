@@ -1,15 +1,20 @@
 import "./LoadingSpinner.css";
 
 export default function LoadingSpinner({
-  label = "Dang tai du lieu...",
+  label = "Đang tải dữ liệu...",
   fullScreen = false,
   size = "md",
+  role = "admin", // admin, teacher, student, parent
 }) {
   return (
-	<div className={`common-loading-spinner ${fullScreen ? "is-fullscreen" : ""}`}>
-	  <span className={`common-loading-spinner__circle size-${size}`} aria-hidden="true" />
-	  {label ? <p className="common-loading-spinner__label">{label}</p> : null}
-	</div>
+    <div className={`common-loading-spinner ${fullScreen ? "is-fullscreen" : ""} theme-${role}`}>
+      <div className={`spinner-triple-rings size-${size}`}>
+        <div className="ring ring-outer"></div>
+        <div className="ring ring-middle"></div>
+        <div className="ring ring-inner"></div>
+      </div>
+      {label ? <p className="common-loading-spinner__label">{label}</p> : null}
+    </div>
   );
 }
 

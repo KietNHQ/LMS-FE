@@ -116,7 +116,7 @@
 
 .admin-create-user-dialog-field label {
     color: #344054;
-    font-size: 1rem;
+    font-size: 0.95rem;
     font-weight: 700;
 }
 
@@ -205,9 +205,134 @@
 }
 
 .admin-create-user-dialog-checkbox input {
-    width: 1rem;
-    height: 1rem;
+    width: 1.1rem;
+    height: 1.1rem;
     min-height: auto;
+    cursor: pointer;
+}
+
+/* Grouped Permissions */
+.admin-create-user-dialog-perm-groups {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    margin-top: 0.4rem;
+}
+
+.perm-group-item {
+    border: 1px solid #e4e8f0;
+    border-radius: 0.85rem;
+    background: #ffffff;
+    overflow: hidden;
+    transition: all 0.2s ease;
+}
+
+.perm-group-item.active {
+    border-color: #8fb3ff;
+    box-shadow: 0 4px 12px rgba(143, 179, 255, 0.08);
+}
+
+.perm-group-header {
+    padding: 0.75rem 0.9rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    background: #fdfdff;
+    user-select: none;
+}
+
+.perm-group-header:hover {
+    background: #f8faff;
+}
+
+.perm-group-left {
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+}
+
+.perm-group-master-check {
+    width: 1.15rem;
+    height: 1.15rem;
+    cursor: pointer;
+    accent-color: #20366d;
+}
+
+.perm-group-label {
+    font-size: 0.92rem;
+    font-weight: 700;
+    color: #223256;
+}
+
+.perm-group-badge {
+    font-size: 0.75rem;
+    font-weight: 800;
+    padding: 0.15rem 0.45rem;
+    background: #f1f5f9;
+    color: #64748b;
+    border-radius: 2rem;
+}
+
+.perm-group-item.active .perm-group-badge {
+    background: #eef2ff;
+    color: #4f46e5;
+}
+
+.perm-group-arrow {
+    color: #94a3b8;
+    transition: transform 0.2s ease;
+}
+
+.perm-group-arrow.up {
+    transform: rotate(180deg);
+    color: #4f46e5;
+}
+
+.perm-group-content {
+    padding: 0.8rem 1rem 1rem 2.8rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    border-top: 1px solid #f1f5f9;
+    background: #ffffff;
+}
+
+.admin-create-user-dialog-checkbox {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.65rem;
+    color: #475569;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.admin-create-user-dialog-checkbox input {
+    width: 1.05rem;
+    height: 1.05rem;
+    accent-color: #20366d;
+    cursor: pointer;
+}
+
+.admin-managers-native-select {
+    width: 100%;
+    min-height: 3.55rem;
+    border: 1.5px solid #d7deeb;
+    border-radius: 1.05rem;
+    padding: 0 1rem;
+    font-size: 1rem;
+    font-weight: 600;
+    color: #26334d;
+    outline: none;
+    cursor: pointer;
+    background: #fff;
+    transition: all 0.2s ease;
+}
+
+.admin-managers-native-select:focus {
+    border-color: #8fb3ff;
+    box-shadow: 0 0 0 3px rgba(143, 179, 255, 0.2);
 }
 
 .admin-create-user-dialog-field input:hover {

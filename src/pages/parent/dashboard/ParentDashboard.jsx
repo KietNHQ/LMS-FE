@@ -1,7 +1,7 @@
 import "./ParentDashboard.css";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
-import { PageHeader, SchoolYearTermSelector } from "../../../components/common";
+import { PageHeader, SchoolYearTermSelector, LoadingSpinner } from "../../../components/common";
 import ChildSwitcher from "./components/ChildSwitcher/ChildSwitcher";
 import OverviewCards from "./components/OverviewCards/OverviewCards";
 import PaymentSummary from "./components/PaymentSummary/PaymentSummary";
@@ -9,9 +9,7 @@ import EventCalendar from "../../../components/common/EventCalendar/EventCalenda
 import { INITIAL_CALENDAR_EVENTS, CALENDAR_EVENT_TYPES } from "../../../components/common/EventCalendar/eventData";
 import UpcomingSchedule from "./components/UpcomingSchedule/UpcomingSchedule";
 import { useSchoolYearTerm } from "../../../hooks/useSchoolYearTerm";
-// import RecentNotifications from "./components/RecentNotifications/RecentNotifications";
 
-// ✅ GIỮ NGUYÊN DATA FULL
 const childrenData = [
   {
     id: 1,
@@ -70,8 +68,6 @@ const childrenData = [
       ]
     }
   },
-
-  // ✅ ĐỨA THỨ 2 (copy + sửa số liệu nhẹ)
   {
     id: 2,
     name: "Trần Thị Bảo Châu",
@@ -125,10 +121,16 @@ const childrenData = [
 export default function ParentDashboard() {
   const [selectedChildId, setSelectedChildId] = useState(childrenData[0].id);
   const { selectedSchoolYear, selectedTerm, handleYearArrow, handleTermChange } = useSchoolYearTerm();
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    setIsLoading(true);
+    const timer = setTimeout(() => setIsLoading(false), 1000);
+    return () => clearTimeout(timer);
+  }, [selectedSchoolYear, selectedTerm, selectedChildId]);
 
   const selectedChild = childrenData.find(c => c.id === selectedChildId);
 
-  // 🔥 CALCULATE
   const calculateAverage = (subjects) => {
     if (!subjects) return 0;
     const total = subjects.reduce((sum, s) => sum + s.average, 0);
@@ -137,8 +139,6 @@ export default function ParentDashboard() {
 
   const hk1Avg = calculateAverage(selectedChild.gradesBySemester.hk1);
   const yearAvg = calculateAverage(selectedChild.gradesBySemester.year);
-
-
 
   return (
     <div className="dashboard">
@@ -159,36 +159,37 @@ export default function ParentDashboard() {
         }
       />
 
-
-
-      <PaymentSummary yearAvg={yearAvg} />
-
-      <OverviewCards yearAvg={yearAvg} hk1Avg={hk1Avg} />
-
-      <div className="parent-dashboard-grid-top">
-        <div className="parent-dashboard-calendar-card">
-          <EventCalendar
-            title="Lịch Sự Kiện Hệ Thống"
-            themeClass="theme-parent"
-            userRole="parent"
-            isCompact={true}
-            eventTypes={CALENDAR_EVENT_TYPES}
-            initialEvents={INITIAL_CALENDAR_EVENTS}
-            selectedSchoolYear={selectedSchoolYear}
-            selectedTerm={selectedTerm}
-            rolePolicy={{
-              canCreate: false,
-              canViewDetails: true,
-              canEdit: false,
-              canDelete: false
-            }}
-          />
+      {isLoading ? (
+        <div className="layout-loading-wrapper">
+          <LoadingSpinner size="lg" label="Đang cập nhật kết quả con em..." role="parent" />
         </div>
-
-        <UpcomingSchedule gradesBySemester={selectedChild.gradesBySemester} />
-      </div>
-
-      {/* <RecentNotifications /> */}
+      ) : (
+        <>
+          <PaymentSummary yearAvg={yearAvg} />
+          <OverviewCards yearAvg={yearAvg} hk1Avg={hk1Avg} />
+          <div className="parent-dashboard-grid-top">
+            <div className="parent-dashboard-calendar-card">
+              <EventCalendar
+                title="Lịch Sự Kiện Hệ Thống"
+                themeClass="theme-parent"
+                userRole="parent"
+                isCompact={true}
+                eventTypes={CALENDAR_EVENT_TYPES}
+                initialEvents={INITIAL_CALENDAR_EVENTS}
+                selectedSchoolYear={selectedSchoolYear}
+                selectedTerm={selectedTerm}
+                rolePolicy={{
+                  canCreate: false,
+                  canViewDetails: true,
+                  canEdit: false,
+                  canDelete: false
+                }}
+              />
+            </div>
+            <UpcomingSchedule gradesBySemester={selectedChild.gradesBySemester} />
+          </div>
+        </>
+      )}
     </div>
   );
 }

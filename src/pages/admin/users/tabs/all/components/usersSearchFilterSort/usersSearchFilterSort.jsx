@@ -3,7 +3,7 @@ import { FiSearch } from "react-icons/fi";
 import Select from "../../../../../../../components/ui/Select/Select";
 import "./UsersSearchFilterSort.css";
 
-const tabs = ["Tất cả", "Admin", "Giáo viên", "Học sinh", "Phụ huynh"];
+const tabs = ["Tất cả", "Quản lý", "Giáo viên", "Học sinh", "Phụ huynh"];
 
 export default function UsersSearchFilterSort({
     searchValue,

@@ -3,14 +3,16 @@ import axiosClient from "../../../shared/http/axiosClient";
 const USER_BASE_ENDPOINTS = ["/users"];
 
 const roleToApi = {
-  Admin: "admin",
+  "Quản trị viên": "admin",
+  "Quản lý": "manager",
   "Giáo viên": "teacher",
   "Học sinh": "student",
   "Phụ huynh": "guardian",
 };
 
 const roleFromApi = {
-  admin: "Admin",
+  admin: "Quản trị viên",
+  manager: "Quản lý",
   teacher: "Giáo viên",
   student: "Học sinh",
   parent: "Phụ huynh",
@@ -41,7 +43,8 @@ const getInitial = (name = "") => {
 };
 
 const getColorByRole = (roleLabel) => {
-  if (roleLabel === "Admin") return "navy";
+  if (roleLabel === "Quản trị viên") return "navy";
+  if (roleLabel === "Quản lý") return "navy";
   if (roleLabel === "Giáo viên") return "teal";
   if (roleLabel === "Học sinh") return "blue";
   return "orange";
@@ -67,7 +70,18 @@ const requestWithEndpointFallback = async (builder) => {
 
 const mapApiUserToView = (user = {}) => {
   const roleLabel = roleFromApi[user.role] || user.role || "Học sinh";
-  const fullName = user.fullName || user.name || user.full_name || "";
+  let fullName = user.fullName || user.name || user.full_name || "";
+
+  if (!fullName && user.profile) {
+    fullName = user.profile.fullName || user.profile.name || "";
+    if (!fullName && (user.profile.firstName || user.profile.lastName)) {
+      fullName = `${user.profile.lastName || ""} ${user.profile.firstName || ""}`.trim();
+    }
+  }
+
+  if (!fullName && user.email) {
+    fullName = user.email.split("@")[0];
+  }
 
   return {
     id: user.id,

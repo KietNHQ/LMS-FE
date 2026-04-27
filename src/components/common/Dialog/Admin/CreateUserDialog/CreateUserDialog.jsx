@@ -1,14 +1,126 @@
 import React, { useMemo, useState, useRef, useEffect } from "react";
-import { FiDownload, FiUpload, FiChevronDown } from "react-icons/fi";
+import { FiDownload, FiUpload, FiChevronDown, FiCheck, FiShield, FiCheckSquare } from "react-icons/fi";
+import { PERMISSIONS } from "../../../../../config/permissions";
+import Select from "../../../../ui/Select/Select";
 import "./CreateUserDialog.css";
 
-const allRoleOptions = ["Admin", "Phụ huynh", "Học sinh", "Giáo viên"];
+const allRoleOptions = ["Quản lý", "Phụ huynh", "Học sinh", "Giáo viên"];
+
+const MANAGEMENT_TITLES = [
+    { label: "Tùy chỉnh", value: "custom", permissions: [] },
+    { label: "Hiệu trưởng", value: "principal", permissions: [
+        PERMISSIONS.USER_VIEW, PERMISSIONS.USER_CREATE, PERMISSIONS.USER_UPDATE, 
+        PERMISSIONS.USER_LOCK, PERMISSIONS.USER_DELETE,
+        PERMISSIONS.NOTIFICATION_VIEW, PERMISSIONS.NOTIFICATION_CREATE,
+        PERMISSIONS.CLASS_VIEW, PERMISSIONS.CLASS_CREATE, PERMISSIONS.TIMETABLE_VIEW,
+        PERMISSIONS.GRADE_VIEW, PERMISSIONS.GRADE_APPROVE, PERMISSIONS.REPORT_ACADEMIC_VIEW,
+        PERMISSIONS.QUIZ_VIEW, PERMISSIONS.EXAM_SESSION_MANAGE, PERMISSIONS.EXAM_PROCTOR_MANAGE,
+        PERMISSIONS.DISCIPLINE_VIEW, PERMISSIONS.DISCIPLINE_PROCESS, PERMISSIONS.COMPETITION_MANAGE, PERMISSIONS.REPORT_DISCIPLINE_VIEW,
+        PERMISSIONS.FINANCE_TUITION_VIEW, PERMISSIONS.FINANCE_TUITION_PUBLISH, PERMISSIONS.REPORT_FINANCE_VIEW
+    ] },
+    { label: "Phó hiệu trưởng (Học vụ)", value: "vp_academic", permissions: [
+        PERMISSIONS.USER_VIEW, PERMISSIONS.NOTIFICATION_VIEW,
+        PERMISSIONS.CLASS_VIEW, PERMISSIONS.GRADE_VIEW, PERMISSIONS.GRADE_APPROVE,
+        PERMISSIONS.QUIZ_VIEW, PERMISSIONS.TIMETABLE_VIEW, PERMISSIONS.REPORT_ACADEMIC_VIEW,
+        PERMISSIONS.EXAM_SESSION_MANAGE
+    ] },
+    { label: "Phó hiệu trưởng (Nề nếp)", value: "vp_discipline", permissions: [
+        PERMISSIONS.USER_VIEW, PERMISSIONS.NOTIFICATION_VIEW, PERMISSIONS.NOTIFICATION_CREATE,
+        PERMISSIONS.DISCIPLINE_VIEW, PERMISSIONS.DISCIPLINE_PROCESS, 
+        PERMISSIONS.COMPETITION_MANAGE, PERMISSIONS.REPORT_DISCIPLINE_VIEW
+    ] },
+    { label: "Giáo vụ", value: "academic_staff", permissions: [
+        PERMISSIONS.USER_VIEW, PERMISSIONS.CLASS_VIEW, PERMISSIONS.TIMETABLE_VIEW, 
+        PERMISSIONS.QUIZ_VIEW, PERMISSIONS.EXAM_SESSION_MANAGE, PERMISSIONS.EXAM_PROCTOR_MANAGE
+    ] },
+    { label: "Kế toán", value: "finance", permissions: [
+        PERMISSIONS.USER_VIEW, PERMISSIONS.FINANCE_TUITION_VIEW, 
+        PERMISSIONS.FINANCE_TUITION_PUBLISH, PERMISSIONS.REPORT_FINANCE_VIEW
+    ] },
+    { label: "Tổ trưởng bộ môn", value: "dept_head", permissions: [
+        PERMISSIONS.USER_VIEW, PERMISSIONS.CLASS_VIEW, 
+        PERMISSIONS.QUIZ_VIEW, PERMISSIONS.NOTIFICATION_VIEW
+    ] },
+];
+
+const PERMISSION_GROUPS = [
+    {
+        id: "users",
+        label: "Người dùng & Thông báo",
+        permissions: [
+            { id: PERMISSIONS.USER_VIEW, label: "Xem người dùng" },
+            { id: PERMISSIONS.USER_CREATE, label: "Thêm người dùng" },
+            { id: PERMISSIONS.USER_UPDATE, label: "Sửa người dùng" },
+            { id: PERMISSIONS.USER_LOCK, label: "Ẩn (Vô hiệu hóa)" },
+            { id: PERMISSIONS.USER_DELETE, label: "Xóa vĩnh viễn" },
+            { id: PERMISSIONS.NOTIFICATION_VIEW, label: "Xem thông báo toàn trường" },
+            { id: PERMISSIONS.NOTIFICATION_CREATE, label: "Gửi thông báo toàn trường" },
+        ]
+    },
+    {
+        id: "classes",
+        label: "Đào tạo & Lớp học",
+        permissions: [
+            { id: PERMISSIONS.CLASS_VIEW, label: "Quản lý danh sách lớp" },
+            { id: PERMISSIONS.CLASS_CREATE, label: "Tạo lớp học mới" },
+            { id: PERMISSIONS.TIMETABLE_VIEW, label: "Quản lý thời khóa biểu" },
+            { id: PERMISSIONS.TIMETABLE_RESOLVE_CONFLICT, label: "Xử lý xung đột TKB" },
+        ]
+    },
+    {
+        id: "grades",
+        label: "Học tập & Điểm số",
+        permissions: [
+            { id: PERMISSIONS.GRADE_VIEW, label: "Xem điểm số toàn trường" },
+            { id: PERMISSIONS.GRADE_APPROVE, label: "Phê duyệt điểm số" },
+        ]
+    },
+    {
+        id: "exams",
+        label: "Kỳ thi & Kiểm tra",
+        permissions: [
+            { id: PERMISSIONS.QUIZ_VIEW, label: "Quản lý ngân hàng đề thi/quiz" },
+            { id: PERMISSIONS.EXAM_SESSION_MANAGE, label: "Quản lý ca thi/phòng thi" },
+            { id: PERMISSIONS.EXAM_PROCTOR_MANAGE, label: "Phân công giám thị" },
+        ]
+    },
+    {
+        id: "discipline",
+        label: "Nề nếp & Thi đua",
+        permissions: [
+            { id: PERMISSIONS.DISCIPLINE_VIEW, label: "Quản lý vi phạm nề nếp" },
+            { id: PERMISSIONS.DISCIPLINE_PROCESS, label: "Xử lý/Duyệt kỷ luật" },
+            { id: PERMISSIONS.COMPETITION_MANAGE, label: "Quản lý thi đua khối/lớp" },
+        ]
+    },
+    {
+        id: "finance",
+        label: "Tài chính & Học phí",
+        permissions: [
+            { id: PERMISSIONS.FINANCE_TUITION_VIEW, label: "Quản lý học phí & khoản thu" },
+            { id: PERMISSIONS.FINANCE_TUITION_PUBLISH, label: "Công khai phiếu thu" },
+        ]
+    },
+    {
+        id: "reports",
+        label: "Hệ thống Báo cáo",
+        permissions: [
+            { id: PERMISSIONS.REPORT_ACADEMIC_VIEW, label: "Báo cáo Học lực & Hạnh kiểm" },
+            { id: PERMISSIONS.REPORT_DISCIPLINE_VIEW, label: "Báo cáo Kỷ luật & Thi đua" },
+            { id: PERMISSIONS.REPORT_FINANCE_VIEW, label: "Báo cáo Doanh thu & Công nợ" },
+        ]
+    }
+];
+
+// Flat list for easy lookup
+const AVAILABLE_PERMISSIONS = PERMISSION_GROUPS.flatMap(g => g.permissions);
 
 const roleEmailDomainMap = {
-    Admin: "admin.email.edu.vn",
-    "Giáo viên": "teacher.email.edu.vn",
-    "Học sinh": "student.email.edu.vn",
-    "Phụ huynh": "parent.email.edu.vn",
+    "Quản trị viên": "thptlocal.edu.vn",
+    "Quản lý": "thptlocal.edu.vn",
+    "Giáo viên": "thptlocal.edu.vn",
+    "Học sinh": "thptlocal.edu.vn",
+    "Phụ huynh": "thptlocal.edu.vn",
 };
 
 function getRoleEmailDomain(role) {
@@ -109,6 +221,10 @@ function buildDefaultForm(role) {
             children: [createEmptyChild()],
             phone: "",
         },
+        managerInfo: {
+            title: "custom",
+            permissions: [],
+        },
     };
 }
 
@@ -120,18 +236,27 @@ function buildFormFromInitialData(initialData, mode, role) {
     const profile = initialData.profile || {};
     const parsed = parseFullName(initialData.name);
 
-    const initialChildren = Array.isArray(profile.children)
-        ? profile.children
+    // Pick DOB from profile or root, ensuring it's in YYYY-MM-DD format for date input
+    let rawDob = profile.dob || initialData.dob || "";
+    if (rawDob && rawDob.includes("T")) rawDob = rawDob.split("T")[0];
+    // If it's DD/MM/YYYY, convert to YYYY-MM-DD
+    if (rawDob && rawDob.includes("/") && rawDob.split("/")[0].length === 2) {
+        const parts = rawDob.split("/");
+        rawDob = `${parts[2]}-${parts[1]}-${parts[0]}`;
+    }
+
+    const initialChildren = Array.isArray(profile.children || initialData.displayChildren)
+        ? (profile.children || initialData.displayChildren)
             .map((child) => ({
-                childName: String(child?.childName || "").trim(),
-                childClass: String(child?.childClass || "").trim(),
+                childName: String(child?.childName || child?.studentName || "").trim(),
+                childClass: String(child?.childClass || child?.className || child?.class || "").trim(),
             }))
             .filter((child) => child.childName || child.childClass)
         : [];
 
     const fallbackChild = {
-        childName: String(profile.childName || "").trim(),
-        childClass: String(profile.childClass || "").trim(),
+        childName: String(profile.childName || profile.studentName || initialData.childName || initialData.studentName || "").trim(),
+        childClass: String(profile.childClass || profile.className || profile.class || initialData.childClass || initialData.className || initialData.class || "").trim(),
     };
 
     const resolvedChildren =
@@ -144,22 +269,26 @@ function buildFormFromInitialData(initialData, mode, role) {
     return {
         lastName: profile.lastName || parsed.lastName,
         firstName: profile.firstName || parsed.firstName,
-        dob: profile.dob || "",
+        dob: rawDob,
         role,
 
         studentInfo: {
             parentName: profile.parentName || "",
             parentPhone: normalizePhone(profile.parentPhone || ""),
             hasPersonalPhone: Boolean(profile.hasPersonalPhone),
-            personalPhone: normalizePhone(profile.personalPhone || ""),
+            personalPhone: normalizePhone(profile.personalPhone || initialData.phone || ""),
         },
         teacherInfo: {
             subject: profile.subject || "",
-            phone: normalizePhone(profile.phone || (role === "Giáo viên" ? initialData.phone : "")),
+            phone: normalizePhone(profile.phone || initialData.phone || ""),
         },
         parentInfo: {
             children: resolvedChildren,
-            phone: normalizePhone(profile.phone || (role === "Phụ huynh" ? initialData.phone : "")),
+            phone: normalizePhone(profile.phone || initialData.phone || ""),
+        },
+        managerInfo: {
+            title: profile.title || "custom",
+            permissions: Array.isArray(profile.permissions) ? profile.permissions : [],
         },
         _mode: mode,
     };
@@ -200,6 +329,13 @@ function buildRoleProfile(role, form) {
         };
     }
 
+    if (role === "Quản lý") {
+        return {
+            title: form.managerInfo.title,
+            permissions: form.managerInfo.permissions,
+        };
+    }
+
     return {};
 }
 
@@ -234,12 +370,11 @@ export default function CreateUserDialog({
     importFeedback,
 }) {
     const normalizedRoleOptions = useMemo(() => {
-        if (!Array.isArray(roleOptions) || roleOptions.length === 0) {
-            return allRoleOptions;
+        if (mode === "edit" && initialData?.role === "Quản trị viên") {
+            return ["Quản trị viên", ...allRoleOptions];
         }
-
-        return roleOptions;
-    }, [roleOptions]);
+        return allRoleOptions;
+    }, [mode, initialData]);
 
     const [isRoleOpen, setIsRoleOpen] = useState(false);
     const roleRef = useRef(null);
@@ -258,6 +393,38 @@ export default function CreateUserDialog({
         const role = fixedRole || initialData?.role || normalizedRoleOptions[0] || "Học sinh";
         return buildFormFromInitialData(initialData, mode, role);
     });
+
+    const [expandedGroups, setExpandedGroups] = useState(["users"]);
+
+    const toggleGroupExpand = (groupId) => {
+        setExpandedGroups(prev => 
+            prev.includes(groupId) ? prev.filter(id => id !== groupId) : [...prev, groupId]
+        );
+    };
+
+    const toggleGroupAll = (groupId, checked) => {
+        const group = PERMISSION_GROUPS.find(g => g.id === groupId);
+        if (!group) return;
+
+        const groupIds = group.permissions.map(p => p.id);
+        
+        setForm(prev => {
+            const current = prev.managerInfo.permissions;
+            let next;
+            if (checked) {
+                // Add missing ones
+                next = Array.from(new Set([...current, ...groupIds]));
+            } else {
+                // Remove all from this group
+                next = current.filter(id => !groupIds.includes(id));
+            }
+
+            return {
+                ...prev,
+                managerInfo: { ...prev.managerInfo, title: "custom", permissions: next }
+            };
+        });
+    };
 
     const handleChange = (field, value) => {
         setForm((prev) => ({
@@ -332,57 +499,26 @@ export default function CreateUserDialog({
     const handleSubmit = (e) => {
         e.preventDefault();
 
-
-
         if (!form.lastName.trim() || !form.firstName.trim()) {
-            window.alert("Vui long nhap day du ho va ten.");
+            window.alert("Vui lòng nhập đầy đủ họ và tên.");
             return;
         }
 
         if (!form.dob) {
-            window.alert("Vui long chon ngay sinh.");
+            window.alert("Vui lòng chọn ngày sinh.");
             return;
         }
 
         if (selectedRole === "Học sinh") {
             if (!form.studentInfo.parentName.trim() || form.studentInfo.parentPhone.length !== 10) {
-                window.alert("Vui long nhap thong tin phu huynh hop le.");
-                return;
-            }
-
-            if (form.studentInfo.hasPersonalPhone && form.studentInfo.personalPhone.length !== 10) {
-                window.alert("So dien thoai ca nhan hoc sinh phai du 10 chu so.");
+                window.alert("Vui lòng nhập thông tin phụ huynh hợp lệ.");
                 return;
             }
         }
 
         if (selectedRole === "Giáo viên") {
             if (!form.teacherInfo.subject.trim() || form.teacherInfo.phone.length !== 10) {
-                window.alert("Vui long nhap mon day va so dien thoai giao vien hop le.");
-                return;
-            }
-        }
-
-        if (selectedRole === "Phụ huynh") {
-            const hasInvalidChild = form.parentInfo.children.some((child) => {
-                const childName = String(child.childName || "").trim();
-                const childClass = String(child.childClass || "").trim();
-
-                return (childName && !childClass) || (!childName && childClass);
-            });
-
-            const completedChildren = form.parentInfo.children.filter((child) => {
-                const childName = String(child.childName || "").trim();
-                const childClass = String(child.childClass || "").trim();
-                return childName && childClass;
-            });
-
-            if (
-                completedChildren.length === 0 ||
-                hasInvalidChild ||
-                form.parentInfo.phone.length !== 10
-            ) {
-                window.alert("Vui long nhap day du thong tin phu huynh.");
+                window.alert("Vui lòng nhập môn dạy và số điện thoại giáo viên hợp lệ.");
                 return;
             }
         }
@@ -405,10 +541,39 @@ export default function CreateUserDialog({
                 firstName: form.firstName.trim(),
                 dob: form.dob,
             },
-
         };
 
         onSubmit(payload);
+    };
+
+    const handleManagerTitleChange = (val) => {
+        const titleData = MANAGEMENT_TITLES.find(t => t.value === val);
+        setForm(prev => ({
+            ...prev,
+            managerInfo: {
+                ...prev.managerInfo,
+                title: val,
+                permissions: titleData ? [...titleData.permissions] : []
+            }
+        }));
+    };
+
+    const togglePermission = (permId) => {
+        setForm(prev => {
+            const current = prev.managerInfo.permissions;
+            const next = current.includes(permId)
+                ? current.filter(id => id !== permId)
+                : [...current, permId];
+            
+            return {
+                ...prev,
+                managerInfo: {
+                    ...prev.managerInfo,
+                    title: "custom",
+                    permissions: next
+                }
+            };
+        });
     };
 
     const handleFileChange = (event) => {
@@ -500,31 +665,12 @@ export default function CreateUserDialog({
                             {fixedRole ? (
                                 <input type="text" value={fixedRole} readOnly />
                             ) : (
-                                <div className="admin-custom-select" ref={roleRef}>
-                                    <div
-                                        className={`admin-custom-select-trigger ${isRoleOpen ? "active" : ""}`}
-                                        onClick={() => setIsRoleOpen(!isRoleOpen)}
-                                    >
-                                        <span>{form.role}</span>
-                                        <FiChevronDown className={`admin-select-icon ${isRoleOpen ? "open" : ""}`} />
-                                    </div>
-                                    {isRoleOpen && (
-                                        <div className="admin-custom-select-options">
-                                            {normalizedRoleOptions.map((r) => (
-                                                <div
-                                                    key={r}
-                                                    className={`admin-custom-select-option ${form.role === r ? "active" : ""}`}
-                                                    onClick={() => {
-                                                        handleChange("role", r);
-                                                        setIsRoleOpen(false);
-                                                    }}
-                                                >
-                                                    {r}
-                                                </div>
-                                            ))}
-                                        </div>
-                                    )}
-                                </div>
+                                <Select
+                                    variant="custom"
+                                    value={form.role}
+                                    onChange={(e) => handleChange("role", e.target.value)}
+                                    options={normalizedRoleOptions}
+                                />
                             )}
                         </div>
                     </div>
@@ -714,7 +860,122 @@ export default function CreateUserDialog({
                         </div>
                     )}
 
+                    {selectedRole === "Quản trị viên" && (
+                        <div className="admin-create-user-dialog-role-block">
+                            <div className="admin-create-user-dialog-role-header">
+                                <h3>Quyền Quản trị hệ thống</h3>
+                                <FiShield className="mgr-title-icon" />
+                            </div>
+                            
+                            <div className="admin-create-user-dialog-info-msg" style={{ 
+                                fontSize: "0.85rem", 
+                                color: "#64748b", 
+                                marginBottom: "1rem",
+                                padding: "0.75rem",
+                                background: "#f1f5f9",
+                                borderRadius: "8px",
+                                borderLeft: "4px solid #6366f1"
+                            }}>
+                                Quyền hạn của Quản trị viên được thiết lập cố định để bảo vệ tính toàn vẹn của hệ thống. 
+                                Vai trò này không có quyền Xóa vĩnh viễn dữ liệu.
+                            </div>
 
+                            <div className="admin-create-user-dialog-perm-groups">
+                                <div className="perm-group-item active">
+                                    <div className="perm-group-header">
+                                        <div className="perm-group-left">
+                                            <FiCheck className="perm-group-master-check" style={{ color: "#10b981" }} />
+                                            <span className="perm-group-label">Quản lý Hệ thống (Cố định)</span>
+                                        </div>
+                                    </div>
+                                    <div className="perm-group-content">
+                                        {AVAILABLE_PERMISSIONS.filter(p => [
+                                            PERMISSIONS.USER_VIEW, 
+                                            PERMISSIONS.USER_CREATE, 
+                                            PERMISSIONS.USER_UPDATE, 
+                                            PERMISSIONS.USER_LOCK
+                                        ].includes(p.id)).map(perm => (
+                                            <label key={perm.id} className="admin-create-user-dialog-checkbox disabled">
+                                                <input 
+                                                    type="checkbox"
+                                                    checked={true}
+                                                    readOnly
+                                                />
+                                                <span style={{ color: "#64748b" }}>{perm.label}</span>
+                                            </label>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {selectedRole === "Quản lý" && (
+                        <div className="admin-create-user-dialog-role-block">
+                            <div className="admin-create-user-dialog-role-header">
+                                <h3>Phân quyền quản lý</h3>
+                                <FiCheckSquare className="mgr-title-icon" />
+                            </div>
+                            
+                            <div className="admin-create-user-dialog-field">
+                                <label>Danh hiệu / Chức vụ</label>
+                                <Select
+                                    variant="custom"
+                                    value={form.managerInfo.title}
+                                    onChange={(e) => handleManagerTitleChange(e.target.value)}
+                                    options={MANAGEMENT_TITLES}
+                                />
+                            </div>
+
+                            <div className="admin-create-user-dialog-perm-groups">
+                                {PERMISSION_GROUPS.map(group => {
+                                    const isExpanded = expandedGroups.includes(group.id);
+                                    const selectedInGroup = group.permissions.filter(p => 
+                                        form.managerInfo.permissions.includes(p.id)
+                                    );
+                                    const isAllInGroup = selectedInGroup.length === group.permissions.length;
+                                    const isSomeInGroup = selectedInGroup.length > 0 && !isAllInGroup;
+
+                                    return (
+                                        <div key={group.id} className={`perm-group-item ${isExpanded ? "active" : ""}`}>
+                                            <div className="perm-group-header" onClick={() => toggleGroupExpand(group.id)}>
+                                                <div className="perm-group-left">
+                                                    <input 
+                                                        type="checkbox" 
+                                                        className="perm-group-master-check"
+                                                        checked={isAllInGroup}
+                                                        ref={el => { if (el) el.indeterminate = isSomeInGroup; }}
+                                                        onClick={(e) => e.stopPropagation()}
+                                                        onChange={(e) => toggleGroupAll(group.id, e.target.checked)}
+                                                    />
+                                                    <span className="perm-group-label">{group.label}</span>
+                                                    <span className="perm-group-badge">
+                                                        {selectedInGroup.length}/{group.permissions.length}
+                                                    </span>
+                                                </div>
+                                                <FiChevronDown className={`perm-group-arrow ${isExpanded ? "up" : ""}`} />
+                                            </div>
+
+                                            {isExpanded && (
+                                                <div className="perm-group-content">
+                                                    {group.permissions.map(perm => (
+                                                        <label key={perm.id} className="admin-create-user-dialog-checkbox">
+                                                            <input 
+                                                                type="checkbox"
+                                                                checked={form.managerInfo.permissions.includes(perm.id)}
+                                                                onChange={() => togglePermission(perm.id)}
+                                                            />
+                                                            <span>{perm.label}</span>
+                                                        </label>
+                                                    ))}
+                                                </div>
+                                            )}
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    )}
 
                     <div className="admin-create-user-dialog-actions">
                         <button
@@ -734,6 +995,3 @@ export default function CreateUserDialog({
         </div>
     );
 }
-
-
-

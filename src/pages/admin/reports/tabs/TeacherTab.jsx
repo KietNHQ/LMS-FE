@@ -95,12 +95,12 @@ const TeacherTab = ({ reportData, formatScore }) => {
                                 <div className="profile-main">
                                     <div className="profile-text">
                                         <h3>GV. {selectedTeacher.teacherName}</h3>
-                                        <p>Bộ môn: {selectedTeacher.subject} | Phân bổ: {selectedTeacher.assignedClasses.length} lớp</p>
+                                        <p>Bộ môn: {selectedTeacher.subject} | Phân bổ: {(selectedTeacher.assignedClasses || []).length} lớp</p>
                                     </div>
                                     <div className="profile-stats">
                                         <div className="stat-box">
                                             <span className="label">Điểm TB Lớp</span>
-                                            <span className="value">{(selectedTeacher.assignedClasses.reduce((a, b) => a + b.classAverageScore, 0) / selectedTeacher.assignedClasses.length).toFixed(1)}</span>
+                                            <span className="value">{(selectedTeacher.assignedClasses || []).length > 0 ? ((selectedTeacher.assignedClasses.reduce((a, b) => a + b.classAverageScore, 0) / selectedTeacher.assignedClasses.length).toFixed(1)) : "0"}</span>
                                         </div>
                                         <div className="stat-box">
                                             <span className="label">Chuyên cần</span>
@@ -137,7 +137,7 @@ const TeacherTab = ({ reportData, formatScore }) => {
                             <Card title="So sánh hiệu quả so với mặt bằng chung bộ môn">
                                 <p className="chart-subtitle">Đối soát điểm số trung bình của các lớp và điểm chuẩn (Benchmark) bộ môn {selectedTeacher.subject}</p>
                                 <ResponsiveContainer width="100%" height={280}>
-                                    <ComposedChart data={selectedTeacher.assignedClasses}>
+                                    <ComposedChart data={selectedTeacher.assignedClasses || []}>
                                         <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
                                         <XAxis dataKey="classId" axisLine={false} tickLine={false} />
                                         <YAxis domain={[0, 10]} axisLine={false} tickLine={false} />
@@ -167,7 +167,7 @@ const TeacherTab = ({ reportData, formatScore }) => {
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {selectedTeacher.assignedClasses.map((cls, idx) => (
+                                        {(selectedTeacher.assignedClasses || []).map((cls, idx) => (
                                             <tr key={idx}>
                                                 <td className="bold"><FiBook className="m-r-8" /> {cls.classId}</td>
                                                 <td><span className={`score-badge ${cls.classAverageScore >= 8 ? 'high' : 'mid'}`}>{cls.classAverageScore}</span></td>

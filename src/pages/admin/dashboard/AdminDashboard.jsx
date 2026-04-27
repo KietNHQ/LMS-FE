@@ -1,295 +1,188 @@
-import "./AdminDashboard.css";
-import StatisticsCardsSection from "./components/statisticsCardsSection/statisticsCardsSection";
-import EventCalendarSection from "./components/eventCalendarSection/eventCalendarSection";
-import RevenueSection from "./components/revenueSection/revenueSection";
-import ConductScoreSection from "./components/conductScoreSection/conductScoreSection";
-import AcademicOverviewSection from "./components/academicOverviewSection/academicOverviewSection";
 import { useEffect, useState } from "react";
-import { adminDashboardService } from "../../../services/pages/admin/dashboard/dashboardService";
-import { SchoolYearTermSelector } from "../../../components/common";
-import {
-  getCurrentSchoolYear,
-  getCurrentTerm,
-  shiftSchoolYear,
-} from "../../../utils/dateUtils";
-
-const createEmptyRevenueRows = () => [
-  {
-    grade: "10",
-    gradeLabel: "Khối 10",
-    studentCount: 0,
-    paidStudentCount: 0,
-    hk1Value: 0,
-    hk2Value: 0,
-  },
-  {
-    grade: "11",
-    gradeLabel: "Khối 11",
-    studentCount: 0,
-    paidStudentCount: 0,
-    hk1Value: 0,
-    hk2Value: 0,
-  },
-  {
-    grade: "12",
-    gradeLabel: "Khối 12",
-    studentCount: 0,
-    paidStudentCount: 0,
-    hk1Value: 0,
-    hk2Value: 0,
-  },
-  {
-    grade: "all",
-    gradeLabel: "Cả 3 khối",
-    studentCount: 0,
-    paidStudentCount: 0,
-    hk1Value: 0,
-    hk2Value: 0,
-  },
-];
+import { useNavigate } from "react-router-dom";
+import { FiUsers, FiLock, FiActivity, FiShield, FiAlertTriangle, FiCheckCircle, FiClock, FiList } from "react-icons/fi";
+import "./AdminDashboard.css";
 
 const AdminDashboard = () => {
-  const adminName =
-    localStorage.getItem("email")?.split("@")[0] || "Quản Trị Viên";
+    const navigate = useNavigate();
+    const adminName = localStorage.getItem("email")?.split("@")[0] || "Quản Trị Viên";
 
-  const initialSchoolYear = getCurrentSchoolYear();
-  const initialTerm = getCurrentTerm();
+    const [stats, setStats] = useState({
+        totalUsers: 1240,
+        activeManagers: 12,
+        lockedAccounts: 3,
+        logsToday: 45
+    });
 
-  const getMaxWeekBySchoolYear = (schoolYear) => {
-    const customWeekLimitByYear = {
-      "2024-2025": 35,
-      "2025-2026": 35,
-    };
+    const [auditLogs] = useState([
+        { id: 1, user: "Nguyen Hoang Quoc Kiet", action: "Cập nhật quyền hạn cho Hiệu trưởng", time: "10 phút trước", type: "success" },
+        { id: 2, user: "admin@thptlocal.edu.vn", action: "Khóa tài khoản Giáo viên (GV001)", time: "25 phút trước", type: "warning" },
+        { id: 3, user: "admin@thptlocal.edu.vn", action: "Tạo tài khoản Quản lý mới", time: "1 giờ trước", type: "info" },
+    ]);
 
-    return customWeekLimitByYear[schoolYear] || 35;
-  };
+    const [systemLogs] = useState([
+        { id: 1, event: "Hệ thống", action: "Sao lưu dữ liệu định kỳ", time: "2 giờ trước", icon: <FiActivity /> },
+        { id: 2, event: "Tuần 32", action: "Chuyển đổi tuần học tự động", time: "5 giờ trước", icon: <FiClock /> },
+        { id: 3, event: "v2.4.5", action: "Cập nhật phiên bản hệ thống", time: "1 ngày trước", icon: <FiCheckCircle /> },
+    ]);
 
-  const getTermWeekRange = (schoolYear, term) => {
-    const totalWeeks = getMaxWeekBySchoolYear(schoolYear);
-    const hk1Weeks = Math.ceil(totalWeeks / 2);
-    const hk2Weeks = Math.max(totalWeeks - hk1Weeks, 1);
+    const userDistribution = [
+        { label: "Học sinh", count: 1050, color: "#6366f1" },
+        { label: "Giáo viên", count: 85, color: "#10b981" },
+        { label: "Phụ huynh", count: 92, color: "#f59e0b" },
+        { label: "Quản lý", count: 12, color: "#ec4899" },
+        { label: "Quản trị viên", count: 1, color: "#1e293b" },
+    ];
 
-    if (term === "hk2") {
-      return {
-        startWeek: hk1Weeks + 1,
-        endWeek: totalWeeks,
-        maxWeekInTerm: hk2Weeks,
-      };
-    }
+    return (
+        <div className="admin-dashboard-new">
+            <header className="admin-dashboard-new__header">
+                <div className="header-left">
+                    <h1>Chào mừng trở lại, {adminName}</h1>
+                    <p>Hệ thống đang hoạt động ổn định. Bạn có {stats.logsToday} nhật ký hệ thống mới hôm nay.</p>
+                </div>
+                <div className="header-status">
+                    <FiCheckCircle className="status-icon" />
+                    <span>Hệ thống: Trực tuyến</span>
+                </div>
+            </header>
 
-    return { startWeek: 1, endWeek: hk1Weeks, maxWeekInTerm: hk1Weeks };
-  };
+            <section className="admin-dashboard-new__stats">
+                <div className="stat-card">
+                    <div className="stat-icon users"><FiUsers /></div>
+                    <div className="stat-info">
+                        <span className="label">Tổng người dùng</span>
+                        <h2 className="value">{stats.totalUsers}</h2>
+                    </div>
+                </div>
+                <div className="stat-card">
+                    <div className="stat-icon managers"><FiShield /></div>
+                    <div className="stat-info">
+                        <span className="label">Đội ngũ quản lý</span>
+                        <h2 className="value">{stats.activeManagers}</h2>
+                    </div>
+                </div>
+                <div className="stat-card">
+                    <div className="stat-icon locked"><FiLock /></div>
+                    <div className="stat-info">
+                        <span className="label">Tài khoản bị khóa</span>
+                        <h2 className="value text-danger">{stats.lockedAccounts}</h2>
+                    </div>
+                </div>
+                <div className="stat-card">
+                    <div className="stat-icon logs"><FiActivity /></div>
+                    <div className="stat-info">
+                        <span className="label">Nhật ký hôm nay</span>
+                        <h2 className="value">{stats.logsToday}</h2>
+                    </div>
+                </div>
+            </section>
 
-  const getCurrentWeekForSchoolYear = (schoolYear, term) => {
-    const [startRaw, endRaw] = `${schoolYear}`.split("-");
-    const startYear = Number(startRaw);
-    const endYear = Number(endRaw);
-    const { startWeek, endWeek, maxWeekInTerm } = getTermWeekRange(schoolYear, term);
+            <div className="admin-dashboard-new__grid">
+                <div className="admin-dashboard-new__card role-dist">
+                    <div className="card-header">
+                        <h3>Cơ cấu người dùng</h3>
+                        <FiUsers className="title-icon" />
+                    </div>
+                    <div className="dist-bars">
+                        {userDistribution.map(item => (
+                            <div key={item.label} className="dist-item">
+                                <div className="dist-info">
+                                    <span>{item.label}</span>
+                                    <span>{item.count}</span>
+                                </div>
+                                <div className="progress-bg">
+                                    <div className="progress-fill" style={{ 
+                                        width: `${(item.count / stats.totalUsers) * 100}%`,
+                                        backgroundColor: item.color 
+                                    }}></div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
 
-    if (!Number.isFinite(startYear) || !Number.isFinite(endYear)) {
-      return 1;
-    }
+                <div className="admin-dashboard-new__card sys-health">
+                    <div className="card-header">
+                        <h3>Trạng thái hệ thống</h3>
+                        <FiActivity className="title-icon" />
+                    </div>
+                    <div className="health-list">
+                        <div className="health-item">
+                            <span className="label">Phiên bản Core</span>
+                            <span className="value">v2.4.0 (Stable)</span>
+                        </div>
+                        <div className="health-item">
+                            <span className="label">Cơ sở dữ liệu</span>
+                            <span className="value text-success">Kết nối tốt (12ms)</span>
+                        </div>
+                        <div className="health-item">
+                            <span className="label">Bộ nhớ tạm (Cache)</span>
+                            <span className="value">85% khả dụng</span>
+                        </div>
+                        <div className="health-item">
+                            <span className="label">Thời gian hoạt động</span>
+                            <span className="value">14 ngày 2 giờ</span>
+                        </div>
+                    </div>
+                    <div className="health-notices">
+                        <div className="notice warning">
+                            <FiAlertTriangle />
+                            <span>Có 3 chứng chỉ SSL sắp hết hạn trong 15 ngày.</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-    const termStart = term === "hk2" ? new Date(endYear, 0, 1) : new Date(startYear, 7, 1);
-    const termEnd =
-      term === "hk2"
-        ? new Date(endYear, 4, 31, 23, 59, 59, 999)
-        : new Date(startYear, 11, 31, 23, 59, 59, 999);
-    const now = new Date();
+            <div className="admin-dashboard-new__logs-grid">
+                {/* NHẬT KÝ PHÂN QUYỀN */}
+                <section className="admin-dashboard-new__card logs-table-card">
+                    <div className="card-header">
+                        <div className="header-group">
+                            <h3>Nhật ký Phân quyền</h3>
+                            <FiShield className="title-icon" />
+                        </div>
+                        <button className="view-all-btn" onClick={() => navigate("/admin/audit-log")}>Xem tất cả</button>
+                    </div>
+                    <div className="logs-list">
+                        {auditLogs.map(log => (
+                            <div key={log.id} className="log-row">
+                                <div className={`log-indicator ${log.type}`}></div>
+                                <div className="log-main">
+                                    <span className="log-user">{log.user}</span>
+                                    <span className="log-action">{log.action}</span>
+                                </div>
+                                <span className="log-time">{log.time}</span>
+                            </div>
+                        ))}
+                    </div>
+                </section>
 
-    if (now < termStart) {
-      return startWeek;
-    }
-
-    if (now > termEnd) {
-      return endWeek;
-    }
-
-    const diffTime = now.getTime() - termStart.getTime();
-    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-    const computedWeek = Math.floor(diffDays / 7) + 1;
-
-    const weekInTerm = Math.min(Math.max(computedWeek, 1), maxWeekInTerm);
-    const weekInSchoolYear = startWeek - 1 + weekInTerm;
-
-    return Math.min(Math.max(weekInSchoolYear, startWeek), endWeek);
-  };
-
-  const [selectedSchoolYear, setSelectedSchoolYear] = useState(initialSchoolYear);
-  const [selectedTerm, setSelectedTerm] = useState(initialTerm);
-  const [selectedClass, setSelectedClass] = useState("all");
-  const [selectedWeek, setSelectedWeek] = useState(() =>
-    getCurrentWeekForSchoolYear(initialSchoolYear, initialTerm)
-  );
-
-  const [summaryStats, setSummaryStats] = useState({
-    totalStudents: 0,
-    totalTeachers: 0,
-    totalClasses: 0,
-  });
-  const [revenueComparisonData, setRevenueComparisonData] = useState(createEmptyRevenueRows);
-  const [competitionData, setCompetitionData] = useState([]);
-
-  useEffect(() => {
-    let isMounted = true;
-
-    const fetchDashboardOverview = async () => {
-      try {
-        const overview = await adminDashboardService.getDashboardOverview();
-        if (!isMounted) {
-          return;
-        }
-        setSummaryStats(overview.summary);
-        setRevenueComparisonData(overview.revenueComparisonData);
-      } catch (_error) {
-        if (!isMounted) {
-          return;
-        }
-        setRevenueComparisonData(createEmptyRevenueRows());
-      }
-    };
-
-    fetchDashboardOverview();
-
-    return () => {
-      isMounted = false;
-    };
-  }, [selectedSchoolYear, selectedTerm]);
-
-  useEffect(() => {
-    let isMounted = true;
-
-    const fetchConductRanking = async () => {
-      try {
-        const ranking = await adminDashboardService.getConductRanking({
-          week: selectedWeek,
-          schoolYear: selectedSchoolYear,
-          term: selectedTerm,
-        });
-        if (isMounted) {
-          setCompetitionData(ranking);
-        }
-      } catch (_error) {
-        if (isMounted) {
-          setCompetitionData([]);
-        }
-      }
-    };
-
-    fetchConductRanking();
-
-    return () => {
-      isMounted = false;
-    };
-  }, [selectedSchoolYear, selectedTerm, selectedWeek]);
-
-  const maxWeek = getMaxWeekBySchoolYear(selectedSchoolYear);
-
-  const handlePrevWeek = () => {
-    setSelectedWeek((prevWeek) => Math.max(prevWeek - 1, 1));
-  };
-
-  const handleNextWeek = () => {
-    setSelectedWeek((prevWeek) => Math.min(prevWeek + 1, maxWeek));
-  };
-
-  const handleYearArrow = (direction) => {
-    const nextSchoolYear = shiftSchoolYear(selectedSchoolYear, direction);
-    setSelectedSchoolYear(nextSchoolYear);
-    setSelectedWeek(getCurrentWeekForSchoolYear(nextSchoolYear, selectedTerm));
-  };
-
-  const handleTermChange = (term) => {
-    setSelectedTerm(term);
-    setSelectedWeek(getCurrentWeekForSchoolYear(selectedSchoolYear, term));
-  };
-
-  const formatCompactMoney = (value) => {
-    const absValue = Math.abs(Number(value) || 0);
-
-    const normalize = (num) => {
-      const rounded = num >= 100 ? Math.round(num) : Number(num.toFixed(1));
-      return Number.isInteger(rounded)
-        ? `${rounded}`
-        : `${rounded}`.replace(".", ",");
-    };
-
-    if (absValue >= 1_000_000_000) {
-      return `${normalize(absValue / 1_000_000_000)} tỷ`;
-    }
-
-    if (absValue >= 1_000_000) {
-      return `${normalize(absValue / 1_000_000)}tr`;
-    }
-
-    if (absValue >= 1_000) {
-      return `${normalize(absValue / 1_000)}k`;
-    }
-
-    return `${absValue}`;
-  };
-
-  const termLabel = selectedTerm === "hk1" ? "Học kỳ 1" : "Học kỳ 2";
-  const hasHk2Data = revenueComparisonData.some((item) => Number(item.hk2Value) > 0);
-
-  return (
-    <div className="admin-dashboard">
-      <div className="admin-dashboard__header">
-        <div className="admin-dashboard__title-row">
-          <h2 className="admin-dashboard__title">Xin chào, {adminName}</h2>
-
-          <div className="admin-dashboard__header-controls">
-            <SchoolYearTermSelector
-              selectedSchoolYear={selectedSchoolYear}
-              selectedTerm={selectedTerm}
-              onYearChange={handleYearArrow}
-              onTermChange={handleTermChange}
-            />
-          </div>
+                {/* LOG HỆ THỐNG */}
+                <section className="admin-dashboard-new__card logs-table-card">
+                    <div className="card-header">
+                        <div className="header-group">
+                            <h3>Log Hệ Thống</h3>
+                            <FiActivity className="title-icon" />
+                        </div>
+                        <button className="view-all-btn" onClick={() => navigate("/admin/system-log")}>Xem tất cả</button>
+                    </div>
+                    <div className="logs-list">
+                        {systemLogs.map(log => (
+                            <div key={log.id} className="log-row">
+                                <div className="log-icon-wrap">{log.icon}</div>
+                                <div className="log-main">
+                                    <span className="log-user">{log.event}</span>
+                                    <span className="log-action">{log.action}</span>
+                                </div>
+                                <span className="log-time">{log.time}</span>
+                            </div>
+                        ))}
+                    </div>
+                </section>
+            </div>
         </div>
-      </div>
-
-      <StatisticsCardsSection
-        totalStudents={summaryStats.totalStudents}
-        totalTeachers={summaryStats.totalTeachers}
-        totalClasses={summaryStats.totalClasses}
-        selectedSchoolYear={selectedSchoolYear}
-      />
-
-      <div className="admin-dashboard__matrix">
-        <div className="admin-dashboard__slot admin-dashboard__slot--revenue">
-          <RevenueSection
-            selectedSchoolYear={selectedSchoolYear}
-            selectedTerm={selectedTerm}
-            termLabel={termLabel}
-            hasHk2Data={hasHk2Data}
-            comparisonData={revenueComparisonData}
-            formatCompactMoney={formatCompactMoney}
-          />
-        </div>
-
-        <div className="admin-dashboard__slot admin-dashboard__slot--pricing">
-          <EventCalendarSection />
-        </div>
-
-        <div className="admin-dashboard__slot admin-dashboard__slot--conduct">
-          <ConductScoreSection
-            selectedClass={selectedClass}
-            setSelectedClass={setSelectedClass}
-            selectedWeek={selectedWeek}
-            maxWeek={maxWeek}
-            onPrevWeek={handlePrevWeek}
-            onNextWeek={handleNextWeek}
-            competitionData={competitionData}
-          />
-        </div>
-
-        <div className="admin-dashboard__slot admin-dashboard__slot--academic">
-          <AcademicOverviewSection />
-        </div>
-      </div>
-    </div>
-  );
+    );
 };
 
 export default AdminDashboard;

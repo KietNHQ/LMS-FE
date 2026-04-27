@@ -3,9 +3,9 @@ import { useNavigate } from "react-router-dom";
 import { sidebarConfig, roleTheme } from "./sidebar.config";
 import SidebarItem from "./SidebarItem";
 import ProfileDialog from "../common/Dialog/ProfileDialog/ProfileDialog";
-import PointConfigModal from "../../pages/vp-discipline/components/PointConfigModal";
 import { FiChevronLeft, FiLogOut, FiMenu, FiSettings, FiX } from "react-icons/fi";
 import { FaGraduationCap } from "react-icons/fa";
+import { PERMISSIONS } from "../../config/permissions";
 import "./Sidebar.css";
 
 const MOBILE_BREAKPOINT = 768;
@@ -22,10 +22,49 @@ export default function Sidebar({
                                   userName = "User",
                                   userEmail,
                                   isCollapsed,
-                                  setIsCollapsed
+                                  setIsCollapsed,
+                                  userPermissions = null // [NEW] Prop nhận danh sách permissions từ BE
                                 }) {
   const navigate = useNavigate();
-  const items = sidebarConfig[role] || [];
+
+  // [NEW] Giả lập permissions nếu chưa có từ BE để tương thích ngược
+  const defaultMockPermissions = useMemo(() => {
+    switch (role) {
+      case "management":
+        // Role mới: Chứa tất cả quyền mặc định để demo. Sau này lấy từ BE.
+        return Object.values(PERMISSIONS);
+      case "admin":
+        // Admin chỉ được 3 quyền: quản lý user, xem audit log phân quyền, xem system log.
+        // KHÔNG có bất kỳ quyền nghiệp vụ nào (grade, finance, discipline...).
+        return [
+          PERMISSIONS.USER_VIEW,
+          PERMISSIONS.USER_CREATE,
+          PERMISSIONS.USER_UPDATE,
+          PERMISSIONS.USER_LOCK,
+          PERMISSIONS.USER_IMPORT,
+          PERMISSIONS.USER_ASSIGN_PERMISSION,
+          PERMISSIONS.PERMISSION_AUDIT_VIEW,
+          PERMISSIONS.SYSTEM_LOG_VIEW,
+        ];
+      case "vp_academic":
+        return [PERMISSIONS.GRADE_VIEW, PERMISSIONS.QUIZ_VIEW];
+      case "vp_discipline":
+        return [PERMISSIONS.DISCIPLINE_VIEW, PERMISSIONS.COMPETITION_MANAGE];
+      default:
+        return Object.values(PERMISSIONS);
+    }
+  }, [role]);
+
+  const permissionsToCheck = userPermissions || defaultMockPermissions;
+
+  // [NEW] Filter danh sách sidebar dựa trên permissions thay vì show toàn bộ theo role
+  const items = useMemo(() => {
+    const baseItems = sidebarConfig[role] || [];
+    return baseItems.filter(item => {
+      if (!item.requiredPermissions || item.requiredPermissions.length === 0) return true;
+      return item.requiredPermissions.some(p => permissionsToCheck.includes(p));
+    });
+  }, [role, permissionsToCheck]);
 
   const getIsMobile = () => window.innerWidth <= MOBILE_BREAKPOINT;
   const getIsAtTop = () => window.scrollY <= 16;
@@ -34,7 +73,6 @@ export default function Sidebar({
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [isAtTop, setIsAtTop] = useState(getIsAtTop);
   const [isProfileDialogOpen, setIsProfileDialogOpen] = useState(false);
-  const [isPointConfigOpen, setIsPointConfigOpen] = useState(false);
   const [studentUnreadCount, setStudentUnreadCount] = useState(() => {
     const saved = Number(localStorage.getItem(STUDENT_UNREAD_COUNT_KEY));
     return Number.isFinite(saved) ? saved : 0;
@@ -47,7 +85,7 @@ export default function Sidebar({
     const saved = Number(localStorage.getItem(TEACHER_UNREAD_COUNT_KEY));
     return Number.isFinite(saved) ? saved : 0;
   });
-  const [homeroomUnread, setHomeroomUnread] = useState(true); // Mock for GVCN chat dot
+  const [homeroomUnread, setHomeroomUnread] = useState(false); // Removed mock dot for GVCN chat
   // Hiển thị badge số thông báo cho admin
   const [adminUnreadCount, setAdminUnreadCount] = useState(0);
 
@@ -55,6 +93,8 @@ export default function Sidebar({
 
   const roleLabel = useMemo(() => {
     switch (role) {
+      case "management":
+        return "Quản lý";
       case "student":
         return "Học sinh";
       case "teacher":
@@ -231,9 +271,8 @@ export default function Sidebar({
       return teacherUnreadCount;
     }
 
-    if (role === "teacher" && itemPath === "/teacher/homeroom" && homeroomUnread) {
-      return 1;
-    }
+    // Homeroom dot logic removed as chat moved to global portal
+
 
     return 0;
   };
@@ -341,16 +380,6 @@ export default function Sidebar({
               </div>
 
                 <div className="sidebar-footer">
-                  {role === "vp_discipline" && (
-                    <button
-                        className="sidebar-config-btn"
-                        onClick={() => setIsPointConfigOpen(true)}
-                        type="button"
-                    >
-                      <FiSettings />
-                      <span>Cấu hình điểm</span>
-                    </button>
-                  )}
                   <button
                       className="sidebar-logout-btn"
                       onClick={handleLogout}
@@ -391,16 +420,6 @@ export default function Sidebar({
                 </div>
 
                 <div className="sidebar-footer">
-                  {role === "vp_discipline" && (
-                    <button
-                        className="sidebar-config-btn"
-                        onClick={() => setIsPointConfigOpen(true)}
-                        type="button"
-                    >
-                      <FiSettings />
-                      <span>Cấu hình điểm</span>
-                    </button>
-                  )}
                   <button
                       className="sidebar-logout-btn"
                       onClick={handleLogout}
@@ -414,10 +433,6 @@ export default function Sidebar({
           )}
         </aside>
 
-        <PointConfigModal
-          isOpen={isPointConfigOpen}
-          onClose={() => setIsPointConfigOpen(false)}
-        />
 
         <ProfileDialog
           open={isProfileDialogOpen}
