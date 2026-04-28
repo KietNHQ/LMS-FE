@@ -1,11 +1,11 @@
 import { useEffect, useState } from "react";
 import { PageHeader, SchoolYearTermSelector, EventCalendar, LoadingSpinner } from "../../../../components/common";
 import { useSchoolYearTerm } from "../../../../hooks/useSchoolYearTerm";
-import { adminDashboardService } from "../../../../services/pages/admin/dashboard/dashboardService";
-import { 
+import { principalService } from "../../../../services/pages/principal";
+import {
     FiUsers, FiUserCheck, FiHome, FiDollarSign, FiStar, FiActivity, 
     FiShield, FiBell, FiTrendingUp, FiCheckCircle, FiBarChart2, FiAlertCircle,
-    FiArrowRight, FiTrendingDown, FiCalendar
+    FiArrowRight, FiTrendingDown
 } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
 import { INITIAL_CALENDAR_EVENTS, CALENDAR_EVENT_TYPES } from "../../../../components/common/EventCalendar/eventData";
@@ -22,7 +22,7 @@ export default function PrincipalDashboard() {
         totalClasses: 42,
     });
 
-    const [gradeProgress, setGradeProgress] = useState({
+    const [gradeProgress] = useState({
         draft: 12,
         pending: 8,
         finalized: 22,
@@ -34,7 +34,7 @@ export default function PrincipalDashboard() {
         ]
     });
 
-    const [revenueStats, setRevenueStats] = useState({
+    const [revenueStats] = useState({
         expected: 15000000000,
         collected: 12500000000,
         collectionRate: 83,
@@ -92,7 +92,7 @@ export default function PrincipalDashboard() {
         let isMounted = true;
         const fetch = async () => {
             try {
-                const overview = await adminDashboardService.getDashboardOverview();
+                const overview = await principalService.getDashboardOverview();
                 if (!isMounted) return;
                 if (overview.summary) setSummaryStats(overview.summary);
             } catch (_) {}

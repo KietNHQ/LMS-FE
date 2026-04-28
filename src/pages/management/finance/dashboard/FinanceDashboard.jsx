@@ -1,16 +1,15 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { PageHeader, SchoolYearTermSelector } from "../../../../components/common";
 import { useSchoolYearTerm } from "../../../../hooks/useSchoolYearTerm";
+import { financeService } from "../../../../services/pages/finance";
 import {
     FiAlertCircle,
     FiAlertTriangle,
     FiBarChart2,
     FiCalendar,
     FiClock,
-    FiDollarSign,
     FiPieChart,
     FiTarget,
-    FiTrendingUp
 } from "react-icons/fi";
 import {
     Bar,
@@ -25,13 +24,13 @@ import { Link } from "react-router-dom";
 import Modal from "../../../../components/ui/Modal/Modal";
 import "./FinanceDashboard.css";
 
-export default function FinanceDashboard() {
+export function FinanceDashboard() {
     const { selectedSchoolYear, selectedTerm, handleYearArrow, handleTermChange } = useSchoolYearTerm();
     const [showImpactDialog, setShowImpactDialog] = useState(false);
     const [impactFilter, setImpactFilter] = useState("all");
     const [impactQuery, setImpactQuery] = useState("");
 
-    const summary = {
+    const [summary, setSummary] = useState({
         actualRevenue: "12.50T",
         targetRevenue: "13.10T",
         revenueGap: "600tr",
@@ -41,7 +40,40 @@ export default function FinanceDashboard() {
         refundRate: "1.8%",
         unrecognizedRevenue: "320tr",
         pipelineRevenue: "610tr"
-    };
+    });
+
+    useEffect(() => {
+        let isMounted = true;
+
+        const loadFinanceSummary = async () => {
+            try {
+                const data = await financeService.getDebtSummary({
+                    params: {
+                        schoolYearId: selectedSchoolYear,
+                        semesterId: selectedTerm,
+                    },
+                });
+
+                if (!isMounted || !data) return;
+
+                const totalCollected = Number(data.totalCollected ?? data.collected ?? 0);
+                const totalDebt = Number(data.totalDebt ?? data.debt ?? 0);
+                const overdueDebt = Number(data.overdueDebt ?? data.overdueDebtAmount ?? 0);
+                const collectionRate = data.collectionRate ?? (totalDebt > 0 ? Math.round((totalCollected / totalDebt) * 1000) / 10 : null);
+
+                setSummary((prev) => ({
+                    ...prev,
+                    actualRevenue: totalCollected > 0 ? `${(totalCollected / 1000).toFixed(2)}T` : prev.actualRevenue,
+                    debt: totalDebt > 0 ? `${Math.round(totalDebt / 1_000_000)}tr` : prev.debt,
+                    overdueDebt: overdueDebt > 0 ? `${Math.round(overdueDebt / 1_000_000)}tr` : prev.overdueDebt,
+                    collectionRate: collectionRate != null ? `${collectionRate}%` : prev.collectionRate,
+                }));
+            } catch (_) {}
+        };
+
+        loadFinanceSummary();
+        return () => { isMounted = false; };
+    }, [selectedSchoolYear, selectedTerm]);
 
     const monthlyRevenue = [
         { month: "08", actual: 1.45, unpaid: 55, debt: "55tr" },
@@ -84,7 +116,8 @@ export default function FinanceDashboard() {
 
     const revenueImpacts = [
         { 
-            label: "Học sinh tăng/giảm", 
+            id: "student_change",
+            label: "Học sinh tăng/giảm",
             value: "+46 HS", 
             note: "Ảnh hưởng trực tiếp đến doanh số học phí",
             trend: "increase",
@@ -95,7 +128,8 @@ export default function FinanceDashboard() {
             ]
         },
         { 
-            label: "Chi phí hư hại", 
+            id: "damage_costs",
+            label: "Chi phí hư hại",
             value: "69tr", 
             note: "Phát sinh từ vận hành và tài sản",
             trend: "decrease",
@@ -106,7 +140,8 @@ export default function FinanceDashboard() {
             ]
         },
         { 
-            label: "Marketing", 
+            id: "marketing",
+            label: "Marketing",
             value: "420tr", 
             note: "Kéo doanh số tuyển sinh và tái ghi danh",
             trend: "increase",
@@ -117,7 +152,8 @@ export default function FinanceDashboard() {
             ]
         },
         { 
-            label: "Lớp trống", 
+            id: "empty_classes",
+            label: "Lớp trống",
             value: "6 lớp", 
             note: "Tác động đến công suất và doanh thu kỳ sau",
             trend: "decrease",
@@ -128,7 +164,8 @@ export default function FinanceDashboard() {
             ]
         },
         { 
-            label: "Giáo viên liên quan", 
+            id: "teacher_related",
+            label: "Giáo viên liên quan",
             value: "7", 
             note: "Ảnh hưởng phân bổ chi phí và sĩ số",
             trend: "neutral",
@@ -139,7 +176,8 @@ export default function FinanceDashboard() {
             ]
         },
         { 
-            label: "Hoàn tiền", 
+            id: "refunds",
+            label: "Hoàn tiền",
             value: "36tr", 
             note: "Làm giảm doanh số thực thu",
             trend: "decrease",
@@ -209,7 +247,7 @@ export default function FinanceDashboard() {
 
     const primaryAlert = alerts[0];
     const impactDetailConfig = {
-        "Học sinh tăng/giảm": {
+        student_change: {
             priority: "Cao",
             owner: "Tuyển sinh",
             effect: "Tăng doanh số +3.2%",
@@ -218,7 +256,7 @@ export default function FinanceDashboard() {
             dueDate: "30/04/2026",
             status: "Đang triển khai"
         },
-        "Chi phí hư hại": {
+        damage_costs: {
             priority: "Cao",
             owner: "Hành chính - Cơ sở vật chất",
             effect: "Giảm biên lợi nhuận -1.1%",
@@ -227,7 +265,7 @@ export default function FinanceDashboard() {
             dueDate: "26/04/2026",
             status: "Cần xử lý gấp"
         },
-        Marketing: {
+        marketing: {
             priority: "Trung bình",
             owner: "Marketing + Tuyển sinh",
             effect: "Đóng góp nguồn thu mới 1.18T",
@@ -236,7 +274,7 @@ export default function FinanceDashboard() {
             dueDate: "05/05/2026",
             status: "Đang theo dõi"
         },
-        "Lớp trống": {
+        empty_classes: {
             priority: "Cao",
             owner: "Giáo vụ",
             effect: "Thất thoát công suất lớp -9%",
@@ -245,7 +283,7 @@ export default function FinanceDashboard() {
             dueDate: "28/04/2026",
             status: "Cần xử lý gấp"
         },
-        "Giáo viên liên quan": {
+        teacher_related: {
             priority: "Trung bình",
             owner: "Nhân sự học thuật",
             effect: "Chi phí phân bổ tăng nhẹ +0.4%",
@@ -254,7 +292,7 @@ export default function FinanceDashboard() {
             dueDate: "08/05/2026",
             status: "Đang theo dõi"
         },
-        "Hoàn tiền": {
+        refunds: {
             priority: "Trung bình",
             owner: "CSKH + Kế toán",
             effect: "Giảm doanh số thực thu -0.8%",
@@ -267,7 +305,7 @@ export default function FinanceDashboard() {
 
     const impactDetails = useMemo(
         () => revenueImpacts.map((item) => {
-            const detail = impactDetailConfig[item.label] || {};
+            const detail = impactDetailConfig[item.id] || {};
             const priorityScore = detail.priority === "Cao" ? 3 : 2;
             const urgencyScore = detail.status === "Cần xử lý gấp" ? 2 : 1;
             const trendScore = item.trend === "decrease" ? 2 : item.trend === "neutral" ? 1 : 0;
