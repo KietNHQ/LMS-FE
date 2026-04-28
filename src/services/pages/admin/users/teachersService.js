@@ -29,7 +29,24 @@ const requestWithFallback = async (endpoints, callback) => {
 };
 
 const parseTeacher = (item = {}) => {
-  const name = item.fullName || item.name || item.full_name || "";
+  let name = item.fullName || item.name || item.full_name || "";
+  
+  if (!name && item.profile) {
+    name = item.profile.fullName || item.profile.name || "";
+    if (!name && (item.profile.firstName || item.profile.lastName)) {
+      name = `${item.profile.lastName || ""} ${item.profile.firstName || ""}`.trim();
+    }
+  }
+  
+  if (!name && (item.firstName || item.lastName)) {
+    name = `${item.lastName || ""} ${item.firstName || ""}`.trim();
+  }
+
+  // Final fallback to email prefix if still empty
+  if (!name && item.email) {
+    name = item.email.split("@")[0];
+  }
+
   return {
     id: item.id,
     name,

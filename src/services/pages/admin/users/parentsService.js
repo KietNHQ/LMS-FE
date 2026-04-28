@@ -45,11 +45,11 @@ const parseParent = (item = {}) => {
     profile.fullName ||
     profile.full_name ||
     profile.name ||
-    composeFullName(
+    (
       item.lastName || item.last_name || item.surname || profile.lastName || profile.last_name || profile.surname,
       item.firstName || item.first_name || item.givenName || item.given_name || profile.firstName || profile.first_name || profile.givenName || profile.given_name
     ) ||
-    "Phụ huynh";
+    (item.email ? item.email.split("@")[0] : "Phụ huynh");
 
   return {
     id: item.id,

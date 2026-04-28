@@ -1,5 +1,5 @@
 import React from "react";
-import { FiEdit2, FiTrash2, FiBarChart2 } from "react-icons/fi";
+import { FiEdit2, FiTrash2, FiBarChart2, FiUserX, FiUserCheck, FiLock } from "react-icons/fi";
 import "./teacherListSection.css";
 
 function getAvatarLetter(name) {
@@ -14,13 +14,26 @@ export default function TeacherListSection({
 	onView,
 	onEdit,
 	onDelete,
+    onResetPassword,
+    onToggleStatus,
+    selectedUserIds = [],
+    onSelectRow,
+    onSelectAll,
 }) {
+    const isAllSelected = teachers.length > 0 && selectedUserIds.length === teachers.length;
 	return (
 		<section className="teacher-list-card">
 			<div className="teacher-list-table-wrap">
 				<table className="teacher-list-table">
 					<thead>
 						<tr>
+                            <th className="teacher-checkbox-col">
+                                <input 
+                                    type="checkbox" 
+                                    checked={isAllSelected}
+                                    onChange={(e) => onSelectAll(e.target.checked)}
+                                />
+                            </th>
 							<th>GIÁO VIÊN</th>
 							<th>MÔN DẠY</th>
                             <th>LỚP CHỦ NHIỆM</th>
@@ -43,6 +56,7 @@ export default function TeacherListSection({
 									key={teacher.id}
 									onClick={() => onView(teacher)}
 									tabIndex={0}
+                                    className={selectedUserIds.includes(teacher.id) ? "is-selected" : ""}
 									onKeyDown={(e) => {
 										if (e.key === "Enter" || e.key === " ") {
 											e.preventDefault();
@@ -50,13 +64,20 @@ export default function TeacherListSection({
 										}
 									}}
 								>
+                                    <td onClick={(e) => e.stopPropagation()}>
+                                        <input 
+                                            type="checkbox" 
+                                            checked={selectedUserIds.includes(teacher.id)}
+                                            onChange={() => onSelectRow(teacher.id)}
+                                        />
+                                    </td>
 									<td>
 										<div className="teacher-main-info">
 											<div className="teacher-avatar">{getAvatarLetter(teacher.name)}</div>
 
 											<div className="teacher-name-wrap">
-												<h4>{teacher.name}</h4>
-												<p>{teacher.email}</p>
+												<h4>{teacher.name || teacher.email?.split("@")[0] || "Chưa đặt tên"}</h4>
+												<p className="teacher-email-text">{teacher.email || "—"}</p>
 											</div>
 										</div>
 									</td>
@@ -105,10 +126,28 @@ export default function TeacherListSection({
 												<FiEdit2 />
 											</button>
 
+                                            <button
+                                                type="button"
+                                                className="teacher-icon-btn block"
+                                                onClick={() => onToggleStatus(teacher)}
+                                                title={teacher.status === "Hoạt động" ? "Khóa" : "Mở khóa"}
+                                            >
+                                                {teacher.status === "Hoạt động" ? <FiUserX /> : <FiUserCheck />}
+                                            </button>
+
+                                            <button
+                                                type="button"
+                                                className="teacher-icon-btn reset"
+                                                onClick={() => onResetPassword(teacher)}
+                                                title="Đặt lại mật khẩu"
+                                            >
+                                                <FiLock />
+                                            </button>
+
 											<button
 												type="button"
 												className="teacher-icon-btn delete"
-												onClick={() => onDelete(teacher.id)}
+												onClick={() => onDelete(teacher)}
 												aria-label="Xóa"
 												title="Xóa"
 											>

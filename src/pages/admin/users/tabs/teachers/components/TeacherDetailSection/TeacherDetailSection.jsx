@@ -131,7 +131,7 @@ export default function TeacherDetailSection({
 									{isClassOpen && (
 										<div className="teacher-detail-custom-select-options">
 											{classOptions.map((className) => {
-												const isDisabled = teacher.assignedClasses?.includes(className);
+												const isDisabled = (teacher.assignedClasses || []).includes(className);
 												return (
 													<div
 														key={className}
@@ -164,10 +164,10 @@ export default function TeacherDetailSection({
 						</div>
 
 						<div className="teacher-detail-chip-wrap">
-							{teacher.assignedClasses.length === 0 ? (
+							{(!teacher.assignedClasses || teacher.assignedClasses.length === 0) ? (
 								<p className="teacher-detail-empty">Chưa có lớp được phân công.</p>
 							) : (
-								teacher.assignedClasses.map((className) => (
+								(teacher.assignedClasses || []).map((className) => (
 									<span key={className} className="teacher-detail-chip">
 										{className}
 										<button type="button" onClick={() => onRemoveAssignedClass(className)}>

@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 
 import "./AdminParents.css";
-import { CreateUserDialog, Pagination } from "../../../../../components/common";
+import { CreateUserDialog, Pagination, ConfirmationModal } from "../../../../../components/common";
 import ParentActionsSection from "./components/parentActionsSection/parentActionsSection";
 import ParentListSection from "./components/parentListSection/parentListSection";
 import ParentInformationSection from "./components/parentInformationSection/parentInformationSection";
@@ -48,6 +48,22 @@ export default function AdminParents({ onCountChange }) {
   const [activeParentId, setActiveParentId] = useState(null);
   const [parentForm, setParentForm] = useState(emptyParentForm);
   const [currentPage, setCurrentPage] = useState(1);
+
+  const [selectedUserIds, setSelectedUserIds] = useState([]);
+  const [isBulkDeleting, setIsBulkDeleting] = useState(false);
+  const [isBulkToggling, setIsBulkToggling] = useState(false);
+  const [statusTarget, setStatusTarget] = useState(null);
+
+  const [confirmConfig, setConfirmConfig] = useState({
+    isOpen: false,
+    title: "",
+    message: "",
+    confirmLabel: "",
+    onConfirm: () => {},
+    variant: "primary"
+  });
+
+  const closeConfirm = () => setConfirmConfig(prev => ({ ...prev, isOpen: false }));
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isImportingExcel, setIsImportingExcel] = useState(false);
@@ -110,6 +126,7 @@ export default function AdminParents({ onCountChange }) {
 
   useEffect(() => {
     setCurrentPage(1);
+    setSelectedUserIds([]);
   }, [searchTerm, selectedStatus, selectedClass]);
 
   useEffect(() => {
@@ -192,15 +209,173 @@ export default function AdminParents({ onCountChange }) {
     });
   };
 
-  const handleDeleteParent = async (id) => {
-    if (!window.confirm("Bạn có chắc muốn xóa phụ huynh này không?")) return;
+  const handleBulkStatusChange = async (targetStatus) => {
+    if (selectedUserIds.length === 0) return;
+    
+    const actionLabel = targetStatus === "Hoạt động" ? "KÍCH HOẠT" : "KHÓA";
+    
+    setConfirmConfig({
+      isOpen: true,
+      title: `${actionLabel} tài khoản`,
+      message: `Bạn có chắc chắn muốn ${actionLabel} ${selectedUserIds.length} phụ huynh đã chọn?`,
+      confirmLabel: `Xác nhận ${actionLabel.toLowerCase()}`,
+      variant: targetStatus === "Hoạt động" ? "primary" : "warning",
+      onConfirm: async () => {
+        closeConfirm();
+        setIsBulkToggling(true);
+        try {
+          const promises = selectedUserIds.map(id => {
+            const parent = parents.find(u => u.id === id);
+            if (!parent) return Promise.resolve();
+            return parentsService.updateParent(id, { ...parent, status: targetStatus });
+          });
+          
+          await Promise.all(promises);
+          await loadParents();
+          window.alert(`Đã ${actionLabel.toLowerCase()} thành công ${selectedUserIds.length} phụ huynh.`);
+        } catch (error) {
+          window.alert(getErrorMessage(error, "Có lỗi xảy ra khi xử lý hàng loạt."));
+        } finally {
+          setIsBulkToggling(false);
+        }
+      }
+    });
+  };
+
+  const handleBulkResetPassword = async () => {
+    if (selectedUserIds.length === 0) return;
+    
+    setConfirmConfig({
+      isOpen: true,
+      title: "Đặt lại mật khẩu",
+      message: `Bạn có chắc chắn muốn ĐẶT LẠI MẬT KHẨU cho ${selectedUserIds.length} phụ huynh đã chọn?`,
+      confirmLabel: "Đặt lại mật khẩu",
+      variant: "primary",
+      onConfirm: async () => {
+        closeConfirm();
+        setIsBulkToggling(true);
+        try {
+          const results = [];
+          for (const id of selectedUserIds) {
+            const parent = parents.find(u => u.id === id);
+            if (!parent) continue;
+            
+            const generatedPwd = Math.random().toString(36).slice(-10);
+            await parentsService.updateParent(id, { ...parent, password: generatedPwd });
+            results.push({ name: parent.name, password: generatedPwd });
+          }
+          
+          await loadParents();
+          
+          const resultMsg = results.map(r => `${r.name}: ${r.password}`).join("\n");
+          window.alert(`Đặt lại mật khẩu thành công cho ${results.length} phụ huynh:\n\n${resultMsg}`);
+        } catch (error) {
+          window.alert(getErrorMessage(error, "Có lỗi xảy ra khi đặt lại mật khẩu hàng loạt."));
+        } finally {
+          setIsBulkToggling(false);
+        }
+      }
+    });
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedUserIds.length === 0) return;
+    
+    setConfirmConfig({
+      isOpen: true,
+      title: "Xóa tài khoản",
+      message: `CẢNH BÁO: Bạn có chắc chắn muốn XÓA VĨNH VIỄN ${selectedUserIds.length} phụ huynh đã chọn? Hành động này không thể hoàn tác.`,
+      confirmLabel: "Xóa tài khoản",
+      variant: "danger",
+      onConfirm: async () => {
+        closeConfirm();
+        setIsBulkDeleting(true);
+        try {
+          const promises = selectedUserIds.map(id => parentsService.deleteParent(id));
+          await Promise.all(promises);
+          await loadParents();
+          window.alert(`Đã xóa thành công ${selectedUserIds.length} phụ huynh.`);
+        } catch (error) {
+          window.alert(getErrorMessage(error, "Có lỗi xảy ra khi xóa hàng loạt."));
+        } finally {
+          setIsBulkDeleting(false);
+        }
+      }
+    });
+  };
+
+  const handleResetPassword = async (parent) => {
+    if (!parent) return;
+    
+    setConfirmConfig({
+      isOpen: true,
+      title: "Đặt lại mật khẩu",
+      message: `Bạn có chắc chắn muốn đặt lại mật khẩu cho phụ huynh ${parent.name}?`,
+      confirmLabel: "Đặt lại mật khẩu",
+      variant: "primary",
+      onConfirm: async () => {
+        closeConfirm();
+        try {
+          const generatedPwd = Math.random().toString(36).slice(-10);
+          await parentsService.updateParent(parent.id, { ...parent, password: generatedPwd });
+          window.alert(`Đặt lại mật khẩu thành công cho ${parent.name}.\nMật khẩu mới là: ${generatedPwd}`);
+        } catch (error) {
+          window.alert(getErrorMessage(error, "Không thể đặt lại mật khẩu."));
+        }
+      }
+    });
+  };
+
+  const handleToggleStatus = async () => {
+    if (!statusTarget) return;
+    
+    const nextStatus = statusTarget.status === "Hoạt động" ? "Vô hiệu hóa" : "Hoạt động";
+    const actionLabel = nextStatus === "Hoạt động" ? "Kích hoạt" : "Vô hiệu hóa";
 
     try {
-      await parentsService.deleteParent(id);
+      await parentsService.updateParent(statusTarget.id, { ...statusTarget, status: nextStatus });
+      setStatusTarget(null);
       await loadParents();
+      window.alert(`${actionLabel} phụ huynh ${statusTarget.name} thành công.`);
     } catch (error) {
-      window.alert(getErrorMessage(error, "Không thể xóa phụ huynh."));
+      window.alert(getErrorMessage(error, `Không thể ${actionLabel.toLowerCase()} phụ huynh.`));
     }
+  };
+
+  const handleSelectRow = (userId) => {
+    setSelectedUserIds(prev => 
+      prev.includes(userId) 
+        ? prev.filter(id => id !== userId) 
+        : [...prev, userId]
+    );
+  };
+
+  const handleSelectAll = (checked) => {
+    if (checked) {
+      setSelectedUserIds(paginatedParents.map(u => u.id));
+    } else {
+      setSelectedUserIds([]);
+    }
+  };
+
+  const handleDeleteParent = async (parent) => {
+    setConfirmConfig({
+      isOpen: true,
+      title: "Xóa phụ huynh",
+      message: `Bạn có chắc chắn muốn xóa vĩnh viễn phụ huynh ${parent.name}? Hành động này không thể hoàn tác.`,
+      confirmLabel: "Xóa ngay",
+      variant: "danger",
+      onConfirm: async () => {
+        closeConfirm();
+        try {
+          await parentsService.deleteParent(parent.id);
+          await loadParents();
+          window.alert("Đã xóa phụ huynh thành công.");
+        } catch (error) {
+          window.alert(getErrorMessage(error, "Không thể xóa phụ huynh."));
+        }
+      }
+    });
   };
 
   const handleCloseModal = () => {
@@ -240,23 +415,33 @@ export default function AdminParents({ onCountChange }) {
       return;
     }
 
-    const payload = {
-      ...parentForm,
-      profile: {
-        ...(parentForm.profile || {}),
-        children: normalizeChildren(parentForm.profile?.children),
-        phone: parentForm.phone || "",
-      },
-    };
+    setConfirmConfig({
+      isOpen: true,
+      title: "Lưu thay đổi",
+      message: `Bạn có chắc chắn muốn lưu những thay đổi cho phụ huynh ${parentForm.name}?`,
+      confirmLabel: "Lưu thay đổi",
+      variant: "primary",
+      onConfirm: async () => {
+        closeConfirm();
+        const payload = {
+          ...parentForm,
+          profile: {
+            ...(parentForm.profile || {}),
+            children: normalizeChildren(parentForm.profile?.children),
+            phone: parentForm.phone || "",
+          },
+        };
 
-    try {
-      await parentsService.updateParent(activeParentId, payload);
-      await loadParents();
-      window.alert(`Đã cập nhật phụ huynh ${parentForm.name.trim()} thành công.`);
-      handleCloseModal();
-    } catch (error) {
-      window.alert(getErrorMessage(error, "Không thể cập nhật phụ huynh."));
-    }
+        try {
+          await parentsService.updateParent(activeParentId, payload);
+          await loadParents();
+          window.alert(`Đã cập nhật phụ huynh ${parentForm.name.trim()} thành công.`);
+          handleCloseModal();
+        } catch (error) {
+          window.alert(getErrorMessage(error, "Không thể cập nhật phụ huynh."));
+        }
+      }
+    });
   };
 
   return (
@@ -285,6 +470,11 @@ export default function AdminParents({ onCountChange }) {
             onView={handleViewParent}
             onEdit={handleEditParent}
             onDelete={handleDeleteParent}
+            onResetPassword={handleResetPassword}
+            onToggleStatus={setStatusTarget}
+            selectedUserIds={selectedUserIds}
+            onSelectRow={handleSelectRow}
+            onSelectAll={handleSelectAll}
           />
 
           {hasFilteredParents && totalPages > 1 && (
@@ -328,6 +518,70 @@ export default function AdminParents({ onCountChange }) {
           importFeedback={importFeedback}
         />
       )}
+
+      {/* Bulk Action Bar */}
+      {selectedUserIds.length > 0 && (
+        <div className="admin-bulk-actions-bar">
+          <div className="bulk-info">
+            <span className="bulk-count">Đã chọn: <strong>{selectedUserIds.length}</strong></span>
+            <button className="bulk-clear-btn" onClick={() => setSelectedUserIds([])}>Bỏ chọn</button>
+          </div>
+          <div className="bulk-btns">
+            <button 
+              className="bulk-btn lock" 
+              onClick={() => handleBulkStatusChange("Vô hiệu hóa")}
+              disabled={isBulkToggling}
+            >
+              Khóa tài khoản
+            </button>
+            <button 
+              className="bulk-btn unlock" 
+              onClick={() => handleBulkStatusChange("Hoạt động")}
+              disabled={isBulkToggling}
+            >
+              Mở khóa
+            </button>
+            <button 
+              className="bulk-btn reset" 
+              onClick={handleBulkResetPassword}
+              disabled={isBulkToggling}
+            >
+              Đặt lại mật khẩu
+            </button>
+            <button 
+                className="bulk-btn delete" 
+                onClick={handleBulkDelete}
+                disabled={isBulkDeleting}
+            >
+                {isBulkDeleting ? "Đang xóa..." : "Xóa tài khoản"}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {statusTarget && (
+        <ConfirmationModal
+          isOpen={true}
+          title={statusTarget.status === "Hoạt động" ? "Vô hiệu hóa người dùng" : "Kích hoạt người dùng"}
+          message={
+            <>Bạn có chắc muốn {statusTarget.status === "Hoạt động" ? "vô hiệu hóa" : "kích hoạt lại"} phụ huynh <strong>{statusTarget.name}</strong> không?</>
+          }
+          confirmLabel={statusTarget.status === "Hoạt động" ? "Xác nhận vô hiệu hóa" : "Xác nhận kích hoạt"}
+          variant={statusTarget.status === "Hoạt động" ? "warning" : "primary"}
+          onConfirm={handleToggleStatus}
+          onCancel={() => setStatusTarget(null)}
+        />
+      )}
+
+      <ConfirmationModal
+        isOpen={confirmConfig.isOpen}
+        title={confirmConfig.title}
+        message={confirmConfig.message}
+        confirmLabel={confirmConfig.confirmLabel}
+        variant={confirmConfig.variant}
+        onConfirm={confirmConfig.onConfirm}
+        onCancel={closeConfirm}
+      />
     </div>
   );
 }

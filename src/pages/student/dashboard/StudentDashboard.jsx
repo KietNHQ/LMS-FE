@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import "./StudentDashboard.css";
 import {
@@ -14,7 +14,7 @@ import { INITIAL_CALENDAR_EVENTS, CALENDAR_EVENT_TYPES } from "../../../componen
 import SubjectRadar from "./components/SubjectRadar/SubjectRadar";
 import YearProgress from "./components/YearProgress/YearProgress";
 import UpcomingTests from "./components/UpcomingTests/UpcomingTests";
-import { SchoolYearTermSelector } from "../../../components/common";
+import { SchoolYearTermSelector, LoadingSpinner } from "../../../components/common";
 import { useSchoolYearTerm } from "../../../hooks/useSchoolYearTerm";
 
 const subjectData = [
@@ -123,6 +123,13 @@ function getOverviewCardData(overview) {
 export default function StudentDashboard() {
     const navigate = useNavigate();
     const { selectedSchoolYear, selectedTerm, handleYearArrow, handleTermChange } = useSchoolYearTerm();
+    const [isLoading, setIsLoading] = useState(true);
+
+    useEffect(() => {
+        setIsLoading(true);
+        const timer = setTimeout(() => setIsLoading(false), 1000);
+        return () => clearTimeout(timer);
+    }, [selectedSchoolYear, selectedTerm]);
 
     const summaryCard = useMemo(
         () => getOverviewCardData(academicOverview),
@@ -222,42 +229,49 @@ export default function StudentDashboard() {
                 </div>
             </div>
 
-            <StatsCards cards={statsCards} />
-
-            <div className="student-dashboard-grid student-dashboard-grid-top">
-                <div className="student-dashboard-calendar-card">
-                  <EventCalendar 
-                    title="Lịch Sự Kiện"
-                    themeClass="theme-student"
-                    userRole="student"
-                    isCompact={true}
-                    eventTypes={CALENDAR_EVENT_TYPES}
-                    initialEvents={INITIAL_CALENDAR_EVENTS}
-                    selectedSchoolYear={selectedSchoolYear}
-                    selectedTerm={selectedTerm}
-                    rolePolicy={{
-                      canCreate: false,
-                      canViewDetails: true,
-                      canEdit: false,
-                      canDelete: false
-                    }}
-                  />
+            {isLoading ? (
+                <div className="layout-loading-wrapper">
+                    <LoadingSpinner size="lg" label="Đang tải dữ liệu học tập..." role="student" />
                 </div>
-                <UpcomingTests
-                    quizzes={upcomingQuizzes}
-                    onOpenQuiz={() => navigate("/student/quiz")}
-                />
-            </div>
+            ) : (
+                <>
+                    <StatsCards cards={statsCards} />
 
+                    <div className="student-dashboard-grid student-dashboard-grid-top">
+                        <div className="student-dashboard-calendar-card">
+                        <EventCalendar 
+                            title="Lịch Sự Kiện"
+                            themeClass="theme-student"
+                            userRole="student"
+                            isCompact={true}
+                            eventTypes={CALENDAR_EVENT_TYPES}
+                            initialEvents={INITIAL_CALENDAR_EVENTS}
+                            selectedSchoolYear={selectedSchoolYear}
+                            selectedTerm={selectedTerm}
+                            rolePolicy={{
+                            canCreate: false,
+                            canViewDetails: true,
+                            canEdit: false,
+                            canDelete: false
+                            }}
+                        />
+                        </div>
+                        <UpcomingTests
+                            quizzes={upcomingQuizzes}
+                            onOpenQuiz={() => navigate("/student/quiz")}
+                        />
+                    </div>
 
-            <div className="student-dashboard-grid student-dashboard-grid-bottom">
-                <YearProgress
-                    items={currentStudentYearProgress}
-                    onOpenGrades={() => navigate("/student/grades")}
-                />
+                    <div className="student-dashboard-grid student-dashboard-grid-bottom">
+                        <YearProgress
+                            items={currentStudentYearProgress}
+                            onOpenGrades={() => navigate("/student/grades")}
+                        />
 
-                <SubjectRadar data={subjectData} />
-            </div>
+                        <SubjectRadar data={subjectData} />
+                    </div>
+                </>
+            )}
         </div>
     );
 }

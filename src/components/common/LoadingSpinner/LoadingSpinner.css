@@ -3,47 +3,100 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 10px;
-  min-height: 120px;
+  gap: 1.5rem;
+  min-height: 140px;
 }
 
 .common-loading-spinner.is-fullscreen {
   min-height: 100vh;
   width: 100%;
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(10px);
 }
 
-.common-loading-spinner__circle {
+/* Triple Rings Base */
+.spinner-triple-rings {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.spinner-triple-rings .ring {
+  position: absolute;
   border-radius: 50%;
-  border: 3px solid rgba(120, 87, 255, 0.2);
-  border-top-color: #7857ff;
-  animation: common-spinner-rotate 0.75s linear infinite;
+  border: 3px solid transparent;
+  box-sizing: border-box;
 }
 
-.common-loading-spinner__circle.size-sm {
-  width: 20px;
-  height: 20px;
+/* Role Color Variants using project variables */
+.common-loading-spinner.theme-admin { --spinner-color: #1e2f5a; }
+.common-loading-spinner.theme-teacher { --spinner-color: #0d9488; }
+.common-loading-spinner.theme-student { --spinner-color: #2563eb; }
+.common-loading-spinner.theme-parent { --spinner-color: #7c3aed; }
+
+/* Outer Ring */
+.ring-outer {
+  border-top-color: var(--spinner-color) !important;
+  border-right-color: var(--spinner-color) !important;
+  animation: spinner-rotation 1.5s linear infinite;
 }
 
-.common-loading-spinner__circle.size-md {
-  width: 28px;
-  height: 28px;
+/* Middle Ring */
+.ring-middle {
+  border-bottom-color: var(--spinner-color) !important;
+  border-left-color: var(--spinner-color) !important;
+  opacity: 0.7;
+  animation: spinner-rotation-back 1s linear infinite;
 }
 
-.common-loading-spinner__circle.size-lg {
-  width: 36px;
-  height: 36px;
+/* Inner Ring */
+.ring-inner {
+  border-top-color: var(--spinner-color) !important;
+  border-bottom-color: var(--spinner-color) !important;
+  opacity: 0.4;
+  animation: spinner-rotation 2s linear infinite;
 }
+
+/* Size Variants */
+.size-sm.spinner-triple-rings { width: 36px; height: 36px; }
+.size-sm .ring-outer { width: 36px; height: 36px; }
+.size-sm .ring-middle { width: 28px; height: 28px; }
+.size-sm .ring-inner { width: 20px; height: 20px; }
+
+.size-md.spinner-triple-rings { width: 52px; height: 52px; }
+.size-md .ring-outer { width: 52px; height: 52px; }
+.size-md .ring-middle { width: 40px; height: 40px; }
+.size-md .ring-inner { width: 28px; height: 28px; }
+
+.size-lg.spinner-triple-rings { width: 72px; height: 72px; }
+.size-lg .ring-outer { width: 72px; height: 72px; }
+.size-lg .ring-middle { width: 56px; height: 56px; }
+.size-lg .ring-inner { width: 40px; height: 40px; }
 
 .common-loading-spinner__label {
   margin: 0;
-  color: var(--text-secondary, #667085);
-  font-size: 13px;
-  font-weight: 600;
+  color: var(--spinner-color);
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  opacity: 0.8;
+  animation: label-pulse 1.5s ease-in-out infinite;
 }
 
-@keyframes common-spinner-rotate {
-  to {
-	transform: rotate(360deg);
-  }
+@keyframes spinner-rotation {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes spinner-rotation-back {
+  0% { transform: rotate(360deg); }
+  100% { transform: rotate(0deg); }
+}
+
+@keyframes label-pulse {
+  0%, 100% { opacity: 0.5; transform: scale(0.98); }
+  50% { opacity: 1; transform: scale(1); }
 }
 

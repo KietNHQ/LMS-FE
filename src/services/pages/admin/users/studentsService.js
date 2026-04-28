@@ -43,9 +43,21 @@ const getRows = (payload) => {
 
 const parseStudent = (item = {}) => {
   const profile = item.profile || {};
+  let name = item.fullName || item.name || `${item.surname || ""} ${item.given_name || ""}`.trim();
+
+  if (!name && profile) {
+    name = profile.fullName || profile.name || "";
+    if (!name && (profile.firstName || profile.lastName)) {
+      name = `${profile.lastName || ""} ${profile.firstName || ""}`.trim();
+    }
+  }
+
+  if (!name && item.email) {
+    name = item.email.split("@")[0];
+  }
   return {
     id: item.id,
-    name: item.fullName || item.name || `${item.surname || ""} ${item.given_name || ""}`.trim(),
+    name,
     email: item.email || "",
     gender: item.gender === "F" ? "Nữ" : item.gender === "M" ? "Nam" : profile.gender || "Nam",
     dob: item.dob || item.birth_date || profile.dob || "",

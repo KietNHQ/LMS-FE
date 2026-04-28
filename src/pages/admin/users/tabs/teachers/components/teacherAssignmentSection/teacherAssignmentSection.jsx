@@ -65,10 +65,10 @@ export default function TeacherAssignmentSection({
 			</div>
 
 			<div className="teacher-assignment-chip-wrap">
-				{teacher.assignedClasses.length === 0 ? (
+				{(!teacher.assignedClasses || teacher.assignedClasses.length === 0) ? (
 					<p className="teacher-assignment-empty">Chưa có lớp được phân công.</p>
 				) : (
-					teacher.assignedClasses.map((className) => (
+					(teacher.assignedClasses || []).map((className) => (
 						<span key={className} className="teacher-assignment-chip">
 							{className}
 							<button type="button" onClick={() => onRemoveAssignedClass(className)}>

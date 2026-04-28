@@ -32,12 +32,14 @@ import {
     FiRepeat,
     FiPrinter,
     FiClipboard as FiTask,
-    FiMap
+    FiMap,
+    FiHash
 } from "react-icons/fi";
 import { LuUserCog } from "react-icons/lu";
 import { FaChalkboardTeacher } from "react-icons/fa";
 import { PiStudentBold } from "react-icons/pi";
 import { RiParentFill } from "react-icons/ri";
+import { PERMISSIONS } from "../../config/permissions";
 
 export const roleTheme = {
     admin: {
@@ -88,70 +90,31 @@ export const roleTheme = {
 };
 
 export const sidebarConfig = {
-    // ── SUPER ADMIN ─────────────────────────────────────────────────
+    // ── MANAGEMENT (Tất cả cán bộ nhân viên dùng chung 1 menu) ──────────────────
+    management: [
+        { label: "Trang chủ",          icon: FiGrid,          path: "/management/dashboard" },
+        { label: "Người Dùng",         icon: LuUserCog,       path: "/management/users",        requiredPermissions: [PERMISSIONS.USER_VIEW] },
+        { label: "Lớp Học",           icon: FiBookOpen,      path: "/management/classes",      requiredPermissions: [PERMISSIONS.CLASS_VIEW] },
+        { label: "Quản Lý Điểm Số",    icon: FiAward,         path: "/management/grades",      requiredPermissions: [PERMISSIONS.GRADE_VIEW] },
+        { label: "NỀ Nếp & Kỷ Luật", icon: FiAlertTriangle, path: "/management/discipline",   requiredPermissions: [PERMISSIONS.DISCIPLINE_VIEW] },
+        { label: "Thi Đua",            icon: FiStar,          path: "/management/competition",  requiredPermissions: [PERMISSIONS.COMPETITION_MANAGE] },
+        { label: "Bài Kiểm Tra",       icon: FiFileText,      path: "/management/quiz",         requiredPermissions: [PERMISSIONS.QUIZ_VIEW] },
+        { label: "Kỳ Thi",             icon: FiCalendar,      path: "/management/exams",        requiredPermissions: [PERMISSIONS.QUIZ_VIEW] },
+        { label: "Thời Khóa Biểu",    icon: FiCalendar,      path: "/management/timetable",   requiredPermissions: [PERMISSIONS.TIMETABLE_VIEW] },
+        { label: "Học Phí & Tài Chính",icon: FiCreditCard,    path: "/management/finance",     requiredPermissions: [PERMISSIONS.FINANCE_TUITION_VIEW] },
+        { label: "Phê Duyệt",          icon: FiCheckSquare,   path: "/management/approvals" },
+        { label: "Trò chuyện",         icon: FiMessageSquare, path: "/management/chat" },
+        { label: "Thông Báo",          icon: FiBell,          path: "/management/notifications" },
+        { label: "Báo Cáo",            icon: FiBarChart2,     path: "/management/reports" },
+    ],
+
     admin: [
-        { label: "Trang chủ", icon: FiGrid, path: "/admin/dashboard" },
-        { label: "Người Dùng", icon: LuUserCog, path: "/admin/users" },
-        { label: "Lớp Học", icon: FiBookOpen, path: "/admin/classes" },
-        { label: "Điểm thi đua", icon: FiStar, path: "/admin/competition" },
-        { label: "Bài Kiểm Tra", icon: FiFileText, path: "/admin/quiz" },
-        { label: "Thanh Toán", icon: FiCreditCard, path: "/admin/payment" },
-        { label: "Thời Khóa Biểu", icon: FiCalendar, path: "/admin/timetable" },
-        { label: "Thông Báo", icon: FiBell, path: "/admin/notifications" },
-        { label: "Báo Cáo", icon: FiBarChart2, path: "/admin/reports" }
+        { label: "Trang chủ Admin",     icon: FiGrid,             path: "/admin/dashboard" },
+        { label: "Quản Lý Tài Khoản",  icon: LuUserCog,          path: "/admin/users",           requiredPermissions: [PERMISSIONS.USER_VIEW] },
+        { label: "Nhật Ký Phân Quyền", icon: FiShield,           path: "/admin/audit-log",       requiredPermissions: [PERMISSIONS.PERMISSION_AUDIT_VIEW] },
+        { label: "Log Hệ Thống",       icon: FiActivity,         path: "/admin/system-log",      requiredPermissions: [PERMISSIONS.SYSTEM_LOG_VIEW] },
+        { label: "Thông Báo",          icon: FiBell,             path: "/admin/notifications" },
     ],
-
-    // ── HIỆU TRƯỞNG ─────────────────────────────────────────────────
-    principal: [
-        { label: "Trang chủ",          icon: FiGrid,        path: "/principal/dashboard" },
-        { label: "Theo Dõi Tổng Hợp",   icon: FiEye,         path: "/principal/overview" },
-        { label: "Phê Duyệt",           icon: FiCheckSquare, path: "/principal/approvals" },
-        { label: "Báo Cáo",             icon: FiBarChart2,   path: "/principal/reports" },
-        { label: "Nhật Ký Hệ Thống",    icon: FiShield,      path: "/principal/audit-logs" },
-        { label: "Thông Báo",           icon: FiBell,        path: "/principal/notifications" },
-    ],
-
-    // ── PHÓ HIỆU TRƯỞNG CHUYÊN MÔN ─────────────────────────────────
-    vp_academic: [
-        { label: "Trang chủ",           icon: FiGrid,      path: "/vp-academic/dashboard" },
-        { label: "Lớp & Điểm Số",       icon: FiAward,     path: "/vp-academic/grades" },
-        { label: "Phê Duyệt & Mở Khóa", icon: FiUnlock,    path: "/vp-academic/approvals" },
-        { label: "Kỳ Thi",              icon: FiCalendar,  path: "/vp-academic/exams" },
-        { label: "Quản Lý Dữ Liệu",   icon: FiUpload,    path: "/vp-academic/data-management" },
-        { label: "Thông Báo",           icon: FiBell,      path: "/vp-academic/notifications" },
-    ],
-
-    // ── PHÓ HIỆU TRƯỞNG NỀ NẾP ─────────────────────────────────────
-    vp_discipline: [
-        { label: "Trang chủ",       icon: FiGrid,          path: "/vp-discipline/dashboard" },
-        { label: "Quản Lý Nề Nếp",  icon: FiAlertTriangle, path: "/vp-discipline/discipline-management" },
-        { label: "Quản Lý Thi Đua",  icon: FiAward,         path: "/vp-discipline/cockpit" },
-        { label: "Báo Cáo",         icon: FiBarChart2,     path: "/vp-discipline/reports" },
-        { label: "Thông Báo",       icon: FiBell,          path: "/vp-discipline/notifications" },
-    ],
-
-    // ── GIÁO VỤ ─────────────────────────────────────────────────────
-    academic_staff: [
-        { label: "Trang chủ",         icon: FiGrid,             path: "/academic/dashboard" },
-        { label: "Nhân Sự",           icon: FiUsers,            path: "/academic/personnel" },
-        { label: "Lớp & Giảng Dạy",   icon: FiBookOpen,         path: "/academic/class-management" },
-        { label: "Thời Khóa Biểu",   icon: FiCalendar,         path: "/academic/timetable" },
-        { label: "Học Bạ",            icon: FiBookmark,         path: "/academic/academic-records" },
-        { label: "Import / Export",  icon: FiUpload,           path: "/academic/import" },
-        { label: "Thông Báo",         icon: FiBell,             path: "/academic/notifications" },
-    ],
-
-    // ── KẾ TOÁN ─────────────────────────────────────────────────────
-    finance_staff: [
-        { label: "Trang chủ",           icon: FiGrid,       path: "/finance/dashboard" },
-        { label: "Quản Lý Thu Phí",    icon: FiCreditCard, path: "/finance/fee-management" },
-        { label: "Công nợ & Thanh toán",icon: FiRepeat,     path: "/finance/payment-hub" },
-        { label: "Phê Duyệt",           icon: FiCheckSquare, path: "/finance/approvals" },
-        { label: "Báo Cáo Tài Chính",   icon: FiBarChart2,  path: "/finance/reports" },
-        { label: "Nhật Ký Kiểm Toán",    icon: FiShield,     path: "/finance/audit-log" },
-        { label: "Thông Báo",           icon: FiBell,       path: "/finance/notifications" },
-    ],
-
 
     teacher: [
         { label: "Trang chủ", icon: FiGrid, path: "/teacher/dashboard" },
@@ -161,6 +124,7 @@ export const sidebarConfig = {
         { label: "Quản Lý Điểm", icon: FiAward, path: "/teacher/grades" },
         { label: "Bài Kiểm Tra", icon: FiFileText, path: "/teacher/quiz" },
         { label: "Thời Khóa Biểu", icon: FiCalendar, path: "/teacher/schedule" },
+        { label: "Trò chuyện", icon: FiMessageSquare, path: "/teacher/chat" },
         { label: "Thông Báo", icon: FiBell, path: "/teacher/notifications" },
         { label: "Hỗ Trợ", icon: FiHelpCircle, path: "/teacher/support" },
     ],

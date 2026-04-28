@@ -1,6 +1,6 @@
 import { Suspense, lazy } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
-import { LoadingSpinner } from "../components/common";
+import { LoadingSpinner, LoadingAnimationBook } from "../components/common";
 
 /* AUTH PAGES */
 import Login from "../pages/auth/Login";
@@ -39,56 +39,32 @@ const AdminPayment = lazy(() => import("../pages/admin/payment/AdminPayment"));
 const AdminCompetition = lazy(() => import("../pages/admin/competition/AdminCompetition"));
 const AdminCompetitionDetail = lazy(() => import("../pages/admin/competition/AdminCompetitionDetail"));
 
-/* ADMIN SUB-ROLE LAYOUTS */
-const PrincipalLayout = lazy(() => import("../layouts/principal/PrincipalLayout"));
-const VpAcademicLayout = lazy(() => import("../layouts/vp-academic/VpAcademicLayout"));
-const VpDisciplineLayout = lazy(() => import("../layouts/vp-discipline/VpDisciplineLayout"));
-const AcademicStaffLayout = lazy(() => import("../layouts/academic-staff/AcademicStaffLayout"));
-const FinanceLayout = lazy(() => import("../layouts/finance/FinanceLayout"));
+/* ── MANAGEMENT LAYOUT (Thay thế Admin/Principal/VP/Finance Layout) ── */
+const ManagementLayout = lazy(() => import("../layouts/management/ManagementLayout"));
+const ManagementDashboard = lazy(() => import("../pages/management/dashboard/index.js"));
+const ManagementUsers = lazy(() => import("../pages/management/users/index.js"));
+const ManagementClasses = lazy(() => import("../pages/management/classes/index.js"));
+const ManagementClassDetail = lazy(() => import("../pages/management/classes/detail/index.js"));
+const ManagementDiscipline = lazy(() => import("../pages/management/discipline/index.js"));
+const ManagementCompetition = lazy(() => import("../pages/management/competition/index.js"));
+const ManagementGrades = lazy(() => import("../pages/management/grades/index.js"));
+const ManagementQuiz = lazy(() => import("../pages/management/quiz/index.js"));
+const ManagementCreateQuiz = lazy(() => import("../pages/management/quiz/create/index.js"));
+const ManagementQuizSubmissions = lazy(() => import("../pages/management/quiz/submissions/index.js"));
+const ManagementExams = lazy(() => import("../pages/management/exams/index.js"));
+const ManagementExamRooms = lazy(() => import("../pages/management/exams/rooms/index.js"));
+const ManagementTimetable = lazy(() => import("../pages/management/timetable/index.js"));
+const ManagementFinance = lazy(() => import("../pages/management/finance/index.js"));
+const ManagementApprovals = lazy(() => import("../pages/management/approvals/index.js"));
+const ManagementNotifications = lazy(() => import("../pages/management/notifications/index.js"));
+const ManagementReports = lazy(() => import("../pages/management/reports/index.js"));
+const ManagementChat = lazy(() => import("../pages/management/chat/ManagementChat"));
 
-/* PRINCIPAL PAGES */
-const PrincipalDashboard = lazy(() => import("../pages/principal/dashboard/PrincipalDashboard"));
-const PrincipalOverview = lazy(() => import("../pages/principal/overview/PrincipalOverview"));
-const PrincipalApprovals = lazy(() => import("../pages/principal/approvals/PrincipalApprovals"));
-const PrincipalReports = lazy(() => import("../pages/principal/reports/PrincipalReports"));
-const PrincipalAuditLogs = lazy(() => import("../pages/principal/audit-logs/PrincipalAuditLogs"));
-const PrincipalNotifications = lazy(() => import("../pages/principal/notifications/PrincipalNotifications"));
 
-/* VP ACADEMIC PAGES */
-const VpAcademicDashboard = lazy(() => import("../pages/vp-academic/dashboard/VpAcademicDashboard"));
-const VpAcademicGrades = lazy(() => import("../pages/vp-academic/grades/VpAcademicGrades"));
-const VpAcademicApprovals = lazy(() => import("../pages/vp-academic/approvals/VpAcademicApprovals"));
-const VpAcademicExams = lazy(() => import("../pages/vp-academic/exams/VpAcademicExams"));
-const VpAcademicExamRooms = lazy(() => import("../pages/vp-academic/exams/VpAcademicExamRooms"));
-const VpAcademicExamRoomDetail = lazy(() => import("../pages/vp-academic/exams/VpAcademicExamRoomDetail"));
-const VpAcademicDataManagement = lazy(() => import("../pages/vp-academic/data-management/VpAcademicDataManagement"));
-const VpAcademicNotifications = lazy(() => import("../pages/vp-academic/notifications/VpAcademicNotifications"));
-
-/* VP DISCIPLINE PAGES */
-const VpDisciplineDashboard = lazy(() => import("../pages/vp-discipline/dashboard/VpDisciplineDashboard"));
-const VpDisciplineMgmt = lazy(() => import("../pages/vp-discipline/discipline-management/VpDisciplineMgmt"));
-const VpDisciplineCockpit = lazy(() => import("../pages/vp-discipline/cockpit/VpDisciplineCockpit"));
-
-const VpDisciplineReports = lazy(() => import("../pages/vp-discipline/reports/VpDisciplineReports"));
-const VpDisciplineNotifications = lazy(() => import("../pages/vp-discipline/notifications/VpDisciplineNotifications"));
-
-/* ACADEMIC STAFF PAGES */
-const AcademicStaffDashboard = lazy(() => import("../pages/academic-staff/dashboard/AcademicStaffDashboard"));
-const AcademicStaffPersonnel = lazy(() => import("../pages/academic-staff/personnel/AcademicStaffPersonnel"));
-const AcademicStaffClassMgmt = lazy(() => import("../pages/academic-staff/class-management/AcademicStaffClassMgmt"));
-const AcademicStaffTimetable = lazy(() => import("../pages/academic-staff/timetable/AcademicStaffTimetable"));
-const AcademicStaffAcademicRecords = lazy(() => import("../pages/academic-staff/academic-records/AcademicStaffAcademicRecords"));
-const AcademicStaffImport = lazy(() => import("../pages/academic-staff/import/AcademicStaffImport"));
-const AcademicStaffNotifications = lazy(() => import("../pages/academic-staff/notifications/AcademicStaffNotifications"));
-
-/* FINANCE PAGES */
-const FinanceDashboard = lazy(() => import("../pages/finance/dashboard/FinanceDashboard"));
-const FinanceFeeManagement = lazy(() => import("../pages/finance/fee-management/FinanceFeeManagement"));
-const FinancePaymentHub = lazy(() => import("../pages/finance/payment-hub/FinancePaymentHub"));
-const FinanceReports = lazy(() => import("../pages/finance/reports/FinanceReports"));
-const FinanceNotifications = lazy(() => import("../pages/finance/notifications/FinanceNotifications"));
-const FinanceApprovals = lazy(() => import("../pages/finance/approvals/FinanceApprovals"));
-const FinanceAuditLog = lazy(() => import("../pages/finance/settings/FinanceAuditLog"));
+/* ADMIN SUB-ROLE LAYOUTS (đã xóa — chuyển sang /management) */
+// Dùng AdminAuditLog cho /admin/audit-log & /admin/system-log
+const AdminAuditLog = lazy(() => import("../pages/admin/audit-log/AdminAuditLog"));
+const AdminSystemLog = lazy(() => import("../pages/admin/system-log/AdminSystemLog"));
 
 
 /* STUDENT PAGES */
@@ -145,6 +121,7 @@ const TeacherTeachingClassDetail = lazy(
 const TeacherNotifications = lazy(
   () => import("../pages/teacher/notifications/TeacherNotifications")
 );
+const TeacherChat = lazy(() => import("../pages/teacher/chat/TeacherChat"));
 
 
 /* PARENT PAGES */
@@ -166,7 +143,6 @@ const ParentSupport = lazy(() => import("../pages/parent/support/ParentSupport")
 
 export default function AppRoutes() {
   return (
-    <Suspense fallback={<LoadingSpinner label="Dang tai trang..." />}>
     <Routes>
       {/* DEFAULT */}
       <Route path="/" element={<Navigate to="/login" replace />} />
@@ -176,93 +152,68 @@ export default function AppRoutes() {
       <Route path="/login/forgotpass" element={<ForgotPassword />} />
       <Route path="/login/resetpass" element={<ResetPassword />} />
 
-      {/* ADMIN */}
-      <Route path="/admin" element={<AdminLayout />}>
+      {/* ── ADMIN ── */}
+      <Route path="/admin" element={
+        <Suspense fallback={<LoadingAnimationBook fullScreen={true} label="Đang tải giao diện quản trị..." />}>
+          <AdminLayout />
+        </Suspense>
+      }>
         <Route index element={<Navigate to="dashboard" replace />} />
-        <Route path="dashboard" element={<AdminDashboard />} />
-        <Route path="users" element={<AdminUsers />} />
-        <Route path="classes" element={<AdminClasses />} />
-        <Route path="classes/:classId" element={<ClassDetailSection />} />
-        <Route path="quiz" element={<AdminQuiz />} />
-        <Route path="quiz/create" element={<AdminCreateQuiz />} />
-        <Route path="quiz/:quizId/submissions" element={<AdminQuizSubmissions />} />
-        <Route path="payment" element={<AdminPayment />} />
-        <Route path="competition" element={<AdminCompetition />} />
-        <Route path="competition/:classId" element={<AdminCompetitionDetail />} />
-        <Route path="timetable" element={<AdminTimetable />} />
-        <Route path="attendance" element={<Navigate to="/admin/classes" replace />} />
+        <Route path="dashboard"     element={<AdminDashboard />} />
+        <Route path="users"         element={<AdminUsers />} />
         <Route path="notifications" element={<AdminNotifications />} />
-        <Route path="reports" element={<AdminReports />} />
+        <Route path="audit-log"   element={<AdminAuditLog />} />
+        <Route path="system-log"  element={<AdminSystemLog />} />
+        <Route path="classes"       element={<Navigate to="/management/classes" replace />} />
+        <Route path="quiz"          element={<Navigate to="/management/quiz" replace />} />
+        <Route path="timetable"     element={<Navigate to="/management/timetable" replace />} />
+        <Route path="payment"       element={<Navigate to="/management/finance" replace />} />
+        <Route path="competition"   element={<Navigate to="/management/competition" replace />} />
+        <Route path="reports"       element={<Navigate to="/management/reports" replace />} />
       </Route>
 
-      {/* PRINCIPAL */}
-      <Route path="/principal" element={<PrincipalLayout />}>
+
+      {/* ── MANAGEMENT ── */}
+      <Route path="/management" element={
+        <Suspense fallback={<LoadingAnimationBook fullScreen={true} label="Đang tải hệ thống quản lý..." />}>
+          <ManagementLayout />
+        </Suspense>
+      }>
         <Route index element={<Navigate to="dashboard" replace />} />
-        <Route path="dashboard" element={<PrincipalDashboard />} />
-        <Route path="overview" element={<PrincipalOverview />} />
-        <Route path="classes/:classId" element={<ClassDetailSection />} />
-        <Route path="approvals" element={<PrincipalApprovals />} />
-        <Route path="reports" element={<PrincipalReports />} />
-        <Route path="audit-logs" element={<PrincipalAuditLogs />} />
-        <Route path="notifications" element={<PrincipalNotifications />} />
+        <Route path="dashboard"    element={<ManagementDashboard />} />
+        <Route path="users"        element={<ManagementUsers />} />
+        <Route path="classes"      element={<ManagementClasses />} />
+        <Route path="classes/:classId" element={<ManagementClassDetail />} />
+        <Route path="discipline"   element={<ManagementDiscipline />} />
+        <Route path="competition"  element={<ManagementCompetition />} />
+        <Route path="grades"       element={<ManagementGrades />} />
+        <Route path="quiz"         element={<ManagementQuiz />} />
+        <Route path="quiz/create"  element={<ManagementCreateQuiz />} />
+        <Route path="quiz/:quizId/submissions" element={<ManagementQuizSubmissions />} />
+        <Route path="exams"        element={<ManagementExams />} />
+        <Route path="exams/rooms"  element={<ManagementExamRooms />} />
+        <Route path="timetable"    element={<ManagementTimetable />} />
+        <Route path="finance"      element={<ManagementFinance />} />
+        <Route path="approvals"    element={<ManagementApprovals />} />
+        <Route path="notifications" element={<ManagementNotifications />} />
+        <Route path="reports"      element={<ManagementReports />} />
+        <Route path="chat"         element={<ManagementChat />} />
       </Route>
 
-      {/* VP ACADEMIC */}
-      <Route path="/vp-academic" element={<VpAcademicLayout />}>
-        <Route index element={<Navigate to="dashboard" replace />} />
-        <Route path="dashboard" element={<VpAcademicDashboard />} />
-        <Route path="grades" element={<VpAcademicGrades />} />
-        <Route path="approvals" element={<VpAcademicApprovals />} />
-        <Route path="exams" element={<VpAcademicExams />} />
-        <Route path="exams/rooms" element={<VpAcademicExamRooms />} />
-        <Route path="exams/rooms/:roomId" element={<VpAcademicExamRoomDetail />} />
-        <Route path="data-management" element={<VpAcademicDataManagement />} />
-        <Route path="notifications" element={<VpAcademicNotifications />} />
-      </Route>
-
-      {/* VP DISCIPLINE */}
-      <Route path="/vp-discipline" element={<VpDisciplineLayout />}>
-        <Route index element={<Navigate to="dashboard" replace />} />
-        <Route path="dashboard" element={<VpDisciplineDashboard />} />
-        <Route path="discipline-management" element={<VpDisciplineMgmt />} />
-        <Route path="discipline" element={<Navigate to="/vp-discipline/discipline-management" replace />} />
-        <Route path="incidents" element={<Navigate to="/vp-discipline/discipline-management" replace />} />
-        <Route path="cockpit" element={<VpDisciplineCockpit />} />
-        <Route path="competition" element={<Navigate to="/vp-discipline/cockpit" replace />} />
-        <Route path="attendance" element={<Navigate to="/vp-discipline/cockpit?tab=attendance" replace />} />
-        <Route path="conduct" element={<Navigate to="/vp-discipline/cockpit?tab=conduct" replace />} />
-
-        <Route path="reports" element={<VpDisciplineReports />} />
-        <Route path="notifications" element={<VpDisciplineNotifications />} />
-      </Route>
-
-      {/* ACADEMIC STAFF */}
-      <Route path="/academic" element={<AcademicStaffLayout />}>
-        <Route index element={<Navigate to="dashboard" replace />} />
-        <Route path="dashboard" element={<AcademicStaffDashboard />} />
-        <Route path="personnel" element={<AcademicStaffPersonnel />} />
-        <Route path="class-management" element={<AcademicStaffClassMgmt />} />
-        <Route path="timetable" element={<AcademicStaffTimetable />} />
-        <Route path="academic-records" element={<AcademicStaffAcademicRecords />} />
-        <Route path="import" element={<AcademicStaffImport />} />
-        <Route path="notifications" element={<AcademicStaffNotifications />} />
-      </Route>
-
-      {/* FINANCE */}
-      <Route path="/finance" element={<FinanceLayout />}>
-        <Route index element={<Navigate to="dashboard" replace />} />
-        <Route path="dashboard" element={<FinanceDashboard />} />
-        <Route path="fee-management" element={<FinanceFeeManagement />} />
-        <Route path="payment-hub" element={<FinancePaymentHub />} />
-        <Route path="reports" element={<FinanceReports />} />
-        <Route path="approvals" element={<FinanceApprovals />} />
-        <Route path="audit-log" element={<FinanceAuditLog />} />
-        <Route path="notifications" element={<FinanceNotifications />} />
-      </Route>
+      {/* ── Redirect tương thích ngược ── */}
+      <Route path="/principal/*"     element={<Navigate to="/management/dashboard" replace />} />
+      <Route path="/vp-academic/*"   element={<Navigate to="/management/dashboard" replace />} />
+      <Route path="/vp-discipline/*" element={<Navigate to="/management/dashboard" replace />} />
+      <Route path="/academic/*"      element={<Navigate to="/management/dashboard" replace />} />
+      <Route path="/finance/*"       element={<Navigate to="/management/dashboard" replace />} />
 
 
       {/* STUDENT */}
-      <Route path="/student" element={<StudentLayout />}>
+      <Route path="/student" element={
+        <Suspense fallback={<LoadingAnimationBook fullScreen={true} label="Đang tải không gian học sinh..." />}>
+          <StudentLayout />
+        </Suspense>
+      }>
         <Route index element={<Navigate to="dashboard" replace />} />
         <Route path="dashboard" element={<StudentDashboard />} />
         <Route path="classes" element={<StudentClasses />} />
@@ -273,11 +224,14 @@ export default function AppRoutes() {
         <Route path="notifications" element={<StudentNotifications />} />
         <Route path="schedule" element={<StudentSchedule />} />
         <Route path="support" element={<StudentSupport />} />
-        {/* <Route path="profile" element={<StudentProfile />} /> */}
       </Route>
 
       {/* TEACHER */}
-      <Route path="/teacher" element={<TeacherLayout />}>
+      <Route path="/teacher" element={
+        <Suspense fallback={<LoadingAnimationBook fullScreen={true} label="Đang tải không gian giáo viên..." />}>
+          <TeacherLayout />
+        </Suspense>
+      }>
         <Route index element={<Navigate to="dashboard" replace />} />
         <Route path="dashboard"        element={<TeacherDashboard />} />
         <Route path="teaching-classes" element={<TeacherTeachingClasses />} />
@@ -290,11 +244,16 @@ export default function AppRoutes() {
         <Route path="quiz/:quizId/submissions" element={<TeacherQuizSubmissions />} />
         <Route path="schedule"         element={<TeacherSchedule />} />
         <Route path="notifications"    element={<TeacherNotifications />} />
+        <Route path="chat"             element={<TeacherChat />} />
         <Route path="support"          element={<TeacherSupport />} />
       </Route>
 
         {/* PARENT */}
-        <Route path="/parent" element={<ParentLayout />}>
+        <Route path="/parent" element={
+          <Suspense fallback={<LoadingAnimationBook fullScreen={true} label="Đang tải không gian phụ huynh..." />}>
+            <ParentLayout />
+          </Suspense>
+        }>
             <Route index element={<Navigate to="dashboard" replace />} />
             <Route path="dashboard" element={<ParentDashboard />} />
             <Route path="children-overview" element={<ParentChildrenOverview />} />
@@ -305,6 +264,5 @@ export default function AppRoutes() {
         </Route>
 
     </Routes>
-    </Suspense>
   );
 }

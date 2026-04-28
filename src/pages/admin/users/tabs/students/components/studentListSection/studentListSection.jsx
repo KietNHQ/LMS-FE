@@ -1,14 +1,24 @@
 import React from "react";
-import { FiEdit2, FiTrash2 } from "react-icons/fi";
+import { FiEdit2, FiTrash2, FiUserX, FiUserCheck, FiLock } from "react-icons/fi";
 import "./studentListSection.css";
 
 function formatDate(dateString) {
-    if (!dateString) return "";
-    const parts = dateString.split("-");
-    if (parts.length === 3) {
-        return `${parts[2]}/${parts[1]}/${parts[0]}`;
+    if (!dateString) return "—";
+    try {
+        const date = new Date(dateString);
+        if (isNaN(date.getTime())) {
+            // Fallback for YYYY-MM-DD
+            const parts = dateString.split("-");
+            if (parts.length === 3) return `${parts[2]}/${parts[1]}/${parts[0]}`;
+            return dateString;
+        }
+        const day = String(date.getDate()).padStart(2, '0');
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const year = date.getFullYear();
+        return `${day}/${month}/${year}`;
+    } catch (e) {
+        return dateString;
     }
-    return dateString;
 }
 
 function getAvatarLetter(name) {
@@ -32,14 +42,28 @@ export default function StudentListSection({
     onSelectStudent,
     onEdit,
     onDelete,
+    onResetPassword,
+    onToggleStatus,
+    selectedUserIds = [],
+    onSelectRow,
+    onSelectAll,
 }) {
+    const isAllSelected = students.length > 0 && selectedUserIds.length === students.length;
     return (
         <section className="student-list-card">
             <div className="student-list-table-wrap">
                 <table className="student-list-table">
                     <thead>
                         <tr>
+                            <th className="student-checkbox-col">
+                                <input 
+                                    type="checkbox" 
+                                    checked={isAllSelected}
+                                    onChange={(e) => onSelectAll(e.target.checked)}
+                                />
+                            </th>
                             <th>HỌC SINH</th>
+                            <th>NGÀY SINH</th>
                             <th>LỚP</th>
                             <th>GVCN</th>
                             <th>PHỤ HUYNH</th>
@@ -61,6 +85,7 @@ export default function StudentListSection({
                                     key={student.id}
                                     onClick={() => onSelectStudent(student)}
                                     tabIndex={0}
+                                    className={selectedUserIds.includes(student.id) ? "is-selected" : ""}
                                     onKeyDown={(e) => {
                                         if (e.key === "Enter" || e.key === " ") {
                                             e.preventDefault();
@@ -68,6 +93,13 @@ export default function StudentListSection({
                                         }
                                     }}
                                 >
+                                    <td onClick={(e) => e.stopPropagation()}>
+                                        <input 
+                                            type="checkbox" 
+                                            checked={selectedUserIds.includes(student.id)}
+                                            onChange={() => onSelectRow(student.id)}
+                                        />
+                                    </td>
                                     <td>
                                         <div className="student-main-info">
                                             <div className="student-avatar">
@@ -76,12 +108,16 @@ export default function StudentListSection({
 
                                             <div className="student-name-wrap">
                                                 <h4>{student.name}</h4>
-                                                <p>{student.email || "—"}</p>
+                                                <p className="student-email-text">{student.email?.replace("thptlocal.edu.vn", "") || "—"}</p>
                                                 <div className="student-dob-gender">
-                                                    {formatDate(student.dob)} • {student.gender}
+                                                    Giới tính: {student.gender || "Nam"}
                                                 </div>
                                             </div>
                                         </div>
+                                    </td>
+
+                                    <td>
+                                        <span className="student-dob-text">{formatDate(student.dob)}</span>
                                     </td>
 
                                     <td>
@@ -117,8 +153,26 @@ export default function StudentListSection({
 
                                             <button
                                                 type="button"
+                                                className="student-icon-btn block"
+                                                onClick={() => onToggleStatus(student)}
+                                                title={student.status === "Đang học" ? "Đình chỉ" : "Kích hoạt"}
+                                            >
+                                                {student.status === "Đang học" ? <FiUserX /> : <FiUserCheck />}
+                                            </button>
+
+                                            <button
+                                                type="button"
+                                                className="student-icon-btn reset"
+                                                onClick={() => onResetPassword(student)}
+                                                title="Đặt lại mật khẩu"
+                                            >
+                                                <FiLock />
+                                            </button>
+
+                                            <button
+                                                type="button"
                                                 className="student-icon-btn delete"
-                                                onClick={() => onDelete(student.id)}
+                                                onClick={() => onDelete(student)}
                                                 aria-label="Xóa"
                                                 title="Xóa"
                                             >
