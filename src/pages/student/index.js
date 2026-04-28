@@ -5,3 +5,4 @@ export { default as StudentQuiz } from "./quiz/StudentQuiz";
 export { default as StudentNotifications } from "./notification/StudentNotifications";
 export { default as StudentSchedule } from "./schedule/StudentSchedule";
 export { default as StudentSupport } from "./support/StudentSupport";
+export { default as StudentBanCanSuLop } from "./ban-can-su-lop/StudentBanCanSuLop.jsx";

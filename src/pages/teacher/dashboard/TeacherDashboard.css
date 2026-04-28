@@ -25,10 +25,11 @@
   margin-bottom: 24px;
 }
 
-.teacher-dashboard-header h2 {
-  font-size: 28px;
-  font-weight: 800;
-  color: #1e293b;
+.teacher-dashboard-header h1 {
+  font-size: var(--teacher-tab-heading-size, 1.85rem);
+  font-weight: var(--teacher-tab-heading-weight, 800);
+  line-height: var(--teacher-tab-heading-line-height, 1.12);
+  color: var(--teacher-tab-heading-color, #1e293b);
   margin: 0;
 }
 

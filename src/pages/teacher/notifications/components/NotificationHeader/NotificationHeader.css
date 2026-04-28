@@ -18,10 +18,10 @@
 
 .teacher-notification-header__title h1 {
   margin: 0;
-  font-size: clamp(28px, 2.4vw, 40px);
-  line-height: 1.12;
-  font-weight: 800;
-  color: #16233b;
+  font-size: var(--teacher-tab-heading-size, 1.85rem);
+  line-height: var(--teacher-tab-heading-line-height, 1.12);
+  font-weight: var(--teacher-tab-heading-weight, 800);
+  color: var(--teacher-tab-heading-color, #1e293b);
   letter-spacing: -0.01em;
 }
 
