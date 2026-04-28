@@ -1,6 +1,6 @@
 import axiosClient from "../../../shared/http/axiosClient";
 
-const USER_BASE_ENDPOINTS = ["/users", "/auth/users"];
+const USER_BASE_ENDPOINTS = ["/users"];
 
 const roleToApi = {
   Admin: "admin",
@@ -27,7 +27,13 @@ const statusFromApi = {
   inactive: "Vô hiệu hóa",
 };
 
-const getPayload = (response) => response?.data ?? response ?? {};
+const getPayload = (response) => {
+  // If response has data and pagination, it's a wrapped object, return it as is
+  if (response?.data && response?.pagination) {
+    return response;
+  }
+  return response?.data ?? response ?? {};
+};
 
 const getInitial = (name = "") => {
   const trimmed = `${name}`.trim();
@@ -106,9 +112,11 @@ export const userService = {
       ? payload
       : Array.isArray(payload?.items)
         ? payload.items
-        : Array.isArray(payload?.data)
-          ? payload.data
-          : [];
+        : Array.isArray(payload?.users)
+          ? payload.users
+          : Array.isArray(payload?.data)
+            ? payload.data
+            : [];
 
     return {
       items: rows.map(mapApiUserToView),

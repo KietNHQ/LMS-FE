@@ -2,14 +2,27 @@ import React, { useState } from "react";
 import { FiEdit2, FiSave, FiX, FiImage } from "react-icons/fi";
 import "./transferInfoSection.css";
 
-export default function TransferInfoSection({ initialInfo }) {
+export default function TransferInfoSection({ accounts = [] }) {
+    const firstAccount = accounts[0] || {};
     const [isEditing, setIsEditing] = useState(false);
-    const [info, setInfo] = useState(initialInfo || {
-        bankName: "Ngân hàng TMCP Phương Đông (OCB)",
-        accountName: "TRUONG THPT EDUVN",
-        accountNumber: "0123456789",
-        qrUrl: "https://upload.wikimedia.org/wikipedia/commons/d/d0/QR_code_for_mobile_English_Wikipedia.svg"
+    const [info, setInfo] = useState({
+        bankName: firstAccount.bank_name || firstAccount.bankName || "Ngân hàng TMCP Phương Đông (OCB)",
+        accountName: firstAccount.account_holder || firstAccount.accountHolder || "TRUONG THPT EDUVN",
+        accountNumber: firstAccount.account_number || firstAccount.accountNumber || "0123456789",
+        qrUrl: firstAccount.qr_url || firstAccount.qrUrl || "https://upload.wikimedia.org/wikipedia/commons/d/d0/QR_code_for_mobile_English_Wikipedia.svg"
     });
+
+    React.useEffect(() => {
+        if (accounts.length > 0) {
+            const acc = accounts[0];
+            setInfo({
+                bankName: acc.bank_name || acc.bankName,
+                accountName: acc.account_holder || acc.accountHolder,
+                accountNumber: acc.account_number || acc.accountNumber,
+                qrUrl: acc.qr_url || acc.qrUrl || "https://upload.wikimedia.org/wikipedia/commons/d/d0/QR_code_for_mobile_English_Wikipedia.svg"
+            });
+        }
+    }, [accounts]);
     
     const [editForm, setEditForm] = useState(info);
 

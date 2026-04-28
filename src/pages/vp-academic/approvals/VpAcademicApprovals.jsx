@@ -87,9 +87,9 @@ export default function VpAcademicApprovals() {
                             <h3>Hàng chờ yêu cầu ({requests.length})</h3>
                         </div>
                         <div className="sla-legend">
-                            <span className="dot normal"></span> &lt; 24h
-                            <span className="dot warning"></span> 24h - 72h
-                            <span className="dot danger"></span> &gt; 72h
+                            <div className="legend-item"><span className="dot normal"></span> &lt; 24h</div>
+                            <div className="legend-item"><span className="dot warning"></span> 24h - 72h</div>
+                            <div className="legend-item"><span className="dot danger"></span> &gt; 72h</div>
                         </div>
                     </div>
 

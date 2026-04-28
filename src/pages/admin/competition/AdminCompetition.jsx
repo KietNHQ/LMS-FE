@@ -152,7 +152,7 @@ const AdminCompetition = () => {
             />
 
             <div className="competition-cards-grid">
-                {isLoading && <div className="competition-empty-state">Dang tai du lieu thi dua...</div>}
+                {isLoading && <div className="competition-empty-state">Đang tải dữ liệu thi đua...</div>}
                 {!isLoading && loadError && <div className="competition-empty-state">{loadError}</div>}
                 {!isLoading && !loadError && paginatedData.map(item => (
                     <ClassCompetitionCard
@@ -162,7 +162,7 @@ const AdminCompetition = () => {
                     />
                 ))}
                 {!isLoading && !loadError && paginatedData.length === 0 && (
-                    <div className="competition-empty-state">Khong co du lieu phu hop bo loc.</div>
+                    <div className="competition-empty-state">Không có dữ liệu phù hợp bộ lọc.</div>
                 )}
             </div>
 

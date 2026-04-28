@@ -1,6 +1,7 @@
 import React, { useMemo, useState, useEffect } from "react";
 import { Bell, BellPlus } from "lucide-react";
 import "./AdminNotifications.css";
+import notificationService from "../../../services/pages/admin/notifications/notificationService";
 import NotificationHistorySection from "./components/notificationHistorySection/notificationHistorySection";
 import CreateNotificationSection from "./components/createNotificationSection/createNotificationSection";
 
@@ -18,33 +19,47 @@ const TARGET_OPTIONS = [
   "Phụ huynh Lớp 12"
 ];
 
+const getErrorMessage = (error, fallback) => {
+  const apiError = error?.response?.data?.error;
+  const apiMessage = error?.response?.data?.message;
+  return apiMessage || apiError || fallback;
+};
+
 const AdminNotifications = () => {
   const [open, setOpen] = useState(false);
   const [detail, setDetail] = useState(null);
+  const [loadError, setLoadError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
   const [activeFilter, setActiveFilter] = useState("Tất cả");
 
-  const [list, setList] = useState(() => {
-    const saved = localStorage.getItem("admin_notifications_list");
-    return saved ? JSON.parse(saved) : [
-      {
-        id: 1,
-        title: "Lịch thi HK2 2024-2025",
-        content: "Nhà trường thông báo lịch thi học kỳ 2...",
-        type: "Lớp 10",
-        date: "2025-01-15",
-        read: false,
-      },
-      {
-        id: 2,
-        title: "Họp phụ huynh tháng 2",
-        content: "Kính mời phụ huynh...",
-        type: "Phụ huynh",
-        date: "2025-01-10",
-        read: false,
-      },
-    ];
-  });
+  const [list, setList] = useState([]);
+  
+  // Fetch notifications from API
+  useEffect(() => {
+    const fetchNotifications = async () => {
+      setIsLoading(true);
+      setLoadError("");
+      try {
+        const result = await notificationService.listNotifications();
+        // Map API data to UI structure
+        const mapped = (result.items || []).map(item => ({
+          id: item.id,
+          title: item.title,
+          content: item.content,
+          type: item.type || "Chung",
+          date: item.sent_at || item.created_at || new Date().toISOString(),
+          read: true // Sent notifications are considered read by admin
+        }));
+        setList(mapped);
+      } catch (error) {
+        setLoadError(getErrorMessage(error, "Không thể tải danh sách thông báo."));
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchNotifications();
+  }, []);
 
   // Sync to localStorage whenever list changes
   useEffect(() => {
@@ -79,27 +94,46 @@ const AdminNotifications = () => {
     window.dispatchEvent(new Event("admin-notification-count-updated"));
   }, [unreadCount]);
 
-  const handleAdd = () => {
+  const handleAdd = async () => {
     if (!form.title || !form.content) return;
 
-    setList([
-      {
-        id: Date.now(),
-        ...form,
-        date: new Date().toISOString().slice(0, 10),
-        read: false,
-      },
-      ...list,
-    ]);
+    try {
+      const response = await notificationService.createNotification({
+        title: form.title,
+        content: form.content,
+        type: form.type,
+        status: 'sent', // Send immediately for now
+        priority: 'normal'
+      });
 
-    setOpen(false);
-    setForm({ title: "", content: "", type: "Tất cả" });
+      if (response.success) {
+        const newItem = {
+          id: response.data?.id || Date.now(),
+          ...form,
+          date: new Date().toISOString(),
+          read: true,
+        };
+        setList([newItem, ...list]);
+        setOpen(false);
+        setForm({ title: "", content: "", type: "Tất cả" });
+      }
+    } catch (error) {
+      window.alert(getErrorMessage(error, "Không thể gửi thông báo."));
+    }
   };
 
-  const handleDelete = (id) => {
-    setList(list.filter((i) => i.id !== id));
-    if (detail?.id === id) {
-      setDetail(null);
+  const handleDelete = async (id) => {
+    const confirmed = window.confirm("Bạn có chắc muốn xóa thông báo này?");
+    if (!confirmed) return;
+
+    try {
+      await notificationService.deleteNotification(id);
+      setList(list.filter((i) => i.id !== id));
+      if (detail?.id === id) {
+        setDetail(null);
+      }
+    } catch (error) {
+      window.alert(getErrorMessage(error, "Không thể xóa thông báo."));
     }
   };
 
@@ -135,7 +169,13 @@ const AdminNotifications = () => {
       <div className="admin-header">
         <div className="admin-header-title">
           <h2>Trung tâm Thông báo</h2>
-          <p>{unreadCount} chưa đọc / {list.length} thông báo đã gửi</p>
+          {isLoading ? (
+            <p>Đang tải dữ liệu...</p>
+          ) : loadError ? (
+            <p style={{ color: "var(--red-primary)" }}>{loadError}</p>
+          ) : (
+            <p>{unreadCount} chưa đọc / {list.length} thông báo đã gửi</p>
+          )}
         </div>
 
         <div className="admin-header-actions">

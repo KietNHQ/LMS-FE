@@ -1,0 +1,2 @@
+export { vpAcademicService } from "./vpAcademicService";
+

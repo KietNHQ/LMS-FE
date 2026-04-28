@@ -1,21 +1,22 @@
 import axiosClient from "../../../shared/http/axiosClient";
+import { importExportService } from "../import-export/importExportService";
 
 const getPayload = (response) => response?.data ?? response ?? {};
 
-const statusFromApi = {
-  active: "Đang học",
-  inactive: "Đình chỉ",
-  suspended: "Đình chỉ",
-  reserved: "Bảo lưu",
-  graduated: "Đã tốt nghiệp",
-};
+const statusFromApi = new Map([
+  ["active", "Đang học"],
+  ["inactive", "Đình chỉ"],
+  ["suspended", "Đình chỉ"],
+  ["reserved", "Bảo lưu"],
+  ["graduated", "Đã tốt nghiệp"],
+]);
 
-const statusToApi = {
-  "Đang học": "active",
-  "Đình chỉ": "suspended",
-  "Bảo lưu": "reserved",
-  "Đã tốt nghiệp": "graduated",
-};
+const statusToApi = new Map([
+  ["Đang học", "active"],
+  ["Đình chỉ", "suspended"],
+  ["Bảo lưu", "reserved"],
+  ["Đã tốt nghiệp", "graduated"],
+]);
 
 const requestWithFallback = async (endpoints, callback) => {
   let lastError;
@@ -55,7 +56,7 @@ const parseStudent = (item = {}) => {
     parentPhone: profile.parentPhone || "",
     parentEmail: profile.parentEmail || "",
     address: profile.address || "",
-    status: statusFromApi[item.status] || profile.status || "Đang học",
+    status: statusFromApi.get(item.status) || profile.status || "Đang học",
     profile,
   };
 };
@@ -90,7 +91,7 @@ export const studentsService = {
       fullName: formData.name,
       email: formData.email,
       dob: formData.dob || null,
-      status: statusToApi[formData.status] || undefined,
+      status: statusToApi.get(formData.status) || undefined,
       profile: {
         ...(formData.profile || {}),
         parentName: formData.parentName,
@@ -109,14 +110,22 @@ export const studentsService = {
     return requestWithFallback(["/users", "/auth/users"], (basePath) => axiosClient.delete(`${basePath}/${id}`));
   },
 
-  importStudents: async (file) => {
-    const formData = new FormData();
-    formData.append("file", file);
-    return requestWithFallback(["/users/import", "/auth/users/import"], (path) =>
-      axiosClient.post(path, formData, {
+  importStudents: async (file, options = {}) => {
+    return requestWithFallback(["/imports/students", "/users/import", "/auth/users/import"], (path) => {
+      if (path === "/imports/students") {
+        return importExportService.importStudents(file, options);
+      }
+
+      const formData = new FormData();
+      formData.append("file", file);
+      if (options && typeof options === "object" && Object.keys(options).length > 0) {
+        formData.append("options", JSON.stringify(options));
+      }
+
+      return axiosClient.post(path, formData, {
         headers: { "Content-Type": "multipart/form-data" },
-      })
-    );
+      });
+    });
   },
 
   downloadTemplate: async () => {

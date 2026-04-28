@@ -79,7 +79,8 @@ const AdminReports = () => {
         setReportData(data);
       } catch (loadError) {
         if (isMounted) {
-          setError(loadError?.message || "Không tải được báo cáo.");
+          const msg = loadError?.response?.data?.message || loadError?.message || "Không tải được báo cáo.";
+          setError(msg);
         }
       } finally {
         if (isMounted) {

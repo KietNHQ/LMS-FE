@@ -60,8 +60,7 @@ const VpAcademicGrades = lazy(() => import("../pages/vp-academic/grades/VpAcadem
 const VpAcademicApprovals = lazy(() => import("../pages/vp-academic/approvals/VpAcademicApprovals"));
 const VpAcademicExams = lazy(() => import("../pages/vp-academic/exams/VpAcademicExams"));
 const VpAcademicExamRooms = lazy(() => import("../pages/vp-academic/exams/VpAcademicExamRooms"));
-const VpAcademicTimetable = lazy(() => import("../pages/vp-academic/timetable/VpAcademicTimetable"));
-const VpAcademicTeachingAssignment = lazy(() => import("../pages/vp-academic/teaching-assignment/VpAcademicTeachingAssignment"));
+const VpAcademicExamRoomDetail = lazy(() => import("../pages/vp-academic/exams/VpAcademicExamRoomDetail"));
 const VpAcademicDataManagement = lazy(() => import("../pages/vp-academic/data-management/VpAcademicDataManagement"));
 const VpAcademicNotifications = lazy(() => import("../pages/vp-academic/notifications/VpAcademicNotifications"));
 
@@ -104,6 +103,7 @@ const ClassDetailView = lazy(
   () => import("../pages/student/classes/components/ClassDetailView/ClassDetailView")
 );
 const StudentGrades = lazy(() => import("../pages/student/grades/StudentGrades"));
+const StudentBanCanSuLop = lazy(() => import("../pages/student/ban-can-su-lop/StudentBanCanSuLop.jsx"));
 const StudentQuiz = lazy(() => import("../pages/student/quiz/StudentQuiz"));
 const StudentNotifications = lazy(
   () => import("../pages/student/notification/StudentNotifications")
@@ -215,8 +215,7 @@ export default function AppRoutes() {
         <Route path="approvals" element={<VpAcademicApprovals />} />
         <Route path="exams" element={<VpAcademicExams />} />
         <Route path="exams/rooms" element={<VpAcademicExamRooms />} />
-        <Route path="timetable" element={<VpAcademicTimetable />} />
-        <Route path="teaching-assignment" element={<VpAcademicTeachingAssignment />} />
+        <Route path="exams/rooms/:roomId" element={<VpAcademicExamRoomDetail />} />
         <Route path="data-management" element={<VpAcademicDataManagement />} />
         <Route path="notifications" element={<VpAcademicNotifications />} />
       </Route>
@@ -269,6 +268,7 @@ export default function AppRoutes() {
         <Route path="classes" element={<StudentClasses />} />
         <Route path="classes/:classId" element={<ClassDetailView />} />
         <Route path="grades" element={<StudentGrades />} />
+        <Route path="ban-can-su-lop" element={<StudentBanCanSuLop />} />
         <Route path="quiz" element={<StudentQuiz />} />
         <Route path="notifications" element={<StudentNotifications />} />
         <Route path="schedule" element={<StudentSchedule />} />

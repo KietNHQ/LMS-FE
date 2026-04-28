@@ -4,7 +4,8 @@
     gap: 1.5rem;
 }
 
-.sop-section, .legal-section {
+.sop-section,
+.legal-section {
     background: #fff;
     border-radius: var(--radius-lg);
     padding: 1.5rem;
