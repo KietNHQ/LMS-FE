@@ -24,8 +24,10 @@
 }
 
 .teacher-schedule .common-page-header h1 {
-  font-size: clamp(28px, 2.6vw, 40px);
-  letter-spacing: -0.03em;
+  font-size: var(--teacher-tab-heading-size, 1.85rem);
+  line-height: var(--teacher-tab-heading-line-height, 1.12);
+  font-weight: var(--teacher-tab-heading-weight, 800);
+  color: var(--teacher-tab-heading-color, #1e293b);
 }
 
 .teacher-schedule .common-page-header p {

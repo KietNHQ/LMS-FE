@@ -32,10 +32,10 @@
 
 .teacher-create-quiz__header h1 {
     margin: 0;
-    font-size: 2rem;
-    line-height: 1.2;
-    font-weight: 800;
-    color: #1f2937;
+    font-size: var(--teacher-tab-heading-size, 1.85rem);
+    line-height: var(--teacher-tab-heading-line-height, 1.12);
+    font-weight: var(--teacher-tab-heading-weight, 800);
+    color: var(--teacher-tab-heading-color, #1e293b);
 }
 
 .teacher-create-quiz__back-btn,
@@ -422,9 +422,6 @@
 }
 
 @media (max-width: 640px) {
-    .teacher-create-quiz__header h1 {
-        font-size: 1.6rem;
-    }
 
     .teacher-create-quiz__template-btn,
     .teacher-create-quiz__upload-btn {

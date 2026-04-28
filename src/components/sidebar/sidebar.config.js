@@ -133,6 +133,7 @@ export const sidebarConfig = {
         { label: "Trang chủ", icon: FiGrid, path: "/student/dashboard" },
         { label: "Lớp Học", icon: FiBookOpen, path: "/student/classes" },
         { label: "Điểm Số", icon: FiAward, path: "/student/grades" },
+        { label: "Ban Cán Sự Lớp", icon: FiUsers, path: "/student/ban-can-su-lop" },
         { label: "Bài Kiểm Tra", icon: FiFileText, path: "/student/quiz" },
         { label: "Thông Báo", icon: FiBell, path: "/student/notifications" },
         { label: "Thời Khóa Biểu", icon: FiCalendar, path: "/student/schedule" },

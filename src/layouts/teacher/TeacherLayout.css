@@ -6,9 +6,20 @@
     --content-gap-collapsed: 1rem;
 
     --layout-bg: #e8f4f1;
+    --teacher-tab-heading-size: clamp(1.6rem, 1.45rem + 0.6vw, 1.85rem);
+    --teacher-tab-heading-line-height: 1.12;
+    --teacher-tab-heading-weight: 800;
+    --teacher-tab-heading-color: #1e293b;
 
     min-height: 100vh;
     background: var(--layout-bg);
+}
+
+.teacher-layout__content .common-page-header h1 {
+    font-size: var(--teacher-tab-heading-size);
+    line-height: var(--teacher-tab-heading-line-height);
+    font-weight: var(--teacher-tab-heading-weight);
+    color: var(--teacher-tab-heading-color);
 }
 
 .teacher-layout__main {
