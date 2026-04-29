@@ -1,7 +1,7 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import { PageHeader, SchoolYearTermSelector } from "../../../components/common";
 import HomeroomOverviewSection from "./components/homeroomOverviewSection/HomeroomOverviewSection";
-import ClassStudentsSection from "../teachingClasses/components/classStudentsSection/ClassStudentsSection";
+import HomeroomStudentsSection from "./components/homeroomStudentsSection/HomeroomStudentsSection";
 import HomeroomAttendanceSection from "./components/homeroomAttendanceSection/HomeroomAttendanceSection";
 import HomeroomActionDialog from "./components/homeroomActionDialog/HomeroomActionDialog";
 import { homeroomData } from "./data/homeroomData";
@@ -9,15 +9,93 @@ import { useSchoolYearTerm } from "../../../hooks/useSchoolYearTerm";
 import { FiUsers, FiAward, FiCalendar } from "react-icons/fi";
 import "./TeacherHomeroom.css";
 
+const officerRoleConfig = {
+    monitor: { label: "Lớp trưởng", field: "monitor" },
+    viceMonitor: { label: "Phó học tập", field: "viceMonitor" },
+    secretary: { label: "Bí thư", field: "secretary" },
+};
+
 export default function TeacherHomeroom() {
     const { selectedSchoolYear, selectedTerm, handleYearArrow, handleTermChange } = useSchoolYearTerm();
     const [activeSection, setActiveSection] = useState("overview");
-    const [hasUnreadMessages, setHasUnreadMessages] = useState(true); // Mock unread state
+    const [hasUnreadMessages] = useState(true); // Mock unread state
     const [classData, setClassData] = useState(() => ({
         ...homeroomData,
+        students: (homeroomData.students || []).map((student) => ({
+            ...student,
+            officerRole: student.officerRole || null,
+        })),
         extraOfficers: homeroomData.extraOfficers || [],
     }));
     const [actionDialog, setActionDialog] = useState({ open: false, mode: "officer" });
+
+    const officerRows = useMemo(() => (
+        Object.entries(officerRoleConfig).map(([key, config]) => {
+            const student = classData.students.find((item) => item.officerRole === key) || null;
+            return {
+                key,
+                label: config.label,
+                field: config.field,
+                studentId: student?.id || null,
+                studentName: student?.name || classData[config.field] || "Chưa phân công",
+            };
+        })
+    ), [classData]);
+
+    const handleUpdateStudent = (studentId, updates) => {
+        setClassData((prev) => {
+            const nextStudents = prev.students.map((student) => {
+                if (student.id !== studentId) return student;
+                const nextStudent = { ...student, ...updates };
+                return nextStudent;
+            });
+
+            const updatedStudent = nextStudents.find((student) => student.id === studentId);
+            const nextClassData = {
+                ...prev,
+                students: nextStudents,
+            };
+
+            if (updatedStudent?.officerRole && officerRoleConfig[updatedStudent.officerRole]) {
+                nextClassData[officerRoleConfig[updatedStudent.officerRole].field] = updatedStudent.name;
+            }
+
+            return nextClassData;
+        });
+    };
+
+    const handleAssignOfficer = (studentId, roleKey) => {
+        const selectedRole = officerRoleConfig[roleKey];
+        if (!selectedRole) return;
+
+        const roleOwner = classData.students.find((student) => student.officerRole === roleKey);
+        if (roleOwner && roleOwner.id !== studentId) {
+            window.alert(`Vai trò ${selectedRole.label} đã có người nắm.`);
+            return;
+        }
+
+        setClassData((prev) => {
+            const nextStudents = prev.students.map((student) => {
+                if (student.id === studentId) {
+                    return { ...student, officerRole: roleKey };
+                }
+
+                if (student.officerRole === roleKey) {
+                    return { ...student, officerRole: null };
+                }
+
+                return student;
+            });
+
+            const assignedStudent = nextStudents.find((student) => student.id === studentId);
+
+            return {
+                ...prev,
+                students: nextStudents,
+                [selectedRole.field]: assignedStudent?.name || prev[selectedRole.field],
+            };
+        });
+    };
 
     const openOfficerDialog = () => setActionDialog({ open: true, mode: "officer" });
     const openActivityDialog = () => setActionDialog({ open: true, mode: "activity" });
@@ -136,7 +214,14 @@ export default function TeacherHomeroom() {
                         onCreateActivityClick={openActivityDialog}
                     />
                 )}
-                {activeSection === "students" && <ClassStudentsSection students={classData.students} />}
+                {activeSection === "students" && (
+                    <HomeroomStudentsSection
+                        students={classData.students}
+                        officers={officerRows}
+                        onUpdateStudent={handleUpdateStudent}
+                        onAssignOfficer={handleAssignOfficer}
+                    />
+                )}
                 {activeSection === "attendance" && <HomeroomAttendanceSection data={classData} />}
             </div>
 
