@@ -164,7 +164,7 @@ export default function HomeroomOverviewSection({ data, onAddOfficersClick, onCr
                             onClick={() => onAddOfficersClick?.(data)}
                         >
                             <FiPlus />
-                            <span>Thêm ban cán sự</span>
+                            <span>Phân công ban cán sự</span>
                         </button>
                     </div>
                     <div className="card-content officers-list">

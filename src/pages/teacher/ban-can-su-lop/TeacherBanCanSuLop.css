@@ -1,0 +1,60 @@
+.teacher-ban-can-su-lop-page { padding: 16px; }
+.teacher-ban-can-su-lop-header__title h1 { margin: 0 0 6px; font-size: 28px; font-weight: 800; color: #16233b; }
+.teacher-ban-can-su-lop-header__title p { margin: 0; color: #6f7c91; font-size: 13px; }
+
+.teacher-ban-can-su-lop-content { display: grid; grid-template-columns: 320px 1fr; gap: 16px; margin-top: 16px; }
+
+.teacher-ban-can-su-lop-classes { background: #fff; border: 1px solid #dfe5f0; border-radius: 12px; padding: 12px; }
+.teacher-ban-can-su-lop-classes h3 { margin: 0 0 8px; font-size: 15px; color: #16233b; }
+.teacher-ban-can-su-lop-class-list { display: grid; gap: 8px; max-height: 640px; overflow: auto; padding-right: 6px; }
+.teacher-ban-can-su-lop-class-card { text-align: left; padding: 10px; border-radius: 10px; border: 1px solid transparent; background: linear-gradient(180deg,#ffffff 0%, #fbfdff 100%); display: block; cursor: pointer; }
+.teacher-ban-can-su-lop-class-card:hover { transform: translateY(-2px); box-shadow: 0 10px 20px rgba(22,35,59,0.04); }
+.teacher-ban-can-su-lop-class-card.active { border-color: #cfe0ff; box-shadow: 0 12px 26px rgba(37,99,255,0.08); }
+.class-card-title { font-weight: 800; color: #16233b; margin-bottom: 4px; }
+.class-card-sub { font-size: 13px; color: #6f7c91; }
+.class-card-meta { margin-top: 8px; font-size: 12px; color: #4a5568; }
+
+.teacher-ban-can-su-lop-panel { background: #fff; border: 1px solid #dfe5f0; border-radius: 12px; padding: 16px; }
+.teacher-ban-can-su-lop-panel__header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+.teacher-ban-can-su-lop-panel__header h2 { margin: 0; font-size: 20px; color: #16233b; }
+.teacher-ban-can-su-lop-panel__header span { font-size: 12px; color: #2563ff; background: #eef4ff; padding: 6px 10px; border-radius: 999px; }
+
+.teacher-ban-can-su-lop-assignments { display: grid; gap: 12px; }
+.assignment-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px; border-radius: 10px; border: 1px solid #eef3ff; background: linear-gradient(180deg,#fff 0%, #fbfdff 100%); }
+.assignment-info strong { display: block; font-weight: 800; color: #16233b; }
+.assignment-info small { color: #6f7c91; font-size: 12px; }
+.assignment-control { display:flex; align-items:center; gap:8px; }
+.assignment-control select { padding: 8px 10px; border-radius: 8px; border: 1px solid #dfe5f0; background: #fff; }
+
+.assignment-control select[size] {
+  padding: 4px 8px;
+  font-size: 14px;
+  line-height: 1.8;
+  overflow-y: scroll;
+  border: 1px solid #d9e2f5;
+  border-radius: 10px;
+  background: #ffffff;
+  box-shadow: 0 2px 8px rgba(30, 47, 90, 0.06);
+}
+
+.assignment-control select[size] option {
+  padding: 6px 8px;
+  line-height: 1.6;
+  background: #ffffff;
+  color: #16233b;
+}
+
+.assignment-control select[size] option:checked {
+  background: linear-gradient(#2563ff, #2563ff);
+  background-color: #2563ff !important;
+  color: #ffffff;
+}
+.assigned-name { font-size: 14px; color: #2563ff; font-weight: 700; min-width: 220px; }
+.btn-clear { background: transparent; border: 1px solid #f1f5f9; padding: 6px 10px; border-radius: 8px; cursor: pointer; }
+
+.teacher-ban-can-su-lop-footer { margin-top: 14px; color: #6f7c91; font-size: 12px; }
+
+@media (max-width: 900px) {
+  .teacher-ban-can-su-lop-content { grid-template-columns: 1fr; }
+}
+

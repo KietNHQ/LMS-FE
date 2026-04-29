@@ -93,6 +93,7 @@ const TeacherSupport = lazy(() => import("../pages/teacher/support/TeacherSuppor
 const TeacherTeachingClasses = lazy(
   () => import("../pages/teacher/teachingClasses/TeacherTeachingClasses")
 );
+const TeacherBanCanSuLop = lazy(() => import("../pages/teacher/ban-can-su-lop/TeacherBanCanSuLop"));
 const TeacherQuizSubmissions = lazy(
   () => import("../pages/teacher/quiz/submissions/TeacherQuizSubmissions")
 );
@@ -221,6 +222,7 @@ export default function AppRoutes() {
         <Route path="dashboard"        element={<TeacherDashboard />} />
         <Route path="teaching-classes" element={<TeacherTeachingClasses />} />
         <Route path="teaching-classes/:classId" element={<TeacherTeachingClassDetail />} />
+        <Route path="ban-can-su-lop" element={<TeacherBanCanSuLop />} />
         <Route path="homeroom"         element={<TeacherHomeroom />} />
         <Route path="lessons"          element={<TeacherLessons />} />
         <Route path="grades"           element={<TeacherGrades />} />

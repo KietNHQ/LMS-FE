@@ -1,4 +1,265 @@
 .homeroom-students-section {
-    padding: 1rem;
+    padding: 0;
+}
+
+.homeroom-students-list-card {
+    display: grid;
+    gap: 16px;
+}
+
+.homeroom-students-list-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.homeroom-students-list-kicker {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #2563ff;
+}
+
+.homeroom-students-list-header h2 {
+    margin: 8px 0 6px;
+    font-size: 24px;
+    font-weight: 800;
+    color: #16233b;
+}
+
+.homeroom-students-list-header p {
+    margin: 0;
+    max-width: 900px;
+    color: #6f7c91;
+    line-height: 1.6;
+    font-size: 14px;
+}
+
+.homeroom-students-list-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    border: 1px solid #dfe5f0;
+    background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+    color: #16233b;
+    border-radius: 999px;
+    padding: 10px 14px;
+    font-size: 13px;
+    font-weight: 800;
+    white-space: nowrap;
+}
+
+.homeroom-students-table-wrap {
+    background: #ffffff;
+    border: 1px solid #dfe5f0;
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 12px 30px rgba(22, 35, 59, 0.06);
+}
+
+.homeroom-students-table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+}
+
+.homeroom-students-table thead {
+    background: #fbfcff;
+}
+
+.homeroom-students-table th,
+.homeroom-students-table td {
+    padding: 14px 12px;
+    border-bottom: 1px solid #eef1f6;
+    text-align: left;
+    vertical-align: middle;
+}
+
+.homeroom-students-table th {
+    color: #6b7891;
+    font-size: 12px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.homeroom-students-row {
+    cursor: pointer;
+    transition: background-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.homeroom-students-row:hover {
+    background: linear-gradient(180deg, #fbfcff 0%, #f6f9ff 100%);
+    box-shadow: inset 0 0 0 1px rgba(143, 179, 255, 0.18);
+}
+
+.homeroom-students-main-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+}
+
+.homeroom-students-avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #2563ff 0%, #4f8cff 100%);
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    font-weight: 900;
+    flex-shrink: 0;
+}
+
+.homeroom-students-name-wrap {
+    min-width: 0;
+}
+
+.homeroom-students-name-wrap h4 {
+    margin: 0;
+    color: #16233b;
+    font-size: 15px;
+    font-weight: 800;
+}
+
+.homeroom-students-name-wrap p {
+    margin: 3px 0 0;
+    color: #7c879b;
+    font-size: 13px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.homeroom-students-muted {
+    color: #475569;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.homeroom-students-parent-wrap h5 {
+    margin: 0;
+    font-size: 14px;
+    color: #16233b;
+    font-weight: 800;
+}
+
+.homeroom-students-role-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 6px 12px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 800;
+    white-space: nowrap;
+}
+
+.homeroom-students-role-badge.role-empty {
+    background: #f1f5f9;
+    color: #64748b;
+}
+
+.homeroom-students-role-badge.role-monitor {
+    background: #eef4ff;
+    color: #2563ff;
+}
+
+.homeroom-students-role-badge.role-vice {
+    background: #effaf5;
+    color: #11845b;
+}
+
+.homeroom-students-role-badge.role-secretary {
+    background: #fff7ed;
+    color: #d97706;
+}
+
+.homeroom-students-row-actions {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.homeroom-students-icon-btn {
+    width: 34px;
+    height: 34px;
+    border: 1px solid #dfe5f0;
+    border-radius: 10px;
+    background: #ffffff;
+    color: #98a2b3;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.18s ease;
+    font-size: 16px;
+}
+
+.homeroom-students-icon-btn:hover {
+    transform: translateY(-1px);
+    background: #eef2fb;
+    color: #20366d;
+    box-shadow: 0 8px 16px rgba(30, 47, 90, 0.1);
+}
+
+.homeroom-students-icon-btn.primary:hover {
+    color: #2563ff;
+}
+
+.homeroom-students-empty-row {
+    text-align: center;
+    color: #94a3b8;
+    padding: 24px 12px;
+}
+
+.homeroom-students-table th:nth-child(1),
+.homeroom-students-table td:nth-child(1) { width: 26%; }
+.homeroom-students-table th:nth-child(2),
+.homeroom-students-table td:nth-child(2) { width: 9%; text-align: center; }
+.homeroom-students-table th:nth-child(3),
+.homeroom-students-table td:nth-child(3) { width: 11%; text-align: center; }
+.homeroom-students-table th:nth-child(4),
+.homeroom-students-table td:nth-child(4) { width: 16%; }
+.homeroom-students-table th:nth-child(5),
+.homeroom-students-table td:nth-child(5) { width: 13%; text-align: center; }
+.homeroom-students-table th:nth-child(6),
+.homeroom-students-table td:nth-child(6) { width: 12%; text-align: center; }
+.homeroom-students-table th:nth-child(7),
+.homeroom-students-table td:nth-child(7) { width: 13%; text-align: center; }
+
+@media (max-width: 1100px) {
+    .homeroom-students-list-header {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .homeroom-students-table {
+        min-width: 920px;
+    }
+
+    .homeroom-students-table-wrap {
+        overflow-x: auto;
+    }
+}
+
+@media (max-width: 768px) {
+    .homeroom-students-list-header h2 {
+        font-size: 20px;
+    }
+
+    .homeroom-students-table th,
+    .homeroom-students-table td {
+        padding: 12px 10px;
+    }
 }
 
