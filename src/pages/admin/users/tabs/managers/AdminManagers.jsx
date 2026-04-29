@@ -497,9 +497,11 @@ export default function AdminManagers({ onCountChange, currentPermissions = [] }
                                         <button className="mgr-action-btn block" title={m.status === "Hoạt động" ? "Vô hiệu hóa" : "Kích hoạt"} onClick={() => setStatusTarget(m)}>
                                             {m.status === "Hoạt động" ? <FiUserX size={16} /> : <FiUserCheck size={16} />}
                                         </button>
-                                        <button className="mgr-action-btn reset" title="Đặt lại mật khẩu" onClick={() => handleResetPassword(m)}>
-                                            <FiLock size={16} />
-                                        </button>
+                                        {currentPermissions.includes(PERMISSIONS.USER_UPDATE) && (
+                                            <button className="mgr-action-btn reset" title="Đặt lại mật khẩu" onClick={() => handleResetPassword(m)}>
+                                                <FiLock size={16} />
+                                            </button>
+                                        )}
                                         {currentPermissions.includes(PERMISSIONS.USER_DELETE) && (
                                             <button className="mgr-action-btn delete" title="Xóa" onClick={() => handleDeleteUser(m)}>
                                                 <FiTrash2 size={16} />
@@ -570,13 +572,15 @@ export default function AdminManagers({ onCountChange, currentPermissions = [] }
                         >
                             Mở khóa
                         </button>
-                        <button 
-                            className="bulk-btn reset" 
-                            onClick={handleBulkResetPassword}
-                            disabled={isBulkToggling}
-                        >
-                            Đặt lại mật khẩu
-                        </button>
+                        {currentPermissions.includes(PERMISSIONS.USER_UPDATE) && (
+                            <button
+                                className="bulk-btn reset"
+                                onClick={handleBulkResetPassword}
+                                disabled={isBulkToggling}
+                            >
+                                Đặt lại mật khẩu
+                            </button>
+                        )}
                         {currentPermissions.includes(PERMISSIONS.USER_DELETE) && (
                             <button 
                                 className="bulk-btn delete" 

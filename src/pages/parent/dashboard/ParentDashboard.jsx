@@ -9,8 +9,9 @@ import EventCalendar from "../../../components/common/EventCalendar/EventCalenda
 import { INITIAL_CALENDAR_EVENTS, CALENDAR_EVENT_TYPES } from "../../../components/common/EventCalendar/eventData";
 import UpcomingSchedule from "./components/UpcomingSchedule/UpcomingSchedule";
 import { useSchoolYearTerm } from "../../../hooks/useSchoolYearTerm";
+import { parentService } from "../../../services/pages/parent/parentService";
 
-const childrenData = [
+const defaultChildrenData = [
   {
     id: 1,
     name: "Nguyễn Minh Tuấn",
@@ -119,34 +120,75 @@ const childrenData = [
 ];
 
 export default function ParentDashboard() {
-  const [selectedChildId, setSelectedChildId] = useState(childrenData[0].id);
+  const [childrenList, setChildrenList] = useState([]);
+  const [selectedChildId, setSelectedChildId] = useState(null);
   const { selectedSchoolYear, selectedTerm, handleYearArrow, handleTermChange } = useSchoolYearTerm();
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
 
+  // Fetch children data from API on component mount
   useEffect(() => {
-    setIsLoading(true);
-    const timer = setTimeout(() => setIsLoading(false), 1000);
-    return () => clearTimeout(timer);
-  }, [selectedSchoolYear, selectedTerm, selectedChildId]);
+    const fetchChildren = async () => {
+      try {
+        setIsLoading(true);
+        setError(null);
 
-  const selectedChild = childrenData.find(c => c.id === selectedChildId);
+        const response = await parentService.listChildren({ mock: false });
+        console.log("📋 Parent Children API Response:", response);
+
+        const children = response.data || response.parent_children || response || [];
+        const childrenArray = Array.isArray(children) ? children : defaultChildrenData;
+
+        setChildrenList(childrenArray);
+        if (childrenArray.length > 0 && !selectedChildId) {
+          setSelectedChildId(childrenArray[0].id || childrenArray[0].studentId);
+        }
+      } catch (err) {
+        console.error("❌ Error fetching parent children:", err);
+        setError(err.message);
+        setChildrenList(defaultChildrenData);
+        if (defaultChildrenData.length > 0) {
+          setSelectedChildId(defaultChildrenData[0].id);
+        }
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchChildren();
+  }, []); // Run once on mount
+
+  const selectedChild = (childrenList.length > 0 ? childrenList : defaultChildrenData).find(
+    c => (c.id || c.studentId) === selectedChildId
+  ) || (childrenList.length > 0 ? childrenList : defaultChildrenData)[0];
 
   const calculateAverage = (subjects) => {
-    if (!subjects) return 0;
-    const total = subjects.reduce((sum, s) => sum + s.average, 0);
+    if (!subjects || !Array.isArray(subjects)) return 0;
+    const total = subjects.reduce((sum, s) => sum + (s.average || 0), 0);
     return (total / subjects.length).toFixed(2);
   };
 
-  const hk1Avg = calculateAverage(selectedChild.gradesBySemester.hk1);
-  const yearAvg = calculateAverage(selectedChild.gradesBySemester.year);
+  const hk1Avg = selectedChild?.gradesBySemester?.hk1 ? calculateAverage(selectedChild.gradesBySemester.hk1) : 0;
+  const yearAvg = selectedChild?.gradesBySemester?.year ? calculateAverage(selectedChild.gradesBySemester.year) : 0;
 
   return (
     <div className="dashboard">
       <PageHeader
         title="Trang chủ phụ huynh"
       />
+      {error && (
+        <div style={{
+          padding: "1rem",
+          marginBottom: "1rem",
+          backgroundColor: "#fef2f2",
+          borderLeft: "4px solid #dc2626",
+          borderRadius: "0.5rem"
+        }}>
+          <strong style={{ color: "#dc2626" }}>⚠️ Lỗi:</strong> {error}
+        </div>
+      )}
       <ChildSwitcher
-        childrenList={childrenData}
+        childrenList={childrenList.length > 0 ? childrenList : defaultChildrenData}
         selectedChildId={selectedChildId}
         onSelect={setSelectedChildId}
         extraControl={
@@ -186,7 +228,7 @@ export default function ParentDashboard() {
                 }}
               />
             </div>
-            <UpcomingSchedule gradesBySemester={selectedChild.gradesBySemester} />
+            <UpcomingSchedule gradesBySemester={selectedChild?.gradesBySemester || { hk1: [], hk2: [], year: [] }} />
           </div>
         </>
       )}

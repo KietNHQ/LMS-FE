@@ -126,23 +126,25 @@ export default function TeacherListSection({
 												<FiEdit2 />
 											</button>
 
-                                            <button
-                                                type="button"
-                                                className="teacher-icon-btn block"
-                                                onClick={() => onToggleStatus(teacher)}
-                                                title={teacher.status === "Hoạt động" ? "Khóa" : "Mở khóa"}
-                                            >
-                                                {teacher.status === "Hoạt động" ? <FiUserX /> : <FiUserCheck />}
-                                            </button>
+											<button
+												type="button"
+												className="teacher-icon-btn block"
+												onClick={() => onToggleStatus(teacher)}
+												title={teacher.status === "Hoạt động" ? "Khóa" : "Mở khóa"}
+											>
+												{teacher.status === "Hoạt động" ? <FiUserX /> : <FiUserCheck />}
+											</button>
 
-                                            <button
-                                                type="button"
-                                                className="teacher-icon-btn reset"
-                                                onClick={() => onResetPassword(teacher)}
-                                                title="Đặt lại mật khẩu"
-                                            >
-                                                <FiLock />
-                                            </button>
+											{onResetPassword && (
+												<button
+													type="button"
+													className="teacher-icon-btn reset"
+													onClick={() => onResetPassword(teacher)}
+													title="Đặt lại mật khẩu"
+												>
+													<FiLock />
+												</button>
+											)}
 
 											<button
 												type="button"

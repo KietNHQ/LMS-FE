@@ -57,6 +57,13 @@ export default function VpAcademicExams() {
         { value: "hsg", label: "Bồi dưỡng HSG" },
     ];
 
+    const studentCountMap = {
+        k10: 520,
+        k11: 480,
+        k12: 450,
+        all: 1450
+    };
+
     const [selectedExam, setSelectedExam] = useState(null);
     const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -65,6 +72,7 @@ export default function VpAcademicExams() {
         title: "",
         type: "tt",
         target: "k12",
+        candidates: 450,
         startDate: "",
         endDate: "",
         startTime: "07:30",
@@ -145,7 +153,7 @@ export default function VpAcademicExams() {
                                         <span>Thời lượng: <strong>{exam.duration}</strong></span>
                                     </div>
                                     <div className="meta-item">
-                                        <FiUsers className="m-icon" style={{ color: '#3b82f6' }} />
+                                        <FiUsers className="m-icon" style={{ color: 'var(--admin-primary)' }} />
                                         <span>G/v có mặt: <strong>{exam.staffArrival}</strong></span>
                                     </div>
                                 </div>
@@ -208,7 +216,7 @@ export default function VpAcademicExams() {
                                     </div>
                                 </div>
                                 <div className="dash-item">
-                                    <div className="dash-icon" style={{ color: '#3b82f6' }}><FiUsers /></div>
+                                    <div className="dash-icon" style={{ color: 'var(--admin-primary)' }}><FiUsers /></div>
                                     <div className="dash-info">
                                         <label>Giám thị tập trung</label>
                                         <strong>{selectedExam.staffArrival}</strong>
@@ -269,7 +277,7 @@ export default function VpAcademicExams() {
 
                         <div className="modal-footer-premium">
                             <Button variant="secondary" onClick={closeDetail}>Đóng</Button>
-                            <Button variant="primary" className="vpa-btn-main" onClick={() => navigate('/vp-academic/exams/rooms')}>
+                            <Button variant="primary" className="vpa-btn-main" onClick={() => navigate('/management/exams/rooms')}>
                                 Xếp phòng
                             </Button>
                         </div>
@@ -349,13 +357,26 @@ export default function VpAcademicExams() {
                     <div className="form-section">
                         <h3>3. Quy mô & Môn thi</h3>
                         <div className="form-row">
-                            <Input label="Sĩ số dự kiến" type="number" placeholder="450" />
+                            <Input 
+                                label="Sĩ số dự kiến" 
+                                type="number" 
+                                placeholder="450" 
+                                value={createFormData.candidates}
+                                readOnly
+                            />
                             <Select 
                                 variant="custom"
                                 label="Đối tượng"
                                 options={targetOptions}
                                 value={createFormData.target}
-                                onChange={e => setCreateFormData({...createFormData, target: e.target.value})}
+                                onChange={e => {
+                                    const val = e.target.value;
+                                    setCreateFormData({
+                                        ...createFormData, 
+                                        target: val,
+                                        candidates: studentCountMap[val] || 0
+                                    });
+                                }}
                             />
                         </div>
                         <div className="form-group-custom">

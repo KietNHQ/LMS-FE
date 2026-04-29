@@ -114,14 +114,16 @@ export default function ParentListSection({
                                                 {parent.status === "Hoạt động" ? <FiUserX /> : <FiUserCheck />}
                                             </button>
 
-                                            <button
-                                                type="button"
-                                                className="parent-icon-btn reset"
-                                                onClick={() => onResetPassword(parent)}
-                                                title="Đặt lại mật khẩu"
-                                            >
-                                                <FiLock />
-                                            </button>
+                                            {onResetPassword && (
+                                                <button
+                                                    type="button"
+                                                    className="parent-icon-btn reset"
+                                                    onClick={() => onResetPassword(parent)}
+                                                    title="Đặt lại mật khẩu"
+                                                >
+                                                    <FiLock />
+                                                </button>
+                                            )}
 
                                             <button onClick={() => onDelete(parent)} title="Xóa" className="parent-icon-btn delete">
                                                 <FiTrash2 />

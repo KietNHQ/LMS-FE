@@ -60,6 +60,37 @@ export default function VpAcademicExamRoomDetail() {
         toast.success("Đang xử lý file Excel... Nhập danh sách học sinh thành công!");
     };
 
+    const handleClearAll = () => {
+        if (students.length === 0) return;
+        if (window.confirm("Bạn có chắc chắn muốn xóa toàn bộ học sinh khỏi phòng này?")) {
+            setStudents([]);
+            toast.info("Đã xóa toàn bộ học sinh khỏi phòng.");
+        }
+    };
+
+    const handleQuickArrange = () => {
+        if (classFilter === "all") {
+            toast.warning("Vui lòng chọn một lớp cụ thể để xếp nhanh!");
+            return;
+        }
+        
+        const studentsFromClass = MASTER_STUDENTS.filter(s => s.class === classFilter && !students.find(curr => curr.id === s.id));
+        if (studentsFromClass.length === 0) {
+            toast.info(`Không còn học sinh nào của lớp ${classFilter} để thêm.`);
+            return;
+        }
+
+        const remainingSpots = roomInfo.totalStudents - students.length;
+        if (remainingSpots <= 0) {
+            toast.error("Phòng thi đã đầy!");
+            return;
+        }
+
+        const toAdd = studentsFromClass.slice(0, remainingSpots);
+        setStudents(prev => [...prev, ...toAdd]);
+        toast.success(`Đã xếp nhanh ${toAdd.length} học sinh từ lớp ${classFilter} vào phòng.`);
+    };
+
     const handleConfirmAdd = () => {
         if (selectedStudentIds.length === 0) {
             toast.warning("Vui lòng chọn ít nhất một học sinh!");
@@ -178,7 +209,7 @@ export default function VpAcademicExamRoomDetail() {
         <div className="vpa-room-detail">
             {/* Header */}
             <div className="vpa-detail-header">
-                <button className="back-btn" onClick={() => navigate("/vp-academic/exams/rooms")}>
+                <button className="back-btn" onClick={() => navigate("/management/exams/rooms")}>
                     <FiArrowLeft /> Quay lại
                 </button>
                 <div className="header-info">
@@ -190,7 +221,7 @@ export default function VpAcademicExamRoomDetail() {
             {/* Stats Cards */}
             <div className="vpa-rooms-stats" style={{ marginBottom: '2rem' }}>
                 <div className="stat-card">
-                    <div className="stat-icon" style={{ backgroundColor: '#34d39920', color: '#34d399' }}>
+                    <div className="stat-icon" style={{ backgroundColor: '#34d39920', color: '#10b981' }}>
                         <FiBookOpen />
                     </div>
                     <div className="stat-details">
@@ -208,12 +239,14 @@ export default function VpAcademicExamRoomDetail() {
                     </div>
                 </div>
                 <div className="stat-card">
-                    <div className="stat-icon" style={{ backgroundColor: '#8b5cf620', color: '#8b5cf6' }}>
+                    <div className="stat-icon" style={{ backgroundColor: '#1e2f5a20', color: '#1e2f5a' }}>
                         <FiUsers />
                     </div>
                     <div className="stat-details">
                         <span className="label">Tổng thí sinh</span>
-                        <span className="value" style={{ fontSize: '1.2rem' }}>{students.length}</span>
+                        <span className="value" style={{ fontSize: '1.6rem' }}>
+                            {students.length} <span style={{ fontSize: '0.9rem', color: '#94a3b8', fontWeight: 600 }}>/ {roomInfo.totalStudents}</span>
+                        </span>
                     </div>
                 </div>
             </div>
@@ -238,13 +271,26 @@ export default function VpAcademicExamRoomDetail() {
                         className="class-filter-select"
                         style={{ width: '180px' }}
                     />
+                    <Button 
+                        variant="outline" 
+                        onClick={handleQuickArrange}
+                        disabled={classFilter === "all"}
+                        style={{ 
+                            borderColor: classFilter === 'all' ? '#e2e8f0' : '#c3d2ef', 
+                            color: classFilter === 'all' ? '#94a3b8' : 'var(--admin-navy)', 
+                            background: classFilter === 'all' ? '#f8fafc' : '#e9efff',
+                            fontWeight: 750
+                        }}
+                    >
+                        Xếp nhanh
+                    </Button>
                 </div>
                 <div className="toolbar-right">
+                    <Button className="vpa-btn-ghost" onClick={handleClearAll} style={{ color: '#ef4444', borderColor: '#fee2e2' }}>
+                        <FiTrash2 /> Xóa tất cả
+                    </Button>
                     <Button className="vpa-btn-secondary" onClick={() => setIsAddModalOpen(true)}>
                         <FiPlus /> Thêm học sinh
-                    </Button>
-                    <Button className="vpa-btn-ghost" onClick={handleDownloadTemplate}>
-                        <FiDownload /> Tải mẫu
                     </Button>
                     <Button className="vpa-btn-primary" onClick={handleImportExcel}>
                         <FiFilePlus /> Nhập Excel
@@ -260,9 +306,9 @@ export default function VpAcademicExamRoomDetail() {
                             <th>Mã học sinh</th>
                             <th>Họ và tên</th>
                             <th>Lớp</th>
-                            <th>SĐT Phụ huynh</th>
-                            <th>Giáo viên chủ nhiệm</th>
-                            <th>Thao tác</th>
+                            <th>Trạng thái</th>
+                            <th>GV Chủ nhiệm</th>
+                            <th style={{ textAlign: 'right' }}>Thao tác</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -270,12 +316,19 @@ export default function VpAcademicExamRoomDetail() {
                             paginatedStudents.map((student) => (
                                 <tr key={student.id}>
                                     <td><span className="student-id">{student.id}</span></td>
-                                    <td><span className="student-name">{student.name}</span></td>
+                                    <td>
+                                        <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                            <span className="student-name">{student.name}</span>
+                                            <span style={{ fontSize: '0.75rem', color: '#94a3b8' }}>{student.parentPhone}</span>
+                                        </div>
+                                    </td>
                                     <td>{student.class}</td>
-                                    <td><span className="phone-cell">{student.parentPhone}</span></td>
+                                    <td>
+                                        <span className="status-pill ok">Đã xác nhận</span>
+                                    </td>
                                     <td><span className="teacher-cell">{student.teacher}</span></td>
                                     <td>
-                                        <div className="actions-cell">
+                                        <div className="actions-cell" style={{ justifyContent: 'flex-end' }}>
                                             <button 
                                                 className="btn-icon-table delete" 
                                                 title="Xóa"

@@ -171,13 +171,13 @@
     cursor: pointer;
     transition: all 0.2s;
     white-space: nowrap;
-    box-shadow: 0 2px 8px rgba(153, 27, 27, 0.2);
+    box-shadow: 0 2px 8px rgba(30, 47, 90, 0.2);
 }
 
 .btn-navigate-discipline:hover {
     background: var(--admin-primary-hover, #7f1d1d);
     transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(153, 27, 27, 0.3);
+    box-shadow: 0 4px 12px rgba(30, 47, 90, 0.3);
 }
 
 
@@ -193,7 +193,7 @@
     transition: all 0.2s;
 }
 
-.search-box-pill:focus-within { background: white; border-color: var(--admin-primary); box-shadow: 0 0 0 3px rgba(153, 27, 27, 0.1); }
+.search-box-pill:focus-within { background: white; border-color: var(--admin-primary); box-shadow: 0 0 0 3px var(--admin-focus-ring); }
 .search-box-pill input { border: none; background: transparent; outline: none; font-size: 0.85rem; width: 100%; color: var(--admin-text-primary); }
 .search-box-pill svg { color: var(--admin-text-muted); }
 
@@ -223,7 +223,7 @@
 }
 
 .dm-table-premium tr:last-child td { border-bottom: none; }
-.dm-table-premium tr:hover td { background: #fdf2f2; }
+.dm-table-premium tr:hover td { background: var(--admin-primary-soft); }
 
 .dm-footer-pagination {
     display: flex;
@@ -266,7 +266,7 @@
     transition: all 0.2s;
 }
 
-.att-btn-mini:hover { border-color: var(--admin-primary); color: var(--admin-primary); background: #fef2f2; transform: scale(1.05); }
+.att-btn-mini:hover { border-color: var(--admin-primary); color: var(--admin-primary); background: var(--admin-primary-soft); transform: scale(1.05); }
 
 /* Side Panels */
 .att-side-trends { display: flex; flex-direction: column; gap: 1.5rem; }
@@ -315,7 +315,7 @@
 }
 
 .highlight-card h4 { margin: 0 0 1.25rem 0; font-size: 0.9rem; font-weight: 800; display: flex; align-items: center; gap: 0.5rem; text-transform: uppercase; }
-.highlight-card.danger h4 { color: #dc2626; }
+.highlight-card.danger h4 { color: var(--admin-primary); }
 
 .h-list { display: flex; flex-direction: column; gap: 0.75rem; }
 .h-item {
@@ -328,7 +328,7 @@
 }
 
 .h-item strong { font-size: 0.95rem; color: var(--admin-text-primary); }
-.h-item span { font-size: 0.75rem; color: #dc2626; font-weight: 800; }
+.h-item span { font-size: 0.75rem; color: var(--admin-primary); font-weight: 800; }
 
 /* Table alignment helpers */
 .th-center, .td-center { text-align: center !important; }
@@ -347,27 +347,51 @@
 }
 
 .points-indicator.plus {
-    color: #059669;
-    background: #ecfdf5;
+    color: var(--admin-primary);
+    background: var(--admin-primary-soft);
 }
 
 .points-indicator.minus {
-    color: #dc2626;
-    background: #fef2f2;
+    color: var(--admin-text-secondary);
+    background: #eef2ff;
 }
 
 .td-day-badge {
     font-size: 0.8rem;
     font-weight: 800;
-    color: #475569;
-    background: #f1f5f9;
+    color: var(--admin-primary);
+    background: var(--admin-primary-soft);
     padding: 0.3rem 0.75rem;
     border-radius: 20px;
 }
 
+.vp-attendance .common-status-badge.status-success,
+.vp-attendance .common-status-badge.status-completed,
+.vp-attendance .common-status-badge.status-resolved {
+    color: var(--admin-primary);
+    background: var(--admin-primary-soft);
+    border-color: var(--admin-border);
+}
+
+.vp-attendance .common-status-badge.status-warning,
+.vp-attendance .common-status-badge.status-pending,
+.vp-attendance .common-status-badge.status-draft {
+    color: var(--admin-text-secondary);
+    background: #eef2ff;
+    border-color: var(--admin-border);
+}
+
+.vp-attendance .common-status-badge.status-critical,
+.vp-attendance .common-status-badge.status-error,
+.vp-attendance .common-status-badge.status-rejected {
+    color: var(--admin-text-secondary);
+    background: #eef2ff;
+    border-color: var(--admin-border);
+}
+
 .btn-add-bonus {
     padding: 0.6rem 1.25rem;
-    background: #059669;
+    background: var(--admin-primary);
     color: white;
     border: none;
     border-radius: 10px;
@@ -378,13 +402,13 @@
     gap: 0.5rem;
     cursor: pointer;
     transition: all 0.2s;
-    box-shadow: 0 4px 12px rgba(5, 150, 105, 0.2);
+    box-shadow: 0 4px 12px rgba(30, 47, 90, 0.2);
 }
 
 .btn-add-bonus:hover {
-    background: #047857;
+    background: var(--admin-primary-hover);
     transform: translateY(-2px);
-    box-shadow: 0 6px 15px rgba(5, 150, 105, 0.3);
+    box-shadow: 0 6px 15px rgba(30, 47, 90, 0.3);
 }
 
 /* Rank Information */
@@ -402,4 +426,58 @@
 
 .att-stat-card.primary .stat-sub {
     margin-top: 0.5rem;
+}
+
+/* Select Styling */
+.filter-group select {
+    width: 100%;
+    padding: 0.6rem 0.8rem;
+    background: white;
+    color: var(--admin-text-primary);
+    border: 1px solid var(--admin-border);
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    appearance: none;
+    padding-right: 2rem;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%236B7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3E%3C/svg%3E");
+    background-position: right 0.5rem center;
+    background-repeat: no-repeat;
+    background-size: 1.5em 1.5em;
+    padding-right: 2.5rem;
+}
+
+.filter-group select:focus {
+    outline: none;
+    border-color: var(--admin-primary);
+    box-shadow: 0 0 0 3px rgba(30, 47, 90, 0.1);
+    background-color: white;
+}
+
+.filter-group select:hover {
+    border-color: var(--admin-primary);
+}
+
+/* Active/Selected Select */
+.filter-group select.active-select {
+    background: var(--admin-primary);
+    color: white;
+    border-color: var(--admin-primary);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='white' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3E%3C/svg%3E");
+}
+
+/* Option styling */
+.filter-group select option {
+    background: white;
+    color: var(--admin-text-primary);
+    padding: 0.5rem;
+}
+
+.filter-group select option:checked {
+    background: var(--admin-primary);
+    background: linear-gradient(#ffffff 0%, #ffffff 100%);
+    background-color: var(--admin-primary);
+    color: white;
 }

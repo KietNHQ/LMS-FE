@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 
 import "./AdminStudents.css";
+import { PERMISSIONS } from "../../../../../config/permissions";
 import { CreateUserDialog, Pagination, ConfirmationModal } from "../../../../../components/common";
 
 import StudentActionsSection from "./components/studentActionsSection/studentActionsSection";
@@ -50,7 +51,7 @@ const toStudentForm = (student = {}) => ({
 
 const buildDownloadName = (fallbackName) => fallbackName;
 
-export default function AdminStudents({ onCountChange, schoolYear }) {
+export default function AdminStudents({ onCountChange, schoolYear, currentPermissions = [] }) {
   const [students, setStudents] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [loadError, setLoadError] = useState("");
@@ -465,7 +466,7 @@ export default function AdminStudents({ onCountChange, schoolYear }) {
             onSelectStudent={handleViewStudent}
             onEdit={handleEditStudent}
             onDelete={handleDeleteStudent}
-            onResetPassword={handleResetPassword}
+            onResetPassword={currentPermissions.includes(PERMISSIONS?.USER_UPDATE) ? handleResetPassword : null}
             onToggleStatus={setStatusTarget}
             selectedUserIds={selectedUserIds}
             onSelectRow={handleSelectRow}
@@ -523,8 +524,8 @@ export default function AdminStudents({ onCountChange, schoolYear }) {
             <span className="bulk-count">Đã chọn: <strong>{selectedUserIds.length}</strong></span>
             <button className="bulk-clear-btn" onClick={() => setSelectedUserIds([])}>Bỏ chọn</button>
           </div>
-          <div className="bulk-btns">
-            <button 
+            <div className="bulk-btns">
+            <button
               className="bulk-btn lock" 
               onClick={() => handleBulkStatusChange("Đình chỉ")}
               disabled={isBulkToggling}
@@ -538,14 +539,16 @@ export default function AdminStudents({ onCountChange, schoolYear }) {
             >
               Mở khóa
             </button>
-            <button 
-              className="bulk-btn reset" 
-              onClick={handleBulkResetPassword}
-              disabled={isBulkToggling}
-            >
-              Đặt lại mật khẩu
-            </button>
-            <button 
+            {currentPermissions.includes(PERMISSIONS?.USER_UPDATE) && (
+              <button
+                className="bulk-btn reset"
+                onClick={handleBulkResetPassword}
+                disabled={isBulkToggling}
+              >
+                Đặt lại mật khẩu
+              </button>
+            )}
+            <button
                 className="bulk-btn delete" 
                 onClick={handleBulkDelete}
                 disabled={isBulkDeleting}

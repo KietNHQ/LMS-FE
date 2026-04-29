@@ -239,7 +239,7 @@
 }
 
 .clickable-row { cursor: pointer; }
-.clickable-row:hover { background: #fdf2f2 !important; }
+.clickable-row:hover { background: var(--admin-primary-soft) !important; }
 .clickable-row:hover .class-name-v2 { color: var(--admin-primary); }
 
 .rank-medal {
@@ -276,13 +276,13 @@
 }
 
 .conduct-badge.success {
-    background: #dcfce7;
-    color: #16a34a;
+    background: var(--admin-primary-soft);
+    color: var(--admin-primary);
 }
 
 .conduct-badge.warning {
-    background: #fef3c7;
-    color: #d97706;
+    background: #eef2ff;
+    color: var(--admin-text-secondary);
 }
 
 .attendance-mini-bar {
@@ -297,7 +297,7 @@
 
 .attendance-mini-bar .bar-fill {
     height: 100%;
-    background: #10b981;
+    background: var(--admin-primary);
     border-radius: 3px;
 }
 
@@ -306,7 +306,7 @@
     left: 105%;
     font-size: 0.75rem;
     font-weight: 700;
-    color: #10b981;
+    color: var(--admin-primary);
     white-space: nowrap;
 }
 
@@ -322,9 +322,9 @@
     gap: 4px;
 }
 
-.trend-badge.up { background: #ecfdf5; color: #059669; }
-.trend-badge.down { background: #fef2f2; color: #dc2626; }
-.trend-badge.flat { background: #f8fafc; color: #94a3b8; }
+.trend-badge.up { background: var(--admin-primary-soft); color: var(--admin-primary); }
+.trend-badge.down { background: #eef2ff; color: var(--admin-text-secondary); }
+.trend-badge.flat { background: #f8fafc; color: var(--admin-text-muted); }
 
 /* Highlight Cards (Premium Redesign) */
 .highlight-card {
@@ -477,11 +477,11 @@
 }
 
 .btn-view-incidents:hover { 
-    background: #fdf2f2; 
-    border-color: #fee2e2; 
-    color: #dc2626; 
+    background: var(--admin-primary-soft);
+    border-color: color-mix(in srgb, var(--admin-primary-soft) 80%, transparent 20%);
+    color: var(--admin-text-primary);
     transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(220, 38, 38, 0.1);
+    box-shadow: 0 4px 8px rgba(15, 23, 42, 0.06);
 }
 
 @media (max-width: 1280px) {

@@ -1,4 +1,13 @@
 .vp-academic-exams {
+    --vpa-navy: #1e2f5a;
+    --vpa-navy-dark: #172547;
+    --vpa-navy-soft: #e9efff;
+    --vpa-navy-border: #c3d2ef;
+    --vpa-navy-muted: #dce5f7;
+    --vpa-text-primary: #1e2f5a;
+    --vpa-text-secondary: #4d5f82;
+    --vpa-text-muted: #7e8eab;
+
     padding: 1.5rem 2.5rem;
     min-height: 100vh;
     animation: fadeIn 0.4s ease-out;
@@ -14,55 +23,55 @@
 /* ── UI LIBRARY OVERRIDES (Role Theme) ── */
 .vpa-btn-main, 
 .vp-academic-exams .ui-button.is-primary {
-    background: var(--admin-primary) !important;
-    border-color: var(--admin-primary) !important;
+    background: var(--vpa-navy) !important;
+    border-color: var(--vpa-navy) !important;
     font-weight: 750 !important;
-    box-shadow: var(--admin-shadow-sm) !important;
+    box-shadow: 0 2px 6px rgba(30, 47, 90, 0.06) !important;
 }
 
 .vpa-btn-main:hover, 
 .vp-academic-exams .ui-button.is-primary:hover {
-    background: var(--admin-primary-hover) !important;
+    background: var(--vpa-navy-dark) !important;
     transform: translateY(-1px);
-    box-shadow: var(--admin-shadow-md) !important;
+    box-shadow: 0 10px 24px rgba(30, 47, 90, 0.12) !important;
 }
 
 .vp-academic-exams .ui-button.is-secondary {
-    color: var(--admin-text-secondary) !important;
-    border-color: var(--admin-border-strong) !important;
+    color: var(--vpa-text-secondary) !important;
+    border-color: var(--vpa-navy-border) !important;
 }
 
 .vp-academic-exams .ui-button.is-secondary:hover {
-    background: var(--admin-primary-soft) !important;
-    color: var(--admin-primary) !important;
-    border-color: var(--admin-primary) !important;
+    background: var(--vpa-navy-soft) !important;
+    color: var(--vpa-navy) !important;
+    border-color: var(--vpa-navy) !important;
 }
 
 .vp-academic-exams .ui-input__field:focus,
 .vp-academic-exams .custom-dropdown-trigger.open,
 .vp-academic-exams .custom-dropdown-trigger:focus,
 .ui-textarea:focus {
-    border-color: var(--admin-primary) !important;
-    box-shadow: 0 0 0 3px var(--admin-focus-ring) !important;
+    border-color: var(--vpa-navy) !important;
+    box-shadow: 0 0 0 3px rgba(30, 47, 90, 0.2) !important;
 }
 
 .vp-academic-exams .custom-dropdown-item.active {
-    background-color: var(--admin-primary-soft) !important;
-    color: var(--admin-text-primary) !important;
+    background-color: var(--vpa-navy-soft) !important;
+    color: var(--vpa-navy-dark) !important;
     font-weight: 700;
 }
 
 /* ── STATUS BADGE OVERRIDES ── */
 .vp-academic-exams .common-status-badge.status-success {
-    background-color: var(--admin-success-bg) !important;
-    color: var(--admin-success-fg) !important;
-    border: 1px solid var(--admin-border) !important;
+    background-color: var(--vpa-navy-soft) !important;
+    color: var(--vpa-navy-dark) !important;
+    border: 1px solid var(--vpa-navy-border) !important;
 }
 
 .vp-academic-exams .common-status-badge.status-info {
-    background-color: var(--admin-info-bg) !important;
-    color: var(--admin-info-fg) !important;
-    border: 1px solid var(--admin-border) !important;
+    background-color: #ebf2ff !important;
+    color: #27498f !important;
+    border: 1px solid var(--vpa-navy-muted) !important;
 }
 
 /* ── CONTENT LAYOUT ── */
@@ -77,13 +86,13 @@
     display: flex;
     align-items: center;
     gap: 0.75rem;
-    color: var(--admin-text-secondary);
+    color: var(--vpa-text-secondary);
     font-weight: 750;
     font-size: 1.05rem;
 }
 
 .sh-left .sh-icon {
-    color: var(--admin-primary);
+    color: var(--vpa-navy);
     font-size: 1.25rem;
 }
 
@@ -96,18 +105,18 @@
 
 .exam-card-vpa {
     position: relative;
-    border-top: 4px solid var(--admin-border) !important;
+    border-top: 4px solid var(--vpa-navy-muted) !important;
     transition: all 0.3s ease;
     height: 100%;
 }
 
 .exam-card-vpa:hover {
     transform: translateY(-4px);
-    box-shadow: var(--admin-shadow-md);
+    box-shadow: 0 10px 24px rgba(30, 47, 90, 0.12);
 }
 
-.exam-card-vpa.status-border-success { border-top-color: var(--admin-primary) !important; }
-.exam-card-vpa.status-border-info { border-top-color: var(--admin-text-secondary) !important; }
+.exam-card-vpa.status-border-success { border-top-color: var(--vpa-navy) !important; }
+.exam-card-vpa.status-border-info { border-top-color: var(--vpa-text-secondary) !important; }
 
 .exam-card-header {
     margin-bottom: 1.25rem;
@@ -116,7 +125,7 @@
 .exam-card-body h4 {
     font-size: 1.15rem;
     font-weight: 850;
-    color: var(--admin-navy);
+    color: var(--vpa-text-primary);
     margin-bottom: 1rem;
 }
 
@@ -131,15 +140,15 @@
     align-items: center;
     gap: 0.6rem;
     font-size: 0.9rem;
-    color: var(--admin-text-secondary);
+    color: var(--vpa-text-secondary);
 }
 
-.m-icon { color: var(--admin-text-muted); }
+.m-icon { color: var(--vpa-text-muted); }
 
 .exam-card-footer {
     margin-top: 1.5rem;
     padding-top: 1.25rem;
-    border-top: 1px solid var(--admin-border);
+    border-top: 1px solid var(--vpa-navy-muted);
 }
 
 /* ── MODAL REFINEMENTS ── */
@@ -190,14 +199,14 @@
     display: flex;
     align-items: center;
     gap: 1rem;
-    border: 1px solid #e2e8f0;
+    border: 1px solid var(--vpa-navy-muted);
 }
 
 .dash-icon {
     width: 40px;
     height: 40px;
-    background: #f0fdf4;
-    color: var(--vpa-emerald);
+    background: var(--vpa-navy-soft);
+    color: var(--vpa-navy);
     border-radius: 8px;
     display: flex;
     align-items: center;
@@ -208,13 +217,13 @@
 .dash-info label {
     display: block;
     font-size: 0.75rem;
-    color: #64748b;
+    color: var(--vpa-text-muted);
     font-weight: 600;
 }
 
 .dash-info strong {
     font-size: 0.95rem;
-    color: var(--admin-navy);
+    color: var(--vpa-text-primary);
 }
 
 /* Preparation Progress */
@@ -231,7 +240,7 @@
 .preparation-progress-section h3 {
     font-size: 1rem !important;
     font-weight: 800 !important;
-    color: var(--admin-navy) !important;
+    color: var(--vpa-text-primary) !important;
     border: none !important;
     padding: 0 !important;
     margin: 0 !important;
@@ -240,7 +249,7 @@
 
 .percent-complete {
     font-size: 0.85rem;
-    color: var(--vpa-emerald);
+    color: var(--vpa-navy);
     font-weight: 700;
 }
 
@@ -254,32 +263,42 @@
 
 .progress-bar-fill {
     height: 100%;
-    background: var(--vpa-emerald);
+    background: var(--vpa-navy);
     border-radius: 4px;
     transition: width 1s ease-out;
 }
 
 /* ── PREMIUM MODAL HEADER (Role-based) ── */
-.vpa-detail-modal-fixed .ui-modal__header {
-    background: var(--vpa-emerald) !important;
+.vpa-detail-modal-fixed .ui-modal__header,
+.vpa-create-modal-fixed .ui-modal__header {
+    background: var(--vpa-navy) !important;
     padding: 1.5rem 2rem !important;
     border-bottom: none !important;
     position: relative;
 }
 
-.vpa-detail-modal-fixed .ui-modal__title {
+.vpa-detail-modal-fixed .ui-modal__title,
+.vpa-create-modal-fixed .ui-modal__title {
     color: #fff !important;
     font-size: 1.25rem !important;
     font-weight: 850 !important;
 }
 
-.vpa-detail-modal-fixed .ui-modal__close {
-    color: rgba(255, 255, 255, 0.8) !important;
+.vpa-detail-modal-fixed .ui-modal__close,
+.vpa-create-modal-fixed .ui-modal__close {
+    background: transparent !important;
+    border: none !important;
+    color: rgba(255, 255, 255, 0.9) !important;
+    width: 32px !important;
+    height: 32px !important;
+    border-radius: 8px !important;
+    transition: all 0.2s !important;
 }
 
-.vpa-detail-modal-fixed .ui-modal__close:hover {
+.vpa-detail-modal-fixed .ui-modal__close:hover,
+.vpa-create-modal-fixed .ui-modal__close:hover {
+    background: rgba(255, 255, 255, 0.15) !important;
     color: #fff !important;
-    background: rgba(255, 255, 255, 0.1) !important;
 }
 
 /* Stepper UI - High Precision Fix */
@@ -312,7 +331,7 @@
     left: 10%;
     width: 53%; /* Adjusted to reach 3rd circle exactly */
     height: 2px;
-    background: #10b981; /* Hardcoded emerald to ensure visibility */
+    background: var(--vpa-navy);
     z-index: 2;
     transition: width 0.4s ease;
 }
@@ -352,26 +371,26 @@
 
 /* DONE: Filled Emerald */
 .step-item.done .step-circle {
-    background: #10b981 !important;
-    border-color: #10b981 !important;
+    background: var(--vpa-navy) !important;
+    border-color: var(--vpa-navy) !important;
     color: #fff !important;
 }
 
 .step-item.done .step-label {
-    color: #10b981;
+    color: var(--vpa-navy);
 }
 
 /* ACTIVE: Bordered Navy */
 .step-item.active .step-circle {
     background: #fff;
-    border-color: var(--admin-navy);
-    color: var(--admin-navy);
+    border-color: var(--vpa-navy-dark);
+    color: var(--vpa-navy-dark);
     border-width: 3px;
-    box-shadow: 0 0 0 4px rgba(15, 23, 42, 0.08);
+    box-shadow: 0 0 0 4px rgba(30, 47, 90, 0.08);
 }
 
 .step-item.active .step-label {
-    color: var(--admin-navy);
+    color: var(--vpa-navy-dark);
     font-weight: 850;
 }
 
@@ -386,14 +405,14 @@
     background: #fff;
     padding: 1rem;
     border-radius: 12px;
-    border: 1.5px solid #f1f5f9;
+    border: 1.5px solid var(--vpa-navy-muted);
     text-align: center;
 }
 
 .summary-box .label {
     display: block;
     font-size: 0.75rem;
-    color: #64748b;
+    color: var(--vpa-text-muted);
     font-weight: 700;
     margin-bottom: 4px;
 }
@@ -401,7 +420,7 @@
 .summary-box .value {
     font-size: 1.4rem;
     font-weight: 850;
-    color: var(--admin-navy);
+    color: var(--vpa-text-primary);
 }
 
 .modal-footer-premium {
@@ -409,7 +428,7 @@
     justify-content: flex-end;
     gap: 1rem;
     padding-top: 1.5rem;
-    border-top: 1.5px solid #f1f5f9;
+    border-top: 1.5px solid var(--vpa-navy-muted);
 }
 
 .subject-tags-grid {
@@ -420,12 +439,12 @@
 }
 
 .sub-tag-premium {
-    background: #f1f5f9;
+    background: var(--vpa-navy-soft);
     padding: 0.4rem 0.8rem;
     border-radius: 6px;
     font-size: 0.85rem;
     font-weight: 700;
-    color: #475569;
+    color: var(--vpa-navy-dark);
 }
 
 /* ── CREATE FORM ── */
@@ -438,11 +457,11 @@
 .form-section h3 {
     font-size: 0.85rem;
     font-weight: 850;
-    color: var(--admin-text-muted);
+    color: var(--vpa-text-muted);
     text-transform: uppercase;
     letter-spacing: 0.8px;
     margin-bottom: 1rem;
-    border-left: 3px solid var(--admin-primary);
+    border-left: 3px solid var(--vpa-navy);
     padding-left: 0.75rem;
 }
 
@@ -461,16 +480,16 @@
 .ui-label {
     font-size: 0.875rem;
     font-weight: 600;
-    color: var(--admin-text-primary);
+    color: var(--vpa-text-primary);
     margin-bottom: 0.25rem;
 }
 
 .ui-textarea {
     width: 100%;
     padding: 0.75rem;
-    border: 1px solid var(--admin-border);
+    border: 1px solid var(--vpa-navy-muted);
     border-radius: 8px;
-    background: var(--admin-surface-soft);
+    background: #f3f6ff;
     font-size: 0.95rem;
     transition: all 0.2s;
     resize: none;
@@ -478,9 +497,9 @@
 
 .ui-textarea:focus {
     outline: none;
-    border-color: var(--admin-primary);
+    border-color: var(--vpa-navy);
     background: #fff;
-    box-shadow: 0 0 0 3px var(--admin-focus-ring);
+    box-shadow: 0 0 0 3px rgba(30, 47, 90, 0.2);
 }
 
 .subject-selection-grid {
@@ -493,26 +512,26 @@
 .selectable-sub {
     padding: 0.4rem 0.9rem;
     background: #fff;
-    border: 1.5px solid var(--admin-border);
+    border: 1.5px solid var(--vpa-navy-muted);
     border-radius: 10px;
     font-size: 0.85rem;
     font-weight: 700;
-    color: var(--admin-text-secondary);
+    color: var(--vpa-text-secondary);
     cursor: pointer;
     transition: all 0.2s;
 }
 
 .selectable-sub:hover {
-    border-color: var(--admin-primary);
-    background: var(--admin-primary-soft);
-    color: var(--admin-primary);
+    border-color: var(--vpa-navy);
+    background: var(--vpa-navy-soft);
+    color: var(--vpa-navy);
 }
 
 .selectable-sub.selected {
-    background: var(--admin-primary);
-    border-color: var(--admin-primary);
+    background: var(--vpa-navy);
+    border-color: var(--vpa-navy);
     color: #fff;
-    box-shadow: var(--admin-shadow-sm);
+    box-shadow: 0 2px 6px rgba(30, 47, 90, 0.06);
 }
 
 .vpa-pagination-wrapper {

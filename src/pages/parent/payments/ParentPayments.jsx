@@ -4,6 +4,7 @@ import Modal from "../../../components/ui/Modal/Modal";
 import { Select } from "../../../components/ui";
 import { SchoolYearTermSelector } from "../../../components/common";
 import { useSchoolYearTerm } from "../../../hooks/useSchoolYearTerm";
+import { parentService } from "../../../services/pages/parent/parentService";
 import PaymentSummaryCard from "./components/PaymentSummaryCard/PaymentSummaryCard";
 import PaymentTable from "./components/PaymentTable/PaymentTable";
 import InvoiceHistory from "./components/InvoiceHistory/InvoiceHistory";
@@ -234,6 +235,36 @@ export default function ParentPayments() {
 
     const selectedPayment = paymentList.find((item) => item.id === selectedPaymentId) || null;
     const selectedDetailPayment = paymentList.find((item) => item.id === selectedDetailId) || null;
+
+    // Fetch payments from API on component mount
+    useEffect(() => {
+        const fetchPayments = async () => {
+            try {
+                const response = await parentService.listPayments({ mock: false });
+                console.log("💳 Parent Payments API Response:", response);
+
+                const payments = response.data || response.parent_payments || response || [];
+                const paymentArray = Array.isArray(payments) ? payments : [];
+
+                if (paymentArray.length > 0) {
+                    setPaymentList(normalizePaymentList(paymentArray));
+                    return;
+                }
+            } catch (err) {
+                console.error("❌ Error fetching parent payments:", err);
+            }
+
+            // Fallback to localStorage if API fails
+            const stored = loadJson(PAYMENT_STORAGE_KEYS.PARENT_RECORDS, []);
+            if (stored.length) {
+                setPaymentList(normalizePaymentList(stored));
+            } else {
+                setPaymentList(normalizePaymentList(getFallbackPayments()));
+            }
+        };
+
+        fetchPayments();
+    }, []);
 
     useEffect(() => {
         const handleSync = () => {
