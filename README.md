@@ -1,84 +1,171 @@
 # EduVN LMS Frontend
 
-Hệ thống quản lý học tập (Learning Management System - LMS) dành cho EduVN. Dự án này là phần Front-End được xây dựng bằng **React**, **Vite** nhằm cung cấp một giao diện quản trị hiện đại, mượt mà và trực quan cho các cấp quản lý, giáo viên, học sinh và phụ huynh.
+Giao diện web của hệ thống quản lý học tập **EduVN LMS** được xây dựng bằng **React** và **Vite**. Dự án tập trung vào trải nghiệm quản trị theo vai trò, điều hướng rõ ràng và cấu trúc mã nguồn tách bạch giữa các phân hệ nghiệp vụ.
 
----
+## Tổng quan
 
-## Tính năng cốt lõi (Trang Quản Trị - Admin)
+Ứng dụng hỗ trợ các không gian làm việc chính:
 
-Dự án bao gồm một hệ thống quản trị toàn diện, phân hệ rõ ràng để theo dõi và điều hành trường học/trung tâm:
+- **Admin**: quản trị hệ thống, người dùng, thông báo, audit log.
+- **Management**: điều hành học vụ và vận hành nhà trường.
+- **Teacher**: lớp dạy, bài giảng, điểm số, bài kiểm tra, lịch dạy.
+- **Student**: lớp học, điểm số, bài kiểm tra, lịch học, thông báo.
+- **Parent**: theo dõi con em, tin nhắn, thanh toán, hỗ trợ.
 
-### 1. Bảng điều khiển (Dashboard)
-- Giao diện tổng quan trực quan với các biểu đồ thống kê đa chiều (sử dụng `recharts`).
-- **Bảng xếp hạng thi đua tuần:** Hệ thống danh sách xếp hạng nề nếp với mật độ thông tin cao, hỗ trợ lọc theo khối (Top 3 mỗi khối hoặc danh sách đầy đủ), tích hợp biểu tượng hạng (Vàng/Bạc/Đồng) và chỉ số xu hướng (Tăng/Giảm/Ổn định).
-- Theo dõi số lượng học sinh, doanh thu, lịch học hiện tại trong ngày.
-- Quản lý đồng bộ: **Năm học & Học kỳ** được áp dụng toàn cục (Global Context), thay đổi năm/học kỳ trên Dashboard sẽ tự động đồng bộ hoá dữ liệu lọc trên tất cả các trang quản lý khác.
+## Các phân hệ chính
 
-### 2. Hệ thống Quản lý Con người
-- **Quản lý Người dùng (Users):** Quản trị viên cấp cao có thể giám sát toàn bộ tài khoản trong hệ thống, cấp quyền, khoá/mở khoá.
-- **Quản lý Giáo viên (Teachers):** Tạo mới tài khoản, phân công chuyên môn, xếp lịch dạy và quản lý thông tin liên lạc.
-- **Quản lý Học sinh (Students):** Thêm mới học sinh, phân lớp, quản lý hồ sơ học tập, tích hợp Import/Export dữ liệu từ file Excel.
-- **Quản lý Phụ huynh (Parents):** Kết nối tài khoản phụ huynh với học sinh, đảm bảo liên lạc thông suốt, cung cấp quyền theo dõi tiến độ học tập.
+### 1. Xác thực
+- Đăng nhập
+- Quên mật khẩu
+- Đặt lại mật khẩu
 
-### 3. Quản lý Đào tạo & Vận hành
-- **Quản lý Lớp học (Classes):** Xây dựng phòng học, chia khối (Grade), gán giáo viên chủ nhiệm và sĩ số.
-- **Quản lý Thi đua (Competition Management):**
-  - **Trang tổng quan:** Hiển thị thẻ hiệu năng của từng lớp (Hạng, Điểm số, Xu hướng) với thanh tiến trình trực quan.
-  - **Chi tiết thi đua:** Nhật ký ghi nhận vi phạm/khen thưởng chi tiết cho từng lớp. Hỗ trợ CRUD (Thêm/Sửa/Xóa) bản ghi nề nếp.
-  - **Bộ chọn tuần (Calendar-style):** Giao diện lưới lịch học tuần trực quan, phân nhóm theo tháng và học kỳ.
-  - **Hệ thống tính điểm:** Tự động hóa việc trừ/cộng điểm dựa trên danh mục quy định (Chuyên cần, Tác phong, Học tập).
-- **Quản lý Bài Kiểm Tra (Quizzes):** Tạo, chỉnh sửa bài kiểm tra. Hỗ trợ hệ thống bộ lọc đa phân cấp (theo Khối, theo Môn học) rất trực quan và tiện dụng.
-- **Quản lý Thời Khóa Biểu (Timetable):** Giao diện lưới lịch học giúp admin và giáo viên dễ dàng xếp lịch, tự động phát hiện xung đột lịch giảng dạy (Conflict Checker).
-- **Quản lý Thanh Toán (Payments):** Theo dõi học phí, in hóa đơn và kiểm soát các giao dịch tài chính liên quan đến học viên.
+### 2. Admin
+- Dashboard
+- Quản lý người dùng
+- Thông báo hệ thống
+- Audit log / System log
 
----
+### 3. Management
+Đây là phân hệ chính trong dự án, bao gồm:
+
+- Dashboard tổng quan
+- Quản lý người dùng
+- Quản lý lớp học và chi tiết lớp
+- Quản lý học vụ (`academic`)
+- Quản lý nề nếp / kỷ luật
+- Quản lý thi đua
+- Quản lý điểm số
+- Quản lý bài kiểm tra / quiz
+- Quản lý kỳ thi và phân phòng thi
+- Quản lý thời khóa biểu
+- Quản lý tài chính / học phí
+- Phê duyệt nghiệp vụ
+- Thông báo, báo cáo và chat
+
+### 4. Teacher
+- Dashboard giáo viên
+- Lớp giảng dạy
+- Lớp chủ nhiệm
+- Bài giảng / tiết học
+- Điểm số
+- Quiz
+- Lịch dạy
+- Hỗ trợ và chat
+
+### 5. Student
+- Dashboard học sinh
+- Lớp học
+- Điểm số
+- Bài kiểm tra / quiz
+- Thông báo
+- Thời khóa biểu
+- Ban cán sự lớp
+- Hỗ trợ
+
+### 6. Parent
+- Dashboard phụ huynh
+- Tổng quan con em
+- Tin nhắn
+- Thông báo
+- Thanh toán
+- Hỗ trợ
 
 ## Công nghệ sử dụng
 
-- **Core:** React 19, Vite (Fast Refresh & HMR)
-- **Routing:** React Router v7
-- **Giao diện & Thành phần UI:** 
-  - CSS thuần cấu trúc theo mô hình BEM/Module, kết hợp CSS Variables để tối ưu hóa khả năng tái sử dụng (không dùng Tailwind).
-  - Biểu tượng (Icons): `react-icons`, `lucide-react`, `@mui/icons-material`.
-  - Thành phần nâng cao: Modal, Dropdown, Table tuỳ chỉnh, Toast notifications (`react-toastify`).
-- **Xử lý Dữ liệu:** 
-  - `axios` (Client HTTP)
-  - `@tanstack/react-query` (Caching & Quản lý trạng thái server)
-  - `xlsx` (Nhập/Xuất Excel)
-  - `recharts` (Biểu đồ, trực quan hóa dữ liệu)
+- **React 19**
+- **Vite**
+- **React Router DOM v7**
+- **@tanstack/react-query**
+- **axios**
+- **react-toastify**
+- **recharts**
+- **xlsx**
+- **react-icons**, **lucide-react**, **@mui/material**, **@mui/icons-material**
+- CSS thuần, tách file theo layout / page / component, sử dụng CSS variables cho theme
 
----
+## Cấu trúc thư mục chính
 
-## Hướng dẫn chạy dự án (Getting Started)
+```text
+src/
+├── components/   # Component dùng chung
+├── config/       # Cấu hình ứng dụng
+├── context/      # Global context
+├── hooks/        # Custom hooks
+├── layouts/      # Layout theo vai trò
+├── pages/        # Màn hình nghiệp vụ
+├── routes/       # Khai báo router
+├── services/     # Tầng gọi API
+├── styles/       # Style dùng chung / global
+└── utils/        # Hàm tiện ích
+```
 
-### 1. Yêu cầu hệ thống
-- Máy tính đã cài đặt **Node.js** (phiên bản 18+ khuyến nghị).
-- Trình quản lý gói `npm` (hoặc `yarn`, `pnpm`).
+## Routing
 
-### 2. Cài đặt các biến môi trường
-Mở thư mục gốc của dự án, thiết lập file `.env` nếu có (đảm bảo không bao giờ commit file này lên Git).
+Ứng dụng sử dụng routing theo vai trò và theo phân hệ:
 
-### 3. Cài đặt Dependencies
+- `/login`
+- `/admin/*`
+- `/management/*`
+- `/teacher/*`
+- `/student/*`
+- `/parent/*`
+
+Một số route cũ cũng được redirect tương thích ngược về `/management/*` để tránh gãy liên kết.
+
+## Yêu cầu hệ thống
+
+- **Node.js** 18+ (khuyến nghị)
+- **npm**
+
+## Cài đặt và chạy dự án
+
+### 1) Cài dependencies
+
 ```bash
 npm install
 ```
 
-### 4. Khởi chạy môi trường phát triển (Development)
+### 2) Chạy môi trường phát triển
+
 ```bash
 npm run dev
 ```
-Truy cập ứng dụng tại địa chỉ `http://localhost:5173`.
 
-### 5. Xây dựng bản Production (Build)
+Mặc định ứng dụng sẽ chạy ở:
+
+```text
+http://localhost:5173
+```
+
+### 3) Build production
+
 ```bash
 npm run build
 ```
-*(Thư mục sau khi build sẽ nằm ở `./dist`)*
 
----
+### 4) Xem bản build
 
-## Thiết kế UI/UX
-Dự án được chăm chút rất kỹ về mặt UI/UX để mang lại cảm giác thân thiện và "Premium":
-- Cấu trúc Header & Toolbar: Bộ chọn bộ lọc, công cụ tìm kiếm và các nút hành động (Tạo mới, Xóa) được tổ chức ngăn nắp, phản hồi tốt trên nhiều kích thước màn hình.
-- **Thiết kế Navy Admin Standard:** Sử dụng hệ màu Navy chuyên nghiệp, bo góc 20px, hiệu ứng đổ bóng mượt mà và các thành phần "Soft Dropdown" đồng nhất trên toàn hệ thống.
-- Trải nghiệm liền mạch nhờ Global Context kết nối mọi trang quản lý thông qua bối cảnh thời gian cụ thể (Năm học + Học kỳ).
+```bash
+npm run preview
+```
+
+### 5) Kiểm tra lint
+
+```bash
+npm run lint
+```
+
+## Quy ước phát triển
+
+- Mỗi vai trò có layout riêng để giữ trải nghiệm nhất quán.
+- Các màn hình nghiệp vụ được tách theo module, hạn chế phụ thuộc chéo.
+- Global state dùng cho các thông tin dùng chung như **năm học** và **học kỳ**.
+- API được tách riêng trong `src/services` để dễ bảo trì.
+- CSS ưu tiên tách theo page / component thay vì viết dồn vào một file lớn.
+
+## Ghi chú
+
+- Dự án frontend này kết nối với backend API riêng của LMS.
+- Không nên commit file `.env` hoặc thông tin nhạy cảm lên Git.
+- Thư mục build sau khi chạy `npm run build` nằm ở `dist/`.
+

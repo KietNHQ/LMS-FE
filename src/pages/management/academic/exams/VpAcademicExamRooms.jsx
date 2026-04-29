@@ -173,7 +173,7 @@ export default function VpAcademicExamRooms() {
     return (
         <div className="vpa-exam-rooms">
             <div className="vpa-rooms-header">
-                <button className="back-btn" onClick={() => navigate("/vp-academic/exams")}>
+                <button className="back-btn" onClick={() => navigate("/management/exams")}>
                     <FiArrowLeft /> Quay lại
                 </button>
                 <div className="header-info">
@@ -202,7 +202,29 @@ export default function VpAcademicExamRooms() {
                     <span style={{ fontWeight: 800, color: 'var(--admin-navy)', fontSize: '1.1rem' }}>Danh sách phòng thi</span>
                 </div>
                 <div style={{ display: 'flex', gap: '1rem' }}>
-                    <Button variant="outline" onClick={handleSendNotifications} style={{ borderColor: '#3b82f6', color: '#3b82f6', borderRadius: '8px' }}>
+                    <Button 
+                        variant="outline" 
+                        onClick={handleSendNotifications} 
+                        style={{ 
+                            borderColor: '#3b82f6', 
+                            color: '#3b82f6', 
+                            borderRadius: '8px',
+                            background: '#fff',
+                            boxShadow: '0 2px 4px rgba(59, 130, 246, 0.1)',
+                            fontWeight: 700,
+                            transition: 'all 0.2s ease'
+                        }}
+                        onMouseEnter={(e) => {
+                            e.currentTarget.style.background = '#eff6ff';
+                            e.currentTarget.style.boxShadow = '0 4px 8px rgba(59, 130, 246, 0.15)';
+                            e.currentTarget.style.transform = 'translateY(-1px)';
+                        }}
+                        onMouseLeave={(e) => {
+                            e.currentTarget.style.background = '#fff';
+                            e.currentTarget.style.boxShadow = '0 2px 4px rgba(59, 130, 246, 0.1)';
+                            e.currentTarget.style.transform = 'translateY(0)';
+                        }}
+                    >
                         <FiPlus /> Gửi thông báo
                     </Button>
                     <Button className="vpa-btn-glow" onClick={() => handleOpenRoomModal()} style={{ borderRadius: '8px' }}>
@@ -217,7 +239,7 @@ export default function VpAcademicExamRooms() {
                         <div 
                             key={i} 
                             className="room-card" 
-                            onClick={() => navigate(`/vp-academic/exams/rooms/${room.name.toLowerCase().replace(/\s+/g, '-')}`)}
+                            onClick={() => navigate(`/management/exams/rooms/${room.id}`)}
                             style={{ cursor: 'pointer', transition: 'all 0.2s' }}
                             onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-2px)'}
                             onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
@@ -242,14 +264,14 @@ export default function VpAcademicExamRooms() {
                             </div>
                             <div className="room-footer">
                                 <button 
-                                    className="btn-action-small" 
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        handleOpenRoomModal(room);
-                                    }}
-                                >
-                                    Điều chỉnh
-                                </button>
+                                     className="btn-action-small" 
+                                     onClick={(e) => {
+                                         e.stopPropagation();
+                                         navigate(`/management/exams/rooms/${room.id}`);
+                                     }}
+                                 >
+                                     Điều chỉnh
+                                 </button>
                             </div>
                         </div>
                     ))}

@@ -27,9 +27,9 @@
 }
 
 .back-btn:hover {
-    border-color: var(--vpa-emerald);
-    color: var(--vpa-emerald);
-    background: #f0fdf4;
+    border-color: var(--admin-navy);
+    color: var(--admin-navy);
+    background: #e9efff;
 }
 
 .header-info h1 {
@@ -41,7 +41,7 @@
 
 .exam-name {
     font-size: 0.95rem;
-    color: var(--vpa-emerald);
+    color: #64748b;
     font-weight: 700;
 }
 
@@ -118,8 +118,8 @@
 
 .search-box input:focus {
     outline: none;
-    border-color: var(--vpa-emerald);
-    box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.1);
+    border-color: var(--admin-navy);
+    box-shadow: 0 0 0 4px rgba(30, 47, 90, 0.1);
 }
 
 .search-box svg {
@@ -172,7 +172,7 @@
 }
 
 .student-id {
-    color: var(--vpa-emerald);
+    color: var(--admin-navy);
     font-family: 'JetBrains Mono', monospace;
     font-weight: 700;
 }
@@ -229,27 +229,27 @@
 }
 
 .vpa-btn-primary {
-    background: #10b981 !important;
+    background: linear-gradient(135deg, #1e2f5a 0%, #172547 100%) !important;
     color: white !important;
     border: none !important;
-    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25) !important;
+    box-shadow: 0 4px 15px rgba(30, 47, 90, 0.25) !important;
 }
 
 .vpa-btn-primary:hover {
-    background: #059669 !important;
-    transform: translateY(-1.5px);
-    box-shadow: 0 6px 15px rgba(16, 185, 129, 0.35) !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 0 6px 20px rgba(30, 47, 90, 0.35) !important;
+    filter: brightness(1.1);
 }
 
 .vpa-btn-secondary {
-    background: #f0fdf4 !important;
-    color: #059669 !important;
-    border: 1.5px solid #d1fae5 !important;
+    background: #e9efff !important;
+    color: var(--admin-navy) !important;
+    border: 1.5px solid #c3d2ef !important;
 }
 
 .vpa-btn-secondary:hover {
-    background: #d1fae5 !important;
-    border-color: #10b981 !important;
+    background: #dbe4ff !important;
+    border-color: var(--admin-navy) !important;
     transform: translateY(-1.5px);
 }
 
@@ -305,9 +305,9 @@
 }
 
 .picker-search:focus-within {
-    border-color: var(--vpa-emerald);
+    border-color: var(--admin-navy);
     background: white;
-    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+    box-shadow: 0 0 0 3px rgba(30, 47, 90, 0.1);
 }
 
 .picker-search svg {
@@ -337,7 +337,7 @@
 }
 
 .picker-table tr:hover {
-    background: #f0fdf4 !important;
+    background: #e9efff !important;
 }
 
 .picker-footer {
@@ -354,7 +354,7 @@
 }
 
 .selected-count strong {
-    color: var(--vpa-emerald);
+    color: var(--admin-navy);
     font-size: 1.1rem;
 }
 
@@ -369,7 +369,42 @@
     border: 1px solid #e2e8f0;
 }
 
+.status-pill {
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.status-pill.ok {
+    background: #e9efff;
+    color: var(--admin-navy);
+    border: 1px solid #c3d2ef;
+}
+
+.status-pill.warn {
+    background: #fff7ed;
+    color: #f97316;
+    border: 1px solid #ffedd5;
+}
+
+/* ── ANIMATIONS ── */
 @keyframes fadeIn {
     from { opacity: 0; transform: translateY(10px); }
     to { opacity: 1; transform: translateY(0); }
+}
+
+.vpa-student-table tr {
+    transition: all 0.2s;
+}
+
+.vpa-student-table tr:hover td {
+    background-color: #f8fafc;
+}
+
+.vpa-btn-ghost:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none !important;
 }

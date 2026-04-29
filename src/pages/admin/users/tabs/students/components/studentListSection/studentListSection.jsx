@@ -160,14 +160,16 @@ export default function StudentListSection({
                                                 {student.status === "Đang học" ? <FiUserX /> : <FiUserCheck />}
                                             </button>
 
-                                            <button
-                                                type="button"
-                                                className="student-icon-btn reset"
-                                                onClick={() => onResetPassword(student)}
-                                                title="Đặt lại mật khẩu"
-                                            >
-                                                <FiLock />
-                                            </button>
+                                            {onResetPassword && (
+                                                <button
+                                                    type="button"
+                                                    className="student-icon-btn reset"
+                                                    onClick={() => onResetPassword(student)}
+                                                    title="Đặt lại mật khẩu"
+                                                >
+                                                    <FiLock />
+                                                </button>
+                                            )}
 
                                             <button
                                                 type="button"

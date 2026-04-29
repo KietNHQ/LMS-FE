@@ -1,1 +1,1 @@
-export { default } from "../ManagementExams";
+export { default } from "../../academic/exams/VpAcademicExamRooms";

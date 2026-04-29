@@ -158,15 +158,17 @@
 }
 
 .theme-vp_discipline {
-  --admin-primary: #991b1b; /* Crimson 800 */
-  --sidebar-bg: linear-gradient(180deg, #ef4444 0%, #991b1b 100%);
-  --admin-primary-hover: #7f1d1d;
-  --admin-primary-soft: #fef2f2;
-  --admin-border: #fee2e2;
-  --admin-border-strong: #fecaca;
-  --admin-text-primary: #7f1d1d;
-  --admin-text-secondary: #991b1b;
-  --admin-focus-ring: rgba(153, 27, 27, 0.2);
+  --admin-primary: #1e2f5a;
+  --sidebar-bg: linear-gradient(180deg, #2b3f6f 0%, #152340 100%);
+  --admin-primary-hover: #172547;
+  --admin-primary-soft: #e9efff;
+  --admin-border: #dce5f7;
+  --admin-border-strong: #c3d2ef;
+  --admin-text-primary: #1e2f5a;
+  --admin-text-secondary: #4d5f82;
+  --admin-focus-ring: rgba(30, 47, 90, 0.2);
+  --admin-shadow-sm: 0 2px 6px rgba(30, 47, 90, 0.06);
+  --admin-shadow-md: 0 10px 24px rgba(30, 47, 90, 0.12);
 }
 
 .theme-academic_staff {

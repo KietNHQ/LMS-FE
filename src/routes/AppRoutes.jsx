@@ -32,6 +32,7 @@ const ManagementCreateQuiz = lazy(() => import("../pages/management/quiz/create/
 const ManagementQuizSubmissions = lazy(() => import("../pages/management/quiz/submissions/index.js"));
 const ManagementExams = lazy(() => import("../pages/management/exams/index.js"));
 const ManagementExamRooms = lazy(() => import("../pages/management/exams/rooms/index.js"));
+const ManagementExamRoomDetail = lazy(() => import("../pages/management/exams/rooms/detail.js"));
 const ManagementTimetable = lazy(() => import("../pages/management/timetable/index.js"));
 const ManagementFinance = lazy(() => import("../pages/management/finance/index.js"));
 const ManagementFinanceDashboard = lazy(() => import("../pages/management/finance/dashboard/FinanceDashboard").then((m) => ({ default: m.FinanceDashboard })));
@@ -174,6 +175,7 @@ export default function AppRoutes() {
         <Route path="quiz/:quizId/submissions" element={<ManagementQuizSubmissions />} />
         <Route path="exams"        element={<ManagementExams />} />
         <Route path="exams/rooms"  element={<ManagementExamRooms />} />
+        <Route path="exams/rooms/:roomId" element={<ManagementExamRoomDetail />} />
         <Route path="timetable"    element={<ManagementTimetable />} />
         <Route path="finance"      element={<ManagementFinance />} />
         <Route path="finance/dashboard" element={<ManagementFinanceDashboard />} />

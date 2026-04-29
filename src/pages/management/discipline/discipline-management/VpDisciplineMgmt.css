@@ -150,7 +150,7 @@
     display: flex;
     flex-direction: column;
     gap: 1.25rem;
-    background: #f8fafc;
+    background: var(--admin-primary-soft);
     padding: 1rem;
     border-radius: 1.25rem;
     border: 1px solid var(--admin-border);
@@ -237,7 +237,7 @@
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    background: #dc2626;
+    background: var(--admin-primary);
     color: white;
     border: none;
     padding: 0.625rem 1.25rem;
@@ -246,13 +246,13 @@
     font-weight: 600;
     cursor: pointer;
     transition: all 0.2s;
-    box-shadow: 0 4px 6px -1px rgba(220, 38, 38, 0.2);
+    box-shadow: 0 4px 6px -1px rgba(30, 47, 90, 0.2);
 }
 
 .btn-add-violation-premium:hover {
-    background: #b91c1c;
+    background: var(--admin-primary-hover);
     transform: translateY(-1px);
-    box-shadow: 0 10px 15px -3px rgba(220, 38, 38, 0.3);
+    box-shadow: 0 10px 15px -3px rgba(30, 47, 90, 0.3);
 }
 
 /* ── Table & Rows ── */
@@ -324,8 +324,8 @@
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
 }
 
-.dm-btn-action.edit { color: #2563eb; }
-.dm-btn-action.edit:hover { background: #eff6ff; border-color: #2563eb; }
+.dm-btn-action.edit { color: var(--admin-primary); }
+.dm-btn-action.edit:hover { background: var(--admin-primary-soft); border-color: var(--admin-primary); }
 
 .dm-btn-action.process { color: #059669; }
 .dm-btn-action.process:hover { background: #ecfdf5; border-color: #059669; }
@@ -333,8 +333,8 @@
 .dm-btn-action.hide { color: #64748b; }
 .dm-btn-action.hide:hover { background: #f8fafc; border-color: #64748b; }
 
-.dm-btn-action.delete { color: #dc2626; }
-.dm-btn-action.delete:hover { background: #fef2f2; border-color: #dc2626; }
+.dm-btn-action.delete { color: var(--admin-text-secondary); }
+.dm-btn-action.delete:hover { background: var(--admin-primary-soft); border-color: var(--admin-primary); color: var(--admin-primary); }
 
 .btn-action-handle {
     background: var(--admin-primary-soft);
@@ -352,7 +352,7 @@
     background: var(--admin-primary);
     color: white;
     border-color: var(--admin-primary);
-    box-shadow: 0 4px 6px -1px rgba(153, 27, 27, 0.2);
+    box-shadow: 0 4px 6px -1px rgba(30, 47, 90, 0.2);
 }
 
 .status-tag {
@@ -399,8 +399,8 @@
 .s-avatar {
     width: 32px;
     height: 32px;
-    background: #eff6ff;
-    color: #2563eb;
+    background: var(--admin-primary-soft);
+    color: var(--admin-primary);
     border-radius: 50%;
     display: flex;
     align-items: center;
@@ -424,7 +424,7 @@
     font-size: 0.75rem;
     font-weight: 700;
 }
-.level-pill.high { background: #fef2f2; color: #dc2626; }
+.level-pill.high { background: var(--admin-primary-soft); color: var(--admin-primary); }
 .level-pill.med { background: #fffbeb; color: #d97706; }
 .level-pill.low { background: #f0fdf4; color: #16a34a; }
 
@@ -478,7 +478,7 @@
 .form-header h4 {
     margin: 0;
     font-size: 1rem;
-    color: #dc2626;
+    color: var(--admin-primary);
     display: flex;
     align-items: center;
     gap: 0.5rem;
@@ -543,7 +543,7 @@
     margin-top: 1.5rem;
 }
 .btn-save-premium {
-    background: #0f172a;
+    background: var(--admin-primary);
     color: white;
     border: none;
     padding: 0.75rem 2rem;
@@ -552,7 +552,7 @@
     cursor: pointer;
     transition: all 0.2s;
 }
-.btn-save-premium:hover { background: #1e293b; }
+.btn-save-premium:hover { background: var(--admin-primary-hover); }
 
 /* ── Pagination Styling ── */
 .dm-footer-pagination {
@@ -606,8 +606,8 @@
 
 .pag-info span {
     font-weight: 800;
-    color: #dc2626;
-    background: #fee2e2;
+    color: var(--admin-primary);
+    background: var(--admin-primary-soft);
     padding: 2px 8px;
     border-radius: 4px;
     margin: 0 4px;

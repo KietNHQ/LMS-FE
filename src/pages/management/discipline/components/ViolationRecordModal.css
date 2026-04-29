@@ -27,7 +27,7 @@
 }
 
 .vrm-header {
-    background: linear-gradient(135deg, #991b1b 0%, #dc2626 100%);
+    background: linear-gradient(135deg, var(--admin-primary) 0%, var(--admin-primary-hover) 100%);
     padding: 1.5rem 2rem;
     display: flex;
     align-items: center;
@@ -39,7 +39,7 @@
 .header-icon {
     width: 48px;
     height: 48px;
-    background: rgba(255, 255, 255, 0.15);
+    background: rgba(255, 255, 255, 0.12);
     border-radius: 12px;
     display: flex;
     align-items: center;
@@ -99,7 +99,7 @@
 }
 
 .vrm-section-title svg {
-    color: #dc2626;
+    color: var(--admin-primary);
 }
 
 .vrm-grid {
@@ -140,7 +140,7 @@
 .s-card-avatar {
     width: 44px;
     height: 44px;
-    background: #dc2626;
+    background: var(--admin-primary);
     color: white;
     border-radius: 10px;
     display: flex;
@@ -252,8 +252,8 @@
 }
 
 .vrm-textarea:focus {
-    border-color: #dc2626;
-    box-shadow: 0 0 0 4px rgba(220, 38, 38, 0.08);
+    border-color: var(--admin-primary);
+    box-shadow: 0 0 0 4px var(--admin-focus-ring);
 }
 
 /* Footer */
@@ -279,7 +279,7 @@
 
 .btn-vrm-primary {
     padding: 10px 28px;
-    background: #dc2626;
+    background: var(--admin-primary);
     color: white;
     border: none;
     border-radius: 10px;
@@ -289,7 +289,7 @@
     gap: 8px;
     cursor: pointer;
     transition: all 0.2s;
-    box-shadow: 0 4px 6px -1px rgba(220, 38, 38, 0.2);
+    box-shadow: 0 4px 6px -1px rgba(30, 47, 90, 0.2);
 }
 
 @keyframes vrmFadeIn { from { opacity: 0; } to { opacity: 1; } }

@@ -545,7 +545,7 @@ export default function AllUsers({ onCountChange, currentPermissions = [] }) {
                         onView={handleViewUser}
                         onEdit={handleEditUser}
                         onToggleStatus={setStatusTarget}
-                        onResetPassword={handleResetPassword}
+                        onResetPassword={currentPermissions.includes(PERMISSIONS.USER_UPDATE) ? handleResetPassword : null}
                         onDelete={currentPermissions.includes(PERMISSIONS.USER_DELETE) ? handleDeleteUser : null}
                     />
 
@@ -584,13 +584,15 @@ export default function AllUsers({ onCountChange, currentPermissions = [] }) {
                         >
                             Mở khóa
                         </button>
-                        <button 
-                            className="bulk-btn reset" 
-                            onClick={handleBulkResetPassword}
-                            disabled={isBulkToggling}
-                        >
-                            Đặt lại mật khẩu
-                        </button>
+                        {currentPermissions.includes(PERMISSIONS.USER_UPDATE) && (
+                            <button
+                                className="bulk-btn reset"
+                                onClick={handleBulkResetPassword}
+                                disabled={isBulkToggling}
+                            >
+                                Đặt lại mật khẩu
+                            </button>
+                        )}
                         {currentPermissions.includes(PERMISSIONS.USER_DELETE) && (
                             <button 
                                 className="bulk-btn delete" 

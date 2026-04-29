@@ -45,7 +45,7 @@ const toTeacherForm = (teacher = {}) => ({
   profile: teacher.profile || {},
 });
 
-export default function AdminTeachers({ onCountChange }) {
+export default function AdminTeachers({ onCountChange, currentPermissions = [] }) {
   const [teachers, setTeachers] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [loadError, setLoadError] = useState("");
@@ -534,14 +534,14 @@ export default function AdminTeachers({ onCountChange }) {
 
       {shouldRenderDataSection && (
         <>
-          <TeacherListSection
+            <TeacherListSection
             teachers={paginatedTeachers}
             emptyMessage={emptyMessage}
             onSelectTeacher={handleShowTeacherDetail}
             onView={handleViewTeacher}
             onEdit={handleEditTeacher}
-            onDelete={handleDeleteTeacher}
-            onResetPassword={handleResetPassword}
+              onDelete={handleDeleteTeacher}
+              onResetPassword={currentPermissions.includes(PERMISSIONS.USER_UPDATE) ? handleResetPassword : null}
             onToggleStatus={setStatusTarget}
             selectedUserIds={selectedUserIds}
             onSelectRow={handleSelectRow}
@@ -608,14 +608,14 @@ export default function AdminTeachers({ onCountChange }) {
       )}
 
       {/* Bulk Action Bar */}
-      {selectedUserIds.length > 0 && (
+            {selectedUserIds.length > 0 && (
         <div className="admin-bulk-actions-bar">
           <div className="bulk-info">
             <span className="bulk-count">Đã chọn: <strong>{selectedUserIds.length}</strong></span>
             <button className="bulk-clear-btn" onClick={() => setSelectedUserIds([])}>Bỏ chọn</button>
           </div>
-          <div className="bulk-btns">
-            <button 
+            <div className="bulk-btns">
+            <button
               className="bulk-btn lock" 
               onClick={() => handleBulkStatusChange("Tạm khóa")}
               disabled={isBulkToggling}
@@ -629,13 +629,15 @@ export default function AdminTeachers({ onCountChange }) {
             >
               Mở khóa
             </button>
-            <button 
-              className="bulk-btn reset" 
-              onClick={handleBulkResetPassword}
-              disabled={isBulkToggling}
-            >
-              Đặt lại mật khẩu
-            </button>
+            {currentPermissions.includes(PERMISSIONS.USER_UPDATE) && (
+              <button
+                className="bulk-btn reset"
+                onClick={handleBulkResetPassword}
+                disabled={isBulkToggling}
+              >
+                Đặt lại mật khẩu
+              </button>
+            )}
             {currentPermissions.includes(PERMISSIONS.USER_DELETE) && (
               <button 
                 className="bulk-btn delete" 

@@ -2,7 +2,7 @@ import React, { useMemo, useState } from "react";
 import "./ConversationList.css";
 import { FiSearch, FiUsers } from "react-icons/fi";
 
-const teachers = [
+const defaultTeachers = [
     {
         id: 1,
         name: "Cô Trần Thị Lan Anh",
@@ -21,8 +21,11 @@ const normalizeText = (value) =>
         .normalize("NFD")
         .replace(/[\u0300-\u036f]/g, "");
 
-export default function ConversationList({ onSelect }) {
+export default function ConversationList({ onSelect, conversationList = [], isLoading = false }) {
     const [searchQuery, setSearchQuery] = useState("");
+
+    // Use API data if available, otherwise fallback to default data
+    const teachers = conversationList.length > 0 ? conversationList : defaultTeachers;
 
     const filteredTeachers = useMemo(() => {
         const query = normalizeText(searchQuery.trim());
@@ -32,10 +35,10 @@ export default function ConversationList({ onSelect }) {
         }
 
         return teachers.filter((teacher) =>
-            normalizeText(teacher.name).includes(query) ||
-            normalizeText(teacher.className).includes(query)
+            normalizeText(teacher.name || "").includes(query) ||
+            normalizeText(teacher.className || "").includes(query)
         );
-    }, [searchQuery]);
+    }, [searchQuery, teachers]);
 
     return (
         <div className="conversation-wrapper">

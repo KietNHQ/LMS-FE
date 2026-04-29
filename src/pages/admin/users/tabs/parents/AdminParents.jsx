@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 
 import "./AdminParents.css";
+import { PERMISSIONS } from "../../../../../config/permissions";
 import { CreateUserDialog, Pagination, ConfirmationModal } from "../../../../../components/common";
 import ParentActionsSection from "./components/parentActionsSection/parentActionsSection";
 import ParentListSection from "./components/parentListSection/parentListSection";
@@ -35,7 +36,7 @@ const normalizeChildren = (children = []) =>
     }))
     .filter((item) => item.childName && item.childClass);
 
-export default function AdminParents({ onCountChange }) {
+export default function AdminParents({ onCountChange, currentPermissions = [] }) {
   const [parents, setParents] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [loadError, setLoadError] = useState("");
@@ -470,7 +471,7 @@ export default function AdminParents({ onCountChange }) {
             onView={handleViewParent}
             onEdit={handleEditParent}
             onDelete={handleDeleteParent}
-            onResetPassword={handleResetPassword}
+            onResetPassword={currentPermissions.includes(PERMISSIONS.USER_UPDATE) ? handleResetPassword : null}
             onToggleStatus={setStatusTarget}
             selectedUserIds={selectedUserIds}
             onSelectRow={handleSelectRow}
@@ -541,14 +542,16 @@ export default function AdminParents({ onCountChange }) {
             >
               Mở khóa
             </button>
-            <button 
-              className="bulk-btn reset" 
-              onClick={handleBulkResetPassword}
-              disabled={isBulkToggling}
-            >
-              Đặt lại mật khẩu
-            </button>
-            <button 
+            {currentPermissions.includes(PERMISSIONS.USER_UPDATE) && (
+              <button
+                className="bulk-btn reset"
+                onClick={handleBulkResetPassword}
+                disabled={isBulkToggling}
+              >
+                Đặt lại mật khẩu
+              </button>
+            )}
+            <button
                 className="bulk-btn delete" 
                 onClick={handleBulkDelete}
                 disabled={isBulkDeleting}
