@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { teachingClassesData } from "../teachingClasses/data/teachingClassesData";
 import "./TeacherBanCanSuLop.css";
 
@@ -14,20 +15,28 @@ function loadOfficersFromStorage() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     return raw ? JSON.parse(raw) : {};
-  } catch (e) {
+  } catch {
     return {};
   }
 }
 
 export default function TeacherBanCanSuLop() {
   const classes = useMemo(() => teachingClassesData, []);
-  const [selectedClassId, setSelectedClassId] = useState(classes?.[0]?.id ?? null);
+  const [searchParams] = useSearchParams();
+  const [selectedClassId, setSelectedClassId] = useState(() => {
+    const q = searchParams.get("classId");
+    if (q) {
+      const n = Number(q);
+      return Number.isNaN(n) ? (classes?.[0]?.id ?? null) : n;
+    }
+    return classes?.[0]?.id ?? null;
+  });
   const [officers, setOfficers] = useState(() => loadOfficersFromStorage());
 
   useEffect(() => {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(officers));
-    } catch (e) {
+    } catch {
       // ignore
     }
   }, [officers]);
@@ -104,6 +113,7 @@ export default function TeacherBanCanSuLop() {
                       <select
                         value={(officers[selectedClassId] && officers[selectedClassId][tab.key]) || ""}
                         onChange={(e) => assignOfficer(tab.key, e.target.value ? Number(e.target.value) : null)}
+                        size="5"
                       >
                         <option value="">-- Chọn học sinh --</option>
                         {selectedClass.students.map((s) => (

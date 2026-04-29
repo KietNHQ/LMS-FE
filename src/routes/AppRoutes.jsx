@@ -1,6 +1,6 @@
 import { Suspense, lazy } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
-import { LoadingSpinner, LoadingAnimationBook } from "../components/common";
+import { LoadingAnimationBook } from "../components/common";
 
 /* AUTH PAGES */
 import Login from "../pages/auth/Login";
@@ -13,31 +13,9 @@ const AdminDashboard = lazy(
   () => import("../pages/admin/dashboard/AdminDashboard")
 );
 const AdminUsers = lazy(() => import("../pages/admin/users/AdminUsers"));
-const AdminClasses = lazy(() => import("../pages/admin/classes/AdminClasses"));
-const ClassDetailSection = lazy(
-  () =>
-    import(
-      "../pages/admin/classes/components/classDetailSection/classDetailSection"
-    )
-);
-const AdminQuiz = lazy(() => import("../pages/admin/quiz/AdminQuiz"));
-const AdminCreateQuiz = lazy(
-  () => import("../pages/admin/quiz/create/AdminCreateQuiz")
-);
-const AdminTimetable = lazy(
-  () => import("../pages/admin/timetable/AdminTimetable")
-);
 const AdminNotifications = lazy(
   () => import("../pages/admin/notifications/AdminNotifications")
 );
-const AdminReports = lazy(() => import("../pages/admin/reports/AdminReports"));
-const AdminQuizSubmissions = lazy(
-    () => import("../pages/admin/quiz/submissions/AdminQuizSubmissions")
-);
-
-const AdminPayment = lazy(() => import("../pages/admin/payment/AdminPayment"));
-const AdminCompetition = lazy(() => import("../pages/admin/competition/AdminCompetition"));
-const AdminCompetitionDetail = lazy(() => import("../pages/admin/competition/AdminCompetitionDetail"));
 
 /* ── MANAGEMENT LAYOUT (Thay thế Admin/Principal/VP/Finance Layout) ── */
 const ManagementLayout = lazy(() => import("../layouts/management/ManagementLayout"));
@@ -45,6 +23,7 @@ const ManagementDashboard = lazy(() => import("../pages/management/dashboard/ind
 const ManagementUsers = lazy(() => import("../pages/management/users/index.js"));
 const ManagementClasses = lazy(() => import("../pages/management/classes/index.js"));
 const ManagementClassDetail = lazy(() => import("../pages/management/classes/detail/index.js"));
+const ManagementAcademicDashboard = lazy(() => import("../pages/management/academic/dashboard/VpAcademicDashboard"));
 const ManagementDiscipline = lazy(() => import("../pages/management/discipline/index.js"));
 const ManagementCompetition = lazy(() => import("../pages/management/competition/index.js"));
 const ManagementGrades = lazy(() => import("../pages/management/grades/index.js"));
@@ -55,6 +34,7 @@ const ManagementExams = lazy(() => import("../pages/management/exams/index.js"))
 const ManagementExamRooms = lazy(() => import("../pages/management/exams/rooms/index.js"));
 const ManagementTimetable = lazy(() => import("../pages/management/timetable/index.js"));
 const ManagementFinance = lazy(() => import("../pages/management/finance/index.js"));
+const ManagementFinanceDashboard = lazy(() => import("../pages/management/finance/dashboard/FinanceDashboard").then((m) => ({ default: m.FinanceDashboard })));
 const ManagementApprovals = lazy(() => import("../pages/management/approvals/index.js"));
 const ManagementNotifications = lazy(() => import("../pages/management/notifications/index.js"));
 const ManagementReports = lazy(() => import("../pages/management/reports/index.js"));
@@ -185,6 +165,8 @@ export default function AppRoutes() {
         <Route path="users"        element={<ManagementUsers />} />
         <Route path="classes"      element={<ManagementClasses />} />
         <Route path="classes/:classId" element={<ManagementClassDetail />} />
+        <Route path="academic"    element={<Navigate to="academic/dashboard" replace />} />
+        <Route path="academic/dashboard" element={<ManagementAcademicDashboard />} />
         <Route path="discipline"   element={<ManagementDiscipline />} />
         <Route path="competition"  element={<ManagementCompetition />} />
         <Route path="grades"       element={<ManagementGrades />} />
@@ -195,6 +177,7 @@ export default function AppRoutes() {
         <Route path="exams/rooms"  element={<ManagementExamRooms />} />
         <Route path="timetable"    element={<ManagementTimetable />} />
         <Route path="finance"      element={<ManagementFinance />} />
+        <Route path="finance/dashboard" element={<ManagementFinanceDashboard />} />
         <Route path="approvals"    element={<ManagementApprovals />} />
         <Route path="notifications" element={<ManagementNotifications />} />
         <Route path="reports"      element={<ManagementReports />} />
@@ -203,10 +186,10 @@ export default function AppRoutes() {
 
       {/* ── Redirect tương thích ngược ── */}
       <Route path="/principal/*"     element={<Navigate to="/management/dashboard" replace />} />
-      <Route path="/vp-academic/*"   element={<Navigate to="/management/dashboard" replace />} />
-      <Route path="/vp-discipline/*" element={<Navigate to="/management/dashboard" replace />} />
-      <Route path="/academic/*"      element={<Navigate to="/management/dashboard" replace />} />
-      <Route path="/finance/*"       element={<Navigate to="/management/dashboard" replace />} />
+      <Route path="/vp-academic/*"   element={<Navigate to="/management/grades" replace />} />
+      <Route path="/vp-discipline/*" element={<Navigate to="/management/discipline" replace />} />
+      <Route path="/academic/*"      element={<Navigate to="/management/academic/dashboard" replace />} />
+      <Route path="/finance/*"       element={<Navigate to="/management/finance" replace />} />
 
 
       {/* STUDENT */}

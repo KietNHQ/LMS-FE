@@ -1,12 +1,11 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { PageHeader, SchoolYearTermSelector, EventCalendar } from "../../../../components/common";
 import { useSchoolYearTerm } from "../../../../hooks/useSchoolYearTerm";
-import { 
-    FiCheckCircle, FiAlertTriangle, FiUnlock, FiTrendingDown, 
-    FiDatabase, FiBell, FiShield, FiMoreHorizontal,
-    FiClock, FiCalendar, FiActivity, FiInfo, FiX, FiFilter, FiSearch,
-    FiUserCheck, FiArrowUpRight, FiList
+import { vpAcademicService } from "../../../../services/pages/vp-academic";
+import {
+    FiCheckCircle, FiAlertTriangle, FiUnlock, FiTrendingDown,
+    FiClock, FiActivity, FiInfo, FiSearch
 } from "react-icons/fi";
 import { Modal, Select, Button, Input } from "../../../../components/ui";
 import OperationalAlerts from "./components/OperationalAlerts";
@@ -37,12 +36,41 @@ export default function VpAcademicDashboard() {
     ];
 
     // Top 4 Primary KPIs
-    const primaryStats = [
+    const [primaryStats, setPrimaryStats] = useState([
         { label: "Tiến độ Nhập Điểm", value: "92.5%", trend: "+2.1%", status: "success", icon: <FiCheckCircle /> },
         { label: "Lớp/Môn Quá Hạn", value: "08", trend: "-2", status: "danger", icon: <FiAlertTriangle /> },
         { label: "Yêu cầu Chờ Duyệt", value: "05", trend: "+3", status: "warning", icon: <FiUnlock /> },
         { label: "Sụt giảm Chất lượng", value: "03", trend: "+1", status: "danger", icon: <FiTrendingDown /> },
-    ];
+    ]);
+
+    useEffect(() => {
+        let isMounted = true;
+
+        const loadAcademicStats = async () => {
+            try {
+                const stats = await vpAcademicService.getAssessmentWorkflowStats(selectedTerm, {
+                    params: { schoolYearId: selectedSchoolYear },
+                });
+
+                if (!isMounted || !stats) return;
+
+                const pending = Number(stats.pendingCount ?? stats.pending ?? stats.waitingCount ?? 0);
+                const overdue = Number(stats.overdueCount ?? stats.overdue ?? 0);
+                const progress = Number(stats.completionRate ?? stats.progressRate ?? 0);
+                const qualityDrop = Number(stats.declineCount ?? stats.qualityDropCount ?? 0);
+
+                setPrimaryStats((prev) => [
+                    { ...prev[0], value: progress > 0 ? `${progress}%` : prev[0].value },
+                    { ...prev[1], value: overdue > 0 ? `${overdue}` : prev[1].value },
+                    { ...prev[2], value: pending > 0 ? `${pending}` : prev[2].value },
+                    { ...prev[3], value: qualityDrop > 0 ? `${qualityDrop}` : prev[3].value },
+                ]);
+            } catch (_) {}
+        };
+
+        loadAcademicStats();
+        return () => { isMounted = false; };
+    }, [selectedSchoolYear, selectedTerm]);
 
     // Filter event types to only allow "Ngày kiểm tra" for VP Academic
     const ACADEMIC_EVENT_TYPES = CALENDAR_EVENT_TYPES.filter(type => type.label === "Ngày kiểm tra");

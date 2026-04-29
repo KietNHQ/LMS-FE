@@ -32,6 +32,7 @@ export default function HomeroomStudentsSection({
     officers = [],
     onUpdateStudent,
     onAssignOfficer,
+    onBanCanSuLopClick,
 }) {
     const [activeStudentId, setActiveStudentId] = useState(null);
     const [dialogMode, setDialogMode] = useState("view");
@@ -59,13 +60,17 @@ export default function HomeroomStudentsSection({
     };
 
     const handleSaveStudent = (studentId, payload) => {
-        onUpdateStudent?.(studentId, payload);
-        setDialogMode("view");
+        const saved = onUpdateStudent?.(studentId, payload);
+        if (saved) {
+            setDialogMode("view");
+        }
     };
 
     const handleAssignOfficer = (studentId, roleKey) => {
-        onAssignOfficer?.(studentId, roleKey);
-        setDialogMode("view");
+        const assigned = onAssignOfficer?.(studentId, roleKey);
+        if (assigned) {
+            setDialogMode("view");
+        }
     };
 
     return (
@@ -79,7 +84,11 @@ export default function HomeroomStudentsSection({
                     <h2>Quản lý học sinh lớp chủ nhiệm</h2>
                     <p>Click vào từng thẻ để xem chi tiết. Phần thao tác chỉ cho phép chỉnh sửa và cấp quyền ban cán sự cho học sinh đó.</p>
                 </div>
-                <button type="button" className="homeroom-students-list-badge">
+                <button
+                    type="button"
+                    className="homeroom-students-list-badge"
+                    onClick={() => onBanCanSuLopClick?.()}
+                >
                     <FiUserPlus />
                     <span>Ban cán sự lớp</span>
                 </button>

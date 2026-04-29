@@ -25,6 +25,30 @@
 .assignment-info small { color: #6f7c91; font-size: 12px; }
 .assignment-control { display:flex; align-items:center; gap:8px; }
 .assignment-control select { padding: 8px 10px; border-radius: 8px; border: 1px solid #dfe5f0; background: #fff; }
+
+.assignment-control select[size] {
+  padding: 4px 8px;
+  font-size: 14px;
+  line-height: 1.8;
+  overflow-y: scroll;
+  border: 1px solid #d9e2f5;
+  border-radius: 10px;
+  background: #ffffff;
+  box-shadow: 0 2px 8px rgba(30, 47, 90, 0.06);
+}
+
+.assignment-control select[size] option {
+  padding: 6px 8px;
+  line-height: 1.6;
+  background: #ffffff;
+  color: #16233b;
+}
+
+.assignment-control select[size] option:checked {
+  background: linear-gradient(#2563ff, #2563ff);
+  background-color: #2563ff !important;
+  color: #ffffff;
+}
 .assigned-name { font-size: 14px; color: #2563ff; font-weight: 700; min-width: 220px; }
 .btn-clear { background: transparent; border: 1px solid #f1f5f9; padding: 6px 10px; border-radius: 8px; cursor: pointer; }
 

@@ -33,18 +33,7 @@ export default function HomeroomStudentDetailDialog({
     parentName: "",
     parentPhone: "",
   });
-
-  useEffect(() => {
-    if (!student) return;
-    setForm({
-      name: student.name || "",
-      email: student.email || "",
-      gender: student.gender || "Nam",
-      dob: student.dob || "",
-      parentName: student.parentName || "",
-      parentPhone: student.parentPhone || "",
-    });
-  }, [student]);
+  const [selectedRoleKey, setSelectedRoleKey] = useState("");
 
   const currentRole = useMemo(
     () => officerRows.find((role) => role.studentId === student?.id) || null,
@@ -56,14 +45,28 @@ export default function HomeroomStudentDetailDialog({
       ...role,
       isCurrent: role.studentId === student?.id,
       isOccupiedByAnother: Boolean(role.studentId && role.studentId !== student?.id),
+      isLockedByCurrentStudent: Boolean(currentRole && role.studentId !== student?.id),
     })),
-    [officerRows, student]
+    [officerRows, student, currentRole]
   );
 
   const firstAvailableRole = useMemo(
-    () => roleCards.find((role) => !role.isOccupiedByAnother)?.key || null,
-    [roleCards]
+    () => (currentRole ? null : roleCards.find((role) => !role.isOccupiedByAnother)?.key || null),
+    [roleCards, currentRole]
   );
+
+  useEffect(() => {
+    if (!student) return;
+    setForm({
+      name: student.name || "",
+      email: student.email || "",
+      gender: student.gender || "Nam",
+      dob: student.dob || "",
+      parentName: student.parentName || "",
+      parentPhone: student.parentPhone || "",
+    });
+    setSelectedRoleKey(student.officerRole || firstAvailableRole || "");
+  }, [student, firstAvailableRole]);
 
   const handleSubmit = () => {
     if (!student) return;
@@ -73,12 +76,18 @@ export default function HomeroomStudentDetailDialog({
       email: form.email.trim(),
       parentName: form.parentName.trim(),
       parentPhone: form.parentPhone.trim(),
+      officerRole: selectedRoleKey || null,
     });
   };
 
-  const handleRoleAssign = (roleKey) => {
+  const handleRoleSelect = (roleKey) => {
     if (!student) return;
-    onAssignOfficer?.(student.id, roleKey);
+    setSelectedRoleKey(roleKey);
+  };
+
+  const handleRoleAssign = () => {
+    if (!student || !selectedRoleKey) return;
+    onAssignOfficer?.(student.id, selectedRoleKey);
   };
 
   return (
@@ -155,10 +164,10 @@ export default function HomeroomStudentDetailDialog({
                 <button
                   key={role.key}
                   type="button"
-                  className={`homeroom-student-detail-dialog__role-card ${role.isCurrent ? "active" : ""}`}
-                  disabled={role.isOccupiedByAnother || mode === "edit"}
-                  onClick={() => handleRoleAssign(role.key)}
-                  title={role.isOccupiedByAnother ? `Đang do ${role.studentName} đảm nhiệm` : role.label}
+                  className={`homeroom-student-detail-dialog__role-card ${selectedRoleKey === role.key ? "active" : ""}`}
+                  disabled={role.isOccupiedByAnother || (mode !== "edit" && role.isLockedByCurrentStudent)}
+                  onClick={() => handleRoleSelect(role.key)}
+                  title={role.isOccupiedByAnother ? `Đang do ${role.studentName} đảm nhiệm` : role.isLockedByCurrentStudent ? "Học sinh này chỉ được giữ 1 vai trò" : role.label}
                 >
                   <span>{role.label}</span>
                   <strong>{role.studentName || "Chưa phân công"}</strong>
@@ -185,8 +194,8 @@ export default function HomeroomStudentDetailDialog({
                 <button
                   type="button"
                   className="homeroom-student-detail-dialog__primary-btn"
-                  onClick={() => firstAvailableRole && handleRoleAssign(firstAvailableRole)}
-                  disabled={!firstAvailableRole}
+                  onClick={handleRoleAssign}
+                  disabled={!selectedRoleKey}
                 >
                   <FiUserPlus />
                   <span>Cấp quyền</span>

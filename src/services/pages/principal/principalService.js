@@ -1,4 +1,5 @@
 import { createScopedApiService } from "../admin/generated/createScopedApiService";
+import { adminDashboardService } from "../admin/dashboard/dashboardService";
 
 const PRINCIPAL_MODULES = [
   "dashboard",
@@ -27,6 +28,8 @@ const scopedApi = createScopedApiService(PRINCIPAL_MODULES);
 export const principalService = {
   role: "principal",
   ...scopedApi,
+  getDashboardSummary: () => adminDashboardService.getDashboardSummary(),
+  getDashboardOverview: () => adminDashboardService.getDashboardOverview(),
 };
 
 export default principalService;

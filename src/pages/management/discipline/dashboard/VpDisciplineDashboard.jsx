@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { PageHeader, WeekPicker, EventCalendar } from "../../../../components/common";
 import DisciplineHeaderActions from "../components/DisciplineHeaderActions";
 import Select from "../../../../components/ui/Select/Select";
 import { useSchoolYearTerm } from "../../../../hooks/useSchoolYearTerm";
+import { vpDisciplineService } from "../../../../services/pages/vp-discipline";
 import { FiAlertTriangle, FiUsers, FiClock, FiAward, FiBarChart2, FiArrowRight } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
 import { INITIAL_CALENDAR_EVENTS, CALENDAR_EVENT_TYPES } from "../../../../components/common/EventCalendar/eventData";
@@ -16,12 +17,48 @@ export default function VpDisciplineDashboard() {
     const [conductGrade, setConductGrade] = useState("all");
 
     // Mock Business Data
-    const stats = {
+    const [stats, setStats] = useState({
         violationsToday: 18,
         studentsInvolved: 22,
         attendanceRate: 98.5,
         topRank: "12A1"
-    };
+    });
+
+    useEffect(() => {
+        let isMounted = true;
+
+        const loadDashboardData = async () => {
+            try {
+                const [summaryResult, rankingResult] = await Promise.allSettled([
+                    vpDisciplineService.getReportSummary(selectedTerm, {
+                        params: { schoolYearId: selectedSchoolYear },
+                    }),
+                    vpDisciplineService.getClassRankings({
+                        params: { schoolYearId: selectedSchoolYear, semesterId: selectedTerm },
+                    }),
+                ]);
+
+                if (!isMounted) return;
+
+                const summary = summaryResult.status === "fulfilled" ? (summaryResult.value || {}) : {};
+                const rankings = rankingResult.status === "fulfilled" ? (rankingResult.value || []) : [];
+                const topRank = Array.isArray(rankings) && rankings.length > 0
+                    ? (rankings[0]?.label || rankings[0]?.className || rankings[0]?.name || "12A1")
+                    : "12A1";
+
+                setStats((prev) => ({
+                    ...prev,
+                    violationsToday: Number(summary.totalViolations ?? summary.violationsToday ?? prev.violationsToday) || prev.violationsToday,
+                    studentsInvolved: Number(summary.totalStudents ?? summary.studentCount ?? prev.studentsInvolved) || prev.studentsInvolved,
+                    attendanceRate: Number(summary.attendanceRate ?? prev.attendanceRate) || prev.attendanceRate,
+                    topRank,
+                }));
+            } catch (_) {}
+        };
+
+        loadDashboardData();
+        return () => { isMounted = false; };
+    }, [selectedSchoolYear, selectedTerm]);
 
     const alerts = [
         { id: 1, title: "Lớp vi phạm nhiều nhất tuần này: 10A3", desc: "Tổng cộng 15 vi phạm. Tăng 50% so với tuần trước. Chủ yếu là đi học trễ.", path: "/vp-discipline/discipline-management?class=10A3" },
