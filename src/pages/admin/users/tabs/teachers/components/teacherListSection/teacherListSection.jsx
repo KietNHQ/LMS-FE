@@ -19,6 +19,7 @@ export default function TeacherListSection({
     selectedUserIds = [],
     onSelectRow,
     onSelectAll,
+    currentUser,
 }) {
     const isAllSelected = teachers.length > 0 && selectedUserIds.length === teachers.length;
 	return (
@@ -131,6 +132,8 @@ export default function TeacherListSection({
 												className="teacher-icon-btn block"
 												onClick={() => onToggleStatus(teacher)}
 												title={teacher.status === "Hoạt động" ? "Khóa" : "Mở khóa"}
+												disabled={teacher.id === currentUser?.id}
+												style={teacher.id === currentUser?.id ? { opacity: 0.3, cursor: 'not-allowed' } : {}}
 											>
 												{teacher.status === "Hoạt động" ? <FiUserX /> : <FiUserCheck />}
 											</button>
@@ -152,6 +155,8 @@ export default function TeacherListSection({
 												onClick={() => onDelete(teacher)}
 												aria-label="Xóa"
 												title="Xóa"
+												disabled={teacher.id === currentUser?.id}
+												style={teacher.id === currentUser?.id ? { opacity: 0.3, cursor: 'not-allowed' } : {}}
 											>
 												<FiTrash2 />
 											</button>

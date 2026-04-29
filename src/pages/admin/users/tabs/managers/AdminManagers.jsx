@@ -55,7 +55,7 @@ const formatDate = (dateString) => {
 const emptyForm = { name: "", email: "", phone: "", role: "Quản lý", status: "Hoạt động", dob: "" };
 
 /* ─────────────────────────────────────────────────── */
-export default function AdminManagers({ onCountChange, currentPermissions = [] }) {
+export default function AdminManagers({ onCountChange, hasPermission, currentUser }) {
     const [managers, setManagers]         = useState([]);
     const [isLoading, setIsLoading]       = useState(false);
     const [loadError, setLoadError]       = useState("");
@@ -418,8 +418,7 @@ export default function AdminManagers({ onCountChange, currentPermissions = [] }
                             />
                         </div>
                         <span>Người dùng</span>
-                        <span>Vai trò</span>
-                        <span>Quyền hạn</span>
+                        <span>Vai trò / Chức danh</span>
                         <span>Điện thoại</span>
                         <span>Trạng thái</span>
                         <span>Ngày sinh</span>
@@ -455,28 +454,12 @@ export default function AdminManagers({ onCountChange, currentPermissions = [] }
                                         </div>
                                     </div>
 
-                                    <div>
-                                        <span className={`mgr-role-chip ${roleMeta.cssClass}`}>
-                                            {roleMeta.label}
-                                        </span>
-                                    </div>
-
-                                    <div className="mgr-permission-count">
-                                        <div className="mgr-permission-tags">
-                                            {Array.isArray(m.permissions) && m.permissions.length > 0 ? (
-                                                <>
-                                                    {m.permissions.slice(0, 2).map((p, i) => (
-                                                        <span key={i} className="mgr-perm-tag">
-                                                            {p.split('.').slice(-1)[0]}
-                                                        </span>
-                                                    ))}
-                                                    {m.permissions.length > 2 && (
-                                                        <span className="mgr-perm-more">+{m.permissions.length - 2}</span>
-                                                    )}
-                                                </>
-                                            ) : (
-                                                <span className="no-perm">0 quyền</span>
-                                            )}
+                                    <div className="mgr-role-cell">
+                                        <div className="mgr-role-tags">
+                                            {m.position && <span className="mgr-position-tag">{m.position}</span>}
+                                            <span className={`mgr-role-chip ${roleMeta.cssClass}`}>
+                                                {roleMeta.label}
+                                            </span>
                                         </div>
                                     </div>
 
@@ -494,19 +477,29 @@ export default function AdminManagers({ onCountChange, currentPermissions = [] }
                                         <button className="mgr-action-btn edit" title="Chỉnh sửa" onClick={() => handleEditManager(m)}>
                                             <FiEdit2 size={16} />
                                         </button>
-                                        <button className="mgr-action-btn block" title={m.status === "Hoạt động" ? "Vô hiệu hóa" : "Kích hoạt"} onClick={() => setStatusTarget(m)}>
+                                        <button 
+                                            className="mgr-action-btn block" 
+                                            title={m.status === "Hoạt động" ? "Vô hiệu hóa" : "Kích hoạt"} 
+                                            onClick={() => setStatusTarget(m)}
+                                            disabled={m.id === currentUser?.id || m.role === 'Quản trị viên' || m.role === 'admin'}
+                                            style={(m.id === currentUser?.id || m.role === 'Quản trị viên' || m.role === 'admin') ? { opacity: 0.3, cursor: 'not-allowed' } : {}}
+                                        >
                                             {m.status === "Hoạt động" ? <FiUserX size={16} /> : <FiUserCheck size={16} />}
                                         </button>
-                                        {currentPermissions.includes(PERMISSIONS.USER_UPDATE) && (
+                                        {hasPermission(PERMISSIONS.USER_UPDATE) && (
                                             <button className="mgr-action-btn reset" title="Đặt lại mật khẩu" onClick={() => handleResetPassword(m)}>
                                                 <FiLock size={16} />
                                             </button>
                                         )}
-                                        {currentPermissions.includes(PERMISSIONS.USER_DELETE) && (
-                                            <button className="mgr-action-btn delete" title="Xóa" onClick={() => handleDeleteUser(m)}>
+                                            <button 
+                                                className="mgr-action-btn delete" 
+                                                title="Xóa" 
+                                                onClick={() => handleDeleteUser(m)}
+                                                disabled={m.id === currentUser?.id || m.role === 'Quản trị viên' || m.role === 'admin'}
+                                                style={(m.id === currentUser?.id || m.role === 'Quản trị viên' || m.role === 'admin') ? { opacity: 0.3, cursor: 'not-allowed' } : {}}
+                                            >
                                                 <FiTrash2 size={16} />
                                             </button>
-                                        )}
                                     </div>
                                 </div>
                             );
@@ -572,7 +565,7 @@ export default function AdminManagers({ onCountChange, currentPermissions = [] }
                         >
                             Mở khóa
                         </button>
-                        {currentPermissions.includes(PERMISSIONS.USER_UPDATE) && (
+                        {hasPermission(PERMISSIONS.USER_UPDATE) && (
                             <button
                                 className="bulk-btn reset"
                                 onClick={handleBulkResetPassword}
@@ -581,7 +574,7 @@ export default function AdminManagers({ onCountChange, currentPermissions = [] }
                                 Đặt lại mật khẩu
                             </button>
                         )}
-                        {currentPermissions.includes(PERMISSIONS.USER_DELETE) && (
+                        {hasPermission(PERMISSIONS.USER_DELETE) && (
                             <button 
                                 className="bulk-btn delete" 
                                 onClick={handleBulkDelete}

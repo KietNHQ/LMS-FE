@@ -65,7 +65,7 @@ export default function ManagerInformationSection({
                                 <div className="manager-view-title-wrap">
                                     <h3>{formData.name}</h3>
                                     <p>
-                                        {formData.role} • {formData.email}
+                                        {formData.position && `${formData.position} • `}{formData.role} • {formData.email}
                                     </p>
                                 </div>
                             </div>
@@ -142,6 +142,16 @@ export default function ManagerInformationSection({
                                     value={formData.name}
                                     onChange={(e) => onChange("name", e.target.value)}
                                     placeholder="Nhập họ và tên"
+                                />
+                            </div>
+
+                            <div className="manager-form-group full">
+                                <label>Chức danh / Vị trí</label>
+                                <input
+                                    type="text"
+                                    value={formData.position || ""}
+                                    onChange={(e) => onChange("position", e.target.value)}
+                                    placeholder="Ví dụ: Hiệu trưởng, Giáo vụ..."
                                 />
                             </div>
 

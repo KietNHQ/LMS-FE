@@ -41,7 +41,7 @@ const buildDownloadFilename = (headers = {}) => {
     }
 };
 
-export default function AllUsers({ onCountChange, currentPermissions = [] }) {
+export default function AllUsers({ onCountChange, hasPermission, currentUser }) {
     const [users, setUsers] = useState([]);
     const [isLoadingUsers, setIsLoadingUsers] = useState(false);
     const [loadError, setLoadError] = useState("");
@@ -545,8 +545,10 @@ export default function AllUsers({ onCountChange, currentPermissions = [] }) {
                         onView={handleViewUser}
                         onEdit={handleEditUser}
                         onToggleStatus={setStatusTarget}
-                        onResetPassword={currentPermissions.includes(PERMISSIONS.USER_UPDATE) ? handleResetPassword : null}
-                        onDelete={currentPermissions.includes(PERMISSIONS.USER_DELETE) ? handleDeleteUser : null}
+                        onResetPassword={hasPermission(PERMISSIONS.USER_UPDATE) ? handleResetPassword : null}
+                        onDelete={handleDeleteUser}
+                        currentUser={currentUser}
+                        hasPermission={hasPermission}
                     />
 
                     {hasFilteredUsers && totalPages > 1 && (
@@ -584,7 +586,7 @@ export default function AllUsers({ onCountChange, currentPermissions = [] }) {
                         >
                             Mở khóa
                         </button>
-                        {currentPermissions.includes(PERMISSIONS.USER_UPDATE) && (
+                        {hasPermission(PERMISSIONS.USER_UPDATE) && (
                             <button
                                 className="bulk-btn reset"
                                 onClick={handleBulkResetPassword}
@@ -593,7 +595,7 @@ export default function AllUsers({ onCountChange, currentPermissions = [] }) {
                                 Đặt lại mật khẩu
                             </button>
                         )}
-                        {currentPermissions.includes(PERMISSIONS.USER_DELETE) && (
+                        {hasPermission(PERMISSIONS.USER_DELETE) && (
                             <button 
                                 className="bulk-btn delete" 
                                 onClick={handleBulkDelete}

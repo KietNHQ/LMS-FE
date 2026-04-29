@@ -1,5 +1,6 @@
 import React from "react";
 import { FiEdit2, FiTrash2, FiUserCheck, FiUserX, FiKey } from "react-icons/fi";
+import { PERMISSIONS } from "../../../../../../../config/permissions";
 import "./UserDetailSection.css";
 
 function getRoleClass(role) {
@@ -32,6 +33,8 @@ export default function UserDetailSection({
                                                onToggleStatus,
                                                onDelete,
                                                onResetPassword,
+                                               currentUser,
+                                               hasPermission,
                                            }) {
     const isAllSelected = users.length > 0 && selectedUserIds.length === users.length;
 
@@ -47,7 +50,7 @@ export default function UserDetailSection({
                     />
                 </div>
                 <span>Người dùng</span>
-                <span>Vai trò</span>
+                <span>Chức danh / Vai trò</span>
                 <span>Điện thoại</span>
                 <span>Trạng thái</span>
                 <span>Ngày sinh</span>
@@ -84,10 +87,13 @@ export default function UserDetailSection({
                                 </div>
                             </div>
 
-                            <div>
-                  <span className={`user-role-chip ${getRoleClass(user.role)}`}>
-                    {user.role}
-                  </span>
+                            <div className="user-detail-role-group">
+                                {user.position && (
+                                    <span className="user-position-text">{user.position}</span>
+                                )}
+                                <span className={`user-role-chip ${getRoleClass(user.role)}`}>
+                                    {user.role}
+                                </span>
                             </div>
 
                             <div className="user-detail-phone">{user.phone}</div>
@@ -117,6 +123,8 @@ export default function UserDetailSection({
                                     className="user-detail-action-btn status"
                                     onClick={() => onToggleStatus(user)}
                                     title="Khóa / mở"
+                                    disabled={user.id === currentUser?.id || user.role === 'Quản trị viên' || user.role === 'admin'}
+                                    style={(user.id === currentUser?.id || user.role === 'Quản trị viên' || user.role === 'admin') ? { opacity: 0.3, cursor: 'not-allowed' } : {}}
                                 >
                                     {user.status === "Hoạt động" ? <FiUserX /> : <FiUserCheck />}
                                 </button>
@@ -129,15 +137,15 @@ export default function UserDetailSection({
                                     <FiKey />
                                 </button>
 
-                                {onDelete && (
                                     <button
                                         className="user-detail-action-btn delete"
                                         onClick={() => onDelete(user.id)}
                                         title="Xóa"
+                                        disabled={user.id === currentUser?.id || user.role === 'Quản trị viên' || user.role === 'admin'}
+                                        style={(user.id === currentUser?.id || user.role === 'Quản trị viên' || user.role === 'admin') ? { opacity: 0.3, cursor: 'not-allowed' } : {}}
                                     >
                                         <FiTrash2 />
                                     </button>
-                                )}
                             </div>
                         </div>
                     );

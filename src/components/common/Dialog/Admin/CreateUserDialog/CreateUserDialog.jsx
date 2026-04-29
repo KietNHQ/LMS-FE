@@ -2,6 +2,7 @@ import React, { useMemo, useState, useRef, useEffect } from "react";
 import { FiDownload, FiUpload, FiChevronDown, FiCheck, FiShield, FiCheckSquare } from "react-icons/fi";
 import { PERMISSIONS } from "../../../../../config/permissions";
 import Select from "../../../../ui/Select/Select";
+import { useCheckPermission } from "../../../../../hooks/useAuth";
 import "./CreateUserDialog.css";
 
 const allRoleOptions = ["Quản lý", "Phụ huynh", "Học sinh", "Giáo viên"];
@@ -369,6 +370,9 @@ export default function CreateUserDialog({
     isImportingExcel = false,
     importFeedback,
 }) {
+    const { user: currentUser } = useCheckPermission();
+    const isAdmin = currentUser?.role === "admin";
+
     const normalizedRoleOptions = useMemo(() => {
         if (mode === "edit" && initialData?.role === "Quản trị viên") {
             return ["Quản trị viên", ...allRoleOptions];
@@ -406,7 +410,12 @@ export default function CreateUserDialog({
         const group = PERMISSION_GROUPS.find(g => g.id === groupId);
         if (!group) return;
 
-        const groupIds = group.permissions.map(p => p.id);
+        let groupIds = group.permissions.map(p => p.id);
+        
+        // Prevent non-admin from mass-assigning dangerous permissions
+        if (!isAdmin) {
+            groupIds = groupIds.filter(id => id !== PERMISSIONS.USER_DELETE);
+        }
         
         setForm(prev => {
             const current = prev.managerInfo.permissions;
@@ -958,16 +967,18 @@ export default function CreateUserDialog({
 
                                             {isExpanded && (
                                                 <div className="perm-group-content">
-                                                    {group.permissions.map(perm => (
-                                                        <label key={perm.id} className="admin-create-user-dialog-checkbox">
-                                                            <input 
-                                                                type="checkbox"
-                                                                checked={form.managerInfo.permissions.includes(perm.id)}
-                                                                onChange={() => togglePermission(perm.id)}
-                                                            />
-                                                            <span>{perm.label}</span>
-                                                        </label>
-                                                    ))}
+                                                    {group.permissions
+                                                        .filter(perm => perm.id !== PERMISSIONS.USER_DELETE || isAdmin)
+                                                        .map(perm => (
+                                                            <label key={perm.id} className="admin-create-user-dialog-checkbox">
+                                                                <input 
+                                                                    type="checkbox"
+                                                                    checked={form.managerInfo.permissions.includes(perm.id)}
+                                                                    onChange={() => togglePermission(perm.id)}
+                                                                />
+                                                                <span>{perm.label}</span>
+                                                            </label>
+                                                        ))}
                                                 </div>
                                             )}
                                         </div>

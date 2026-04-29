@@ -5,6 +5,7 @@ import "./AdminUsers.css";
 // Import components and hooks
 import { PageHeader, SchoolYearTermSelector } from "../../../components/common";
 import { useSchoolYearTerm } from "../../../hooks/useSchoolYearTerm";
+import { useCheckPermission } from "../../../hooks/useAuth";
 
 // Import sub-pages
 import AllUsers from "./tabs/all/AllUsers";
@@ -29,15 +30,7 @@ export default function AdminUsers() {
     const { selectedSchoolYear, selectedTerm, handleYearArrow, handleTermChange } = useSchoolYearTerm();
     const [itemCount, setItemCount] = useState(0);
 
-    const currentPermissions = useMemo(() => {
-        try {
-            const user = JSON.parse(localStorage.getItem("user") || "{}");
-            // Nếu có permissions cụ thể từ BE thì dùng, không thì mặc định là admin (được giả lập trong Sidebar)
-            return user.permissions || [];
-        } catch {
-            return [];
-        }
-    }, []);
+    const { hasPermission, user: currentUser } = useCheckPermission();
 
     const activeTab = TABS.find((tab) => tab.id === activeTabId) || TABS[0];
     const ActiveComponent = activeTab.component;
@@ -78,7 +71,8 @@ export default function AdminUsers() {
                     onCountChange={setItemCount}
                     schoolYear={selectedSchoolYear}
                     term={selectedTerm}
-                    currentPermissions={currentPermissions}
+                    hasPermission={hasPermission}
+                    currentUser={currentUser}
                 />
             </div>
         </div>

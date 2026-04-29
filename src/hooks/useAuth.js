@@ -22,15 +22,23 @@ export const useLogin = () => {
             storage.setItem('accessToken', session.accessToken);
             storage.setItem('refreshToken', session.refreshToken);
             storage.setItem('userRole', user.role);
+            storage.setItem('user', JSON.stringify(user)); // Lưu toàn bộ object user để dùng permissions, position, v.v.
 
             toast.success('Đăng nhập thành công!');
 
-            switch (user.role) {
-                case 'student': navigate('/student/dashboard'); break;
-                case 'teacher': navigate('/teacher/dashboard'); break;
-                case 'guardian': navigate('/parent/dashboard'); break;
-                case 'admin': navigate('/admin/dashboard'); break;
-                default: navigate('/');
+            const role = user.role?.toLowerCase();
+            if (role === 'admin') {
+                navigate('/admin/dashboard');
+            } else if (['quản trị viên', 'quản lý', 'hiệu trưởng', 'phó ht học vụ', 'phó ht nề nếp', 'giáo vụ', 'tài chính', 'tổ trưởng bộ môn'].includes(role)) {
+                navigate('/management/dashboard');
+            } else if (role === 'teacher') {
+                navigate('/teacher/dashboard');
+            } else if (role === 'student') {
+                navigate('/student/dashboard');
+            } else if (role === 'guardian') {
+                navigate('/parent/dashboard');
+            } else {
+                navigate('/');
             }
         },
         onError: (error) => {
@@ -135,6 +143,26 @@ export const useUpdateUser = () => {
         mutationFn: ({ id, data }) => authService.updateUser(id, data),
         onSuccess: () => queryClient.invalidateQueries({ queryKey: ['users'] }),
     });
+};
+
+export const useCheckPermission = () => {
+    const userString = localStorage.getItem('user');
+    const user = userString ? JSON.parse(userString) : {};
+    
+    const hasPermission = (requiredPermission) => {
+        // Admin bypass - only for the technical 'admin' role
+        const role = user.role?.toLowerCase() || '';
+        if (role === 'admin') return true;
+        
+        // Check if user has the specific permission
+        if (Array.isArray(user.permissions)) {
+            return user.permissions.includes(requiredPermission);
+        }
+        
+        return false;
+    };
+
+    return { hasPermission, user };
 };
 
 export const useDeleteUser = () => {

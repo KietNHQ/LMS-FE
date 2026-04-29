@@ -51,7 +51,7 @@ const toStudentForm = (student = {}) => ({
 
 const buildDownloadName = (fallbackName) => fallbackName;
 
-export default function AdminStudents({ onCountChange, schoolYear, currentPermissions = [] }) {
+export default function AdminStudents({ onCountChange, schoolYear, hasPermission, currentUser }) {
   const [students, setStudents] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [loadError, setLoadError] = useState("");
@@ -466,7 +466,7 @@ export default function AdminStudents({ onCountChange, schoolYear, currentPermis
             onSelectStudent={handleViewStudent}
             onEdit={handleEditStudent}
             onDelete={handleDeleteStudent}
-            onResetPassword={currentPermissions.includes(PERMISSIONS?.USER_UPDATE) ? handleResetPassword : null}
+            onResetPassword={hasPermission(PERMISSIONS?.USER_UPDATE) ? handleResetPassword : null}
             onToggleStatus={setStatusTarget}
             selectedUserIds={selectedUserIds}
             onSelectRow={handleSelectRow}
@@ -539,7 +539,7 @@ export default function AdminStudents({ onCountChange, schoolYear, currentPermis
             >
               Mở khóa
             </button>
-            {currentPermissions.includes(PERMISSIONS?.USER_UPDATE) && (
+            {hasPermission(PERMISSIONS?.USER_UPDATE) && (
               <button
                 className="bulk-btn reset"
                 onClick={handleBulkResetPassword}

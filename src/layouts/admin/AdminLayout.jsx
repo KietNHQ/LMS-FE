@@ -39,6 +39,7 @@ export default function AdminLayout() {
                 userEmail={userEmail}
                 isCollapsed={isCollapsed}
                 setIsCollapsed={setIsCollapsed}
+                userPermissions={storedUser.permissions} // Truyền permissions từ BE xuống
             />
 
             <main className="admin-layout__main">

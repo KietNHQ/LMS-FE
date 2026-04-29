@@ -45,7 +45,7 @@ const toTeacherForm = (teacher = {}) => ({
   profile: teacher.profile || {},
 });
 
-export default function AdminTeachers({ onCountChange, currentPermissions = [] }) {
+export default function AdminTeachers({ onCountChange, hasPermission, currentUser }) {
   const [teachers, setTeachers] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [loadError, setLoadError] = useState("");
@@ -541,11 +541,12 @@ export default function AdminTeachers({ onCountChange, currentPermissions = [] }
             onView={handleViewTeacher}
             onEdit={handleEditTeacher}
               onDelete={handleDeleteTeacher}
-              onResetPassword={currentPermissions.includes(PERMISSIONS.USER_UPDATE) ? handleResetPassword : null}
+              onResetPassword={hasPermission(PERMISSIONS?.USER_UPDATE) ? handleResetPassword : null}
             onToggleStatus={setStatusTarget}
             selectedUserIds={selectedUserIds}
             onSelectRow={handleSelectRow}
             onSelectAll={handleSelectAll}
+            currentUser={currentUser}
           />
 
           {hasFilteredTeachers && totalPages > 1 && (
@@ -629,7 +630,7 @@ export default function AdminTeachers({ onCountChange, currentPermissions = [] }
             >
               Mở khóa
             </button>
-            {currentPermissions.includes(PERMISSIONS.USER_UPDATE) && (
+            {hasPermission(PERMISSIONS?.USER_UPDATE) && (
               <button
                 className="bulk-btn reset"
                 onClick={handleBulkResetPassword}
@@ -638,7 +639,7 @@ export default function AdminTeachers({ onCountChange, currentPermissions = [] }
                 Đặt lại mật khẩu
               </button>
             )}
-            {currentPermissions.includes(PERMISSIONS.USER_DELETE) && (
+            {hasPermission(PERMISSIONS.USER_DELETE) && (
               <button 
                 className="bulk-btn delete" 
                 onClick={handleBulkDelete}

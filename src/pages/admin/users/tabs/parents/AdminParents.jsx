@@ -36,7 +36,7 @@ const normalizeChildren = (children = []) =>
     }))
     .filter((item) => item.childName && item.childClass);
 
-export default function AdminParents({ onCountChange, currentPermissions = [] }) {
+export default function AdminParents({ onCountChange, hasPermission, currentUser }) {
   const [parents, setParents] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [loadError, setLoadError] = useState("");
@@ -471,7 +471,7 @@ export default function AdminParents({ onCountChange, currentPermissions = [] })
             onView={handleViewParent}
             onEdit={handleEditParent}
             onDelete={handleDeleteParent}
-            onResetPassword={currentPermissions.includes(PERMISSIONS.USER_UPDATE) ? handleResetPassword : null}
+            onResetPassword={hasPermission(PERMISSIONS.USER_UPDATE) ? handleResetPassword : null}
             onToggleStatus={setStatusTarget}
             selectedUserIds={selectedUserIds}
             onSelectRow={handleSelectRow}
@@ -542,7 +542,7 @@ export default function AdminParents({ onCountChange, currentPermissions = [] })
             >
               Mở khóa
             </button>
-            {currentPermissions.includes(PERMISSIONS.USER_UPDATE) && (
+            {hasPermission(PERMISSIONS.USER_UPDATE) && (
               <button
                 className="bulk-btn reset"
                 onClick={handleBulkResetPassword}

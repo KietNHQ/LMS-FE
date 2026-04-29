@@ -180,6 +180,24 @@
     font-weight: 500;
 }
 
+.user-detail-role-group {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.35rem;
+    width: 100%;
+}
+
+.user-position-text {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--admin-text-primary, #1e2f5a);
+    background: rgba(30, 47, 90, 0.08);
+    padding: 0.15rem 0.6rem;
+    border-radius: 4px;
+    white-space: nowrap;
+}
+
 .user-role-chip,
 .user-status-chip {
     display: inline-flex;
