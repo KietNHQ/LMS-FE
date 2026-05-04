@@ -7,7 +7,7 @@ import TeacherActionsSection from "./components/teacherActionsSection/teacherAct
 import TeacherListSection from "./components/teacherListSection/teacherListSection";
 import TeacherInformationSection from "./components/teacherInformationSection/teacherInformationSection";
 import TeacherDetailSection from "./components/TeacherDetailSection/TeacherDetailSection";
-import { teachersService } from "../../../../../services/pages/admin/users";
+import { teachersService, userService } from "../../../../../services/pages/admin/users";
 
 const statusOptions = ["Tất cả trạng thái", "Hoạt động", "Tạm khóa"];
 const classOptions = ["10A1", "10A2", "11B1", "11B2", "12C1", "12C2"];
@@ -85,10 +85,18 @@ export default function AdminTeachers({ onCountChange, hasPermission, currentUse
     message: "",
     confirmLabel: "",
     onConfirm: () => {},
-    variant: "primary"
+    variant: "primary",
+    showNewPassword: false
   });
 
-  const closeConfirm = () => setConfirmConfig(prev => ({ ...prev, isOpen: false }));
+  const [adminPasswordInput, setAdminPasswordInput] = useState("");
+  const [newPasswordInput, setNewPasswordInput] = useState("");
+
+  const closeConfirm = () => {
+    setConfirmConfig(prev => ({ ...prev, isOpen: false }));
+    setAdminPasswordInput("");
+    setNewPasswordInput("");
+  };
 
   const loadTeachers = useCallback(async () => {
     setIsLoading(true);
@@ -265,14 +273,14 @@ export default function AdminTeachers({ onCountChange, hasPermission, currentUse
   const handleBulkResetPassword = async () => {
     if (selectedUserIds.length === 0) return;
     
+    setAdminPasswordInput("");
     setConfirmConfig({
       isOpen: true,
-      title: "Đặt lại mật khẩu",
-      message: `Bạn có chắc chắn muốn ĐẶT LẠI MẬT KHẨU cho ${selectedUserIds.length} giáo viên đã chọn?`,
+      title: "Xác minh quyền Admin",
+      message: `Để đặt lại mật khẩu cho ${selectedUserIds.length} giáo viên, vui lòng nhập mật khẩu Admin của bạn:`,
       confirmLabel: "Đặt lại mật khẩu",
       variant: "primary",
       onConfirm: async () => {
-        closeConfirm();
         setIsBulkToggling(true);
         try {
           const results = [];
@@ -281,16 +289,20 @@ export default function AdminTeachers({ onCountChange, hasPermission, currentUse
             if (!teacher) continue;
             
             const generatedPwd = Math.random().toString(36).slice(-10);
-            await teachersService.updateTeacher(id, { ...teacher, password: generatedPwd });
+            await userService.resetPassword(id, { 
+              adminPassword: adminPasswordInput, 
+              newPassword: generatedPwd 
+            });
             results.push({ name: teacher.name, password: generatedPwd });
           }
           
+          closeConfirm();
           await loadTeachers();
           
           const resultMsg = results.map(r => `${r.name}: ${r.password}`).join("\n");
           window.alert(`Đặt lại mật khẩu thành công cho ${results.length} giáo viên:\n\n${resultMsg}`);
         } catch (error) {
-          window.alert(getErrorMessage(error, "Có lỗi xảy ra khi đặt lại mật khẩu hàng loạt."));
+          window.alert(getErrorMessage(error, "Có lỗi xảy ra khi đặt lại mật khẩu hàng loạt. Kiểm tra lại mật khẩu Admin."));
         } finally {
           setIsBulkToggling(false);
         }
@@ -327,20 +339,45 @@ export default function AdminTeachers({ onCountChange, hasPermission, currentUse
   const handleResetPassword = async (teacher) => {
     if (!teacher) return;
     
+    const isSelf = teacher.id === currentUser?.id || teacher.email === currentUser?.email;
+    setAdminPasswordInput("");
+    setNewPasswordInput("");
+
     setConfirmConfig({
       isOpen: true,
-      title: "Đặt lại mật khẩu",
-      message: `Bạn có chắc chắn muốn đặt lại mật khẩu cho giáo viên ${teacher.name}?`,
+      title: "Xác minh quyền Admin",
+      message: isSelf 
+        ? `Thiết lập mật khẩu mới cho chính bạn (${teacher.name}):`
+        : `Xác nhận đặt lại mật khẩu cho ${teacher.name}. Hệ thống sẽ tự sinh mật khẩu mới.`,
       confirmLabel: "Đặt lại mật khẩu",
       variant: "primary",
+      showNewPassword: isSelf,
       onConfirm: async () => {
-        closeConfirm();
         try {
-          const generatedPwd = Math.random().toString(36).slice(-10);
-          await teachersService.updateTeacher(teacher.id, { ...teacher, password: generatedPwd });
-          window.alert(`Đặt lại mật khẩu thành công cho ${teacher.name}.\nMật khẩu mới là: ${generatedPwd}`);
+          let targetNewPassword = "";
+          if (isSelf) {
+            if (!newPasswordInput.trim()) {
+              window.alert("Vui lòng nhập mật khẩu mới.");
+              return;
+            }
+            targetNewPassword = newPasswordInput;
+          } else {
+            targetNewPassword = Math.random().toString(36).slice(-10);
+          }
+
+          await userService.resetPassword(teacher.id, { 
+            adminPassword: adminPasswordInput, 
+            newPassword: targetNewPassword 
+          });
+          
+          closeConfirm();
+          if (isSelf) {
+            window.alert("Đã đổi mật khẩu của bạn thành công.");
+          } else {
+            window.alert(`Đặt lại mật khẩu thành công cho ${teacher.name}.\nMật khẩu mới là: ${targetNewPassword}`);
+          }
         } catch (error) {
-          window.alert(getErrorMessage(error, "Không thể đặt lại mật khẩu."));
+          window.alert(getErrorMessage(error, "Xác thực Admin thất bại hoặc lỗi hệ thống."));
         }
       }
     });
@@ -682,7 +719,47 @@ export default function AdminTeachers({ onCountChange, hasPermission, currentUse
         variant={confirmConfig.variant}
         onConfirm={confirmConfig.onConfirm}
         onCancel={closeConfirm}
-      />
+      >
+        {confirmConfig.title === "Xác minh quyền Admin" && (
+          <div style={{ marginTop: "1rem", display: "flex", flexDirection: "column", gap: "1rem" }}>
+            <div>
+              <label style={{ fontSize: "0.85rem", color: "#666", marginBottom: "4px", display: "block" }}>Mật khẩu Admin của bạn:</label>
+              <input
+                type="password"
+                placeholder="Nhập mật khẩu Admin để xác thực"
+                value={adminPasswordInput}
+                onChange={(e) => setAdminPasswordInput(e.target.value)}
+                autoFocus
+                style={{
+                  width: "100%",
+                  padding: "0.75rem",
+                  borderRadius: "8px",
+                  border: "1px solid #ddd",
+                  fontSize: "1rem"
+                }}
+              />
+            </div>
+            {confirmConfig.showNewPassword && (
+              <div>
+                <label style={{ fontSize: "0.85rem", color: "#666", marginBottom: "4px", display: "block" }}>Mật khẩu MỚI cho bạn:</label>
+                <input
+                  type="text"
+                  placeholder="Nhập mật khẩu mới tại đây"
+                  value={newPasswordInput}
+                  onChange={(e) => setNewPasswordInput(e.target.value)}
+                  style={{
+                    width: "100%",
+                    padding: "0.75rem",
+                    borderRadius: "8px",
+                    border: "1px solid #ddd",
+                    fontSize: "1rem"
+                  }}
+                />
+              </div>
+            )}
+          </div>
+        )}
+      </ConfirmationModal>
     </div>
   );
 }

@@ -76,7 +76,7 @@ export default function UserDetailSection({
             {users.length === 0 ? (
                 <div className="user-detail-empty">{emptyMessage}</div>
             ) : (
-                users.map((user) => {
+                users.map((user, index) => {
                     const isSelected = selectedUserIds.includes(user.id);
                     const isMenuOpen = openMenuId === user.id;
                     const isDisabled = user.id === currentUser?.id || user.role === 'Quản trị viên' || user.role === 'admin';
@@ -85,7 +85,7 @@ export default function UserDetailSection({
                         <div
                             className={`user-detail-row ${
                                 user.status === "Vô hiệu hóa" ? "is-inactive" : ""
-                            } ${isSelected ? "is-selected" : ""}`.trim()}
+                            } ${isSelected ? "is-selected" : ""} ${isMenuOpen ? "menu-open" : ""}`.trim()}
                             key={user.id}
                             onClick={() => onView && onView(user)}
                         >
@@ -123,7 +123,7 @@ export default function UserDetailSection({
                             <div className="user-detail-date">{formatDate(user.dob)}</div>
 
                             <div className="user-detail-actions" onClick={(e) => e.stopPropagation()}>
-                                <div className={`user-actions-dropdown ${isMenuOpen ? "is-open" : ""}`} ref={isMenuOpen ? menuRef : null}>
+                                <div className={`user-actions-dropdown ${isMenuOpen ? "is-open" : ""} ${index >= 4 ? "open-up" : ""}`} ref={isMenuOpen ? menuRef : null}>
                                     <button className="user-actions-trigger" onClick={(e) => toggleMenu(e, user.id)}>
                                         <FiMoreHorizontal />
                                     </button>
@@ -144,10 +144,12 @@ export default function UserDetailSection({
                                                 <span>{user.status === "Hoạt động" ? "Vô hiệu hóa" : "Kích hoạt"}</span>
                                             </button>
 
-                                            <button className="user-menu-item reset" onClick={() => { onResetPassword(user); setOpenMenuId(null); }}>
-                                                <FiKey />
-                                                <span>Đặt lại mật khẩu</span>
-                                            </button>
+                                            {onResetPassword && (
+                                                <button className="user-menu-item reset" onClick={() => { onResetPassword(user); setOpenMenuId(null); }}>
+                                                    <FiKey />
+                                                    <span>Đặt lại mật khẩu</span>
+                                                </button>
+                                            )}
 
                                             <button 
                                                 className="user-menu-item delete" 

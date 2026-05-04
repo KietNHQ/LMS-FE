@@ -2,13 +2,13 @@
 	background: #ffffff;
 	border: 1px solid #dae1ed;
 	border-radius: 1.5rem;
-	overflow: hidden;
+	overflow: visible; /* Changed from hidden to allow dropdown menus to be visible */
 	box-shadow: 0 8px 24px rgba(30, 47, 90, 0.08);
 	min-width: 0;
 }
 
 .teacher-list-table-wrap {
-	overflow-x: hidden;
+	overflow: visible;
 	min-width: 0;
 }
 
@@ -43,7 +43,29 @@
 
 .teacher-list-table tbody tr {
 	cursor: pointer;
-	transition: background-color 0.2s ease, box-shadow 0.2s ease;
+	transition: background-color 0.2s ease, box-shadow 0.2s ease, z-index 0s;
+    position: relative;
+    z-index: 1;
+}
+
+.teacher-list-table tbody tr.menu-open {
+    z-index: 100; /* Ensure active row is above others */
+}
+
+.teacher-list-table thead tr th:first-child {
+    border-top-left-radius: 1.5rem;
+}
+
+.teacher-list-table thead tr th:last-child {
+    border-top-right-radius: 1.5rem;
+}
+
+.teacher-list-table tbody tr:last-child td:first-child {
+    border-bottom-left-radius: 1.5rem;
+}
+
+.teacher-list-table tbody tr:last-child td:last-child {
+    border-bottom-right-radius: 1.5rem;
 }
 
 .teacher-list-table tbody tr:hover {
@@ -166,3 +188,103 @@
 .teacher-list-table th:nth-child(5), .teacher-list-table td:nth-child(5) { width: 15%; }
 .teacher-list-table th:nth-child(6), .teacher-list-table td:nth-child(6) { width: 12%; }
 .teacher-list-table th:nth-child(7), .teacher-list-table td:nth-child(7) { width: 16%; }
+
+/* Dropdown Action Menu Styles (Standardized) */
+.teacher-actions-dropdown {
+    position: relative;
+    display: inline-block;
+}
+
+.teacher-actions-trigger {
+    width: 2.25rem;
+    height: 2.25rem;
+    border: none;
+    outline: none;
+    background: transparent;
+    border-radius: 0.7rem;
+    display: grid;
+    place-items: center;
+    color: #7e8eab;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.teacher-actions-trigger:hover,
+.teacher-actions-dropdown.is-open .teacher-actions-trigger {
+    background: #e9efff;
+    color: #1e2f5a;
+    box-shadow: 0 4px 10px rgba(30, 47, 90, 0.1);
+}
+
+.teacher-actions-menu {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    z-index: 1000;
+    background: #ffffff;
+    border: 1px solid #dce5f7;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(30, 47, 90, 0.15);
+    padding: 0.5rem;
+    min-width: 180px;
+    margin-top: 0.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    animation: menuFadeIn 0.2s ease-out;
+}
+
+.teacher-actions-dropdown.open-up .teacher-actions-menu {
+    top: auto;
+    bottom: 100%;
+    margin-top: 0;
+    margin-bottom: 0.5rem;
+    transform-origin: bottom right;
+}
+
+@keyframes menuFadeIn {
+    from { opacity: 0; transform: translateY(-10px) scale(0.95); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.teacher-menu-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.65rem 0.85rem;
+    border: none;
+    background: transparent;
+    color: #4d5f82;
+    font-size: 0.88rem;
+    font-weight: 600;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    width: 100%;
+    text-align: left;
+}
+
+.teacher-menu-item:hover:not(:disabled) {
+    background: #e9efff;
+    color: #1e2f5a;
+}
+
+.teacher-menu-item svg {
+    font-size: 1.1rem;
+    flex-shrink: 0;
+}
+
+.teacher-menu-item.delete:hover:not(:disabled) {
+    background: #fdeceb;
+    color: #b42318;
+}
+
+.teacher-menu-item.status:hover:not(:disabled) {
+    background: #fff6df;
+    color: #8a5a11;
+}
+
+.teacher-menu-item:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}

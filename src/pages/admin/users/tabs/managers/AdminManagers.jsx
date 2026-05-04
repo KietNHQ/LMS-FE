@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState, useRef } from "react";
-import { FiPlus, FiSearch, FiEdit2, FiTrash2, FiLock, FiUnlock, FiShield, FiX, FiUserX, FiUserCheck, FiMoreHorizontal } from "react-icons/fi";
+import { FiPlus, FiSearch, FiEdit2, FiTrash2, FiKey, FiUnlock, FiShield, FiX, FiUserX, FiUserCheck, FiMoreHorizontal } from "react-icons/fi";
 import { PERMISSIONS } from "../../../../../config/permissions";
 import { Pagination, CreateUserDialog, ConfirmationModal } from "../../../../../components/common";
 import { userService } from "../../../../../services/pages/admin/users";
@@ -84,13 +84,21 @@ export default function AdminManagers({ onCountChange, hasPermission, currentUse
         message: "",
         confirmLabel: "",
         onConfirm: () => {},
-        variant: "primary"
+        variant: "primary",
+        showNewPassword: false
     });
+
+    const [adminPasswordInput, setAdminPasswordInput] = useState("");
+    const [newPasswordInput, setNewPasswordInput] = useState("");
 
     const [openMenuId, setOpenMenuId] = useState(null);
     const menuRef = useRef(null);
 
-    const closeConfirm = () => setConfirmConfig(prev => ({ ...prev, isOpen: false }));
+    const closeConfirm = () => {
+        setConfirmConfig(prev => ({ ...prev, isOpen: false }));
+        setAdminPasswordInput("");
+        setNewPasswordInput("");
+    };
 
     /* ── Load dữ liệu ── */
     const loadManagers = useCallback(async () => {
@@ -226,14 +234,14 @@ export default function AdminManagers({ onCountChange, hasPermission, currentUse
     const handleBulkResetPassword = async () => {
         if (selectedUserIds.length === 0) return;
         
+        setAdminPasswordInput("");
         setConfirmConfig({
             isOpen: true,
-            title: "Đặt lại mật khẩu",
-            message: `Bạn có chắc chắn muốn ĐẶT LẠI MẬT KHẨU cho ${selectedUserIds.length} tài khoản đã chọn?`,
+            title: "Xác minh quyền Admin",
+            message: `Để đặt lại mật khẩu cho ${selectedUserIds.length} tài khoản, vui lòng nhập mật khẩu Admin của bạn:`,
             confirmLabel: "Đặt lại mật khẩu",
             variant: "primary",
             onConfirm: async () => {
-                closeConfirm();
                 setIsBulkToggling(true);
                 try {
                     const results = [];
@@ -242,16 +250,20 @@ export default function AdminManagers({ onCountChange, hasPermission, currentUse
                         if (!user) continue;
                         
                         const generatedPwd = Math.random().toString(36).slice(-10);
-                        await userService.updateUser(id, { ...user, password: generatedPwd });
+                        await userService.resetPassword(id, { 
+                            adminPassword: adminPasswordInput, 
+                            newPassword: generatedPwd 
+                        });
                         results.push({ name: user.name, password: generatedPwd });
                     }
                     
+                    closeConfirm();
                     await loadManagers();
                     
                     const resultMsg = results.map(r => `${r.name}: ${r.password}`).join("\n");
                     window.alert(`Đặt lại mật khẩu thành công cho ${results.length} người dùng:\n\n${resultMsg}`);
                 } catch (error) {
-                    window.alert(getErrorMessage(error, "Có lỗi xảy ra khi đặt lại mật khẩu hàng loạt."));
+                    window.alert(getErrorMessage(error, "Có lỗi xảy ra khi đặt lại mật khẩu hàng loạt. Kiểm tra lại mật khẩu Admin."));
                 } finally {
                     setIsBulkToggling(false);
                 }
@@ -288,20 +300,45 @@ export default function AdminManagers({ onCountChange, hasPermission, currentUse
     const handleResetPassword = async (user) => {
         if (!user) return;
         
+        const isSelf = user.id === currentUser?.id || user.email === currentUser?.email;
+        setAdminPasswordInput("");
+        setNewPasswordInput("");
+
         setConfirmConfig({
             isOpen: true,
-            title: "Đặt lại mật khẩu",
-            message: `Bạn có chắc chắn muốn đặt lại mật khẩu cho người dùng ${user.name}?`,
+            title: "Xác minh quyền Admin",
+            message: isSelf 
+                ? `Thiết lập mật khẩu mới cho chính bạn (${user.name}):`
+                : `Xác nhận đặt lại mật khẩu cho ${user.name}. Hệ thống sẽ tự sinh mật khẩu mới.`,
             confirmLabel: "Đặt lại mật khẩu",
             variant: "primary",
+            showNewPassword: isSelf,
             onConfirm: async () => {
-                closeConfirm();
                 try {
-                    const generatedPwd = Math.random().toString(36).slice(-10);
-                    await userService.updateUser(user.id, { ...user, password: generatedPwd });
-                    window.alert(`Đặt lại mật khẩu thành công cho ${user.name}.\nMật khẩu mới là: ${generatedPwd}`);
+                    let targetNewPassword = "";
+                    if (isSelf) {
+                        if (!newPasswordInput.trim()) {
+                            window.alert("Vui lòng nhập mật khẩu mới.");
+                            return;
+                        }
+                        targetNewPassword = newPasswordInput;
+                    } else {
+                        targetNewPassword = Math.random().toString(36).slice(-10);
+                    }
+
+                    await userService.resetPassword(user.id, { 
+                        adminPassword: adminPasswordInput, 
+                        newPassword: targetNewPassword 
+                    });
+                    
+                    closeConfirm();
+                    if (isSelf) {
+                        window.alert("Đã đổi mật khẩu của bạn thành công.");
+                    } else {
+                        window.alert(`Đặt lại mật khẩu thành công cho ${user.name}.\nMật khẩu mới là: ${targetNewPassword}`);
+                    }
                 } catch (error) {
-                    window.alert(getErrorMessage(error, "Không thể đặt lại mật khẩu."));
+                    window.alert(getErrorMessage(error, "Xác thực Admin thất bại hoặc lỗi hệ thống."));
                 }
             }
         });
@@ -391,30 +428,32 @@ export default function AdminManagers({ onCountChange, hasPermission, currentUse
         <div className="admin-managers-page">
 
             {/* Toolbar */}
-            <div className="admin-managers-toolbar">
-                <div className="admin-managers-search-wrap">
-                    <FiSearch size={16} />
+            {/* Toolbar (Standardized) */}
+            <div className="users-toolbar-card">
+                <div className="users-search-box">
+                    <FiSearch className="users-search-icon" />
                     <input
-                        className="admin-managers-search"
+                        type="text"
                         placeholder="Tìm kiếm tên, email, điện thoại..."
                         value={searchValue}
                         onChange={(e) => setSearchValue(e.target.value)}
                     />
                 </div>
 
-                <Select
-                    variant="custom"
-                    className="admin-managers-filter-select-wrap"
-                    selectClassName="admin-managers-filter-select"
-                    value={roleFilter}
-                    onChange={(e) => setRoleFilter(e.target.value)}
-                    options={MANAGEMENT_ROLES}
-                />
-
-                <button className="admin-managers-add-btn" onClick={() => { setFormData(emptyForm); setCreateOpen(true); }}>
-                    <FiPlus size={16} />
-                    <span>Thêm Cán bộ</span>
-                </button>
+                <div className="users-filter-group">
+                    <div className="admin-managers-filter-select-wrap">
+                        <Select
+                            variant="custom"
+                            value={roleFilter}
+                            onChange={(e) => setRoleFilter(e.target.value)}
+                            options={MANAGEMENT_ROLES}
+                        />
+                    </div>
+                    
+                    <button className="admin-managers-add-btn" onClick={() => { setFormData(emptyForm); setCreateOpen(true); }}>
+                        <FiPlus /> Thêm Cán bộ
+                    </button>
+                </div>
             </div>
 
 
@@ -424,11 +463,12 @@ export default function AdminManagers({ onCountChange, hasPermission, currentUse
             {loadError && <div className="admin-managers-state-msg">{loadError}</div>}
 
             {!isLoading && !loadError && (
-                <div className="admin-managers-table-section">
-                    <div className="mgr-table-head">
-                        <div className="mgr-checkbox-cell">
+                <div className="user-detail-section">
+                    <div className="user-detail-head">
+                        <div className="user-detail-checkbox-col">
                             <input 
                                 type="checkbox" 
+                                className="user-detail-checkbox"
                                 checked={paginated.length > 0 && selectedUserIds.length === paginated.length}
                                 onChange={(e) => handleSelectAll(e.target.checked)}
                             />
@@ -447,84 +487,79 @@ export default function AdminManagers({ onCountChange, hasPermission, currentUse
                             <p>{managers.length === 0 ? "Chưa có tài khoản quản lý nào." : "Không tìm thấy quản lý phù hợp."}</p>
                         </div>
                     ) : (
-                        paginated.map((m) => {
-                            const roleMeta = getRoleMeta(m.role);
+                        paginated.map((m, index) => {
                             const isMenuOpen = openMenuId === m.id;
-                            const isDisabled = m.id === currentUser?.id || m.role === 'Quản trị viên' || m.role === 'admin';
+                            const avatarColor = m.role?.toLowerCase().includes('quản trị') ? 'navy' : 'teal';
 
                             return (
                                 <div 
-                                    className={`mgr-table-row ${m.status === "Vô hiệu hóa" ? "is-inactive" : ""} ${selectedUserIds.includes(m.id) ? "is-selected" : ""}`} 
+                                    className={`user-detail-row ${m.status === "Vô hiệu hóa" ? "is-inactive" : ""} ${selectedUserIds.includes(m.id) ? "is-selected" : ""} ${isMenuOpen ? "menu-open" : ""}`} 
                                     key={m.id}
                                     onClick={() => handleViewManager(m)}
                                 >
-                                    <div className="mgr-checkbox-cell" onClick={(e) => e.stopPropagation()}>
+                                    <div className="user-detail-checkbox-col" onClick={(e) => e.stopPropagation()}>
                                         <input 
                                             type="checkbox" 
+                                            className="user-detail-checkbox"
                                             checked={selectedUserIds.includes(m.id)}
                                             onChange={() => handleSelectRow(m.id)}
                                         />
                                     </div>
-                                    <div className="mgr-user-cell">
-                                        <div className={`mgr-avatar ${m.color || ""}`}>{getAvatarInitial(m.name)}</div>
-                                        <div className="mgr-user-info">
-                                            <div className="mgr-user-name">{m.name || "—"}</div>
-                                            <div className="mgr-user-email">{m.email || "—"}</div>
+                                    <div className="user-detail-user">
+                                        <div className={`user-detail-avatar ${avatarColor}`}>
+                                            {m.name ? m.name.charAt(0).toUpperCase() : "U"}
+                                        </div>
+                                        <div className="user-detail-info">
+                                            <div className="user-detail-name">{m.name || "—"}</div>
+                                            <div className="user-detail-email">{m.email || "—"}</div>
                                         </div>
                                     </div>
 
-                                    <div className="mgr-role-cell">
-                                        <div className="mgr-role-tags">
-
-                                            <span className={`mgr-role-chip ${roleMeta.cssClass}`}>
-                                                {roleMeta.label}
-                                            </span>
-                                        </div>
+                                    <div className="user-detail-role-group">
+                                        <span className={`user-role-chip ${avatarColor === 'navy' ? 'admin' : 'teacher'}`}>
+                                            {m.role || "Quản lý"}
+                                        </span>
+                                        {m.position && <span className="user-position-text">{m.position}</span>}
                                     </div>
 
-                                    <div className="mgr-phone">{m.phone !== "—" ? m.phone : <span style={{ color: "#d1d5db" }}>—</span>}</div>
+                                    <div className="user-detail-phone">{m.phone !== "—" ? m.phone : <span style={{ color: "#d1d5db" }}>—</span>}</div>
 
-                                    <div>
-                                        <span className={`mgr-status-chip ${m.status === "Hoạt động" ? "active" : "inactive"}`}>
+                                    <div className="user-detail-status">
+                                        <span className={`user-status-chip ${m.status === "Hoạt động" ? "active" : "inactive"}`}>
                                             {m.status}
                                         </span>
                                     </div>
 
-                                    <div className="mgr-date">{formatDate(m.dob)}</div>
+                                    <div className="user-detail-date">{formatDate(m.dob)}</div>
 
-                                    <div className="mgr-actions" onClick={(e) => e.stopPropagation()}>
-                                        <div className={`mgr-actions-dropdown ${isMenuOpen ? "is-open" : ""}`} ref={isMenuOpen ? menuRef : null}>
-                                            <button className="mgr-actions-trigger" onClick={(e) => toggleMenu(e, m.id)}>
+                                    <div className="user-detail-actions" onClick={(e) => e.stopPropagation()}>
+                                        <div className={`user-actions-dropdown ${isMenuOpen ? "is-open" : ""} ${index >= paginated.length - 2 ? "open-up" : ""}`}>
+                                            <button className="user-actions-trigger" onClick={(e) => toggleMenu(e, m.id)}>
                                                 <FiMoreHorizontal />
                                             </button>
                                             
                                             {isMenuOpen && (
-                                                <div className="mgr-actions-menu">
-                                                    <button className="mgr-menu-item edit" onClick={() => { handleEditManager(m); setOpenMenuId(null); }}>
+                                                <div className="user-actions-menu">
+                                                    <button className="user-menu-item" onClick={() => { handleViewManager(m); setOpenMenuId(null); }}>
+                                                        <FiEye />
+                                                        <span>Xem chi tiết</span>
+                                                    </button>
+                                                    <button className="user-menu-item" onClick={() => { handleEditManager(m); setOpenMenuId(null); }}>
                                                         <FiEdit2 />
                                                         <span>Chỉnh sửa</span>
                                                     </button>
                                                     
                                                     <button 
-                                                        className="mgr-menu-item status" 
+                                                        className="user-menu-item status" 
                                                         onClick={() => { setStatusTarget(m); setOpenMenuId(null); }}
-                                                        disabled={isDisabled}
                                                     >
                                                         {m.status === "Hoạt động" ? <FiUserX /> : <FiUserCheck />}
                                                         <span>{m.status === "Hoạt động" ? "Vô hiệu hóa" : "Kích hoạt"}</span>
                                                     </button>
 
-                                                    {hasPermission(PERMISSIONS.USER_UPDATE) && (
-                                                        <button className="mgr-menu-item reset" onClick={() => { handleResetPassword(m); setOpenMenuId(null); }}>
-                                                            <FiLock />
-                                                            <span>Đặt lại mật khẩu</span>
-                                                        </button>
-                                                    )}
-
                                                     <button 
-                                                        className="mgr-menu-item delete" 
+                                                        className="user-menu-item delete" 
                                                         onClick={() => { handleDeleteUser(m); setOpenMenuId(null); }}
-                                                        disabled={isDisabled}
                                                     >
                                                         <FiTrash2 />
                                                         <span>Xóa tài khoản</span>
@@ -641,7 +676,47 @@ export default function AdminManagers({ onCountChange, hasPermission, currentUse
                 variant={confirmConfig.variant}
                 onConfirm={confirmConfig.onConfirm}
                 onCancel={closeConfirm}
-            />
+            >
+                {confirmConfig.title === "Xác minh quyền Admin" && (
+                    <div style={{ marginTop: "1rem", display: "flex", flexDirection: "column", gap: "1rem" }}>
+                        <div>
+                            <label style={{ fontSize: "0.85rem", color: "#666", marginBottom: "4px", display: "block" }}>Mật khẩu Admin của bạn:</label>
+                            <input
+                                type="password"
+                                placeholder="Nhập mật khẩu Admin để xác thực"
+                                value={adminPasswordInput}
+                                onChange={(e) => setAdminPasswordInput(e.target.value)}
+                                autoFocus
+                                style={{
+                                    width: "100%",
+                                    padding: "0.75rem",
+                                    borderRadius: "8px",
+                                    border: "1px solid #ddd",
+                                    fontSize: "1rem"
+                                }}
+                            />
+                        </div>
+                        {confirmConfig.showNewPassword && (
+                            <div>
+                                <label style={{ fontSize: "0.85rem", color: "#666", marginBottom: "4px", display: "block" }}>Mật khẩu MỚI cho bạn:</label>
+                                <input
+                                    type="text"
+                                    placeholder="Nhập mật khẩu mới tại đây"
+                                    value={newPasswordInput}
+                                    onChange={(e) => setNewPasswordInput(e.target.value)}
+                                    style={{
+                                        width: "100%",
+                                        padding: "0.75rem",
+                                        borderRadius: "8px",
+                                        border: "1px solid #ddd",
+                                        fontSize: "1rem"
+                                    }}
+                                />
+                            </div>
+                        )}
+                    </div>
+                )}
+            </ConfirmationModal>
         </div>
     );
 }
