@@ -65,7 +65,7 @@ export default function ManagerInformationSection({
                                 <div className="manager-view-title-wrap">
                                     <h3>{formData.name}</h3>
                                     <p>
-                                        {formData.position && `${formData.position} • `}{formData.role} • {formData.email}
+                                        {formData.role} • {formData.email}
                                     </p>
                                 </div>
                             </div>
@@ -146,12 +146,12 @@ export default function ManagerInformationSection({
                             </div>
 
                             <div className="manager-form-group full">
-                                <label>Chức danh / Vị trí</label>
+                                <label>Email</label>
                                 <input
-                                    type="text"
-                                    value={formData.position || ""}
-                                    onChange={(e) => onChange("position", e.target.value)}
-                                    placeholder="Ví dụ: Hiệu trưởng, Giáo vụ..."
+                                    type="email"
+                                    value={formData.email}
+                                    onChange={(e) => onChange("email", e.target.value)}
+                                    placeholder="Nhập địa chỉ email"
                                 />
                             </div>
 
@@ -177,16 +177,7 @@ export default function ManagerInformationSection({
                                 </div>
                             </div>
 
-                            <div className="manager-form-group full">
-                                <label>Email</label>
-                                <input
-                                    type="email"
-                                    value={formData.email}
-                                    onChange={(e) => onChange("email", e.target.value)}
-                                    placeholder="email@thptlocal.edu.vn"
-                                    readOnly={isEditMode}
-                                />
-                            </div>
+
 
                             <div className="manager-form-grid two-cols">
                                 <div className="manager-form-group">

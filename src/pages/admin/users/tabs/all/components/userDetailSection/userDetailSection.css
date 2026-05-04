@@ -15,7 +15,7 @@
 .user-detail-head,
 .user-detail-row {
     display: grid;
-    grid-template-columns: 0.35fr 2.05fr 1.2fr 1.2fr 1.1fr 1.1fr 0.9fr;
+    grid-template-columns: 0.35fr 2.6fr 1.1fr 1.1fr 1fr 1fr 0.85fr;
     gap: 1rem;
     align-items: center;
 }
@@ -79,9 +79,11 @@
     justify-content: flex-start;
     align-items: center;
     text-align: left;
+    width: 100%;
+    box-sizing: border-box;
 }
 
-.user-detail-head span:first-child {
+.user-detail-head span:nth-child(2) {
     justify-content: flex-start;
     padding-left: 0.5rem;
 }
@@ -274,11 +276,15 @@
 .user-detail-actions {
     display: flex;
     align-items: center;
-    justify-content: flex-start;
-    gap: 0.4rem;
+    justify-content: center;
 }
 
-.user-detail-action-btn {
+.user-actions-dropdown {
+    position: relative;
+    display: inline-block;
+}
+
+.user-actions-trigger {
     width: 2.25rem;
     height: 2.25rem;
     border: none;
@@ -289,35 +295,79 @@
     place-items: center;
     color: var(--admin-text-muted, #7e8eab);
     cursor: pointer;
-    transition: background-color 0.18s ease, color 0.18s ease, transform 0.18s ease,
-        box-shadow 0.18s ease;
+    transition: all 0.2s ease;
 }
 
-.user-detail-action-btn:hover {
-    transform: translateY(-1px);
+.user-actions-trigger:hover,
+.user-actions-dropdown.is-open .user-actions-trigger {
     background: var(--admin-primary-soft, #e9efff);
     color: var(--admin-primary, #1e2f5a);
-    box-shadow: 0 6px 12px rgba(30, 47, 90, 0.14);
+    box-shadow: 0 4px 10px rgba(30, 47, 90, 0.1);
 }
 
-.user-detail-action-btn.edit:hover {
+.user-actions-menu {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    z-index: 1000;
+    background: #ffffff;
+    border: 1px solid var(--admin-border, #dce5f7);
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(30, 47, 90, 0.15);
+    padding: 0.5rem;
+    min-width: 180px;
+    margin-top: 0.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    animation: menuFadeIn 0.2s ease-out;
+}
+
+@keyframes menuFadeIn {
+    from { opacity: 0; transform: translateY(-10px) scale(0.95); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.user-menu-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.65rem 0.85rem;
+    border: none;
+    background: transparent;
+    color: var(--admin-text-secondary, #4d5f82);
+    font-size: 0.88rem;
+    font-weight: 600;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    width: 100%;
+    text-align: left;
+}
+
+.user-menu-item:hover:not(:disabled) {
     background: var(--admin-primary-soft, #e9efff);
     color: var(--admin-primary, #1e2f5a);
 }
 
-.user-detail-action-btn.status:hover {
+.user-menu-item svg {
+    font-size: 1.1rem;
+    flex-shrink: 0;
+}
+
+.user-menu-item.delete:hover:not(:disabled) {
+    background: var(--admin-danger-bg, #fdeceb);
+    color: var(--admin-danger-fg, #b42318);
+}
+
+.user-menu-item.status:hover:not(:disabled) {
     background: var(--admin-warning-bg, #fff6df);
     color: var(--admin-warning-fg, #8a5a11);
 }
 
-.user-detail-action-btn.reset:hover {
-    background: var(--admin-primary-soft, #e9efff);
-    color: var(--admin-primary, #1e2f5a);
-}
-
-.user-detail-action-btn.delete:hover {
-    background: var(--admin-danger-bg, #fdeceb);
-    color: var(--admin-danger-fg, #b42318);
+.user-menu-item:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
 }
 
 .user-detail-empty {
@@ -325,23 +375,16 @@
     text-align: center;
     color: var(--admin-text-muted, #7e8eab);
     font-size: 1rem;
-    font-weight: 600;
 }
 
-/* Center chips in their columns */
+/* Center Vai trò, Trạng thái, and Thao tác columns for better balance */
 .user-detail-row > div:nth-child(3),
-.user-detail-row > div:nth-child(4),
-.user-detail-head span:nth-child(3),
-.user-detail-head span:nth-child(4) {
-    justify-content: center !important;
-    text-align: center !important;
-}
-
-/* Center Phone Number */
+.user-detail-head > *:nth-child(3),
 .user-detail-row > div:nth-child(5),
-.user-detail-head span:nth-child(5) {
+.user-detail-head > *:nth-child(5),
+.user-detail-row > div:nth-child(7),
+.user-detail-head > *:nth-child(7) {
     justify-content: center !important;
-    text-align: center !important;
 }
 
 /* Prevent header wrapping */

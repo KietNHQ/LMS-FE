@@ -145,7 +145,7 @@
 .mgr-table-head,
 .mgr-table-row {
     display: grid;
-    grid-template-columns: 0.4fr 2.4fr 1.2fr 0.8fr 1.1fr 1.1fr 1.1fr 1.2fr;
+    grid-template-columns: 0.35fr 2.6fr 1.1fr 1.1fr 1fr 1fr 0.85fr;
     gap: 1rem;
     align-items: center;
     padding: 0.75rem 1.25rem;
@@ -182,12 +182,14 @@
     display: flex;
     justify-content: flex-start;
     align-items: center;
+    width: 100%;
+    box-sizing: border-box;
 }
 
 /* First column: Align with the avatar/name block */
-.mgr-table-head span:first-child {
+.mgr-table-head span:nth-child(2) {
     justify-content: flex-start;
-    padding-left: 0.5rem; /* Reduced from 4rem to align closer to start */
+    padding-left: 0.5rem;
 }
 
 .mgr-table-row {
@@ -349,15 +351,19 @@
     font-weight: 500;
 }
 
-/* Actions - Keep centered if it looks better, but user asked for left alignment for "the letters" */
+/* Actions Dropdown */
 .mgr-actions {
     display: flex;
     align-items: center;
-    justify-content: flex-start;
-    gap: 0.4rem;
+    justify-content: center;
 }
 
-.mgr-action-btn {
+.mgr-actions-dropdown {
+    position: relative;
+    display: inline-block;
+}
+
+.mgr-actions-trigger {
     width: 2.25rem;
     height: 2.25rem;
     border-radius: 0.7rem;
@@ -367,18 +373,80 @@
     display: grid;
     place-items: center;
     color: var(--admin-text-muted, #7e8eab);
-    transition: all 0.18s ease;
+    transition: all 0.2s ease;
 }
 
-.mgr-action-btn:hover {
+.mgr-actions-trigger:hover,
+.mgr-actions-dropdown.is-open .mgr-actions-trigger {
     background: var(--admin-primary-soft, #e9efff);
     color: var(--admin-primary, #1e2f5a);
-    transform: translateY(-1px);
-    box-shadow: 0 6px 12px rgba(30, 47, 90, 0.14);
+    box-shadow: 0 4px 10px rgba(30, 47, 90, 0.1);
 }
 
-.mgr-action-btn.block:hover { background: var(--admin-warning-bg, #fff6df); color: var(--admin-warning-fg, #8a5a11); }
-.mgr-action-btn.delete:hover { background: var(--admin-danger-bg, #fdeceb); color: var(--admin-danger-fg, #b42318); }
+.mgr-actions-menu {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    z-index: 1000;
+    background: #ffffff;
+    border: 1px solid var(--admin-border, #dce5f7);
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(30, 47, 90, 0.15);
+    padding: 0.5rem;
+    min-width: 180px;
+    margin-top: 0.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    animation: mgrMenuFadeIn 0.2s ease-out;
+}
+
+@keyframes mgrMenuFadeIn {
+    from { opacity: 0; transform: translateY(-10px) scale(0.95); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.mgr-menu-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.65rem 0.85rem;
+    border: none;
+    background: transparent;
+    color: var(--admin-text-secondary, #4d5f82);
+    font-size: 0.88rem;
+    font-weight: 600;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    width: 100%;
+    text-align: left;
+}
+
+.mgr-menu-item:hover:not(:disabled) {
+    background: var(--admin-primary-soft, #e9efff);
+    color: var(--admin-primary, #1e2f5a);
+}
+
+.mgr-menu-item svg {
+    font-size: 1.1rem;
+    flex-shrink: 0;
+}
+
+.mgr-menu-item.delete:hover:not(:disabled) {
+    background: var(--admin-danger-bg, #fdeceb);
+    color: var(--admin-danger-fg, #b42318);
+}
+
+.mgr-menu-item.status:hover:not(:disabled) {
+    background: var(--admin-warning-bg, #fff6df);
+    color: var(--admin-warning-fg, #8a5a11);
+}
+
+.mgr-menu-item:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
 
 /* Modal Styles */
 .mgr-modal-overlay {
@@ -440,22 +508,14 @@
 .mgr-btn-cancel { padding: 10px 20px; border-radius: 10px; border: 1.5px solid #dce5f7; background: #fff; font-weight: 600; cursor: pointer; }
 .mgr-btn-submit { padding: 10px 24px; border-radius: 10px; border: none; background: #1e2f5a; color: #fff; font-weight: 600; cursor: pointer; box-shadow: 0 4px 12px rgba(30, 47, 90, 0.2); }
 
-/* Center chips in their columns */
+/* Center Vai trò, Trạng thái, and Thao tác columns for better balance */
 .mgr-table-row > div:nth-child(3),
-.mgr-table-row > div:nth-child(4),
-.mgr-table-row > div:nth-child(6),
-.mgr-table-head span:nth-child(3),
-.mgr-table-head span:nth-child(4),
-.mgr-table-head span:nth-child(6) {
-    justify-content: center !important;
-    text-align: center !important;
-}
-
-/* Center Phone Number */
+.mgr-table-head > *:nth-child(3),
 .mgr-table-row > div:nth-child(5),
-.mgr-table-head span:nth-child(5) {
+.mgr-table-head > *:nth-child(5),
+.mgr-table-row > div:nth-child(7),
+.mgr-table-head > *:nth-child(7) {
     justify-content: center !important;
-    text-align: center !important;
 }
 
 /* Prevent header wrapping */

@@ -1,5 +1,5 @@
-import React from "react";
-import { FiEdit2, FiTrash2, FiUserCheck, FiUserX, FiKey } from "react-icons/fi";
+import React, { useState, useEffect, useRef } from "react";
+import { FiEdit2, FiTrash2, FiUserCheck, FiUserX, FiKey, FiMoreHorizontal } from "react-icons/fi";
 import { PERMISSIONS } from "../../../../../../../config/permissions";
 import "./UserDetailSection.css";
 
@@ -13,7 +13,6 @@ function getRoleClass(role) {
 
 function formatDate(dateString) {
     if (!dateString) return "—";
-    // Extract YYYY-MM-DD part if it's an ISO string or similar
     const cleanDate = dateString.slice(0, 10);
     const parts = cleanDate.split("-");
     if (parts.length === 3) {
@@ -37,6 +36,23 @@ export default function UserDetailSection({
                                                hasPermission,
                                            }) {
     const isAllSelected = users.length > 0 && selectedUserIds.length === users.length;
+    const [openMenuId, setOpenMenuId] = useState(null);
+    const menuRef = useRef(null);
+
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (menuRef.current && !menuRef.current.contains(event.target)) {
+                setOpenMenuId(null);
+            }
+        };
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, []);
+
+    const toggleMenu = (e, userId) => {
+        e.stopPropagation();
+        setOpenMenuId(openMenuId === userId ? null : userId);
+    };
 
     return (
         <div className="user-detail-section">
@@ -50,7 +66,7 @@ export default function UserDetailSection({
                     />
                 </div>
                 <span>Người dùng</span>
-                <span>Chức danh / Vai trò</span>
+                <span>Vai trò</span>
                 <span>Điện thoại</span>
                 <span>Trạng thái</span>
                 <span>Ngày sinh</span>
@@ -62,6 +78,9 @@ export default function UserDetailSection({
             ) : (
                 users.map((user) => {
                     const isSelected = selectedUserIds.includes(user.id);
+                    const isMenuOpen = openMenuId === user.id;
+                    const isDisabled = user.id === currentUser?.id || user.role === 'Quản trị viên' || user.role === 'admin';
+
                     return (
                         <div
                             className={`user-detail-row ${
@@ -83,14 +102,11 @@ export default function UserDetailSection({
 
                                 <div className="user-detail-info">
                                     <div className="user-detail-name">{user.name}</div>
-                                    <div className="user-detail-email">{user.email?.replace("thptlocal.edu.vn", "")}</div>
+                                    <div className="user-detail-email">{user.email?.split('@')[0]}</div>
                                 </div>
                             </div>
 
                             <div className="user-detail-role-group">
-                                {user.position && (
-                                    <span className="user-position-text">{user.position}</span>
-                                )}
                                 <span className={`user-role-chip ${getRoleClass(user.role)}`}>
                                     {user.role}
                                 </span>
@@ -99,53 +115,51 @@ export default function UserDetailSection({
                             <div className="user-detail-phone">{user.phone}</div>
 
                             <div>
-                  <span
-                      className={`user-status-chip ${
-                          user.status === "Hoạt động" ? "active" : "inactive"
-                      }`}
-                  >
-                    {user.status}
-                  </span>
+                                <span className={`user-status-chip ${user.status === "Hoạt động" ? "active" : "inactive"}`}>
+                                    {user.status}
+                                </span>
                             </div>
 
                             <div className="user-detail-date">{formatDate(user.dob)}</div>
 
                             <div className="user-detail-actions" onClick={(e) => e.stopPropagation()}>
-                                <button
-                                    className="user-detail-action-btn edit"
-                                    onClick={() => onEdit(user)}
-                                    title="Chỉnh sửa"
-                                >
-                                    <FiEdit2 />
-                                </button>
-
-                                <button
-                                    className="user-detail-action-btn status"
-                                    onClick={() => onToggleStatus(user)}
-                                    title="Khóa / mở"
-                                    disabled={user.id === currentUser?.id || user.role === 'Quản trị viên' || user.role === 'admin'}
-                                    style={(user.id === currentUser?.id || user.role === 'Quản trị viên' || user.role === 'admin') ? { opacity: 0.3, cursor: 'not-allowed' } : {}}
-                                >
-                                    {user.status === "Hoạt động" ? <FiUserX /> : <FiUserCheck />}
-                                </button>
-
-                                <button
-                                    className="user-detail-action-btn reset"
-                                    onClick={() => onResetPassword(user)}
-                                    title="Đặt lại mật khẩu"
-                                >
-                                    <FiKey />
-                                </button>
-
-                                    <button
-                                        className="user-detail-action-btn delete"
-                                        onClick={() => onDelete(user.id)}
-                                        title="Xóa"
-                                        disabled={user.id === currentUser?.id || user.role === 'Quản trị viên' || user.role === 'admin'}
-                                        style={(user.id === currentUser?.id || user.role === 'Quản trị viên' || user.role === 'admin') ? { opacity: 0.3, cursor: 'not-allowed' } : {}}
-                                    >
-                                        <FiTrash2 />
+                                <div className={`user-actions-dropdown ${isMenuOpen ? "is-open" : ""}`} ref={isMenuOpen ? menuRef : null}>
+                                    <button className="user-actions-trigger" onClick={(e) => toggleMenu(e, user.id)}>
+                                        <FiMoreHorizontal />
                                     </button>
+                                    
+                                    {isMenuOpen && (
+                                        <div className="user-actions-menu">
+                                            <button className="user-menu-item edit" onClick={() => { onEdit(user); setOpenMenuId(null); }}>
+                                                <FiEdit2 />
+                                                <span>Chỉnh sửa</span>
+                                            </button>
+                                            
+                                            <button 
+                                                className="user-menu-item status" 
+                                                onClick={() => { onToggleStatus(user); setOpenMenuId(null); }}
+                                                disabled={isDisabled}
+                                            >
+                                                {user.status === "Hoạt động" ? <FiUserX /> : <FiUserCheck />}
+                                                <span>{user.status === "Hoạt động" ? "Vô hiệu hóa" : "Kích hoạt"}</span>
+                                            </button>
+
+                                            <button className="user-menu-item reset" onClick={() => { onResetPassword(user); setOpenMenuId(null); }}>
+                                                <FiKey />
+                                                <span>Đặt lại mật khẩu</span>
+                                            </button>
+
+                                            <button 
+                                                className="user-menu-item delete" 
+                                                onClick={() => { onDelete(user.id); setOpenMenuId(null); }}
+                                                disabled={isDisabled}
+                                            >
+                                                <FiTrash2 />
+                                                <span>Xóa tài khoản</span>
+                                            </button>
+                                        </div>
+                                    )}
+                                </div>
                             </div>
                         </div>
                     );

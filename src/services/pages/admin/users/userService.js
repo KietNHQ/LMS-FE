@@ -108,6 +108,7 @@ const buildCreatePayload = (formData = {}) => ({
 });
 
 const buildUpdatePayload = (formData = {}) => ({
+  email: formData.email,
   fullName: formData.name,
   phone: formData.phone === "—" ? "" : formData.phone,
   dob: formData.dob || null,

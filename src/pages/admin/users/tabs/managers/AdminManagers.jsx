@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { FiPlus, FiSearch, FiEdit2, FiTrash2, FiLock, FiUnlock, FiShield, FiX, FiUserX, FiUserCheck } from "react-icons/fi";
+import { useCallback, useEffect, useMemo, useState, useRef } from "react";
+import { FiPlus, FiSearch, FiEdit2, FiTrash2, FiLock, FiUnlock, FiShield, FiX, FiUserX, FiUserCheck, FiMoreHorizontal } from "react-icons/fi";
 import { PERMISSIONS } from "../../../../../config/permissions";
 import { Pagination, CreateUserDialog, ConfirmationModal } from "../../../../../components/common";
 import { userService } from "../../../../../services/pages/admin/users";
@@ -43,7 +43,6 @@ const getAvatarInitial = (name = "") => name.trim().charAt(0).toUpperCase() || "
 
 const formatDate = (dateString) => {
     if (!dateString) return "—";
-    // Fix: slice(0,10) to get YYYY-MM-DD from ISO before splitting
     const cleanDate = dateString.slice(0, 10);
     const parts = cleanDate.split("-");
     if (parts.length === 3) {
@@ -88,6 +87,9 @@ export default function AdminManagers({ onCountChange, hasPermission, currentUse
         variant: "primary"
     });
 
+    const [openMenuId, setOpenMenuId] = useState(null);
+    const menuRef = useRef(null);
+
     const closeConfirm = () => setConfirmConfig(prev => ({ ...prev, isOpen: false }));
 
     /* ── Load dữ liệu ── */
@@ -96,7 +98,6 @@ export default function AdminManagers({ onCountChange, hasPermission, currentUse
         setLoadError("");
         try {
             const result = await userService.listUsers({ page: 1, limit: 500 });
-            // Lọc lấy tài khoản Quản lý (đã đổi tên từ Admin)
             const adminRows = (result.items || []).filter(
                 (u) => u.role === "Quản trị viên" || u.role === "Quản lý"
             );
@@ -111,6 +112,21 @@ export default function AdminManagers({ onCountChange, hasPermission, currentUse
 
     useEffect(() => { loadManagers(); }, [loadManagers]);
     useEffect(() => { onCountChange?.(managers.length); }, [managers.length, onCountChange]);
+
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (menuRef.current && !menuRef.current.contains(event.target)) {
+                setOpenMenuId(null);
+            }
+        };
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, []);
+
+    const toggleMenu = (e, userId) => {
+        e.stopPropagation();
+        setOpenMenuId(openMenuId === userId ? null : userId);
+    };
 
     /* ── Lọc ── */
     const filtered = useMemo(() => {
@@ -418,7 +434,7 @@ export default function AdminManagers({ onCountChange, hasPermission, currentUse
                             />
                         </div>
                         <span>Người dùng</span>
-                        <span>Vai trò / Chức danh</span>
+                        <span>Vai trò</span>
                         <span>Điện thoại</span>
                         <span>Trạng thái</span>
                         <span>Ngày sinh</span>
@@ -433,6 +449,9 @@ export default function AdminManagers({ onCountChange, hasPermission, currentUse
                     ) : (
                         paginated.map((m) => {
                             const roleMeta = getRoleMeta(m.role);
+                            const isMenuOpen = openMenuId === m.id;
+                            const isDisabled = m.id === currentUser?.id || m.role === 'Quản trị viên' || m.role === 'admin';
+
                             return (
                                 <div 
                                     className={`mgr-table-row ${m.status === "Vô hiệu hóa" ? "is-inactive" : ""} ${selectedUserIds.includes(m.id) ? "is-selected" : ""}`} 
@@ -456,7 +475,7 @@ export default function AdminManagers({ onCountChange, hasPermission, currentUse
 
                                     <div className="mgr-role-cell">
                                         <div className="mgr-role-tags">
-                                            {m.position && <span className="mgr-position-tag">{m.position}</span>}
+
                                             <span className={`mgr-role-chip ${roleMeta.cssClass}`}>
                                                 {roleMeta.label}
                                             </span>
@@ -474,32 +493,45 @@ export default function AdminManagers({ onCountChange, hasPermission, currentUse
                                     <div className="mgr-date">{formatDate(m.dob)}</div>
 
                                     <div className="mgr-actions" onClick={(e) => e.stopPropagation()}>
-                                        <button className="mgr-action-btn edit" title="Chỉnh sửa" onClick={() => handleEditManager(m)}>
-                                            <FiEdit2 size={16} />
-                                        </button>
-                                        <button 
-                                            className="mgr-action-btn block" 
-                                            title={m.status === "Hoạt động" ? "Vô hiệu hóa" : "Kích hoạt"} 
-                                            onClick={() => setStatusTarget(m)}
-                                            disabled={m.id === currentUser?.id || m.role === 'Quản trị viên' || m.role === 'admin'}
-                                            style={(m.id === currentUser?.id || m.role === 'Quản trị viên' || m.role === 'admin') ? { opacity: 0.3, cursor: 'not-allowed' } : {}}
-                                        >
-                                            {m.status === "Hoạt động" ? <FiUserX size={16} /> : <FiUserCheck size={16} />}
-                                        </button>
-                                        {hasPermission(PERMISSIONS.USER_UPDATE) && (
-                                            <button className="mgr-action-btn reset" title="Đặt lại mật khẩu" onClick={() => handleResetPassword(m)}>
-                                                <FiLock size={16} />
+                                        <div className={`mgr-actions-dropdown ${isMenuOpen ? "is-open" : ""}`} ref={isMenuOpen ? menuRef : null}>
+                                            <button className="mgr-actions-trigger" onClick={(e) => toggleMenu(e, m.id)}>
+                                                <FiMoreHorizontal />
                                             </button>
-                                        )}
-                                            <button 
-                                                className="mgr-action-btn delete" 
-                                                title="Xóa" 
-                                                onClick={() => handleDeleteUser(m)}
-                                                disabled={m.id === currentUser?.id || m.role === 'Quản trị viên' || m.role === 'admin'}
-                                                style={(m.id === currentUser?.id || m.role === 'Quản trị viên' || m.role === 'admin') ? { opacity: 0.3, cursor: 'not-allowed' } : {}}
-                                            >
-                                                <FiTrash2 size={16} />
-                                            </button>
+                                            
+                                            {isMenuOpen && (
+                                                <div className="mgr-actions-menu">
+                                                    <button className="mgr-menu-item edit" onClick={() => { handleEditManager(m); setOpenMenuId(null); }}>
+                                                        <FiEdit2 />
+                                                        <span>Chỉnh sửa</span>
+                                                    </button>
+                                                    
+                                                    <button 
+                                                        className="mgr-menu-item status" 
+                                                        onClick={() => { setStatusTarget(m); setOpenMenuId(null); }}
+                                                        disabled={isDisabled}
+                                                    >
+                                                        {m.status === "Hoạt động" ? <FiUserX /> : <FiUserCheck />}
+                                                        <span>{m.status === "Hoạt động" ? "Vô hiệu hóa" : "Kích hoạt"}</span>
+                                                    </button>
+
+                                                    {hasPermission(PERMISSIONS.USER_UPDATE) && (
+                                                        <button className="mgr-menu-item reset" onClick={() => { handleResetPassword(m); setOpenMenuId(null); }}>
+                                                            <FiLock />
+                                                            <span>Đặt lại mật khẩu</span>
+                                                        </button>
+                                                    )}
+
+                                                    <button 
+                                                        className="mgr-menu-item delete" 
+                                                        onClick={() => { handleDeleteUser(m); setOpenMenuId(null); }}
+                                                        disabled={isDisabled}
+                                                    >
+                                                        <FiTrash2 />
+                                                        <span>Xóa tài khoản</span>
+                                                    </button>
+                                                </div>
+                                            )}
+                                        </div>
                                     </div>
                                 </div>
                             );
