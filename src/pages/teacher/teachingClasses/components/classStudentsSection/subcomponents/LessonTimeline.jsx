@@ -13,7 +13,8 @@ const LessonTimeline = ({
   calendarProps,
   availableReviewDates,
   reviewsForSelectedDate,
-  onTodayClick
+  onTodayClick,
+  readOnly
 }) => {
   return (
     <section className="lesson-timeline" aria-label="Mốc thời gian tiết học">
@@ -23,9 +24,11 @@ const LessonTimeline = ({
           <p>{currentLessonTime}</p>
         </div>
 
-        <button type="button" className="tc-open-form-btn" onClick={onOpenLessonReview}>
-          Đánh giá tiết học
-        </button>
+        {!readOnly && (
+          <button type="button" className="tc-open-form-btn" onClick={onOpenLessonReview}>
+            Đánh giá tiết học
+          </button>
+        )}
       </div>
 
       <div className="lesson-history">
@@ -72,16 +75,18 @@ const LessonTimeline = ({
           <ul className="lesson-history-list">
             {reviewsForSelectedDate.map((review) => (
               <li key={review.id} className="lesson-history-item">
-                <div className="lesson-history-item-top">
-                  <span className="lesson-history-tag">{review.lessonLabel}</span>
-                  <span className="lesson-history-score">{review.score}</span>
+                <div className="lesson-history-content">
+                  <div className="lesson-history-item-top">
+                    <span className="lesson-history-tag">{review.lessonLabel}</span>
+                  </div>
+                  <p className="lesson-history-time">{review.lessonTime}</p>
+                  <p className="lesson-history-attendance">
+                    Đi học: <strong>{review.attended}</strong> | Vắng: <strong>{review.absent}</strong>
+                  </p>
+                  <p className="lesson-history-note">{review.note}</p>
+                  <small>{review.createdAt}</small>
                 </div>
-                <p className="lesson-history-time">{review.lessonTime}</p>
-                <p className="lesson-history-attendance">
-                  Đi học: <strong>{review.attended}</strong> | Vắng: <strong>{review.absent}</strong>
-                </p>
-                <p className="lesson-history-note">{review.note}</p>
-                <small>{review.createdAt}</small>
+                <span className="lesson-history-score">{review.score}</span>
               </li>
             ))}
           </ul>

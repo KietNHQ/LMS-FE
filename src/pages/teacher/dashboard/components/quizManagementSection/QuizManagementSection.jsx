@@ -58,7 +58,7 @@ const QuizManagementSection = () => {
         <WeekPicker 
           value={selectedWeek} 
           onChange={setSelectedWeek} 
-          label="" 
+          label="Tuần" 
         />
       </div>
 

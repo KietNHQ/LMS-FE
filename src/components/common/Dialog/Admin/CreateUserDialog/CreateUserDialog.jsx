@@ -224,6 +224,7 @@ function buildDefaultForm(role) {
         },
         managerInfo: {
             title: "custom",
+            customTitle: "",
             permissions: [],
         },
     };
@@ -289,6 +290,7 @@ function buildFormFromInitialData(initialData, mode, role) {
         },
         managerInfo: {
             title: profile.title || "custom",
+            customTitle: profile.customTitle || "",
             permissions: Array.isArray(profile.permissions) ? profile.permissions : [],
         },
         _mode: mode,
@@ -331,8 +333,14 @@ function buildRoleProfile(role, form) {
     }
 
     if (role === "Quản lý") {
+        const titleData = MANAGEMENT_TITLES.find(t => t.value === form.managerInfo.title);
+        const resolvedTitle = form.managerInfo.title === "custom" 
+            ? form.managerInfo.customTitle.trim() 
+            : (titleData?.label || form.managerInfo.title);
+
         return {
-            title: form.managerInfo.title,
+            title: resolvedTitle,
+            titleKey: form.managerInfo.title, // Keep the key for reference
             permissions: form.managerInfo.permissions,
         };
     }
@@ -935,6 +943,19 @@ export default function CreateUserDialog({
                                     options={MANAGEMENT_TITLES}
                                 />
                             </div>
+
+                            {form.managerInfo.title === "custom" && (
+                                <div className="admin-create-user-dialog-field animate-fade-in" style={{ marginTop: "-0.5rem" }}>
+                                    <label>Tên chức vụ tùy chỉnh</label>
+                                    <input
+                                        type="text"
+                                        placeholder="Ví dụ: Trưởng phòng Đào tạo"
+                                        value={form.managerInfo.customTitle}
+                                        onChange={(e) => handleRoleInfoChange("managerInfo", "customTitle", e.target.value)}
+                                        required
+                                    />
+                                </div>
+                            )}
 
                             <div className="admin-create-user-dialog-perm-groups">
                                 {PERMISSION_GROUPS.map(group => {

@@ -1,8 +1,8 @@
-.student-ban-can-su-lop-page {
+.student-class-committee-page {
   padding: 16px;
 }
 
-.student-ban-can-su-lop-header {
+.student-class-committee-header {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
@@ -10,7 +10,7 @@
   margin-bottom: 18px;
 }
 
-.student-ban-can-su-lop-header__title h1 {
+.student-class-committee-header__title h1 {
   margin: 4px 0 0;
   font-size: clamp(28px, 2.2vw, 38px);
   line-height: 1.1;
@@ -19,8 +19,8 @@
   color: #16233b;
 }
 
-.student-ban-can-su-lop-kicker,
-.student-ban-can-su-lop-section-label {
+.student-class-committee-kicker,
+.student-class-committee-section-label {
   display: inline-flex;
   align-items: center;
   font-size: 12px;
@@ -30,7 +30,7 @@
   color: #5f6f89;
 }
 
-.student-ban-can-su-lop-header__title p {
+.student-class-committee-header__title p {
   margin: 10px 0 0;
   max-width: 760px;
   color: #6f7c91;
@@ -38,7 +38,7 @@
   line-height: 1.6;
 }
 
-.student-ban-can-su-lop-header__badge {
+.student-class-committee-header__badge {
   min-height: 52px;
   padding: 0 16px;
   border-radius: 16px;
@@ -52,14 +52,14 @@
   flex-shrink: 0;
 }
 
-.student-ban-can-su-lop-tabs {
+.student-class-committee-tabs {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 12px;
   margin-bottom: 18px;
 }
 
-.student-ban-can-su-lop-tab {
+.student-class-committee-tab {
   width: 100%;
   border: 1px solid #dfe5f0;
   border-radius: 18px;
@@ -74,29 +74,29 @@
   box-shadow: 0 10px 22px rgba(24, 39, 75, 0.05);
 }
 
-.student-ban-can-su-lop-tab:hover {
+.student-class-committee-tab:hover {
   transform: translateY(-3px);
   border-color: #b9cbff;
   box-shadow: 0 16px 30px rgba(37, 99, 255, 0.12);
 }
 
-.student-ban-can-su-lop-tab.active {
+.student-class-committee-tab.active {
   border-color: #2563ff;
   background: linear-gradient(135deg, #2563ff 0%, #4f8cff 100%);
   box-shadow: 0 18px 34px rgba(37, 99, 255, 0.24);
 }
 
-.student-ban-can-su-lop-tab.active .student-ban-can-su-lop-tab__text strong,
-.student-ban-can-su-lop-tab.active .student-ban-can-su-lop-tab__text small {
+.student-class-committee-tab.active .student-class-committee-tab__text strong,
+.student-class-committee-tab.active .student-class-committee-tab__text small {
   color: #ffffff;
 }
 
-.student-ban-can-su-lop-tab.active .student-ban-can-su-lop-tab__icon {
+.student-class-committee-tab.active .student-class-committee-tab__icon {
   background: rgba(255, 255, 255, 0.18);
   color: #ffffff;
 }
 
-.student-ban-can-su-lop-tab__icon {
+.student-class-committee-tab__icon {
   width: 44px;
   height: 44px;
   border-radius: 14px;
@@ -109,50 +109,50 @@
   flex-shrink: 0;
 }
 
-.student-ban-can-su-lop-tab__text {
+.student-class-committee-tab__text {
   display: flex;
   flex-direction: column;
   gap: 2px;
 }
 
-.student-ban-can-su-lop-tab__text strong {
+.student-class-committee-tab__text strong {
   font-size: 16px;
   font-weight: 800;
   color: #16233b;
 }
 
-.student-ban-can-su-lop-tab__text small {
+.student-class-committee-tab__text small {
   font-size: 13px;
   color: #6f7c91;
   font-weight: 600;
 }
 
-.student-ban-can-su-lop-content {
+.student-class-committee-content {
   display: grid;
   grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
   gap: 16px;
 }
 
-.student-ban-can-su-lop-overview,
-.student-ban-can-su-lop-panel {
+.student-class-committee-overview,
+.student-class-committee-panel {
   background: #ffffff;
   border: 1px solid #dfe5f0;
   border-radius: 22px;
   box-shadow: 0 12px 30px rgba(22, 35, 59, 0.06);
 }
 
-.student-ban-can-su-lop-overview {
+.student-class-committee-overview {
   padding: 18px;
 }
 
-.student-ban-can-su-lop-overview__top {
+.student-class-committee-overview__top {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
   gap: 12px;
 }
 
-.student-ban-can-su-lop-overview__top h2 {
+.student-class-committee-overview__top h2 {
   margin: 8px 0 0;
   font-size: 24px;
   line-height: 1.2;
@@ -160,7 +160,7 @@
   color: #16233b;
 }
 
-.student-ban-can-su-lop-overview__icon {
+.student-class-committee-overview__icon {
   width: 52px;
   height: 52px;
   border-radius: 16px;
@@ -173,21 +173,21 @@
   flex-shrink: 0;
 }
 
-.student-ban-can-su-lop-description {
+.student-class-committee-description {
   margin: 14px 0 0;
   color: #5f6f89;
   line-height: 1.7;
   font-size: 14px;
 }
 
-.student-ban-can-su-lop-highlights {
+.student-class-committee-highlights {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 12px;
   margin-top: 16px;
 }
 
-.student-ban-can-su-lop-highlight-card {
+.student-class-committee-highlight-card {
   border-radius: 16px;
   background: linear-gradient(180deg, #f8fbff 0%, #eef4ff 100%);
   border: 1px solid #dce6f6;
@@ -197,7 +197,7 @@
   gap: 6px;
 }
 
-.student-ban-can-su-lop-highlight-card span {
+.student-class-committee-highlight-card span {
   font-size: 12px;
   font-weight: 800;
   text-transform: uppercase;
@@ -205,13 +205,13 @@
   color: #6f7c91;
 }
 
-.student-ban-can-su-lop-highlight-card strong {
+.student-class-committee-highlight-card strong {
   font-size: 15px;
   color: #16233b;
   font-weight: 800;
 }
 
-.student-ban-can-su-lop-contact-box {
+.student-class-committee-contact-box {
   margin-top: 16px;
   padding: 14px 16px;
   border-radius: 18px;
@@ -223,13 +223,13 @@
   gap: 12px;
 }
 
-.student-ban-can-su-lop-contact-box strong {
+.student-class-committee-contact-box strong {
   display: block;
   font-size: 15px;
   margin-top: 4px;
 }
 
-.student-ban-can-su-lop-contact-box__phone {
+.student-class-committee-contact-box__phone {
   display: inline-flex;
   align-items: center;
   gap: 8px;
@@ -237,16 +237,16 @@
   white-space: nowrap;
 }
 
-.student-ban-can-su-lop-details {
+.student-class-committee-details {
   display: grid;
   gap: 16px;
 }
 
-.student-ban-can-su-lop-panel {
+.student-class-committee-panel {
   padding: 18px;
 }
 
-.student-ban-can-su-lop-panel__header {
+.student-class-committee-panel__header {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -254,14 +254,14 @@
   margin-bottom: 14px;
 }
 
-.student-ban-can-su-lop-panel__header h3 {
+.student-class-committee-panel__header h3 {
   margin: 0;
   font-size: 18px;
   font-weight: 800;
   color: #16233b;
 }
 
-.student-ban-can-su-lop-panel__header span {
+.student-class-committee-panel__header span {
   font-size: 12px;
   font-weight: 800;
   color: #2563ff;
@@ -270,7 +270,7 @@
   border-radius: 999px;
 }
 
-.student-ban-can-su-lop-list {
+.student-class-committee-list {
   margin: 0;
   padding-left: 18px;
   display: grid;
@@ -280,12 +280,12 @@
   line-height: 1.7;
 }
 
-.student-ban-can-su-lop-member-list {
+.student-class-committee-member-list {
   display: grid;
   gap: 12px;
 }
 
-.student-ban-can-su-lop-member-card {
+.student-class-committee-member-card {
   border: 1px solid #dfe5f0;
   border-radius: 16px;
   padding: 12px;
@@ -295,7 +295,7 @@
   background: linear-gradient(180deg, #ffffff 0%, #f9fbff 100%);
 }
 
-.student-ban-can-su-lop-member-card__avatar {
+.student-class-committee-member-card__avatar {
   width: 48px;
   height: 48px;
   border-radius: 14px;
@@ -309,56 +309,56 @@
   flex-shrink: 0;
 }
 
-.student-ban-can-su-lop-member-card__info {
+.student-class-committee-member-card__info {
   display: flex;
   flex-direction: column;
   gap: 4px;
 }
 
-.student-ban-can-su-lop-member-card__info strong {
+.student-class-committee-member-card__info strong {
   font-size: 15px;
   color: #16233b;
 }
 
-.student-ban-can-su-lop-member-card__info span {
+.student-class-committee-member-card__info span {
   font-size: 13px;
   color: #2563ff;
   font-weight: 700;
 }
 
-.student-ban-can-su-lop-member-card__info small {
+.student-class-committee-member-card__info small {
   font-size: 13px;
   color: #6f7c91;
   font-weight: 600;
 }
 
 @media (max-width: 1100px) {
-  .student-ban-can-su-lop-content {
+  .student-class-committee-content {
     grid-template-columns: 1fr;
   }
 
-  .student-ban-can-su-lop-highlights {
+  .student-class-committee-highlights {
     grid-template-columns: 1fr;
   }
 }
 
 @media (max-width: 900px) {
-  .student-ban-can-su-lop-page {
+  .student-class-committee-page {
     padding: 16px 12px 20px;
   }
 
-  .student-ban-can-su-lop-header,
-  .student-ban-can-su-lop-contact-box,
-  .student-ban-can-su-lop-panel__header {
+  .student-class-committee-header,
+  .student-class-committee-contact-box,
+  .student-class-committee-panel__header {
     flex-direction: column;
     align-items: stretch;
   }
 
-  .student-ban-can-su-lop-tabs {
+  .student-class-committee-tabs {
     grid-template-columns: 1fr;
   }
 
-  .student-ban-can-su-lop-tab {
+  .student-class-committee-tab {
     padding: 12px 14px;
   }
 }

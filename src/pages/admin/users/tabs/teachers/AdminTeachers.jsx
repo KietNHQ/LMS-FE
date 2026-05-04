@@ -13,6 +13,20 @@ const statusOptions = ["Tất cả trạng thái", "Hoạt động", "Tạm khó
 const classOptions = ["10A1", "10A2", "11B1", "11B2", "12C1", "12C2"];
 const ITEMS_PER_PAGE = 7;
 
+const getErrorMessage = (error, fallback) => {
+  const data = error?.response?.data;
+  if (!data) return fallback;
+
+  if (typeof data.message === "string") return data.message;
+  if (typeof data.error === "string") return data.error;
+  if (data.error && typeof data.error === "object" && typeof data.error.message === "string") {
+    return data.error.message;
+  }
+  if (typeof data === "object" && typeof data.message === "string") return data.message;
+
+  return fallback;
+};
+
 const emptyTeacherForm = {
   id: "",
   name: "",
@@ -24,12 +38,6 @@ const emptyTeacherForm = {
   assignedClasses: [],
   status: "Hoạt động",
   profile: {},
-};
-
-const getErrorMessage = (error, fallback) => {
-  const apiError = error?.response?.data?.error;
-  const apiMessage = error?.response?.data?.message;
-  return apiMessage || apiError || fallback;
 };
 
 const toTeacherForm = (teacher = {}) => ({

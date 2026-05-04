@@ -18,7 +18,8 @@ const StudentReviewModal = ({
   onAddEntry, 
   onRemoveEntry, 
   reviewTotalPoints, 
-  onSave 
+  onSave,
+  readOnly
 }) => {
   if (!student) return null;
 
@@ -26,7 +27,7 @@ const StudentReviewModal = ({
     <Modal
       open={!!student}
       onClose={onClose}
-      title="Điền thông tin ghi nhận"
+      title={readOnly ? "Thông tin ghi nhận" : "Điền thông tin ghi nhận"}
       className="tc-review-modal"
     >
       <div className="tc-review-dialog-content">
@@ -48,70 +49,76 @@ const StudentReviewModal = ({
         </div>
 
         <div className="tc-review-dialog-grid">
-          <div className="tc-review-dialog-field">
-            <label className="tc-detail-label" htmlFor="review-category">
-              Nhóm ghi nhận
-            </label>
-            <Select
-              variant="custom"
-              id="review-category"
-              value={reviewCategory}
-              onChange={(e) => onCategoryChange(e.target.value)}
-              options={Object.keys(REVIEW_CONTENT_MAPPING).map((category) => ({
-                value: category,
-                label: category
-              }))}
-            />
-          </div>
+          {!readOnly && (
+            <>
+              <div className="tc-review-dialog-field">
+                <label className="tc-detail-label" htmlFor="review-category">
+                  Nhóm ghi nhận
+                </label>
+                <Select
+                  variant="custom"
+                  id="review-category"
+                  value={reviewCategory}
+                  onChange={(e) => onCategoryChange(e.target.value)}
+                  options={Object.keys(REVIEW_CONTENT_MAPPING).map((category) => ({
+                    value: category,
+                    label: category
+                  }))}
+                />
+              </div>
 
-          <div className="tc-review-dialog-field">
-            <label className="tc-detail-label" htmlFor="review-content">
-              Nội dung
-            </label>
-            <Select
-              variant="custom"
-              id="review-content"
-              value={reviewContent.label}
-              onChange={(e) => {
-                const nextContent = REVIEW_CONTENT_MAPPING[reviewCategory].find(
-                  (item) => item.label === e.target.value
-                );
-                if (nextContent) {
-                  onContentChange(nextContent);
-                }
-              }}
-              options={REVIEW_CONTENT_MAPPING[reviewCategory].map((item) => ({
-                value: item.label,
-                label: item.label
-              }))}
-            />
-          </div>
+              <div className="tc-review-dialog-field">
+                <label className="tc-detail-label" htmlFor="review-content">
+                  Nội dung
+                </label>
+                <Select
+                  variant="custom"
+                  id="review-content"
+                  value={reviewContent.label}
+                  onChange={(e) => {
+                    const nextContent = REVIEW_CONTENT_MAPPING[reviewCategory].find(
+                      (item) => item.label === e.target.value
+                    );
+                    if (nextContent) {
+                      onContentChange(nextContent);
+                    }
+                  }}
+                  options={REVIEW_CONTENT_MAPPING[reviewCategory].map((item) => ({
+                    value: item.label,
+                    label: item.label
+                  }))}
+                />
+              </div>
 
-          <div className="tc-review-dialog-field tc-review-dialog-field--full">
-            <label className="tc-detail-label" htmlFor="review-note">
-              Ghi chú
-            </label>
-            <input
-              id="review-note"
-              className="tc-input"
-              type="text"
-              value={reviewNote}
-              onChange={(e) => setReviewNote(e.target.value)}
-              placeholder="Nhập ghi chú bổ sung..."
-            />
-          </div>
+              <div className="tc-review-dialog-field tc-review-dialog-field--full">
+                <label className="tc-detail-label" htmlFor="review-note">
+                  Ghi chú
+                </label>
+                <input
+                  id="review-note"
+                  className="tc-input"
+                  type="text"
+                  value={reviewNote}
+                  onChange={(e) => setReviewNote(e.target.value)}
+                  placeholder="Nhập ghi chú bổ sung..."
+                />
+              </div>
+            </>
+          )}
 
           <div className="tc-review-dialog-field tc-review-dialog-field--full tc-review-dialog-entry-box">
             <div className="tc-review-dialog-entry-box-top">
               <span className="tc-detail-label">ghi nhận đã chọn</span>
-              <button type="button" className="tc-review-dialog-add-entry-btn" onClick={onAddEntry}>
-                Thêm ghi nhận
-              </button>
+              {!readOnly && (
+                <button type="button" className="tc-review-dialog-add-entry-btn" onClick={onAddEntry}>
+                  Thêm ghi nhận
+                </button>
+              )}
             </div>
 
             {reviewEntries.length === 0 ? (
               <p className="tc-review-dialog-entry-empty">
-                Chọn nhóm ghi nhận, nội dung và ghi chú nếu cần, sau đó bấm thêm để tạo nhiều ô đánh giá.
+                {readOnly ? "Học sinh này chưa có ghi nhận nào trong tiết học này." : "Chọn nhóm ghi nhận, nội dung và ghi chú nếu cần, sau đó bấm thêm để tạo nhiều ô đánh giá."}
               </p>
             ) : (
               <div className="tc-review-dialog-entry-list">
@@ -129,13 +136,15 @@ const StudentReviewModal = ({
                         <span className={`tc-review-dialog-score-badge ${entry.pts >= 0 ? "positive" : "negative"}`}>
                           {pointLabel} điểm
                         </span>
-                        <button
-                          type="button"
-                          className="tc-review-dialog-entry-remove"
-                          onClick={() => onRemoveEntry(entry.id)}
-                        >
-                          Xóa
-                        </button>
+                        {!readOnly && (
+                          <button
+                            type="button"
+                            className="tc-review-dialog-entry-remove"
+                            onClick={() => onRemoveEntry(entry.id)}
+                          >
+                            Xóa
+                          </button>
+                        )}
                       </div>
                     </div>
                   );
@@ -151,12 +160,14 @@ const StudentReviewModal = ({
 
         <div className="tc-review-dialog-actions">
           <button type="button" className="tc-review-dialog-btn secondary" onClick={onClose}>
-            Hủy
+            {readOnly ? "Đóng" : "Hủy"}
           </button>
-          <button type="button" className="tc-review-dialog-btn primary" onClick={onSave}>
-            <FiCheck />
-            Lưu ghi nhận
-          </button>
+          {!readOnly && (
+            <button type="button" className="tc-review-dialog-btn primary" onClick={onSave}>
+              <FiCheck />
+              Lưu ghi nhận
+            </button>
+          )}
         </div>
       </div>
     </Modal>

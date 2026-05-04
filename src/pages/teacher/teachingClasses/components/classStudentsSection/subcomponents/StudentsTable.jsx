@@ -1,5 +1,5 @@
 import React from "react";
-import { FiEdit3 } from "react-icons/fi";
+import { FiEdit3, FiEye } from "react-icons/fi";
 import { formatDate } from "../../../utils/teachingClassesUtils";
 import "./StudentsTable.css";
 
@@ -9,7 +9,8 @@ const StudentsTable = ({
   onToggleAttendance, 
   onOpenReview, 
   effectivePage, 
-  itemsPerPage 
+  itemsPerPage,
+  readOnly
 }) => {
   return (
     <div className="table-wrapper">
@@ -42,24 +43,27 @@ const StudentsTable = ({
               <td className="student-dob">{formatDate(student.dob)}</td>
               <td className="student-parent">{student.parentName}</td>
               <td className="student-phone">{student.parentPhone}</td>
+              
               <td className="student-review-cell">
                 <div className="review-display">
                   <button
                     type="button"
                     className="review-icon-btn"
                     onClick={() => onOpenReview(student)}
-                    aria-label={`Đánh giá học sinh ${student.name}`}
+                    aria-label={`Xem đánh giá học sinh ${student.name}`}
                   >
-                    <FiEdit3 />
+                    {readOnly ? <FiEye /> : <FiEdit3 />}
                   </button>
                 </div>
               </td>
+              
               <td className="student-attendance-cell">
                 <label className="attendance-checkbox">
                   <input
                     type="checkbox"
                     checked={!!studentAttendance[student.id]}
-                    onChange={() => onToggleAttendance(student.id)}
+                    onChange={() => !readOnly && onToggleAttendance(student.id)}
+                    disabled={readOnly}
                     aria-label={`Đi học ${student.name}`}
                   />
                 </label>

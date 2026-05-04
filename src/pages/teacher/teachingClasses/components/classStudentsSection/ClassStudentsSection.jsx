@@ -21,7 +21,7 @@ import Pagination from "./subcomponents/Pagination";
 
 const ITEMS_PER_PAGE = 8;
 
-const ClassStudentsSection = ({ students }) => {
+const ClassStudentsSection = ({ students, readOnly = false }) => {
   // --- State ---
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
@@ -339,6 +339,7 @@ const ClassStudentsSection = ({ students }) => {
         availableReviewDates={availableReviewDates}
         reviewsForSelectedDate={reviewsForSelectedDate}
         onTodayClick={handleBackToToday}
+        readOnly={readOnly}
         calendarProps={{
           calendarMonthLabel,
           calendarViewDate,
@@ -365,6 +366,7 @@ const ClassStudentsSection = ({ students }) => {
         onRemoveEntry={removeReviewEntry}
         reviewTotalPoints={reviewTotalPoints}
         onSave={saveReview}
+        readOnly={readOnly}
       />
 
       <LessonReviewModal 
@@ -388,6 +390,7 @@ const ClassStudentsSection = ({ students }) => {
         onOpenReview={openReviewDialog}
         effectivePage={effectivePage}
         itemsPerPage={ITEMS_PER_PAGE}
+        readOnly={readOnly}
       />
 
       <Pagination 

@@ -60,7 +60,7 @@ const ClassDetailView = lazy(
   () => import("../pages/student/classes/components/ClassDetailView/ClassDetailView")
 );
 const StudentGrades = lazy(() => import("../pages/student/grades/StudentGrades"));
-const StudentBanCanSuLop = lazy(() => import("../pages/student/ban-can-su-lop/StudentBanCanSuLop.jsx"));
+const StudentClassCommittee = lazy(() => import("../pages/student/class-committee/StudentClassCommittee.jsx"));
 const StudentQuiz = lazy(() => import("../pages/student/quiz/StudentQuiz"));
 const StudentNotifications = lazy(
   () => import("../pages/student/notification/StudentNotifications")
@@ -205,7 +205,7 @@ export default function AppRoutes() {
         <Route path="classes" element={<StudentClasses />} />
         <Route path="classes/:classId" element={<ClassDetailView />} />
         <Route path="grades" element={<StudentGrades />} />
-        <Route path="ban-can-su-lop" element={<StudentBanCanSuLop />} />
+        <Route path="class-committee" element={<StudentClassCommittee />} />
         <Route path="quiz" element={<StudentQuiz />} />
         <Route path="notifications" element={<StudentNotifications />} />
         <Route path="schedule" element={<StudentSchedule />} />

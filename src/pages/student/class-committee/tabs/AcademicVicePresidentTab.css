@@ -1,0 +1,109 @@
+.academic-vice-president-tab {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* Override Teacher theme to Student theme (Navy Blue) */
+.tc-student-theme-override {
+  --tc-primary: #2563ff;
+  --tc-primary-strong: #1a4cd8;
+  --tc-primary-soft: #f8fbff;
+  --tc-border: #dfe5f0;
+  --tc-text-main: #16233b;
+  --tc-text-subtle: #5f6f89;
+  --tc-shadow: rgba(37, 99, 255, 0.12);
+}
+
+.tc-student-theme-override .tc-open-form-btn,
+.tc-student-theme-override .tc-review-dialog-add-entry-btn,
+.tc-student-theme-override .tc-review-dialog-btn.primary,
+.tc-student-theme-override .tc-add-btn {
+  border-color: #1a4cd8;
+  background: linear-gradient(180deg, #2563ff 0%, #1a4cd8 100%);
+  box-shadow: 0 10px 24px rgba(37, 99, 255, 0.22);
+}
+
+.tc-student-theme-override .tc-open-form-btn:hover,
+.tc-student-theme-override .tc-review-dialog-btn.primary:hover,
+.tc-student-theme-override .tc-add-btn:hover {
+  box-shadow: 0 14px 28px rgba(37, 99, 255, 0.28);
+}
+
+.tc-student-theme-override .tc-review-dialog-preview {
+  border-color: #dfe5f0;
+  border-left-color: #2563ff;
+  background: #f8fbff;
+}
+
+.tc-student-theme-override .lesson-timeline {
+  background: linear-gradient(180deg, #f8fbff 0%, #eef4ff 100%);
+}
+
+.tc-student-theme-override .lesson-history-item small {
+  color: #5f6f89;
+}
+
+.tc-student-theme-override .tc-review-dialog-preview--text {
+  border-left-color: #4f8cff;
+}
+
+.tc-student-theme-override .lesson-history-item {
+  border-color: #dfe5f0;
+  border-left-color: #2563ff;
+  background: #f8fbff;
+}
+
+.tc-student-theme-override .lesson-history-calendar-btn,
+.tc-student-theme-override .lesson-calendar-nav-btn {
+  border-color: #dfe5f0;
+  color: #2563ff;
+}
+
+.tc-student-theme-override .lesson-history-calendar-btn:hover,
+.tc-student-theme-override .lesson-calendar-nav-btn:hover {
+  border-color: #2563ff;
+  background: #f8fbff;
+}
+
+.tc-student-theme-override .lesson-calendar-day.today {
+  border-color: #2563ff;
+}
+
+.tc-student-theme-override .lesson-calendar-day.has-review {
+  background: #eef4ff;
+  color: #2563ff;
+}
+
+.tc-student-theme-override .lesson-history-date-picker input[type="date"] {
+  border-color: #dfe5f0;
+}
+
+.tc-student-theme-override .tc-review-dialog-entry-empty {
+  border-color: #dfe5f0;
+}
+
+.tc-student-theme-override .tc-review-dialog-entry-card {
+  border-color: #dfe5f0;
+}
+
+.tc-student-theme-override .tc-review-dialog-entry-box {
+  background: #f8fbff;
+}
+
+.tc-student-theme-override .tc-review-dialog-btn.secondary {
+  border-color: #dfe5f0;
+}
+
+.tc-student-theme-override .tc-review-dialog-btn.secondary:hover {
+  border-color: #b9cbff;
+  background: #f8fbff;
+}
+
+.tc-student-theme-override .lesson-history {
+  border-top-color: #dfe5f0;
+}
+
+.tc-student-theme-override .lesson-calendar-popover {
+  border-color: #dfe5f0;
+}
