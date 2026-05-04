@@ -9,7 +9,8 @@ export default function ConfirmationModal({
     cancelLabel = "Hủy", 
     onConfirm, 
     onCancel, 
-    variant = "primary" 
+    variant = "primary",
+    children
 }) {
     if (!isOpen) return null;
 
@@ -24,6 +25,7 @@ export default function ConfirmationModal({
                 </div>
                 <div className="admin-confirm-modal-body">
                     <p>{message}</p>
+                    {children}
                 </div>
                 <div className="admin-confirm-modal-footer">
                     <button className="admin-confirm-btn cancel" onClick={onCancel}>

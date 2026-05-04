@@ -13,25 +13,25 @@ export const authService = {
 
   changePassword: async (data) => axiosClient.post("/auth/change-password", data),
 
-  // Quan ly user cho trang admin
-  listUsers: async (params) => axiosClient.get("/auth/users", { params }),
+  // Quan ly user cho trang admin (Canonical endpoints)
+  listUsers: async (params) => axiosClient.get("/users", { params }),
 
-  createUser: async (userData) => axiosClient.post("/auth/users", userData),
+  createUser: async (userData) => axiosClient.post("/users", userData),
 
   importUsers: async (formData) =>
-    axiosClient.post("/auth/users/import", formData, {
+    axiosClient.post("/users/import", formData, {
       headers: {
         "Content-Type": "multipart/form-data",
       },
     }),
 
   downloadImportTemplate: async () =>
-    axiosClient.get("/auth/users/import/template", {
+    axiosClient.get("/users/import/template", {
       responseType: "blob",
     }),
 
-  updateUser: async (id, data) => axiosClient.put(`/auth/users/${id}`, data),
+  updateUser: async (id, data) => axiosClient.put(`/users/${id}`, data),
 
-  deleteUser: async (id) => axiosClient.delete(`/auth/users/${id}`),
+  deleteUser: async (id) => axiosClient.delete(`/users/${id}`),
 };
 

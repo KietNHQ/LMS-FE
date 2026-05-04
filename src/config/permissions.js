@@ -40,88 +40,87 @@ import { RiParentFill } from "react-icons/ri";
 
 export const PERMISSIONS = {
     // 1. Nhóm Người dùng (User)
-    USER_VIEW: 'user.view',
-    USER_CREATE: 'user.create',
-    USER_UPDATE: 'user.update',
-    USER_DELETE: 'user.delete',
-    USER_LOCK: 'user.lock',
-    USER_IMPORT: 'user.import',
-    USER_ASSIGN_PERMISSION: 'user.assign_permission_limited',
-    SYSTEM_LOG_VIEW: 'system_log.view',
-    PERMISSION_AUDIT_VIEW: 'permission_audit.view',
+    USER_VIEW: 'users:read',
+    USER_CREATE: 'users:create',
+    USER_UPDATE: 'users:update',
+    USER_DELETE: 'users:delete',
+    USER_LOCK: 'users:update',
+    USER_IMPORT: 'import:create',
+    USER_ASSIGN_PERMISSION: 'users:assign_role',
+    SYSTEM_LOG_VIEW: 'audit_logs:read',
+    PERMISSION_AUDIT_VIEW: 'audit_logs:sensitive',
 
     // 2. Nhóm Lớp học (Class)
-    CLASS_VIEW: 'class.view',
-    CLASS_CREATE: 'class.create',
-    CLASS_UPDATE: 'class.update',
-    CLASS_DELETE: 'class.delete',
-    CLASS_VIEW_OWN: 'class.view_own', // Quyền GV xem lớp của mình
+    CLASS_VIEW: 'class_allocation:read',
+    CLASS_CREATE: 'class_allocation:create',
+    CLASS_UPDATE: 'class_allocation:update',
+    CLASS_DELETE: 'class_allocation:update',
+    CLASS_VIEW_OWN: 'class_allocation:read',
 
     // 3. Nhóm Nề nếp (Discipline)
-    DISCIPLINE_VIEW: 'discipline.view',
-    DISCIPLINE_CREATE: 'discipline.create',
-    DISCIPLINE_UPDATE: 'discipline.update',
-    DISCIPLINE_PROCESS: 'discipline.process',
-    DISCIPLINE_DELETE: 'discipline.delete',
-    DISCIPLINE_HIDE: 'discipline.hide',
-    DISCIPLINE_EXPORT: 'discipline.export',
-    COMPETITION_MANAGE: 'competition.manage_school',
+    DISCIPLINE_VIEW: 'discipline:read',
+    DISCIPLINE_CREATE: 'discipline:create',
+    DISCIPLINE_UPDATE: 'discipline:create',
+    DISCIPLINE_PROCESS: 'discipline:approve',
+    DISCIPLINE_DELETE: 'discipline:create',
+    DISCIPLINE_EXPORT: 'discipline:export',
+    COMPETITION_MANAGE: 'discipline:read',
 
     // 4. Nhóm Điểm số (Grade)
-    GRADE_VIEW: 'grade.view',
-    GRADE_UPDATE: 'grade.update',
-    GRADE_APPROVE: 'grade.approve',
-    GRADE_REMIND: 'grade.remind',
-    GRADE_AUDIT_VIEW: 'grade.audit_view',
-    GRADE_EXPORT: 'grade.export',
-    GRADE_VIEW_OWN: 'grade.view_own', // Học sinh / Phụ huynh
+    GRADE_VIEW: 'grades:read',
+    GRADE_UPDATE: 'grades:update',
+    GRADE_APPROVE: 'grades:finalize',
+    GRADE_REMIND: 'grades:read',
+    GRADE_AUDIT_VIEW: 'audit_logs:sensitive',
+    GRADE_EXPORT: 'grades:export',
+    GRADE_VIEW_OWN: 'grades:read',
 
     // 5. Nhóm Kiểm tra (Quiz)
-    QUIZ_VIEW: 'quiz.view',
-    QUIZ_CREATE: 'quiz.create',
-    QUIZ_UPDATE: 'quiz.update',
-    QUIZ_DELETE: 'quiz.delete',
-    QUIZ_PUBLISH: 'quiz.publish',
+    QUIZ_VIEW: 'exam:read',
+    QUIZ_CREATE: 'exam:create',
+    QUIZ_UPDATE: 'exam:update',
+    QUIZ_DELETE: 'exam:delete',
+    QUIZ_PUBLISH: 'exam:update',
 
     // 6. Nhóm TKB (Timetable)
-    TIMETABLE_VIEW: 'timetable.view',
-    TIMETABLE_CREATE: 'timetable.create',
-    TIMETABLE_UPDATE: 'timetable.update',
-    TIMETABLE_DELETE: 'timetable.delete',
-    TIMETABLE_RESOLVE_CONFLICT: 'timetable.resolve_conflict',
-    SCHEDULE_VIEW_OWN: 'schedule.view_own',
+    TIMETABLE_VIEW: 'class_allocation:read',
+    TIMETABLE_CREATE: 'class_allocation:create',
+    TIMETABLE_UPDATE: 'class_allocation:update',
+    TIMETABLE_DELETE: 'class_allocation:update',
+    TIMETABLE_RESOLVE_CONFLICT: 'class_allocation:update',
+    SCHEDULE_VIEW_OWN: 'class_allocation:read',
 
     // 7. Nhóm Tài chính (Finance)
-    FINANCE_TUITION_VIEW: 'finance.tuition.view',
-    FINANCE_TUITION_UPDATE: 'finance.tuition.update',
-    FINANCE_TUITION_UPDATE_DUEDATE: 'finance.tuition.update_duedate',
-    FINANCE_TUITION_PUBLISH: 'finance.tuition.publish',
-    FINANCE_VIEW_OWN: 'finance.view_own',
+    FINANCE_TUITION_VIEW: 'fees:read',
+    FINANCE_TUITION_UPDATE: 'fees:update',
+    FINANCE_TUITION_UPDATE_DUEDATE: 'fees:update',
+    FINANCE_TUITION_PUBLISH: 'fees:update',
+    FINANCE_VIEW_OWN: 'fees:read',
     
     // 8. Nhóm Thông báo (Notification)
-    NOTIFICATION_VIEW: 'notification.view',
-    NOTIFICATION_CREATE: 'notification.create',
-    NOTIFICATION_DELETE: 'notification.delete',
+    NOTIFICATION_VIEW: 'notifications:read',
+    NOTIFICATION_CREATE: 'notifications:create',
+    NOTIFICATION_DELETE: 'notifications:delete',
 
     // 9. Nhóm Báo cáo (Report)
-    REPORT_ACADEMIC_VIEW: 'report.academic.view',
-    REPORT_FINANCE_VIEW: 'report.finance.view',
-    REPORT_DISCIPLINE_VIEW: 'report.discipline.view',
+    REPORT_ACADEMIC_VIEW: 'reports:read',
+    REPORT_FINANCE_VIEW: 'reports:read',
+    REPORT_DISCIPLINE_VIEW: 'reports:read',
 
     // 10. Nhóm Phòng thi & Coi thi (Exam Session)
-    EXAM_SESSION_MANAGE: 'exam.session.manage',
-    EXAM_PROCTOR_MANAGE: 'exam.proctor.manage',
+    EXAM_SESSION_MANAGE: 'exam:create',
+    EXAM_PROCTOR_MANAGE: 'exam:update',
 
     // 11. Hệ thống & Cài đặt (System)
-    SYSTEM_SETTING_UPDATE: 'system.setting.update',
+    SYSTEM_SETTING_UPDATE: 'system_config:update',
     
     // Core Basic (dành cho các user cơ bản)
-    TEACHER_BASIC: 'teacher.basic',
-    STUDENT_VIEW_OWN: 'student.view_own',
-    STUDENT_MONITOR: 'student.monitor',
-    STUDENT_ACADEMIC_VICE: 'student.academic_vice',
-    PARENT_VIEW_OWN: 'parent.view_own',
-    ATTENDANCE_VIEW_OWN: 'attendance.view_own',
+    TEACHER_BASIC: 'grades:read',
+    STUDENT_VIEW_OWN: 'grades:read',
+    STUDENT_MONITOR: 'discipline:read',
+    STUDENT_ACADEMIC_VICE: 'grades:read',
+    PARENT_VIEW_OWN: 'grades:read',
+    ATTENDANCE_VIEW_OWN: 'attendance:read',
 };
 
 // Map các tính năng Sidebar với Permission tương ứng.

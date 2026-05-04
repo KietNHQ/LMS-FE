@@ -176,5 +176,22 @@ export const userService = {
       })
     );
   },
+
+  resetPassword: async (userId, { adminPassword, newPassword }) => {
+    return requestWithEndpointFallback((basePath) =>
+      axiosClient.post(`${basePath}/${userId}/reset-password`, {
+        adminPassword,
+        newPassword,
+      })
+    );
+  },
+
+  updateStatus: async (userId, status) => {
+    return requestWithEndpointFallback((basePath) =>
+      axiosClient.put(`${basePath}/${userId}`, {
+        status: statusToApi[status] || status,
+      })
+    );
+  },
 };
 

@@ -37,7 +37,16 @@ axiosClient.interceptors.response.use(
   (response) => response.data,
   async (error) => {
     const originalRequest = error.config;
+    const errorData = error.response?.data;
 
+    // 1. Xu ly loi bat buoc doi mat khau (BE Issue #10)
+    if (error.response?.status === 403 && errorData?.error === "REQUIRE_PASSWORD_CHANGE") {
+      // Co the emit event hoac luu vao store de hien thi Dialog doi mat khau bat buoc
+      console.warn("User must change password:", errorData.message);
+      return Promise.reject(error);
+    }
+
+    // 2. Bat 401 va thu refresh token
     if (error.response?.status === 401 && !originalRequest._retry) {
       if (originalRequest.url.includes("/auth/login") || originalRequest.url.includes("/auth/refresh")) {
         return Promise.reject(error);

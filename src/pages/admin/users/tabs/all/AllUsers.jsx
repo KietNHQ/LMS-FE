@@ -6,6 +6,7 @@ import "./AllUsers.css";
 import UsersSearchFilterSort from "./components/usersSearchFilterSort/UsersSearchFilterSort";
 import UserDetailSection from "./components/userDetailSection/userDetailSection";
 import { CreateUserDialog, Pagination, LoadingSpinner, ConfirmationModal } from "../../../../../components/common";
+import { useCheckPermission } from "../../../../../hooks/useAuth";
 import { userService, studentsService } from "../../../../../services/pages/admin/users";
 
 // Detail Section Imports
@@ -41,7 +42,8 @@ const buildDownloadFilename = (headers = {}) => {
     }
 };
 
-export default function AllUsers({ onCountChange, hasPermission, currentUser }) {
+export default function AllUsers({ onCountChange, hasPermission, currentUser: propCurrentUser }) {
+    const { user: adminUser } = useCheckPermission();
     const [users, setUsers] = useState([]);
     const [isLoadingUsers, setIsLoadingUsers] = useState(false);
     const [loadError, setLoadError] = useState("");
@@ -71,10 +73,18 @@ export default function AllUsers({ onCountChange, hasPermission, currentUser }) 
         message: "",
         confirmLabel: "",
         onConfirm: () => {},
-        variant: "primary"
+        variant: "primary",
+        showNewPassword: false
     });
 
-    const closeConfirm = () => setConfirmConfig(prev => ({ ...prev, isOpen: false }));
+    const [adminPasswordInput, setAdminPasswordInput] = useState("");
+    const [newPasswordInput, setNewPasswordInput] = useState("");
+
+    const closeConfirm = () => {
+        setConfirmConfig(prev => ({ ...prev, isOpen: false }));
+        setAdminPasswordInput("");
+        setNewPasswordInput("");
+    };
 
     const loadUsers = useCallback(async () => {
         setIsLoadingUsers(true);
@@ -205,15 +215,17 @@ export default function AllUsers({ onCountChange, hasPermission, currentUser }) 
     const handleBulkResetPassword = async () => {
         if (selectedUserIds.length === 0) return;
         
+        setAdminPasswordInput("");
         setConfirmConfig({
             isOpen: true,
-            title: "Đặt lại mật khẩu",
-            message: `Bạn có chắc chắn muốn ĐẶT LẠI MẬT KHẨU cho ${selectedUserIds.length} tài khoản đã chọn?`,
+            title: "Xác minh quyền Admin",
+            message: `Để đặt lại mật khẩu cho ${selectedUserIds.length} tài khoản, vui lòng nhập mật khẩu Admin của bạn:`,
             confirmLabel: "Đặt lại mật khẩu",
             variant: "primary",
             onConfirm: async () => {
-                closeConfirm();
-                setIsBulkToggling(true);
+                // Ta thực hiện reset password từng người một (vì BE reset-password là endpoint theo userId)
+                // Hoặc admin có thể chỉ reset cho 1 người, bulk reset password này cần cân nhắc logic BE.
+                // Hiện tại BE yêu cầu userId trên URL. Nên ta loop.
                 try {
                     const results = [];
                     for (const id of selectedUserIds) {
@@ -221,18 +233,20 @@ export default function AllUsers({ onCountChange, hasPermission, currentUser }) 
                         if (!user) continue;
                         
                         const generatedPwd = Math.random().toString(36).slice(-10);
-                        await userService.updateUser(id, { ...user, password: generatedPwd });
+                        await userService.resetPassword(id, { 
+                            adminPassword: adminPasswordInput, 
+                            newPassword: generatedPwd 
+                        });
                         results.push({ name: user.name, password: generatedPwd });
                     }
                     
+                    closeConfirm();
                     await loadUsers();
                     
                     const resultMsg = results.map(r => `${r.name}: ${r.password}`).join("\n");
                     window.alert(`Đặt lại mật khẩu thành công cho ${results.length} người dùng:\n\n${resultMsg}`);
                 } catch (error) {
-                    window.alert(getErrorMessage(error, "Có lỗi xảy ra khi đặt lại mật khẩu hàng loạt."));
-                } finally {
-                    setIsBulkToggling(false);
+                    window.alert(getErrorMessage(error, "Có lỗi xảy ra khi đặt lại mật khẩu hàng loạt. Kiểm tra lại mật khẩu Admin."));
                 }
             }
         });
@@ -241,20 +255,45 @@ export default function AllUsers({ onCountChange, hasPermission, currentUser }) 
     const handleResetPassword = async (user) => {
         if (!user) return;
         
+        const isSelf = user.id === adminUser?.id || user.email === adminUser?.email;
+        setAdminPasswordInput("");
+        setNewPasswordInput("");
+        
         setConfirmConfig({
             isOpen: true,
-            title: "Đặt lại mật khẩu",
-            message: `Bạn có chắc chắn muốn đặt lại mật khẩu cho người dùng ${user.name}?`,
+            title: "Xác minh quyền Admin",
+            message: isSelf 
+                ? `Thiết lập mật khẩu mới cho chính bạn (${user.name}):`
+                : `Xác nhận đặt lại mật khẩu cho ${user.name}. Hệ thống sẽ tự sinh mật khẩu mới.`,
             confirmLabel: "Đặt lại mật khẩu",
             variant: "primary",
+            showNewPassword: isSelf,
             onConfirm: async () => {
-                closeConfirm();
                 try {
-                    const generatedPwd = Math.random().toString(36).slice(-10);
-                    await userService.updateUser(user.id, { ...user, password: generatedPwd });
-                    window.alert(`Đặt lại mật khẩu thành công cho ${user.name}.\nMật khẩu mới là: ${generatedPwd}`);
+                    let targetNewPassword = "";
+                    if (isSelf) {
+                        if (!newPasswordInput.trim()) {
+                            window.alert("Vui lòng nhập mật khẩu mới.");
+                            return;
+                        }
+                        targetNewPassword = newPasswordInput;
+                    } else {
+                        targetNewPassword = Math.random().toString(36).slice(-10);
+                    }
+
+                    await userService.resetPassword(user.id, { 
+                        adminPassword: adminPasswordInput, 
+                        newPassword: targetNewPassword 
+                    });
+                    
+                    closeConfirm();
+                    if (isSelf) {
+                        window.alert("Đã đổi mật khẩu của bạn thành công.");
+                    } else {
+                        window.alert(`Đặt lại mật khẩu thành công cho ${user.name}.\nMật khẩu mới là: ${targetNewPassword}`);
+                    }
                 } catch (error) {
-                    window.alert(getErrorMessage(error, "Không thể đặt lại mật khẩu."));
+                    window.alert(getErrorMessage(error, "Xác thực Admin thất bại hoặc lỗi hệ thống."));
                 }
             }
         });
@@ -547,7 +586,7 @@ export default function AllUsers({ onCountChange, hasPermission, currentUser }) 
                         onToggleStatus={setStatusTarget}
                         onResetPassword={hasPermission(PERMISSIONS.USER_UPDATE) ? handleResetPassword : null}
                         onDelete={handleDeleteUser}
-                        currentUser={currentUser}
+                        currentUser={adminUser}
                         hasPermission={hasPermission}
                     />
 
@@ -662,7 +701,47 @@ export default function AllUsers({ onCountChange, hasPermission, currentUser }) 
                 variant={confirmConfig.variant}
                 onConfirm={confirmConfig.onConfirm}
                 onCancel={closeConfirm}
-            />
+            >
+                {confirmConfig.title === "Xác minh quyền Admin" && (
+                    <div style={{ marginTop: "1rem", display: "flex", flexDirection: "column", gap: "1rem" }}>
+                        <div>
+                            <label style={{ fontSize: "0.85rem", color: "#666", marginBottom: "4px", display: "block" }}>Mật khẩu Admin của bạn:</label>
+                            <input
+                                type="password"
+                                placeholder="Nhập mật khẩu Admin để xác thực"
+                                value={adminPasswordInput}
+                                onChange={(e) => setAdminPasswordInput(e.target.value)}
+                                autoFocus
+                                style={{
+                                    width: "100%",
+                                    padding: "0.75rem",
+                                    borderRadius: "8px",
+                                    border: "1px solid #ddd",
+                                    fontSize: "1rem"
+                                }}
+                            />
+                        </div>
+                        {confirmConfig.showNewPassword && (
+                            <div>
+                                <label style={{ fontSize: "0.85rem", color: "#666", marginBottom: "4px", display: "block" }}>Mật khẩu MỚI cho bạn:</label>
+                                <input
+                                    type="text"
+                                    placeholder="Nhập mật khẩu mới tại đây"
+                                    value={newPasswordInput}
+                                    onChange={(e) => setNewPasswordInput(e.target.value)}
+                                    style={{
+                                        width: "100%",
+                                        padding: "0.75rem",
+                                        borderRadius: "8px",
+                                        border: "1px solid #ddd",
+                                        fontSize: "1rem"
+                                    }}
+                                />
+                            </div>
+                        )}
+                    </div>
+                )}
+            </ConfirmationModal>
         </div>
     );
 }
