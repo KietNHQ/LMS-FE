@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { FiEdit2, FiTrash2, FiUserX, FiUserCheck, FiKey, FiMoreHorizontal } from "react-icons/fi";
+import { FiEdit2, FiTrash2, FiUserX, FiUserCheck, FiKey, FiMoreHorizontal, FiEye, FiShield } from "react-icons/fi";
 import "./studentListSection.css";
 
 function getAvatarLetter(name) {
@@ -85,7 +85,10 @@ export default function StudentListSection({
                         {students.length === 0 ? (
                             <tr>
                                 <td colSpan="8" className="student-empty-row">
-                                    {emptyMessage}
+                                    <div className="user-detail-empty">
+                                        <FiShield size={42} strokeWidth={1.5} />
+                                        <p>{emptyMessage}</p>
+                                    </div>
                                 </td>
                             </tr>
                         ) : (
@@ -142,6 +145,10 @@ export default function StudentListSection({
 
                                                     {isMenuOpen && (
                                                         <div className="student-actions-menu">
+                                                            <button className="student-menu-item" onClick={() => { onSelectStudent(student); setOpenMenuId(null); }}>
+                                                                <FiEye />
+                                                                <span>Xem chi tiết</span>
+                                                            </button>
                                                             <button className="student-menu-item" onClick={() => { onEdit(student); setOpenMenuId(null); }}>
                                                                 <FiEdit2 />
                                                                 <span>Chỉnh sửa</span>
@@ -152,7 +159,7 @@ export default function StudentListSection({
                                                                 onClick={() => { onToggleStatus(student); setOpenMenuId(null); }}
                                                             >
                                                                 {student.status === "Đang học" ? <FiUserX /> : <FiUserCheck />}
-                                                                <span>{student.status === "Đang học" ? "Khóa" : "Kích hoạt"}</span>
+                                                                <span>{student.status === "Đang học" ? "Vô hiệu hóa" : "Kích hoạt"}</span>
                                                             </button>
 
                                                             {onResetPassword && (

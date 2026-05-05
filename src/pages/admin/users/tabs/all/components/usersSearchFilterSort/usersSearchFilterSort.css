@@ -112,6 +112,29 @@
     font-weight: 700;
 }
 
+/* Status Select Styling */
+.users-status-select {
+    min-width: 160px;
+}
+
+.users-status-select .custom-dropdown-trigger {
+    height: 2.75rem;
+    background: #ffffff;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #1e2f5a;
+}
+
+.users-status-select .custom-dropdown-trigger:hover {
+    border-color: #cbd5e1;
+}
+
+.users-status-select .custom-dropdown-trigger.open {
+    border-color: #1e2f5a;
+}
+
 /* Global Button Style for Admin Users */
 .accounts-overview-add-btn {
     display: flex;

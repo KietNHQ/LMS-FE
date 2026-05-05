@@ -9,8 +9,24 @@ import TeacherInformationSection from "./components/teacherInformationSection/te
 import TeacherDetailSection from "./components/TeacherDetailSection/TeacherDetailSection";
 import { teachersService, userService } from "../../../../../services/pages/admin/users";
 
-const statusOptions = ["Tất cả trạng thái", "Hoạt động", "Tạm khóa"];
+const statusOptions = ["Tất cả trạng thái", "Hoạt động", "Vô hiệu hóa"];
 const classOptions = ["10A1", "10A2", "11B1", "11B2", "12C1", "12C2"];
+const DEFAULT_SUBJECTS = [
+  "Toán học",
+  "Ngữ văn",
+  "Tiếng Anh",
+  "Vật lý",
+  "Hóa học",
+  "Sinh học",
+  "Lịch sử",
+  "Địa lý",
+  "Tin học",
+  "GDCD",
+  "Thể dục",
+  "Công nghệ",
+  "Mỹ thuật",
+  "Âm nhạc"
+];
 const ITEMS_PER_PAGE = 7;
 
 const getErrorMessage = (error, fallback) => {
@@ -53,7 +69,7 @@ const toTeacherForm = (teacher = {}) => ({
   profile: teacher.profile || {},
 });
 
-export default function AdminTeachers({ onCountChange, hasPermission, currentUser }) {
+export default function AdminTeachers({ onCountChange, schoolYear, term, hasPermission, currentUser }) {
   const [teachers, setTeachers] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [loadError, setLoadError] = useState("");
@@ -117,13 +133,10 @@ export default function AdminTeachers({ onCountChange, hasPermission, currentUse
     loadTeachers();
   }, [loadTeachers]);
 
-  useEffect(() => {
-    onCountChange?.(teachers.length);
-  }, [teachers.length, onCountChange]);
-
   const subjectOptions = useMemo(() => {
-    const subjects = teachers.map((teacher) => teacher.subject).filter(Boolean);
-    return ["Tất cả môn", ...new Set(subjects)];
+    const dataSubjects = teachers.map((teacher) => teacher.subject).filter(Boolean);
+    const combined = Array.from(new Set([...DEFAULT_SUBJECTS, ...dataSubjects]));
+    return ["Tất cả môn", ...combined.sort((a, b) => a.localeCompare(b, "vi"))];
   }, [teachers]);
 
   const editableSubjectOptions = useMemo(() => {
@@ -143,10 +156,17 @@ export default function AdminTeachers({ onCountChange, hasPermission, currentUse
 
       const matchStatus = selectedStatus === "Tất cả trạng thái" || teacher.status === selectedStatus;
       const matchSubject = selectedSubject === "Tất cả môn" || teacher.subject === selectedSubject;
+      
+      // Nếu có năm học/học kỳ, đảm bảo giáo viên đang hoạt động
+      const isActiveInTerm = !schoolYear || teacher.status === "Hoạt động";
 
-      return matchSearch && matchStatus && matchSubject;
+      return matchSearch && matchStatus && matchSubject && isActiveInTerm;
     });
-  }, [teachers, searchTerm, selectedStatus, selectedSubject]);
+  }, [teachers, searchTerm, selectedStatus, selectedSubject, schoolYear, term]);
+
+  useEffect(() => {
+    onCountChange?.(filteredTeachers.length);
+  }, [filteredTeachers.length, onCountChange]);
 
   const hasFilteredTeachers = filteredTeachers.length > 0;
   const shouldRenderDataSection = !isLoading && !loadError;

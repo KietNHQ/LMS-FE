@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { FiEdit2, FiTrash2, FiBarChart2, FiUserX, FiUserCheck, FiKey, FiMoreHorizontal } from "react-icons/fi";
+import { FiEdit2, FiTrash2, FiEye, FiUserX, FiUserCheck, FiKey, FiMoreHorizontal, FiShield } from "react-icons/fi";
 import "./teacherListSection.css";
 
 function getAvatarLetter(name) {
@@ -66,7 +66,10 @@ export default function TeacherListSection({
 						{teachers.length === 0 ? (
 							<tr>
 								<td colSpan="7" className="teacher-empty-row">
-									{emptyMessage}
+									<div className="user-detail-empty">
+										<FiShield size={42} strokeWidth={1.5} />
+										<p>{emptyMessage}</p>
+									</div>
 								</td>
 							</tr>
 						) : (
@@ -137,8 +140,8 @@ export default function TeacherListSection({
                                                     {isMenuOpen && (
                                                         <div className="teacher-actions-menu">
                                                             <button className="teacher-menu-item" onClick={() => { onSelectTeacher(teacher); setOpenMenuId(null); }}>
-                                                                <FiBarChart2 />
-                                                                <span>Chi tiết</span>
+                                                                <FiEye />
+                                                                <span>Xem chi tiết</span>
                                                             </button>
 
                                                             <button className="teacher-menu-item edit" onClick={() => { onEdit(teacher); setOpenMenuId(null); }}>
@@ -152,7 +155,7 @@ export default function TeacherListSection({
                                                                 disabled={teacher.id === currentUser?.id}
                                                             >
                                                                 {teacher.status === "Hoạt động" ? <FiUserX /> : <FiUserCheck />}
-                                                                <span>{teacher.status === "Hoạt động" ? "Khóa" : "Mở khóa"}</span>
+                                                                <span>{teacher.status === "Hoạt động" ? "Vô hiệu hóa" : "Kích hoạt"}</span>
                                                             </button>
 
                                                             {onResetPassword && (

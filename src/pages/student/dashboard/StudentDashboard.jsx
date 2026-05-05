@@ -16,6 +16,7 @@ import YearProgress from "./components/YearProgress/YearProgress";
 import UpcomingTests from "./components/UpcomingTests/UpcomingTests";
 import { SchoolYearTermSelector, LoadingSpinner } from "../../../components/common";
 import { useSchoolYearTerm } from "../../../hooks/useSchoolYearTerm";
+import { studentService } from "../../../services/pages/student/studentService";
 
 const subjectData = [
     { subject: "Toán", score: 8.0 },
@@ -124,17 +125,37 @@ export default function StudentDashboard() {
     const navigate = useNavigate();
     const { selectedSchoolYear, selectedTerm, handleYearArrow, handleTermChange } = useSchoolYearTerm();
     const [isLoading, setIsLoading] = useState(true);
+    const [dashboardData, setDashboardData] = useState(null);
 
     useEffect(() => {
-        setIsLoading(true);
-        const timer = setTimeout(() => setIsLoading(false), 1000);
-        return () => clearTimeout(timer);
+        const fetchDashboardData = async () => {
+            setIsLoading(true);
+            try {
+                // Gọi API lấy dữ liệu dashboard (hiện tại dùng mock trong service)
+                const response = await studentService.getDashboard();
+                if (response.success) {
+                    setDashboardData(response.data);
+                }
+            } catch (error) {
+                console.error("Failed to fetch student dashboard:", error);
+            } finally {
+                // Giả lập delay nhẹ để hiệu ứng loading mượt mà
+                setTimeout(() => setIsLoading(false), 600);
+            }
+        };
+
+        fetchDashboardData();
     }, [selectedSchoolYear, selectedTerm]);
 
-    const summaryCard = useMemo(
-        () => getOverviewCardData(academicOverview),
-        []
-    );
+    const summaryCard = useMemo(() => {
+        const avg = dashboardData?.summary?.averageScore || academicOverview.semester1Average;
+        return {
+            title: "Điểm trung bình học kỳ",
+            value: formatScore(avg),
+            rank: getAcademicRank(avg),
+            subtitlePrefix: "Học lực:",
+        };
+    }, [dashboardData]);
 
     const weekProgressPercent = useMemo(() => {
         if (!academicOverview.totalWeeks) return 0;
@@ -197,26 +218,29 @@ export default function StudentDashboard() {
             {
                 id: "upcoming-quiz",
                 title: "Bài kiểm tra sắp tới",
-                value: `${upcomingQuizzes.length}`,
+                value: `${dashboardData?.upcomingTests?.length || upcomingQuizzes.length}`,
                 subtitle: (
                     <span className="student-upcoming-subjects-preview">
-            {topUpcomingSubjects}
-          </span>
+                        {dashboardData?.upcomingTests?.length > 0 
+                            ? dashboardData.upcomingTests.slice(0, 3).map(t => t.subject).join(", ") + (dashboardData.upcomingTests.length > 3 ? ", ..." : "")
+                            : topUpcomingSubjects
+                        }
+                    </span>
                 ),
                 icon: HiOutlineClipboardDocumentList,
                 color: "orange",
             },
         ];
-    }, [summaryCard, weekProgressPercent, topUpcomingSubjects]);
+    }, [summaryCard, weekProgressPercent, topUpcomingSubjects, dashboardData]);
 
     return (
         <div className="student-dashboard-content">
             <div className="student-dashboard-top-panel">
                 <WelcomeHeader
-                    studentName="Tuấn"
-                    classNameLabel="10A1"
-                    studentCode="HS10A1-023"
-                    homeroomTeacher="Cô Nguyễn Thị Lan"
+                    studentName={dashboardData?.profile?.fullName?.split(" ").pop() || "Học sinh"}
+                    classNameLabel={dashboardData?.profile?.className || "—"}
+                    studentCode={dashboardData?.profile?.studentCode || "—"}
+                    homeroomTeacher={dashboardData?.profile?.homeroomTeacher || "Chưa cập nhật"}
                 />
 
                 <div className="student-dashboard-toolbar">
@@ -257,7 +281,7 @@ export default function StudentDashboard() {
                         />
                         </div>
                         <UpcomingTests
-                            quizzes={upcomingQuizzes}
+                            quizzes={dashboardData?.upcomingTests || upcomingQuizzes}
                             onOpenQuiz={() => navigate("/student/quiz")}
                         />
                     </div>

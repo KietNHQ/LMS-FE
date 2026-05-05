@@ -1,6 +1,7 @@
 import { Suspense, lazy } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
 import { LoadingAnimationBook } from "../components/common";
+import ProtectedRoute from "../components/common/ProtectedRoute/ProtectedRoute";
 
 /* AUTH PAGES */
 import Login from "../pages/auth/Login";
@@ -136,9 +137,11 @@ export default function AppRoutes() {
 
       {/* ── ADMIN ── */}
       <Route path="/admin" element={
-        <Suspense fallback={<LoadingAnimationBook fullScreen={true} label="Đang tải giao diện quản trị..." />}>
-          <AdminLayout />
-        </Suspense>
+        <ProtectedRoute allowedRoles={["admin"]}>
+          <Suspense fallback={<LoadingAnimationBook fullScreen={true} label="Đang tải giao diện quản trị..." />}>
+            <AdminLayout />
+          </Suspense>
+        </ProtectedRoute>
       }>
         <Route index element={<Navigate to="dashboard" replace />} />
         <Route path="dashboard"     element={<AdminDashboard />} />
@@ -157,9 +160,11 @@ export default function AppRoutes() {
 
       {/* ── MANAGEMENT ── */}
       <Route path="/management" element={
-        <Suspense fallback={<LoadingAnimationBook fullScreen={true} label="Đang tải hệ thống quản lý..." />}>
-          <ManagementLayout />
-        </Suspense>
+        <ProtectedRoute allowedRoles={["management"]}>
+          <Suspense fallback={<LoadingAnimationBook fullScreen={true} label="Đang tải hệ thống quản lý..." />}>
+            <ManagementLayout />
+          </Suspense>
+        </ProtectedRoute>
       }>
         <Route index element={<Navigate to="dashboard" replace />} />
         <Route path="dashboard"    element={<ManagementDashboard />} />
@@ -196,9 +201,11 @@ export default function AppRoutes() {
 
       {/* STUDENT */}
       <Route path="/student" element={
-        <Suspense fallback={<LoadingAnimationBook fullScreen={true} label="Đang tải không gian học sinh..." />}>
-          <StudentLayout />
-        </Suspense>
+        <ProtectedRoute allowedRoles={["student"]}>
+          <Suspense fallback={<LoadingAnimationBook fullScreen={true} label="Đang tải không gian học sinh..." />}>
+            <StudentLayout />
+          </Suspense>
+        </ProtectedRoute>
       }>
         <Route index element={<Navigate to="dashboard" replace />} />
         <Route path="dashboard" element={<StudentDashboard />} />
@@ -214,9 +221,11 @@ export default function AppRoutes() {
 
       {/* TEACHER */}
       <Route path="/teacher" element={
-        <Suspense fallback={<LoadingAnimationBook fullScreen={true} label="Đang tải không gian giáo viên..." />}>
-          <TeacherLayout />
-        </Suspense>
+        <ProtectedRoute allowedRoles={["teacher"]}>
+          <Suspense fallback={<LoadingAnimationBook fullScreen={true} label="Đang tải không gian giáo viên..." />}>
+            <TeacherLayout />
+          </Suspense>
+        </ProtectedRoute>
       }>
         <Route index element={<Navigate to="dashboard" replace />} />
         <Route path="dashboard"        element={<TeacherDashboard />} />
@@ -237,9 +246,11 @@ export default function AppRoutes() {
 
         {/* PARENT */}
         <Route path="/parent" element={
-          <Suspense fallback={<LoadingAnimationBook fullScreen={true} label="Đang tải không gian phụ huynh..." />}>
-            <ParentLayout />
-          </Suspense>
+          <ProtectedRoute allowedRoles={["guardian"]}>
+            <Suspense fallback={<LoadingAnimationBook fullScreen={true} label="Đang tải không gian phụ huynh..." />}>
+              <ParentLayout />
+            </Suspense>
+          </ProtectedRoute>
         }>
             <Route index element={<Navigate to="dashboard" replace />} />
             <Route path="dashboard" element={<ParentDashboard />} />

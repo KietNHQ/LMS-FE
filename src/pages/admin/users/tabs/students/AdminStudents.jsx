@@ -59,7 +59,7 @@ const toStudentForm = (student = {}) => ({
 
 const buildDownloadName = (fallbackName) => fallbackName;
 
-export default function AdminStudents({ onCountChange, schoolYear, hasPermission, currentUser }) {
+export default function AdminStudents({ onCountChange, schoolYear, term, hasPermission, currentUser }) {
   const [students, setStudents] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [loadError, setLoadError] = useState("");
@@ -120,10 +120,6 @@ export default function AdminStudents({ onCountChange, schoolYear, hasPermission
     loadStudents();
   }, [loadStudents]);
 
-  useEffect(() => {
-    onCountChange?.(students.length);
-  }, [students.length, onCountChange]);
-
   const classOptions = useMemo(() => {
     const classes = Array.from(new Set(students.map((student) => student.className).filter(Boolean)));
     return ["Tất cả lớp", ...classes];
@@ -131,16 +127,26 @@ export default function AdminStudents({ onCountChange, schoolYear, hasPermission
 
   const filteredStudents = useMemo(() => {
     return students.filter((student) => {
+      // Lọc theo Năm học
       const matchYear = !schoolYear || student.academicYear === schoolYear || !student.academicYear;
+      
+      // Lọc theo Học kỳ (Nếu có logic term trong data, hiện tại giả định khớp năm học và đang học)
+      const matchTerm = true; // Cần bổ sung logic nếu BE trả về term cụ thể
+
       const matchSearch =
         (student.name || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
         (student.parentName || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
         (student.parentPhone || "").includes(searchTerm);
       const matchClass = selectedClass === "Tất cả lớp" || student.className === selectedClass;
       const matchStatus = selectedStatus === "Tất cả trạng thái" || student.status === selectedStatus;
-      return matchYear && matchSearch && matchClass && matchStatus;
+      
+      return matchYear && matchTerm && matchSearch && matchClass && matchStatus;
     });
-  }, [students, searchTerm, selectedClass, selectedStatus, schoolYear]);
+  }, [students, searchTerm, selectedClass, selectedStatus, schoolYear, term]);
+
+  useEffect(() => {
+    onCountChange?.(filteredStudents.length);
+  }, [filteredStudents.length, onCountChange]);
 
   const hasFilteredStudents = filteredStudents.length > 0;
   const shouldRenderDataSection = !isLoading && !loadError;

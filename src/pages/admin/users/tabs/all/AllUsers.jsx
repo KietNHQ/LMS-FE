@@ -49,7 +49,7 @@ const buildDownloadFilename = (headers = {}) => {
     }
 };
 
-export default function AllUsers({ onCountChange, hasPermission, currentUser: propCurrentUser }) {
+export default function AllUsers({ onCountChange, schoolYear, term, hasPermission, currentUser: propCurrentUser }) {
     const { user: adminUser } = useCheckPermission();
     const [users, setUsers] = useState([]);
     const [isLoadingUsers, setIsLoadingUsers] = useState(false);
@@ -57,6 +57,7 @@ export default function AllUsers({ onCountChange, hasPermission, currentUser: pr
 
     const [searchValue, setSearchValue] = useState("");
     const [quickRole, setQuickRole] = useState("Tất cả");
+    const [statusFilter, setStatusFilter] = useState("Tất cả");
 
     const [isCreateOpen, setIsCreateOpen] = useState(false);
     const [editingUser, setEditingUser] = useState(null);
@@ -98,7 +99,7 @@ export default function AllUsers({ onCountChange, hasPermission, currentUser: pr
         setLoadError("");
 
         try {
-            const result = await userService.listUsers({ page: 1, limit: 500 });
+            const result = await userService.listUsers({ page: 1, limit: 2000 });
             setUsers(result.items || []);
             setSelectedUserIds([]); // Reset selection on reload
         } catch (error) {
@@ -124,10 +125,6 @@ export default function AllUsers({ onCountChange, hasPermission, currentUser: pr
         loadClasses();
     }, [loadUsers, loadClasses]);
 
-    useEffect(() => {
-        onCountChange?.(users.length);
-    }, [users.length, onCountChange]);
-
     const filteredUsers = useMemo(() => {
         return users.filter((user) => {
             const matchSearch =
@@ -140,9 +137,27 @@ export default function AllUsers({ onCountChange, hasPermission, currentUser: pr
                     ? (user.role === "Quản lý" || user.role === "Quản trị viên") 
                     : user.role === quickRole);
 
-            return matchSearch && matchQuickRole;
+            // Logic lọc theo Năm học / Học kỳ
+            let matchYearTerm = true;
+            if (schoolYear) {
+                if (user.role === "Học sinh") {
+                    // Nếu là học sinh, khớp năm học
+                    matchYearTerm = user.academicYear === schoolYear || !user.academicYear;
+                } else {
+                    // Các role khác: Chỉ hiện nếu đang hoạt động
+                    matchYearTerm = user.status === "Hoạt động";
+                }
+            }
+
+            const matchStatus = statusFilter === "Tất cả" ? true : user.status === statusFilter;
+
+            return matchSearch && matchQuickRole && matchYearTerm && matchStatus;
         });
-    }, [users, searchValue, quickRole]);
+    }, [users, searchValue, quickRole, schoolYear, term, statusFilter]);
+
+    useEffect(() => {
+        onCountChange?.(filteredUsers.length);
+    }, [filteredUsers.length, onCountChange]);
 
     const stats = useMemo(() => [
         { label: "Tổng người dùng", value: users.length, iconClass: "stat-icon--navy", Icon: FiUsers },
@@ -545,6 +560,8 @@ export default function AllUsers({ onCountChange, hasPermission, currentUser: pr
                 onSearchChange={setSearchValue}
                 quickRole={quickRole}
                 onQuickRoleChange={setQuickRole}
+                statusFilter={statusFilter}
+                onStatusChange={setStatusFilter}
             >
                 <button
                     className="accounts-overview-add-btn"

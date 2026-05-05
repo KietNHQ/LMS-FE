@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState, useRef } from "react";
-import { FiPlus, FiSearch, FiEdit2, FiTrash2, FiKey, FiUnlock, FiShield, FiX, FiUserX, FiUserCheck, FiMoreHorizontal } from "react-icons/fi";
+import { FiPlus, FiSearch, FiEdit2, FiTrash2, FiKey, FiUnlock, FiShield, FiX, FiUserX, FiUserCheck, FiMoreHorizontal, FiEye } from "react-icons/fi";
 import { PERMISSIONS } from "../../../../../config/permissions";
 import { Pagination, CreateUserDialog, ConfirmationModal } from "../../../../../components/common";
 import { userService } from "../../../../../services/pages/admin/users";
@@ -20,6 +20,7 @@ const MANAGEMENT_ROLES = [
     { value: "Giáo vụ",      label: "Giáo vụ" },
     { value: "Tài chính",    label: "Tài chính" },
     { value: "Tổ trưởng bộ môn", label: "Tổ trưởng bộ môn" },
+    { value: "Khác",         label: "Khác (Tùy chỉnh)" },
 ];
 
 const ROLE_META = {
@@ -54,13 +55,20 @@ const formatDate = (dateString) => {
 const emptyForm = { name: "", email: "", phone: "", role: "Quản lý", status: "Hoạt động", dob: "" };
 
 /* ─────────────────────────────────────────────────── */
-export default function AdminManagers({ onCountChange, hasPermission, currentUser }) {
+export default function AdminManagers({ onCountChange, schoolYear, term, hasPermission, currentUser }) {
     const [managers, setManagers]         = useState([]);
     const [isLoading, setIsLoading]       = useState(false);
     const [loadError, setLoadError]       = useState("");
 
     const [searchValue, setSearchValue]   = useState("");
     const [roleFilter, setRoleFilter]     = useState("Tất cả");
+    const [statusFilter, setStatusFilter] = useState("Tất cả");
+
+    const STATUS_OPTIONS = [
+        { value: "Tất cả", label: "Tất cả trạng thái" },
+        { value: "Hoạt động", label: "Đang hoạt động" },
+        { value: "Vô hiệu hóa", label: "Vô hiệu hóa" },
+    ];
 
     const [currentPage, setCurrentPage]   = useState(1);
 
@@ -119,7 +127,6 @@ export default function AdminManagers({ onCountChange, hasPermission, currentUse
     }, []);
 
     useEffect(() => { loadManagers(); }, [loadManagers]);
-    useEffect(() => { onCountChange?.(managers.length); }, [managers.length, onCountChange]);
 
     useEffect(() => {
         const handleClickOutside = (event) => {
@@ -135,7 +142,6 @@ export default function AdminManagers({ onCountChange, hasPermission, currentUse
         e.stopPropagation();
         setOpenMenuId(openMenuId === userId ? null : userId);
     };
-
     /* ── Lọc ── */
     const filtered = useMemo(() => {
         return managers.filter((m) => {
@@ -143,10 +149,22 @@ export default function AdminManagers({ onCountChange, hasPermission, currentUse
             const matchSearch = (m.name || "").toLowerCase().includes(q)
                 || (m.email || "").toLowerCase().includes(q)
                 || (m.phone || "").includes(q);
-            const matchRole = roleFilter === "Tất cả" || m.role === roleFilter;
-            return matchSearch && matchRole;
+            const standardValues = MANAGEMENT_ROLES.map(r => r.value).filter(v => v !== "Tất cả" && v !== "Khác");
+            const matchRole = roleFilter === "Tất cả" 
+                ? true 
+                : (roleFilter === "Khác" 
+                    ? !standardValues.includes(m.role)
+                    : m.role === roleFilter);
+
+            // Nếu có năm học/học kỳ, ưu tiên cán bộ đang hoạt động
+            const isActiveInTerm = !schoolYear || m.status === "Hoạt động";
+            const matchStatus = statusFilter === "Tất cả" ? true : m.status === statusFilter;
+
+            return matchSearch && matchRole && isActiveInTerm && matchStatus;
         });
-    }, [managers, searchValue, roleFilter]);
+    }, [managers, searchValue, roleFilter, schoolYear, term, statusFilter]);
+
+    useEffect(() => { onCountChange?.(filtered.length); }, [filtered.length, onCountChange]);
 
     useEffect(() => { setCurrentPage(1); }, [searchValue, roleFilter]);
 
@@ -448,6 +466,13 @@ export default function AdminManagers({ onCountChange, hasPermission, currentUse
                             onChange={(e) => setRoleFilter(e.target.value)}
                             options={MANAGEMENT_ROLES}
                         />
+
+                        <Select
+                            variant="custom"
+                            value={statusFilter}
+                            onChange={(e) => setStatusFilter(e.target.value)}
+                            options={STATUS_OPTIONS}
+                        />
                     </div>
                     
                     <button className="admin-managers-add-btn" onClick={() => { setFormData(emptyForm); setCreateOpen(true); }}>
@@ -482,8 +507,8 @@ export default function AdminManagers({ onCountChange, hasPermission, currentUse
                     </div>
 
                     {paginated.length === 0 ? (
-                        <div className="admin-managers-empty">
-                            <FiShield size={40} />
+                        <div className="user-detail-empty">
+                            <FiShield size={42} strokeWidth={1.5} />
                             <p>{managers.length === 0 ? "Chưa có tài khoản quản lý nào." : "Không tìm thấy quản lý phù hợp."}</p>
                         </div>
                     ) : (

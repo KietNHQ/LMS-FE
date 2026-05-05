@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { FiEdit2, FiTrash2, FiUserX, FiUserCheck, FiKey, FiMoreHorizontal } from "react-icons/fi";
+import { FiEdit2, FiTrash2, FiUserX, FiUserCheck, FiKey, FiMoreHorizontal, FiEye, FiShield } from "react-icons/fi";
 import "./parentListSection.css";
 
 function getAvatarLetter(name) {
@@ -63,7 +63,10 @@ export default function ParentListSection({
 						{parents.length === 0 ? (
 							<tr>
 								<td colSpan="6" className="parent-empty-row">
-									{emptyMessage}
+									<div className="user-detail-empty">
+										<FiShield size={42} strokeWidth={1.5} />
+										<p>{emptyMessage}</p>
+									</div>
 								</td>
 							</tr>
 						) : (
@@ -130,6 +133,10 @@ export default function ParentListSection({
 
                                                     {isMenuOpen && (
                                                         <div className="parent-actions-menu">
+                                                            <button className="parent-menu-item" onClick={() => { onView(parent); setOpenMenuId(null); }}>
+                                                                <FiEye />
+                                                                <span>Xem chi tiết</span>
+                                                            </button>
                                                             <button className="parent-menu-item" onClick={() => { onEdit(parent); setOpenMenuId(null); }}>
                                                                 <FiEdit2 />
                                                                 <span>Chỉnh sửa</span>
@@ -140,7 +147,7 @@ export default function ParentListSection({
                                                                 onClick={() => { onToggleStatus(parent); setOpenMenuId(null); }}
                                                             >
                                                                 {parent.status === "Hoạt động" ? <FiUserX /> : <FiUserCheck />}
-                                                                <span>{parent.status === "Hoạt động" ? "Khóa" : "Mở khóa"}</span>
+                                                                <span>{parent.status === "Hoạt động" ? "Vô hiệu hóa" : "Kích hoạt"}</span>
                                                             </button>
 
                                                             {onResetPassword && (

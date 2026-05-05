@@ -10,8 +10,15 @@ export default function UsersSearchFilterSort({
     onSearchChange,
     quickRole,
     onQuickRoleChange,
+    statusFilter,
+    onStatusChange,
     children,
 }) {
+    const statusOptions = [
+        { value: "Tất cả", label: "Tất cả trạng thái" },
+        { value: "Hoạt động", label: "Đang hoạt động" },
+        { value: "Vô hiệu hóa", label: "Vô hiệu hóa" },
+    ];
     const roleOptions = useMemo(() => 
         tabs.map(tab => ({
             value: tab,
@@ -38,6 +45,14 @@ export default function UsersSearchFilterSort({
                     onChange={(e) => onQuickRoleChange(e.target.value)}
                     options={roleOptions}
                     className="users-quick-role-select"
+                />
+
+                <Select
+                    variant="custom"
+                    value={statusFilter}
+                    onChange={(e) => onStatusChange(e.target.value)}
+                    options={statusOptions}
+                    className="users-status-select"
                 />
                 
                 {children}

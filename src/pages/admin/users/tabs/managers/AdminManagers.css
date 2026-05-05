@@ -2,8 +2,8 @@
    AdminManagers.css — Tab "Quản lý" chuẩn hóa
    =================================================== */
 
-@import "../all/components/userDetailSection/UserDetailSection.css";
-@import "../all/components/usersSearchFilterSort/UsersSearchFilterSort.css";
+@import "../all/components/userDetailSection/userDetailSection.css";
+@import "../all/components/usersSearchFilterSort/usersSearchFilterSort.css";
 
 .admin-managers-page {
     display: flex;

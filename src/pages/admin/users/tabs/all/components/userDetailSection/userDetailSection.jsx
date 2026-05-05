@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
-import { FiEdit2, FiTrash2, FiUserCheck, FiUserX, FiKey, FiMoreHorizontal } from "react-icons/fi";
+import { FiEdit2, FiTrash2, FiUserCheck, FiUserX, FiKey, FiMoreHorizontal, FiEye, FiShield } from "react-icons/fi";
 import { PERMISSIONS } from "../../../../../../../config/permissions";
-import "./UserDetailSection.css";
+import "./userDetailSection.css";
 
 function getRoleClass(role) {
     if (role === "Quản lý" || role === "Quản trị viên") return "admin";
@@ -74,7 +74,10 @@ export default function UserDetailSection({
             </div>
 
             {users.length === 0 ? (
-                <div className="user-detail-empty">{emptyMessage}</div>
+                <div className="user-detail-empty">
+                    <FiShield size={42} strokeWidth={1.5} />
+                    <p>{emptyMessage}</p>
+                </div>
             ) : (
                 users.map((user, index) => {
                     const isSelected = selectedUserIds.includes(user.id);
@@ -130,6 +133,10 @@ export default function UserDetailSection({
                                     
                                     {isMenuOpen && (
                                         <div className="user-actions-menu">
+                                            <button className="user-menu-item" onClick={() => { onView(user); setOpenMenuId(null); }}>
+                                                <FiEye />
+                                                <span>Xem chi tiết</span>
+                                            </button>
                                             <button className="user-menu-item edit" onClick={() => { onEdit(user); setOpenMenuId(null); }}>
                                                 <FiEdit2 />
                                                 <span>Chỉnh sửa</span>

@@ -36,6 +36,7 @@ const requestWithFallback = async (endpoints, callback) => {
 
 const getRows = (payload) => {
   if (Array.isArray(payload)) return payload;
+  if (Array.isArray(payload?.users)) return payload.users;
   if (Array.isArray(payload?.items)) return payload.items;
   if (Array.isArray(payload?.data)) return payload.data;
   return [];
@@ -43,7 +44,7 @@ const getRows = (payload) => {
 
 const parseStudent = (item = {}) => {
   const profile = item.profile || {};
-  let name = item.fullName || item.name || `${item.surname || ""} ${item.given_name || ""}`.trim();
+  let name = item.fullName || item.full_name || item.name || `${item.given_name || ""} ${item.surname || ""}`.trim();
 
   if (!name && profile) {
     name = profile.fullName || profile.name || "";
@@ -77,9 +78,9 @@ export const studentsService = {
   listStudents: async () => {
     const response = await requestWithFallback(["/students", "/users"], (basePath) => {
       if (basePath === "/users") {
-        return axiosClient.get(basePath, { params: { role: "student", page: 1, limit: 500 } });
+        return axiosClient.get(basePath, { params: { role: "student", page: 1, limit: 2000 } });
       }
-      return axiosClient.get(basePath, { params: { page: 1, limit: 500 } });
+      return axiosClient.get(basePath, { params: { page: 1, limit: 2000 } });
     });
 
     const payload = getPayload(response);

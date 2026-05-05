@@ -14,15 +14,19 @@ export const useLogin = () => {
 
             const storage = rememberMe ? localStorage : sessionStorage;
 
-            // Xóa sạch rác ở cả 2 nơi trước khi lưu mới
-            localStorage.clear();
-            sessionStorage.clear();
+            // KIỂM TRA TRẠNG THÁI TÀI KHOẢN
+            if (user.status === "Vô hiệu hóa") {
+                localStorage.clear();
+                sessionStorage.clear();
+                toast.error("Tài khoản của bạn đã bị vô hiệu hóa. Vui lòng liên hệ Quản trị viên!");
+                return;
+            }
 
             // LƯU ĐẦY ĐỦ CẢ ACCESS VÀ REFRESH TOKEN
             storage.setItem('accessToken', session.accessToken);
             storage.setItem('refreshToken', session.refreshToken);
             storage.setItem('userRole', user.role);
-            storage.setItem('user', JSON.stringify(user)); // Lưu toàn bộ object user để dùng permissions, position, v.v.
+            storage.setItem('user', JSON.stringify(user));
 
             toast.success('Đăng nhập thành công!');
 

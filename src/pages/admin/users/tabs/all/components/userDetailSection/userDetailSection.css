@@ -248,6 +248,7 @@
 
 .user-role-chip.admin:hover {
     background: var(--admin-primary-hover, #172547);
+    color: #ffffff;
 }
 
 .user-role-chip.teacher {
@@ -408,10 +409,30 @@
 }
 
 .user-detail-empty {
-    padding: 3rem 1.5rem;
+    grid-column: 1 / -1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1.25rem;
+    padding: 5rem 2rem;
     text-align: center;
     color: var(--admin-text-muted, #7e8eab);
     font-size: 1rem;
+    background: rgba(248, 250, 255, 0.5);
+    border-bottom-left-radius: 1.7rem;
+    border-bottom-right-radius: 1.7rem;
+}
+
+.user-detail-empty svg {
+    color: var(--admin-border-strong, #c3d2ef);
+    filter: drop-shadow(0 4px 10px rgba(30, 47, 90, 0.05));
+}
+
+.user-detail-empty p {
+    margin: 0;
+    font-weight: 600;
+    color: var(--admin-text-secondary, #4d5f82);
 }
 
 /* Center Vai trò, Trạng thái, and Thao tác columns for better balance */

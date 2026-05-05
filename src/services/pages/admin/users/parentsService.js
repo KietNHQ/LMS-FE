@@ -23,6 +23,7 @@ const requestWithFallback = async (endpoints, callback) => {
 
 const getRows = (payload) => {
   if (Array.isArray(payload)) return payload;
+  if (Array.isArray(payload?.users)) return payload.users;
   if (Array.isArray(payload?.items)) return payload.items;
   if (Array.isArray(payload?.data)) return payload.data;
   return [];
@@ -102,7 +103,7 @@ export const parentsService = {
     }
 
     const response = await requestWithFallback(["/guardians"], (basePath) =>
-      axiosClient.get(basePath, { params: { page: 1, limit: 500 } })
+      axiosClient.get(basePath, { params: { page: 1, limit: 2000 } })
     );
 
     return getRows(getPayload(response)).map(parseParent);

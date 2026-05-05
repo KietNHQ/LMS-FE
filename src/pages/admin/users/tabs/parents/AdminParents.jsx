@@ -9,7 +9,7 @@ import ParentInformationSection from "./components/parentInformationSection/pare
 import { parentsService, userService } from "../../../../../services/pages/admin/users";
 
 const ITEMS_PER_PAGE = 7;
-const statusOptions = ["Tất cả trạng thái", "Hoạt động", "Khóa"];
+const statusOptions = ["Tất cả trạng thái", "Hoạt động", "Vô hiệu hóa"];
 const classOptions = ["Tất cả khối", "Khối 10", "Khối 11", "Khối 12"];
 
 const emptyParentForm = {
@@ -36,7 +36,7 @@ const normalizeChildren = (children = []) =>
     }))
     .filter((item) => item.childName && item.childClass);
 
-export default function AdminParents({ onCountChange, hasPermission, currentUser }) {
+export default function AdminParents({ onCountChange, schoolYear, term, hasPermission, currentUser }) {
   const [parents, setParents] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [loadError, setLoadError] = useState("");
@@ -97,10 +97,6 @@ export default function AdminParents({ onCountChange, hasPermission, currentUser
     loadParents();
   }, [loadParents]);
 
-  useEffect(() => {
-    onCountChange?.(parents.length);
-  }, [parents.length, onCountChange]);
-
   const filteredParents = useMemo(() => {
     return parents.filter((parent) => {
       const searchStr = searchTerm.toLowerCase();
@@ -111,6 +107,11 @@ export default function AdminParents({ onCountChange, hasPermission, currentUser
 
       const matchesStatus = selectedStatus === "Tất cả trạng thái" || parent.status === selectedStatus;
 
+      // Logic lọc theo Năm học/Học kỳ: Hiện tại giả định nếu có năm học, 
+      // ta ưu tiên những phụ huynh có thông tin con em liên quan.
+      // (Cần bổ sung field academicYear vào con em nếu BE hỗ trợ)
+      const matchesYearTerm = true; 
+
       let matchesClass = true;
       if (selectedClass !== "Tất cả khối") {
         const gradePrefix = selectedClass.replace("Khối ", "");
@@ -118,9 +119,13 @@ export default function AdminParents({ onCountChange, hasPermission, currentUser
         matchesClass = children.some((child) => String(child.childClass || "").startsWith(gradePrefix));
       }
 
-      return matchesSearch && matchesStatus && matchesClass;
+      return matchesSearch && matchesStatus && matchesClass && matchesYearTerm;
     });
-  }, [parents, searchTerm, selectedStatus, selectedClass]);
+  }, [parents, searchTerm, selectedStatus, selectedClass, schoolYear, term]);
+
+  useEffect(() => {
+    onCountChange?.(filteredParents.length);
+  }, [filteredParents.length, onCountChange]);
 
   const hasFilteredParents = filteredParents.length > 0;
   const shouldRenderDataSection = !isLoading && !loadError;

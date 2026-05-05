@@ -1,6 +1,6 @@
 import axiosClient from "../../../shared/http/axiosClient";
 
-const USER_BASE_ENDPOINTS = ["/users"];
+const USER_BASE_ENDPOINTS = ["/users", "/auth/users"];
 
 const roleToApi = {
   "Quản trị viên": "admin",
@@ -98,22 +98,47 @@ const mapApiUserToView = (user = {}) => {
   };
 };
 
-const buildCreatePayload = (formData = {}) => ({
-  email: formData.email,
-  fullName: formData.name,
-  role: roleToApi[formData.role] || "student",
-  phone: formData.phone === "—" ? "" : formData.phone,
-  dob: formData.dob || null,
-  profile: formData.profile || {},
-});
+const buildCreatePayload = (formData = {}) => {
+  const role = roleToApi[formData.role] || "student";
+  const profile = formData.profile || {};
+  const phone = formData.phone === "—" ? "" : formData.phone;
+
+  // Base payload — BE expects birthDate (not dob), and givenName/surname as top-level fields
+  const payload = {
+    email: formData.email,
+    fullName: formData.name || `${formData.lastName || ""} ${formData.firstName || ""}`.trim(),
+    givenName: formData.firstName || profile.firstName || "",
+    surname: formData.lastName || profile.lastName || "",
+    role,
+    phone: phone || profile.phone || "",
+    birthDate: formData.dob || profile.dob || null,
+  };
+
+  // Role-specific fields — BE expects these as top-level, not nested in "profile"
+  if (role === "teacher") {
+    payload.qualification = profile.subject || null;
+    payload.teacherCode = profile.teacherCode || null;
+    payload.hireDate = profile.hireDate || null;
+  } else if (role === "student") {
+    payload.studentCode = profile.studentCode || null;
+    payload.gender = profile.gender || null;
+  } else if (role === "guardian") {
+    payload.occupation = profile.occupation || null;
+    payload.studentIds = profile.studentIds || [];
+  }
+
+  return payload;
+};
 
 const buildUpdatePayload = (formData = {}) => ({
   email: formData.email,
-  fullName: formData.name,
+  fullName: formData.name || `${formData.lastName || ""} ${formData.firstName || ""}`.trim() || undefined,
+  givenName: formData.firstName || formData.profile?.firstName || undefined,
+  surname: formData.lastName || formData.profile?.lastName || undefined,
   phone: formData.phone === "—" ? "" : formData.phone,
-  dob: formData.dob || null,
+  birthDate: formData.dob || formData.profile?.dob || undefined,
   status: statusToApi[formData.status] || undefined,
-  profile: formData.profile || {},
+  gender: formData.profile?.gender || undefined,
 });
 
 export const userService = {

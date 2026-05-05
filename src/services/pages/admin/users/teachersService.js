@@ -73,6 +73,7 @@ const parseTeacher = (item = {}) => {
 
 const getRows = (payload) => {
   if (Array.isArray(payload)) return payload;
+  if (Array.isArray(payload?.users)) return payload.users;
   if (Array.isArray(payload?.items)) return payload.items;
   if (Array.isArray(payload?.data)) return payload.data;
   return [];
@@ -82,9 +83,9 @@ export const teachersService = {
   listTeachers: async () => {
     const response = await requestWithFallback(["/teachers", "/users"], (basePath) => {
       if (basePath === "/users") {
-        return axiosClient.get(basePath, { params: { role: "teacher", page: 1, limit: 500 } });
+        return axiosClient.get(basePath, { params: { role: "teacher", page: 1, limit: 2000 } });
       }
-      return axiosClient.get(basePath, { params: { page: 1, limit: 500 } });
+      return axiosClient.get(basePath, { params: { page: 1, limit: 2000 } });
     });
 
     const payload = getPayload(response);
