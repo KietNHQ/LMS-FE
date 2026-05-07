@@ -81,3 +81,158 @@
     }
 }
 
+
+.permissions-section {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.permissions-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.permission-badge {
+    background: rgba(37, 99, 235, 0.1);
+    color: #2563eb;
+    padding: 4px 12px;
+    border-radius: 100px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    border: 1px solid rgba(37, 99, 235, 0.2);
+    transition: all 0.2s ease;
+}
+
+/* Role-based Badge Colors */
+.profile-dialog[data-role="teacher"] .permission-badge {
+    background: rgba(15, 118, 110, 0.1);
+    color: #0f766e;
+    border-color: rgba(15, 118, 110, 0.2);
+}
+
+.profile-dialog[data-role="admin"] .permission-badge,
+.profile-dialog[data-role="management"] .permission-badge,
+.profile-dialog[data-role="manager"] .permission-badge {
+    background: rgba(30, 47, 90, 0.1);
+    color: #1e2f5a;
+    border-color: rgba(30, 47, 90, 0.2);
+}
+
+/* --- Permissions Section Grouped Mode --- */
+.permissions-section.grouped-mode {
+    grid-column: 1 / -1; /* Luôn full width */
+    width: 100%;
+    margin-top: 0.5rem; /* Tạo khoảng cách với hàng trên */
+}
+
+.permissions-section-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+    padding-bottom: 12px;
+    border-bottom: 1px dashed #e2e8f0;
+}
+
+.permissions-section-header .section-icon {
+    font-size: 20px;
+    color: var(--role-accent);
+}
+
+.permissions-section-header h3 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 700;
+    color: #1e293b;
+}
+
+.permissions-groups-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 24px;
+    max-height: 320px;
+    overflow-y: auto;
+    padding-right: 8px;
+}
+
+/* Custom Scrollbar for permissions */
+.permissions-groups-container::-webkit-scrollbar {
+    width: 6px;
+}
+.permissions-groups-container::-webkit-scrollbar-track {
+    background: #f1f5f9;
+    border-radius: 10px;
+}
+.permissions-groups-container::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 10px;
+}
+.permissions-groups-container::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}
+
+.permission-group-item {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.permissions-empty-state {
+    padding: 20px 0;
+    text-align: center;
+    color: #94a3b8;
+    font-size: 14px;
+    font-style: italic;
+}
+
+.group-title {
+    margin: 0;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    font-weight: 700;
+    color: #64748b;
+    opacity: 0.8;
+}
+
+.permissions-badges-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.permission-tag {
+    background: #fff;
+    color: #334155;
+    border: 1px solid #e2e8f0;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+}
+
+.permission-tag:hover {
+    border-color: var(--role-accent);
+    color: var(--role-accent);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+/* Role Theme Accent Colors for Permissions */
+[data-role="admin"] .permission-tag:hover,
+[data-role="quản trị viên"] .permission-tag:hover {
+    background: rgba(30, 47, 90, 0.04);
+}
+
+[data-role="management"] .permission-tag:hover,
+[data-role="manager"] .permission-tag:hover {
+    background: rgba(30, 47, 90, 0.04);
+}
+
+.permission-badge:hover {
+    background: rgba(37, 99, 235, 0.15);
+    transform: translateY(-1px);
+}

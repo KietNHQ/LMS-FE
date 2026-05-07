@@ -37,10 +37,15 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
     }
 
     // 4. Kiểm tra quyền truy cập (Role)
-    const userRole = user.role?.toLowerCase();
+    const userRole = (user.role || localStorage.getItem('userRole') || "").toLowerCase();
+
+    // SUPER ADMIN BYPASS: Admin/Quản trị viên có quyền vào MỌI NƠI
+    if (userRole === 'admin' || userRole === 'quản trị viên' || userRole === 'administrator') {
+        return children;
+    }
     
     // Chuẩn hóa role quản lý (vì có nhiều chức danh tiếng Việt)
-    const managementRoles = ['quản trị viên', 'quản lý', 'hiệu trưởng', 'phó ht học vụ', 'phó ht nề nếp', 'giáo vụ', 'tài chính', 'tổ trưởng bộ môn'];
+    const managementRoles = ['quản lý', 'hiệu trưởng', 'phó ht học vụ', 'phó ht nề nếp', 'giáo vụ', 'tài chính', 'tổ trưởng bộ môn', 'management'];
     
     let isAuthorized = false;
     
@@ -50,7 +55,7 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
         const normalizedAllowedRoles = allowedRoles.map(r => r.toLowerCase());
         
         // Nếu yêu cầu role 'admin' hoặc 'management'
-        if (normalizedAllowedRoles.includes('admin') && userRole === 'admin') {
+        if (normalizedAllowedRoles.includes('admin') && (userRole === 'admin' || userRole === 'quản trị viên' || userRole === 'administrator')) {
             isAuthorized = true;
         } else if (normalizedAllowedRoles.includes('management') && managementRoles.includes(userRole)) {
             isAuthorized = true;
@@ -62,11 +67,21 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
     if (!isAuthorized) {
         toast.warning("Bạn không có quyền truy cập vào khu vực này!");
         // Quay lại trang dashboard phù hợp với role của mình
-        if (userRole === 'admin') return <Navigate to="/admin/dashboard" replace />;
-        if (managementRoles.includes(userRole)) return <Navigate to="/management/dashboard" replace />;
-        if (userRole === 'teacher') return <Navigate to="/teacher/dashboard" replace />;
-        if (userRole === 'student') return <Navigate to="/student/dashboard" replace />;
-        if (userRole === 'guardian') return <Navigate to="/parent/dashboard" replace />;
+        if (userRole === 'admin' || userRole === 'quản trị viên' || userRole === 'administrator') 
+            return <Navigate to="/admin/dashboard" replace />;
+            
+        if (managementRoles.includes(userRole)) 
+            return <Navigate to="/management/dashboard" replace />;
+            
+        if (userRole === 'teacher' || userRole === 'giáo viên') 
+            return <Navigate to="/teacher/dashboard" replace />;
+            
+        if (userRole === 'student' || userRole === 'học sinh') 
+            return <Navigate to="/student/dashboard" replace />;
+            
+        if (userRole === 'guardian' || userRole === 'parent' || userRole === 'phụ huynh') 
+            return <Navigate to="/parent/dashboard" replace />;
+            
         return <Navigate to="/login" replace />;
     }
 

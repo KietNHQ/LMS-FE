@@ -17,11 +17,25 @@ export default function TeacherLayout() {
         return () => clearTimeout(timer);
     }, [location.pathname]);
 
+    // Đọc từ localStorage
+    const storedUser = (() => {
+        try {
+            return JSON.parse(localStorage.getItem("user") || "{}");
+        } catch {
+            return {};
+        }
+    })();
+
+    const userName = storedUser.fullName || storedUser.name || "Giáo viên";
+    const userEmail = storedUser.email || "";
+
     return (
         <div className={`teacher-layout theme-teacher ${isCollapsed ? "collapsed" : ""}`}>
             <Sidebar
                 role="teacher"
-                userName="Lê Minh Hoàng"
+                user={storedUser}
+                userName={userName}
+                userEmail={userEmail}
                 isCollapsed={isCollapsed}
                 setIsCollapsed={setIsCollapsed}
             />

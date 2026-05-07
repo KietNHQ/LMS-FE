@@ -37,6 +37,8 @@
     background: #885def;
 }
 
-.profile-actions-section.role-admin .profile-change-password-btn {
+.profile-actions-section.role-admin .profile-change-password-btn,
+.profile-actions-section.role-management .profile-change-password-btn,
+.profile-actions-section.role-manager .profile-change-password-btn {
     background: #1e2f5a;
 }

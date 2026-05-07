@@ -7,7 +7,7 @@ import UsersSearchFilterSort from "./components/usersSearchFilterSort/UsersSearc
 import UserDetailSection from "./components/userDetailSection/userDetailSection";
 import { CreateUserDialog, Pagination, LoadingSpinner, ConfirmationModal } from "../../../../../components/common";
 import { useCheckPermission } from "../../../../../hooks/useAuth";
-import { userService, studentsService } from "../../../../../services/pages/admin/users";
+import { userService, studentsService, permissionService } from "../../../../../services/pages/admin/users";
 
 // Detail Section Imports
 import TeacherInformationSection from "../teachers/components/teacherInformationSection/teacherInformationSection";
@@ -88,6 +88,9 @@ export default function AllUsers({ onCountChange, schoolYear, term, hasPermissio
     const [adminPasswordInput, setAdminPasswordInput] = useState("");
     const [newPasswordInput, setNewPasswordInput] = useState("");
 
+    const [allSystemPermissions, setAllSystemPermissions] = useState([]);
+    const [permissionMap, setPermissionMap] = useState({}); // key -> id mapping
+
     const closeConfirm = () => {
         setConfirmConfig(prev => ({ ...prev, isOpen: false }));
         setAdminPasswordInput("");
@@ -124,6 +127,26 @@ export default function AllUsers({ onCountChange, schoolYear, term, hasPermissio
         loadUsers();
         loadClasses();
     }, [loadUsers, loadClasses]);
+
+    // Load all system permissions for mapping (same as AdminManagers)
+    useEffect(() => {
+        const fetchAllPermissions = async () => {
+            try {
+                const perms = await permissionService.getAllPermissions();
+                setAllSystemPermissions(perms);
+                
+                const map = {};
+                perms.forEach(p => {
+                    const key = `${p.resource}:${p.action}`;
+                    if (p.id) map[key] = p.id;
+                });
+                setPermissionMap(map);
+            } catch (err) {
+                console.error("Failed to load system permissions for AllUsers:", err);
+            }
+        };
+        fetchAllPermissions();
+    }, []);
 
     const filteredUsers = useMemo(() => {
         return users.filter((user) => {
@@ -349,7 +372,23 @@ export default function AllUsers({ onCountChange, schoolYear, term, hasPermissio
 
     const handleCreateUser = async (formData) => {
         try {
-            await userService.createUser(formData);
+            // Map permissions to IDs if present
+            const updatedFormData = { ...formData };
+            if ((formData.role === "Quản lý" || formData.role === "Quản trị viên") && formData.profile?.permissions) {
+                const permissionIds = formData.profile.permissions
+                    .map(p => {
+                        const permId = permissionMap[p];
+                        return permId ? parseInt(permId) : null;
+                    })
+                    .filter(id => id !== null);
+                
+                updatedFormData.profile = {
+                    ...updatedFormData.profile,
+                    permission_ids: permissionIds
+                };
+            }
+
+            await userService.createUser(updatedFormData);
             setIsCreateOpen(false);
             setImportFeedback(null);
             await loadUsers();
@@ -374,7 +413,26 @@ export default function AllUsers({ onCountChange, schoolYear, term, hasPermissio
             onConfirm: async () => {
                 closeConfirm();
                 try {
+                    // 1. Update basic user info
                     await userService.updateUser(id, formData);
+                    
+                    // 2. Update permissions if the user is a manager/admin
+                    if ((formData.role === "Quản lý" || formData.role === "Quản trị viên") && formData.permissions) {
+                        const permissionIds = formData.permissions
+                            .map(p => {
+                                const permId = permissionMap[p];
+                                return permId ? parseInt(permId) : null;
+                            })
+                            .filter(id => id !== null);
+
+                        if (permissionIds.length > 0) {
+                            await permissionService.updateUserPermissions(id, {
+                                mode: "replace",
+                                permissionIds,
+                            });
+                        }
+                    }
+
                     setEditingUser(null);
                     setSelectedUser(null);
                     setActiveModalMode(null);
@@ -474,14 +532,50 @@ export default function AllUsers({ onCountChange, schoolYear, term, hasPermissio
         }
     };
 
-    const handleViewUser = (user) => {
+    const handleViewUser = async (user) => {
         setSelectedUser(user);
         setActiveModalMode("view");
+        
+        // Fetch fresh permissions if manager/admin
+        if (user.role === "Quản lý" || user.role === "Quản trị viên") {
+            try {
+                const rawPerms = await permissionService.getUserPermissions(user.id);
+                const perms = Array.isArray(rawPerms) 
+                    ? rawPerms.map(p => {
+                        if (typeof p === 'object' && p.resource && p.action) {
+                            return `${p.resource}:${p.action}`;
+                        }
+                        return typeof p === 'object' ? p.key || p.id : p;
+                    }) 
+                    : [];
+                setSelectedUser(prev => prev?.id === user.id ? { ...prev, permissions: perms } : prev);
+            } catch (err) {
+                console.error("Failed to load user permissions in AllUsers view:", err);
+            }
+        }
     };
 
-    const handleEditUser = (user) => {
+    const handleEditUser = async (user) => {
         setSelectedUser(user);
         setActiveModalMode("edit");
+
+        // Fetch fresh permissions if manager/admin
+        if (user.role === "Quản lý" || user.role === "Quản trị viên") {
+            try {
+                const rawPerms = await permissionService.getUserPermissions(user.id);
+                const perms = Array.isArray(rawPerms) 
+                    ? rawPerms.map(p => {
+                        if (typeof p === 'object' && p.resource && p.action) {
+                            return `${p.resource}:${p.action}`;
+                        }
+                        return typeof p === 'object' ? p.key || p.id : p;
+                    }) 
+                    : [];
+                setSelectedUser(prev => prev?.id === user.id ? { ...prev, permissions: perms } : prev);
+            } catch (err) {
+                console.error("Failed to load user permissions in AllUsers edit:", err);
+            }
+        }
     };
 
     const handleCloseModal = () => {

@@ -48,97 +48,7 @@ function normalizeSchoolYearKey(value = "") {
 }
 
 function getFallbackPayments() {
-    return [
-        {
-            id: 1,
-            title: "Hoc phi HK1",
-            term: "Học kỳ 1",
-            schoolYear: "2025-2026",
-            grade: "Khoi 10",
-            className: "10A1",
-            childName: "Nguyen Van B",
-            deadline: "2025-09-30",
-            feeItems: [
-                { id: "f-1", name: "Hoc phi", note: "Bat buoc", amount: 3800000 },
-                { id: "f-2", name: "Ban tru", note: "Bat buoc", amount: 700000 },
-                { id: "f-3", name: "Dich vu xe dua don", note: "Dich vu", amount: 350000 },
-                { id: "f-4", name: "Dong phuc", note: "Phat sinh", amount: 150000 },
-            ],
-            description: "Khoan thu hoc ky 1 duoc tao tu danh muc thu cua nha truong.",
-            discountCode: "",
-            discountAmount: 0,
-            status: "paid",
-            paidDate: "2025-09-25",
-            paidAmount: 5000000,
-            invoiceCode: "INV-HK1-2025-10A1-01",
-        },
-        {
-            id: 2,
-            title: "Hoc phi HK2",
-            term: "Học kỳ 2",
-            schoolYear: "2025-2026",
-            grade: "Khoi 10",
-            className: "10A1",
-            childName: "Nguyen Van B",
-            deadline: "2026-02-28",
-            feeItems: [
-                { id: "f-5", name: "Hoc phi", note: "Bat buoc", amount: 3600000 },
-                { id: "f-6", name: "Ban tru", note: "Bat buoc", amount: 700000 },
-                { id: "f-7", name: "Dich vu CLB", note: "Dich vu", amount: 200000 },
-            ],
-            description: "Khoan thu hoc ky 2, se cap nhat theo xac nhan tu admin.",
-            discountCode: "FIX500",
-            discountAmount: 500000,
-            status: "unpaid",
-            paidDate: "",
-            paidAmount: 0,
-            invoiceCode: "INV-HK2-2026-10A1-01",
-        },
-        {
-            id: 3,
-            title: "Hoc phi HK1",
-            term: "Học kỳ 1",
-            schoolYear: "2025-2026",
-            grade: "Khoi 12",
-            className: "12A2",
-            childName: "Nguyen Thi Ngoc Ha",
-            deadline: "2025-09-30",
-            feeItems: [
-                { id: "f-8", name: "Hoc phi", note: "Bat buoc", amount: 4300000 },
-                { id: "f-9", name: "Ban tru", note: "Bat buoc", amount: 800000 },
-                { id: "f-10", name: "Dich vu bo tro", note: "Dich vu", amount: 300000 },
-            ],
-            description: "Khoan thu hoc ky 1 cho hoc sinh lop 12A2.",
-            discountCode: "GIAM10",
-            discountAmount: 540000,
-            status: "paid",
-            paidDate: "2025-09-26",
-            paidAmount: 4860000,
-            invoiceCode: "INV-HK1-2025-12A2-01",
-        },
-        {
-            id: 4,
-            title: "Hoc phi HK2",
-            term: "Học kỳ 2",
-            schoolYear: "2025-2026",
-            grade: "Khoi 12",
-            className: "12A2",
-            childName: "Nguyen Thi Ngoc Ha",
-            deadline: "2026-02-28",
-            feeItems: [
-                { id: "f-11", name: "Hoc phi", note: "Bat buoc", amount: 4200000 },
-                { id: "f-12", name: "Ban tru", note: "Bat buoc", amount: 800000 },
-                { id: "f-13", name: "Dich vu CLB", note: "Dich vu", amount: 250000 },
-            ],
-            description: "Khoan thu hoc ky 2 cho hoc sinh lop 12A2.",
-            discountCode: "",
-            discountAmount: 0,
-            status: "unpaid",
-            paidDate: "",
-            paidAmount: 0,
-            invoiceCode: "INV-HK2-2026-12A2-01",
-        },
-    ];
+    return [];
 }
 
 function upgradeLegacySingleChildDemoData(list) {
@@ -643,9 +553,6 @@ export default function ParentPayments() {
                         </div>
 
                         <div className="qr-payment-meta">
-                            <p className="qr-demo-warning">
-                                [MO PHONG] Du lieu thanh toan chi de test giao dien, khong dung chuyen khoan that.
-                            </p>
                             <p><strong>Ngân hàng:</strong> {BANK_INFO.bankName}</p>
                             <p><strong>STK:</strong> {BANK_INFO.accountNumber}</p>
                             <p><strong>Tên tài khoản:</strong> {BANK_INFO.accountName}</p>

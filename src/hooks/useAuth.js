@@ -2,6 +2,25 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { authService } from "../services/shared/auth/authService";
 import { toast } from 'react-toastify';
+import { PERMISSIONS } from '../config/permissions';
+
+// Helper: Chuyển đổi danh sách quyền từ BE (object) sang FE (string key)
+const normalizePermissions = (permissionsInput) => {
+    // Nếu BE bọc quyền trong 1 object { permissions: [...] }
+    const permissions = Array.isArray(permissionsInput) 
+        ? permissionsInput 
+        : (permissionsInput?.permissions || permissionsInput?.items || []);
+
+    if (!Array.isArray(permissions)) return [];
+    
+    return permissions.map(p => {
+        if (typeof p === 'string') return p;
+        if (typeof p === 'object' && p.resource && p.action) {
+            return `${p.resource}:${p.action}`;
+        }
+        return p;
+    });
+};
 
 export const useLogin = () => {
     const navigate = useNavigate();
@@ -26,20 +45,26 @@ export const useLogin = () => {
             storage.setItem('accessToken', session.accessToken);
             storage.setItem('refreshToken', session.refreshToken);
             storage.setItem('userRole', user.role);
-            storage.setItem('user', JSON.stringify(user));
+            
+            // Chuẩn hóa permissions trước khi lưu
+            const normalizedUser = {
+                ...user,
+                permissions: normalizePermissions(user.permissions)
+            };
+            storage.setItem('user', JSON.stringify(normalizedUser));
 
             toast.success('Đăng nhập thành công!');
 
             const role = user.role?.toLowerCase();
-            if (role === 'admin') {
+            if (role === 'admin' || role === 'quản trị viên' || role === 'administrator') {
                 navigate('/admin/dashboard');
-            } else if (['quản trị viên', 'quản lý', 'hiệu trưởng', 'phó ht học vụ', 'phó ht nề nếp', 'giáo vụ', 'tài chính', 'tổ trưởng bộ môn'].includes(role)) {
+            } else if (role === 'manager' || role === 'management' || ['quản lý', 'hiệu trưởng', 'phó ht học vụ', 'phó ht nề nếp', 'giáo vụ', 'tài chính', 'tổ trưởng bộ môn'].includes(role)) {
                 navigate('/management/dashboard');
-            } else if (role === 'teacher') {
+            } else if (role === 'teacher' || role === 'giáo viên') {
                 navigate('/teacher/dashboard');
-            } else if (role === 'student') {
+            } else if (role === 'student' || role === 'học sinh') {
                 navigate('/student/dashboard');
-            } else if (role === 'guardian') {
+            } else if (role === 'guardian' || role === 'parent' || role === 'phụ huynh') {
                 navigate('/parent/dashboard');
             } else {
                 navigate('/');
@@ -94,10 +119,40 @@ export const useLogout = () => {
 
 export const useGetMe = () => {
     return useQuery({
-        queryKey: ['me'], // Tên cache trong React Query
-        queryFn: () => authService.getMe(),
-        retry: false, // Nếu lỗi 401 thì không cố gọi lại liên tục
-        staleTime: 5 * 60 * 1000, // 5 phút mới cần fetch lại (đỡ tốn tài nguyên)
+        queryKey: ['me'],
+        queryFn: async () => {
+            const response = await authService.getMe();
+            const user = response?.data ?? response;
+            
+            // [WORKAROUND] Nếu BE chưa trả về permissions trong /me, ta gọi thêm API lấy quyền riêng
+            if (user && (!user.permissions || user.permissions.length === 0)) {
+                try {
+                    // Import động để tránh vòng lặp phụ thuộc (circular dependency)
+                    const { permissionService } = await import('../services/pages/admin/users/permissionService');
+                    const perms = await permissionService.getUserPermissions(user.id);
+                    user.permissions = perms;
+                } catch (err) {
+                    console.error("Failed to fetch permissions workaround:", err);
+                }
+            }
+            
+            // Sync to storage
+            if (user) {
+                const normalizedUser = {
+                    ...user,
+                    permissions: normalizePermissions(user.permissions)
+                };
+                const isLocal = !!localStorage.getItem('user');
+                const storage = isLocal ? localStorage : sessionStorage;
+                storage.setItem('user', JSON.stringify(normalizedUser));
+                if (user.role) storage.setItem('userRole', user.role);
+                return normalizedUser;
+            }
+            
+            return user;
+        },
+        retry: false,
+        staleTime: 30 * 1000, // Fetch every 30s to keep permissions fresh
     });
 };
 
@@ -156,7 +211,7 @@ export const useCheckPermission = () => {
     const hasPermission = (requiredPermission) => {
         // Admin bypass - only for the technical 'admin' role
         const role = user.role?.toLowerCase() || '';
-        if (role === 'admin') return true;
+        if (role === 'admin' || role === 'quản trị viên') return true;
         
         // Check if user has the specific permission
         if (Array.isArray(user.permissions)) {

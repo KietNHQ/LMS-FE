@@ -107,7 +107,13 @@ export default function PrincipalDashboard() {
     return (
         <div className="principal-dashboard">
             <PageHeader
-                title="Hệ Thống Quản Trị Hiệu Trưởng"
+                title={`Hệ Thống Quản Trị ${(() => {
+                    try {
+                        const user = JSON.parse(localStorage.getItem("user") || "{}");
+                        // Nếu có fullName thì hiện fullName, không thì hiện roleLabel
+                        return user.fullName || "Cán Bộ Quản Lý";
+                    } catch { return "Cán Bộ Quản Lý"; }
+                })()}`}
 
                 actions={
                     <SchoolYearTermSelector

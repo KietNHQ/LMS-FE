@@ -14,6 +14,14 @@ export const ROLE_THEME = {
     admin: {
         label: "Quản trị viên",
         accent: "#1e2f5a"
+    },
+    management: {
+        label: "Quản lý",
+        accent: "#1e2f5a"
+    },
+    manager: {
+        label: "Quản lý",
+        accent: "#1e2f5a"
     }
 }
 
@@ -57,20 +65,42 @@ export const DEFAULT_PROFILE_BY_ROLE = {
         email: "phuhuynh.nguyen@familymail.vn"
     },
     admin: {
-        name: "Trần Gia Bảo",
+        name: "Quản trị viên",
         email: "admin@eduvn.edu.vn",
-        roleDescription: [
-            "Quản lý người dùng, phân quyền và cấu hình hệ thống.",
-            "Theo dõi vận hành toàn trường: lớp học, thời khóa biểu, báo cáo.",
-            "Giám sát thông báo, dữ liệu học vụ và hỗ trợ kỹ thuật nội bộ."
-        ]
+        roleDescription: [],
+        achievements: [],
+        permissions: []
+    },
+    management: {
+        name: "Cán bộ Quản lý",
+        email: "manager@eduvn.edu.vn",
+        roleDescription: [],
+        achievements: [],
+        permissions: []
     }
 }
 
+DEFAULT_PROFILE_BY_ROLE.manager = DEFAULT_PROFILE_BY_ROLE.management;
+
 export function getProfileByRole(role, profile) {
-    return {
-        ...(DEFAULT_PROFILE_BY_ROLE[role] || DEFAULT_PROFILE_BY_ROLE.student),
+    const defaultProfile = DEFAULT_PROFILE_BY_ROLE[role] || DEFAULT_PROFILE_BY_ROLE.student;
+    
+    // Merge real profile into default, handling field mapping (fullName -> name)
+    const mergedProfile = {
+        ...defaultProfile,
         ...(profile || {})
+    };
+
+    // Mapping fields if they exist in the incoming profile but not in the default schema
+    if (profile?.fullName && !profile.name) {
+        mergedProfile.name = profile.fullName;
     }
+
+    // Ensure permissions are correctly prioritized if they exist in profile
+    if (profile?.permissions && Array.isArray(profile.permissions)) {
+        mergedProfile.permissions = profile.permissions;
+    }
+
+    return mergedProfile;
 }
 

@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState, useRef } from "react";
 import { FiPlus, FiSearch, FiEdit2, FiTrash2, FiKey, FiUnlock, FiShield, FiX, FiUserX, FiUserCheck, FiMoreHorizontal, FiEye } from "react-icons/fi";
 import { PERMISSIONS } from "../../../../../config/permissions";
 import { Pagination, CreateUserDialog, ConfirmationModal } from "../../../../../components/common";
-import { userService } from "../../../../../services/pages/admin/users";
+import { userService, permissionService } from "../../../../../services/pages/admin/users";
 import Select from "../../../../../components/ui/Select/Select";
 import ManagerInformationSection from "./components/managerInformationSection/managerInformationSection";
 import "./AdminManagers.css";
@@ -101,6 +101,8 @@ export default function AdminManagers({ onCountChange, schoolYear, term, hasPerm
 
     const [openMenuId, setOpenMenuId] = useState(null);
     const menuRef = useRef(null);
+    const [allSystemPermissions, setAllSystemPermissions] = useState([]);
+    const [permissionMap, setPermissionMap] = useState({}); // key -> id mapping
 
     const closeConfirm = () => {
         setConfirmConfig(prev => ({ ...prev, isOpen: false }));
@@ -127,6 +129,30 @@ export default function AdminManagers({ onCountChange, schoolYear, term, hasPerm
     }, []);
 
     useEffect(() => { loadManagers(); }, [loadManagers]);
+
+    // Load all system permissions for mapping
+    useEffect(() => {
+        const fetchAllPermissions = async () => {
+            try {
+                const perms = await permissionService.getAllPermissions();
+                setAllSystemPermissions(perms);
+                
+                // Create map: "resource:action" -> id
+                const map = {};
+                perms.forEach(p => {
+                    const key = `${p.resource}:${p.action}`;
+                    if (p.id) {
+                        map[key] = p.id;
+                    }
+                });
+                console.log("Permission Map Initialized:", map);
+                setPermissionMap(map);
+            } catch (err) {
+                console.error("Failed to load all system permissions:", err);
+            }
+        };
+        fetchAllPermissions();
+    }, []);
 
     useEffect(() => {
         const handleClickOutside = (event) => {
@@ -179,16 +205,50 @@ export default function AdminManagers({ onCountChange, schoolYear, term, hasPerm
     }, [filtered, currentPage]);
 
     /* ── Detail Handlers ── */
-    const handleViewManager = (manager) => {
+    const handleViewManager = async (manager) => {
         setActiveManagerId(manager.id);
         setFormData({ ...manager });
         setActiveModalMode("view");
+        
+        // Fetch fresh permissions
+        try {
+            const rawPerms = await permissionService.getUserPermissions(manager.id);
+            // Normalize: Reconstruct key from resource and action
+            const perms = Array.isArray(rawPerms) 
+                ? rawPerms.map(p => {
+                    if (typeof p === 'object' && p.resource && p.action) {
+                        return `${p.resource}:${p.action}`;
+                    }
+                    return typeof p === 'object' ? p.key || p.id : p;
+                }) 
+                : [];
+            setFormData(prev => ({ ...prev, permissions: perms }));
+        } catch (err) {
+            console.error("Failed to load permissions:", err);
+        }
     };
 
-    const handleEditManager = (manager) => {
+    const handleEditManager = async (manager) => {
         setActiveManagerId(manager.id);
         setFormData({ ...manager });
         setActiveModalMode("edit");
+
+        // Fetch fresh permissions
+        try {
+            const rawPerms = await permissionService.getUserPermissions(manager.id);
+            // Normalize: Reconstruct key from resource and action
+            const perms = Array.isArray(rawPerms) 
+                ? rawPerms.map(p => {
+                    if (typeof p === 'object' && p.resource && p.action) {
+                        return `${p.resource}:${p.action}`;
+                    }
+                    return typeof p === 'object' ? p.key || p.id : p;
+                }) 
+                : [];
+            setFormData(prev => ({ ...prev, permissions: perms }));
+        } catch (err) {
+            console.error("Failed to load permissions:", err);
+        }
     };
 
     const handleCloseDetail = () => {
@@ -202,13 +262,29 @@ export default function AdminManagers({ onCountChange, schoolYear, term, hasPerm
     };
 
     /* ── Handlers ── */
-    const handleCreate = async (payload) => {
+    const handleCreate = async (formData) => {
         setIsSaving(true);
         try {
-            await userService.createUser(payload);
+            // Map permissions to IDs if present
+            const updatedFormData = { ...formData };
+            if (formData.profile?.permissions) {
+                const permissionIds = formData.profile.permissions
+                    .map(p => {
+                        const permId = permissionMap[p];
+                        return permId ? parseInt(permId) : null;
+                    })
+                    .filter(id => id !== null);
+                
+                updatedFormData.profile = {
+                    ...updatedFormData.profile,
+                    permission_ids: permissionIds
+                };
+            }
+
+            await userService.createUser(updatedFormData);
             setCreateOpen(false);
             await loadManagers();
-            window.alert(`Đã tạo thành công tài khoản quản lý: ${payload.name}.`);
+            window.alert(`Đã tạo thành công tài khoản quản lý: ${formData.name}.`);
         } catch (err) {
             window.alert(getErrorMessage(err, "Không thể tạo tài khoản quản lý."));
         } finally {
@@ -428,10 +504,33 @@ export default function AdminManagers({ onCountChange, schoolYear, term, hasPerm
                 closeConfirm();
                 setIsSaving(true);
                 try {
+                    // 1. Update basic user info
                     await userService.updateUser(id, payload);
+
+                    // 2. Update permissions if they exist in payload
+                    if (payload.permissions) {
+                        const permissionIds = payload.permissions
+                            .map(p => {
+                                // p is a string (key like "users:read")
+                                const id = permissionMap[p];
+                                return id ? parseInt(id) : null;
+                            })
+                            .filter(id => id !== null);
+
+                        if (permissionIds.length > 0) {
+                            console.log("Saving Permissions:", { mode: "replace", permissionIds });
+                            await permissionService.updateUserPermissions(id, {
+                                mode: "replace",
+                                permissionIds,
+                            });
+                        } else {
+                            console.warn("No permissions mapped. Payload keys:", payload.permissions);
+                        }
+                    }
+
                     handleCloseDetail();
                     await loadManagers();
-                    window.alert("Đã cập nhật tài khoản quản lý thành công.");
+                    window.alert("Đã cập nhật tài khoản quản lý và quyền hạn thành công.");
                 } catch (err) {
                     window.alert(getErrorMessage(err, "Không thể cập nhật tài khoản."));
                 } finally {
@@ -518,7 +617,7 @@ export default function AdminManagers({ onCountChange, schoolYear, term, hasPerm
 
                             return (
                                 <div 
-                                    className={`user-detail-row ${m.status === "Vô hiệu hóa" ? "is-inactive" : ""} ${selectedUserIds.includes(m.id) ? "is-selected" : ""} ${isMenuOpen ? "menu-open" : ""}`} 
+                                    className={`user-detail-row ${m.status === "Vô hiệu hóa" ? "is-inactive" : ""} ${selectedUserIds.includes(m.id) ? "is-selected" : ""} ${isMenuOpen ? "menu-open" : ""} ${(!m.role || m.role === "Quản trị viên" || m.role === "Quản lý") ? "row-is-system" : ""}`} 
                                     key={m.id}
                                     onClick={() => handleViewManager(m)}
                                 >
@@ -541,9 +640,9 @@ export default function AdminManagers({ onCountChange, schoolYear, term, hasPerm
                                     </div>
 
                                     <div className="user-detail-role-group">
-                                        <span className={`user-role-chip ${avatarColor === 'navy' ? 'admin' : 'teacher'}`}>
-                                            {m.role || "Quản lý"}
-                                        </span>
+                                         <span className={`user-role-chip ${m.role === 'Quản trị viên' ? 'admin' : (!m.role || m.role === 'Quản lý' ? 'manager' : 'teacher')}`}>
+                                             {m.role || "Quản lý"}
+                                         </span>
                                         {m.position && <span className="user-position-text">{m.position}</span>}
                                     </div>
 
@@ -569,26 +668,32 @@ export default function AdminManagers({ onCountChange, schoolYear, term, hasPerm
                                                         <FiEye />
                                                         <span>Xem chi tiết</span>
                                                     </button>
-                                                    <button className="user-menu-item" onClick={() => { handleEditManager(m); setOpenMenuId(null); }}>
-                                                        <FiEdit2 />
-                                                        <span>Chỉnh sửa</span>
-                                                    </button>
+                                                                                                         {m.role !== "Quản trị viên" && (
+                                                        <button className="user-menu-item" onClick={() => { handleEditManager(m); setOpenMenuId(null); }}>
+                                                            <FiEdit2 />
+                                                            <span>Chỉnh sửa</span>
+                                                        </button>
+                                                     )}
                                                     
-                                                    <button 
-                                                        className="user-menu-item status" 
-                                                        onClick={() => { setStatusTarget(m); setOpenMenuId(null); }}
-                                                    >
-                                                        {m.status === "Hoạt động" ? <FiUserX /> : <FiUserCheck />}
-                                                        <span>{m.status === "Hoạt động" ? "Vô hiệu hóa" : "Kích hoạt"}</span>
-                                                    </button>
+                                                                                                         {m.role !== "Quản trị viên" && (
+                                                        <button 
+                                                            className="user-menu-item status" 
+                                                            onClick={() => { setStatusTarget(m); setOpenMenuId(null); }}
+                                                        >
+                                                            {m.status === "Hoạt động" ? <FiUserX /> : <FiUserCheck />}
+                                                            <span>{m.status === "Hoạt động" ? "Vô hiệu hóa" : "Kích hoạt"}</span>
+                                                        </button>
+                                                     )}
 
-                                                    <button 
-                                                        className="user-menu-item delete" 
-                                                        onClick={() => { handleDeleteUser(m); setOpenMenuId(null); }}
-                                                    >
-                                                        <FiTrash2 />
-                                                        <span>Xóa tài khoản</span>
-                                                    </button>
+                                                                                                         {m.role !== "Quản trị viên" && (
+                                                        <button 
+                                                            className="user-menu-item delete" 
+                                                            onClick={() => { handleDeleteUser(m); setOpenMenuId(null); }}
+                                                        >
+                                                            <FiTrash2 />
+                                                            <span>Xóa tài khoản</span>
+                                                        </button>
+                                                     )}
                                                 </div>
                                             )}
                                         </div>

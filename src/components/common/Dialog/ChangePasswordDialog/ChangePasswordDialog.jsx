@@ -77,7 +77,7 @@ export default function ChangePasswordDialog({ open, role = "student", onClose }
 
 				{/* Removed Admin reset notice since it's no longer random */}
 
-				<form onSubmit={handleSubmit} className="change-password-form">
+				<form onSubmit={handleSubmit} className={`change-password-form role-${role}`}>
 					<label>
 						Mật khẩu hiện tại
 						<div className="password-input-wrapper">
@@ -142,7 +142,7 @@ export default function ChangePasswordDialog({ open, role = "student", onClose }
 
 					{error ? <p className="change-password-error">{error}</p> : null}
 
-					<div className={`change-password-actions role-${role}`}>
+					<div className="change-password-actions">
 						<button type="button" className="change-password-cancel" onClick={onClose}>
 							Hủy
 						</button>

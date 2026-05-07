@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { FiEye, FiEyeOff } from "react-icons/fi";
 import AuthLayout from "../../layouts/auth/AuthLayout.jsx";
 import { useLogin } from "../../hooks/useAuth";
@@ -26,6 +26,7 @@ function Login() {
     // State lưu lỗi mật khẩu từ Frontend
     const [passwordError, setPasswordError] = useState("");
 
+    const navigate = useNavigate();
     const loginMutation = useLogin();
     const isSubmitting = loginMutation.isPending;
 
@@ -43,6 +44,31 @@ function Login() {
     }, [isCardLoading]);
 
     useEffect(() => {
+        // AUTO-REDIRECT NẾU ĐÃ ĐĂNG NHẬP
+        const accessToken = localStorage.getItem("accessToken") || sessionStorage.getItem("accessToken");
+        const userString = localStorage.getItem("user") || sessionStorage.getItem("user");
+        
+        if (accessToken && userString) {
+            try {
+                const user = JSON.parse(userString);
+                const role = user.role?.toLowerCase();
+                
+                if (role === 'admin' || role === 'quản trị viên' || role === 'administrator') {
+                    navigate('/admin/dashboard', { replace: true });
+                } else if (role === 'manager' || role === 'management' || ['quản lý', 'hiệu trưởng', 'phó ht học vụ', 'phó ht nề nếp', 'giáo vụ', 'tài chính', 'tổ trưởng bộ môn'].includes(role)) {
+                    navigate('/management/dashboard', { replace: true });
+                } else if (role === 'teacher' || role === 'giáo viên') {
+                    navigate('/teacher/dashboard', { replace: true });
+                } else if (role === 'student' || role === 'học sinh') {
+                    navigate('/student/dashboard', { replace: true });
+                } else if (role === 'guardian' || role === 'parent' || role === 'phụ huynh') {
+                    navigate('/parent/dashboard', { replace: true });
+                }
+            } catch (e) {
+                console.error("Lỗi parse user:", e);
+            }
+        }
+
         return () => {
             if (submitSpinnerTimerRef.current) {
                 clearTimeout(submitSpinnerTimerRef.current);

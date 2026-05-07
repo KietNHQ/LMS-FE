@@ -49,6 +49,32 @@
   white-space: nowrap;
 }
 
+.sidebar-role-switch-btn {
+  margin-left: auto;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 0.75rem;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.sidebar-role-switch-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: rotate(180deg);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.sidebar-role-switch-btn svg {
+  font-size: 1rem;
+}
+
 /* ===== USER CARD ===== */
 .sidebar-user-card {
   display: flex;

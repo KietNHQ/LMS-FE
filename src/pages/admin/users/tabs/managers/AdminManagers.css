@@ -137,6 +137,46 @@
     color: #059669;
 }
 
+
+/* ── Role Tags Hover Effect ── */
+.user-role-chip {
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: default;
+    border: 1px solid transparent;
+}
+
+/* Hiệu ứng nhích lên cho TẤT CẢ các thẻ khi hover */
+.user-role-chip:hover {
+    transform: translateY(-2.5px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Hiệu ứng đổi màu NỀN đặc biệt dành cho Admin và Manager */
+.user-role-chip.admin:hover {
+    background-color: #1e293b !important; /* Đổi sang màu tối hơn hoặc màu bạn muốn */
+    color: #ffffff !important;
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+.user-role-chip.manager:hover {
+    background-color: #1e3a8a !important; /* Màu xanh đậm khác biệt */
+    color: #ffffff !important;
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Hiệu ứng cho các thẻ khác (Giáo viên, Phụ huynh...) - Chỉ nhích lên, không đổi màu nền */
+.user-role-chip.teacher:hover {
+    filter: brightness(1.02); /* Chỉ tăng sáng nhẹ, không đổi màu nền chính */
+}
+
+/* ── Disable Row Hover for System Accounts ── */
+.user-detail-row.row-is-system:hover {
+    background-color: #ffffff !important; 
+    box-shadow: none !important;
+    transform: none !important;
+    cursor: default;
+}
+
 /* Pagination Row Styling */
 .admin-managers-pagination-row {
     display: flex;

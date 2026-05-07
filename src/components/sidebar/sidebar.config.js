@@ -102,10 +102,10 @@ export const sidebarConfig = {
         { label: "Kỳ Thi",             icon: FiCalendar,      path: "/management/exams",        requiredPermissions: [PERMISSIONS.QUIZ_VIEW] },
         { label: "Thời Khóa Biểu",    icon: FiCalendar,      path: "/management/timetable",   requiredPermissions: [PERMISSIONS.TIMETABLE_VIEW] },
         { label: "Học Phí & Tài Chính",icon: FiCreditCard,    path: "/management/finance",     requiredPermissions: [PERMISSIONS.FINANCE_TUITION_VIEW] },
-        { label: "Phê Duyệt",          icon: FiCheckSquare,   path: "/management/approvals" },
+        { label: "Phê Duyệt",          icon: FiCheckSquare,   path: "/management/approvals",    requiredPermissions: [PERMISSIONS.APPROVAL_REQUEST, PERMISSIONS.APPROVAL_PROCESS] },
         { label: "Trò chuyện",         icon: FiMessageSquare, path: "/management/chat" },
         { label: "Thông Báo",          icon: FiBell,          path: "/management/notifications" },
-        { label: "Báo Cáo",            icon: FiBarChart2,     path: "/management/reports" },
+        { label: "Báo Cáo",            icon: FiBarChart2,     path: "/management/reports",      requiredPermissions: [PERMISSIONS.REPORT_VIEW] },
     ],
 
     admin: [

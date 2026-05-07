@@ -1,7 +1,7 @@
 import "./OverviewCards.css";
 import { FiAward, FiTrendingUp, FiBell, FiCreditCard } from "react-icons/fi";
 
-export default function OverviewCards({ yearAvg, hk1Avg }) {
+export default function OverviewCards({ yearAvg, hk1Avg, unreadCount }) {
   return (
     <div className="cards">
 
@@ -29,12 +29,12 @@ export default function OverviewCards({ yearAvg, hk1Avg }) {
         </div>
       </div>
 
-      {/* THÔNG BÁO (có thể dynamic sau) */}
+      {/* THÔNG BÁO */}
       <div className="card">
         <div>
           <p>Thông báo</p>
-          <h3>2</h3>
-          <span>Chưa đọc</span>
+          <h3>{unreadCount || 0}</h3>
+          <span>{unreadCount > 0 ? "Chưa đọc" : "Hệ thống"}</span>
         </div>
 
         <div className="icon orange">
@@ -46,7 +46,7 @@ export default function OverviewCards({ yearAvg, hk1Avg }) {
       <div className="card">
         <div>
           <p>Học phí chưa đóng</p>
-          <h3>5trđ</h3>
+          <h3>---</h3>
         </div>
 
         <div className="icon red">

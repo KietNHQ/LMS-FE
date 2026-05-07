@@ -2,7 +2,7 @@ import React from "react";
 import "./RoleDescriptionSection.css";
 
 export default function RoleDescriptionSection({ descriptions = [] }) {
-    if (!descriptions.length) return null;
+    if (!Array.isArray(descriptions) || !descriptions.length) return null;
 
     return (
         <div className="role-description-section profile-info-card">

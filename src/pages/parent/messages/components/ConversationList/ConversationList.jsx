@@ -2,19 +2,6 @@ import React, { useMemo, useState } from "react";
 import "./ConversationList.css";
 import { FiSearch, FiUsers } from "react-icons/fi";
 
-const defaultTeachers = [
-    {
-        id: 1,
-        name: "Cô Trần Thị Lan Anh",
-        className: "10A1"
-    },
-    {
-        id: 2,
-        name: "Thầy Lê Minh Hoàng",
-        className: "11A2"
-    }
-];
-
 const normalizeText = (value) =>
     value
         .toLowerCase()
@@ -24,8 +11,24 @@ const normalizeText = (value) =>
 export default function ConversationList({ onSelect, conversationList = [], isLoading = false }) {
     const [searchQuery, setSearchQuery] = useState("");
 
-    // Use API data if available, otherwise fallback to default data
-    const teachers = conversationList.length > 0 ? conversationList : defaultTeachers;
+    // [CẢI TIẾN] Lấy danh sách giáo viên thực tế từ các con đã liên kết
+    const teachersFromProfile = useMemo(() => {
+        const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
+        const localChildren = storedUser?.profile?.linkedStudents || 
+                             storedUser?.linkedStudentIds || [];
+        
+        return localChildren
+            .filter(c => c.id !== "child1" && c.name !== "Nguyễn Minh Tuấn")
+            .map(c => ({
+                id: c.teacherId || `teacher-${c.id || c.studentId}`,
+                name: c.teacherName || "Giáo viên chủ nhiệm",
+                className: c.className || c.class_name || "---"
+            }))
+            .filter((v, i, a) => a.findIndex(t => t.name === v.name) === i); // Lọc trùng giáo viên
+    }, []);
+
+    // Ưu tiên dữ liệu từ API tin nhắn, nếu không có thì lấy từ Profile con
+    const teachers = conversationList.length > 0 ? conversationList : teachersFromProfile;
 
     const filteredTeachers = useMemo(() => {
         const query = normalizeText(searchQuery.trim());

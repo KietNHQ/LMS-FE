@@ -17,11 +17,24 @@ export default function StudentLayout() {
         return () => clearTimeout(timer);
     }, [location.pathname]);
 
+    // Đọc từ localStorage
+    const storedUser = (() => {
+        try {
+            return JSON.parse(localStorage.getItem("user") || "{}");
+        } catch {
+            return {};
+        }
+    })();
+
+    const userName = storedUser.fullName || storedUser.name || "Học sinh";
+    const userEmail = storedUser.email || "";
+
     return (
         <div className={`student-layout ${isCollapsed ? "collapsed" : ""}`}>
             <Sidebar
                 role="student"
-                userName="Nguyễn Minh Tuấn"
+                userName={userName}
+                userEmail={userEmail}
                 isCollapsed={isCollapsed}
                 setIsCollapsed={setIsCollapsed}
             />

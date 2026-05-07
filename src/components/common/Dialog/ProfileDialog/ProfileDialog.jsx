@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from "react";
+import { FiShield } from "react-icons/fi";
 import ProfileHeaderSection from "./sections/profileHeaderSection/ProfileHeaderSection";
 import BasicInfoSection from "./sections/basicInfoSection/BasicInfoSection";
 import ContactInfoSection from "./sections/contactInfoSection/ContactInfoSection";
@@ -9,7 +10,60 @@ import RoleDescriptionSection from "./sections/roleDescriptionSection/RoleDescri
 import ProfileActionsSection from "./sections/profileActionsSection/ProfileActionsSection";
 import ChangePasswordDialog from "../ChangePasswordDialog/ChangePasswordDialog";
 import { getProfileByRole, ROLE_THEME } from "./profileData";
+import { PERMISSION_GROUPS } from "../../../../config/permissions";
 import "./ProfileDialog.css";
+
+// Nội bộ component để tránh lỗi Import Module/MIME type
+function PermissionsSection({ permissions = [], role }) {
+    const isAdmin = role === "admin" || role === "quản trị viên";
+    const hasPermissions = Array.isArray(permissions) && permissions.length > 0;
+    
+    const groupedPermissions = useMemo(() => {
+        const groups = Array.isArray(PERMISSION_GROUPS) ? PERMISSION_GROUPS : [];
+        
+        return groups.map(group => {
+            const matchedPermissions = group.permissions.filter(p => {
+                if (isAdmin) return true;
+                return permissions.includes(p.id);
+            });
+
+            return {
+                ...group,
+                matchedPermissions
+            };
+        }).filter(group => group.matchedPermissions.length > 0);
+    }, [permissions, isAdmin]);
+
+    return (
+        <div className="permissions-section profile-info-card grouped-mode">
+            <div className="permissions-section-header">
+                <FiShield className="section-icon" />
+                <h3>Chi tiết quyền hạn {isAdmin ? "(Toàn quyền)" : `(${permissions.length})`}</h3>
+            </div>
+            
+            <div className="permissions-groups-container">
+                {groupedPermissions.length > 0 ? (
+                    groupedPermissions.map((group) => (
+                        <div key={group.id} className="permission-group-item">
+                            <h4 className="group-title">{group.label.toUpperCase()}</h4>
+                            <div className="permissions-badges-grid">
+                                {group.matchedPermissions.map((p) => (
+                                    <span key={p.id} className="permission-tag">
+                                        {p.label}
+                                    </span>
+                                ))}
+                            </div>
+                        </div>
+                    ))
+                ) : (
+                    <div className="permissions-empty-state">
+                        <p>Tài khoản chưa được cấp quyền hệ thống.</p>
+                    </div>
+                )}
+            </div>
+        </div>
+    );
+}
 
 export default function ProfileDialog({ open, role = "student", themeRole, profile, onClose }) {
     const [isPasswordDialogOpen, setIsPasswordDialogOpen] = useState(false);
@@ -46,8 +100,16 @@ export default function ProfileDialog({ open, role = "student", themeRole, profi
             ];
         }
 
+        if (role === "management" || role === "admin" || role === "manager") {
+            return [
+                { label: "Họ và tên", value: resolvedProfile.name || "Người dùng" },
+                { label: "Vai trò", value: roleTheme?.label || "Thành viên" },
+                { label: "Chức danh", value: resolvedProfile.title || "Cán bộ nhân viên" }
+            ];
+        }
+
         return [];
-    }, [role, resolvedProfile]);
+    }, [role, resolvedProfile, roleTheme]);
 
     const contactFields = useMemo(() => {
         if (role === "student") {
@@ -67,22 +129,40 @@ export default function ProfileDialog({ open, role = "student", themeRole, profi
             return [{ label: "Email", value: resolvedProfile.email }];
         }
 
+        if (role === "management" || role === "admin" || role === "manager") {
+            return [
+                { label: "Email", value: resolvedProfile.email },
+                { label: "Số điện thoại", value: resolvedProfile.phone || "—" }
+            ];
+        }
+
         return [];
     }, [role, resolvedProfile]);
 
     if (!open) return null;
 
     return (
-        <div className="profile-dialog" onClick={onClose}>
+        <div className="profile-dialog" data-role={visualRole} onClick={onClose}>
             <div className="profile-dialog-content" onClick={(event) => event.stopPropagation()}>
-                <ProfileHeaderSection name={resolvedProfile.name} roleLabel={roleTheme.label} role={visualRole} />
+                <ProfileHeaderSection name={resolvedProfile.name || "Người dùng"} roleLabel={roleTheme?.label || "Thành viên"} role={visualRole} />
                 <div className="profile-dialog-sections">
                     <BasicInfoSection fields={basicFields} />
                     <ContactInfoSection fields={contactFields} />
-                    <AchievementsSection achievements={resolvedProfile.achievements} />
-                    <HomeroomClassSection subject={resolvedProfile.subject} homeroomClass={resolvedProfile.homeroomClass} />
-                    <LinkedStudentsSection children={resolvedProfile.children} total={resolvedProfile.childrenCount} />
-                    <RoleDescriptionSection descriptions={resolvedProfile.roleDescription} />
+                    {resolvedProfile.achievements && resolvedProfile.achievements.length > 0 && (
+                        <AchievementsSection achievements={resolvedProfile.achievements} />
+                    )}
+                    {role === "teacher" && (
+                        <HomeroomClassSection subject={resolvedProfile.subject} homeroomClass={resolvedProfile.homeroomClass} />
+                    )}
+                    {role === "parent" && resolvedProfile.children && resolvedProfile.children.length > 0 && (
+                        <LinkedStudentsSection children={resolvedProfile.children} total={resolvedProfile.childrenCount} />
+                    )}
+                    {(role === "admin" || role === "management" || role === "manager") && resolvedProfile.roleDescription && (
+                        <RoleDescriptionSection descriptions={resolvedProfile.roleDescription} />
+                    )}
+                    {(role === "admin" || role === "management" || role === "manager" || role === "quản trị viên") && (
+                        <PermissionsSection permissions={resolvedProfile.permissions} role={visualRole} />
+                    )}
                 </div>
                 <ProfileActionsSection
                     role={visualRole}
@@ -99,4 +179,3 @@ export default function ProfileDialog({ open, role = "student", themeRole, profi
         </div>
     );
 }
-

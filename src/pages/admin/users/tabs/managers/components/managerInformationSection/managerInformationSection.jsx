@@ -1,5 +1,6 @@
-import React, { useState, useRef, useEffect } from "react";
-import { FiChevronDown, FiEdit2, FiX } from "react-icons/fi";
+import React, { useState, useRef, useEffect, useMemo } from "react";
+import { FiChevronDown, FiEdit2, FiX, FiShield, FiCheckSquare } from "react-icons/fi";
+import { PERMISSIONS, MANAGEMENT_TITLES, PERMISSION_GROUPS } from "../../../../../../../config/permissions";
 import "./managerInformationSection.css";
 
 function getAvatarLetter(name) {
@@ -13,7 +14,6 @@ function getStatusClass(status) {
 
 function formatDisplayDate(dateString) {
     if (!dateString) return "--";
-    // If it's ISO format, take YYYY-MM-DD
     const cleanDate = dateString.slice(0, 10);
     const parts = cleanDate.split("-");
     if (parts.length === 3) {
@@ -33,11 +33,16 @@ export default function ManagerInformationSection({
 }) {
     const isViewMode = mode === "view";
     const isEditMode = mode === "edit";
-    const title = isEditMode ? "Chỉnh sửa cán bộ" : "Thêm cán bộ mới";
-    const submitLabel = isEditMode ? "Lưu thay đổi" : "Tạo mới";
+    
+    // Bảo vệ Admin: Không cho phép sửa nếu là Quản trị viên
+    const isAdminAccount = formData.role === "Quản trị viên";
+    
+    const title = isEditMode ? "Chỉnh sửa cán bộ" : "Chi tiết cán bộ";
+    const submitLabel = isEditMode ? "Lưu thay đổi" : "Đóng";
 
     const [isRoleOpen, setIsRoleOpen] = useState(false);
     const [isStatusOpen, setIsStatusOpen] = useState(false);
+    const [expandedGroups, setExpandedGroups] = useState(["users"]);
 
     const roleRef = useRef(null);
     const statusRef = useRef(null);
@@ -51,8 +56,72 @@ export default function ManagerInformationSection({
         return () => document.removeEventListener("mousedown", handleClickOutside);
     }, []);
 
-    const permissions = Array.isArray(formData.permissions) ? formData.permissions : [];
-    const permissionsCount = permissions.length;
+    const permissions = useMemo(() => {
+        if (Array.isArray(formData.permissions)) return formData.permissions;
+        if (formData.profile && Array.isArray(formData.profile.permissions)) return formData.profile.permissions;
+        return [];
+    }, [formData]);
+
+    const managerTitleKey = useMemo(() => {
+        if (formData.profile?.titleKey) return formData.profile.titleKey;
+        // fallback to title lookup
+        const title = formData.profile?.title || formData.position || "";
+        const found = MANAGEMENT_TITLES.find(t => t.label === title);
+        return found ? found.value : "custom";
+    }, [formData]);
+
+    const handlePermissionToggle = (permId) => {
+        if (!isEditMode) return;
+        const newPerms = permissions.includes(permId)
+            ? permissions.filter(id => id !== permId)
+            : [...permissions, permId];
+        
+        // Update both top level and profile to be safe
+        onChange("permissions", newPerms);
+        if (formData.profile) {
+            onChange("profile", { ...formData.profile, permissions: newPerms, titleKey: "custom" });
+        }
+    };
+
+    const handleGroupToggle = (groupId, checked) => {
+        if (!isEditMode) return;
+        const group = PERMISSION_GROUPS.find(g => g.id === groupId);
+        if (!group) return;
+        
+        const groupPermIds = group.permissions.map(p => p.id);
+        let newPerms;
+        if (checked) {
+            newPerms = Array.from(new Set([...permissions, ...groupPermIds]));
+        } else {
+            newPerms = permissions.filter(id => !groupPermIds.includes(id));
+        }
+        
+        onChange("permissions", newPerms);
+        if (formData.profile) {
+            onChange("profile", { ...formData.profile, permissions: newPerms, titleKey: "custom" });
+        }
+    };
+
+    const handleTitleChange = (titleKey) => {
+        if (!isEditMode) return;
+        const found = MANAGEMENT_TITLES.find(t => t.value === titleKey);
+        if (!found) return;
+
+        const newPerms = found.permissions || [];
+        const newTitleLabel = found.label;
+
+        onChange("permissions", newPerms);
+        onChange("role", found.value === "custom" ? formData.role : found.label);
+        
+        if (formData.profile) {
+            onChange("profile", { 
+                ...formData.profile, 
+                permissions: newPerms, 
+                titleKey: titleKey,
+                title: newTitleLabel
+            });
+        }
+    };
 
     return (
         <div className="manager-modal-overlay" onClick={onClose}>
@@ -70,15 +139,17 @@ export default function ManagerInformationSection({
                                 </div>
                             </div>
                             <div className="manager-view-header-actions">
-                                <button
-                                    type="button"
-                                    className="manager-view-icon-btn"
-                                    onClick={onRequestEdit}
-                                    title="Chỉnh sửa"
-                                    aria-label="Chỉnh sửa"
-                                >
-                                    <FiEdit2 />
-                                </button>
+                                {!isAdminAccount && (
+                                    <button
+                                        type="button"
+                                        className="manager-view-icon-btn"
+                                        onClick={onRequestEdit}
+                                        title="Chỉnh sửa"
+                                        aria-label="Chỉnh sửa"
+                                    >
+                                        <FiEdit2 />
+                                    </button>
+                                )}
                                 <button
                                     type="button"
                                     className="manager-view-icon-btn"
@@ -100,20 +171,34 @@ export default function ManagerInformationSection({
                                 <span>Số điện thoại</span>
                                 <strong>{formData.phone || "--"}</strong>
                             </div>
-                            <div className="manager-view-row permissions">
-                                <span>Quyền hạn</span>
-                                <div className="manager-permissions-list">
-                                    {permissions.length === 0 ? (
-                                        <span className="no-permissions">0 quyền được cấp</span>
-                                    ) : (
-                                        permissions.map((p, idx) => (
-                                            <span key={idx} className="permission-tag">
-                                                {p.split('.').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
-                                            </span>
-                                        ))
-                                    )}
+                            
+                            {/* Chi tiết quyền hạn trong chế độ Xem */}
+                            <div className="manager-view-permissions-section">
+                                <div className="section-title">
+                                    <FiShield /> Chi tiết quyền hạn ({permissions.length})
+                                </div>
+                                <div className="manager-perm-groups-display">
+                                    {PERMISSION_GROUPS.map(g => {
+                                        const grantedInGroup = g.permissions.filter(p => permissions.includes(p.id));
+                                        if (grantedInGroup.length === 0) return null;
+                                        
+                                        return (
+                                            <div key={g.id} className="perm-group-display-item">
+                                                <div className="group-label">{g.label}</div>
+                                                <div className="group-perms">
+                                                    {grantedInGroup.map(p => (
+                                                        <span key={p.id} className="perm-tag-simple">
+                                                            {p.label}
+                                                        </span>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                    {permissions.length === 0 && <span className="no-perms-msg">Chưa được cấp quyền nào.</span>}
                                 </div>
                             </div>
+
                             <div className="manager-view-row">
                                 <span>Trạng thái</span>
                                 <strong>
@@ -176,8 +261,6 @@ export default function ManagerInformationSection({
                                     />
                                 </div>
                             </div>
-
-
 
                             <div className="manager-form-grid two-cols">
                                 <div className="manager-form-group">
@@ -244,6 +327,73 @@ export default function ManagerInformationSection({
                                     </div>
                                 </div>
                             </div>
+
+                            {/* PHẦN PHÂN QUYỀN CHI TIẾT (GIỐNG CREATE) */}
+                            <div className="manager-permissions-edit-section">
+                                <h3 className="section-header">Phân quyền quản lý</h3>
+                                <div className="manager-form-group">
+                                    <label>Chức vụ mẫu</label>
+                                    <div className="manager-custom-select">
+                                        <SelectInternal 
+                                            value={managerTitleKey} 
+                                            options={MANAGEMENT_TITLES} 
+                                            onChange={(val) => handleTitleChange(val)}
+                                        />
+                                    </div>
+                                </div>
+
+                                {managerTitleKey === "custom" && (
+                                    <div className="manager-form-group">
+                                        <label>Tên chức vụ tùy chỉnh</label>
+                                        <input 
+                                            type="text" 
+                                            value={formData.profile?.customTitle || formData.position || ""} 
+                                            onChange={(e) => {
+                                                const val = e.target.value;
+                                                onChange("profile", { ...formData.profile, customTitle: val, title: val });
+                                            }}
+                                            placeholder="VD: Trưởng phòng đào tạo"
+                                        />
+                                    </div>
+                                )}
+
+                                 <div className="admin-create-user-dialog-perm-groups">
+                                     {PERMISSION_GROUPS.map(g => (
+                                        <div key={g.id} className={`perm-group-item ${expandedGroups.includes(g.id) ? "active" : ""}`}>
+                                            <div 
+                                                className="perm-group-header" 
+                                                onClick={() => setExpandedGroups(p => p.includes(g.id) ? p.filter(id => id !== g.id) : [...p, g.id])}
+                                            >
+                                                <div className="perm-group-left">
+                                                    <input 
+                                                        type="checkbox" 
+                                                        className="perm-group-master-check"
+                                                        checked={g.permissions.every(p => permissions.includes(p.id))} 
+                                                        onChange={e => handleGroupToggle(g.id, e.target.checked)}
+                                                        onClick={e => e.stopPropagation()} 
+                                                    />
+                                                    <span className="perm-group-label">{g.label}</span>
+                                                </div>
+                                                <FiChevronDown className={`perm-group-arrow ${expandedGroups.includes(g.id) ? "up" : ""}`} />
+                                            </div>
+                                            {expandedGroups.includes(g.id) && (
+                                                <div className="perm-group-content">
+                                                    {g.permissions.map(p => (
+                                                        <label key={p.id} className="admin-create-user-dialog-checkbox">
+                                                            <input 
+                                                                type="checkbox" 
+                                                                checked={permissions.includes(p.id)} 
+                                                                onChange={() => handlePermissionToggle(p.id)} 
+                                                            />
+                                                            <span>{p.label}</span>
+                                                        </label>
+                                                    ))}
+                                                </div>
+                                            )}
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
                         </div>
 
                         <div className="manager-modal-actions">
@@ -257,6 +407,47 @@ export default function ManagerInformationSection({
                     </>
                 )}
             </div>
+        </div>
+    );
+}
+
+// Helper component for internal select
+function SelectInternal({ value, options, onChange }) {
+    const [isOpen, setIsOpen] = useState(false);
+    const ref = useRef(null);
+
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (ref.current && !ref.current.contains(event.target)) setIsOpen(false);
+        };
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, []);
+
+    const selectedLabel = options.find(o => o.value === value)?.label || "Chọn chức vụ";
+
+    return (
+        <div className="manager-custom-select" ref={ref}>
+            <div className={`manager-custom-select-trigger ${isOpen ? 'active' : ''}`} onClick={() => setIsOpen(!isOpen)}>
+                <span>{selectedLabel}</span>
+                <FiChevronDown className={`manager-select-icon ${isOpen ? 'open' : ''}`} />
+            </div>
+            {isOpen && (
+                <div className="manager-custom-select-options">
+                    {options.map((o) => (
+                        <div
+                            key={o.value}
+                            className={`manager-custom-select-option ${value === o.value ? 'active' : ''}`}
+                            onClick={() => {
+                                onChange(o.value);
+                                setIsOpen(false);
+                            }}
+                        >
+                            {o.label}
+                        </div>
+                    ))}
+                </div>
+            )}
         </div>
     );
 }

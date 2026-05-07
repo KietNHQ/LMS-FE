@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react"
 import "./ParentChildrenOverview.css"
-import { SchoolYearTermSelector } from "../../../components/common"
+import { PageHeader, SchoolYearTermSelector, LoadingSpinner } from "../../../components/common"
 import { useSchoolYearTerm } from "../../../hooks/useSchoolYearTerm"
 import ChildHeader from "./components/childHeader/ChildHeader"
 import ChildTabs from "./components/ChildTabs/ChildTabs"
@@ -9,17 +9,91 @@ import CalendarSection from "./components/calendarSection/CalendarSection"
 import GradesSection from "./components/GradesSection/GradesSection"
 import LeaveRequestSection from "./components/LeaveRequestSection/LeaveRequestSection"
 import ChildSwitcher from "./components/ChildSwitcher/ChildSwitcher"
+import { parentService } from "../../../services/pages/parent/parentService"
 
 export default function ParentChildrenOverview() {
-    const getCurrentSemesterKey = () => {
-        const month = new Date().getMonth() + 1
-        return month >= 1 && month <= 6 ? "hk2" : "hk1"
-    }
-
+    const [childrenList, setChildrenList] = useState([])
     const [activeTab, setActiveTab] = useState("overview")
-    const [selectedSemester, setSelectedSemester] = useState(getCurrentSemesterKey)
-    const [selectedChildId, setSelectedChildId] = useState("child1")
     const { selectedSchoolYear, selectedTerm, handleYearArrow, handleTermChange } = useSchoolYearTerm()
+    const [selectedSemester, setSelectedSemester] = useState(selectedTerm)
+    const [selectedChildId, setSelectedChildId] = useState(null)
+    const [isLoading, setIsLoading] = useState(true)
+    const [childData, setChildData] = useState(null)
+    const [gradesBySemester, setGradesBySemester] = useState({ hk1: [], hk2: [], year: [] })
+    const [attendanceRecords, setAttendanceRecords] = useState({
+        present: 0, absent: 0, late: 0,
+        weeklySummary: { label: "Tuần này", present: 0, absent: 0, late: 0, total: 0, rate: "0%" },
+        weeklyRecords: [], allMonthlyRecords: [], records: []
+    })
+
+    // 1. Khởi tạo danh sách con từ localStorage
+    useEffect(() => {
+        const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
+        const localChildren = storedUser?.profile?.linkedStudents || [];
+        
+        if (localChildren.length > 0) {
+            const formatted = localChildren
+                .filter(c => c.id !== "child1" && c.name !== "Nguyễn Minh Tuấn")
+                .map(c => ({
+                    ...c,
+                    id: c.id || c.studentId,
+                    name: c.name || `${c.surname || ""} ${c.given_name || ""}`.trim(),
+                    avatarLetter: (c.given_name || c.name || "S")[0].toUpperCase(),
+                    avatarColor: "linear-gradient(135deg, #a67cff, #7c4dff)"
+                }));
+            
+            if (formatted.length > 0) {
+                setChildrenList(formatted);
+                if (!selectedChildId) setSelectedChildId(formatted[0].id);
+            }
+        }
+    }, []);
+
+    // 2. Lấy dữ liệu chi tiết khi chọn con hoặc học kỳ
+    useEffect(() => {
+        if (!selectedChildId) return;
+
+        const fetchChildDetails = async () => {
+            try {
+                setIsLoading(true);
+                // Tìm thông tin con trong list
+                const currentChild = childrenList.find(c => c.id === selectedChildId);
+                if (currentChild) {
+                    setChildData({
+                        ...currentChild,
+                        schoolYear: selectedSchoolYear,
+                        status: "Đang học",
+                        averageScores: { semester1: "0.0", semester2: "0.0", fullYear: "0.0" }
+                    });
+                }
+
+                // Gọi API lấy điểm thực tế
+                // Lưu ý: API này Backend đã mở tại /api/v1/students/:id/grades
+                const gradesRes = await parentService.getChildGrades({ 
+                    pathParams: { childId: selectedChildId },
+                    mock: false 
+                });
+
+                if (gradesRes.success && gradesRes.data) {
+                    setGradesBySemester(gradesRes.data);
+                } else {
+                    setGradesBySemester({ hk1: [], hk2: [], year: [] });
+                }
+            } catch (err) {
+                // [CẢI TIẾN] Xử lý lỗi 404 êm đẹp nếu đã có dữ liệu local
+                if (err.response?.status === 404 || err.message?.includes("404")) {
+                    console.info("ℹ️ Child Grades API 404 - Using local profile data.");
+                } else {
+                    console.error("❌ Error fetching child details:", err);
+                }
+                setGradesBySemester({ hk1: [], hk2: [], year: [] });
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        fetchChildDetails();
+    }, [selectedChildId, selectedSchoolYear, childrenList]);
 
     useEffect(() => {
         setSelectedSemester(selectedTerm)
@@ -27,250 +101,23 @@ export default function ParentChildrenOverview() {
 
     const buildAttendanceSummary = (label, records) => {
         const base = { present: 0, absent: 0, late: 0 }
-        const summary = records.reduce((acc, item) => {
+        const summary = Array.isArray(records) ? records.reduce((acc, item) => {
             if (item.status === "Có mặt") acc.present += 1
             else if (item.status === "Vắng mặt") acc.absent += 1
             else if (item.status === "Đi muộn") acc.late += 1
             return acc
-        }, base)
-        const total = records.length
+        }, base) : base
+        const total = Array.isArray(records) ? records.length : 0
         const rate = total > 0 ? `${Math.round((summary.present / total) * 100)}%` : "0%"
         return { label, ...summary, total, rate }
     }
 
-    // ===== DỮ LIỆU CON 1 — LỚP 10 =====
-    const child1 = {
-        id: "child1",
-        name: "Nguyễn Minh Tuấn",
-        studentId: "STU1024",
-        className: "10A1",
-        schoolYear: "2025 - 2026",
-        status: "Đang học",
-        parentName: "Nguyễn Văn Phụ Huynh",
-        homeroomTeacher: "Trần Thị Lan Anh",
-        avatarLetter: "T",
-        avatarColor: "linear-gradient(135deg, #a67cff, #7c4dff)",
-        averageScores: { semester1: "8.4", semester2: "8.8", fullYear: "8.6" }
-    }
-
-    const child1WeeklyRecords = [
-        { day: "Thứ 2", status: "Có mặt" },
-        { day: "Thứ 3", status: "Có mặt" },
-        { day: "Thứ 4", status: "Đi muộn" },
-        { day: "Thứ 5", status: "Có mặt" },
-        { day: "Thứ 6", status: "Vắng mặt" }
-    ]
-
-    const child1MonthlyRecords = [
-        // Tháng 1/2026
-        { day: "05/01/2026", status: "Có mặt" }, { day: "06/01/2026", status: "Có mặt" },
-        { day: "07/01/2026", status: "Đi muộn" }, { day: "08/01/2026", status: "Có mặt" },
-        { day: "09/01/2026", status: "Có mặt" }, { day: "12/01/2026", status: "Có mặt" },
-        { day: "13/01/2026", status: "Vắng mặt" }, { day: "14/01/2026", status: "Có mặt" },
-        { day: "15/01/2026", status: "Có mặt" }, { day: "16/01/2026", status: "Đi muộn" },
-        { day: "19/01/2026", status: "Có mặt" }, { day: "20/01/2026", status: "Có mặt" },
-        { day: "21/01/2026", status: "Có mặt" }, { day: "22/01/2026", status: "Có mặt" },
-        { day: "23/01/2026", status: "Vắng mặt" },
-        // Tháng 2/2026
-        { day: "02/02/2026", status: "Có mặt" }, { day: "03/02/2026", status: "Có mặt" },
-        { day: "04/02/2026", status: "Có mặt" }, { day: "05/02/2026", status: "Đi muộn" },
-        { day: "06/02/2026", status: "Có mặt" }, { day: "09/02/2026", status: "Có mặt" },
-        { day: "10/02/2026", status: "Vắng mặt" }, { day: "11/02/2026", status: "Có mặt" },
-        { day: "12/02/2026", status: "Có mặt" }, { day: "13/02/2026", status: "Có mặt" },
-        { day: "16/02/2026", status: "Có mặt" }, { day: "17/02/2026", status: "Có mặt" },
-        { day: "18/02/2026", status: "Đi muộn" }, { day: "19/02/2026", status: "Có mặt" },
-        { day: "20/02/2026", status: "Có mặt" }, { day: "23/02/2026", status: "Có mặt" },
-        { day: "24/02/2026", status: "Có mặt" }, { day: "25/02/2026", status: "Vắng mặt" },
-        { day: "26/02/2026", status: "Có mặt" }, { day: "27/02/2026", status: "Có mặt" },
-        // Tháng 3/2026
-        { day: "03/03/2026", status: "Có mặt" }, { day: "04/03/2026", status: "Có mặt" },
-        { day: "05/03/2026", status: "Đi muộn" }, { day: "06/03/2026", status: "Có mặt" },
-        { day: "07/03/2026", status: "Có mặt" }, { day: "10/03/2026", status: "Vắng mặt" },
-        { day: "11/03/2026", status: "Có mặt" }, { day: "12/03/2026", status: "Có mặt" },
-        { day: "13/03/2026", status: "Có mặt" }, { day: "14/03/2026", status: "Đi muộn" },
-        { day: "17/03/2026", status: "Có mặt" }, { day: "18/03/2026", status: "Có mặt" },
-        { day: "19/03/2026", status: "Có mặt" }, { day: "20/03/2026", status: "Có mặt" },
-        { day: "21/03/2026", status: "Có mặt" }, { day: "24/03/2026", status: "Vắng mặt" },
-        { day: "25/03/2026", status: "Có mặt" }, { day: "26/03/2026", status: "Có mặt" },
-        { day: "27/03/2026", status: "Có mặt" }, { day: "28/03/2026", status: "Có mặt" },
-        { day: "31/03/2026", status: "Có mặt" }
-    ]
-
-    const child1GradesBySemester = {
-        hk1: [
-            { subject: "Toán học", oral: 8.4, test15: 8.3, midterm: 8.4, final: 8.7, average: 8.4 },
-            { subject: "Tiếng Anh", oral: 8.0, test15: 7.8, midterm: 8.1, final: 8.3, average: 8.0 },
-            { subject: "Vật lý", oral: 8.5, test15: 8.3, midterm: 8.4, final: 8.8, average: 8.5 },
-            { subject: "Văn học", oral: 8.0, test15: 7.7, midterm: 7.9, final: 8.1, average: 7.9 },
-            { subject: "Hóa học", oral: 8.3, test15: 8.1, midterm: 8.2, final: 8.5, average: 8.3 },
-            { subject: "Sinh học", oral: 8.7, test15: 8.5, midterm: 8.6, final: 8.8, average: 8.7 },
-            { subject: "Lịch sử", oral: 8.5, test15: 8.3, midterm: 8.4, final: 8.6, average: 8.5 },
-            { subject: "Tin học", oral: 8.9, test15: 8.8, midterm: 8.9, final: 9.0, average: 8.9 }
-        ],
-        hk2: [
-            { subject: "Toán học", oral: 8.8, test15: 8.7, midterm: 8.9, final: 9.1, average: 8.8 },
-            { subject: "Tiếng Anh", oral: 8.5, test15: 8.3, midterm: 8.6, final: 8.9, average: 8.5 },
-            { subject: "Vật lý", oral: 8.9, test15: 8.8, midterm: 8.9, final: 9.1, average: 8.9 },
-            { subject: "Văn học", oral: 8.3, test15: 8.1, midterm: 8.2, final: 8.4, average: 8.2 },
-            { subject: "Hóa học", oral: 8.7, test15: 8.6, midterm: 8.7, final: 8.9, average: 8.7 },
-            { subject: "Sinh học", oral: 9.0, test15: 8.9, midterm: 9.0, final: 9.2, average: 9.0 },
-            { subject: "Lịch sử", oral: 8.9, test15: 8.8, midterm: 8.9, final: 9.0, average: 8.9 },
-            { subject: "Tin học", oral: 9.4, test15: 9.3, midterm: 9.4, final: 9.5, average: 9.4 }
-        ],
-        year: [
-            { subject: "Toán học", oral: 8.6, test15: 8.5, midterm: 8.6, final: 8.9, average: 8.6 },
-            { subject: "Tiếng Anh", oral: 8.3, test15: 8.1, midterm: 8.4, final: 8.6, average: 8.3 },
-            { subject: "Vật lý", oral: 8.7, test15: 8.5, midterm: 8.7, final: 8.9, average: 8.7 },
-            { subject: "Văn học", oral: 8.2, test15: 8.0, midterm: 8.1, final: 8.3, average: 8.1 },
-            { subject: "Hóa học", oral: 8.5, test15: 8.3, midterm: 8.5, final: 8.7, average: 8.5 },
-            { subject: "Sinh học", oral: 8.8, test15: 8.7, midterm: 8.8, final: 9.0, average: 8.8 },
-            { subject: "Lịch sử", oral: 8.7, test15: 8.5, midterm: 8.6, final: 8.8, average: 8.7 },
-            { subject: "Tin học", oral: 9.1, test15: 9.0, midterm: 9.1, final: 9.2, average: 9.1 }
-        ]
-    }
-
-    const child1LeaveRequests = [
-        { date: "2026-03-01", reason: "Sốt cao và nghỉ tại nhà", status: "Đã duyệt", approver: "Giáo viên chủ nhiệm" },
-        { date: "2026-03-08", reason: "Sự kiện gia đình", status: "Đang chờ", approver: "—" },
-        { date: "2026-03-10", reason: "Khám sức khỏe", status: "Bị từ chối", approver: "Văn phòng nhà trường" }
-    ]
-
-    const child1ScheduleData = [
-        { day: "Thứ 2", time: "08:00 - 09:30", subject: "Toán học", room: "A101" },
-        { day: "Thứ 3", time: "09:45 - 11:15", subject: "Tiếng Anh", room: "B203" },
-        { day: "Thứ 4", time: "13:00 - 14:30", subject: "Vật lý", room: "C110" }
-    ]
-
-    const child1UpcomingEvents = [
-        { title: "Kiểm tra Tiếng Anh", date: "Thứ 6, 14 Tháng 3", type: "Kiểm tra" },
-        { title: "Cuộc họp Phụ huynh", date: "Thứ 7, 15 Tháng 3", type: "Họp" },
-        { title: "Bài kiểm tra Toán", date: "Thứ 2, 17 Tháng 3", type: "Bài kiểm tra" }
-    ]
-
-    // ===== DỮ LIỆU CON 2 — LỚP 12 =====
-    const child2 = {
-        id: "child2",
-        name: "Nguyễn Thị Ngọc Hà",
-        studentId: "STU0891",
-        className: "12A2",
-        schoolYear: "2025 - 2026",
-        status: "Đang học",
-        parentName: "Nguyễn Văn Phụ Huynh",
-        homeroomTeacher: "Lê Minh Hoàng",
-        avatarLetter: "H",
-        avatarColor: "linear-gradient(135deg, #f97316, #ef4444)",
-        averageScores: { semester1: "9.1", semester2: "9.3", fullYear: "9.2" }
-    }
-
-    const child2WeeklyRecords = [
-        { day: "Thứ 2", status: "Có mặt" },
-        { day: "Thứ 3", status: "Có mặt" },
-        { day: "Thứ 4", status: "Có mặt" },
-        { day: "Thứ 5", status: "Có mặt" },
-        { day: "Thứ 6", status: "Có mặt" }
-    ]
-
-    const child2MonthlyRecords = [
-        // Tháng 1/2026
-        { day: "05/01/2026", status: "Có mặt" }, { day: "06/01/2026", status: "Có mặt" },
-        { day: "07/01/2026", status: "Có mặt" }, { day: "08/01/2026", status: "Có mặt" },
-        { day: "09/01/2026", status: "Có mặt" }, { day: "12/01/2026", status: "Đi muộn" },
-        { day: "13/01/2026", status: "Có mặt" }, { day: "14/01/2026", status: "Có mặt" },
-        { day: "15/01/2026", status: "Có mặt" }, { day: "16/01/2026", status: "Có mặt" },
-        { day: "19/01/2026", status: "Có mặt" }, { day: "20/01/2026", status: "Có mặt" },
-        { day: "21/01/2026", status: "Có mặt" }, { day: "22/01/2026", status: "Có mặt" },
-        { day: "23/01/2026", status: "Có mặt" },
-        // Tháng 2/2026
-        { day: "02/02/2026", status: "Có mặt" }, { day: "03/02/2026", status: "Có mặt" },
-        { day: "04/02/2026", status: "Có mặt" }, { day: "05/02/2026", status: "Có mặt" },
-        { day: "06/02/2026", status: "Có mặt" }, { day: "09/02/2026", status: "Có mặt" },
-        { day: "10/02/2026", status: "Có mặt" }, { day: "11/02/2026", status: "Đi muộn" },
-        { day: "12/02/2026", status: "Có mặt" }, { day: "13/02/2026", status: "Có mặt" },
-        { day: "16/02/2026", status: "Có mặt" }, { day: "17/02/2026", status: "Có mặt" },
-        { day: "18/02/2026", status: "Có mặt" }, { day: "19/02/2026", status: "Vắng mặt" },
-        { day: "20/02/2026", status: "Có mặt" }, { day: "23/02/2026", status: "Có mặt" },
-        { day: "24/02/2026", status: "Có mặt" }, { day: "25/02/2026", status: "Có mặt" },
-        { day: "26/02/2026", status: "Có mặt" }, { day: "27/02/2026", status: "Có mặt" },
-        // Tháng 3/2026
-        { day: "03/03/2026", status: "Có mặt" }, { day: "04/03/2026", status: "Có mặt" },
-        { day: "05/03/2026", status: "Có mặt" }, { day: "06/03/2026", status: "Có mặt" },
-        { day: "07/03/2026", status: "Có mặt" }, { day: "10/03/2026", status: "Có mặt" },
-        { day: "11/03/2026", status: "Có mặt" }, { day: "12/03/2026", status: "Có mặt" },
-        { day: "13/03/2026", status: "Có mặt" }, { day: "14/03/2026", status: "Có mặt" },
-        { day: "17/03/2026", status: "Đi muộn" }, { day: "18/03/2026", status: "Có mặt" },
-        { day: "19/03/2026", status: "Có mặt" }, { day: "20/03/2026", status: "Có mặt" },
-        { day: "21/03/2026", status: "Có mặt" }, { day: "24/03/2026", status: "Có mặt" },
-        { day: "25/03/2026", status: "Có mặt" }, { day: "26/03/2026", status: "Vắng mặt" },
-        { day: "27/03/2026", status: "Có mặt" }, { day: "28/03/2026", status: "Có mặt" },
-        { day: "31/03/2026", status: "Có mặt" }
-    ]
-
-    const child2GradesBySemester = {
-        hk1: [
-            { subject: "Toán học", oral: 9.2, test15: 9.0, midterm: 9.1, final: 9.3, average: 9.1 },
-            { subject: "Tiếng Anh", oral: 9.5, test15: 9.3, midterm: 9.4, final: 9.6, average: 9.4 },
-            { subject: "Vật lý", oral: 9.0, test15: 8.9, midterm: 9.0, final: 9.2, average: 9.0 },
-            { subject: "Văn học", oral: 8.8, test15: 8.7, midterm: 8.8, final: 9.0, average: 8.8 },
-            { subject: "Hóa học", oral: 9.1, test15: 9.0, midterm: 9.1, final: 9.3, average: 9.1 },
-            { subject: "Sinh học", oral: 9.3, test15: 9.2, midterm: 9.3, final: 9.5, average: 9.3 },
-            { subject: "Địa lý", oral: 8.9, test15: 8.8, midterm: 8.9, final: 9.1, average: 8.9 },
-            { subject: "GDCD", oral: 9.4, test15: 9.3, midterm: 9.4, final: 9.5, average: 9.4 },
-            { subject: "Tin học", oral: 9.6, test15: 9.5, midterm: 9.6, final: 9.8, average: 9.6 }
-        ],
-        hk2: [
-            { subject: "Toán học", oral: 9.4, test15: 9.3, midterm: 9.4, final: 9.5, average: 9.4 },
-            { subject: "Tiếng Anh", oral: 9.7, test15: 9.5, midterm: 9.6, final: 9.8, average: 9.6 },
-            { subject: "Vật lý", oral: 9.2, test15: 9.1, midterm: 9.3, final: 9.4, average: 9.2 },
-            { subject: "Văn học", oral: 9.0, test15: 8.9, midterm: 9.0, final: 9.2, average: 9.0 },
-            { subject: "Hóa học", oral: 9.3, test15: 9.2, midterm: 9.3, final: 9.5, average: 9.3 },
-            { subject: "Sinh học", oral: 9.5, test15: 9.4, midterm: 9.5, final: 9.7, average: 9.5 },
-            { subject: "Địa lý", oral: 9.1, test15: 9.0, midterm: 9.1, final: 9.3, average: 9.1 },
-            { subject: "GDCD", oral: 9.6, test15: 9.5, midterm: 9.6, final: 9.7, average: 9.6 },
-            { subject: "Tin học", oral: 9.8, test15: 9.7, midterm: 9.8, final: 10.0, average: 9.8 }
-        ],
-        year: [
-            { subject: "Toán học", oral: 9.3, test15: 9.1, midterm: 9.2, final: 9.4, average: 9.2 },
-            { subject: "Tiếng Anh", oral: 9.6, test15: 9.4, midterm: 9.5, final: 9.7, average: 9.5 },
-            { subject: "Vật lý", oral: 9.1, test15: 9.0, midterm: 9.1, final: 9.3, average: 9.1 },
-            { subject: "Văn học", oral: 8.9, test15: 8.8, midterm: 8.9, final: 9.1, average: 8.9 },
-            { subject: "Hóa học", oral: 9.2, test15: 9.1, midterm: 9.2, final: 9.4, average: 9.2 },
-            { subject: "Sinh học", oral: 9.4, test15: 9.3, midterm: 9.4, final: 9.6, average: 9.4 },
-            { subject: "Địa lý", oral: 9.0, test15: 8.9, midterm: 9.0, final: 9.2, average: 9.0 },
-            { subject: "GDCD", oral: 9.5, test15: 9.4, midterm: 9.5, final: 9.6, average: 9.5 },
-            { subject: "Tin học", oral: 9.7, test15: 9.6, midterm: 9.7, final: 9.9, average: 9.7 }
-        ]
-    }
-
-    const child2LeaveRequests = [
-        { date: "2026-02-19", reason: "Đau đầu, nghỉ dưỡng tại nhà", status: "Đã duyệt", approver: "Giáo viên chủ nhiệm" },
-        { date: "2026-03-12", reason: "Thi thử đại học tại trường ngoài", status: "Đã duyệt", approver: "Hiệu trưởng" }
-    ]
-
-    const child2ScheduleData = [
-        { day: "Thứ 2", time: "07:30 - 09:00", subject: "Toán học", room: "A201" },
-        { day: "Thứ 2", time: "09:15 - 10:45", subject: "Vật lý", room: "B301" },
-        { day: "Thứ 3", time: "07:30 - 09:00", subject: "Tiếng Anh", room: "C102" },
-        { day: "Thứ 4", time: "13:00 - 14:30", subject: "Hóa học", room: "D205" },
-        { day: "Thứ 5", time: "07:30 - 09:00", subject: "Văn học", room: "A105" },
-        { day: "Thứ 6", time: "07:30 - 09:00", subject: "Sinh học", room: "B208" }
-    ]
-
-    const child2UpcomingEvents = [
-        { title: "Thi thử THPT Quốc gia môn Toán", date: "Thứ 3, 18 Tháng 3", type: "Kiểm tra" },
-        { title: "Nộp hồ sơ xét tuyển đại học", date: "Thứ 6, 28 Tháng 3", type: "Hạn nộp" },
-        { title: "Họp phụ huynh cuối kỳ", date: "Thứ 7, 29 Tháng 3", type: "Họp" }
-    ]
-
-    // ===== CHỌN DỮ LIỆU THEO CON ĐANG XEM =====
-    const isChild2 = selectedChildId === "child2"
-
-    const childData = isChild2 ? child2 : child1
-    const gradesBySemester = isChild2 ? child2GradesBySemester : child1GradesBySemester
-    const leaveRequests = isChild2 ? child2LeaveRequests : child1LeaveRequests
-    const scheduleData = isChild2 ? child2ScheduleData : child1ScheduleData
-    const upcomingEvents = isChild2 ? child2UpcomingEvents : child1UpcomingEvents
-    const weeklyRecords = isChild2 ? child2WeeklyRecords : child1WeeklyRecords
-    const allMonthlyRecords = isChild2 ? child2MonthlyRecords : child1MonthlyRecords
+    // Giả lập dữ liệu cho các phần chưa có API (sẽ thay bằng API thật sau)
+    const scheduleData = []
+    const upcomingEvents = []
+    const leaveRequests = []
+    const weeklyRecords = []
+    const allMonthlyRecords = []
 
     const weeklySummary = buildAttendanceSummary("Tuần này", weeklyRecords)
 
@@ -283,8 +130,6 @@ export default function ParentChildrenOverview() {
         allMonthlyRecords,
         records: weeklyRecords
     }
-    const overviewCurrentSemesterGrades = gradesBySemester?.[selectedTerm] || []
-    const overviewSemesterLabel = selectedTerm === "hk2" ? "Học kỳ II" : "Học kỳ I"
 
     const handleOverviewCardClick = (semesterKey) => {
         if (!semesterKey) return
@@ -299,10 +144,12 @@ export default function ParentChildrenOverview() {
         setSelectedSemester(selectedTerm)
     }
 
-    const allChildren = [
-        { id: "child1", name: child1.name, className: child1.className, schoolYear: child1.schoolYear, avatarLetter: child1.avatarLetter, avatarColor: child1.avatarColor },
-        { id: "child2", name: child2.name, className: child2.className, schoolYear: child2.schoolYear, avatarLetter: child2.avatarLetter, avatarColor: child2.avatarColor }
-    ]
+    const overviewCurrentSemesterGrades = gradesBySemester?.[selectedTerm] || []
+    const overviewSemesterLabel = selectedTerm === "hk2" ? "Học kỳ II" : "Học kỳ I"
+
+    if (!selectedChildId || !childData) {
+        return <div className="layout-loading-wrapper"><LoadingSpinner size="lg" label="Đang tải dữ liệu con em..." role="parent" /></div>
+    }
 
     return (
         <div className="parent-children-overview-page">
@@ -326,7 +173,7 @@ export default function ParentChildrenOverview() {
                 </div>
 
                 <ChildSwitcher
-                    children={allChildren}
+                    children={childrenList}
                     selectedId={selectedChildId}
                     onSelect={handleChildSwitch}
                 />

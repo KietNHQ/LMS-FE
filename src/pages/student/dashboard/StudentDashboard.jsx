@@ -10,7 +10,7 @@ import {
 import WelcomeHeader from "./components/WelcomeHeader/WelcomeHeader";
 import StatsCards from "./components/StatsCards/StatsCards";
 import EventCalendar from "../../../components/common/EventCalendar/EventCalendar";
-import { INITIAL_CALENDAR_EVENTS, CALENDAR_EVENT_TYPES } from "../../../components/common/EventCalendar/eventData";
+import { CALENDAR_EVENT_TYPES } from "../../../components/common/EventCalendar/eventData";
 import SubjectRadar from "./components/SubjectRadar/SubjectRadar";
 import YearProgress from "./components/YearProgress/YearProgress";
 import UpcomingTests from "./components/UpcomingTests/UpcomingTests";
@@ -18,173 +18,56 @@ import { SchoolYearTermSelector, LoadingSpinner } from "../../../components/comm
 import { useSchoolYearTerm } from "../../../hooks/useSchoolYearTerm";
 import { studentService } from "../../../services/pages/student/studentService";
 
-const subjectData = [
-    { subject: "Toán", score: 8.0 },
-    { subject: "Ngữ văn", score: 8.3 },
-    { subject: "Tiếng Anh", score: 9.0 },
-    { subject: "Vật lý", score: 7.5 },
-    { subject: "Hóa học", score: 7.0 },
-    { subject: "Sinh học", score: 7.4 },
-    { subject: "Lịch sử", score: 7.8 },
-    { subject: "Địa lý", score: 8.1 },
-    { subject: "GDCD", score: 8.4 },
-    { subject: "Tin học", score: 8.6 },
-    { subject: "Công nghệ", score: 7.7 },
-    { subject: "Thể dục", score: 9.2 },
-];
-
-const currentStudentYearProgress = [
-    { grade: "Lớp 10", hk1: 7.29, hk2: 7.8, fullYear: 7.7, progressPercent: 77 },
-    { grade: "Lớp 11", hk1: 7.85, hk2: 8.1, fullYear: 8.02, progressPercent: 80.2 },
-    { grade: "Lớp 12", hk1: 8.2, hk2: 8.45, fullYear: 8.37, progressPercent: 83.7 },
-];
-
-const upcomingQuizzes = [
-    {
-        title: "Kiểm tra Toán chương 1",
-        subject: "Toán",
-        meta: "45 phút - 20 câu",
-        deadline: "2026-03-14",
-        description: "Ôn tập đại số và phương trình trước bài kiểm tra tuần.",
-    },
-    {
-        title: "Ôn tập giữa kỳ Vật lý",
-        subject: "Vật lý",
-        meta: "60 phút - 25 câu",
-        deadline: "2026-03-18",
-        description: "Bao gồm chuyển động, lực và động lượng cơ bản.",
-    },
-    {
-        title: "Kiểm tra Tiếng Anh Unit 3",
-        subject: "Tiếng Anh",
-        meta: "40 phút - 30 câu",
-        deadline: "2026-03-21",
-        description: "Tập trung vào đọc hiểu và từ vựng.",
-    },
-    {
-        title: "Kiểm tra Hóa học chương 2",
-        subject: "Hóa học",
-        meta: "30 phút - 15 câu",
-        deadline: "2026-03-25",
-        description: "Ôn phần phản ứng hóa học và cân bằng phương trình.",
-    },
-    {
-        title: "Kiểm tra Ngữ văn đọc hiểu",
-        subject: "Ngữ văn",
-        meta: "45 phút - Tự luận",
-        deadline: "2026-03-28",
-        description: "Luyện kỹ năng đọc hiểu và phân tích nội dung văn bản.",
-    },
-    {
-        title: "Kiểm tra Sinh học chương 3",
-        subject: "Sinh học",
-        meta: "45 phút - 30 câu",
-        deadline: "2026-04-02",
-        description: "Ôn tập về di truyền học và biến dị cơ bản.",
-    },
-];
-
-const academicOverview = {
-    totalWeeks: 35,
-    completedWeeks: 18,
-    semester1Average: 7.29,
-    fullYearAverage: 7.7,
-    todayLabel: "Thứ Hai",
-    currentSubject: "Ngữ văn",
-    nextSubject: "Toán",
-};
-
-function getAcademicRank(score) {
-    if (score >= 8.0) return "Giỏi";
-    if (score >= 6.5) return "Khá";
-    if (score >= 5.0) return "Trung bình";
-    return "Yếu";
-}
-
-function formatScore(score) {
-    return Number(score).toFixed(2);
-}
-
-function getOverviewCardData(overview) {
-    const isFullYear = overview.completedWeeks >= overview.totalWeeks;
-    const activeAverage = isFullYear
-        ? overview.fullYearAverage
-        : overview.semester1Average;
-
-    return {
-        title: isFullYear ? "Điểm trung bình cả năm" : "Điểm trung bình học kỳ 1",
-        value: formatScore(activeAverage),
-        rank: getAcademicRank(activeAverage),
-        subtitlePrefix: isFullYear
-            ? "Học lực:"
-            : "Học lực HK1:",
-    };
-}
-
 export default function StudentDashboard() {
     const navigate = useNavigate();
     const { selectedSchoolYear, selectedTerm, handleYearArrow, handleTermChange } = useSchoolYearTerm();
     const [isLoading, setIsLoading] = useState(true);
     const [dashboardData, setDashboardData] = useState(null);
+    const [localProfile, setLocalProfile] = useState(null);
+
+    // 1. Lấy thông tin từ localStorage ngay khi mount
+    useEffect(() => {
+        const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
+        if (storedUser?.profile) {
+            setLocalProfile(storedUser.profile);
+        }
+    }, []);
 
     useEffect(() => {
         const fetchDashboardData = async () => {
             setIsLoading(true);
             try {
-                // Gọi API lấy dữ liệu dashboard (hiện tại dùng mock trong service)
-                const response = await studentService.getDashboard();
+                // Thử gọi dữ liệu thật từ Backend
+                const response = await studentService.getDashboard({ mock: false });
                 if (response.success) {
                     setDashboardData(response.data);
                 }
             } catch (error) {
-                console.error("Failed to fetch student dashboard:", error);
+                console.warn("Backend Student Dashboard API not ready yet, using empty states.");
+                // Backend chưa có API này, để dashboardData = null để dùng fallback
             } finally {
-                // Giả lập delay nhẹ để hiệu ứng loading mượt mà
-                setTimeout(() => setIsLoading(false), 600);
+                setTimeout(() => setIsLoading(false), 500);
             }
         };
 
         fetchDashboardData();
     }, [selectedSchoolYear, selectedTerm]);
 
-    const summaryCard = useMemo(() => {
-        const avg = dashboardData?.summary?.averageScore || academicOverview.semester1Average;
-        return {
-            title: "Điểm trung bình học kỳ",
-            value: formatScore(avg),
-            rank: getAcademicRank(avg),
-            subtitlePrefix: "Học lực:",
-        };
-    }, [dashboardData]);
-
-    const weekProgressPercent = useMemo(() => {
-        if (!academicOverview.totalWeeks) return 0;
-        return Math.min(
-            100,
-            Math.round(
-                (academicOverview.completedWeeks / academicOverview.totalWeeks) * 100
-            )
-        );
-    }, []);
-
-    const topUpcomingSubjects = useMemo(() => {
-        const subjects = upcomingQuizzes.map((quiz) => quiz.subject);
-        const firstThree = subjects.slice(0, 3);
-        return subjects.length > 3
-            ? `${firstThree.join(", ")}, ...`
-            : firstThree.join(", ");
-    }, []);
-
+    // 2. Xử lý các con số thống kê (Stats)
     const statsCards = useMemo(() => {
+        const avg = dashboardData?.summary?.averageScore || 0;
+        const totalWeeks = dashboardData?.summary?.totalWeeks || 35;
+        const completedWeeks = dashboardData?.summary?.completedWeeks || 0;
+        const weekProgress = totalWeeks > 0 ? Math.round((completedWeeks / totalWeeks) * 100) : 0;
+        
         return [
             {
                 id: "summary",
-                title: summaryCard.title,
-                value: summaryCard.value,
+                title: "Điểm trung bình học kỳ",
+                value: avg.toFixed(2),
                 subtitle: (
                     <>
-                        {summaryCard.subtitlePrefix}{" "}
-                        <strong className="student-rank-strong">{summaryCard.rank}</strong>
+                        Học lực: <strong className="student-rank-strong">{avg >= 8 ? "Giỏi" : avg >= 6.5 ? "Khá" : "Trung bình"}</strong>
                     </>
                 ),
                 icon: HiOutlineTrophy,
@@ -193,24 +76,20 @@ export default function StudentDashboard() {
             {
                 id: "weekly-progress",
                 title: "Tiến độ học theo tuần",
-                value: `${academicOverview.completedWeeks}/${academicOverview.totalWeeks}`,
-                subtitle: `Xong ${academicOverview.completedWeeks} tuần`,
-                progressPercent: weekProgressPercent,
+                value: `${completedWeeks}/${totalWeeks}`,
+                subtitle: `Xong ${completedWeeks} tuần`,
+                progressPercent: weekProgress,
                 icon: HiOutlineCalendarDays,
                 color: "green",
             },
             {
                 id: "today-subject",
-                title: (
-                    <>
-                        Hôm nay là <strong>{academicOverview.todayLabel}</strong>
-                    </>
-                ),
-                value: academicOverview.currentSubject,
+                title: "Hôm nay là Thứ Năm",
+                value: dashboardData?.today?.currentSubject || "—",
                 subtitle: (
                     <span className="student-next-subject-text">
-            Tiếp theo: <strong>{academicOverview.nextSubject}</strong>
-          </span>
+                        Tiếp theo: <strong>{dashboardData?.today?.nextSubject || "—"}</strong>
+                    </span>
                 ),
                 icon: HiOutlineClock,
                 color: "purple",
@@ -218,12 +97,12 @@ export default function StudentDashboard() {
             {
                 id: "upcoming-quiz",
                 title: "Bài kiểm tra sắp tới",
-                value: `${dashboardData?.upcomingTests?.length || upcomingQuizzes.length}`,
+                value: `${dashboardData?.upcomingTests?.length || 0}`,
                 subtitle: (
                     <span className="student-upcoming-subjects-preview">
                         {dashboardData?.upcomingTests?.length > 0 
-                            ? dashboardData.upcomingTests.slice(0, 3).map(t => t.subject).join(", ") + (dashboardData.upcomingTests.length > 3 ? ", ..." : "")
-                            : topUpcomingSubjects
+                            ? dashboardData.upcomingTests.slice(0, 3).map(t => t.subject).join(", ")
+                            : "Không có bài kiểm tra mới"
                         }
                     </span>
                 ),
@@ -231,16 +110,16 @@ export default function StudentDashboard() {
                 color: "orange",
             },
         ];
-    }, [summaryCard, weekProgressPercent, topUpcomingSubjects, dashboardData]);
+    }, [dashboardData]);
 
     return (
         <div className="student-dashboard-content">
             <div className="student-dashboard-top-panel">
                 <WelcomeHeader
-                    studentName={dashboardData?.profile?.fullName?.split(" ").pop() || "Học sinh"}
-                    classNameLabel={dashboardData?.profile?.className || "—"}
-                    studentCode={dashboardData?.profile?.studentCode || "—"}
-                    homeroomTeacher={dashboardData?.profile?.homeroomTeacher || "Chưa cập nhật"}
+                    studentName={localProfile?.fullName?.split(" ").pop() || "Học sinh"}
+                    classNameLabel={localProfile?.className || "—"}
+                    studentCode={localProfile?.studentCode || "—"}
+                    homeroomTeacher={localProfile?.homeroomTeacher || "Chưa cập nhật"}
                 />
 
                 <div className="student-dashboard-toolbar">
@@ -269,7 +148,7 @@ export default function StudentDashboard() {
                             userRole="student"
                             isCompact={true}
                             eventTypes={CALENDAR_EVENT_TYPES}
-                            initialEvents={INITIAL_CALENDAR_EVENTS}
+                            initialEvents={dashboardData?.calendarEvents || []}
                             selectedSchoolYear={selectedSchoolYear}
                             selectedTerm={selectedTerm}
                             rolePolicy={{
@@ -281,18 +160,18 @@ export default function StudentDashboard() {
                         />
                         </div>
                         <UpcomingTests
-                            quizzes={dashboardData?.upcomingTests || upcomingQuizzes}
+                            quizzes={dashboardData?.upcomingTests || []}
                             onOpenQuiz={() => navigate("/student/quiz")}
                         />
                     </div>
 
                     <div className="student-dashboard-grid student-dashboard-grid-bottom">
                         <YearProgress
-                            items={currentStudentYearProgress}
+                            items={dashboardData?.yearProgress || []}
                             onOpenGrades={() => navigate("/student/grades")}
                         />
 
-                        <SubjectRadar data={subjectData} />
+                        <SubjectRadar data={dashboardData?.subjectScores || []} />
                     </div>
                 </>
             )}

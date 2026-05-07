@@ -122,13 +122,58 @@ const ParentMessages = lazy(() => import("../pages/parent/messages/ParentMessage
 const ParentPayments = lazy(() => import("../pages/parent/payments/ParentPayments"));
 const ParentSupport = lazy(() => import("../pages/parent/support/ParentSupport"));
 
+/**
+ * RootRedirect - Tự động điều hướng người dùng dựa trên Role sau khi đăng nhập
+ * Nếu chưa đăng nhập, mặc định cho vào cổng giáo viên (hoặc trang guest mong muốn)
+ */
+const RootRedirect = () => {
+    const userString = localStorage.getItem("user") || sessionStorage.getItem("user");
+    const user = userString ? JSON.parse(userString) : null;
+
+    if (!user) {
+        // Nếu chưa đăng nhập, quay về trang Login để Admin có thể đăng nhập
+        return <Navigate to="/login" replace />;
+    }
+
+    const role = (user.role || localStorage.getItem('userRole') || "").toLowerCase();
+    
+    // 1. ADMIN
+    if (role === 'admin' || role === 'quản trị viên' || role === 'administrator') {
+        return <Navigate to="/admin/dashboard" replace />;
+    }
+    
+    // 2. MANAGEMENT
+    const managementRoles = ['manager', 'management', 'quản lý', 'hiệu trưởng', 'phó ht học vụ', 'phó ht nề nếp', 'giáo vụ', 'tài chính', 'tổ trưởng bộ môn'];
+    if (managementRoles.includes(role)) {
+        return <Navigate to="/management/dashboard" replace />;
+    }
+    
+    // 3. TEACHER
+    if (role === 'teacher' || role === 'giáo viên') {
+        return <Navigate to="/teacher/dashboard" replace />;
+    }
+
+    // 4. STUDENT
+    if (role === 'student' || role === 'học sinh') {
+        return <Navigate to="/student/dashboard" replace />;
+    }
+
+    // 5. PARENT
+    if (role === 'guardian' || role === 'parent' || role === 'phụ huynh') {
+        return <Navigate to="/parent/dashboard" replace />;
+    }
+
+    // FALLBACK: Nếu không khớp vai trò nào rõ ràng, đưa về Login cho an toàn
+    return <Navigate to="/login" replace />;
+};
 
 
 export default function AppRoutes() {
   return (
     <Routes>
       {/* DEFAULT */}
-      <Route path="/" element={<Navigate to="/login" replace />} />
+      {/* DEFAULT */}
+      <Route path="/" element={<RootRedirect />} />
 
       {/* AUTH */}
       <Route path="/login" element={<Login />} />
@@ -158,13 +203,10 @@ export default function AppRoutes() {
       </Route>
 
 
-      {/* ── MANAGEMENT ── */}
       <Route path="/management" element={
-        <ProtectedRoute allowedRoles={["management"]}>
-          <Suspense fallback={<LoadingAnimationBook fullScreen={true} label="Đang tải hệ thống quản lý..." />}>
-            <ManagementLayout />
-          </Suspense>
-        </ProtectedRoute>
+        <Suspense fallback={<LoadingAnimationBook fullScreen={true} label="Đang tải hệ thống quản lý..." />}>
+          <ManagementLayout />
+        </Suspense>
       }>
         <Route index element={<Navigate to="dashboard" replace />} />
         <Route path="dashboard"    element={<ManagementDashboard />} />
@@ -199,13 +241,10 @@ export default function AppRoutes() {
       <Route path="/finance/*"       element={<Navigate to="/management/finance" replace />} />
 
 
-      {/* STUDENT */}
       <Route path="/student" element={
-        <ProtectedRoute allowedRoles={["student"]}>
-          <Suspense fallback={<LoadingAnimationBook fullScreen={true} label="Đang tải không gian học sinh..." />}>
-            <StudentLayout />
-          </Suspense>
-        </ProtectedRoute>
+        <Suspense fallback={<LoadingAnimationBook fullScreen={true} label="Đang tải không gian học sinh..." />}>
+          <StudentLayout />
+        </Suspense>
       }>
         <Route index element={<Navigate to="dashboard" replace />} />
         <Route path="dashboard" element={<StudentDashboard />} />
@@ -219,13 +258,10 @@ export default function AppRoutes() {
         <Route path="support" element={<StudentSupport />} />
       </Route>
 
-      {/* TEACHER */}
       <Route path="/teacher" element={
-        <ProtectedRoute allowedRoles={["teacher"]}>
-          <Suspense fallback={<LoadingAnimationBook fullScreen={true} label="Đang tải không gian giáo viên..." />}>
-            <TeacherLayout />
-          </Suspense>
-        </ProtectedRoute>
+        <Suspense fallback={<LoadingAnimationBook fullScreen={true} label="Đang tải không gian giáo viên..." />}>
+          <TeacherLayout />
+        </Suspense>
       }>
         <Route index element={<Navigate to="dashboard" replace />} />
         <Route path="dashboard"        element={<TeacherDashboard />} />
@@ -244,13 +280,10 @@ export default function AppRoutes() {
         <Route path="support"          element={<TeacherSupport />} />
       </Route>
 
-        {/* PARENT */}
         <Route path="/parent" element={
-          <ProtectedRoute allowedRoles={["guardian"]}>
-            <Suspense fallback={<LoadingAnimationBook fullScreen={true} label="Đang tải không gian phụ huynh..." />}>
-              <ParentLayout />
-            </Suspense>
-          </ProtectedRoute>
+          <Suspense fallback={<LoadingAnimationBook fullScreen={true} label="Đang tải không gian phụ huynh..." />}>
+            <ParentLayout />
+          </Suspense>
         }>
             <Route index element={<Navigate to="dashboard" replace />} />
             <Route path="dashboard" element={<ParentDashboard />} />

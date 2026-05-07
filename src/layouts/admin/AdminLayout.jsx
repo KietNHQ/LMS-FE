@@ -22,7 +22,8 @@ export default function AdminLayout() {
     // Đọc từ localStorage
     const storedUser = (() => {
         try {
-            return JSON.parse(localStorage.getItem("user") || "{}");
+            const userStr = localStorage.getItem("user") || sessionStorage.getItem("user");
+            return JSON.parse(userStr || "{}");
         } catch {
             return {};
         }
@@ -35,6 +36,7 @@ export default function AdminLayout() {
         <div className={`admin-layout ${isCollapsed ? "collapsed" : ""}`}>
             <Sidebar
                 role="admin"
+                user={storedUser}
                 userName={userName}
                 userEmail={userEmail}
                 isCollapsed={isCollapsed}

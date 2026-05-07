@@ -13,10 +13,13 @@
 .manager-modal {
     width: 100%;
     max-width: 34rem;
+    max-height: 92vh; /* Giới hạn chiều cao modal */
     background: #ffffff;
     border-radius: 1.5rem;
-    padding: 1.6rem 1.45rem;
+    padding: 1.8rem;
     box-shadow: 0 24px 60px rgba(15, 23, 42, 0.24);
+    display: flex;
+    flex-direction: column;
     animation: modalAppear 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
@@ -30,9 +33,9 @@
 }
 
 .manager-modal h2 {
-    margin: 0 0 1.2rem;
-    font-size: 1.5rem;
-    color: #273142;
+    margin: 0 0 1.5rem;
+    font-size: 1.65rem;
+    color: #1e293b;
     font-weight: 800;
 }
 
@@ -108,7 +111,22 @@
 .manager-modal-form {
     display: flex;
     flex-direction: column;
-    gap: 0.95rem;
+    gap: 1.25rem;
+    overflow-y: auto; /* Kích hoạt thanh cuộn */
+    padding-right: 0.85rem;
+    margin-right: -0.85rem;
+    flex: 1; /* Để form giãn ra chiếm khoảng trống giữa header và footer */
+    scrollbar-width: thin;
+    scrollbar-color: #cbd5e1 transparent;
+}
+
+.manager-modal-form::-webkit-scrollbar {
+    width: 6px;
+}
+
+.manager-modal-form::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 10px;
 }
 
 .manager-form-grid.two-cols {
@@ -162,6 +180,20 @@
     display: flex;
     flex-direction: column;
     border-top: 1px solid #f1f5f9;
+    overflow-y: auto;
+    max-height: calc(92vh - 160px); /* Leave space for header and actions */
+    padding-right: 4px;
+    scrollbar-width: thin;
+    scrollbar-color: #cbd5e1 transparent;
+}
+
+.manager-view-list::-webkit-scrollbar {
+    width: 5px;
+}
+
+.manager-view-list::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 10px;
 }
 
 .manager-view-row {
@@ -351,9 +383,193 @@
     font-weight: 700;
 }
 
+
+/* CHI TIẾT QUYỀN HẠN (VIEW MODE) */
+.manager-view-permissions-section {
+    padding: 1.25rem 0;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.manager-view-permissions-section .section-title {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    font-size: 1rem;
+    font-weight: 800;
+    color: #1e293b;
+    margin-bottom: 1rem;
+}
+
+.manager-view-permissions-section .section-title svg {
+    color: #23386f;
+    font-size: 1.1rem;
+}
+
+.manager-perm-groups-display {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    background: #f8faff;
+    padding: 1rem;
+    border-radius: 1rem;
+    border: 1px solid #edf2f7;
+    max-height: 280px; /* Giới hạn chiều cao phần thẻ quyền */
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: #cbd5e1 transparent;
+}
+
+.manager-perm-groups-display::-webkit-scrollbar {
+    width: 4px;
+}
+
+.manager-perm-groups-display::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 10px;
+}
+
+.perm-group-display-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.perm-group-display-item .group-label {
+    font-size: 0.82rem;
+    font-weight: 800;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.025em;
+}
+
+.perm-group-display-item .group-perms {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+}
+
+.perm-tag-simple {
+    background: #ffffff;
+    color: #334155;
+    padding: 0.3rem 0.7rem;
+    border-radius: 0.6rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+}
+
+.no-perms-msg {
+    color: #94a3b8;
+    font-size: 0.9rem;
+    font-style: italic;
+    text-align: center;
+    padding: 0.5rem;
+}
+
+/* PHÂN QUYỀN (EDIT MODE) */
+.manager-permissions-edit-section {
+    margin-top: 1.5rem;
+    padding-top: 1.5rem;
+    border-top: 2px dashed #e2e8f0;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.manager-permissions-edit-section h3 {
+    margin: 0;
+    font-size: 1.15rem;
+    color: #1e293b;
+    font-weight: 800;
+}
+
+/* Tái sử dụng styles từ CreateUserDialog cho Expandable Groups */
+.admin-create-user-dialog-perm-groups {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+}
+
+.perm-group-item {
+    border: 1px solid #e4e8f0;
+    border-radius: 0.85rem;
+    background: #ffffff;
+    overflow: hidden;
+    transition: all 0.2s ease;
+}
+
+.perm-group-item.active {
+    border-color: #23386f;
+    box-shadow: 0 4px 12px rgba(35, 56, 111, 0.08);
+}
+
+.perm-group-header {
+    padding: 0.75rem 0.9rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    background: #fdfdff;
+    user-select: none;
+}
+
+.perm-group-header:hover {
+    background: #f8faff;
+}
+
+.perm-group-left {
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+}
+
+.perm-group-label {
+    font-size: 0.92rem;
+    font-weight: 700;
+    color: #223256;
+}
+
+.perm-group-arrow {
+    color: #94a3b8;
+    transition: transform 0.2s ease;
+}
+
+.perm-group-arrow.up {
+    transform: rotate(180deg);
+    color: #23386f;
+}
+
+.perm-group-content {
+    padding: 0.8rem 1rem 1rem 1rem;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+    border-top: 1px solid #f1f5f9;
+    background: #ffffff;
+}
+
+.admin-create-user-dialog-checkbox {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.65rem;
+    color: #475569;
+    font-size: 0.88rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.admin-create-user-dialog-checkbox input {
+    width: 1.05rem;
+    height: 1.05rem;
+    accent-color: #23386f;
+    cursor: pointer;
+}
+
 @media (max-width: 640px) {
     .manager-form-grid.two-cols,
-    .manager-modal-actions {
+    .manager-modal-actions,
+    .perm-group-content {
         grid-template-columns: 1fr;
     }
 }

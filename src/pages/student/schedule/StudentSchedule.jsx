@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import StudentWeeklyScheduleSection from "./components/StudentWeeklyScheduleSection/StudentWeeklyScheduleSection";
 import StudentScheduleFilterSection from "./components/StudentScheduleFilterSection/StudentScheduleFilterSection";
 import StudentDailyScheduleSection from "./components/StudentDailyScheduleSection/StudentDailyScheduleSection";
@@ -15,8 +15,18 @@ function getTodayDayIndex() {
 
 export default function StudentSchedule() {
   const { selectedSchoolYear, selectedTerm, handleYearArrow, handleTermChange } = useSchoolYearTerm();
-  const studentId = "STU1024"; // Mock logged-in student
-  const classNameValue = "10A1";
+  const [localProfile, setLocalProfile] = useState(null);
+
+  // 1. Lấy thông tin từ localStorage
+  useEffect(() => {
+    const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
+    if (storedUser?.profile) {
+      setLocalProfile(storedUser.profile);
+    }
+  }, []);
+
+  const studentId = localProfile?.id || "STU_LOADING";
+  const classNameValue = localProfile?.className || "—";
 
   const [weekOffset, setWeekOffset] = useState(0);
   const [selectedLesson, setSelectedLesson] = useState(null);
@@ -27,8 +37,6 @@ export default function StudentSchedule() {
     const now = new Date();
     const target = new Date(now);
     target.setDate(now.getDate() + offset);
-    // Move weekOffset if necessary, but skipping for simplicity in quick navigation without daily view
-    // Instead of opening Daily view, we just jump to the correct week
     const diffTime = target.getTime() - now.getTime();
     const diffWeeks = Math.round(diffTime / (1000 * 60 * 60 * 24 * 7));
     setWeekOffset(diffWeeks);
@@ -80,8 +88,6 @@ export default function StudentSchedule() {
           studentId={studentId}
           onLessonSelect={(lesson) => {
             setSelectedLesson(lesson);
-            // Optionally close daily modal when opening lesson detail, 
-            // but keeping it open allows easy switching between lessons
           }}
         />
       </Modal>

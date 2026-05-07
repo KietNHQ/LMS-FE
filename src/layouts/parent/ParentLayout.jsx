@@ -17,11 +17,24 @@ export default function ParentLayout() {
         return () => clearTimeout(timer);
     }, [location.pathname]);
 
+    // Đọc từ localStorage
+    const storedUser = (() => {
+        try {
+            return JSON.parse(localStorage.getItem("user") || "{}");
+        } catch {
+            return {};
+        }
+    })();
+
+    const userName = storedUser.fullName || storedUser.name || "Phụ huynh";
+    const userEmail = storedUser.email || "";
+
     return (
         <div className={`parent-layout ${isCollapsed ? "collapsed" : ""}`}>
             <Sidebar
                 role="parent"
-                userName="Nguyễn Văn Hùng"
+                userName={userName}
+                userEmail={userEmail}
                 isCollapsed={isCollapsed}
                 setIsCollapsed={setIsCollapsed}
             />

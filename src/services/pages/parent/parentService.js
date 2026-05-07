@@ -171,10 +171,10 @@ const PARENT_FAQS_MOCK = [
 ];
 
 const PARENT_ENDPOINTS = [
-  { key: "get_parent_dashboard", method: "GET", path: "/api/v1/dashboard/parent", module: "dashboard", mock: () => PARENT_DASHBOARD_MOCK },
+  { key: "get_parent_dashboard", method: "GET", path: "/api/v1/guardians/me/children", module: "dashboard", mock: () => PARENT_DASHBOARD_MOCK },
   { key: "get_parent_children", method: "GET", path: "/api/v1/guardians/me/children", module: "children", mock: () => PARENT_CHILDREN_MOCK },
   { key: "get_parent_child_by_id", method: "GET", path: "/api/v1/guardians/me/children/:childId", module: "children", mock: (input) => PARENT_CHILDREN_MOCK.find((item) => `${item.id}` === `${input.pathParams?.childId}`) || null },
-  { key: "get_parent_child_grades", method: "GET", path: "/api/v1/guardians/me/children/:childId/grades", module: "children", mock: () => ({ semester1: [], semester2: [], year: [] }) },
+  { key: "get_parent_child_grades", method: "GET", path: "/api/v1/students/:childId/grades", module: "children", mock: () => ({ semester1: [], semester2: [], year: [] }) },
   { key: "get_parent_child_attendance", method: "GET", path: "/api/v1/guardians/me/children/:childId/attendance", module: "children", mock: () => ({ weekly: [], monthly: [] }) },
   { key: "get_parent_child_schedule", method: "GET", path: "/api/v1/guardians/me/children/:childId/schedule", module: "children", mock: () => [] },
   { key: "get_parent_messages", method: "GET", path: "/api/v1/guardians/me/messages", module: "messages", mock: () => PARENT_MESSAGES_MOCK },

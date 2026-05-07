@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import { FiChevronDown } from "react-icons/fi";
 import {
     BiTrendingUp,
@@ -25,6 +25,8 @@ import {
 import "./StudentGrades.css";
 import GradesHeader from "./components/GradesHeader/GradesHeader";
 import { Button, Select } from "../../../components/ui";
+import { LoadingSpinner } from "../../../components/common";
+import { studentService } from "../../../services/pages/student/studentService";
 
 /* =========================
    HÀM HỖ TRỢ TÍNH ĐIỂM
@@ -34,17 +36,24 @@ function round2(num) {
 }
 
 function calculateSemesterAverage(semester) {
-    const midtermScore = semester.midterm ?? 0;
-    const test45Score = semester.test45 ?? midtermScore;
+    if (!semester) return 0;
+    // Chấp nhận cả cấu trúc API phẳng hoặc lồng nhau
+    const oral1 = semester.oral1 || semester.oral || 0;
+    const oral2 = semester.oral2 || 0;
+    const test15_1 = semester.test15_1 || semester.test15 || 0;
+    const test15_2 = semester.test15_2 || 0;
+    const midterm = semester.midterm || 0;
+    const test45 = semester.test45 || midterm;
+    const final = semester.final || 0;
 
     const total =
-        semester.oral1 +
-        semester.oral2 +
-        semester.test15_1 +
-        semester.test15_2 +
-        test45Score +
-        midtermScore * 2 +
-        semester.final * 3;
+        oral1 +
+        oral2 +
+        test15_1 +
+        test15_2 +
+        test45 +
+        midterm * 2 +
+        final * 3;
 
     return round2(total / 10);
 }
@@ -66,20 +75,6 @@ function getTrend(hk1Avg, hk2Avg) {
     return "same";
 }
 
-function getRankColorClass(rank) {
-    if (rank === "Giỏi") return "rank-good";
-    if (rank === "Khá") return "rank-fair";
-    if (rank === "Trung bình") return "rank-average";
-    return "rank-weak";
-}
-
-function getSummaryColorClass(rank) {
-    if (rank === "Giỏi") return "green";
-    if (rank === "Khá") return "orange";
-    if (rank === "Trung bình") return "blue";
-    return "red";
-}
-
 const subjectIconMap = {
     toán: FaSquareRootAlt,
     "vật lý": FaAtom,
@@ -98,541 +93,212 @@ const subjectIconMap = {
 };
 
 function getSubjectIcon(subjectName) {
-    const normalizedName = subjectName.trim().toLowerCase();
+    const normalizedName = subjectName?.trim().toLowerCase() || "";
     return subjectIconMap[normalizedName] || FaGraduationCap;
 }
 
-/* =========================
-   DỮ LIỆU GỐC
-========================= */
-const rawGradeData = {
-    "10A1 - Năm học 2024-2025": [
-        {
-            id: 1,
-            name: "Toán",
-            className: "Lớp 10A1",
-            hk1: { oral1: 8, oral2: 9, test15_1: 8, test15_2: 7, midterm: 8, final: 9 },
-            hk2: { oral1: 9, oral2: 8, test15_1: 8, test15_2: 9, midterm: 8, final: 9 },
-        },
-        {
-            id: 2,
-            name: "Vật lý",
-            className: "Lớp 10A1",
-            hk1: { oral1: 7, oral2: 8, test15_1: 7, test15_2: 8, midterm: 7, final: 8 },
-            hk2: { oral1: 8, oral2: 8, test15_1: 8, test15_2: 7, midterm: 8, final: 8 },
-        },
-        {
-            id: 3,
-            name: "Hóa học",
-            className: "Lớp 10A1",
-            hk1: { oral1: 6, oral2: 7, test15_1: 6, test15_2: 7, midterm: 6, final: 7 },
-            hk2: { oral1: 7, oral2: 7, test15_1: 7, test15_2: 7, midterm: 7, final: 7 },
-        },
-        {
-            id: 4,
-            name: "Ngữ văn",
-            className: "Lớp 10A1",
-            hk1: { oral1: 7, oral2: 7, test15_1: 7, test15_2: 7, midterm: 7, final: 7 },
-            hk2: { oral1: 6, oral2: 7, test15_1: 6, test15_2: 7, midterm: 6, final: 7 },
-        },
-        {
-            id: 5,
-            name: "Tiếng Anh",
-            className: "Lớp 10A1",
-            hk1: { oral1: 8, oral2: 9, test15_1: 8, test15_2: 9, midterm: 8, final: 9 },
-            hk2: { oral1: 9, oral2: 10, test15_1: 9, test15_2: 9, midterm: 9, final: 9 },
-        },
-        {
-            id: 6,
-            name: "Sinh học",
-            className: "Lớp 10A1",
-            hk1: { oral1: 7, oral2: 8, test15_1: 7, test15_2: 8, midterm: 7, final: 8 },
-            hk2: { oral1: 8, oral2: 8, test15_1: 8, test15_2: 8, midterm: 8, final: 8 },
-        },
-        {
-            id: 7,
-            name: "Lịch sử",
-            className: "Lớp 10A1",
-            hk1: { oral1: 8, oral2: 8, test15_1: 7, test15_2: 8, midterm: 8, final: 8 },
-            hk2: { oral1: 8, oral2: 9, test15_1: 8, test15_2: 8, midterm: 8, final: 9 },
-        },
-        {
-            id: 8,
-            name: "Địa lý",
-            className: "Lớp 10A1",
-            hk1: { oral1: 7, oral2: 7, test15_1: 8, test15_2: 8, midterm: 7, final: 8 },
-            hk2: { oral1: 8, oral2: 8, test15_1: 8, test15_2: 9, midterm: 8, final: 8 },
-        },
-        {
-            id: 9,
-            name: "Tin học",
-            className: "Lớp 10A1",
-            hk1: { oral1: 8, oral2: 9, test15_1: 9, test15_2: 8, midterm: 8, final: 9 },
-            hk2: { oral1: 9, oral2: 9, test15_1: 9, test15_2: 9, midterm: 9, final: 9 },
-        },
-    ],
-
-    "11A1 - Năm học 2025-2026": [
-        {
-            id: 1,
-            name: "Toán",
-            className: "Lớp 11A1",
-            hk1: { oral1: 8, oral2: 8, test15_1: 8, test15_2: 9, midterm: 8, final: 9 },
-            hk2: { oral1: 9, oral2: 9, test15_1: 8, test15_2: 9, midterm: 9, final: 9 },
-        },
-        {
-            id: 2,
-            name: "Vật lý",
-            className: "Lớp 11A1",
-            hk1: { oral1: 8, oral2: 8, test15_1: 8, test15_2: 8, midterm: 8, final: 8 },
-            hk2: { oral1: 8, oral2: 9, test15_1: 8, test15_2: 8, midterm: 8, final: 9 },
-        },
-        {
-            id: 3,
-            name: "Hóa học",
-            className: "Lớp 11A1",
-            hk1: { oral1: 7, oral2: 8, test15_1: 7, test15_2: 8, midterm: 8, final: 8 },
-            hk2: { oral1: 8, oral2: 8, test15_1: 8, test15_2: 8, midterm: 8, final: 8 },
-        },
-        {
-            id: 4,
-            name: "Ngữ văn",
-            className: "Lớp 11A1",
-            hk1: { oral1: 7, oral2: 8, test15_1: 7, test15_2: 7, midterm: 7, final: 8 },
-            hk2: { oral1: 8, oral2: 8, test15_1: 7, test15_2: 8, midterm: 8, final: 8 },
-        },
-        {
-            id: 5,
-            name: "Tiếng Anh",
-            className: "Lớp 11A1",
-            hk1: { oral1: 9, oral2: 9, test15_1: 8, test15_2: 9, midterm: 9, final: 9 },
-            hk2: { oral1: 9, oral2: 9, test15_1: 9, test15_2: 9, midterm: 9, final: 9 },
-        },
-        {
-            id: 6,
-            name: "Sinh học",
-            className: "Lớp 11A1",
-            hk1: { oral1: 8, oral2: 8, test15_1: 7, test15_2: 8, midterm: 8, final: 8 },
-            hk2: { oral1: 8, oral2: 9, test15_1: 8, test15_2: 9, midterm: 8, final: 9 },
-        },
-        {
-            id: 7,
-            name: "Lịch sử",
-            className: "Lớp 11A1",
-            hk1: { oral1: 7, oral2: 8, test15_1: 8, test15_2: 7, midterm: 8, final: 8 },
-            hk2: { oral1: 8, oral2: 8, test15_1: 8, test15_2: 8, midterm: 8, final: 8 },
-        },
-        {
-            id: 8,
-            name: "Địa lý",
-            className: "Lớp 11A1",
-            hk1: { oral1: 7, oral2: 8, test15_1: 7, test15_2: 8, midterm: 7, final: 8 },
-            hk2: { oral1: 8, oral2: 8, test15_1: 8, test15_2: 8, midterm: 8, final: 8 },
-        },
-        {
-            id: 9,
-            name: "Tin học",
-            className: "Lớp 11A1",
-            hk1: { oral1: 9, oral2: 8, test15_1: 8, test15_2: 9, midterm: 8, final: 9 },
-            hk2: { oral1: 9, oral2: 9, test15_1: 9, test15_2: 9, midterm: 9, final: 9 },
-        },
-    ],
-
-    "12A1 - Năm học 2026-2027": [
-        {
-            id: 1,
-            name: "Toán",
-            className: "Lớp 12A1",
-            hk1: { oral1: 9, oral2: 9, test15_1: 8, test15_2: 9, midterm: 9, final: 9 },
-            hk2: { oral1: 9, oral2: 10, test15_1: 9, test15_2: 9, midterm: 9, final: 10 },
-        },
-        {
-            id: 2,
-            name: "Vật lý",
-            className: "Lớp 12A1",
-            hk1: { oral1: 8, oral2: 9, test15_1: 8, test15_2: 8, midterm: 8, final: 9 },
-            hk2: { oral1: 9, oral2: 9, test15_1: 8, test15_2: 9, midterm: 9, final: 9 },
-        },
-        {
-            id: 3,
-            name: "Hóa học",
-            className: "Lớp 12A1",
-            hk1: { oral1: 8, oral2: 8, test15_1: 8, test15_2: 8, midterm: 8, final: 8 },
-            hk2: { oral1: 8, oral2: 9, test15_1: 8, test15_2: 8, midterm: 8, final: 9 },
-        },
-        {
-            id: 4,
-            name: "Ngữ văn",
-            className: "Lớp 12A1",
-            hk1: { oral1: 8, oral2: 8, test15_1: 7, test15_2: 8, midterm: 8, final: 8 },
-            hk2: { oral1: 8, oral2: 8, test15_1: 8, test15_2: 8, midterm: 8, final: 8 },
-        },
-        {
-            id: 5,
-            name: "Tiếng Anh",
-            className: "Lớp 12A1",
-            hk1: { oral1: 9, oral2: 9, test15_1: 9, test15_2: 9, midterm: 9, final: 9 },
-            hk2: { oral1: 9, oral2: 10, test15_1: 9, test15_2: 10, midterm: 9, final: 10 },
-        },
-        {
-            id: 6,
-            name: "Sinh học",
-            className: "Lớp 12A1",
-            hk1: { oral1: 8, oral2: 8, test15_1: 8, test15_2: 9, midterm: 8, final: 8 },
-            hk2: { oral1: 9, oral2: 9, test15_1: 9, test15_2: 9, midterm: 9, final: 9 },
-        },
-        {
-            id: 7,
-            name: "Lịch sử",
-            className: "Lớp 12A1",
-            hk1: { oral1: 8, oral2: 8, test15_1: 8, test15_2: 8, midterm: 8, final: 9 },
-            hk2: { oral1: 9, oral2: 8, test15_1: 9, test15_2: 9, midterm: 8, final: 9 },
-        },
-        {
-            id: 8,
-            name: "Địa lý",
-            className: "Lớp 12A1",
-            hk1: { oral1: 8, oral2: 8, test15_1: 7, test15_2: 8, midterm: 8, final: 8 },
-            hk2: { oral1: 8, oral2: 9, test15_1: 8, test15_2: 9, midterm: 8, final: 9 },
-        },
-        {
-            id: 9,
-            name: "Tin học",
-            className: "Lớp 12A1",
-            hk1: { oral1: 9, oral2: 9, test15_1: 9, test15_2: 8, midterm: 9, final: 9 },
-            hk2: { oral1: 10, oral2: 9, test15_1: 9, test15_2: 10, midterm: 9, final: 10 },
-        },
-    ],
-};
-
-function buildComputedData(rawData) {
-    const result = {};
-
-    Object.entries(rawData).forEach(([classLabel, subjects]) => {
-        const computedSubjects = subjects.map((subject) => {
-            const hk1Avg = calculateSemesterAverage(subject.hk1);
-            const hk2Avg = calculateSemesterAverage(subject.hk2);
-            const yearAvg = calculateYearAverage(hk1Avg, hk2Avg);
-            const rank = getAcademicRank(yearAvg);
-            const trend = getTrend(hk1Avg, hk2Avg);
-
-            return {
-                ...subject,
-                hk1Avg,
-                hk2Avg,
-                yearAvg,
-                rank,
-                trend,
-            };
-        });
-
-        const classAverage =
-            computedSubjects.reduce((sum, item) => sum + item.yearAvg, 0) /
-            computedSubjects.length;
-
-        const roundedClassAverage = round2(classAverage);
-
-        result[classLabel] = {
-            average: roundedClassAverage,
-            conduct: getAcademicRank(roundedClassAverage),
-            subjectCount: computedSubjects.length,
-            subjects: computedSubjects,
-        };
-    });
-
-    return result;
-}
-
-const gradeData = buildComputedData(rawGradeData);
-
 export default function StudentGrades() {
-    const classOptions = Object.keys(gradeData);
-
-    const [selectedClass, setSelectedClass] = useState(classOptions[0]);
-    const [openRowId, setOpenRowId] = useState(1);
+    const [isLoading, setIsLoading] = useState(true);
+    const [gradesData, setGradesData] = useState([]);
+    const [openRowId, setOpenRowId] = useState(null);
     const [activeTab, setActiveTab] = useState("hk1");
+    const [selectedSchoolYear, setSelectedSchoolYear] = useState("2025-2026");
 
-    const currentData = useMemo(() => gradeData[selectedClass], [selectedClass]);
+    useEffect(() => {
+        const fetchGrades = async () => {
+            setIsLoading(true);
+            try {
+                const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
+                const studentId = storedUser?.profile?.id;
 
-    const summaryAverage = useMemo(() => {
-        if (!currentData?.subjects?.length) return 0;
+                if (studentId) {
+                    const response = await studentService.getStudentGrades({ 
+                        pathParams: { id: studentId },
+                        mock: false 
+                    });
+                    
+                    if (response.success && response.data) {
+                        // Backend có thể trả về object hk1, hk2 hoặc array. 
+                        // Chúng ta sẽ chuẩn hóa để dùng trong logic hiển thị.
+                        processGradesResponse(response.data);
+                    }
+                }
+            } catch (error) {
+                console.warn("Failed to fetch grades, using empty state.");
+            } finally {
+                setTimeout(() => setIsLoading(false), 500);
+            }
+        };
 
-        const total = currentData.subjects.reduce((sum, subject) => {
-            if (activeTab === "hk1") return sum + subject.hk1Avg;
-            if (activeTab === "hk2") return sum + subject.hk2Avg;
-            return sum + subject.yearAvg;
+        fetchGrades();
+    }, [selectedSchoolYear]);
+
+    const processGradesResponse = (data) => {
+        // Tạm thời nếu data là mảng các môn học có lồng hk1, hk2
+        if (Array.isArray(data)) {
+            const computed = data.map(subject => {
+                const hk1Avg = calculateSemesterAverage(subject.hk1);
+                const hk2Avg = calculateSemesterAverage(subject.hk2);
+                const yearAvg = calculateYearAverage(hk1Avg, hk2Avg);
+                return {
+                    ...subject,
+                    hk1Avg,
+                    hk2Avg,
+                    yearAvg,
+                    rank: getAcademicRank(yearAvg),
+                    trend: getTrend(hk1Avg, hk2Avg)
+                };
+            });
+            setGradesData(computed);
+        }
+    };
+
+    const summaryStats = useMemo(() => {
+        if (gradesData.length === 0) return { avg: 0, rank: "—", count: 0 };
+
+        const total = gradesData.reduce((sum, s) => {
+            if (activeTab === "hk1") return sum + (s.hk1Avg || 0);
+            if (activeTab === "hk2") return sum + (s.hk2Avg || 0);
+            return sum + (s.yearAvg || 0);
         }, 0);
 
-        return round2(total / currentData.subjects.length);
-    }, [currentData, activeTab]);
-
-    const summaryAverageLabel =
-        activeTab === "hk1"
-            ? "Điểm trung bình học kỳ 1"
-            : activeTab === "hk2"
-                ? "Điểm trung bình học kỳ 2"
-                : "Điểm trung bình cả năm";
-
-    const toggleRow = (id) => {
-        setOpenRowId((prev) => (prev === id ? null : id));
-    };
-
-    const getDisplayedValue = (subject) => {
-        if (activeTab === "hk1") return subject.hk1Avg.toFixed(2);
-        if (activeTab === "hk2") return subject.hk2Avg.toFixed(2);
-        return subject.yearAvg.toFixed(2);
-    };
-
-    const getDisplayedLabel = () => {
-        if (activeTab === "hk1") return "TB HK1";
-        if (activeTab === "hk2") return "TB HK2";
-        return "TB cả năm";
-    };
+        const avg = round2(total / gradesData.length);
+        return {
+            avg,
+            rank: getAcademicRank(avg),
+            count: gradesData.length
+        };
+    }, [gradesData, activeTab]);
 
     return (
         <div className="grades-page">
             <GradesHeader title="Kết quả học tập" />
 
-            <div className="grades-toolbar">
-                <div className="grades-filter">
-                    <div className="filter-box">
-                        <Select
-                            variant="custom"
-                            className="grades-class-select"
-                            label="Chọn lớp học"
-                            value={selectedClass}
-                            options={classOptions.map((item) => ({ value: item, label: item }))}
-                            onChange={(event) => {
-                                setSelectedClass(event.target.value);
-                                setOpenRowId(1);
-                            }}
-                        />
+            {isLoading ? (
+                <div className="layout-loading-wrapper" style={{ minHeight: "400px" }}>
+                    <LoadingSpinner size="lg" label="Đang tải bảng điểm..." role="student" />
+                </div>
+            ) : (
+                <>
+                    <div className="grades-toolbar">
+                        <div className="grades-filter">
+                            <Select
+                                variant="custom"
+                                className="grades-class-select"
+                                label="Năm học"
+                                value={selectedSchoolYear}
+                                options={[
+                                    { value: "2025-2026", label: "2025-2026" },
+                                    { value: "2024-2025", label: "2024-2025" }
+                                ]}
+                                onChange={(e) => setSelectedSchoolYear(e.target.value)}
+                            />
+                        </div>
+
+                        <div className="grades-tabs">
+                            {["hk1", "hk2", "year"].map((tab) => (
+                                <Button
+                                    key={tab}
+                                    variant={activeTab === tab ? "primary" : "secondary"}
+                                    className={`grades-tab-btn ${activeTab === tab ? "active" : ""}`}
+                                    onClick={() => setActiveTab(tab)}
+                                >
+                                    {tab === "hk1" ? "Học kỳ 1" : tab === "hk2" ? "Học kỳ 2" : "Cả năm"}
+                                </Button>
+                            ))}
+                        </div>
                     </div>
-                </div>
 
-                <div className="grades-tabs">
-                    <Button
-                        variant={activeTab === "hk1" ? "primary" : "secondary"}
-                        className={`grades-tab-btn ${activeTab === "hk1" ? "active" : ""}`}
-                        onClick={() => setActiveTab("hk1")}
-                        type="button"
-                    >
-                        Học kỳ 1
-                    </Button>
+                    <div className="grades-stats">
+                        <div className="grades-card">
+                            <h2 className="blue">{summaryStats.avg.toFixed(2)}</h2>
+                            <p>{activeTab === "year" ? "TB Cả năm" : `TB Học kỳ ${activeTab === "hk1" ? "1" : "2"}`}</p>
+                        </div>
+                        <div className="grades-card">
+                            <h2 className={summaryStats.rank === "Giỏi" ? "rank-good" : "rank-fair"}>
+                                {summaryStats.rank}
+                            </h2>
+                            <p>Xếp loại học lực</p>
+                        </div>
+                        <div className="grades-card">
+                            <h2 className="green">{summaryStats.count}</h2>
+                            <p>Số môn học</p>
+                        </div>
+                    </div>
 
-                    <Button
-                        variant={activeTab === "hk2" ? "primary" : "secondary"}
-                        className={`grades-tab-btn ${activeTab === "hk2" ? "active" : ""}`}
-                        onClick={() => setActiveTab("hk2")}
-                        type="button"
-                    >
-                        Học kỳ 2
-                    </Button>
-
-                    <Button
-                        variant={activeTab === "year" ? "primary" : "secondary"}
-                        className={`grades-tab-btn ${activeTab === "year" ? "active" : ""}`}
-                        onClick={() => setActiveTab("year")}
-                        type="button"
-                    >
-                        Cả năm
-                    </Button>
-                </div>
-            </div>
-
-            <div className="grades-stats">
-                <div className="grades-card">
-                    <h2 className="blue">{summaryAverage.toFixed(2)}</h2>
-                    <p>{summaryAverageLabel}</p>
-                </div>
-
-                <div className="grades-card">
-                    <h2 className={getSummaryColorClass(currentData.conduct)}>
-                        {currentData.conduct}
-                    </h2>
-                    <p>Xếp loại học lực</p>
-                </div>
-
-                <div className="grades-card">
-                    <h2 className="green">{currentData.subjectCount}</h2>
-                    <p>Số môn học</p>
-                </div>
-            </div>
-
-            <div className="grades-table">
-                <div className="table-header">
-                    <span>Môn học</span>
-                    <span>TB HK1</span>
-                    <span>TB HK2</span>
-                    <span>{getDisplayedLabel()}</span>
-                    <span className="progress-header">Tiến độ</span>
-                    <span>Xếp loại</span>
-                    <span>Chi tiết</span>
-                </div>
-
-                {currentData.subjects.map((subject) => (
-                    <React.Fragment key={`${selectedClass}-${subject.id}`}>
-                        <div className="table-row">
-                            <div className="subject">
-                                <div className="subject-icon">
-                                    {React.createElement(getSubjectIcon(subject.name))}
-                                </div>
-                                <div>
-                                    <b>{subject.name}</b>
-                                    <p>{subject.className}</p>
-                                </div>
-                            </div>
-
-                            <span>{subject.hk1Avg.toFixed(2)}</span>
-                            <span>{subject.hk2Avg.toFixed(2)}</span>
-                            <span className="total">{getDisplayedValue(subject)}</span>
-
-                            <span
-                                className={`trend-cell ${
-                                    subject.trend === "up"
-                                        ? "up"
-                                        : subject.trend === "down"
-                                            ? "down"
-                                            : "same"
-                                }`}
-                            >
-                {subject.trend === "up" ? (
-                    <BiTrendingUp />
-                ) : subject.trend === "down" ? (
-                    <BiTrendingDown />
-                ) : (
-                    <BiMinus />
-                )}
-              </span>
-
-                            <span className={`rank ${getRankColorClass(subject.rank)}`}>
-                {subject.rank}
-              </span>
-
-                            <button
-                                className={`detail-toggle ${openRowId === subject.id ? "open" : ""}`}
-                                onClick={() => toggleRow(subject.id)}
-                                type="button"
-                                aria-label="Xem chi tiết"
-                            >
-                                <FiChevronDown />
-                            </button>
+                    <div className="grades-table">
+                        <div className="table-header">
+                            <span>Môn học</span>
+                            <span>TB HK1</span>
+                            <span>TB HK2</span>
+                            <span>TB Tổng</span>
+                            <span className="progress-header">Xu hướng</span>
+                            <span>Xếp loại</span>
+                            <span>Chi tiết</span>
                         </div>
 
-                        <div className={`detail-collapse ${openRowId === subject.id ? "expanded" : ""}`}>
-                            <div className="table-detail-row">
-                                <div className="detail-panels">
-                                    <div className="detail-card">
-                                        <h3>Học kỳ 1</h3>
-
-                                        <div className="detail-item">
-                                            <span>Điểm miệng 1</span>
-                                            <strong>{subject.hk1.oral1}</strong>
+                        {gradesData.length > 0 ? gradesData.map((subject) => (
+                            <React.Fragment key={subject.id}>
+                                <div className="table-row">
+                                    <div className="subject">
+                                        <div className="subject-icon">
+                                            {React.createElement(getSubjectIcon(subject.name))}
                                         </div>
-
-                                        <div className="detail-item">
-                                            <span>Điểm miệng 2</span>
-                                            <strong>{subject.hk1.oral2}</strong>
-                                        </div>
-
-                                        <div className="detail-item">
-                                            <span>15 phút lần 1</span>
-                                            <strong>{subject.hk1.test15_1}</strong>
-                                        </div>
-
-                                        <div className="detail-item">
-                                            <span>15 phút lần 2</span>
-                                            <strong>{subject.hk1.test15_2}</strong>
-                                        </div>
-
-                                        <div className="detail-item">
-                                            <span>1 tiết</span>
-                                            <strong>{subject.hk1.test45 ?? subject.hk1.midterm}</strong>
-                                        </div>
-
-                                        <div className="detail-item">
-                                            <span>Giữa kỳ</span>
-                                            <strong>{subject.hk1.midterm}</strong>
-                                        </div>
-
-                                        <div className="detail-item">
-                                            <span>Cuối kỳ</span>
-                                            <strong>{subject.hk1.final}</strong>
-                                        </div>
-
-                                        <div className="detail-divider" />
-
-                                        <div className="detail-item detail-average">
-                                            <span>Điểm trung bình học kỳ 1</span>
-                                            <strong>{subject.hk1Avg.toFixed(2)}</strong>
+                                        <div>
+                                            <b>{subject.name}</b>
+                                            <p>{subject.className || "Lớp học"}</p>
                                         </div>
                                     </div>
-
-                                    <div className="detail-card">
-                                        <h3>Học kỳ 2</h3>
-
-                                        <div className="detail-item">
-                                            <span>Điểm miệng 1</span>
-                                            <strong>{subject.hk2.oral1}</strong>
-                                        </div>
-
-                                        <div className="detail-item">
-                                            <span>Điểm miệng 2</span>
-                                            <strong>{subject.hk2.oral2}</strong>
-                                        </div>
-
-                                        <div className="detail-item">
-                                            <span>15 phút lần 1</span>
-                                            <strong>{subject.hk2.test15_1}</strong>
-                                        </div>
-
-                                        <div className="detail-item">
-                                            <span>15 phút lần 2</span>
-                                            <strong>{subject.hk2.test15_2}</strong>
-                                        </div>
-
-                                        <div className="detail-item">
-                                            <span>1 tiết</span>
-                                            <strong>{subject.hk2.test45 ?? subject.hk2.midterm}</strong>
-                                        </div>
-
-                                        <div className="detail-item">
-                                            <span>Giữa kỳ</span>
-                                            <strong>{subject.hk2.midterm}</strong>
-                                        </div>
-
-                                        <div className="detail-item">
-                                            <span>Cuối kỳ</span>
-                                            <strong>{subject.hk2.final}</strong>
-                                        </div>
-
-                                        <div className="detail-divider" />
-
-                                        <div className="detail-item detail-average">
-                                            <span>Điểm trung bình học kỳ 2</span>
-                                            <strong>{subject.hk2Avg.toFixed(2)}</strong>
-                                        </div>
-                                    </div>
+                                    <span>{(subject.hk1Avg || 0).toFixed(2)}</span>
+                                    <span>{(subject.hk2Avg || 0).toFixed(2)}</span>
+                                    <span className="total">
+                                        {(activeTab === "hk1" ? subject.hk1Avg : activeTab === "hk2" ? subject.hk2Avg : subject.yearAvg).toFixed(2)}
+                                    </span>
+                                    <span className={`trend-cell ${subject.trend}`}>
+                                        {subject.trend === "up" ? <BiTrendingUp /> : subject.trend === "down" ? <BiTrendingDown /> : <BiMinus />}
+                                    </span>
+                                    <span className={`rank rank-${subject.rank === "Giỏi" ? "good" : "fair"}`}>
+                                        {subject.rank}
+                                    </span>
+                                    <button
+                                        className={`detail-toggle ${openRowId === subject.id ? "open" : ""}`}
+                                        onClick={() => setOpenRowId(openRowId === subject.id ? null : subject.id)}
+                                    >
+                                        <FiChevronDown />
+                                    </button>
                                 </div>
-
-                                <div className="year-summary-card">
-                                    <div className="year-summary-item">
-                                        <span>Điểm trung bình cả năm</span>
-                                        <strong>{subject.yearAvg.toFixed(2)}</strong>
+                                
+                                {openRowId === subject.id && (
+                                    <div className="detail-collapse expanded">
+                                        <div className="table-detail-row">
+                                            <div className="detail-panels">
+                                                {["hk1", "hk2"].map(hk => (
+                                                    <div key={hk} className="detail-card">
+                                                        <h3>{hk === "hk1" ? "Học kỳ 1" : "Học kỳ 2"}</h3>
+                                                        {Object.entries(subject[hk] || {}).map(([key, val]) => (
+                                                            <div key={key} className="detail-item">
+                                                                <span>{key}</span>
+                                                                <strong>{val}</strong>
+                                                            </div>
+                                                        ))}
+                                                        <div className="detail-divider" />
+                                                        <div className="detail-item detail-average">
+                                                            <span>Điểm trung bình {hk}</span>
+                                                            <strong>{(hk === "hk1" ? subject.hk1Avg : subject.hk2Avg).toFixed(2)}</strong>
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
                                     </div>
-
-                                    <div className="year-summary-item">
-                                        <span>Xếp loại học lực</span>
-                                        <strong>{subject.rank}</strong>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </React.Fragment>
-                ))}
-            </div>
+                                )}
+                            </React.Fragment>
+                        )) : (
+                            <div className="empty-table-state">Chưa có dữ liệu điểm cho năm học này.</div>
+                        )}
+                    </div>
+                </>
+            )}
         </div>
     );
 }
-
-

@@ -45,6 +45,8 @@
     background: #885def;
 }
 
-.profile-header-section.role-admin .profile-avatar {
+.profile-header-section.role-admin .profile-avatar,
+.profile-header-section.role-management .profile-avatar,
+.profile-header-section.role-manager .profile-avatar {
     background: #1e2f5a;
 }

@@ -1,17 +1,21 @@
 import "./PaymentSummary.css";
 
-export default function PaymentSummary({ yearAvg }) { 
+export default function PaymentSummary({ selectedChild, yearAvg }) { 
+  const name = selectedChild?.name || "Chưa có thông tin";
+  const initials = name.charAt(0).toUpperCase();
+  const className = selectedChild?.className || selectedChild?.class_name || "---";
+  const teacherName = selectedChild?.teacherName || "---";
+  const studentCode = selectedChild?.studentCode || selectedChild?.id || "---";
 
   return ( 
     <div className="payment-summary">
-
       <div className="student-info">
-        <div className="avatar">N</div>
+        <div className="avatar">{initials}</div>
 
         <div className="info">
-          <h3>Nguyễn Minh Tuấn</h3>
-          <p>Lớp 10A1 • GVCN: Trần Thị Hương</p>
-          <span>Năm học 2024-2025 • Mã HS: HS001</span>
+          <h3>{name}</h3>
+          <p>Lớp {className} • GVCN: {teacherName}</p>
+          <span>Năm học 2024-2025 • Mã HS: {studentCode}</span>
         </div>
       </div>
 

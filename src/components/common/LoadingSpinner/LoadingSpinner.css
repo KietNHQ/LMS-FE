@@ -33,7 +33,7 @@
 .common-loading-spinner.theme-admin { --spinner-color: #1e2f5a; }
 .common-loading-spinner.theme-teacher { --spinner-color: #0d9488; }
 .common-loading-spinner.theme-student { --spinner-color: #2563eb; }
-.common-loading-spinner.theme-parent { --spinner-color: #7c3aed; }
+.common-loading-spinner.theme-parent { --spinner-color: #a67cff; }
 
 /* Outer Ring */
 .ring-outer {

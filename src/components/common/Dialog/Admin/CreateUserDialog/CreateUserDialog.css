@@ -136,6 +136,13 @@
     font-weight: 700;
 }
 
+.admin-create-user-dialog-field label .required-mark {
+    margin-left: 0.15rem;
+    color: #dc2626;
+    font-size: 0.82em;
+    font-weight: 500;
+}
+
 .admin-create-user-dialog-field input {
     width: 100%;
     min-height: 3.55rem;
@@ -201,39 +208,78 @@
     background: #ffffff;
     color: #20366d;
     font-size: 1.2rem;
-    font-weight: 700;
-    line-height: 1;
-    cursor: pointer;
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.admin-create-user-dialog-role-header h3 {
+    margin: 0;
+    font-size: 1.1rem;
+    color: #1e293b;
+}
+
+.admin-create-user-dialog-role-subtitle {
+    font-size: 0.85rem;
+    color: #64748b;
+    font-weight: normal;
+}
+
+/* ── Children List Layout ── */
+.admin-create-user-dialog-children-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    margin-bottom: 1.5rem;
 }
 
 .admin-create-user-dialog-child-row {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-    padding: 0.7rem;
-    border-radius: 0.8rem;
-    border: 1px solid #e7edf8;
-    background: #ffffff;
+    background: #f8fafc;
+    padding: 1rem;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+    position: relative;
 }
 
 .admin-create-user-dialog-child-remove-btn {
-    align-self: flex-end;
-    min-height: 2rem;
-    border-radius: 0.65rem;
-    border: 1px solid #e6c7ce;
-    background: #fff7f9;
-    color: #a53a4f;
-    font-weight: 700;
+    margin-top: 0.5rem;
+    padding: 0.4rem 0.8rem;
+    font-size: 0.8rem;
+    color: #ef4444;
+    background: #fef2f2;
+    border: 1px solid #fee2e2;
+    border-radius: 4px;
     cursor: pointer;
-    padding: 0 0.9rem;
+    transition: all 0.2s;
+    float: right;
 }
 
-.admin-create-user-dialog-checkbox {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    color: #344054;
-    font-weight: 600;
+.admin-create-user-dialog-child-remove-btn:hover {
+    background: #fee2e2;
+}
+
+.admin-create-user-dialog-child-add-btn {
+    padding: 0.4rem 0.8rem;
+    background: #3b82f6;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.admin-create-user-dialog-child-add-btn:hover {
+    background: #2563eb;
+}
+
+/* ── Checkbox Group ── */
+.admin-create-user-dialog-checkbox-group {
+    margin: 1rem 0;
+    padding: 0.75rem;
+    background: #f1f5f9;
+    border-radius: 6px;
 }
 
 .admin-create-user-dialog-checkbox input {

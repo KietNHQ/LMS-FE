@@ -11,113 +11,7 @@ import UpcomingSchedule from "./components/UpcomingSchedule/UpcomingSchedule";
 import { useSchoolYearTerm } from "../../../hooks/useSchoolYearTerm";
 import { parentService } from "../../../services/pages/parent/parentService";
 
-const defaultChildrenData = [
-  {
-    id: 1,
-    name: "Nguyễn Minh Tuấn",
-    gradesBySemester: {
-      hk1: [
-        { subject: "Toán học", oral: 8, test15: 7, midterm: 8, final: 9, average: 8.2 },
-        { subject: "Tiếng Anh", oral: 7, test15: 8, midterm: 7, final: 8, average: 7.5 },
-        { subject: "Vật lý", oral: 9, test15: 8, midterm: 8, final: 9, average: 8.5 },
-        { subject: "Văn học", oral: 7, test15: 6, midterm: 7, final: 7, average: 6.8 },
-        { subject: "Hóa học", oral: 8, test15: 7, midterm: 8, final: 8, average: 7.8 },
-        { subject: "Sinh học", oral: 9, test15: 8, midterm: 9, final: 9, average: 8.8 },
-        { subject: "Lịch sử", oral: 7, test15: 7, midterm: 6, final: 7, average: 6.8 },
-        { subject: "Tin học", oral: 10, test15: 9, midterm: 9, final: 10, average: 9.5 },
-        { subject: "Địa lý", oral: 8, test15: 8, midterm: 7, final: 8, average: 7.8 },
-        { subject: "GDCD", oral: 9, test15: 9, midterm: 9, final: 9, average: 9.0 },
-        { subject: "Công nghệ", oral: 8, test15: 7, midterm: 8, final: 8, average: 7.8 },
-        { subject: "Âm nhạc", oral: 9, test15: 9, midterm: 10, final: 9, average: 9.2 },
-        { subject: "Mỹ thuật", oral: 8, test15: 8, midterm: 9, final: 8, average: 8.2 },
-        { subject: "Thể dục", oral: 10, test15: 10, midterm: 10, final: 10, average: 10 },
-        { subject: "GDQP-AN", oral: 9, test15: 9, midterm: 8, final: 9, average: 8.8 }
-      ],
-      hk2: [
-        { subject: "Toán học", oral: 9, test15: 8, midterm: 9, final: 9, average: 8.8 },
-        { subject: "Tiếng Anh", oral: 8, test15: 8, midterm: 8, final: 9, average: 1.2 },
-        { subject: "Vật lý", oral: 8, test15: 9, midterm: 8, final: 9, average: 1.5 },
-        { subject: "Văn học", oral: 7, test15: 7, midterm: 7, final: 8, average: 1.2 },
-        { subject: "Hóa học", oral: 8, test15: 8, midterm: 8, final: 9, average: 1.2 },
-        { subject: "Sinh học", oral: 9, test15: 9, midterm: 9, final: 1, average: 9.3 },
-        { subject: "Lịch sử", oral: 1, test15: 7, midterm: 7, final: 7, average: 7 },
-        { subject: "Tin học", oral: 1, test15: 10, midterm: 9, final: 10, average: 9.7 },
-        { subject: "Địa lý", oral: 8, test15: 8, midterm: 8, final: 8, average: 8.0 },
-        { subject: "GDCD", oral: 9, test15: 9, midterm: 9, final: 9, average: 9.0 },
-        { subject: "Công nghệ", oral: 8, test15: 8, midterm: 8, final: 9, average: 8.5 },
-        { subject: "Âm nhạc", oral: 9, test15: 9, midterm: 9, final: 9, average: 9.0 },
-        { subject: "Mỹ thuật", oral: 8, test15: 8, midterm: 8, final: 8, average: 8.0 },
-        { subject: "Thể dục", oral: 10, test15: 10, midterm: 10, final: 10, average: 10 },
-        { subject: "GDQP-AN", oral: 9, test15: 9, midterm: 9, final: 9, average: 9.0 }
-      ],
-      year: [
-        { subject: "Toán học", oral: 1.5, test15: 8.5, midterm: 8.5, final: 1.5, average: 1.5 },
-        { subject: "Tiếng Anh", oral: 1.9, test15: 1.9, midterm: 1.9, final: 7.9, average: 1.9 },
-        { subject: "Vật lý", oral: 1.5, test15: 1.5, midterm: 1.5, final: 8.5, average: 1.5 },
-        { subject: "Văn học", oral: 1, test15: 1, midterm: 1, final: 7, average: 1 },
-        { subject: "Hóa học", oral: 1, test15: 2, midterm: 1, final: 8, average: 1 },
-        { subject: "Sinh học", oral: 1, test15: 1, midterm: 1, final: 9, average: 9 },
-        { subject: "Lịch sử", oral: 1.9, test15: 1.9, midterm: 1.9, final: 6.9, average: 6.9 },
-        { subject: "Tin học", oral: 1.6, test15: 1.6, midterm: 9.6, final: 9.6, average: 9.6 },
-        { subject: "Địa lý", oral: 8.0, test15: 8.0, midterm: 8.0, final: 8.0, average: 8.0 },
-        { subject: "GDCD", oral: 9.0, test15: 9.0, midterm: 9.0, final: 9.0, average: 9.0 },
-        { subject: "Công nghệ", oral: 8.2, test15: 8.2, midterm: 8.2, final: 8.2, average: 8.2 },
-        { subject: "Âm nhạc", oral: 9.1, test15: 9.1, midterm: 9.1, final: 9.1, average: 9.1 },
-        { subject: "Mỹ thuật", oral: 8.1, test15: 8.1, midterm: 8.1, final: 8.1, average: 8.1 },
-        { subject: "Thể dục", oral: 10, test15: 10, midterm: 10, final: 10, average: 10 },
-        { subject: "GDQP-AN", oral: 8.9, test15: 8.9, midterm: 8.9, final: 8.9, average: 8.9 }
-      ]
-    }
-  },
-  {
-    id: 2,
-    name: "Trần Thị Bảo Châu",
-    gradesBySemester: {
-      hk1: [
-        { subject: "Toán học", oral: 9, test15: 9, midterm: 9, final: 10, average: 9.3 },
-        { subject: "Tiếng Anh", oral: 8, test15: 9, midterm: 8, final: 9, average: 8.5 },
-        { subject: "Vật lý", oral: 8, test15: 9, midterm: 9, final: 9, average: 8.8 },
-        { subject: "Văn học", oral: 7, test15: 7, midterm: 8, final: 8, average: 7.5 },
-        { subject: "Hóa học", oral: 9, test15: 8, midterm: 9, final: 9, average: 8.8 },
-        { subject: "Sinh học", oral: 9, test15: 9, midterm: 10, final: 10, average: 9.5 },
-        { subject: "Lịch sử", oral: 7, test15: 8, midterm: 7, final: 8, average: 7.5 },
-        { subject: "Tin học", oral: 10, test15: 10, midterm: 10, final: 10, average: 10 },
-        { subject: "Địa lý", oral: 9, test15: 9, midterm: 9, final: 9, average: 9.0 },
-        { subject: "GDCD", oral: 10, test15: 10, midterm: 10, final: 10, average: 10 },
-        { subject: "Công nghệ", oral: 9, test15: 9, midterm: 9, final: 9, average: 9.0 },
-        { subject: "Âm nhạc", oral: 10, test15: 10, midterm: 10, final: 10, average: 10 }
-      ],
-      hk2: [
-        { subject: "Toán học", oral: 9, test15: 9, midterm: 9, final: 10, average: 9.3 },
-        { subject: "Tiếng Anh", oral: 9, test15: 9, midterm: 9, final: 9, average: 9 },
-        { subject: "Vật lý", oral: 9, test15: 9, midterm: 9, final: 9, average: 9 },
-        { subject: "Văn học", oral: 8, test15: 8, midterm: 8, final: 8, average: 8 },
-        { subject: "Hóa học", oral: 9, test15: 9, midterm: 9, final: 9, average: 9 },
-        { subject: "Sinh học", oral: 10, test15: 10, midterm: 10, final: 10, average: 10 },
-        { subject: "Lịch sử", oral: 8, test15: 8, midterm: 8, final: 8, average: 8 },
-        { subject: "Tin học", oral: 10, test15: 10, midterm: 10, final: 10, average: 10 },
-        { subject: "Địa lý", oral: 9, test15: 9, midterm: 9, final: 9, average: 9 },
-        { subject: "GDCD", oral: 10, test15: 10, midterm: 10, final: 10, average: 10 },
-        { subject: "Công nghệ", oral: 9, test15: 9, midterm: 9, final: 9, average: 9 },
-        { subject: "Âm nhạc", oral: 10, test15: 10, midterm: 10, final: 10, average: 10 }
-      ],
-      year: [
-        { subject: "Toán học", oral: 9.3, test15: 9.3, midterm: 9.3, final: 9.3, average: 9.3 },
-        { subject: "Tiếng Anh", oral: 8.7, test15: 8.7, midterm: 8.7, final: 8.7, average: 8.7 },
-        { subject: "Vật lý", oral: 8.9, test15: 8.9, midterm: 8.9, final: 8.9, average: 8.9 },
-        { subject: "Văn học", oral: 7.8, test15: 7.8, midterm: 7.8, final: 7.8, average: 7.8 },
-        { subject: "Hóa học", oral: 8.9, test15: 8.9, midterm: 8.9, final: 8.9, average: 8.9 },
-        { subject: "Sinh học", oral: 9.7, test15: 9.7, midterm: 9.7, final: 9.7, average: 9.7 },
-        { subject: "Lịch sử", oral: 7.7, test15: 7.7, midterm: 7.7, final: 7.7, average: 7.7 },
-        { subject: "Tin học", oral: 10, test15: 10, midterm: 10, final: 10, average: 10 },
-        { subject: "Địa lý", oral: 9.0, test15: 9.0, midterm: 9.0, final: 9.0, average: 9.0 },
-        { subject: "GDCD", oral: 10, test15: 10, midterm: 10, final: 10, average: 10 },
-        { subject: "Công nghệ", oral: 9.0, test15: 9.0, midterm: 9.0, final: 9.0, average: 9.0 },
-        { subject: "Âm nhạc", oral: 10, test15: 10, midterm: 10, final: 10, average: 10 }
-      ]
-    }
-  }
-];
+const defaultChildrenData = [];
 
 export default function ParentDashboard() {
   const [childrenList, setChildrenList] = useState([]);
@@ -133,30 +27,108 @@ export default function ParentDashboard() {
         setIsLoading(true);
         setError(null);
 
+        // [TỐI ƯU] Lấy dữ liệu từ localStorage trước để hiển thị ngay lập tức
+        const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
+        const localChildren = storedUser?.profile?.linkedStudents || 
+                             storedUser?.linkedStudentIds || [];
+        
+        if (localChildren.length > 0) {
+            // Chuyển đổi format và lọc bỏ dữ liệu mẫu cũ
+            const formattedLocal = localChildren
+                .filter(c => c.id !== "child1" && c.name !== "Nguyễn Minh Tuấn")
+                .map(c => ({
+                    ...c,
+                    id: c.id || c.studentId,
+                    name: c.name || `${c.surname || ""} ${c.given_name || ""}`.trim()
+                }));
+            
+            if (formattedLocal.length > 0) {
+                setChildrenList(formattedLocal);
+                if (!selectedChildId) setSelectedChildId(formattedLocal[0].id);
+            }
+        }
+
         const response = await parentService.listChildren({ mock: false });
         console.log("📋 Parent Children API Response:", response);
 
         const children = response.data || response.parent_children || response || [];
-        const childrenArray = Array.isArray(children) ? children : defaultChildrenData;
+        const childrenArray = (Array.isArray(children) ? children : [])
+            .filter(c => (c.id || c.studentId) !== "child1" && c.name !== "Nguyễn Minh Tuấn");
 
-        setChildrenList(childrenArray);
-        if (childrenArray.length > 0 && !selectedChildId) {
-          setSelectedChildId(childrenArray[0].id || childrenArray[0].studentId);
+        if (childrenArray.length > 0) {
+            setChildrenList(childrenArray);
+            if (!selectedChildId) {
+                setSelectedChildId(childrenArray[0].id || childrenArray[0].studentId);
+            }
         }
       } catch (err) {
-        console.error("❌ Error fetching parent children:", err);
-        setError(err.message);
-        setChildrenList(defaultChildrenData);
-        if (defaultChildrenData.length > 0) {
-          setSelectedChildId(defaultChildrenData[0].id);
+        // [CẢI TIẾN] Nếu là lỗi 404 (do BE chưa có API) nhưng đã có dữ liệu local thì không báo lỗi đỏ
+        if (err.response?.status === 404 || err.message?.includes("404")) {
+            console.info("ℹ️ Parent API 404 - Using local profile data as fallback.");
+        } else {
+            console.error("❌ Error fetching parent children:", err);
+            // Chỉ hiện lỗi lên UI nếu thực sự không có tí dữ liệu nào (kể cả local)
+            if (childrenList.length === 0) {
+                setError(err.message);
+                setChildrenList(defaultChildrenData);
+                if (defaultChildrenData.length > 0) {
+                    setSelectedChildId(defaultChildrenData[0].id);
+                }
+            }
         }
       } finally {
         setIsLoading(false);
       }
     };
 
+
     fetchChildren();
-  }, []); // Run once on mount
+  }, []);
+
+  // Fetch grades for the selected child whenever selectedChildId changes
+  useEffect(() => {
+    if (!selectedChildId) return;
+
+    const fetchGrades = async () => {
+      try {
+        const response = await parentService.getChildGrades({
+          pathParams: { childId: selectedChildId },
+          mock: false
+        });
+
+        if (response.success && response.data) {
+          setChildrenList(prev => prev.map(child => {
+            if ((child.id || child.studentId) === selectedChildId) {
+              return { ...child, gradesBySemester: response.data };
+            }
+            return child;
+          }));
+        }
+      } catch (err) {
+        console.error("❌ Error fetching child grades:", err);
+      }
+    };
+
+    fetchGrades();
+  }, [selectedChildId]);
+
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  // Fetch notifications to get unread count
+  useEffect(() => {
+    const fetchNotifications = async () => {
+      try {
+        const response = await parentService.listNotifications({ mock: false });
+        if (response.success && response.data) {
+          const count = response.data.filter(n => n.unread).length;
+          setUnreadCount(count);
+        }
+      } catch (err) {
+        console.error("❌ Error fetching notifications for count:", err);
+      }
+    };
+    fetchNotifications();
+  }, []);
 
   const selectedChild = (childrenList.length > 0 ? childrenList : defaultChildrenData).find(
     c => (c.id || c.studentId) === selectedChildId
@@ -174,7 +146,7 @@ export default function ParentDashboard() {
   return (
     <div className="dashboard">
       <PageHeader
-        title="Trang chủ phụ huynh"
+        title="Trang chủ - Dữ liệu thực"
       />
       {error && (
         <div style={{
@@ -207,8 +179,8 @@ export default function ParentDashboard() {
         </div>
       ) : (
         <>
-          <PaymentSummary yearAvg={yearAvg} />
-          <OverviewCards yearAvg={yearAvg} hk1Avg={hk1Avg} />
+          <PaymentSummary selectedChild={selectedChild} yearAvg={yearAvg} />
+          <OverviewCards yearAvg={yearAvg} hk1Avg={hk1Avg} unreadCount={unreadCount} />
           <div className="parent-dashboard-grid-top">
             <div className="parent-dashboard-calendar-card">
               <EventCalendar
@@ -217,7 +189,7 @@ export default function ParentDashboard() {
                 userRole="parent"
                 isCompact={true}
                 eventTypes={CALENDAR_EVENT_TYPES}
-                initialEvents={INITIAL_CALENDAR_EVENTS}
+                initialEvents={[]}
                 selectedSchoolYear={selectedSchoolYear}
                 selectedTerm={selectedTerm}
                 rolePolicy={{

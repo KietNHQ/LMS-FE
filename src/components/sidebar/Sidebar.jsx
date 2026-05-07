@@ -3,9 +3,10 @@ import { useNavigate } from "react-router-dom";
 import { sidebarConfig, roleTheme } from "./sidebar.config";
 import SidebarItem from "./SidebarItem";
 import ProfileDialog from "../common/Dialog/ProfileDialog/ProfileDialog";
-import { FiChevronLeft, FiLogOut, FiMenu, FiSettings, FiX } from "react-icons/fi";
+import { FiChevronLeft, FiLogOut, FiMenu, FiSettings, FiX, FiRefreshCw } from "react-icons/fi";
 import { FaGraduationCap } from "react-icons/fa";
 import { PERMISSIONS } from "../../config/permissions";
+import { useLogout } from "../../hooks/useAuth";
 import "./Sidebar.css";
 
 const MOBILE_BREAKPOINT = 768;
@@ -21,36 +22,24 @@ export default function Sidebar({
                                   role = "student",
                                   userName = "User",
                                   userEmail,
+                                  user, // [NEW] Full user object from BE
                                   isCollapsed,
                                   setIsCollapsed,
                                   userPermissions = null // [NEW] Prop nhận danh sách permissions từ BE
                                 }) {
   const navigate = useNavigate();
+  const logoutMutation = useLogout();
 
   // [NEW] Giả lập permissions nếu chưa có từ BE để tương thích ngược
   const defaultMockPermissions = useMemo(() => {
     switch (role) {
       case "management":
-        // Role mới: Chứa tất cả quyền mặc định để demo. Sau này lấy từ BE.
-        return Object.values(PERMISSIONS);
       case "admin":
-        // Admin chỉ được 3 quyền: quản lý user, xem audit log phân quyền, xem system log.
-        // KHÔNG có bất kỳ quyền nghiệp vụ nào (grade, finance, discipline...).
-        return [
-          PERMISSIONS.USER_VIEW,
-          PERMISSIONS.USER_CREATE,
-          PERMISSIONS.USER_UPDATE,
-          PERMISSIONS.USER_LOCK,
-          PERMISSIONS.USER_IMPORT,
-          PERMISSIONS.USER_ASSIGN_PERMISSION,
-          PERMISSIONS.PERMISSION_AUDIT_VIEW,
-          PERMISSIONS.SYSTEM_LOG_VIEW,
-        ];
       case "vp_academic":
-        return [PERMISSIONS.GRADE_VIEW, PERMISSIONS.QUIZ_VIEW];
       case "vp_discipline":
-        return [PERMISSIONS.DISCIPLINE_VIEW, PERMISSIONS.COMPETITION_MANAGE];
+        return [];
       default:
+        // Các role học sinh/phụ huynh có thể giữ bộ quyền full vì họ không dùng RBAC chi tiết như admin
         return Object.values(PERMISSIONS);
     }
   }, [role]);
@@ -60,7 +49,12 @@ export default function Sidebar({
   // [NEW] Filter danh sách sidebar dựa trên permissions thay vì show toàn bộ theo role
   const items = useMemo(() => {
     const baseItems = sidebarConfig[role] || [];
+    
+    // [FIX] Admin/Quản trị viên luôn có toàn quyền, không cần check từng cái
+    const isAdmin = role === "admin" || role === "quản trị viên";
+    
     return baseItems.filter(item => {
+      if (isAdmin) return true;
       if (!item.requiredPermissions || item.requiredPermissions.length === 0) return true;
       return item.requiredPermissions.some(p => permissionsToCheck.includes(p));
     });
@@ -278,9 +272,7 @@ export default function Sidebar({
   };
 
   const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
-    navigate("/login");
+    logoutMutation.mutate();
   };
 
   const handleToggle = () => {
@@ -306,10 +298,13 @@ export default function Sidebar({
     setIsProfileDialogOpen(false);
   };
 
-  const profileData = useMemo(() => ({
-    name: userName,
-    email: displayEmail
-  }), [userName, displayEmail]);
+  const profileData = useMemo(() => {
+    if (user) return user;
+    return {
+      name: userName,
+      email: displayEmail
+    };
+  }, [user, userName, displayEmail]);
 
   return (
       <>
@@ -350,6 +345,63 @@ export default function Sidebar({
                 <h2>EduVN</h2>
                 <span>{roleLabel}</span>
               </div>
+
+              {!isCollapsed && (role !== "student" && role !== "học sinh") && (() => {
+                // [NEW] Lấy user từ prop hoặc dự phòng từ localStorage nếu prop bị thiếu
+                const currentUser = user || (() => {
+                    try {
+                        return JSON.parse(localStorage.getItem("user") || sessionStorage.getItem("user") || "{}");
+                    } catch { return {}; }
+                })();
+
+                // [NEW] Kiểm tra xem tài khoản này có vai trò nhân viên/giáo viên hay không
+                const staffRoles = ['admin', 'quản trị viên', 'teacher', 'giáo viên', 'management', 'quản lý', 'principal', 'hiệu trưởng', 'vp_academic', 'vp_discipline', 'academic_staff', 'finance_staff'];
+                const primaryRole = currentUser?.role?.toLowerCase();
+                const hasStaffRole = staffRoles.includes(primaryRole);
+
+                // [NEW] Kiểm tra xem tài khoản này có con em (guardian profile) hay không
+                const hasChildren = currentUser?.guardianId || 
+                                    (currentUser?.linkedStudentIds && currentUser.linkedStudentIds.length > 0) ||
+                                    (currentUser?.profile?.linkedStudents && currentUser.profile.linkedStudents.length > 0);
+                
+                const isCurrentlyParentView = role === "parent" || role === "phụ huynh";
+                
+                // ĐIỀU KIỆN HIỆN NÚT:
+                // 1. Nếu đang ở view Phụ huynh: Chỉ hiện nếu họ có vai trò gốc là Nhân viên (để quay lại)
+                // 2. Nếu đang ở view Nhân viên: Chỉ hiện nếu họ có con em liên kết (để chuyển sang)
+                const showBtn = isCurrentlyParentView ? hasStaffRole : hasChildren;
+
+                if (!showBtn) return null;
+
+                return (
+                  <button 
+                    className="sidebar-role-switch-btn"
+                    title={isCurrentlyParentView ? "Quay lại trang nhân viên" : "Chuyển sang trang phụ huynh"}
+                  onClick={() => {
+                    if (role === "parent" || role === "phụ huynh") {
+                        // Quay lại trang chính dựa trên role trong localStorage
+                        const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
+                        const primaryRole = storedUser.role?.toLowerCase();
+                        
+                        if (primaryRole === 'admin' || primaryRole === 'quản trị viên') {
+                            navigate('/admin/dashboard');
+                        } else if (['quản lý', 'hiệu trưởng', 'phó ht học vụ', 'phó ht nề nếp', 'giáo vụ', 'tài chính', 'tổ trưởng bộ môn'].includes(primaryRole)) {
+                            navigate('/management/dashboard');
+                        } else if (primaryRole === 'teacher' || primaryRole === 'giáo viên') {
+                            navigate('/teacher/dashboard');
+                        } else {
+                            navigate('/');
+                        }
+                    } else {
+                        // Đang ở trang nhân viên, chuyển sang trang phụ huynh
+                        navigate('/parent/dashboard');
+                    }
+                  }}
+                >
+                  <FiRefreshCw />
+                </button>
+                );
+              })()}
             </div>
 
             <div className="sidebar-mobile-expand-panel">

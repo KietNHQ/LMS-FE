@@ -1,6 +1,6 @@
 import React, { useMemo, useState, useRef, useEffect } from "react";
 import { FiDownload, FiUpload, FiChevronDown, FiCheck, FiShield, FiCheckSquare } from "react-icons/fi";
-import { PERMISSIONS } from "../../../../../config/permissions";
+import { PERMISSIONS, MANAGEMENT_TITLES, PERMISSION_GROUPS } from "../../../../../config/permissions";
 import Select from "../../../../ui/Select/Select";
 import { useCheckPermission } from "../../../../../hooks/useAuth";
 import { classesService } from "../../../../../services/pages/admin/classes/classesService";
@@ -8,116 +8,6 @@ import "./CreateUserDialog.css";
 
 const allRoleOptions = ["Quản lý", "Phụ huynh", "Học sinh", "Giáo viên"];
 
-const MANAGEMENT_TITLES = [
-    { label: "Tùy chỉnh", value: "custom", permissions: [] },
-    { label: "Hiệu trưởng", value: "principal", permissions: [
-        PERMISSIONS.USER_VIEW, PERMISSIONS.USER_CREATE, PERMISSIONS.USER_UPDATE, 
-        PERMISSIONS.USER_LOCK, PERMISSIONS.USER_DELETE,
-        PERMISSIONS.NOTIFICATION_VIEW, PERMISSIONS.NOTIFICATION_CREATE,
-        PERMISSIONS.CLASS_VIEW, PERMISSIONS.CLASS_CREATE, PERMISSIONS.TIMETABLE_VIEW,
-        PERMISSIONS.GRADE_VIEW, PERMISSIONS.GRADE_APPROVE, PERMISSIONS.REPORT_ACADEMIC_VIEW,
-        PERMISSIONS.QUIZ_VIEW, PERMISSIONS.EXAM_SESSION_MANAGE, PERMISSIONS.EXAM_PROCTOR_MANAGE,
-        PERMISSIONS.DISCIPLINE_VIEW, PERMISSIONS.DISCIPLINE_PROCESS, PERMISSIONS.COMPETITION_MANAGE, PERMISSIONS.REPORT_DISCIPLINE_VIEW,
-        PERMISSIONS.FINANCE_TUITION_VIEW, PERMISSIONS.FINANCE_TUITION_PUBLISH, PERMISSIONS.REPORT_FINANCE_VIEW
-    ] },
-    { label: "Phó hiệu trưởng (Học vụ)", value: "vp_academic", permissions: [
-        PERMISSIONS.USER_VIEW, PERMISSIONS.NOTIFICATION_VIEW,
-        PERMISSIONS.CLASS_VIEW, PERMISSIONS.GRADE_VIEW, PERMISSIONS.GRADE_APPROVE,
-        PERMISSIONS.QUIZ_VIEW, PERMISSIONS.TIMETABLE_VIEW, PERMISSIONS.REPORT_ACADEMIC_VIEW,
-        PERMISSIONS.EXAM_SESSION_MANAGE
-    ] },
-    { label: "Phó hiệu trưởng (Nề nếp)", value: "vp_discipline", permissions: [
-        PERMISSIONS.USER_VIEW, PERMISSIONS.NOTIFICATION_VIEW, PERMISSIONS.NOTIFICATION_CREATE,
-        PERMISSIONS.DISCIPLINE_VIEW, PERMISSIONS.DISCIPLINE_PROCESS, 
-        PERMISSIONS.COMPETITION_MANAGE, PERMISSIONS.REPORT_DISCIPLINE_VIEW
-    ] },
-    { label: "Giáo vụ", value: "academic_staff", permissions: [
-        PERMISSIONS.USER_VIEW, PERMISSIONS.CLASS_VIEW, PERMISSIONS.TIMETABLE_VIEW, 
-        PERMISSIONS.QUIZ_VIEW, PERMISSIONS.EXAM_SESSION_MANAGE, PERMISSIONS.EXAM_PROCTOR_MANAGE
-    ] },
-    { label: "Kế toán", value: "finance", permissions: [
-        PERMISSIONS.USER_VIEW, PERMISSIONS.FINANCE_TUITION_VIEW, 
-        PERMISSIONS.FINANCE_TUITION_PUBLISH, PERMISSIONS.REPORT_FINANCE_VIEW
-    ] },
-    { label: "Tổ trưởng bộ môn", value: "dept_head", permissions: [
-        PERMISSIONS.USER_VIEW, PERMISSIONS.CLASS_VIEW, 
-        PERMISSIONS.QUIZ_VIEW, PERMISSIONS.NOTIFICATION_VIEW
-    ] },
-];
-
-const SUBJECT_OPTIONS = [
-    "Toán học", "Ngữ văn", "Tiếng Anh", "Vật lý", "Hóa học", "Sinh học", "Lịch sử", 
-    "Địa lý", "Tin học", "GDCD", "Thể dục", "Công nghệ", "Mỹ thuật", "Âm nhạc", "GDQP-AN", "Khác"
-];
-
-const PERMISSION_GROUPS = [
-    {
-        id: "users",
-        label: "Người dùng & Thông báo",
-        permissions: [
-            { id: PERMISSIONS.USER_VIEW, label: "Xem người dùng" },
-            { id: PERMISSIONS.USER_CREATE, label: "Thêm người dùng" },
-            { id: PERMISSIONS.USER_UPDATE, label: "Sửa người dùng" },
-            { id: PERMISSIONS.USER_LOCK, label: "Ẩn (Vô hiệu hóa)" },
-            { id: PERMISSIONS.USER_DELETE, label: "Xóa vĩnh viễn" },
-            { id: PERMISSIONS.NOTIFICATION_VIEW, label: "Xem thông báo toàn trường" },
-            { id: PERMISSIONS.NOTIFICATION_CREATE, label: "Gửi thông báo toàn trường" },
-        ]
-    },
-    {
-        id: "classes",
-        label: "Đào tạo & Lớp học",
-        permissions: [
-            { id: PERMISSIONS.CLASS_VIEW, label: "Quản lý danh sách lớp" },
-            { id: PERMISSIONS.CLASS_CREATE, label: "Tạo lớp học mới" },
-            { id: PERMISSIONS.TIMETABLE_VIEW, label: "Quản lý thời khóa biểu" },
-            { id: PERMISSIONS.TIMETABLE_RESOLVE_CONFLICT, label: "Xử lý xung đột TKB" },
-        ]
-    },
-    {
-        id: "grades",
-        label: "Học tập & Điểm số",
-        permissions: [
-            { id: PERMISSIONS.GRADE_VIEW, label: "Xem điểm số toàn trường" },
-            { id: PERMISSIONS.GRADE_APPROVE, label: "Phê duyệt điểm số" },
-        ]
-    },
-    {
-        id: "exams",
-        label: "Kỳ thi & Kiểm tra",
-        permissions: [
-            { id: PERMISSIONS.QUIZ_VIEW, label: "Quản lý ngân hàng đề thi/quiz" },
-            { id: PERMISSIONS.EXAM_SESSION_MANAGE, label: "Quản lý ca thi/phòng thi" },
-            { id: PERMISSIONS.EXAM_PROCTOR_MANAGE, label: "Phân công giám thị" },
-        ]
-    },
-    {
-        id: "discipline",
-        label: "Nề nếp & Thi đua",
-        permissions: [
-            { id: PERMISSIONS.DISCIPLINE_VIEW, label: "Quản lý vi phạm nề nếp" },
-            { id: PERMISSIONS.DISCIPLINE_PROCESS, label: "Xử lý/Duyệt kỷ luật" },
-            { id: PERMISSIONS.COMPETITION_MANAGE, label: "Quản lý thi đua khối/lớp" },
-        ]
-    },
-    {
-        id: "finance",
-        label: "Tài chính & Học phí",
-        permissions: [
-            { id: PERMISSIONS.FINANCE_TUITION_VIEW, label: "Quản lý học phí & khoản thu" },
-            { id: PERMISSIONS.FINANCE_TUITION_PUBLISH, label: "Công khai phiếu thu" },
-        ]
-    },
-    {
-        id: "reports",
-        label: "Hệ thống Báo cáo",
-        permissions: [
-            { id: PERMISSIONS.REPORT_ACADEMIC_VIEW, label: "Báo cáo Học lực & Hạnh kiểm" },
-            { id: PERMISSIONS.REPORT_DISCIPLINE_VIEW, label: "Báo cáo Kỷ luật & Thi đua" },
-            { id: PERMISSIONS.REPORT_FINANCE_VIEW, label: "Báo cáo Doanh thu & Công nợ" },
-        ]
-    }
-];
 
 const roleEmailDomainMap = {
     "Quản trị viên": "thptlocal.edu.vn",
@@ -162,10 +52,10 @@ function createEmptyChild() { return { childName: "", childClass: "" }; }
 function buildDefaultForm(role) {
     return {
         lastName: "", firstName: "", dob: "", role: role || "Học sinh",
-        studentInfo: { parentName: "", parentPhone: "", hasPersonalPhone: false, personalPhone: "" },
+        studentInfo: { parentPhone: "", hasPersonalPhone: false, personalPhone: "" },
         teacherInfo: { subject: "", phone: "", isHomeroomTeacher: false, homeroomClass: "" },
         parentInfo: { children: [createEmptyChild()], phone: "" },
-        managerInfo: { title: "custom", customTitle: "", permissions: [] },
+        managerInfo: { phone: "", title: "custom", customTitle: "", permissions: [] },
         status: "Hoạt động",
     };
 }
@@ -191,25 +81,25 @@ function buildFormFromInitialData(initialData, mode, role) {
         firstName: profile.firstName || parsed.firstName || "",
         dob: rawDob,
         role: role || initialData.role,
-        studentInfo: { parentName: profile.parentName || "", parentPhone: normalizePhone(profile.parentPhone || ""), hasPersonalPhone: Boolean(profile.hasPersonalPhone), personalPhone: normalizePhone(profile.personalPhone || initialData.phone || "") },
+        studentInfo: { parentPhone: normalizePhone(profile.parentPhone || ""), hasPersonalPhone: Boolean(profile.hasPersonalPhone), personalPhone: normalizePhone(profile.personalPhone || initialData.phone || "") },
         teacherInfo: { subject: profile.subject || "", phone: normalizePhone(profile.phone || initialData.phone || ""), isHomeroomTeacher: !!profile.homeroomClass, homeroomClass: profile.homeroomClass || "" },
         parentInfo: { children: resolvedChildren, phone: normalizePhone(profile.phone || initialData.phone || "") },
-        managerInfo: { title: profile.title || "custom", customTitle: profile.customTitle || "", permissions: Array.isArray(profile.permissions) ? profile.permissions : [] },
+        managerInfo: { phone: normalizePhone(profile.phone || initialData.phone || ""), title: profile.title || "custom", customTitle: profile.customTitle || "", permissions: Array.isArray(profile.permissions) ? profile.permissions : [] },
         status: initialData.status || "Hoạt động",
     };
 }
 
 function buildRoleProfile(role, form) {
-    if (role === "Học sinh") return { parentName: form.studentInfo.parentName.trim(), parentPhone: form.studentInfo.parentPhone, hasPersonalPhone: form.studentInfo.hasPersonalPhone, personalPhone: form.studentInfo.hasPersonalPhone ? form.studentInfo.personalPhone : "" };
+    if (role === "Học sinh") return { parentPhone: form.studentInfo.parentPhone, hasPersonalPhone: form.studentInfo.hasPersonalPhone, personalPhone: form.studentInfo.hasPersonalPhone ? form.studentInfo.personalPhone : "" };
     if (role === "Giáo viên") return { subject: form.teacherInfo.subject.trim(), phone: form.teacherInfo.phone, homeroomClass: form.teacherInfo.isHomeroomTeacher ? form.teacherInfo.homeroomClass : "" };
     if (role === "Phụ huynh") {
         const children = form.parentInfo.children.map(child => ({ childName: String(child.childName || "").trim(), childClass: String(child.childClass || "").trim() })).filter(child => child.childName && child.childClass);
         return { childName: children[0]?.childName || "", childClass: children[0]?.childClass || "", children, phone: form.parentInfo.phone };
     }
-    if (role === "Quản lý") {
+    if (role === "Quản lý" || role === "Quản trị viên") {
         const titleData = MANAGEMENT_TITLES.find(t => t.value === form.managerInfo.title);
         const resolvedTitle = form.managerInfo.title === "custom" ? form.managerInfo.customTitle.trim() : (titleData?.label || form.managerInfo.title);
-        return { title: resolvedTitle, titleKey: form.managerInfo.title, permissions: form.managerInfo.permissions };
+        return { phone: form.managerInfo.phone, title: resolvedTitle, titleKey: form.managerInfo.title, permissions: form.managerInfo.permissions };
     }
     return {};
 }
@@ -218,6 +108,7 @@ function getRolePhone(role, form) {
     if (role === "Học sinh") return form.studentInfo.hasPersonalPhone ? form.studentInfo.personalPhone : "—";
     if (role === "Giáo viên") return form.teacherInfo.phone || "—";
     if (role === "Phụ huynh") return form.parentInfo.phone || "—";
+    if (role === "Quản lý" || role === "Quản trị viên") return form.managerInfo.phone || "—";
     return "—";
 }
 
@@ -228,7 +119,19 @@ export default function CreateUserDialog({ mode = "create", title, submitLabel, 
     const [form, setForm] = useState(() => buildFormFromInitialData(initialData, mode, fixedRole || initialData?.role || normalizedRoleOptions[0] || "Học sinh"));
     const [expandedGroups, setExpandedGroups] = useState(["users"]);
     const [realClasses, setRealClasses] = useState([]);
+    const [shouldUpdateLinkedStudents, setShouldUpdateLinkedStudents] = useState(false);
     const contentRef = useRef(null);
+    const selectedRole = fixedRole || form.role;
+
+    // Kiểm tra xem SĐT có thay đổi so với dữ liệu gốc không
+    const phoneHasChanged = useMemo(() => {
+        if (mode !== "edit" || !initialData) return false;
+        const oldPhone = initialData.phone || initialData.profile?.phone || "";
+        if (selectedRole === "Phụ huynh") return form.parentInfo.phone !== oldPhone;
+        if (selectedRole === "Giáo viên") return form.teacherInfo.phone !== oldPhone;
+        if (selectedRole === "Quản lý") return form.managerInfo.phone !== oldPhone;
+        return false;
+    }, [mode, initialData, form, selectedRole]);
 
     // Fetch danh sách lớp học thật
     useEffect(() => {
@@ -250,7 +153,6 @@ export default function CreateUserDialog({ mode = "create", title, submitLabel, 
             contentRef.current.scrollTop = 0;
         }
     }, [mode, initialData]);
-    const selectedRole = fixedRole || form.role;
     const generatedEmail = useMemo(() => buildEmail(form.firstName, form.lastName, selectedRole), [form.firstName, form.lastName, selectedRole]);
 
     const handleChange = (field, value) => setForm(prev => ({ ...prev, [field]: value }));
@@ -270,6 +172,7 @@ export default function CreateUserDialog({ mode = "create", title, submitLabel, 
             role: selectedRole,
             phone: getRolePhone(selectedRole, form),
             status: form.status,
+            shouldUpdateLinkedStudents: mode === "edit" && phoneHasChanged ? shouldUpdateLinkedStudents : undefined,
             profile: { ...buildRoleProfile(selectedRole, form), lastName: form.lastName.trim(), firstName: form.firstName.trim(), dob: form.dob }
         });
     };
@@ -333,55 +236,55 @@ export default function CreateUserDialog({ mode = "create", title, submitLabel, 
                             </>
                         ) : (
                             <>
-                                <div className="admin-create-user-dialog-field-row">
-                                    <div className="admin-create-user-dialog-field">
-                                        <label htmlFor="create-lastname">Họ và tên lót</label>
-                                        <input 
-                                            id="create-lastname"
-                                            type="text" 
-                                            placeholder="VD: Nguyễn Văn"
-                                            value={form.lastName} 
-                                            onChange={e => handleChange("lastName", e.target.value)} 
-                                            required 
-                                        />
-                                    </div>
-                                    <div className="admin-create-user-dialog-field">
-                                        <label htmlFor="create-firstname">Tên</label>
-                                        <input 
-                                            id="create-firstname"
-                                            type="text" 
-                                            placeholder="VD: Tuấn"
-                                            value={form.firstName} 
-                                            onChange={e => handleChange("firstName", e.target.value)} 
-                                            required 
-                                        />
-                                    </div>
-                                </div>
-                                <div className="admin-create-user-dialog-field-row">
-                                    <div className="admin-create-user-dialog-field">
-                                        <label htmlFor="create-dob">Ngày tháng năm sinh</label>
-                                        <input 
-                                            id="create-dob"
-                                            type="date" 
-                                            value={form.dob} 
-                                            onChange={e => handleChange("dob", e.target.value)} 
-                                            required 
-                                        />
-                                    </div>
-                                    <div className="admin-create-user-dialog-field">
-                                        <label>Vai trò</label>
-                                        {fixedRole ? (
-                                            <div className="admin-create-user-dialog-readonly-value">{fixedRole}</div>
-                                        ) : (
-                                            <Select 
-                                                variant="custom" 
-                                                value={form.role} 
-                                                onChange={e => handleChange("role", e.target.value)} 
-                                                options={normalizedRoleOptions} 
-                                            />
-                                        )}
-                                    </div>
-                                </div>
+                                 <div className="admin-create-user-dialog-field-row">
+                                     <div className="admin-create-user-dialog-field">
+                                         <label htmlFor="create-lastname">Họ và tên lót <span className="required-mark">*</span></label>
+                                         <input 
+                                             id="create-lastname"
+                                             type="text" 
+                                             placeholder="VD: Nguyễn Văn"
+                                             value={form.lastName} 
+                                             onChange={e => handleChange("lastName", e.target.value)} 
+                                             required 
+                                         />
+                                     </div>
+                                     <div className="admin-create-user-dialog-field">
+                                         <label htmlFor="create-firstname">Tên <span className="required-mark">*</span></label>
+                                         <input 
+                                             id="create-firstname"
+                                             type="text" 
+                                             placeholder="VD: Tuấn"
+                                             value={form.firstName} 
+                                             onChange={e => handleChange("firstName", e.target.value)} 
+                                             required 
+                                         />
+                                     </div>
+                                 </div>
+                                 <div className="admin-create-user-dialog-field-row">
+                                     <div className="admin-create-user-dialog-field">
+                                         <label htmlFor="create-dob">Ngày tháng năm sinh <span className="required-mark">*</span></label>
+                                         <input 
+                                             id="create-dob"
+                                             type="date" 
+                                             value={form.dob} 
+                                             onChange={e => handleChange("dob", e.target.value)} 
+                                             required 
+                                         />
+                                     </div>
+                                     <div className="admin-create-user-dialog-field">
+                                         <label>Vai trò <span className="required-mark">*</span></label>
+                                         {fixedRole ? (
+                                             <div className="admin-create-user-dialog-readonly-value">{fixedRole}</div>
+                                         ) : (
+                                             <Select 
+                                                 variant="custom" 
+                                                 value={form.role} 
+                                                 onChange={e => handleChange("role", e.target.value)} 
+                                                 options={normalizedRoleOptions} 
+                                             />
+                                         )}
+                                     </div>
+                                 </div>
                                 <div className="admin-create-user-dialog-field">
                                     <label>Email hệ thống (Tự động)</label>
                                     <div className="admin-create-user-dialog-readonly-value">
@@ -396,6 +299,19 @@ export default function CreateUserDialog({ mode = "create", title, submitLabel, 
                                 <h3>Thông tin giáo viên</h3>
                                 <div className="admin-create-user-dialog-field-row">
                                     <div className="admin-create-user-dialog-field">
+                                        <label htmlFor="teacher-phone">Số điện thoại <span className="required-mark">*</span></label>
+                                        <input 
+                                            id="teacher-phone"
+                                            type="tel" 
+                                            placeholder="Nhập SĐT giáo viên"
+                                            value={form.teacherInfo.phone} 
+                                            onChange={e => handleRoleInfoChange("teacherInfo", "phone", e.target.value)} 
+                                            inputMode="numeric" 
+                                            maxLength={10} 
+                                            required 
+                                        />
+                                    </div>
+                                    <div className="admin-create-user-dialog-field">
                                         <label>Môn chuyên dạy</label>
                                         <Select 
                                             variant="custom" 
@@ -405,19 +321,15 @@ export default function CreateUserDialog({ mode = "create", title, submitLabel, 
                                             placeholder="Chọn môn" 
                                         />
                                     </div>
-                                    <div className="admin-create-user-dialog-field">
-                                        <label htmlFor="teacher-phone">Số điện thoại</label>
-                                        <input 
-                                            id="teacher-phone"
-                                            type="tel" 
-                                            value={form.teacherInfo.phone} 
-                                            onChange={e => handleRoleInfoChange("teacherInfo", "phone", e.target.value)} 
-                                            inputMode="numeric" 
-                                            maxLength={10} 
-                                            required 
-                                        />
-                                    </div>
                                 </div>
+                                {mode === "edit" && phoneHasChanged && (
+                                    <div className="admin-create-user-dialog-checkbox-group">
+                                        <label className="admin-create-user-dialog-checkbox">
+                                            <input type="checkbox" checked={shouldUpdateLinkedStudents} onChange={e => setShouldUpdateLinkedStudents(e.target.checked)} />
+                                            <span>Cập nhập liên kết học sinh với số điện thoại mới</span>
+                                        </label>
+                                    </div>
+                                )}
                                 {mode === "edit" && (
                                     <div className="admin-create-user-dialog-field-row">
                                         <div className="admin-create-user-dialog-field">
@@ -447,62 +359,72 @@ export default function CreateUserDialog({ mode = "create", title, submitLabel, 
                                 )}
                             </div>
                         )}
-                        {selectedRole === "Học sinh" && (
-                            <div className="admin-create-user-dialog-role-block">
-                                <h3>Thông tin học sinh</h3>
-                                <div className="admin-create-user-dialog-field">
-                                    <label htmlFor="student-parent-name">Tên phụ huynh</label>
-                                    <input id="student-parent-name" type="text" value={form.studentInfo.parentName} onChange={e => handleRoleInfoChange("studentInfo", "parentName", e.target.value)} required />
-                                </div>
-                                <div className="admin-create-user-dialog-field">
-                                    <label htmlFor="student-parent-phone">SĐT phụ huynh</label>
-                                    <input id="student-parent-phone" type="tel" value={form.studentInfo.parentPhone} onChange={e => handleRoleInfoChange("studentInfo", "parentPhone", e.target.value)} inputMode="numeric" maxLength={10} required />
-                                </div>
-                                <label className="admin-create-user-dialog-checkbox">
-                                    <input type="checkbox" checked={form.studentInfo.hasPersonalPhone} onChange={e => handleRoleInfoChange("studentInfo", "hasPersonalPhone", e.target.checked)} />
-                                    <span>Học sinh có SĐT cá nhân</span>
-                                </label>
-                                {form.studentInfo.hasPersonalPhone && (
-                                    <div className="admin-create-user-dialog-field">
-                                        <label htmlFor="student-personal-phone">SĐT học sinh</label>
-                                        <input id="student-personal-phone" type="tel" value={form.studentInfo.personalPhone} onChange={e => handleRoleInfoChange("studentInfo", "personalPhone", e.target.value)} inputMode="numeric" maxLength={10} required />
-                                    </div>
-                                )}
-                            </div>
-                        )}
-                        {selectedRole === "Phụ huynh" && (
-                            <div className="admin-create-user-dialog-role-block">
-                                <div className="admin-create-user-dialog-role-header">
-                                    <h3>Thông tin phụ huynh</h3>
-                                    <button type="button" className="admin-create-user-dialog-child-add-btn" onClick={handleAddParentChild}>+</button>
-                                </div>
-                                {form.parentInfo.children.map((c, i) => (
-                                    <div key={i} className="admin-create-user-dialog-child-row">
-                                        <div className="admin-create-user-dialog-field-row">
-                                            <div className="admin-create-user-dialog-field">
-                                                <label htmlFor={`parent-child-name-${i}`}>Tên con</label>
-                                                <input id={`parent-child-name-${i}`} type="text" value={c.childName} onChange={e => handleParentChildChange(i, "childName", e.target.value)} required />
+                         {selectedRole === "Học sinh" && (
+                             <div className="admin-create-user-dialog-role-block">
+                                 <div className="admin-create-user-dialog-role-header">
+                                     <h3>Thông tin gia đình</h3>
+                                 </div>
+                                 <div className="admin-create-user-dialog-field">
+                                     <label htmlFor="student-parent-phone">SĐT phụ huynh <span className="required-mark">*</span></label>
+                                     <input id="student-parent-phone" type="tel" placeholder="Nhập SĐT phụ huynh" value={form.studentInfo.parentPhone} onChange={e => handleRoleInfoChange("studentInfo", "parentPhone", e.target.value)} inputMode="numeric" maxLength={10} required />
+                                 </div>
+                             </div>
+                         )}
+                         {selectedRole === "Phụ huynh" && (
+                             <div className="admin-create-user-dialog-role-block">
+                                 <div className="admin-create-user-dialog-role-header">
+                                     <h3>Thông tin con em</h3>
+                                     <button type="button" className="admin-create-user-dialog-child-add-btn" onClick={handleAddParentChild}>+ Thêm con</button>
+                                 </div>
+                                  <div className="admin-create-user-dialog-field">
+                                      <label htmlFor="parent-phone">Số điện thoại phụ huynh <span className="required-mark">*</span></label>
+                                      <input id="parent-phone" type="tel" placeholder="Nhập SĐT phụ huynh" value={form.parentInfo.phone} onChange={e => handleRoleInfoChange("parentInfo", "phone", e.target.value)} inputMode="numeric" maxLength={10} required />
+                                  </div>
+                                  {mode === "edit" && phoneHasChanged && (
+                                      <div className="admin-create-user-dialog-checkbox-group">
+                                          <label className="admin-create-user-dialog-checkbox">
+                                              <input type="checkbox" checked={shouldUpdateLinkedStudents} onChange={e => setShouldUpdateLinkedStudents(e.target.checked)} />
+                                              <span>Cập nhập liên kết học sinh với số điện thoại mới</span>
+                                          </label>
+                                      </div>
+                                  )}
+                                 <div className="admin-create-user-dialog-children-list">
+                                    {form.parentInfo.children.map((c, i) => (
+                                        <div key={i} className="admin-create-user-dialog-child-row">
+                                            <div className="admin-create-user-dialog-field-row">
+                                                <div className="admin-create-user-dialog-field">
+                                                    <label htmlFor={`parent-child-name-${i}`}>Họ tên con <span className="required-mark">*</span></label>
+                                                    <input id={`parent-child-name-${i}`} type="text" placeholder="Nhập tên con" value={c.childName} onChange={e => handleParentChildChange(i, "childName", e.target.value)} required />
+                                                </div>
+                                                <div className="admin-create-user-dialog-field">
+                                                    <label htmlFor={`parent-child-class-${i}`}>Lớp <span className="required-mark">*</span></label>
+                                                    <input id={`parent-child-class-${i}`} type="text" placeholder="VD: 10A1" value={c.childClass} onChange={e => handleParentChildChange(i, "childClass", e.target.value)} required />
+                                                </div>
                                             </div>
-                                            <div className="admin-create-user-dialog-field">
-                                                <label htmlFor={`parent-child-class-${i}`}>Lớp</label>
-                                                <input id={`parent-child-class-${i}`} type="text" value={c.childClass} onChange={e => handleParentChildChange(i, "childClass", e.target.value)} required />
-                                            </div>
+                                            {form.parentInfo.children.length > 1 && (
+                                                <button type="button" className="admin-create-user-dialog-child-remove-btn" onClick={() => handleRemoveParentChild(i)}>Gỡ bỏ</button>
+                                            )}
                                         </div>
-                                        {form.parentInfo.children.length > 1 && (
-                                            <button type="button" className="admin-create-user-dialog-child-remove-btn" onClick={() => handleRemoveParentChild(i)}>Xóa</button>
-                                        )}
-                                    </div>
-                                ))}
-                                <div className="admin-create-user-dialog-field">
-                                    <label htmlFor="parent-phone">Số điện thoại</label>
-                                    <input id="parent-phone" type="tel" value={form.parentInfo.phone} onChange={e => handleRoleInfoChange("parentInfo", "phone", e.target.value)} inputMode="numeric" maxLength={10} required />
-                                </div>
-                            </div>
-                        )}
-                        {selectedRole === "Quản lý" && (
+                                    ))}
+                                 </div>
+                             </div>
+                         )}
+                        {(selectedRole === "Quản lý" || selectedRole === "Quản trị viên") && (
                             <div className="admin-create-user-dialog-role-block">
                                 <h3>Phân quyền quản lý</h3>
-                                <div className="admin-create-user-dialog-field"><label>Chức vụ</label><Select variant="custom" value={form.managerInfo.title} onChange={e => { const v = e.target.value; setForm(p => ({ ...p, managerInfo: { ...p.managerInfo, title: v, permissions: MANAGEMENT_TITLES.find(t => t.value === v)?.permissions || [] } })); }} options={MANAGEMENT_TITLES} /></div>
+                                  <div className="admin-create-user-dialog-field">
+                                      <label htmlFor="manager-phone">Số điện thoại <span className="required-mark">*</span></label>
+                                      <input id="manager-phone" type="tel" placeholder="Nhập SĐT quản lý" value={form.managerInfo.phone} onChange={e => handleRoleInfoChange("managerInfo", "phone", e.target.value)} inputMode="numeric" maxLength={10} required />
+                                  </div>
+                                  {mode === "edit" && phoneHasChanged && (
+                                      <div className="admin-create-user-dialog-checkbox-group">
+                                          <label className="admin-create-user-dialog-checkbox">
+                                              <input type="checkbox" checked={shouldUpdateLinkedStudents} onChange={e => setShouldUpdateLinkedStudents(e.target.checked)} />
+                                              <span>Cập nhập liên kết học sinh với số điện thoại mới</span>
+                                          </label>
+                                      </div>
+                                  )}
+                                  <div className="admin-create-user-dialog-field"><label>Chức vụ</label><Select variant="custom" value={form.managerInfo.title} onChange={e => { const v = e.target.value; setForm(p => ({ ...p, managerInfo: { ...p.managerInfo, title: v, permissions: MANAGEMENT_TITLES.find(t => t.value === v)?.permissions || [] } })); }} options={MANAGEMENT_TITLES} /></div>
                                 {form.managerInfo.title === "custom" && <div className="admin-create-user-dialog-field"><label>Tên chức vụ</label><input type="text" value={form.managerInfo.customTitle} onChange={e => handleRoleInfoChange("managerInfo", "customTitle", e.target.value)} required /></div>}
                                 <div className="admin-create-user-dialog-perm-groups">
                                     {PERMISSION_GROUPS.map(g => (
