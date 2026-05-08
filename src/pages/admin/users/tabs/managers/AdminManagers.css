@@ -112,8 +112,16 @@
     filter: brightness(1.1);
 }
 
+.users-filter-group {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
 .admin-managers-filter-select-wrap {
-    min-width: 180px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
 }
 
 /* ── Manager-specific Role Chips ── */

@@ -14,10 +14,10 @@ export const PERMISSIONS = {
     CLASS_ALLOCATION_MANAGE: 'class_allocation:manage',
 
     // 4. Nhóm Điểm số (Grade)
-    GRADE_VIEW: 'grade:read',
-    GRADE_CREATE: 'grade:create',
-    GRADE_FINALIZE: 'grade:finalize',
-    GRADE_UNLOCK: 'grade:unlock',
+    GRADE_VIEW: 'grades:read',
+    GRADE_CREATE: 'grades:create',
+    GRADE_FINALIZE: 'grades:finalize',
+    GRADE_UNLOCK: 'grades:unlock',
 
     // 5. Nhóm Kiểm tra (Exam & Quiz)
     EXAM_VIEW: 'exam:read',
