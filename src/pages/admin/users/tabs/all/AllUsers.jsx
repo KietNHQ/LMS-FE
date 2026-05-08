@@ -404,7 +404,7 @@ export default function AllUsers({ onCountChange, schoolYear, term, hasPermissio
             await userService.createUser(updatedFormData);
             setIsCreateOpen(false);
             setImportFeedback(null);
-            await loadUsers();
+            await Promise.all([loadUsers(), loadClasses()]);
             window.alert(`Đã tạo thành công người dùng ${formData.name} (${formData.role}).`);
         } catch (error) {
             window.alert(getErrorMessage(error, "Không thể tạo người dùng."));
@@ -462,7 +462,7 @@ export default function AllUsers({ onCountChange, schoolYear, term, hasPermissio
                     setEditingUser(null);
                     setSelectedUser(null);
                     setActiveModalMode(null);
-                    await loadUsers();
+                    await Promise.all([loadUsers(), loadClasses()]);
                     window.alert(`Đã cập nhật người dùng ${formData.name} thành công.`);
                 } catch (error) {
                     window.alert(getErrorMessage(error, "Không thể cập nhật người dùng."));
@@ -519,7 +519,7 @@ export default function AllUsers({ onCountChange, schoolYear, term, hasPermissio
             });
 
             await userService.importUsers(file);
-            await loadUsers();
+            await Promise.all([loadUsers(), loadClasses()]);
             setImportFeedback({
                 type: "success",
                 message: "Đã nạp dữ liệu người dùng thành công.",
