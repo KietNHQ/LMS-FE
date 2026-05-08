@@ -1,4 +1,4 @@
-import { FiEdit2, FiPlus, FiTrash2, FiUser, FiMapPin, FiAlertTriangle } from "react-icons/fi";
+import { FiEdit2, FiPlus, FiTrash2, FiUser, FiMapPin, FiAlertTriangle, FiBookOpen, FiRefreshCw } from "react-icons/fi";
 import { BsFillSunFill } from "react-icons/bs";
 import { FaRegMoon } from "react-icons/fa";
 import "./scheduleSlotSection.css";
@@ -55,8 +55,10 @@ export default function ScheduleSlotSection({
     onEditSlot,
     onDeleteSlot,
     onSessionViewChange,
-    onOpenConflicts,
-    conflictCount,
+    onCreateSession,
+    onReset,
+    currentPeriods,
+    maxPeriods,
 }) {
     const isMorning = sessionView === "morning";
 
@@ -67,10 +69,18 @@ export default function ScheduleSlotSection({
                     <h3>Thời khóa biểu lớp {selectedClass}</h3>
                 </div>
                 <div className="tt-schedule-actions">
-                    <button type="button" className="tt-conflict-grid-btn" onClick={onOpenConflicts}>
-                        <FiAlertTriangle />
-                        <span>Xung đột <strong>{conflictCount}</strong></span>
+                    <button type="button" className="tt-reset-btn" onClick={onReset} title="Xóa các tiết đang hiển thị">
+                        <FiRefreshCw />
+                        <span>Xóa lịch</span>
                     </button>
+                    <button type="button" className="tt-add-btn" onClick={onCreateSession}>
+                        <FiPlus />
+                        <span>Thêm tiết học</span>
+                    </button>
+                    <div className="tt-norm-indicator">
+                        <FiBookOpen />
+                        <span>Định mức: <strong>{currentPeriods}/{maxPeriods || 30}</strong> tiết</span>
+                    </div>
                     <button
                         type="button"
                         className={`tt-session-toggle-btn ${isMorning ? "tt-session-toggle-morning" : "tt-session-toggle-afternoon"}`}
@@ -107,8 +117,19 @@ export default function ScheduleSlotSection({
                                 {days.map((day) => {
                                     const key = `${day}-${period}`;
                                     const slot = slotsMap.get(key);
+                                    
+                                    // [NEW] Nếu tiết này là phần tiếp theo của một tiết đôi/tiết dài, ta bỏ qua không render <td>
+                                    if (slot && slot.period < period) {
+                                        return null;
+                                    }
+
+                                    // [NEW] Tính toán rowSpan dựa trên độ dài của tiết học
+                                    const span = (slot && slot.period === period) 
+                                        ? ((slot.periodEnd || slot.period) - slot.period + 1) 
+                                        : 1;
+
                                     return (
-                                        <td key={key} className="slot-cell">
+                                        <td key={key} className="slot-cell" rowSpan={span}>
                                             {slot ? (
                                                 <SlotCard
                                                     session={slot}

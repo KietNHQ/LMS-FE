@@ -131,9 +131,7 @@ const RootRedirect = () => {
     const user = userString ? JSON.parse(userString) : null;
 
     if (!user) {
-        // TẠM THỜI: Nếu chưa đăng nhập, cho phép vào thẳng trang học sinh để xem giao diện (Guest Mode)
-        // Khi nào xong hết logic auth sẽ chuyển lại về /login
-        return <Navigate to="/student/dashboard" replace />;
+        return <Navigate to="/login" replace />;
     }
 
     const role = (user.role || localStorage.getItem('userRole') || "").toLowerCase();
@@ -205,9 +203,11 @@ export default function AppRoutes() {
 
 
       <Route path="/management" element={
-        <Suspense fallback={<LoadingAnimationBook fullScreen={true} label="Đang tải hệ thống quản lý..." />}>
-          <ManagementLayout />
-        </Suspense>
+        <ProtectedRoute allowedRoles={["management"]}>
+          <Suspense fallback={<LoadingAnimationBook fullScreen={true} label="Đang tải hệ thống quản lý..." />}>
+            <ManagementLayout />
+          </Suspense>
+        </ProtectedRoute>
       }>
         <Route index element={<Navigate to="dashboard" replace />} />
         <Route path="dashboard"    element={<ManagementDashboard />} />

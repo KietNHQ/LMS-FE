@@ -80,7 +80,8 @@ export default function ManagementLayout() {
         }
     })();
 
-    const userToUse = latestUser || storedUser;
+    const baseUser = latestUser || storedUser;
+    const userToUse = baseUser;
     const userName = userToUse.fullName || userToUse.name || userToUse.email?.split("@")[0] || "Người dùng";
     const userEmail = userToUse.email || "";
     const userPermissions = userToUse.permissions || null;

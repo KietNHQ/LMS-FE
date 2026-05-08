@@ -55,6 +55,28 @@
     box-shadow: 0 6px 18px rgba(30, 47, 90, 0.2);
 }
 
+.tt-reset-btn {
+    background: #ffffff;
+    color: #64748b;
+    border: 1.5px solid #e2e8f0;
+    padding: 0.7rem 1.25rem;
+    border-radius: 0.85rem;
+    font-weight: 700;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.tt-reset-btn:hover {
+    border-color: #ef4444;
+    color: #ef4444;
+    background: #fef2f2;
+    transform: translateY(-2px);
+}
+
 .tt-conflict-btn {
     background: #ffffff;
     color: #334155;

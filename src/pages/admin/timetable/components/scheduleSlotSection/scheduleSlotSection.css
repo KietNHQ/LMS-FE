@@ -57,6 +57,50 @@
     font-size: 0.8rem;
 }
 
+.tt-reset-btn {
+    background: #ffffff;
+    color: #64748b;
+    border: 1.5px solid #e2e8f0;
+    padding: 0.6rem 1rem;
+    border-radius: 0.85rem;
+    font-weight: 700;
+    font-size: 0.85rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.tt-reset-btn:hover {
+    border-color: #ef4444;
+    color: #ef4444;
+    background: #fef2f2;
+    transform: translateY(-2px);
+}
+
+.tt-add-btn {
+    background: #1e2f5a;
+    color: #ffffff;
+    border: none;
+    padding: 0.6rem 1rem;
+    border-radius: 0.85rem;
+    font-weight: 700;
+    font-size: 0.85rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    box-shadow: 0 4px 12px rgba(30, 47, 90, 0.15);
+}
+
+.tt-add-btn:hover {
+    background: #152340;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 18px rgba(30, 47, 90, 0.2);
+}
+
 /* --- SESSION TOGGLE --- */
 .tt-session-toggle-btn {
     background: #f8fafc;
@@ -128,13 +172,14 @@
 }
 
 .tt-schedule-table td {
-    padding: 1rem;
+    padding: 0.75rem;
     border: 1px solid #f1f5f9;
-    vertical-align: middle;
+    vertical-align: top;
 }
 
 .col-period {
-    width: 100px;
+    width: 120px;
+    min-width: 120px;
     background: #f8fafc !important;
 }
 
@@ -144,10 +189,10 @@
     color: #1e2f5a;
     font-size: 0.9rem;
     background: #f8fafc;
+    width: 120px;
 }
 
 .slot-cell {
-    width: calc(100% / 6);
     background: #ffffff;
     transition: background-color 0.2s ease;
 }
@@ -162,6 +207,7 @@
     border: 1.5px solid #e2e8f0;
     border-radius: 1rem;
     padding: 1rem;
+    height: 100%;
     min-height: 120px;
     display: flex;
     flex-direction: column;
@@ -264,7 +310,8 @@
 /* --- EMPTY SLOT --- */
 .tt-empty-slot-btn {
     width: 100%;
-    height: 120px;
+    height: 100%;
+    min-height: 120px;
     background: transparent;
     border: 2px dashed #f1f5f9;
     border-radius: 1rem;

@@ -4,6 +4,7 @@ export const WEEK_DAYS = [
   { key: "Wednesday", label: "Thứ 4" },
   { key: "Thursday", label: "Thứ 5" },
   { key: "Friday", label: "Thứ 6" },
+  { key: "Saturday", label: "Thứ 7" },
 ];
 
 export const PERIOD_SLOTS = [
@@ -35,19 +36,52 @@ export const SUBJECT_COLOR_MAP = {
   LichSu: "amber",
   DiaLy: "cyan",
   GDCD: "rose",
+  TheDuc: "green",
+  QuocPhong: "slate",
+  CongNghe: "brown",
 };
 
 export const SUBJECT_DISPLAY = {
-  Toan: "Toan",
-  NguVan: "Ngu van",
-  TiengAnh: "Tieng Anh",
-  VatLy: "Vat ly",
-  HoaHoc: "Hoa hoc",
-  SinhHoc: "Sinh hoc",
-  TinHoc: "Tin hoc",
-  LichSu: "Lich su",
-  DiaLy: "Dia ly",
-  GDCD: "GDCD",
+  Toan: "Toán",
+  NguVan: "Ngữ văn",
+  TiengAnh: "Tiếng Anh",
+  VatLy: "Vật lý",
+  HoaHoc: "Hóa học",
+  SinhHoc: "Sinh học",
+  TinHoc: "Tin học",
+  LichSu: "Lịch sử",
+  DiaLy: "Địa lý",
+  GDCD: "Giáo dục công dân",
+  TheDuc: "Giáo dục thể chất",
+  QuocPhong: "QP & AN",
+  CongNghe: "Công nghệ",
+  TraiNghiem: "HĐTN, HN",
+  DiaPhuong: "GD Địa phương",
+};
+
+/**
+ * GDPT 2018 Standards for High School (THPT)
+ */
+export const GDPT_2018_CONFIG = {
+  MAX_WEEKLY_PERIODS: 30,
+  QUOTAS: {
+    Toan: 4,
+    NguVan: 4,
+    TiengAnh: 3,
+    LichSu: 2,
+    TheDuc: 2,
+    QuocPhong: 1,
+    TraiNghiem: 3,
+    DiaPhuong: 1,
+    VatLy: 3,
+    HoaHoc: 3,
+    SinhHoc: 3,
+    TinHoc: 3,
+    CongNghe: 3,
+    DiaLy: 3,
+    GDCD: 3,
+  },
+  CONSECUTIVE_SUBJECTS: ["Toan", "NguVan", "VatLy", "HoaHoc", "SinhHoc"],
 };
 
 export const STATUS_META = {
@@ -63,6 +97,13 @@ export const MODE_META = {
   offline: "Offline",
   online: "Online",
 };
+
+export const ROOM_OPTIONS = [
+  "P101", "P102", "P103", "P104", "P105", 
+  "P201", "P202", "P203", "P204", "P205",
+  "P301", "P302", "Lab 1", "Lab 2", "Lab 3",
+  "Sân thể dục", "Hội trường", "Thư viện"
+];
 
 export const CLASS_OPTIONS = ["10A1", "10A2", "11B1", "12A2"];
 

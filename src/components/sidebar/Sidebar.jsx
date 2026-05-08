@@ -34,6 +34,7 @@ export default function Sidebar({
   const defaultMockPermissions = useMemo(() => {
     switch (role) {
       case "management":
+        return [PERMISSIONS.TIMETABLE_VIEW, PERMISSIONS.TIMETABLE_MANAGE];
       case "admin":
       case "vp_academic":
       case "vp_discipline":

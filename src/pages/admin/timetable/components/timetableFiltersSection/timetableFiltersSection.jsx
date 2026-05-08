@@ -1,11 +1,10 @@
-import React from "react";
 import { FiAlertTriangle, FiClock, FiLayers } from "react-icons/fi";
 import Select from "../../../../../components/ui/Select/Select";
 import "./timetableFiltersSection.css";
 
 export default function TimetableFiltersSection({
     totalSessions,
-    conflictCount,
+    progressLabel,
     classOptions,
     teacherOptions,
     dayOptions,
@@ -18,10 +17,7 @@ export default function TimetableFiltersSection({
     onClassChange,
     onTeacherChange,
     onDayChange,
-    onBlockChange,
     onSearchChange,
-    onCreateSession,
-    onOpenConflicts,
     children,
 }) {
     return (
@@ -31,9 +27,7 @@ export default function TimetableFiltersSection({
                     <h1 className="tt-main-title">Quản lý thời khóa biểu</h1>
                 </div>
                 <div className="tt-header-actions">
-                    <div className="tt-year-selector-wrap">
-                        {children}
-                    </div>
+                    {children}
                 </div>
             </div>
 
@@ -46,11 +40,11 @@ export default function TimetableFiltersSection({
                     </div>
                 </div>
 
-                <div className="tt-stat-mini-card clickable" onClick={onOpenConflicts}>
-                    <div className="stat-icon-box warning"><FiAlertTriangle /></div>
+                <div className="tt-stat-mini-card">
+                    <div className="stat-icon-box warning"><FiLayers /></div>
                     <div className="stat-content">
-                        <span className="stat-value">{conflictCount}</span>
-                        <span className="stat-label">Tiết bị trùng</span>
+                        <span className="stat-value">{progressLabel || "0/0"}</span>
+                        <span className="stat-label">Tiến độ xếp lớp</span>
                     </div>
                 </div>
 
