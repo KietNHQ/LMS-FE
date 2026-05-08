@@ -7,7 +7,7 @@ import UsersSearchFilterSort from "./components/usersSearchFilterSort/UsersSearc
 import UserDetailSection from "./components/userDetailSection/userDetailSection";
 import { CreateUserDialog, Pagination, LoadingSpinner, ConfirmationModal } from "../../../../../components/common";
 import { useCheckPermission } from "../../../../../hooks/useAuth";
-import { userService, studentsService, permissionService } from "../../../../../services/pages/admin/users";
+import { userService, studentsService, parentsService, permissionService } from "../../../../../services/pages/admin/users";
 
 // Detail Section Imports
 import TeacherInformationSection from "../teachers/components/teacherInformationSection/teacherInformationSection";
@@ -67,6 +67,8 @@ export default function AllUsers({ onCountChange, schoolYear, term, hasPermissio
     const [activeModalMode, setActiveModalMode] = useState(null); // 'view' | 'edit'
     const [selectedUser, setSelectedUser] = useState(null);
     const [allClasses, setAllClasses] = useState([]);
+    const [allStudents, setAllStudents] = useState([]);
+    const [allParents, setAllParents] = useState([]);
 
     const [statusTarget, setStatusTarget] = useState(null);
     const [currentPage, setCurrentPage] = useState(1);
@@ -116,7 +118,12 @@ export default function AllUsers({ onCountChange, schoolYear, term, hasPermissio
 
     const loadClasses = useCallback(async () => {
         try {
-            const students = await studentsService.listStudents();
+            const [students, parents] = await Promise.all([
+                studentsService.listStudents(),
+                parentsService.listParents()
+            ]);
+            setAllStudents(students);
+            setAllParents(parents);
             const classes = Array.from(new Set(students.map(s => s.className).filter(Boolean)));
             setAllClasses(classes);
         } catch (err) {
@@ -422,7 +429,20 @@ export default function AllUsers({ onCountChange, schoolYear, term, hasPermissio
                     // 1. Update basic user info
                     await userService.updateUser(id, formData);
                     
-                    // 2. Update permissions if the user is a manager/admin
+                    // 2. Link Guardian if it's a student and guardianId is present
+                    if (formData.role === "Học sinh" && formData.guardianId) {
+                        const studentRecord = allStudents.find(s => s.userId === id || s.id === id);
+                        const studentTableId = studentRecord?.id || formData.profile?.id || id;
+                        if (studentTableId) {
+                            try {
+                                await userService.linkGuardian(studentTableId, formData.guardianId);
+                            } catch (err) {
+                                console.error("Link guardian failed in AllUsers:", err);
+                            }
+                        }
+                    }
+                    
+                    // 3. Update permissions if the user is a manager/admin
                     if ((formData.role === "Quản lý" || formData.role === "Quản trị viên") && formData.permissions) {
                         const permissionIds = formData.permissions
                             .map(p => {
@@ -538,14 +558,41 @@ export default function AllUsers({ onCountChange, schoolYear, term, hasPermissio
         }
     };
 
+    const enrichUserForModal = (user) => {
+        let enriched = { ...user, ...user.profile };
+        
+        if (user.role === "Học sinh") {
+            const studentData = allStudents.find(s => s.userId === user.id || s.id === user.id);
+            if (studentData) {
+                enriched = { ...enriched, ...studentData, role: "Học sinh" };
+            }
+        } else if (user.role === "Phụ huynh") {
+            const parentData = allParents.find(p => p.id === user.id || p.userId === user.id);
+            if (parentData) {
+                enriched = { 
+                    ...enriched, 
+                    ...parentData, 
+                    role: "Phụ huynh",
+                    profile: {
+                        ...(enriched.profile || {}),
+                        ...(parentData.profile || {}),
+                        children: parentData.profile?.children || []
+                    }
+                };
+            }
+        }
+        return enriched;
+    };
+
     const handleViewUser = async (user) => {
-        setSelectedUser(user);
+        const enrichedUser = enrichUserForModal(user);
+        setSelectedUser(enrichedUser);
         setActiveModalMode("view");
         
         // Fetch fresh permissions if manager/admin
-        if (user.role === "Quản lý" || user.role === "Quản trị viên") {
+        if (enrichedUser.role === "Quản lý" || enrichedUser.role === "Quản trị viên") {
             try {
-                const rawPerms = await permissionService.getUserPermissions(user.id);
+                const rawPerms = await permissionService.getUserPermissions(enrichedUser.id);
                 const perms = Array.isArray(rawPerms) 
                     ? rawPerms
                         .filter(p => p.granted !== false) // Chỉ lấy các quyền được granted
@@ -557,7 +604,7 @@ export default function AllUsers({ onCountChange, schoolYear, term, hasPermissio
                             return permissionRevMap[id] || (typeof p === 'object' ? p.key : p);
                         }) 
                     : [];
-                setSelectedUser(prev => prev?.id === user.id ? { ...prev, permissions: perms } : prev);
+                setSelectedUser(prev => prev?.id === enrichedUser.id ? { ...prev, permissions: perms } : prev);
             } catch (err) {
                 console.error("Failed to load user permissions in AllUsers view:", err);
             }
@@ -565,13 +612,14 @@ export default function AllUsers({ onCountChange, schoolYear, term, hasPermissio
     };
 
     const handleEditUser = async (user) => {
-        setSelectedUser(user);
+        const enrichedUser = enrichUserForModal(user);
+        setSelectedUser(enrichedUser);
         setActiveModalMode("edit");
 
         // Fetch fresh permissions if manager/admin
-        if (user.role === "Quản lý" || user.role === "Quản trị viên") {
+        if (enrichedUser.role === "Quản lý" || enrichedUser.role === "Quản trị viên") {
             try {
-                const rawPerms = await permissionService.getUserPermissions(user.id);
+                const rawPerms = await permissionService.getUserPermissions(enrichedUser.id);
                 const perms = Array.isArray(rawPerms) 
                     ? rawPerms
                         .filter(p => p.granted !== false) // Chỉ lấy các quyền được granted
@@ -583,7 +631,7 @@ export default function AllUsers({ onCountChange, schoolYear, term, hasPermissio
                             return permissionRevMap[id] || (typeof p === 'object' ? p.key : p);
                         }) 
                     : [];
-                setSelectedUser(prev => prev?.id === user.id ? { ...prev, permissions: perms } : prev);
+                setSelectedUser(prev => prev?.id === enrichedUser.id ? { ...prev, permissions: perms } : prev);
             } catch (err) {
                 console.error("Failed to load user permissions in AllUsers edit:", err);
             }
