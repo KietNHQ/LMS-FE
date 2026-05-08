@@ -202,11 +202,12 @@ export default function AdminParents({ onCountChange, schoolYear, term, hasPermi
   const handleViewParent = (parent) => {
     setActiveModalMode("view");
     setActiveParentId(parent.id);
+    // profile.children is now populated from students_linked via parseParent
     setParentForm({
       ...parent,
       profile: {
         ...(parent.profile || {}),
-        children: normalizeChildren(parent.profile?.children),
+        children: parent.profile?.children || [],
       },
     });
   };
@@ -218,7 +219,7 @@ export default function AdminParents({ onCountChange, schoolYear, term, hasPermi
       ...parent,
       profile: {
         ...(parent.profile || {}),
-        children: normalizeChildren(parent.profile?.children),
+        children: parent.profile?.children || [],
       },
     });
   };

@@ -71,6 +71,7 @@ const requestWithEndpointFallback = async (builder) => {
 const mapApiUserToView = (user = {}) => {
   const roleLabel = roleFromApi[user.role] || user.role || "Học sinh";
   let fullName = user.fullName || user.name || user.full_name || "";
+  const rawDob = user.dob || user.birthDate || user.birth_date;
 
   if (!fullName && user.profile) {
     fullName = user.profile.fullName || user.profile.name || "";
@@ -91,7 +92,7 @@ const mapApiUserToView = (user = {}) => {
     phone: user.phone || user.profile?.phone || "—",
     status: statusFromApi[user.status] || user.status || "Hoạt động",
     createdAt: user.createdAt ? `${user.createdAt}`.slice(0, 10) : "",
-    dob: user.dob || user.birthDate || user.birth_date || user.profile?.dob || user.profile?.birthDate || "",
+    dob: rawDob ? `${rawDob}`.slice(0, 10) : "",
     avatar: getInitial(fullName),
     color: getColorByRole(roleLabel),
     profile: user.profile || {},
@@ -228,6 +229,24 @@ export const userService = {
       })
     );
   },
+
+  getGuardianByPhone: async (phone) => {
+    return requestWithEndpointFallback((basePath) =>
+      axiosClient.get(basePath.replace('/users', '/guardians'), { params: { search: phone } })
+    );
+  },
+  // Gán phụ huynh vào học sinh
+  linkGuardian: async (studentId, guardianId) => {
+    return requestWithEndpointFallback((basePath) =>
+      // basePath của userService là /users, nên ta replace thành /students để gọi API bên student
+      axiosClient.post(`${basePath.replace('/users', '/students')}/${studentId}/guardians`, {
+        guardianId: guardianId,
+        relationship: "parent",
+        isPrimary: true
+      })
+    );
+  },
+
 };
 
 

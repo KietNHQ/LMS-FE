@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { FiChevronDown, FiEdit2, FiX } from "react-icons/fi";
 import "./studentInformationSection.css";
+import { userService } from "../../../../../../../services/pages/admin/users";
 
 function getAvatarLetter(name) {
     if (!name) return "A";
@@ -48,6 +49,27 @@ export default function StudentInformationSection({
     const classRef = useRef(null);
     const genderRef = useRef(null);
     const statusRef = useRef(null);
+
+    const handlePhoneBlur = async (phone) => {
+        if (!phone || phone.length < 9) return;
+        try {
+            const res = await userService.getGuardianByPhone(phone);
+            // res is the raw axios response; data contains the API payload
+            const apiPayload = res?.data ?? res ?? {};
+            const parent = (apiPayload?.guardians ?? apiPayload?.data ?? [])[0];
+            if (parent) {
+                const fullName = `${parent.surname || ''} ${parent.given_name || ''}`.trim() || parent.name || '';
+                onChange("parentName", fullName);
+                onChange("parentEmail", parent.email || parent.user_email || '');
+                onChange("guardianId", parent.id); // integer guardian table ID
+                console.log('[handlePhoneBlur] Found guardian:', parent.id, fullName);
+            } else {
+                console.log('[handlePhoneBlur] No guardian found for phone:', phone);
+            }
+        } catch (error) {
+            console.log("Không tìm thấy phụ huynh", error);
+        }
+    };
 
     useEffect(() => {
         const handleClickOutside = (event) => {
@@ -271,6 +293,7 @@ export default function StudentInformationSection({
                                             return ph;
                                         })()}
                                         onChange={(e) => onChange("parentPhone", e.target.value)}
+                                        onBlur={(e) => handlePhoneBlur(e.target.value)}
                                     />
                                 </div>
                             </div>

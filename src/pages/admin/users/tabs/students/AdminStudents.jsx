@@ -27,6 +27,9 @@ const getErrorMessage = (error, fallback) => {
 };
 
 const emptyStudentForm = {
+  id: null,          // student table integer ID
+  userId: "",        // user UUID
+  guardianId: null,  // guardian table integer ID (set on phone lookup)
   name: "",
   email: "",
   className: "10A1",
@@ -41,7 +44,8 @@ const emptyStudentForm = {
 };
 
 const toStudentForm = (student = {}) => ({
-  id: student.id,
+  id: student.id,           // student table integer ID — for linkGuardian
+  userId: student.userId || student.id,  // user UUID — for updateStudent
   name: student.name || "",
   email: student.email || "",
   className: student.className || "10A1",
@@ -75,6 +79,8 @@ export default function AdminStudents({ onCountChange, schoolYear, term, hasPerm
   const [importFeedback, setImportFeedback] = useState(null);
 
   const [studentForm, setStudentForm] = useState(emptyStudentForm);
+  const studentFormRef = React.useRef(studentForm);
+  useEffect(() => { studentFormRef.current = studentForm; }, [studentForm]);
   const [currentPage, setCurrentPage] = useState(1);
 
   const [selectedUserIds, setSelectedUserIds] = useState([]);
@@ -250,24 +256,24 @@ export default function AdminStudents({ onCountChange, schoolYear, term, hasPerm
       variant: "primary",
       onConfirm: async () => {
         closeConfirm();
-        const payload = {
-          ...studentForm,
-          profile: {
-            ...(studentForm.profile || {}),
-            parentName: studentForm.parentName,
-            parentPhone: studentForm.parentPhone,
-            parentEmail: studentForm.parentEmail,
-            className: studentForm.className,
-            gender: studentForm.gender,
-            address: studentForm.address,
-            status: studentForm.status,
-          },
-        };
+        // Read the LATEST form via ref to avoid stale closure
+        const latestForm = studentFormRef.current;
+        console.log('[Save] id=', latestForm.id, 'userId=', latestForm.userId, 'guardianId=', latestForm.guardianId);
 
         try {
-          await studentsService.updateStudent(activeStudentId, payload);
+          // activeStudentId is now always the user UUID
+          await studentsService.updateStudent(activeStudentId, latestForm);
+          
+          // linkGuardian uses student TABLE integer ID
+          if (latestForm.guardianId && latestForm.id) {
+            console.log('[linkGuardian] studentTableId=', latestForm.id, 'guardianId=', latestForm.guardianId);
+            await userService.linkGuardian(latestForm.id, latestForm.guardianId);
+          } else {
+            console.log('[linkGuardian] skip - guardianId=', latestForm.guardianId, 'studentId=', latestForm.id);
+          }
+
           await loadStudents();
-          window.alert(`Đã cập nhật học sinh ${studentForm.name.trim()} thành công.`);
+          window.alert(`Đã cập nhật học sinh ${latestForm.name.trim()} thành công.`);
           handleCloseModal();
         } catch (error) {
           window.alert(getErrorMessage(error, "Không thể cập nhật học sinh."));
@@ -476,13 +482,15 @@ export default function AdminStudents({ onCountChange, schoolYear, term, hasPerm
 
   const handleViewStudent = (student) => {
     setActiveModalMode("view");
-    setActiveStudentId(student.id);
+    // Store userId (UUID) in activeStudentId for updateStudent API
+    setActiveStudentId(student.userId || student.id);
     setStudentForm(toStudentForm(student));
   };
 
   const handleEditStudent = (student) => {
     setActiveModalMode("edit");
-    setActiveStudentId(student.id);
+    // Store userId (UUID) in activeStudentId for updateStudent API
+    setActiveStudentId(student.userId || student.id);
     setStudentForm(toStudentForm(student));
   };
 

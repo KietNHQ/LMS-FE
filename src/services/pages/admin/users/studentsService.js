@@ -36,6 +36,7 @@ const requestWithFallback = async (endpoints, callback) => {
 
 const getRows = (payload) => {
   if (Array.isArray(payload)) return payload;
+  if (Array.isArray(payload?.students)) return payload.students; // /students endpoint
   if (Array.isArray(payload?.users)) return payload.users;
   if (Array.isArray(payload?.items)) return payload.items;
   if (Array.isArray(payload?.data)) return payload.data;
@@ -57,7 +58,8 @@ const parseStudent = (item = {}) => {
     name = item.email.split("@")[0];
   }
   return {
-    id: item.id,
+    id: item.id,         // This is student table ID (integer) when from /students endpoint
+    userId: item.user_id || item.userId || item.id, // user UUID for update
     name,
     email: item.email || "",
     gender: item.gender === "F" ? "Nữ" : item.gender === "M" ? "Nam" : profile.gender || "Nam",
@@ -65,11 +67,11 @@ const parseStudent = (item = {}) => {
     className: item.className || item.current_class_name || profile.className || "10A1",
     academicYear: item.academicYear || profile.academicYear || "",
     teacher: item.teacher || profile.teacher || "Chưa phân công",
-    parentName: profile.parentName || "",
-    parentPhone: profile.parentPhone || "",
-    parentEmail: profile.parentEmail || "",
-    address: profile.address || "",
-    status: statusFromApi.get(item.status) || profile.status || "Đang học",
+    parentName: item.parentName || item.parent_name || profile.parentName || "",
+    parentPhone: item.parentPhone || item.parent_phone || profile.parentPhone || "",
+    parentEmail: item.parentEmail || item.parent_email || profile.parentEmail || "",
+    address: item.address || profile.address || "",
+    status: statusFromApi.get(item.status) || item.user_status || profile.status || "Đang học",
     profile,
   };
 };
