@@ -564,7 +564,7 @@ export default function AllUsers({ onCountChange, schoolYear, term, hasPermissio
         if (user.role === "Học sinh") {
             const studentData = allStudents.find(s => s.userId === user.id || s.id === user.id);
             if (studentData) {
-                enriched = { ...enriched, ...studentData, role: "Học sinh" };
+                enriched = { ...enriched, ...studentData, role: "Học sinh", id: user.id, studentTableId: studentData.id };
             }
         } else if (user.role === "Phụ huynh") {
             const parentData = allParents.find(p => p.id === user.id || p.userId === user.id);
@@ -573,6 +573,8 @@ export default function AllUsers({ onCountChange, schoolYear, term, hasPermissio
                     ...enriched, 
                     ...parentData, 
                     role: "Phụ huynh",
+                    id: user.id,
+                    parentTableId: parentData.id,
                     profile: {
                         ...(enriched.profile || {}),
                         ...(parentData.profile || {}),
