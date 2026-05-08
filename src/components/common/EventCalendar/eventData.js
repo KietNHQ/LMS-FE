@@ -17,3 +17,4 @@ export const INITIAL_CALENDAR_EVENTS = [
   { startDay: 15, endDay: 15, title: "Lễ kỷ niệm", content: "Sinh hoạt chung", color: "red", createdBy: "Trần Gia Bảo", createdRole: "Quản trị viên" },
   { startDay: 25, endDay: 25, title: "Nghỉ lễ", content: "Thông báo nghỉ", color: "orange", createdBy: "Trần Gia Bảo", createdRole: "Quản trị viên" },
 ];
+

@@ -1,4 +1,4 @@
-import { createScopedApiService } from "../admin/generated/createScopedApiService";
+import { createScopedApiService } from "../../admin/generated/createScopedApiService";
 
 const FINANCE_MODULES = [
   "dashboard",
@@ -51,4 +51,7 @@ export const financeService = {
 };
 
 export default financeService;
+
+
+
 

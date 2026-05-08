@@ -98,20 +98,23 @@
 
 .notification-bell .bell-badge {
   position: absolute;
-  top: -8px;
-  right: -10px;
-  min-width: 22px;
-  height: 22px;
-  background: #ff3b30;
-  color: #fff !important;
-  font-size: 11px;
+  top: -2px;
+  right: -2px;
+  min-width: 18px;
+  height: 18px;
+  background: #ff4d4f;
+  color: #ffffff !important;
+  font-size: 10px;
   font-weight: 700;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 999px;
-  border: 2px solid #fff;
+  border-radius: 10px;
+  border: 2px solid #ffffff;
+  box-shadow: 0 2px 4px rgba(255, 77, 79, 0.3);
   line-height: 1;
+  padding: 0 4px;
+  z-index: 10;
 }
 
 @media (max-width: 900px) {

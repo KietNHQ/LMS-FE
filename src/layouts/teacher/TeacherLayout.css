@@ -5,7 +5,7 @@
     --content-gap-expanded: 0rem;
     --content-gap-collapsed: 1rem;
 
-    --layout-bg: #e8f4f1;
+    --layout-bg: #f8fafc;
     --teacher-tab-heading-size: clamp(1.6rem, 1.45rem + 0.6vw, 1.85rem);
     --teacher-tab-heading-line-height: 1.12;
     --teacher-tab-heading-weight: 800;

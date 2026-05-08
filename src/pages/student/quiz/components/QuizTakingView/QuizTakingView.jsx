@@ -57,9 +57,10 @@ function getQuizSubjectIcon(quiz) {
 
 export default function QuizTakingView({ quiz, onBack, onSubmit }) {
     const [answers, setAnswers] = useState({});
-    const [remainingSeconds, setRemainingSeconds] = useState(() =>
-        Math.max(0, Math.round(Number(quiz.duration || 0) * 60))
-    );
+    const [remainingSeconds, setRemainingSeconds] = useState(() => {
+        if (quiz.timeRemaining !== undefined) return quiz.timeRemaining;
+        return Math.max(0, Math.round(Number(quiz.duration || 0) * 60));
+    });
     const hasAutoSubmittedRef = useRef(false);
     const answersRef = useRef(answers);
 
@@ -203,3 +204,4 @@ export default function QuizTakingView({ quiz, onBack, onSubmit }) {
         </div>
     );
 }
+

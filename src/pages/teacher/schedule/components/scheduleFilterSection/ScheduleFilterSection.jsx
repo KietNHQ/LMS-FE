@@ -1,15 +1,13 @@
-import React, { useRef } from "react";
+import React, { useRef, useMemo } from "react";
 import "./ScheduleFilterSection.css";
 import { ChevronLeft, ChevronRight, Calendar } from "lucide-react";
 import Select from "../../../../../components/ui/Select/Select";
 import { CLASS_OPTIONS } from "../../../../../utils/timetableShared";
 
-const classes = ["Tất cả", ...CLASS_OPTIONS];
-const quickDays = [
-  { value: -1, label: "Hôm qua" },
-  { value: 0, label: "Hôm nay" },
-  { value: 1, label: "Ngày mai" },
-];
+import { FaRegMoon } from "react-icons/fa";
+import { BsFillSunFill } from "react-icons/bs";
+
+const grades = ["Tất cả", "Khối 10", "Khối 11", "Khối 12"];
 
 function getWeekDates(offset = 0) {
   const now = new Date();
@@ -31,13 +29,21 @@ function formatWeekRange(days) {
   return `${days[0].toLocaleDateString("vi-VN", opts)} - ${days[6].toLocaleDateString("vi-VN", opts)} / ${days[0].getFullYear()}`;
 }
 
-export default function ScheduleFilterSection({ weekOffset, setWeekOffset, selectedClass, setSelectedClass, onQuickDaySelect }) {
+export default function ScheduleFilterSection({ 
+  weekOffset, 
+  setWeekOffset, 
+  selectedGrade,
+  setSelectedGrade,
+  selectedClass, 
+  setSelectedClass,
+  sessionView = "morning",
+  setSessionView
+}) {
   const days = getWeekDates(weekOffset);
   const dateInputRef = useRef(null);
 
   const goBack = () => setWeekOffset((w) => w - 1);
   const goForward = () => setWeekOffset((w) => w + 1);
-  const goToday = () => setWeekOffset(0);
 
   const handleDateChange = (e) => {
     if (!e.target.value) return;
@@ -69,63 +75,93 @@ export default function ScheduleFilterSection({ weekOffset, setWeekOffset, selec
     }
   };
 
+  const isMorning = sessionView === "morning";
+
+  // Cascading Filter Logic
+  const filteredClasses = useMemo(() => {
+    if (selectedGrade === "Tất cả") return ["Tất cả"];
+    const gradeNum = selectedGrade.split(" ")[1]; // "10", "11", "12"
+    const filtered = CLASS_OPTIONS.filter(cls => cls.startsWith(gradeNum));
+    return ["Tất cả", ...filtered];
+  }, [selectedGrade]);
+
+  const handleGradeChange = (e) => {
+    setSelectedGrade(e.target.value);
+    setSelectedClass("Tất cả");
+  };
+
   return (
     <div className="schedule-filter-section">
-      <div className="schedule-filter-week">
-        <div className="schedule-filter-title-nav">
-          <h1 className="schedule-filter-title">Thời khóa biểu</h1>
-          <div className="schedule-filter-week-nav">
-            <button className="week-nav-btn" onClick={goBack}>
-              <ChevronLeft size={18} />
-            </button>
+      <div className="schedule-filter-left">
+        <div className="schedule-filter-week-nav">
+          <button className="week-nav-btn" onClick={goBack}>
+            <ChevronLeft size={18} />
+          </button>
 
-            <div className="week-label" onClick={openPicker} title="Chọn ngày để chuyển tuần">
-              <Calendar size={16} />
-              <span>{formatWeekRange(days)}</span>
-              <input
-                type="date"
-                ref={dateInputRef}
-                onChange={handleDateChange}
-                style={{ position: 'absolute', opacity: 0, width: 0, padding: 0, border: 'none' }}
-                value={days[0].toISOString().split('T')[0]}
-              />
-            </div>
-
-            <button className="week-nav-btn" onClick={goForward}>
-              <ChevronRight size={18} />
-            </button>
+          <div className="week-label" onClick={openPicker} title="Chọn ngày để chuyển tuần">
+            <Calendar size={16} />
+            <span>{formatWeekRange(days)}</span>
+            <input
+              type="date"
+              ref={dateInputRef}
+              onChange={handleDateChange}
+              style={{ position: 'absolute', opacity: 0, width: 0, padding: 0, border: 'none' }}
+              value={days[0].toISOString().split('T')[0]}
+            />
           </div>
+
+          <button className="week-nav-btn" onClick={goForward}>
+            <ChevronRight size={18} />
+          </button>
         </div>
 
-        <div className="schedule-filter-actions">
-          <div className="class-filter-wrapper">
+        <div className="schedule-filter-grade-class-group">
+          <div className="grade-filter-wrapper">
             <Select
               className="schedule-admin-select"
               variant="custom"
-              options={classes}
-              value={selectedClass}
-              onChange={(e) => setSelectedClass(e.target.value)}
+              options={grades}
+              value={selectedGrade}
+              onChange={handleGradeChange}
             />
           </div>
-          <Select
-            className="schedule-admin-select schedule-quick-select"
-            variant="custom"
-            options={quickDays}
-            value={0}
-            onChange={(e) => {
-              const nextOffset = Number(e.target.value);
-              if (typeof onQuickDaySelect === "function") {
-                onQuickDaySelect(nextOffset);
-              } else if (nextOffset === 0) {
-                goToday();
-              }
-            }}
-          />
+
+          {selectedGrade !== "Tất cả" && (
+            <div className="class-filter-wrapper">
+              <Select
+                className="schedule-admin-select"
+                variant="custom"
+                options={filteredClasses}
+                value={selectedClass}
+                onChange={(e) => setSelectedClass(e.target.value)}
+              />
+            </div>
+          )}
         </div>
+      </div>
+
+      <div className="schedule-filter-right">
+        <button
+          type="button"
+          className={`tt-session-toggle-btn ${isMorning ? "tt-session-toggle-morning" : "tt-session-toggle-afternoon"}`}
+          onClick={() => setSessionView(isMorning ? "afternoon" : "morning")}
+        >
+          <span className="tt-session-toggle-icon-wrap">
+            {!isMorning ? (
+              <FaRegMoon className="tt-session-toggle-icon moon" />
+            ) : (
+              <BsFillSunFill className="tt-session-toggle-icon sun" />
+            )}
+          </span>
+          <span className={`tt-session-toggle-label ${isMorning ? "moon" : "sun"}`}>
+            Đổi sang 5 tiết {isMorning ? "chiều" : "sáng"}
+          </span>
+        </button>
       </div>
     </div>
   );
 }
+
 
 
 

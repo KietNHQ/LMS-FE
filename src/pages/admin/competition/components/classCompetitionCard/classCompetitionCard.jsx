@@ -54,3 +54,4 @@ const ClassCompetitionCard = ({ data, onAdjust }) => {
 };
 
 export default ClassCompetitionCard;
+

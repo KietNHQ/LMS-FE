@@ -1,760 +1,529 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import Modal from "../../../components/ui/Modal/Modal";
 import { Select } from "../../../components/ui";
 import { PageHeader, SchoolYearTermSelector } from "../../../components/common";
 import { useSchoolYearTerm } from "../../../hooks/useSchoolYearTerm";
+import teacherService from "../../../services/pages/teacher/teacherService";
 import GradeListSection from "./components/gradeListSection/GradeListSection";
-import GradeEntrySection from "./components/gradeEntrySection/GradeEntrySection";
+import { FiPlus, FiSave, FiX, FiTrash2 } from "react-icons/fi";
 import GradeSummarySection, { GradeSummaryHeader } from "./components/gradeSummarySection/GradeSummarySection";
+import { toast } from "react-toastify";
 import "./TeacherGrades.css";
 
 const SEMESTERS = {
-    hk1: { label: "Học kỳ 1" },
-    hk2: { label: "Học kỳ 2" },
+  hk1: { label: "Học kỳ 1" },
+  hk2: { label: "Học kỳ 2" },
 };
-
-const SCORE_OFFSETS = [1.2, 0.6, 0, -0.8, -1.6, -2.4, -3.2, -4.0, -4.8, -5.6];
-
-const TOAN = "Toán";
-const NGU_VAN = "Ngữ văn";
-const TIENG_ANH = "Tiếng Anh";
-const VAT_LY = "Vật lý";
-const TIN_HOC = "Tin học";
-const HOA_HOC = "Hóa học";
-
-const CLASS_CONFIGS = {
-    "10A1": {
-        label: "Lớp 10A1",
-        teacher: "Cô Trần Minh Anh",
-        subjects: ["Toán", "Ngữ văn", "Tiếng Anh"],
-        students: [
-            { id: 1, name: "Nguyễn Minh Kiet", code: "10A1-01" },
-            { id: 2, name: "Trần Gia Hân", code: "10A1-02" },
-            { id: 3, name: "Lê Hoàng Nam", code: "10A1-03" },
-            { id: 4, name: "Phạm Thu Uyên", code: "10A1-04" },
-            { id: 5, name: "Võ Anh Khoa", code: "10A1-05" },
-            { id: 6, name: "Đặng Gia Minh", code: "10A1-06" },
-            { id: 7, name: "Phan Ngọc Hân", code: "10A1-07" },
-            { id: 8, name: "Bùi Anh Thư", code: "10A1-08" },
-            { id: 9, name: "Lý Thành Công", code: "10A1-09" },
-            { id: 10, name: "Trương Khánh An", code: "10A1-10" },
-        ],
-        subjectBases: {
-            [TOAN]: {
-                hk1: { oral: 8.6, test15: 8.8, midterm: 8.4, final: 8.9 },
-                hk2: { oral: 8.8, test15: 9.0, midterm: 8.7, final: 9.1 },
-            },
-            [NGU_VAN]: {
-                hk1: { oral: 7.8, test15: 8.0, midterm: 7.6, final: 7.9 },
-                hk2: { oral: 7.9, test15: 8.1, midterm: 7.8, final: 8.2 },
-            },
-            [TIENG_ANH]: {
-                hk1: { oral: 8.2, test15: 8.4, midterm: 8.0, final: 8.5 },
-                hk2: { oral: 8.4, test15: 8.5, midterm: 8.3, final: 8.7 },
-            },
-        },
-    },
-    "11A1": {
-        label: "Lớp 11A1",
-        teacher: "Thầy Nguyễn Quốc Bảo",
-        subjects: ["Toán", "Vật lý", "Tin học"],
-        students: [
-            { id: 1, name: "Đỗ Minh Tú", code: "11A1-01" },
-            { id: 2, name: "Ngô Thanh Tâm", code: "11A1-02" },
-            { id: 3, name: "Bùi Gia Bảo", code: "11A1-03" },
-            { id: 4, name: "Phan Nhật Huy", code: "11A1-04" },
-            { id: 5, name: "Huỳnh Khánh Vy", code: "11A1-05" },
-            { id: 6, name: "Vũ Hải Đăng", code: "11A1-06" },
-            { id: 7, name: "Lâm Trí Dũng", code: "11A1-07" },
-            { id: 8, name: "Nguyễn Tuệ Nhi", code: "11A1-08" },
-            { id: 9, name: "Trần Đình Phúc", code: "11A1-09" },
-            { id: 10, name: "Cao Mỹ Linh", code: "11A1-10" },
-        ],
-        subjectBases: {
-            [TOAN]: {
-                hk1: { oral: 8.0, test15: 8.2, midterm: 7.9, final: 8.3 },
-                hk2: { oral: 8.3, test15: 8.5, midterm: 8.1, final: 8.6 },
-            },
-            [VAT_LY]: {
-                hk1: { oral: 7.6, test15: 7.8, midterm: 7.4, final: 7.9 },
-                hk2: { oral: 7.9, test15: 8.0, midterm: 7.7, final: 8.1 },
-            },
-            [TIN_HOC]: {
-                hk1: { oral: 8.4, test15: 8.5, midterm: 8.2, final: 8.6 },
-                hk2: { oral: 8.6, test15: 8.7, midterm: 8.4, final: 8.8 },
-            },
-        },
-    },
-    "12A1": {
-        label: "Lớp 12A1",
-        teacher: "Cô Lê Thanh Hà",
-        subjects: ["Toán", "Hóa học", "Tiếng Anh"],
-        students: [
-            { id: 1, name: "Mai Gia Huy", code: "12A1-01" },
-            { id: 2, name: "Lý Ngọc Trân", code: "12A1-02" },
-            { id: 3, name: "Trương Nhật Minh", code: "12A1-03" },
-            { id: 4, name: "Đặng Nguyên Khang", code: "12A1-04" },
-            { id: 5, name: "Cao Thiên An", code: "12A1-05" },
-            { id: 6, name: "Nguyễn Hoàng Phúc", code: "12A1-06" },
-            { id: 7, name: "Phạm Bảo Ngọc", code: "12A1-07" },
-            { id: 8, name: "Võ Đức Long", code: "12A1-08" },
-            { id: 9, name: "Hoàng Yến Nhi", code: "12A1-09" },
-            { id: 10, name: "Lê Minh Quân", code: "12A1-10" },
-        ],
-        subjectBases: {
-            [TOAN]: {
-                hk1: { oral: 8.8, test15: 9.0, midterm: 8.7, final: 9.1 },
-                hk2: { oral: 9.0, test15: 9.1, midterm: 8.9, final: 9.3 },
-            },
-            [HOA_HOC]: {
-                hk1: { oral: 8.2, test15: 8.3, midterm: 8.0, final: 8.4 },
-                hk2: { oral: 8.4, test15: 8.6, midterm: 8.2, final: 8.7 },
-            },
-            [TIENG_ANH]: {
-                hk1: { oral: 8.5, test15: 8.6, midterm: 8.3, final: 8.7 },
-                hk2: { oral: 8.7, test15: 8.8, midterm: 8.5, final: 8.9 },
-            },
-        },
-    },
-};
-
-const DEFAULT_CLASS_ID = Object.keys(CLASS_CONFIGS)[0];
-const DEFAULT_CLASS_CONFIG = CLASS_CONFIGS[DEFAULT_CLASS_ID];
 
 function round1(value) {
-    return Math.round(value * 10) / 10;
-}
-
-function formatScoreValue(value) {
-    return value === "" || value === null || value === undefined ? "" : String(round1(Number(value)));
-}
-
-function createDraftFromScores(scores) {
-    const oralScores = scores?.oralScores?.length ? scores.oralScores : [scores?.oral ?? ""];
-    const test15Scores = scores?.test15Scores?.length ? scores.test15Scores : [scores?.test15 ?? ""];
-    const oneTietScores = scores?.oneTietScores?.length ? scores.oneTietScores : [scores?.oneTiet ?? ""];
-    const midterm = scores?.midterm ?? oneTietScores?.[0] ?? "";
-
-    return {
-        oralScores: oralScores.map(formatScoreValue),
-        test15Scores: test15Scores.map(formatScoreValue),
-        oneTietScores: oneTietScores.map(formatScoreValue),
-        midterm: formatScoreValue(midterm),
-        oneTiet: formatScoreValue(oneTietScores[0]),
-        final: formatScoreValue(scores?.final),
-        note: scores?.note || "",
-    };
-}
-
-function parseDraftScores(values, fallbackValues = []) {
-    const sourceValues = values?.length ? values : fallbackValues.map((value) => String(value));
-
-    const parsedScores = sourceValues
-        .map((value, index) => {
-            if (value === "" || value === null || value === undefined) {
-                // Keep old values only for already-existing columns; ignore newly-added empty columns.
-                if (index < fallbackValues.length && sourceValues.length <= fallbackValues.length) {
-                    return clampScore(Number(fallbackValues[index]));
-                }
-                return null;
-            }
-
-            const parsed = Number(value);
-            return Number.isFinite(parsed) ? clampScore(parsed) : null;
-        })
-        .filter((value) => value !== null);
-
-    return parsedScores.length ? parsedScores : [clampScore(Number(fallbackValues[0] ?? 0))];
-}
-
-function getDisplayScoreFromList(values = []) {
-    const numericValues = values.filter((value) => typeof value === "number" && !Number.isNaN(value));
-    if (!numericValues.length) return 0;
-    if (numericValues.length === 1) return round1(numericValues[0]);
-    return round1(numericValues.reduce((sum, value) => sum + value, 0) / numericValues.length);
-}
-
-function clampScore(value) {
-    return Math.min(10, Math.max(0, round1(value)));
-}
-
-function calculateAverage(scores) {
-    const oneTietValues = scores.oneTietScores?.length ? scores.oneTietScores : scores.oneTiet !== undefined ? [scores.oneTiet] : [];
-    const midtermValue = typeof scores.midterm === "number" && !Number.isNaN(scores.midterm) ? [scores.midterm] : [];
-
-    const components = [
-        ...(scores.oralScores || []),
-        ...(scores.test15Scores || []),
-        ...midtermValue,
-        ...oneTietValues,
-        scores.final,
-    ].filter((value) => typeof value === "number" && !Number.isNaN(value));
-
-    if (!components.length) return 0;
-    return round1(components.reduce((sum, value) => sum + value, 0) / components.length);
+  if (value === null || value === undefined || isNaN(value)) return 0;
+  return Math.round(value * 10) / 10;
 }
 
 function getRank(average) {
-    if (average >= 8.5) return "excellent";
-    if (average >= 7.0) return "good";
-    if (average >= 5.5) return "fair";
-    if (average >= 4.0) return "average";
-    return "weak";
-}
-
-function getDraftFromRecord(record) {
-    if (!record) {
-        return { oralScores: [""], test15Scores: [""], oneTietScores: [""], midterm: "", oneTiet: "", final: "", note: "" };
-    }
-
-    return createDraftFromScores(record);
-}
-
-function buildScoresFromDraft(draft, fallbackRecord) {
-    const fallback = createDraftFromScores(fallbackRecord);
-
-    return {
-        oralScores: parseDraftScores(draft.oralScores || [], fallback.oralScores),
-        test15Scores: parseDraftScores(draft.test15Scores || [], fallback.test15Scores),
-        midterm: clampScore(Number(draft.midterm === "" ? fallback.midterm : draft.midterm)),
-        oneTietScores: parseDraftScores(draft.oneTietScores || (draft.oneTiet !== undefined ? [draft.oneTiet] : []), fallback.oneTietScores || [fallback.oneTiet]),
-        final: clampScore(Number(draft.final === "" ? fallback.final : draft.final)),
-        note: String(draft.note || "").trim(),
-    };
-}
-
-function buildScore(baseScores, offset) {
-    return {
-        oralScores: [clampScore(baseScores.oral + offset)],
-        test15Scores: [clampScore(baseScores.test15 + offset)],
-        midterm: clampScore(baseScores.midterm + offset),
-        oneTietScores: [clampScore(baseScores.midterm + offset - 0.2)],
-        final: clampScore(baseScores.final + offset),
-    };
-}
-
-function buildRecords(classConfig, subject, semester, overrides = {}) {
-    const baseScores = classConfig.subjectBases[subject]?.[semester];
-    if (!baseScores) return [];
-
-    const hk1Base = classConfig.subjectBases[subject]?.hk1;
-    const hk2Base = classConfig.subjectBases[subject]?.hk2;
-
-    return classConfig.students.map((student, index) => {
-        const recordKey = `${classConfig.label}-${subject}-${semester}-${student.id}`;
-        const override = overrides[recordKey];
-        const rawScores = override || buildScore(baseScores, SCORE_OFFSETS[index % SCORE_OFFSETS.length]);
-        const scores = rawScores.oralScores ? rawScores : createDraftFromScores(rawScores);
-        const oral = getDisplayScoreFromList(scores.oralScores);
-        const test15 = getDisplayScoreFromList(scores.test15Scores);
-        const oneTiet = getDisplayScoreFromList(scores.oneTietScores);
-        const average = calculateAverage(scores);
-        const rank = getRank(average);
-
-        let fullYearAverage = null;
-        if (semester === "hk2" && hk1Base && hk2Base) {
-            const hk1Key = `${classConfig.label}-${subject}-hk1-${student.id}`;
-            const hk1Raw = overrides[hk1Key] || buildScore(hk1Base, SCORE_OFFSETS[index % SCORE_OFFSETS.length]);
-            const hk1Scores = hk1Raw.oralScores ? hk1Raw : createDraftFromScores(hk1Raw);
-            const hk1Avg = calculateAverage(hk1Scores);
-            fullYearAverage = round1((hk1Avg + average * 2) / 3);
-        }
-
-        return {
-            ...student,
-            recordKey,
-            subject,
-            semester,
-            ...scores,
-            oral,
-            test15,
-            oneTiet,
-            average,
-            fullYearAverage,
-            rank,
-            status: average >= 5 ? "Đạt" : "Chưa đạt",
-            note: override?.note || "",
-        };
-    });
+  if (average >= 8.5) return "excellent";
+  if (average >= 7.0) return "good";
+  if (average >= 5.5) return "fair";
+  if (average >= 4.0) return "average";
+  return "weak";
 }
 
 export default function TeacherGrades() {
-    const { selectedSchoolYear, selectedTerm, handleYearArrow, handleTermChange } = useSchoolYearTerm();
-    const classOptions = Object.keys(CLASS_CONFIGS);
-    const [selectedClassId, setSelectedClassId] = useState(DEFAULT_CLASS_ID);
-    const [selectedStudentId, setSelectedStudentId] = useState(DEFAULT_CLASS_CONFIG.students[0].id);
-    const [overrides, setOverrides] = useState({});
-    const [draft, setDraft] = useState(
-        getDraftFromRecord(buildScore(DEFAULT_CLASS_CONFIG.subjectBases[DEFAULT_CLASS_CONFIG.subjects[0]].hk1, 0))
-    );
-    const [saveMessage, setSaveMessage] = useState("");
-    const [entryDialogOpen, setEntryDialogOpen] = useState(false);
-    const [editDialogOpen, setEditDialogOpen] = useState(false);
-    const [atRiskDialogOpen, setAtRiskDialogOpen] = useState(false);
-    const [atRiskCandidates, setAtRiskCandidates] = useState([]);
-    const [editStudentId, setEditStudentId] = useState(null);
-    const [editDraft, setEditDraft] = useState(getDraftFromRecord(null));
+  const { selectedSchoolYear, selectedTerm, handleYearArrow, handleTermChange } = useSchoolYearTerm();
+  
+  // State
+  const [grades] = useState(["10", "11", "12"]);
+  const [selectedGrade, setSelectedGrade] = useState("10");
+  const [classes, setClasses] = useState([]);
+  const [selectedClassId, setSelectedClassId] = useState("");
+  const [subjects, setSubjects] = useState([]);
+  const [selectedSubjectId, setSelectedSubjectId] = useState("");
+  const [records, setRecords] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
+  
+  // Dialog State
+  const [entryDialogOpen, setEntryDialogOpen] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [atRiskDialogOpen, setAtRiskDialogOpen] = useState(false);
+  const [editStudentId, setEditStudentId] = useState(null);
+  const [editDraft, setEditDraft] = useState({
+    oralScores: [""],
+    test15Scores: [""],
+    midterm: "",
+    final: "",
+    note: ""
+  });
 
-    const currentClass = useMemo(() => CLASS_CONFIGS[selectedClassId], [selectedClassId]);
-    const currentSubject = currentClass.subjects?.[0] || "Chưa phân môn";
-
-    const currentRecords = useMemo(
-        () => buildRecords(currentClass, currentSubject, selectedTerm, overrides),
-        [currentClass, currentSubject, selectedTerm, overrides]
-    );
-
-    const activeStudentId = currentRecords.some((item) => item.id === selectedStudentId)
-        ? selectedStudentId
-        : currentRecords[0]?.id || null;
-
-    const selectedRecord = useMemo(
-        () => currentRecords.find((item) => item.id === activeStudentId) || null,
-        [currentRecords, activeStudentId]
-    );
-
-    const editRecord = useMemo(
-        () => currentRecords.find((item) => item.id === editStudentId) || null,
-        [currentRecords, editStudentId]
-    );
-
-    const summaryStats = useMemo(() => {
-        if (!currentRecords.length) {
-            return {
-                average: 0,
-                passRate: 0,
-                excellentRate: 0,
-                atRiskCount: 0,
-                atRiskStudents: [],
-                topStudent: null,
-                weakestStudent: null,
-                rankDistribution: {
-                    excellent: 0,
-                    good: 0,
-                    fair: 0,
-                    average: 0,
-                    weak: 0,
-                },
-            };
+  // Fetch Classes
+  useEffect(() => {
+    const fetchClasses = async () => {
+      try {
+        const response = await teacherService.getTeacherClasses({ mock: true });
+        if (response.success) {
+          const fetchedClasses = response.data || [];
+          setClasses(fetchedClasses);
+          if (fetchedClasses.length > 0 && !selectedClassId) {
+            setSelectedClassId(fetchedClasses[0].id);
+          }
         }
+      } catch (err) {
+        console.error("Fetch classes error:", err);
+      }
+    };
+    fetchClasses();
+  }, []);
 
-        const totalAverage = currentRecords.reduce((sum, record) => sum + record.average, 0);
-        const passCount = currentRecords.filter((record) => record.average >= 5).length;
-        const excellentCount = currentRecords.filter((record) => record.average >= 8.5).length;
-        const atRiskStudents = currentRecords.filter((record) => record.average < 5);
-        const atRiskCount = atRiskStudents.length;
-        const topStudent = currentRecords.reduce((best, record) => (record.average > best.average ? record : best), currentRecords[0]);
-        const weakestStudent = currentRecords.reduce((worst, record) => (record.average < worst.average ? record : worst), currentRecords[0]);
-
-        const rankDistribution = currentRecords.reduce(
-            (acc, record) => {
-                acc[record.rank] += 1;
-                return acc;
-            },
-            {
-                excellent: 0,
-                good: 0,
-                fair: 0,
-                average: 0,
-                weak: 0,
-            }
-        );
-
-        return {
-            average: round1(totalAverage / currentRecords.length),
-            passRate: Math.round((passCount / currentRecords.length) * 100),
-            excellentRate: Math.round((excellentCount / currentRecords.length) * 100),
-            atRiskCount,
-            atRiskStudents,
-            topStudent,
-            weakestStudent,
-            rankDistribution,
-        };
-    }, [currentRecords]);
-
-    const handleOpenSummaryStudent = (summaryCard) => {
-        if (!summaryCard || !summaryCard.records?.length) return;
-
-        if (summaryCard.key === "atRisk") {
-            setAtRiskCandidates(summaryCard.records);
-            setAtRiskDialogOpen(true);
-            return;
+  // Fetch Subjects when class changes
+  useEffect(() => {
+    if (!selectedClassId) return;
+    const fetchSubjects = async () => {
+      try {
+        const response = await teacherService.getClassSubjects({ 
+          pathParams: { id: selectedClassId },
+          mock: true 
+        });
+        if (response.success) {
+          const fetchedSubjects = response.data || [];
+          setSubjects(fetchedSubjects);
+          if (fetchedSubjects.length > 0) {
+            setSelectedSubjectId(fetchedSubjects[0].id);
+          }
         }
+      } catch (err) {
+        console.error("Fetch subjects error:", err);
+      }
+    };
+    fetchSubjects();
+  }, [selectedClassId]);
 
-        openEditDialog(summaryCard.records[0]);
+  // Filtered Classes based on Grade
+  const filteredClasses = useMemo(() => {
+    return classes.filter(c => c.name.startsWith(selectedGrade));
+  }, [classes, selectedGrade]);
+
+  // Update selected class if it's no longer in filtered list
+  useEffect(() => {
+    if (filteredClasses.length > 0) {
+      if (!selectedClassId || !filteredClasses.find(c => c.id === selectedClassId)) {
+        setSelectedClassId(filteredClasses[0].id);
+      }
+    } else {
+      setSelectedClassId("");
+    }
+  }, [filteredClasses]);
+
+  // Fetch Grades
+  const fetchGrades = async () => {
+    if (!selectedClassId || !selectedSubjectId) return;
+    setIsLoading(true);
+    setError(null);
+    try {
+      const response = await teacherService.getGradesByClass({
+        pathParams: { classId: selectedClassId },
+        params: { 
+          subjectId: selectedSubjectId,
+          schoolYear: selectedSchoolYear,
+          term: selectedTerm
+        },
+        mock: true
+      });
+
+      if (response.success) {
+        // Transform API data to UI records if needed
+        // For now, assume API returns the needed structure or use mock if empty
+        const data = response.data || [];
+        
+        // If API returns empty (common in mock), generate some realistic mock data based on the class
+        if (data.length === 0) {
+          const mockRecords = generateMockRecords(selectedClassId, selectedSubjectId, selectedTerm);
+          setRecords(mockRecords);
+        } else {
+          setRecords(data);
+        }
+      } else {
+        setError("Không thể tải danh sách điểm.");
+      }
+    } catch (err) {
+      console.error("Fetch grades error:", err);
+      setError("Đã xảy ra lỗi khi tải dữ liệu điểm số.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchGrades();
+  }, [selectedClassId, selectedSubjectId, selectedSchoolYear, selectedTerm]);
+
+  // Derived Summary Stats
+  const summaryStats = useMemo(() => {
+    if (!records.length) return {
+      average: 0, passRate: 0, excellentRate: 0, atRiskCount: 0, atRiskStudents: []
     };
 
-    const semesterLabel = SEMESTERS[selectedTerm]?.label || selectedTerm;
+    const averages = records.map(r => r.average).filter(v => v !== null);
+    const totalAvg = averages.length ? averages.reduce((a, b) => a + b, 0) / averages.length : 0;
+    const passCount = records.filter(r => r.average >= 5).length;
+    const excellentCount = records.filter(r => r.average >= 8.5).length;
+    const atRiskStudents = records.filter(r => r.average < 5);
 
-    const handleClassChange = (event) => {
-        const nextClassId = event.target.value;
-        const nextClass = CLASS_CONFIGS[nextClassId];
-        const nextSubject = nextClass.subjects?.[0] || "Chưa phân môn";
-        const nextRecord = buildRecords(nextClass, nextSubject, selectedTerm, overrides)[0] || null;
-
-        setSelectedClassId(nextClassId);
-        setSelectedStudentId(nextRecord?.id || nextClass.students[0].id);
-        setDraft(getDraftFromRecord(nextRecord));
-        setSaveMessage("");
-        setEntryDialogOpen(false);
-        setEditDialogOpen(false);
-        setAtRiskDialogOpen(false);
-        setAtRiskCandidates([]);
-        setEditStudentId(null);
+    return {
+      average: round1(totalAvg),
+      passRate: Math.round((passCount / records.length) * 100),
+      excellentRate: Math.round((excellentCount / records.length) * 100),
+      atRiskCount: atRiskStudents.length,
+      atRiskStudents
     };
+  }, [records]);
 
-    const handleSelectStudent = (studentId) => {
-        const nextRecord = currentRecords.find((item) => item.id === studentId) || currentRecords[0] || null;
+  // Handlers
+  const handleClassChange = (e) => setSelectedClassId(e.target.value);
+  
+  const openEditDialog = (record) => {
+    setEditStudentId(record.id);
+    
+    // Ensure at least 2 slots for Oral and 15min
+    let oral = record.oralScores || ["", ""];
+    while (oral.length < 2) oral.push("");
+    
+    let test15 = record.test15Scores || ["", ""];
+    while (test15.length < 2) test15.push("");
 
-        setSelectedStudentId(studentId);
-        setDraft(getDraftFromRecord(nextRecord));
-        setSaveMessage("");
-    };
+    setEditDraft({
+      oralScores: oral,
+      test15Scores: test15,
+      midterm: record.midterm || "",
+      final: record.final || "",
+      note: record.note || ""
+    });
+    setEditDialogOpen(true);
+  };
 
-    const openEditDialog = (record) => {
-        if (!record) return;
+  const handleSaveGrade = async () => {
+    try {
+      // In real scenario, call teacherService.updateGrade
+      // For now, update local state
+      setRecords(prev => prev.map(r => {
+        if (r.id === editStudentId) {
+          const updated = {
+            ...r,
+            ...editDraft,
+            average: calculateRecordAverage(editDraft)
+          };
+          updated.rank = getRank(updated.average);
+          updated.status = updated.average >= 5 ? "Đạt" : "Chưa đạt";
+          return updated;
+        }
+        return r;
+      }));
+      
+      toast.success("Đã cập nhật điểm thành công!");
+      setEditDialogOpen(false);
+    } catch (err) {
+      toast.error("Lỗi khi lưu điểm.");
+    }
+  };
 
-        setSelectedStudentId(record.id);
-        setEditStudentId(record.id);
-        setEditDraft(getDraftFromRecord(record));
-        setEditDialogOpen(true);
-        setSaveMessage("");
-    };
+  const calculateRecordAverage = (draft) => {
+    const oral = (draft.oralScores || []).filter(v => v !== "").map(Number);
+    const test15 = (draft.test15Scores || []).filter(v => v !== "").map(Number);
+    const midterm = draft.midterm !== "" ? Number(draft.midterm) : null;
+    const final = draft.final !== "" ? Number(draft.final) : null;
 
-    const openEntryDialog = () => {
-        setEntryDialogOpen(true);
-        setSaveMessage("");
-    };
+    const components = [...oral, ...test15];
+    if (midterm !== null) components.push(midterm, midterm); // Weight 2
+    if (final !== null) components.push(final, final, final); // Weight 3
+    
+    if (components.length === 0) return 0;
+    return round1(components.reduce((a, b) => a + b, 0) / components.length);
+  };
 
-    const closeEntryDialog = () => {
-        setEntryDialogOpen(false);
-    };
+  const currentClass = classes.find(c => c.id === selectedClassId) || {};
+  const currentSubject = subjects.find(s => s.id === selectedSubjectId) || {};
+  const semesterLabel = SEMESTERS[selectedTerm]?.label || selectedTerm;
 
-    const closeEditDialog = () => {
-        setEditDialogOpen(false);
-        setEditStudentId(null);
-    };
-
-    const closeAtRiskDialog = () => {
-        setAtRiskDialogOpen(false);
-        setAtRiskCandidates([]);
-    };
-
-    const handleSave = () => {
-        if (!selectedRecord) return;
-
-        const nextScores = buildScoresFromDraft(draft, selectedRecord);
-
-        setOverrides((prev) => ({
-            ...prev,
-            [selectedRecord.recordKey]: nextScores,
-        }));
-        setSaveMessage(`Đã cập nhật điểm cho ${selectedRecord.name} trong ${currentSubject} - ${semesterLabel}.`);
-        window.alert(`Đã lưu điểm cho ${selectedRecord.name}.`);
-        setDraft(getDraftFromRecord(nextScores));
-        setEntryDialogOpen(false);
-    };
-
-    const handleSaveEditDialog = () => {
-        if (!editRecord) return;
-
-        const nextScores = buildScoresFromDraft(editDraft, editRecord);
-
-        setOverrides((prev) => ({
-            ...prev,
-            [editRecord.recordKey]: nextScores,
-        }));
-
-        const nextRecord = {
-            ...editRecord,
-            ...nextScores,
-            average: calculateAverage(nextScores),
-            rank: getRank(calculateAverage(nextScores)),
-            status: calculateAverage(nextScores) >= 5 ? "Đạt" : "Chưa đạt",
-            note: nextScores.note,
-        };
-
-        setSelectedStudentId(nextRecord.id);
-        setDraft(getDraftFromRecord(nextRecord));
-        setSaveMessage(`Đã chỉnh sửa điểm cho ${nextRecord.name} trong ${currentSubject} - ${semesterLabel}.`);
-        window.alert(`Đã lưu điểm cho ${nextRecord.name}.`);
-        closeEditDialog();
-    };
-
-    const handleReset = () => {
-        if (!selectedRecord) return;
-
-        setDraft(getDraftFromRecord(selectedRecord));
-        setSaveMessage("");
-    };
-
-    const editOralScores = editDraft.oralScores?.length ? editDraft.oralScores : [editDraft.oral ?? ""];
-    const editTest15Scores = editDraft.test15Scores?.length ? editDraft.test15Scores : [editDraft.test15 ?? ""];
-    const editOneTietScores = editDraft.oneTietScores?.length ? editDraft.oneTietScores : [editDraft.oneTiet ?? ""];
-    const editMidterm = editDraft.midterm ?? "";
-
-    const updateEditScoreList = (field, index, value, currentValues) => {
-        const nextValues = [...currentValues];
-        nextValues[index] = value;
-        setEditDraft((prev) => ({ ...prev, [field]: nextValues }));
-    };
-
-    const addEditScoreField = (field, currentValues) => {
-        setEditDraft((prev) => ({ ...prev, [field]: [...currentValues, ""] }));
-    };
-
+  if (error) {
     return (
-        <div className="teacher-grades-page">
-            <PageHeader
-                title="Quản lý điểm học sinh"
-                eyebrow={`Tổng cộng: ${currentClass.students.length} học sinh`}
-                actions={
-                    <SchoolYearTermSelector
-                        selectedSchoolYear={selectedSchoolYear}
-                        selectedTerm={selectedTerm}
-                        onYearChange={handleYearArrow}
-                        onTermChange={handleTermChange}
-                    />
-                }
-            />
-
-            <div className="teacher-grades-top-panel">
-                <div className="teacher-grades-summary-header">
-                    <GradeSummaryHeader subjectLabel={currentSubject} />
-                </div>
-
-                <div className="teacher-grades-toolbar">
-                    <div className="teacher-grades-toolbar__group">
-                        <Select
-                            className="teacher-grades-select"
-                            label="Chọn lớp"
-                            value={selectedClassId}
-                            variant="custom"
-                            options={classOptions.map((classId) => ({ value: classId, label: CLASS_CONFIGS[classId].label }))}
-                            onChange={handleClassChange}
-                        />
-                    </div>
-
-                    <div className="teacher-grades-toolbar__center">
-                        <span className="grade-entry-badge">{semesterLabel}</span>
-                    </div>
-
-                    <div className="teacher-grades-toolbar__meta">
-                        <span className="grade-entry-badge teacher-grades-teacher-badge">Giảng viên chủ nhiệm: {currentClass.teacher || "Chưa phân công"}</span>
-                    </div>
-
-                </div>
-
-                <div className="teacher-grades-summary-row">
-                    <GradeSummarySection
-                        stats={summaryStats}
-                        onOpenStudent={handleOpenSummaryStudent}
-                    />
-                </div>
-            </div>
-
-            {saveMessage ? <div className="teacher-grades-notice">{saveMessage}</div> : null}
-
-            <div className="teacher-grades-grid">
-                <GradeListSection
-                    records={currentRecords}
-                    selectedStudentId={activeStudentId}
-                    onSelectStudent={handleSelectStudent}
-                    onOpenEditDialog={openEditDialog}
-                    onOpenEntryDialog={openEntryDialog}
-                    subjectLabel={currentSubject}
-                    semesterLabel={semesterLabel}
-                />
-            </div>
-
-            <Modal
-                open={entryDialogOpen}
-                title="Nhập & chỉnh sửa điểm"
-                onClose={closeEntryDialog}
-                className="teacher-grade-entry-modal"
-            >
-                <GradeEntrySection
-                    classLabel={currentClass.label}
-                    selectedRecord={selectedRecord}
-                    draft={draft}
-                    onDraftChange={(field, value) => setDraft((prev) => ({ ...prev, [field]: value }))}
-                    onSave={handleSave}
-                    onReset={handleReset}
-                />
-            </Modal>
-
-            <Modal
-                open={atRiskDialogOpen}
-                title={`Danh sách học sinh cảnh báo (${atRiskCandidates.length})`}
-                onClose={closeAtRiskDialog}
-                className="teacher-grade-risk-modal"
-            >
-                <div className="teacher-grade-risk-list">
-                    {atRiskCandidates.map((student) => (
-                        <button
-                            key={student.recordKey}
-                            type="button"
-                            className="teacher-grade-risk-item"
-                            onClick={() => {
-                                closeAtRiskDialog();
-                                openEditDialog(student);
-                            }}
-                        >
-                            <strong>{student.name}</strong>
-                            <span>{student.code}</span>
-                            <small>Điểm TB: {student.average.toFixed(1)}</small>
-                        </button>
-                    ))}
-                </div>
-            </Modal>
-
-            <Modal
-                open={editDialogOpen}
-                title={editRecord ? `Chỉnh sửa điểm - ${editRecord.name}` : "Chỉnh sửa điểm"}
-                onClose={closeEditDialog}
-                className="teacher-grade-edit-modal"
-            >
-                {editRecord ? (
-                    <form
-                        className="teacher-grade-edit-form"
-                        onSubmit={(event) => {
-                            event.preventDefault();
-                            handleSaveEditDialog();
-                        }}
-                    >
-                        <div className="teacher-grade-edit-meta">
-                            <span>{currentClass.label}</span>
-                            <span>{currentSubject}</span>
-                            <span>{semesterLabel}</span>
-                        </div>
-
-                        <section className="grade-entry-score-block">
-                            <div className="grade-entry-score-block__head">
-                                <span>Điểm miệng</span>
-                                <button type="button" className="grade-entry-score-add-btn" onClick={() => addEditScoreField("oralScores", editOralScores)}>
-                                    +
-                                </button>
-                            </div>
-
-                            <div className="grade-entry-score-grid">
-                                {editOralScores.map((value, index) => (
-                                    <label key={`edit-oral-${index}`} className="grade-entry-field">
-                                        <span>Miệng {index + 1}</span>
-                                        <input
-                                            type="number"
-                                            min="0"
-                                            max="10"
-                                            step="0.1"
-                                            value={value}
-                                            onChange={(event) => updateEditScoreList("oralScores", index, event.target.value, editOralScores)}
-                                        />
-                                    </label>
-                                ))}
-                            </div>
-                        </section>
-
-                        <section className="grade-entry-score-block">
-                            <div className="grade-entry-score-block__head">
-                                <span>Điểm 15 phút</span>
-                                <button type="button" className="grade-entry-score-add-btn" onClick={() => addEditScoreField("test15Scores", editTest15Scores)}>
-                                    +
-                                </button>
-                            </div>
-
-                            <div className="grade-entry-score-grid">
-                                {editTest15Scores.map((value, index) => (
-                                    <label key={`edit-test15-${index}`} className="grade-entry-field">
-                                        <span>15 phút {index + 1}</span>
-                                        <input
-                                            type="number"
-                                            min="0"
-                                            max="10"
-                                            step="0.1"
-                                            value={value}
-                                            onChange={(event) => updateEditScoreList("test15Scores", index, event.target.value, editTest15Scores)}
-                                        />
-                                    </label>
-                                ))}
-                            </div>
-                        </section>
-
-                        <section className="grade-entry-score-block">
-                            <div className="grade-entry-score-block__head">
-                                <span>Điểm 1 tiết</span>
-                                <button type="button" className="grade-entry-score-add-btn" onClick={() => addEditScoreField("oneTietScores", editOneTietScores)}>
-                                    +
-                                </button>
-                            </div>
-
-                            <div className="grade-entry-score-grid">
-                                {editOneTietScores.map((value, index) => (
-                                    <label key={`edit-one-tiet-${index}`} className="grade-entry-field">
-                                        <span>1 tiết {index + 1}</span>
-                                        <input
-                                            type="number"
-                                            min="0"
-                                            max="10"
-                                            step="0.1"
-                                            value={value}
-                                            onChange={(event) => updateEditScoreList("oneTietScores", index, event.target.value, editOneTietScores)}
-                                        />
-                                    </label>
-                                ))}
-                            </div>
-                        </section>
-
-                        <label className="teacher-grade-edit-note">
-                            <span>Giữa kỳ</span>
-                            <input
-                                type="number"
-                                min="0"
-                                max="10"
-                                step="0.1"
-                                value={editMidterm}
-                                onChange={(event) => setEditDraft((prev) => ({ ...prev, midterm: event.target.value }))}
-                            />
-                        </label>
-
-                        <label className="teacher-grade-edit-note">
-                            <span>Cuối kỳ</span>
-                            <input
-                                type="number"
-                                min="0"
-                                max="10"
-                                step="0.1"
-                                value={editDraft.final}
-                                onChange={(event) => setEditDraft((prev) => ({ ...prev, final: event.target.value }))}
-                            />
-                        </label>
-
-                        <label className="teacher-grade-edit-note">
-                            <span>Ghi chú</span>
-                            <textarea
-                                rows="3"
-                                value={editDraft.note}
-                                onChange={(event) => setEditDraft((prev) => ({ ...prev, note: event.target.value }))}
-                                placeholder="Nhận xét ngắn về bài làm..."
-                            />
-                        </label>
-
-                        <div className="teacher-grade-edit-actions">
-                            <button type="button" className="teacher-grade-edit-btn is-ghost" onClick={closeEditDialog}>
-                                Hủy
-                            </button>
-                            <button type="submit" className="teacher-grade-edit-btn is-primary">
-                                Lưu thay đổi
-                            </button>
-                        </div>
-                    </form>
-                ) : null}
-            </Modal>
-        </div>
+      <div className="teacher-grades-error">
+        <p>{error}</p>
+        <button onClick={fetchGrades}>Thử lại</button>
+      </div>
     );
+  }
+
+  return (
+    <div className="teacher-grades-page">
+      <PageHeader
+        title="Quản lý điểm học sinh"
+        eyebrow={`Lớp: ${currentClass.name || "---"} | Môn: ${currentSubject.name || "---"}`}
+        actions={
+          <SchoolYearTermSelector
+            selectedSchoolYear={selectedSchoolYear}
+            selectedTerm={selectedTerm}
+            onYearChange={handleYearArrow}
+            onTermChange={handleTermChange}
+          />
+        }
+      />
+
+      <div className="teacher-grades-top-panel">
+        <div className="teacher-grades-toolbar">
+          <div className="teacher-grades-toolbar__group">
+            <Select
+              className="teacher-grades-select"
+              variant="custom"
+              label="Khối"
+              value={selectedGrade}
+              options={grades.map(g => ({ value: g, label: `Khối ${g}` }))}
+              onChange={(e) => setSelectedGrade(e.target.value)}
+            />
+            <Select
+              className="teacher-grades-select"
+              variant="custom"
+              label="Chọn lớp"
+              value={selectedClassId}
+              options={filteredClasses.map(c => ({ value: c.id, label: c.name }))}
+              onChange={handleClassChange}
+              searchable
+            />
+          </div>
+
+          <div className="teacher-grades-toolbar__meta">
+            <span className="grade-entry-badge teacher-grades-teacher-badge">
+              GVCN: {currentClass.teacher || "Chưa phân công"}
+            </span>
+          </div>
+        </div>
+
+        <div className="teacher-grades-summary-header">
+          <GradeSummaryHeader subjectLabel={currentSubject.name} />
+        </div>
+
+        <div className="teacher-grades-summary-row">
+          <GradeSummarySection
+            stats={summaryStats}
+            onOpenAtRisk={() => setAtRiskDialogOpen(true)}
+          />
+        </div>
+      </div>
+
+      {isLoading ? (
+        <div className="teacher-grades-loading">
+          <div className="spinner"></div>
+          <p>Đang tải dữ liệu điểm số...</p>
+        </div>
+      ) : (
+        <div className="teacher-grades-grid">
+          <GradeListSection
+            records={records}
+            onOpenEditDialog={openEditDialog}
+            subjectLabel={currentSubject.name}
+            semesterLabel={semesterLabel}
+          />
+        </div>
+      )}
+
+      {/* Edit Grade Modal */}
+      <Modal
+        open={editDialogOpen}
+        title={editStudentId ? `Chỉnh sửa điểm - ${records.find(r => r.id === editStudentId)?.name}` : "Chỉnh sửa điểm"}
+        onClose={() => setEditDialogOpen(false)}
+        className="teacher-grade-edit-modal"
+      >
+        <div className="teacher-grade-edit-form">
+           <div className="teacher-grade-edit-meta">
+              <span>{currentClass.name}</span>
+              <span>{currentSubject.name}</span>
+              <span>{semesterLabel}</span>
+           </div>
+
+           <section className="grade-entry-score-block">
+              <div className="grade-entry-score-block__head">
+                <span>Điểm miệng</span>
+                <button 
+                  className="grade-entry-score-add-btn"
+                  onClick={() => {
+                    setEditDraft(prev => ({
+                      ...prev,
+                      oralScores: [...prev.oralScores, ""]
+                    }));
+                  }}
+                >
+                  <FiPlus />
+                </button>
+              </div>
+              <div className="grade-entry-score-grid">
+                {editDraft.oralScores.map((val, idx) => (
+                  <div key={`oral-${idx}`} className="grade-entry-field">
+                    <div className="grade-entry-field__label">
+                      <span>Miệng {idx + 1}</span>
+                      {editDraft.oralScores.length > 2 && (
+                        <button 
+                          className="grade-entry-delete-btn"
+                          onClick={() => {
+                            setEditDraft(prev => ({
+                              ...prev,
+                              oralScores: prev.oralScores.filter((_, i) => i !== idx)
+                            }));
+                          }}
+                        >
+                          <FiTrash2 />
+                        </button>
+                      )}
+                    </div>
+                    <input 
+                      type="number" step="0.1" min="0" max="10" value={val} 
+                      onChange={e => {
+                        const next = [...editDraft.oralScores];
+                        next[idx] = e.target.value;
+                        setEditDraft(prev => ({ ...prev, oralScores: next }));
+                      }}
+                    />
+                  </div>
+                ))}
+              </div>
+           </section>
+
+           <section className="grade-entry-score-block">
+              <div className="grade-entry-score-block__head">
+                <span>Điểm 15 phút</span>
+                <button 
+                  className="grade-entry-score-add-btn"
+                  onClick={() => {
+                    setEditDraft(prev => ({
+                      ...prev,
+                      test15Scores: [...prev.test15Scores, ""]
+                    }));
+                  }}
+                >
+                  <FiPlus />
+                </button>
+              </div>
+              <div className="grade-entry-score-grid">
+                {editDraft.test15Scores.map((val, idx) => (
+                  <div key={`test-${idx}`} className="grade-entry-field">
+                    <div className="grade-entry-field__label">
+                      <span>15 phút {idx + 1}</span>
+                      {editDraft.test15Scores.length > 2 && (
+                        <button 
+                          className="grade-entry-delete-btn"
+                          onClick={() => {
+                            setEditDraft(prev => ({
+                              ...prev,
+                              test15Scores: prev.test15Scores.filter((_, i) => i !== idx)
+                            }));
+                          }}
+                        >
+                          <FiTrash2 />
+                        </button>
+                      )}
+                    </div>
+                    <input 
+                      type="number" step="0.1" min="0" max="10" value={val} 
+                      onChange={e => {
+                        const next = [...editDraft.test15Scores];
+                        next[idx] = e.target.value;
+                        setEditDraft(prev => ({ ...prev, test15Scores: next }));
+                      }}
+                    />
+                  </div>
+                ))}
+              </div>
+           </section>
+
+              <div className="teacher-grade-edit-grid">
+                <div className="teacher-grade-edit-note">
+                  <span>Giữa kỳ</span>
+                  <input 
+                    type="number" step="0.1" min="0" max="10" value={editDraft.midterm} 
+                    onChange={e => setEditDraft(prev => ({ ...prev, midterm: e.target.value }))}
+                  />
+                </div>
+                <div className="teacher-grade-edit-note">
+                  <span>Cuối kỳ</span>
+                  <input 
+                    type="number" step="0.1" min="0" max="10" value={editDraft.final} 
+                    onChange={e => setEditDraft(prev => ({ ...prev, final: e.target.value }))}
+                  />
+                </div>
+              </div>
+
+           <div className="teacher-grade-edit-note">
+              <span>Ghi chú</span>
+              <textarea 
+                rows="3" value={editDraft.note} 
+                onChange={e => setEditDraft(prev => ({ ...prev, note: e.target.value }))}
+                placeholder="Nhận xét của giáo viên..."
+              />
+           </div>
+
+           <div className="teacher-grade-edit-actions">
+              <button className="teacher-grade-edit-btn is-ghost" onClick={() => setEditDialogOpen(false)}>
+                <FiX /> Hủy
+              </button>
+              <button className="teacher-grade-edit-btn is-primary" onClick={handleSaveGrade}>
+                <FiSave /> Lưu thay đổi
+              </button>
+           </div>
+        </div>
+      </Modal>
+
+      {/* At Risk List Modal */}
+      <Modal
+        open={atRiskDialogOpen}
+        title={`Học sinh cảnh báo (${summaryStats.atRiskCount})`}
+        onClose={() => setAtRiskDialogOpen(false)}
+        className="teacher-grade-risk-modal"
+      >
+        <div className="teacher-grade-risk-list">
+          {summaryStats.atRiskStudents.map(student => (
+            <div 
+              key={student.id} className="teacher-grade-risk-item"
+              onClick={() => { setAtRiskDialogOpen(false); openEditDialog(student); }}
+            >
+              <div>
+                <strong>{student.name}</strong>
+                <span>{student.code}</span>
+              </div>
+              <small>TB: {student.average}</small>
+            </div>
+          ))}
+          {summaryStats.atRiskCount === 0 && <p style={{ textAlign: "center", padding: "20px", color: "#64748b" }}>Không có học sinh nào bị cảnh báo.</p>}
+        </div>
+      </Modal>
+    </div>
+  );
 }
 
-
-
-
-
-
-
-
+// Mock Data Generator for Development
+function generateMockRecords(classId, subjectId, term) {
+  const names = [
+    "Nguyễn Minh Kiet", "Trần Gia Hân", "Lê Hoàng Nam", "Phạm Thu Uyên", "Võ Anh Khoa",
+    "Đặng Gia Minh", "Phan Ngọc Hân", "Bùi Anh Thư", "Lý Thành Công", "Trương Khánh An"
+  ];
+  
+  return names.map((name, i) => {
+    const oral = [round1(8 + Math.random() * 2), round1(7 + Math.random() * 3)];
+    const test15 = [round1(7 + Math.random() * 3)];
+    const midterm = round1(6 + Math.random() * 4);
+    const final = round1(5 + Math.random() * 5);
+    
+    // Weighted average: (oral + 15p + midterm*2 + final*3) / (n_oral + n_15p + 2 + 3)
+    const avg = round1((oral.reduce((a, b) => a+b, 0) + test15.reduce((a, b) => a+b, 0) + midterm*2 + final*3) / (oral.length + test15.length + 5));
+    
+    return {
+      id: i + 1,
+      name,
+      code: `${classId}-${(i+1).toString().padStart(2, '0')}`,
+      oralScores: oral.map(String),
+      test15Scores: test15.map(String),
+      midterm: String(midterm),
+      final: String(final),
+      average: avg,
+      rank: getRank(avg),
+      status: avg >= 5 ? "Đạt" : "Chưa đạt",
+      note: ""
+    };
+  });
+}

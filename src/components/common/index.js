@@ -12,3 +12,4 @@ export { default as SchoolYearTermSelector } from "./SchoolYearTermSelector/Scho
 export { default as Pagination } from "./Pagination/Pagination.jsx";
 export { default as UnifiedTimetable } from "./UnifiedTimetable/UnifiedTimetable.jsx";
 export { default as ConfirmationModal } from "./Dialog/ConfirmationModal/ConfirmationModal.jsx";
+

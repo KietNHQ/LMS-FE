@@ -17,6 +17,39 @@ export default function TeacherLayout() {
         return () => clearTimeout(timer);
     }, [location.pathname]);
 
+    // [NEW] Fetch notification count on layout mount to sync sidebar badge
+    useEffect(() => {
+        const syncNotificationCount = async () => {
+            try {
+                const { default: teacherService } = await import("../../services/pages/teacher/teacherService");
+                
+                const response = await teacherService.getNotifications({ mock: false });
+                
+                if (response.success && response.data) {
+                    const unreadCount = response.data.filter(n => 
+                        n.unread === true || n.is_read === false || n.status === "unread"
+                    ).length;
+                    
+                    localStorage.setItem("teacher_unread_notifications_count", String(unreadCount));
+                    window.dispatchEvent(
+                        new CustomEvent("teacher-notification-count-updated", {
+                            detail: unreadCount,
+                        })
+                    );
+                } else {
+                    localStorage.setItem("teacher_unread_notifications_count", "0");
+                    window.dispatchEvent(new CustomEvent("teacher-notification-count-updated", { detail: 0 }));
+                }
+            } catch (err) {
+                console.error("Failed to sync real teacher notification count:", err);
+                localStorage.setItem("teacher_unread_notifications_count", "0");
+                window.dispatchEvent(new CustomEvent("teacher-notification-count-updated", { detail: 0 }));
+            }
+        };
+
+        syncNotificationCount();
+    }, []);
+
     // Đọc từ localStorage
     const storedUser = (() => {
         try {
@@ -60,4 +93,5 @@ export default function TeacherLayout() {
         </div>
     );
 }
+
 

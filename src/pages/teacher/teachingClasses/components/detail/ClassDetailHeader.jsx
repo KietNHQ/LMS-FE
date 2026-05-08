@@ -37,3 +37,4 @@ const ClassDetailHeader = ({ classData, onBack }) => {
 };
 
 export default ClassDetailHeader;
+

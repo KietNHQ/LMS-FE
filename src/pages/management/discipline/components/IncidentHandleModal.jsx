@@ -247,3 +247,4 @@ export default function IncidentHandleModal({ isOpen, onClose, incident, onUpdat
 function getStatusLabel(s) {
     return STATUS_FLOW.find(item => item.value === s)?.label || s;
 }
+

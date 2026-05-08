@@ -40,3 +40,4 @@ const ClassToolbar = ({ searchTerm, onSearchChange, activeFilter, onFilterChange
 };
 
 export default ClassToolbar;
+

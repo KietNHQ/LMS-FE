@@ -20,3 +20,4 @@ export default function LinkedStudentsSection({ children = [], total = 0 }) {
     );
 }
 
+

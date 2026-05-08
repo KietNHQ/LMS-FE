@@ -27,7 +27,7 @@ body.notifications-no-browser-scroll {
   background: transparent;
   border: none;
   box-shadow: none;
-  overflow: hidden;
+  overflow: visible;
 }
 
 

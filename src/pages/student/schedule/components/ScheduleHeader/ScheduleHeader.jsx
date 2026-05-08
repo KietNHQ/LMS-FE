@@ -42,3 +42,4 @@ export default function ScheduleHeader({ classNameValue, sessionView, onToggleSe
         </div>
     );
 }
+

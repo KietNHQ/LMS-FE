@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { FiEye, FiEdit2, FiCopy, FiBookmark, FiChevronLeft, FiChevronRight } from "react-icons/fi";
+import { FiEye, FiEdit2, FiCopy, FiBookmark, FiChevronLeft, FiChevronRight, FiTrash2 } from "react-icons/fi";
 import "./LessonListSection.css";
 
 function statusClassName(status) {
@@ -20,6 +20,7 @@ export default function LessonListSection({
     isLessonPinned,
     onDuplicateLesson,
     onTogglePin,
+    onDeleteLesson,
 }) {
     const [sortBy, setSortBy] = useState("date-desc");
     const [currentPage, setCurrentPage] = useState(1);
@@ -226,6 +227,15 @@ export default function LessonListSection({
                                             >
                                                 <FiEdit2 size={16} />
                                             </button>
+                                            <button
+                                                type="button"
+                                                className="lesson-action-btn action-delete"
+                                                onClick={() => onDeleteLesson?.(lesson.id)}
+                                                title="Xóa bài học"
+                                                aria-label="Xóa bài học"
+                                            >
+                                                <FiTrash2 size={16} />
+                                            </button>
                                         </div>
                                     </td>
                                 </tr>
@@ -304,6 +314,15 @@ export default function LessonListSection({
                                 >
                                     <FiEdit2 size={16} />
                                 </button>
+                                <button
+                                    type="button"
+                                    className="lesson-action-btn action-delete"
+                                    onClick={() => onDeleteLesson?.(lesson.id)}
+                                    title="Xóa bài học"
+                                    aria-label="Xóa bài học"
+                                >
+                                    <FiTrash2 size={16} />
+                                </button>
                             </div>
                         </article>
                     ))
@@ -345,4 +364,5 @@ export default function LessonListSection({
         </div>
     );
 }
+
 

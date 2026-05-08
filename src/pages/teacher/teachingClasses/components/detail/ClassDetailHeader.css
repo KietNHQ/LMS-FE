@@ -8,9 +8,10 @@
 }
 
 .class-detail-header.teacher-detail-header {
-  background: linear-gradient(180deg, #ffffff 0%, #f0fdfa 100%);
-  border: 1px solid var(--tc-border);
-  box-shadow: 0 8px 24px rgba(13, 148, 136, 0.12);
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  padding: 10px 0;
 }
 
 .class-detail-top {

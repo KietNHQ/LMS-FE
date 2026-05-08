@@ -1,12 +1,15 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import "./QuizManagementSection.css";
 import { ClipboardList } from "lucide-react";
 import WeekPicker from "../../../../../components/common/WeekPicker/WeekPicker";
+import teacherService from "../../../../../services/pages/teacher/teacherService";
 
 const QuizManagementSection = () => {
   const [selectedWeek, setSelectedWeek] = useState(28);
+  const [apiQuizzes, setApiQuizzes] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const quizzes = [
+  const hardcodedQuizzes = [
     {
       id: 1,
       title: "Kiểm tra Toán chương 1",
@@ -48,6 +51,37 @@ const QuizManagementSection = () => {
       statusText: "Đã đóng",
     },
   ];
+
+  useEffect(() => {
+    const fetchQuizzes = async () => {
+      setIsLoading(true);
+      try {
+        const response = await teacherService.listQuizzes({ mock: false });
+        if (response.success && response.data) {
+          setApiQuizzes(response.data);
+        }
+      } catch (error) {
+        console.error("Failed to fetch quizzes:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchQuizzes();
+  }, []);
+
+  // Map API data to UI structure
+  const mappedApiQuizzes = apiQuizzes.map(q => ({
+    id: q.id,
+    title: q.title,
+    class: q.class_name || "Lớp chung",
+    duration: q.duration_minutes ? `${q.duration_minutes} phút` : "N/A",
+    type: q.quiz_type === 'exam' ? 'Kiểm tra' : 'Luyện tập',
+    week: 28, // Giả sử tuần 28 vì BE chưa có thông tin tuần
+    status: q.status === 'published' ? 'active' : 'closed',
+    statusText: q.status === 'published' ? 'Đang mở' : 'Đã đóng'
+  }));
+
+  const quizzes = mappedApiQuizzes.length > 0 ? mappedApiQuizzes : hardcodedQuizzes;
 
   const filteredQuizzes = quizzes.filter((q) => q.week === selectedWeek);
 
@@ -93,6 +127,7 @@ const QuizManagementSection = () => {
 };
 
 export default QuizManagementSection;
+
 
 
 

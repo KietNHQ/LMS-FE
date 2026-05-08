@@ -3,6 +3,7 @@ import { Outlet, useLocation } from "react-router-dom";
 import Sidebar from "../../components/sidebar/Sidebar";
 import { LoadingAnimationBook } from "../../components/common";
 import { useGetMe } from "../../hooks/useAuth";
+import ChangePasswordDialog from "../../components/common/Dialog/ChangePasswordDialog/ChangePasswordDialog";
 import "./ManagementLayout.css";
 
 /**
@@ -12,7 +13,14 @@ export default function ManagementLayout() {
     const [isCollapsed, setIsCollapsed] = useState(false);
     const location = useLocation();
     const [isPageTransitioning, setIsPageTransitioning] = useState(false);
+    const [forcePasswordChange, setForcePasswordChange] = useState(false);
     
+    // Lắng nghe sự kiện bắt buộc đổi mật khẩu từ axiosClient
+    useEffect(() => {
+        const handleForceChange = () => setForcePasswordChange(true);
+        window.addEventListener("require-password-change", handleForceChange);
+        return () => window.removeEventListener("require-password-change", handleForceChange);
+    }, []);
     // Tự động đồng bộ thông tin người dùng và quyền hạn từ Server
     const { data: latestUser } = useGetMe();
 
@@ -25,6 +33,42 @@ export default function ManagementLayout() {
 
         return () => clearTimeout(timer);
     }, [location.pathname]);
+
+    // [NEW] Fetch notification count on layout mount to sync sidebar badge
+    useEffect(() => {
+        const syncNotificationCount = async () => {
+            try {
+                // Management roles (Principal, etc.) use admin notification system
+                const { adminApiService } = await import("../../services/pages/admin/generated/adminApiService");
+                
+                let response;
+                try {
+                    response = await adminApiService.get_notifications({ mock: false });
+                } catch (err) {
+                    console.warn("Real Management Notifications API failed, trying mock:", err);
+                    response = await adminApiService.get_notifications({ mock: true });
+                }
+                
+                if (response.success) {
+                    const data = response.data || [];
+                    const unreadCount = Array.isArray(data) ? data.filter(n => 
+                        n.unread === true || n.is_read === false || n.status === "unread"
+                    ).length : 0;
+                    
+                    const finalCount = unreadCount || (response.isMock ? 8 : 0);
+                    localStorage.setItem("admin_unread_notifications_count", String(finalCount));
+                    window.dispatchEvent(
+                        new CustomEvent("admin-notification-count-updated", {
+                            detail: finalCount,
+                        })
+                    );
+                }
+            } catch (err) {
+                console.warn("Failed to sync management notification count:", err);
+            }
+        };
+        syncNotificationCount();
+    }, []);
 
     // Tạm thời đọc từ localStorage
     const storedUser = (() => {
@@ -70,6 +114,20 @@ export default function ManagementLayout() {
                     )}
                 </div>
             </main>
+
+            {/* MANDATORY PASSWORD CHANGE DIALOG */}
+            {(userToUse.requirePasswordChange || forcePasswordChange) && (
+                <ChangePasswordDialog
+                    open={true}
+                    role="management"
+                    isMandatory={true}
+                    onClose={() => {
+                        // Sau khi đổi thành công, reload để cập nhật trạng thái mới
+                        window.location.reload();
+                    }}
+                />
+            )}
         </div>
     );
 }
+

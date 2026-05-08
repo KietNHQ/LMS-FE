@@ -1,4 +1,5 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect } from "react";
+import teacherService from "../../../services/pages/teacher/teacherService";
 import { PageHeader, SchoolYearTermSelector } from "../../../components/common";
 import HomeroomOverviewSection from "./components/homeroomOverviewSection/HomeroomOverviewSection";
 import HomeroomStudentsSection from "./components/homeroomStudentsSection/HomeroomStudentsSection";
@@ -6,7 +7,7 @@ import HomeroomAttendanceSection from "./components/homeroomAttendanceSection/Ho
 import HomeroomActionDialog from "./components/homeroomActionDialog/HomeroomActionDialog";
 import { homeroomData } from "./data/homeroomData";
 import { useSchoolYearTerm } from "../../../hooks/useSchoolYearTerm";
-import { FiUsers, FiAward, FiCalendar } from "react-icons/fi";
+import { FiUsers, FiAward, FiCalendar, FiInfo } from "react-icons/fi";
 import { toast } from "react-toastify";
 import "./TeacherHomeroom.css";
 
@@ -20,18 +21,77 @@ export default function TeacherHomeroom() {
     const { selectedSchoolYear, selectedTerm, handleYearArrow, handleTermChange } = useSchoolYearTerm();
     const [activeSection, setActiveSection] = useState("overview");
     const [hasUnreadMessages] = useState(true); // Mock unread state
-    const [classData, setClassData] = useState(() => ({
-        ...homeroomData,
-        students: (homeroomData.students || []).map((student) => ({
-            ...student,
-            officerRole: student.officerRole || null,
-        })),
-        extraOfficers: homeroomData.extraOfficers || [],
-    }));
+    const [classData, setClassData] = useState(null);
+    const [isLoading, setIsLoading] = useState(false);
     const [actionDialog, setActionDialog] = useState({ open: false, mode: "officer" });
 
-    const officerRows = useMemo(() => (
-        Object.entries(officerRoleConfig).map(([key, config]) => {
+    const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
+    const teacherId = storedUser.teacherId;
+
+    useEffect(() => {
+        const fetchHomeroom = async () => {
+            if (!teacherId) return;
+            setIsLoading(true);
+            try {
+                // 1. Lấy danh sách lớp chủ nhiệm
+                const homeroomRes = await teacherService.getHomeroomClasses({ 
+                    mock: false,
+                    pathParams: { id: teacherId }
+                });
+
+                if (homeroomRes.success && homeroomRes.data && homeroomRes.data.length > 0) {
+                    const firstClass = homeroomRes.data[0];
+                    
+                    // 2. Lấy chi tiết lớp đó (học sinh, môn học...)
+                    const detailRes = await teacherService.getClassDetails({
+                        mock: false,
+                        pathParams: { id: firstClass.id }
+                    });
+
+                    if (detailRes.success && detailRes.data) {
+                        const apiData = detailRes.data;
+                        const mappedData = {
+                            ...homeroomData, // Giữ lại các stats mock (học lực, học phí)
+                            id: apiData.id,
+                            name: apiData.class_name,
+                            room: apiData.room,
+                            students: (apiData.students || []).map(s => ({
+                                id: s.id,
+                                name: s.fullName || `${s.surname} ${s.givenName}`,
+                                avatar: null,
+                                gender: s.gender,
+                                dob: s.birthDate,
+                                phone: s.phone || "N/A",
+                                officerRole: null, // Cần BE trả về role ban cán sự
+                                academicStatus: "Khá", // Mock vì BE chưa có
+                                conductStatus: "Tốt", // Mock vì BE chưa có
+                                tuitionStatus: "paid" // Mock vì BE chưa có
+                            })),
+                            // Các thông tin khác tạm thời giữ mock từ homeroomData
+                        };
+                        setClassData(mappedData);
+                    }
+                } else {
+                    setClassData(homeroomData);
+                }
+            } catch (error) {
+                console.error("Failed to fetch homeroom data:", error);
+                setClassData(homeroomData);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        fetchHomeroom();
+    }, [teacherId]);
+
+    const handleSectionChange = (section) => {
+        setActiveSection(section);
+    };
+
+    const officerRows = useMemo(() => {
+        if (!classData || !classData.students) return [];
+        return Object.entries(officerRoleConfig).map(([key, config]) => {
             const student = classData.students.find((item) => item.officerRole === key) || null;
             return {
                 key,
@@ -40,8 +100,33 @@ export default function TeacherHomeroom() {
                 studentId: student?.id || null,
                 studentName: student?.name || classData[config.field] || "Chưa phân công",
             };
-        })
-    ), [classData]);
+        });
+    }, [classData]);
+
+    if (isLoading) {
+        return (
+            <div className="teacher-homeroom-page">
+                <div className="loading-state">
+                    <div className="spinner"></div>
+                    <p>Đang tải dữ liệu lớp chủ nhiệm...</p>
+                </div>
+            </div>
+        );
+    }
+
+    if (!classData) {
+        return (
+            <div className="teacher-homeroom-page">
+                <div className="empty-state">
+                    <div className="empty-state-icon">
+                        <FiInfo size={48} />
+                    </div>
+                    <h3>Không tìm thấy thông tin</h3>
+                    <p>Hiện tại bạn chưa được phân công chủ nhiệm lớp nào trong học kỳ này.</p>
+                </div>
+            </div>
+        );
+    }
 
     const handleUpdateStudent = (studentId, updates) => {
         let isSaved = false;
@@ -236,11 +321,6 @@ export default function TeacherHomeroom() {
         closeActionDialog();
     };
 
-    // Handle clearing notifications
-    const handleSectionChange = (section) => {
-        setActiveSection(section);
-    };
-
     return (
         <div className="teacher-homeroom-page">
             <PageHeader
@@ -343,6 +423,7 @@ export default function TeacherHomeroom() {
         </div>
     );
 }
+
 
 
 

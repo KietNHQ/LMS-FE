@@ -6,3 +6,4 @@ export { default as StudentNotifications } from "./notification/StudentNotificat
 export { default as StudentSchedule } from "./schedule/StudentSchedule";
 export { default as StudentSupport } from "./support/StudentSupport";
 export { default as StudentClassCommittee } from "./class-committee/StudentClassCommittee.jsx";
+

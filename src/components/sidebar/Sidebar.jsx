@@ -68,14 +68,17 @@ export default function Sidebar({
   const [isAtTop, setIsAtTop] = useState(getIsAtTop);
   const [isProfileDialogOpen, setIsProfileDialogOpen] = useState(false);
   const [studentUnreadCount, setStudentUnreadCount] = useState(() => {
+    if (!localStorage.getItem("accessToken")) return 0;
     const saved = Number(localStorage.getItem(STUDENT_UNREAD_COUNT_KEY));
     return Number.isFinite(saved) ? saved : 0;
   });
   const [parentUnreadCount, setParentUnreadCount] = useState(() => {
+    if (!localStorage.getItem("accessToken")) return 0;
     const saved = Number(localStorage.getItem(PARENT_UNREAD_COUNT_KEY));
     return Number.isFinite(saved) ? saved : 0;
   });
   const [teacherUnreadCount, setTeacherUnreadCount] = useState(() => {
+    if (!localStorage.getItem("accessToken")) return 0;
     const saved = Number(localStorage.getItem(TEACHER_UNREAD_COUNT_KEY));
     return Number.isFinite(saved) ? saved : 0;
   });
@@ -346,7 +349,7 @@ export default function Sidebar({
                 <span>{roleLabel}</span>
               </div>
 
-              {!isCollapsed && (role !== "student" && role !== "học sinh") && (() => {
+              {!isCollapsed && ["admin", "management", "quản trị viên", "quản lý"].includes(role.toLowerCase()) && (() => {
                 // [NEW] Lấy user từ prop hoặc dự phòng từ localStorage nếu prop bị thiếu
                 const currentUser = user || (() => {
                     try {

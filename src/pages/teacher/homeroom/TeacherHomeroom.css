@@ -136,3 +136,77 @@
 .section-switch-btn:not(.active) .unread-dot-tab {
     border-color: white;
 }
+.teacher-homeroom-page .loading-state,
+.teacher-homeroom-page .empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 24px;
+  background: white;
+  border-radius: 24px;
+  border: 1px solid var(--tc-border);
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+  text-align: center;
+  margin-top: 40px;
+}
+
+.empty-state-icon {
+  width: 96px;
+  height: 96px;
+  background: var(--tc-primary-soft);
+  color: var(--tc-primary);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 24px;
+  animation: pulse-soft 2s infinite ease-in-out;
+}
+
+.empty-state h3 {
+  font-size: 24px;
+  color: var(--tc-text-main);
+  margin: 0 0 12px 0;
+  font-weight: 700;
+}
+
+.empty-state p {
+  color: var(--tc-text-subtle);
+  font-size: 16px;
+  max-width: 400px;
+  margin: 0;
+  line-height: 1.6;
+}
+
+.loading-state {
+  color: var(--tc-primary);
+  font-weight: 600;
+  font-size: 18px;
+}
+
+@keyframes pulse-soft {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 0.8;
+  }
+}
+
+.spinner {
+  width: 48px;
+  height: 48px;
+  border: 4px solid var(--tc-primary-soft);
+  border-top: 4px solid var(--tc-primary);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 20px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}

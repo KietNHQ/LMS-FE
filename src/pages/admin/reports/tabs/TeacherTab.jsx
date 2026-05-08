@@ -196,3 +196,4 @@ const TeacherTab = ({ reportData, formatScore }) => {
 };
 
 export default TeacherTab;
+

@@ -233,3 +233,4 @@ export default function DailyScheduleSection({ weekOffset, selectedDay, selected
     </div>
   );
 }
+

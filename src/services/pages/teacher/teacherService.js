@@ -95,6 +95,63 @@ const TEACHER_SUBJECTS_MOCK = [
   { id: 3, name: "Toán", block: "Khối 12", weeklyPeriods: 4 },
 ];
 
+const TEACHER_QUIZZES_MOCK = [
+  {
+    id: 1,
+    title: "Toán 10 - Kiểm tra 15 phút Chương 1",
+    description: "Bài kiểm tra nhanh chương 1 toán lớp 10",
+    subject: "Toán",
+    grade: "Khối 10",
+    questions: 3,
+    durationMinutes: 15,
+    status: "open",
+    isPublished: true,
+    createdAt: "2024-03-20T00:00:00Z",
+    createdByName: "Lê Minh Hoàng",
+    createdByRole: "teacher",
+    quizType: "practice",
+    className: "10A1",
+    submissionCount: 2,
+    gradingStatus: "pending",
+  },
+  {
+    id: 2,
+    title: "Vật Lý 10 - Kiểm tra 1 tiết Chương 1",
+    description: "Bài kiểm tra chương 1 vật lý lớp 10",
+    subject: "Vật Lý",
+    grade: "Khối 10",
+    questions: 15,
+    durationMinutes: 45,
+    status: "open",
+    isPublished: true,
+    createdAt: "2024-03-19T00:00:00Z",
+    createdByName: "Quản trị viên",
+    createdByRole: "admin",
+    quizType: "exam",
+    className: "10A2",
+    submissionCount: 1,
+    gradingStatus: "pending",
+  },
+  {
+    id: 3,
+    title: "Hóa Học 10 - Chương 2",
+    description: "Bài kiểm tra chương 2 hóa học lớp 10",
+    subject: "Hóa Học",
+    grade: "Khối 10",
+    questions: 18,
+    durationMinutes: 45,
+    status: "hidden",
+    isPublished: false,
+    createdAt: "2024-03-18T00:00:00Z",
+    createdByName: "Lê Minh Hoàng",
+    createdByRole: "teacher",
+    quizType: "practice",
+    className: "10A3",
+    submissionCount: 0,
+    gradingStatus: "no-submission",
+  },
+];
+
 const TEACHER_LESSONS_MOCK = [
   {
     id: 1,
@@ -151,24 +208,114 @@ const TEACHER_LESSONS_MOCK = [
 ];
 
 const teacherEndpointRegistry = [
-  { key: "get_dashboard_teacher", method: "GET", path: "/api/v1/dashboard/teacher", module: "dashboard", mock: () => TEACHER_DASHBOARD_MOCK },
-  { key: "get_teachers_by_id", method: "GET", path: "/api/v1/teachers/:id", module: "teacher", mock: () => TEACHER_PROFILE_MOCK },
-  { key: "get_teachers_by_id_classes", method: "GET", path: "/api/v1/teachers/:id/classes", module: "teacher", mock: () => TEACHER_CLASSES_MOCK },
-  { key: "get_teachers_by_id_subjects", method: "GET", path: "/api/v1/teachers/:id/subjects", module: "teacher", mock: () => TEACHER_SUBJECTS_MOCK },
-  { key: "get_classes", method: "GET", path: "/api/v1/classes", module: "classes", mock: () => TEACHER_CLASSES_MOCK },
-  { key: "get_classes_by_id", method: "GET", path: "/api/v1/classes/:id", module: "classes", mock: (input) => {
+  { key: "get_dashboard_teacher", method: "GET", path: "/dashboard/teacher", module: "dashboard", mock: () => TEACHER_DASHBOARD_MOCK },
+  { key: "get_teachers_by_id", method: "GET", path: "/teachers/:id", module: "teacher", mock: () => TEACHER_PROFILE_MOCK },
+  { key: "get_teachers_by_id_classes", method: "GET", path: "/teachers/:id/classes", module: "teacher", mock: () => TEACHER_CLASSES_MOCK },
+  { key: "get_teachers_by_id_subjects", method: "GET", path: "/teachers/:id/subjects", module: "teacher", mock: () => TEACHER_SUBJECTS_MOCK },
+  { key: "get_classes", method: "GET", path: "/classes", module: "classes", mock: () => TEACHER_CLASSES_MOCK },
+  { key: "get_classes_by_id", method: "GET", path: "/classes/:id", module: "classes", mock: (input) => {
       const matched = TEACHER_CLASSES_MOCK.find((item) => `${item.id}` === `${input.pathParams?.id}`);
       return matched ? { ...matched } : null;
     } },
-  { key: "get_classes_by_id_students", method: "GET", path: "/api/v1/classes/:id/students", module: "classes", mock: () => ([{ id: 1, name: "Nguyễn Văn A", status: "Đang học" }, { id: 2, name: "Trần Thị B", status: "Đang học" }]) },
-  { key: "get_classes_by_id_subjects", method: "GET", path: "/api/v1/classes/:id/subjects", module: "classes", mock: () => ([{ id: 1, name: "Toán" }, { id: 2, name: "Văn" }]) },
-  { key: "get_classes_by_id_schedule", method: "GET", path: "/api/v1/classes/:id/schedule", module: "classes", mock: () => ([{ id: 1, title: "Tiết 1 - Toán" }, { id: 2, title: "Tiết 2 - Văn" }]) },
-  { key: "get_lessons", method: "GET", path: "/api/v1/lessons", module: "lessons", mock: () => TEACHER_LESSONS_MOCK },
-  { key: "get_lessons_by_id", method: "GET", path: "/api/v1/lessons/:id", module: "lessons", mock: (input) => TEACHER_LESSONS_MOCK.find((item) => `${item.id}` === `${input.pathParams?.id}`) || null },
-  { key: "post_lessons", method: "POST", path: "/api/v1/lessons", module: "lessons", mock: (input) => ({ id: Date.now(), ...(input.body || {}), status: "Bản nháp" }) },
-  { key: "put_lessons_by_id", method: "PUT", path: "/api/v1/lessons/:id", module: "lessons", mock: (input) => ({ id: input.pathParams?.id, ...(input.body || {}) }) },
-  { key: "delete_lessons_by_id", method: "DELETE", path: "/api/v1/lessons/:id", module: "lessons", mock: (input) => ({ id: input.pathParams?.id, deleted: true }) },
-  { key: "post_lessons_by_id_publish", method: "POST", path: "/api/v1/lessons/:id/publish", module: "lessons", mock: (input) => ({ id: input.pathParams?.id, status: "Đã xuất bản" }) },
+  { key: "get_classes_by_id_students", method: "GET", path: "/classes/:id/students", module: "classes", mock: () => ([{ id: 1, name: "Nguyễn Văn A", status: "Đang học" }, { id: 2, name: "Trần Thị B", status: "Đang học" }]) },
+  { key: "get_classes_by_id_subjects", method: "GET", path: "/classes/:id/subjects", module: "classes", mock: () => ([{ id: 1, name: "Toán" }, { id: 2, name: "Văn" }]) },
+  { key: "get_classes_by_id_schedule", method: "GET", path: "/classes/:id/schedule", module: "classes", mock: () => ([{ id: 1, title: "Tiết 1 - Toán" }, { id: 2, title: "Tiết 2 - Văn" }]) },
+  { key: "get_lessons", method: "GET", path: "/lessons", module: "lessons", mock: () => TEACHER_LESSONS_MOCK },
+  { key: "get_lessons_by_id", method: "GET", path: "/lessons/:id", module: "lessons", mock: (input) => TEACHER_LESSONS_MOCK.find((item) => `${item.id}` === `${input.pathParams?.id}`) || null },
+  { key: "post_lessons", method: "POST", path: "/lessons", module: "lessons", mock: (input) => ({ id: Date.now(), ...(input.body || {}), status: "Bản nháp" }) },
+  { key: "put_lessons_by_id", method: "PUT", path: "/lessons/:id", module: "lessons", mock: (input) => ({ id: input.pathParams?.id, ...(input.body || {}) }) },
+  { key: "delete_lessons_by_id", method: "DELETE", path: "/lessons/:id", module: "lessons", mock: (input) => ({ id: input.pathParams?.id, deleted: true }) },
+  { key: "post_lessons_by_id_publish", method: "POST", path: "/lessons/:id/publish", module: "lessons", mock: (input) => ({ id: input.pathParams?.id, status: "Đã xuất bản" }) },
+  { 
+    key: "get_quizzes", 
+    method: "GET", 
+    path: "/quizzes", 
+    module: "quiz", 
+    mock: () => ({
+      items: TEACHER_QUIZZES_MOCK,
+      total: TEACHER_QUIZZES_MOCK.length
+    }) 
+  },
+  { key: "get_notifications", method: "GET", path: "/notifications/my", module: "notifications", mock: () => ([]) },
+  { key: "get_tickets", method: "GET", path: "/communications/tickets", module: "support", mock: () => ([]) },
+  { key: "post_tickets", method: "POST", path: "/communications/tickets", module: "support", mock: (input) => ({ id: Date.now(), ...input.body, status: "open" }) },
+  { 
+    key: "get_timetable", 
+    method: "GET", 
+    path: "/timetable", 
+    module: "timetable", 
+    mock: () => ([
+      {
+        id: 1,
+        day_of_week: "Monday",
+        period_number: 1,
+        subject_name: "Toán",
+        subject_code: "Toan",
+        class_name: "10A1",
+        room_name: "P201",
+        notes: "Kiểm tra 15 phút Chương 1",
+        status: "normal",
+        color: "teal"
+      },
+      {
+        id: 2,
+        day_of_week: "Monday",
+        period_number: 2,
+        subject_name: "Toán",
+        subject_code: "Toan",
+        class_name: "10A1",
+        room_name: "P201",
+        notes: "Luyện tập hàm số bậc nhất",
+        status: "normal",
+        color: "teal"
+      },
+      {
+        id: 3,
+        day_of_week: "Tuesday",
+        period_number: 3,
+        subject_name: "Vật Lý",
+        subject_code: "VatLy",
+        class_name: "10A2",
+        room_name: "P204",
+        notes: "Định luật bảo toàn cơ năng",
+        status: "normal",
+        color: "orange"
+      }
+    ]) 
+  },
+  { key: "get_grades_class", method: "GET", path: "/grades/class/:classId", module: "grades", mock: () => ([]) },
+  { key: "post_grades_bulk", method: "POST", path: "/grades/bulk", module: "grades", mock: (input) => input.body },
+  { key: "put_grades_by_id", method: "PUT", path: "/grades/:id", module: "grades", mock: (input) => ({ id: input.pathParams?.id, ...input.body }) },
+  { key: "get_grade_items", method: "GET", path: "/grade-items", module: "grades", mock: () => ([]) },
+  { 
+    key: "get_chat_contacts", 
+    method: "GET", 
+    path: "/chat/contacts", 
+    module: "chat", 
+    mock: () => ([
+      { 
+        id: "api-mock-1", 
+        name: "Lớp 10A1 - Group Chat", 
+        subLabel: "Phụ huynh & Giáo viên", 
+        avatar: "10", 
+        type: "homeroom", 
+        roomId: "homeroom",
+        isMockData: true 
+      },
+      { 
+        id: "api-mock-2", 
+        name: "Hỗ trợ Kỹ thuật", 
+        subLabel: "LMS Support Team", 
+        avatar: "IT", 
+        type: "technical", 
+        roomId: "technical",
+        isMockData: true 
+      }
+    ]) 
+  },
+  { key: "get_chat_messages", method: "GET", path: "/chat/messages/:targetId", module: "chat", mock: () => ([]) },
+  { key: "post_chat_message", method: "POST", path: "/chat/messages", module: "chat", mock: (input) => ({ id: Date.now(), ...input.body }) },
+  { key: "get_faqs", method: "GET", path: "/support/faqs", module: "support", mock: () => ([]) },
 ];
 
 const createEndpointCaller = (endpoint) => {
@@ -251,8 +398,22 @@ export const teacherService = {
   updateLesson: (input) => endpointCallers.put_lessons_by_id(input),
   deleteLesson: (input) => endpointCallers.delete_lessons_by_id(input),
   publishLesson: (input) => endpointCallers.post_lessons_by_id_publish(input),
+  listQuizzes: (input) => endpointCallers.get_quizzes(input),
+  getNotifications: (input) => endpointCallers.get_notifications(input),
+  getTickets: (input) => endpointCallers.get_tickets(input),
+  createTicket: (input) => endpointCallers.post_tickets(input),
+  getTimetable: (input) => endpointCallers.get_timetable(input),
+  getGradesByClass: (input) => endpointCallers.get_grades_class(input),
+  bulkUpdateGrades: (input) => endpointCallers.post_grades_bulk(input),
+  updateGrade: (input) => endpointCallers.put_grades_by_id(input),
+  listGradeItems: (input) => endpointCallers.get_grade_items(input),
+  getChatContacts: (input) => endpointCallers.get_chat_contacts(input),
+  getChatMessages: (input) => endpointCallers.get_chat_messages(input),
+  sendMessage: (input) => endpointCallers.post_chat_message(input),
+  getFaqs: (input) => endpointCallers.get_faqs(input),
   endpointCallers,
 };
 
 export default teacherService;
+
 

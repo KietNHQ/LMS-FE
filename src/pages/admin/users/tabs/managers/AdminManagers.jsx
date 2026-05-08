@@ -103,6 +103,7 @@ export default function AdminManagers({ onCountChange, schoolYear, term, hasPerm
     const menuRef = useRef(null);
     const [allSystemPermissions, setAllSystemPermissions] = useState([]);
     const [permissionMap, setPermissionMap] = useState({}); // key -> id mapping
+    const [permissionRevMap, setPermissionRevMap] = useState({}); // id -> key mapping
 
     const closeConfirm = () => {
         setConfirmConfig(prev => ({ ...prev, isOpen: false }));
@@ -137,16 +138,19 @@ export default function AdminManagers({ onCountChange, schoolYear, term, hasPerm
                 const perms = await permissionService.getAllPermissions();
                 setAllSystemPermissions(perms);
                 
-                // Create map: "resource:action" -> id
+                // Create map: "resource:action" -> id AND id -> "resource:action"
                 const map = {};
+                const revMap = {};
                 perms.forEach(p => {
                     const key = `${p.resource}:${p.action}`;
                     if (p.id) {
                         map[key] = p.id;
+                        revMap[p.id] = key;
                     }
                 });
-                console.log("Permission Map Initialized:", map);
+                console.log("Permission Maps Initialized:", { map, revMap });
                 setPermissionMap(map);
+                setPermissionRevMap(revMap);
             } catch (err) {
                 console.error("Failed to load all system permissions:", err);
             }
@@ -215,12 +219,15 @@ export default function AdminManagers({ onCountChange, schoolYear, term, hasPerm
             const rawPerms = await permissionService.getUserPermissions(manager.id);
             // Normalize: Reconstruct key from resource and action
             const perms = Array.isArray(rawPerms) 
-                ? rawPerms.map(p => {
-                    if (typeof p === 'object' && p.resource && p.action) {
-                        return `${p.resource}:${p.action}`;
-                    }
-                    return typeof p === 'object' ? p.key || p.id : p;
-                }) 
+                ? rawPerms
+                    .filter(p => p.granted !== false) // Only include granted ones
+                    .map(p => {
+                        if (typeof p === 'object' && p.resource && p.action) {
+                            return `${p.resource}:${p.action}`;
+                        }
+                        const id = typeof p === 'object' ? p.id : p;
+                        return permissionRevMap[id] || (typeof p === 'object' ? p.key : p);
+                    }) 
                 : [];
             setFormData(prev => ({ ...prev, permissions: perms }));
         } catch (err) {
@@ -238,12 +245,15 @@ export default function AdminManagers({ onCountChange, schoolYear, term, hasPerm
             const rawPerms = await permissionService.getUserPermissions(manager.id);
             // Normalize: Reconstruct key from resource and action
             const perms = Array.isArray(rawPerms) 
-                ? rawPerms.map(p => {
-                    if (typeof p === 'object' && p.resource && p.action) {
-                        return `${p.resource}:${p.action}`;
-                    }
-                    return typeof p === 'object' ? p.key || p.id : p;
-                }) 
+                ? rawPerms
+                    .filter(p => p.granted !== false) // Only include granted ones
+                    .map(p => {
+                        if (typeof p === 'object' && p.resource && p.action) {
+                            return `${p.resource}:${p.action}`;
+                        }
+                        const id = typeof p === 'object' ? p.id : p;
+                        return permissionRevMap[id] || (typeof p === 'object' ? p.key : p);
+                    }) 
                 : [];
             setFormData(prev => ({ ...prev, permissions: perms }));
         } catch (err) {
@@ -850,3 +860,4 @@ export default function AdminManagers({ onCountChange, schoolYear, term, hasPerm
         </div>
     );
 }
+

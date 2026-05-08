@@ -3,7 +3,7 @@ import { FiDownload, FiUpload, FiChevronDown, FiCheck, FiShield, FiCheckSquare }
 import { PERMISSIONS, MANAGEMENT_TITLES, PERMISSION_GROUPS } from "../../../../../config/permissions";
 import Select from "../../../../ui/Select/Select";
 import { useCheckPermission } from "../../../../../hooks/useAuth";
-import { classesService } from "../../../../../services/pages/admin/classes/classesService";
+import { classesService } from "../../../../../services/pages/management/classes/classesService";
 import "./CreateUserDialog.css";
 
 const allRoleOptions = ["Quản lý", "Phụ huynh", "Học sinh", "Giáo viên"];
@@ -48,6 +48,27 @@ function buildEmail(firstName, lastName, role) {
 }
 
 function createEmptyChild() { return { childName: "", childClass: "" }; }
+
+// Helper component for indeterminate checkbox
+function IndeterminateCheckbox({ checked, indeterminate, onChange, className, ...props }) {
+    const ref = useRef();
+    useEffect(() => {
+        if (ref.current) {
+            ref.current.indeterminate = indeterminate;
+        }
+    }, [indeterminate]);
+
+    return (
+        <input
+            type="checkbox"
+            ref={ref}
+            className={className}
+            checked={checked}
+            onChange={onChange}
+            {...props}
+        />
+    );
+}
 
 function buildDefaultForm(role) {
     return {
@@ -430,7 +451,22 @@ export default function CreateUserDialog({ mode = "create", title, submitLabel, 
                                     {PERMISSION_GROUPS.map(g => (
                                         <div key={g.id} className={`perm-group-item ${expandedGroups.includes(g.id) ? "active" : ""}`}>
                                             <div className="perm-group-header" onClick={() => setExpandedGroups(p => p.includes(g.id) ? p.filter(id => id !== g.id) : [...p, g.id])}>
-                                                <div className="perm-group-left"><input type="checkbox" checked={g.permissions.every(p => form.managerInfo.permissions.includes(p.id))} onChange={e => { const checked = e.target.checked; const ids = g.permissions.map(p => p.id).filter(id => isAdmin || id !== PERMISSIONS.USER_DELETE); setForm(p => ({ ...p, managerInfo: { ...p.managerInfo, title: "custom", permissions: checked ? Array.from(new Set([...p.managerInfo.permissions, ...ids])) : p.managerInfo.permissions.filter(id => !ids.includes(id)) } })); }} onClick={e => e.stopPropagation()} /><span className="perm-group-label">{g.label}</span></div>
+                                                <div className="perm-group-left">
+                                                    <IndeterminateCheckbox 
+                                                        checked={g.permissions.every(p => form.managerInfo.permissions.includes(p.id))} 
+                                                        indeterminate={
+                                                            g.permissions.some(p => form.managerInfo.permissions.includes(p.id)) && 
+                                                            !g.permissions.every(p => form.managerInfo.permissions.includes(p.id))
+                                                        }
+                                                        onChange={e => { 
+                                                            const checked = e.target.checked; 
+                                                            const ids = g.permissions.map(p => p.id).filter(id => isAdmin || id !== PERMISSIONS.USER_DELETE); 
+                                                            setForm(p => ({ ...p, managerInfo: { ...p.managerInfo, title: "custom", permissions: checked ? Array.from(new Set([...p.managerInfo.permissions, ...ids])) : p.managerInfo.permissions.filter(id => !ids.includes(id)) } })); 
+                                                        }} 
+                                                        onClick={e => e.stopPropagation()} 
+                                                    />
+                                                    <span className="perm-group-label">{g.label}</span>
+                                                </div>
                                                 <FiChevronDown className={`perm-group-arrow ${expandedGroups.includes(g.id) ? "up" : ""}`} />
                                             </div>
                                             {expandedGroups.includes(g.id) && <div className="perm-group-content">{g.permissions.map(p => <label key={p.id} className="admin-create-user-dialog-checkbox"><input type="checkbox" checked={form.managerInfo.permissions.includes(p.id)} onChange={() => setForm(pPrev => ({ ...pPrev, managerInfo: { ...pPrev.managerInfo, title: "custom", permissions: pPrev.managerInfo.permissions.includes(p.id) ? pPrev.managerInfo.permissions.filter(id => id !== p.id) : [...pPrev.managerInfo.permissions, p.id] } }))} /><span>{p.label}</span></label>)}</div>}
@@ -449,3 +485,4 @@ export default function CreateUserDialog({ mode = "create", title, submitLabel, 
         </div>
     );
 }
+

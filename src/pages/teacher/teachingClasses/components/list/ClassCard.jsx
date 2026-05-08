@@ -38,3 +38,4 @@ const ClassCard = ({ cls, onClick }) => {
 };
 
 export default ClassCard;
+

@@ -88,10 +88,10 @@ const mapApiUserToView = (user = {}) => {
     name: fullName,
     email: user.email || "",
     role: roleLabel,
-    phone: user.phone || "—",
+    phone: user.phone || user.profile?.phone || "—",
     status: statusFromApi[user.status] || user.status || "Hoạt động",
     createdAt: user.createdAt ? `${user.createdAt}`.slice(0, 10) : "",
-    dob: user.dob || user.birthDate || user.birth_date || "",
+    dob: user.dob || user.birthDate || user.birth_date || user.profile?.dob || user.profile?.birthDate || "",
     avatar: getInitial(fullName),
     color: getColorByRole(roleLabel),
     profile: user.profile || {},
@@ -133,17 +133,22 @@ const buildCreatePayload = (formData = {}) => {
   return payload;
 };
 
-const buildUpdatePayload = (formData = {}) => ({
-  email: formData.email,
-  fullName: formData.name || `${formData.lastName || ""} ${formData.firstName || ""}`.trim() || undefined,
-  givenName: formData.firstName || formData.profile?.firstName || undefined,
-  surname: formData.lastName || formData.profile?.lastName || undefined,
-  phone: formData.phone === "—" ? "" : formData.phone,
-  birthDate: formData.dob || formData.profile?.dob || undefined,
-  status: statusToApi[formData.status] || undefined,
-  gender: formData.profile?.gender || undefined,
-  permission_ids: formData.permission_ids || formData.permissions || formData.profile?.permissions || undefined,
-});
+const buildUpdatePayload = (formData = {}) => {
+  const phone = (formData.phone === "—" || formData.phone === "--") ? "" : formData.phone;
+  const dob = (formData.dob === "—" || formData.dob === "--") ? null : (formData.dob || formData.profile?.dob);
+
+  return {
+    email: formData.email,
+    fullName: formData.name || `${formData.lastName || ""} ${formData.firstName || ""}`.trim() || undefined,
+    givenName: formData.firstName || formData.profile?.firstName || undefined,
+    surname: formData.lastName || formData.profile?.lastName || undefined,
+    phone: phone || formData.profile?.phone || undefined,
+    birthDate: dob || undefined,
+    status: statusToApi[formData.status] || undefined,
+    gender: formData.profile?.gender || undefined,
+    permission_ids: formData.permission_ids || formData.permissions || formData.profile?.permissions || undefined,
+  };
+};
 
 export const userService = {
   listUsers: async (params = {}) => {
@@ -224,4 +229,5 @@ export const userService = {
     );
   },
 };
+
 

@@ -24,3 +24,4 @@ export default function ClassStats({ totalAssignmentsPending, totalCompletedLess
         </div>
     );
 }
+

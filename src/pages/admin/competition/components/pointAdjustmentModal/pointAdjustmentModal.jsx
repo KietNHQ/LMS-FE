@@ -246,3 +246,4 @@ const PointAdjustmentModal = ({ isOpen, onClose, classData, rules }) => {
 };
 
 export default PointAdjustmentModal;
+

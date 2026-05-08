@@ -187,3 +187,4 @@ export default function QuizListSection({
         </div>
     );
 }
+

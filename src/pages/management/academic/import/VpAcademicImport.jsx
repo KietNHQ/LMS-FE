@@ -2,3 +2,4 @@ import ComingSoonPage from '../../../../components/common/ComingSoonPage/ComingS
 export default function VpAcademicImport() {
     return <ComingSoonPage title="Nhap du lieu" description="Import tu Excel." icon="📤" />;
 }
+

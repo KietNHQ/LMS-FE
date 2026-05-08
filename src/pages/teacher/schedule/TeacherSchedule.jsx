@@ -1,9 +1,11 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import teacherService from "../../../services/pages/teacher/teacherService";
 import WeeklyScheduleSection from "./components/weeklyScheduleSection/WeeklyScheduleSection";
 import DailyScheduleSection from "./components/dailyScheduleSection/DailyScheduleSection";
 import ScheduleFilterSection from "./components/scheduleFilterSection/ScheduleFilterSection";
 import Modal from "../../../components/ui/Modal/Modal";
-import { PageHeader } from "../../../components/common";
+import { PageHeader, SchoolYearTermSelector } from "../../../components/common";
+import { useSchoolYearTerm } from "../../../hooks/useSchoolYearTerm";
 import "./TeacherSchedule.css";
 
 const PERIOD_TIME = {
@@ -48,21 +50,54 @@ function getTodayDayIndex() {
 }
 
 export default function TeacherSchedule() {
+  const { selectedSchoolYear, selectedTerm, handleYearArrow, handleTermChange } = useSchoolYearTerm();
   const [weekOffset, setWeekOffset] = useState(0);
+  const [selectedGrade, setSelectedGrade] = useState("Tất cả");
   const [selectedClass, setSelectedClass] = useState("Tất cả");
   const [selectedDay, setSelectedDay] = useState(getTodayDayIndex());
   const [selectedLesson, setSelectedLesson] = useState(null);
   const [isDailyModalOpen, setIsDailyModalOpen] = useState(false);
+  const [sessionView, setSessionView] = useState("morning");
+  const [timetableData, setTimetableData] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleQuickDaySelect = (offset) => {
-    const now = new Date();
-    const target = new Date(now);
-    target.setDate(now.getDate() + offset);
-    setSelectedDay(((target.getDay() === 0 ? 6 : target.getDay() - 1) + 7) % 7);
-    setWeekOffset(0);
-    setIsDailyModalOpen(true);
-  };
+  useEffect(() => {
+    const fetchTimetable = async () => {
+      setIsLoading(true);
+      try {
+        let response;
+        try {
+          response = await teacherService.getTimetable({ 
+            mock: false,
+            params: {
+              schoolYear: selectedSchoolYear,
+              term: selectedTerm
+            }
+          });
+        } catch (apiErr) {
+          console.warn("API getTimetable failed, using mock:", apiErr);
+          // Fallback to mock if API fails (401 or not implemented)
+          response = await teacherService.getTimetable({ 
+            mock: true,
+            params: {
+              schoolYear: selectedSchoolYear,
+              term: selectedTerm
+            }
+          });
+        }
 
+        if (response.success && response.data) {
+          setTimetableData(response.data);
+        }
+      } catch (error) {
+        console.error("Failed to fetch timetable:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchTimetable();
+  }, [selectedSchoolYear, selectedTerm]);
+  
   const handleSelectDay = (idx) => {
     setSelectedDay(idx);
     setIsDailyModalOpen(true);
@@ -75,22 +110,43 @@ export default function TeacherSchedule() {
   const reminderList = selectedLesson ? getReminderByType(lessonType) : [];
 
   return (
-    <div className="teacher-schedule">
-      <ScheduleFilterSection
-        weekOffset={weekOffset}
-        setWeekOffset={setWeekOffset}
-        selectedClass={selectedClass}
-        setSelectedClass={setSelectedClass}
-        onQuickDaySelect={handleQuickDaySelect}
+    <div className="teacher-schedule-page">
+      <PageHeader
+        title="Thời khóa biểu"
+        actions={
+          <SchoolYearTermSelector
+            selectedSchoolYear={selectedSchoolYear}
+            selectedTerm={selectedTerm}
+            onYearChange={handleYearArrow}
+            onTermChange={handleTermChange}
+          />
+        }
       />
 
-      <div className="teacher-schedule-content">
-        <WeeklyScheduleSection
+      <div className="teacher-schedule-main-card">
+        <ScheduleFilterSection
           weekOffset={weekOffset}
+          setWeekOffset={setWeekOffset}
+          selectedGrade={selectedGrade}
+          setSelectedGrade={setSelectedGrade}
           selectedClass={selectedClass}
-          onSelectDay={handleSelectDay}
-          onLessonSelect={setSelectedLesson}
+          setSelectedClass={setSelectedClass}
+          sessionView={sessionView}
+          setSessionView={setSessionView}
         />
+
+        <div className="teacher-schedule-content">
+          <WeeklyScheduleSection
+            weekOffset={weekOffset}
+            selectedClass={selectedClass}
+            onSelectDay={handleSelectDay}
+            onLessonSelect={setSelectedLesson}
+            sessionView={sessionView}
+            setSessionView={setSessionView}
+            apiData={timetableData}
+            isLoading={isLoading}
+          />
+        </div>
       </div>
 
       {/* Modal for Daily Schedule */}
@@ -104,6 +160,7 @@ export default function TeacherSchedule() {
           selectedDay={selectedDay}
           selectedClass={selectedClass}
           onLessonSelect={setSelectedLesson}
+          apiData={timetableData}
         />
       </Modal>
 
@@ -165,6 +222,7 @@ export default function TeacherSchedule() {
     </div>
   );
 }
+
 
 
 

@@ -50,3 +50,4 @@ export default function YearProgress({ items, onOpenGrades }) {
     );
 }
 
+

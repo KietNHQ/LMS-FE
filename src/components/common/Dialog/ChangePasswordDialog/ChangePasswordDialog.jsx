@@ -4,7 +4,7 @@ import { toast } from "react-toastify";
 import { Eye, EyeOff } from "lucide-react";
 import "./ChangePasswordDialog.css";
 
-export default function ChangePasswordDialog({ open, role = "student", onClose }) {
+export default function ChangePasswordDialog({ open, role = "student", onClose, isMandatory = false }) {
 	const isAdmin = role === "admin";
 	const [formData, setFormData] = useState({
 		currentPassword: "",
@@ -71,7 +71,7 @@ export default function ChangePasswordDialog({ open, role = "student", onClose }
 	};
 
 	return (
-		<div className="change-password-overlay" onClick={onClose}>
+		<div className="change-password-overlay" onClick={isMandatory ? undefined : onClose}>
 			<div className="change-password-dialog" onClick={(event) => event.stopPropagation()}>
 				<h3>{isAdmin ? "Đặt lại mật khẩu" : "Đổi mật khẩu"}</h3>
 
@@ -140,12 +140,20 @@ export default function ChangePasswordDialog({ open, role = "student", onClose }
 							</label>
 						</>
 
+					{isMandatory && (
+						<div className="mandatory-password-notice">
+							<p><strong>Yêu cầu bảo mật:</strong> Bạn cần đổi mật khẩu mặc định trước khi có thể sử dụng hệ thống.</p>
+						</div>
+					)}
+
 					{error ? <p className="change-password-error">{error}</p> : null}
 
 					<div className="change-password-actions">
-						<button type="button" className="change-password-cancel" onClick={onClose}>
-							Hủy
-						</button>
+						{!isMandatory && (
+							<button type="button" className="change-password-cancel" onClick={onClose}>
+								Hủy
+							</button>
+						)}
 						<button type="submit" className="change-password-submit">
 							{isAdmin ? "Xác nhận đặt lại" : "Cập nhật"}
 						</button>
@@ -155,3 +163,4 @@ export default function ChangePasswordDialog({ open, role = "student", onClose }
 		</div>
 	);
 }
+

@@ -204,3 +204,4 @@ const FinanceTab = ({ reportData, formatCurrency }) => {
 };
 
 export default FinanceTab;
+

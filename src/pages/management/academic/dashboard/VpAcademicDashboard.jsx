@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { PageHeader, SchoolYearTermSelector, EventCalendar } from "../../../../components/common";
 import { useSchoolYearTerm } from "../../../../hooks/useSchoolYearTerm";
-import { vpAcademicService } from "../../../../services/pages/vp-academic";
+import { vpAcademicService } from "../../../../services/pages/management/vp-academic";
 import {
     FiCheckCircle, FiAlertTriangle, FiUnlock, FiTrendingDown,
     FiClock, FiActivity, FiInfo, FiSearch
@@ -325,3 +325,4 @@ export default function VpAcademicDashboard() {
         </div>
     );
 }
+

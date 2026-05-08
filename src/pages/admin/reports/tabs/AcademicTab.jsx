@@ -139,3 +139,4 @@ const AcademicTab = ({ reportData, formatScore }) => {
 };
 
 export default AcademicTab;
+

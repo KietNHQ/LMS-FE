@@ -517,3 +517,4 @@ export function buildFinalScore({ autoScore = 0, essayScore = 0 }) {
     const total = Number(autoScore || 0) + Number(essayScore || 0);
     return Number(Math.min(10, total).toFixed(2));
 }
+

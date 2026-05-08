@@ -12,3 +12,4 @@ export default function StatusBadge({ status = "default", children }) {
     </span>
   );
 }
+

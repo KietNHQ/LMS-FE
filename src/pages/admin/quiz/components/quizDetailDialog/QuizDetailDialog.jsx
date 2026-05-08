@@ -124,3 +124,4 @@ export default function QuizDetailDialog({ quiz, onClose, onSave }) {
     );
 }
 
+

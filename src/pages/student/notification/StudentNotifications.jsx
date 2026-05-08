@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import "./StudentNotifications.css";
 import NotificationHeader from "./components/NotificationHeader/NotificationHeader";
 import NotificationList from "./components/NotificationList/NotificationList";
+import { notificationService } from "../../../services/pages/student/notifications";
 
 const LOAD_BATCH_SIZE = 5;
 const STUDENT_UNREAD_COUNT_KEY = "student_unread_notifications_count";
@@ -18,212 +19,80 @@ export default function StudentNotifications() {
     };
   }, []);
 
-  const [notifications, setNotifications] = useState([
-    {
-      id: 1,
-      title: "Lịch thi HK2 2024-2025",
-      content:
-        "Nhà trường thông báo lịch thi học kỳ 2 năm học 2024-2025. Thi bắt đầu từ ngày 20/05/2025.",
-      date: "2025-01-15",
-      unread: true,
-      important: false,
-      priority: 0,
-      category: "Môn học"
-    },
-    {
-      id: 2,
-      title: "Cập nhật điểm HK1",
-      content:
-        "Điểm học kỳ 1 đã được cập nhật. Học sinh có thể xem điểm trên hệ thống.",
-      date: "2025-01-08",
-      unread: true,
-      important: false,
-      priority: 0,
-      category: "Môn học"
-    },
-    {
-      id: 3,
-      title: "Bảo trì hệ thống",
-      content:
-        "Hệ thống sẽ bảo trì từ 22:00 ngày 20/01/2025 đến 6:00 ngày 21/01/2025.",
-      date: "2025-01-18",
-      unread: true,
-      important: false,
-      priority: 0,
-      category: "Hệ thống"
-    },
-    {
-      id: 4,
-      title: "Thông báo học phí",
-      content:
-        "Sinh viên cần hoàn thành đóng học phí trước ngày 10/02/2025.",
-      date: "2025-01-20",
-      unread: true,
-      important: false,
-      priority: 0,
-      category: "Hệ thống"
-    },
-    {
-      id: 5,
-      title: "Hoạt động ngoại khóa",
-      content:
-        "Nhà trường tổ chức hoạt động ngoại khóa vào cuối tuần này.",
-      date: "2025-01-21",
-      unread: true,
-      important: false,
-      priority: 0
-    },
-    {
-      id: 6,
-      title: "Cập nhật lịch học",
-      content:
-        "Một số lớp học được thay đổi lịch học trong tuần tới.",
-      date: "2025-01-22",
-      unread: true,
-      important: false,
-      priority: 0
-    },
-    {
-      id: 7,
-      title: "Lịch thi HK2 2024-2025",
-      content:
-        "Nhà trường thông báo lịch thi học kỳ 2 năm học 2024-2025. Thi bắt đầu từ ngày 20/05/2025.",
-      date: "2025-01-15",
-      unread: true,
-      important: false,
-      priority: 0
-    },
-     {
-      id: 8,
-      title: "Lịch thi HK2 2024-2025",
-      content:
-        "Nhà trường thông báo lịch thi học kỳ 2 năm học 2024-2025. Thi bắt đầu từ ngày 20/05/2025.",
-      date: "2025-01-15",
-      unread: true,
-      important: false,
-      priority: 0
-    },
-     {
-      id: 9,
-      title: "Lịch thi HK2 2024-2025",
-      content:
-        "Nhà trường thông báo lịch thi học kỳ 2 năm học 2024-2025. Thi bắt đầu từ ngày 20/05/2025.",
-      date: "2025-01-15",
-      unread: true,
-      important: false,
-      priority: 0
-    },
-     {
-      id: 10,
-      title: "Lịch thi HK2 2024-2025",
-      content:
-        "Nhà trường thông báo lịch thi học kỳ 2 năm học 2024-2025. Thi bắt đầu từ ngày 20/05/2025.",
-      date: "2025-01-15",
-      unread: true,
-      important: false,
-      priority: 0
-    },
-     {
-      id: 11,
-      title: "Lịch thi HK2 2024-2025",
-      content:
-        "Nhà trường thông báo lịch thi học kỳ 2 năm học 2024-2025. Thi bắt đầu từ ngày 20/05/2025.",
-      date: "2025-01-15",
-      unread: true,
-      important: false,
-      priority: 0
-    },
-     {
-      id: 12,
-      title: "Lịch thi HK2 2024-2025",
-      content:
-        "Nhà trường thông báo lịch thi học kỳ 2 năm học 2024-2025. Thi bắt đầu từ ngày 20/05/2025.",
-      date: "2025-01-15",
-      unread: true,
-      important: false,
-      priority: 0
-    }, {
-      id: 13,
-      title: "Lịch thi HK2 2024-2025",
-      content:
-        "Nhà trường thông báo lịch thi học kỳ 2 năm học 2024-2025. Thi bắt đầu từ ngày 20/05/2025.",
-      date: "2025-01-15",
-      unread: true,
-      important: false,
-      priority: 0
-    }, {
-      id: 14,
-      title: "Lịch thi HK2 2024-2025",
-      content:
-        "Nhà trường thông báo lịch thi học kỳ 2 năm học 2024-2025. Thi bắt đầu từ ngày 20/05/2025.",
-      date: "2025-01-15",
-      unread: true,
-      important: false,
-      priority: 0
-    }, {
-      id: 15,
-      title: "Lịch thi HK2 2024-2025",
-      content:
-        "Nhà trường thông báo lịch thi học kỳ 2 năm học 2024-2025. Thi bắt đầu từ ngày 20/05/2025.",
-      date: "2025-01-15",
-      unread: true,
-      important: false,
-      priority: 0
-    }, {
-      id: 16,
-      title: "Lịch thi HK2 2024-2025",
-      content:
-        "Nhà trường thông báo lịch thi học kỳ 2 năm học 2024-2025. Thi bắt đầu từ ngày 20/05/2025.",
-      date: "2025-01-15",
-      unread: true,
-      important: false,
-      priority: 0
-    }, {
-      id: 17,
-      title: "Lịch thi HK2 2024-2025",
-      content:
-        "Nhà trường thông báo lịch thi học kỳ 2 năm học 2024-2025. Thi bắt đầu từ ngày 20/05/2025.",
-      date: "2025-01-15",
-      unread: true,
-      important: false,
-      priority: 0
-    }, {
-      id: 18,
-      title: "Lịch thi HK2 2024-2025",
-      content:
-        "Nhà trường thông báo lịch thi học kỳ 2 năm học 2024-2025. Thi bắt đầu từ ngày 20/05/2025.",
-      date: "2025-01-15",
-      unread: true,
-      important: false,
-      priority: 0
-    },
-     {
-      id: 19,
-      title: "Lịch thi HK2 2024-2025",
-      content:
-        "Nhà trường thông báo lịch thi học kỳ 2 năm học 2024-2025. Thi bắt đầu từ ngày 20/05/2025.",
-      date: "2025-01-15",
-      unread: true,
-      important: false,
-      priority: 0
-    },
-     {
-      id: 20,
-      title: "Lịch thi HK2 2024-2025",
-      content:
-        "Nhà trường thông báo lịch thi học kỳ 2 năm học 2024-2025. Thi bắt đầu từ ngày 20/05/2025.",
-      date: "2025-01-15",
-      unread: true,
-      important: false,
-      priority: 0
-    },
-  ]);
-
-  const [priorityCounter, setPriorityCounter] = useState(1);
+  const [notifications, setNotifications] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState("");
   const [selected, setSelected] = useState(null);
   const [filter, setFilter] = useState("all");
   const [showOnlyMarked, setShowOnlyMarked] = useState(false);
   const [visibleCount, setVisibleCount] = useState(LOAD_BATCH_SIZE);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const fetchNotifications = async () => {
+      try {
+        setIsLoading(true);
+        setError("");
+        
+        const hasAuth = !!localStorage.getItem("accessToken");
+        if (!hasAuth) {
+          localStorage.setItem(STUDENT_UNREAD_COUNT_KEY, "0");
+          window.dispatchEvent(
+            new CustomEvent("student-notification-count-updated", {
+              detail: 0,
+            })
+          );
+          setError("Bạn cần đăng nhập để xem thông báo.");
+          setIsLoading(false);
+          return;
+        }
+
+        const [listResponse, unreadResponse] = await Promise.all([
+          notificationService.listNotifications({ 
+            params: { page: 1, limit: 100 },
+            mock: false 
+          }),
+          notificationService.getUnreadCount({ mock: false }),
+        ]);
+
+        if (cancelled) return;
+
+        if (listResponse?.success === false) {
+          setError(listResponse.message || "Không thể lấy dữ liệu thông báo từ máy chủ.");
+          setNotifications([]);
+          return;
+        }
+
+        const apiNotifications = Array.isArray(listResponse?.data) ? listResponse.data : [];
+        setNotifications(apiNotifications);
+
+        const unreadCountFromApi = unreadResponse?.unreadCount ?? listResponse?.unreadCount ?? apiNotifications.filter((item) => item.unread).length;
+        localStorage.setItem(STUDENT_UNREAD_COUNT_KEY, String(unreadCountFromApi));
+        window.dispatchEvent(
+          new CustomEvent("student-notification-count-updated", {
+            detail: unreadCountFromApi,
+          })
+        );
+      } catch (fetchError) {
+        if (!cancelled) {
+          console.error("Lỗi API thông báo:", fetchError);
+          setError("Không thể lấy thông báo. Vui lòng kiểm tra kết nối.");
+          setNotifications([]);
+        }
+      } finally {
+        if (!cancelled) {
+          setIsLoading(false);
+        }
+      }
+    };
+
+    void fetchNotifications();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const categories = useMemo(() => {
     return [...new Set(notifications.map(n => n.category).filter(Boolean))];
@@ -236,13 +105,15 @@ export default function StudentNotifications() {
   );
 
   useEffect(() => {
+    if (isLoading || error) return;
+
     localStorage.setItem(STUDENT_UNREAD_COUNT_KEY, String(unreadCount));
     window.dispatchEvent(
       new CustomEvent("student-notification-count-updated", {
         detail: unreadCount,
       })
     );
-  }, [unreadCount]);
+  }, [unreadCount, isLoading, error]);
 
   const sortedNotifications = useMemo(() => {
     return [...notifications].sort((a, b) => {
@@ -287,54 +158,48 @@ export default function StudentNotifications() {
     setVisibleCount((prev) => Math.min(prev + LOAD_BATCH_SIZE, filteredNotifications.length));
   };
 
-  const markAllRead = () => {
-    const updated = notifications.map(n => ({
+  const markAllRead = async () => {
+    const previousNotifications = notifications;
+    const updated = notifications.map((n) => ({
       ...n,
-      unread: false
+      unread: false,
     }));
+
     setNotifications(updated);
+
+    try {
+      const hasAuth = !!localStorage.getItem("accessToken");
+      await notificationService.markAllNotificationsRead({ mock: !hasAuth });
+    } catch (markError) {
+      console.error("Không thể đánh dấu tất cả là đã đọc:", markError);
+      setNotifications(previousNotifications);
+      setError(markError?.message || "Không thể cập nhật trạng thái thông báo");
+    }
   };
 
   const toggleImportant = (id) => {
-
-    let newCounter = priorityCounter;
-
-    const updated = notifications.map(n => {
-
-      if (n.id === id) {
-
-        if (!n.important) {
-          return {
-            ...n,
-            important: true,
-            priority: newCounter++
-          };
-        } else {
-          return {
-            ...n,
-            important: false,
-            priority: 0
-          };
-        }
-
-      }
-
-      return n;
-
-    });
-
-    setPriorityCounter(newCounter);
-    setNotifications(updated);
+    setNotifications((prev) =>
+      prev.map((item) =>
+        item.id === id ? { ...item, important: !item.important } : item
+      )
+    );
   };
 
-  const openNotification = (item) => {
+  const openNotification = async (item) => {
+    const nextItem = { ...item, unread: false };
 
-    const updated = notifications.map(n =>
-      n.id === item.id ? { ...n, unread: false } : n
+    setNotifications((prev) =>
+      prev.map((n) => (n.id === item.id ? nextItem : n))
     );
+    setSelected(nextItem);
 
-    setNotifications(updated);
-    setSelected(item);
+    try {
+      const hasAuth = !!localStorage.getItem("accessToken");
+      await notificationService.markNotificationRead(item.id, { mock: !hasAuth });
+    } catch (readError) {
+      console.error("Không thể đánh dấu thông báo đã đọc:", readError);
+      setError(readError?.message || "Không thể cập nhật thông báo");
+    }
   };
 
   const closeDialog = () => {
@@ -357,14 +222,20 @@ export default function StudentNotifications() {
           markedCount={markedCount}
         />
 
-        <NotificationList
-          notifications={visibleNotifications}
-          onOpen={openNotification}
-          onToggleImportant={toggleImportant}
-          hasMore={hasMore}
-          onLoadMore={loadMoreNotifications}
-          isFiltered={showOnlyMarked}
-        />
+        {isLoading ? (
+          <div className="notification-list-empty">Đang tải thông báo...</div>
+        ) : error && notifications.length === 0 ? (
+          <div className="notification-list-empty">{error}</div>
+        ) : (
+          <NotificationList
+            notifications={visibleNotifications}
+            onOpen={openNotification}
+            onToggleImportant={toggleImportant}
+            hasMore={hasMore}
+            onLoadMore={loadMoreNotifications}
+            isFiltered={showOnlyMarked}
+          />
+        )}
 
       </div>
 

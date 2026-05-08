@@ -90,3 +90,4 @@ export default function StudentArLedger({ student, onClose }) {
         </div>
     );
 }
+

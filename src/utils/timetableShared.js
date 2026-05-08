@@ -51,11 +51,12 @@ export const SUBJECT_DISPLAY = {
 };
 
 export const STATUS_META = {
-  normal: { label: "Binh thuong", tone: "normal" },
-  rescheduled: { label: "Doi lich", tone: "rescheduled" },
-  cancelled: { label: "Huy", tone: "cancelled" },
-  holiday: { label: "Nghi le", tone: "holiday" },
-  makeup: { label: "Hoc bu", tone: "makeup" },
+  normal: { label: "Bình thường", tone: "normal" },
+  rescheduled: { label: "Đổi lịch", tone: "rescheduled" },
+  cancelled: { label: "Tiết học được nghỉ", tone: "cancelled" },
+  holiday: { label: "Nghỉ lễ", tone: "holiday" },
+  makeup: { label: "Học bù", tone: "makeup" },
+  teacher_changed: { label: "Đổi giáo viên", tone: "rescheduled" },
 };
 
 export const MODE_META = {
@@ -151,6 +152,7 @@ function enrichLesson(baseLesson, className, weekNumber, idx) {
   let status = "normal";
   if ((weekNumber + idx) % 11 === 0) status = "cancelled";
   else if ((weekNumber + idx) % 7 === 0) status = "rescheduled";
+  else if ((weekNumber + idx) % 17 === 0) status = "teacher_changed";
   else if ((weekNumber + idx) % 5 === 0) status = "makeup";
   else if ((weekNumber + idx) % 13 === 0) status = "holiday";
 
@@ -249,3 +251,4 @@ export function getPeriodRangeLabel(periodStart, periodEnd = periodStart) {
   if (!startSlot || !endSlot) return "";
   return `${startSlot.start} - ${endSlot.end}`;
 }
+

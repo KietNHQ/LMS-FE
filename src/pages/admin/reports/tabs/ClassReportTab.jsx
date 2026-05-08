@@ -151,3 +151,4 @@ const ClassReportTab = ({ reportData, formatCurrency }) => {
 };
 
 export default ClassReportTab;
+

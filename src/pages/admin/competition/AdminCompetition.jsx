@@ -9,7 +9,7 @@ import { useSchoolYearTerm } from "../../../hooks/useSchoolYearTerm";
 import {
     adminCompetitionService,
     DEFAULT_COMPETITION_RULES,
-} from "../../../services/pages/admin/competition";
+} from "../../../services/pages/management/competition";
 import "./AdminCompetition.css";
 
 const AdminCompetition = () => {
@@ -188,3 +188,4 @@ const AdminCompetition = () => {
 };
 
 export default AdminCompetition;
+

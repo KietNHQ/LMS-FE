@@ -1,20 +1,21 @@
 .student-schedule-page {
-  padding: 16px;
-  min-height: 100vh;
+  padding: 0;
+  height: calc(100vh - clamp(2rem, 2.8vw, 3rem));
   display: flex;
   flex-direction: column;
   gap: 12px;
   max-width: 1440px;
   width: 100%;
   margin: 0 auto;
+  overflow: hidden;
 }
 
 .student-schedule-page .common-page-header {
-  padding: 12px 16px;
-  border: 1px solid var(--student-border-soft, #e2e8f0);
-  border-radius: 12px;
-  background: linear-gradient(120deg, color-mix(in srgb, var(--student-primary-soft, #eff6ff) 86%, #ffffff 14%) 0%, #ffffff 64%);
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  padding: 12px 0;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
 }
 
 .student-schedule-page .common-page-header__title-container {
@@ -35,6 +36,18 @@
 .student-schedule-page .common-page-header p {
   max-width: 720px;
   line-height: 1.55;
+}
+
+.student-schedule-main-card {
+  background: var(--student-surface, #ffffff);
+  border: 1px solid var(--student-border-soft, #e2e8f0);
+  border-radius: 16px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
 }
 
 .student-schedule-content {
@@ -120,6 +133,11 @@
 .modal-type-badge.status-makeup {
   background: #eff6ff;
   color: #1d4ed8;
+}
+
+.modal-type-badge.status-teacher_changed {
+  background: #fdf2f8;
+  color: #db2777;
 }
 
 .modal-info-grid {

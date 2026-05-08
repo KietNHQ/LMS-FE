@@ -8,7 +8,7 @@ import {
     FiArrowUpRight, FiArrowDownRight, FiTrendingUp, FiCheckCircle
 } from "react-icons/fi";
 import { Card } from "../../../../components/ui";
-import { fetchTermComparison } from "../../../../services/pages/admin/reports/reportService";
+import { fetchTermComparison } from "../../../../services/pages/management/reports/reportService";
 
 const PIE_COLORS = ["#1e2f5a", "#3b82f6", "#60a5fa", "#93c5fd", "#e2e8f0"];
 
@@ -217,3 +217,4 @@ const OverviewTab = ({ reportData, filters, formatCurrency, formatPercent, forma
 };
 
 export default OverviewTab;
+

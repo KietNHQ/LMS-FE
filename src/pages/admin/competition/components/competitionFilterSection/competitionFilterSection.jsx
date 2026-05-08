@@ -147,3 +147,4 @@ const CompetitionFilterSection = ({
 };
 
 export default CompetitionFilterSection;
+

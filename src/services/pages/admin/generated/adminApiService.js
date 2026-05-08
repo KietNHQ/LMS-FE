@@ -6,7 +6,10 @@ const DEFAULT_DELAY_MS = 120;
 const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 const fillPathParams = (path, pathParams = {}) => {
-  return path.replace(/:([a-zA-Z0-9_]+)/g, (_, key) => {
+  // [FIX] Strip redundant /api/v1 prefix if it exists, because axiosClient.baseURL already includes it
+  const cleanPath = path.startsWith("/api/v1") ? path.replace("/api/v1", "") : path;
+  
+  return cleanPath.replace(/:([a-zA-Z0-9_]+)/g, (_, key) => {
     const value = pathParams[key];
     if (value === undefined || value === null) {
       throw new Error(`Missing path param: ${key}`);
@@ -83,7 +86,18 @@ const grouped = adminEndpointRegistry.reduce((acc, endpoint) => {
 }, {});
 
 const endpointCallers = Object.fromEntries(
-  adminEndpointRegistry.map((endpoint) => [endpoint.key, createEndpointCaller(endpoint)]),
+  adminEndpointRegistry.flatMap((endpoint) => {
+    const caller = createEndpointCaller(endpoint);
+    const result = [[endpoint.key, caller]];
+    
+    // Add camelCase alias for better DX
+    const camelKey = endpoint.key.replace(/_([a-z0-9])/g, (g) => g[1].toUpperCase());
+    if (camelKey !== endpoint.key) {
+      result.push([camelKey, caller]);
+    }
+    
+    return result;
+  }),
 );
 
 const moduleServices = adminEndpointRegistry.reduce((acc, endpoint) => {
@@ -102,3 +116,4 @@ export const adminApiService = {
   moduleServices,
   ...endpointCallers,
 };
+

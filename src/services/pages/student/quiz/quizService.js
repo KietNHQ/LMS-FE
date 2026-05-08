@@ -15,3 +15,4 @@ export const quizService = {
   listByModule: studentService.listByModule,
   callByKey: studentService.callByKey,
 };
+

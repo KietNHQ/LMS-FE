@@ -5,6 +5,7 @@ import SectionCard from "../../../../../components/common/SectionCard/SectionCar
 import "./GradeListSection.css";
 
 function formatScore(value) {
+    if (value === null || value === undefined || value === "") return "-";
     const numericValue = Number(value);
     if (!Number.isFinite(numericValue)) return "-";
     return numericValue.toFixed(1);
@@ -30,10 +31,7 @@ function normalizeText(value) {
 
 export default function GradeListSection({
     records = [],
-    selectedStudentId,
-    onSelectStudent,
     onOpenEditDialog,
-    onOpenEntryDialog,
     subjectLabel,
     semesterLabel,
 }) {
@@ -43,9 +41,7 @@ export default function GradeListSection({
     const filteredRecords = useMemo(() => {
         const query = normalizeText(searchValue);
 
-        if (!query) {
-            return records;
-        }
+        if (!query) return records;
 
         return records.filter((record) => {
             const searchable = normalizeText([
@@ -71,11 +67,15 @@ export default function GradeListSection({
         setCurrentPage(1);
     }, [searchValue, records]);
 
-    useEffect(() => {
-        setCurrentPage((prev) => Math.min(prev, totalPages));
-    }, [totalPages]);
-
     const pageStartIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+
+    const getDisplayScore = (scores) => {
+      if (!scores || !scores.length) return "-";
+      const nums = scores.filter(v => v !== "").map(Number);
+      if (!nums.length) return "-";
+      const avg = nums.reduce((a, b) => a + b, 0) / nums.length;
+      return avg.toFixed(1);
+    };
 
     return (
         <SectionCard
@@ -87,20 +87,17 @@ export default function GradeListSection({
                         value={searchValue}
                         onChange={(event) => setSearchValue(event.target.value)}
                         onClear={() => setSearchValue("")}
-                        placeholder="Tìm theo tên, mã học sinh hoặc trạng thái..."
+                        placeholder="Tìm tên, mã học sinh..."
                     />
                 </div>
             }
         >
             <div className="grade-list-section">
                 {paginatedRecords.map((record, index) => (
-                    <article
-                        key={record.recordKey}
-                        className={`grade-list-item ${selectedStudentId === record.id ? "is-selected" : ""}`}
-                    >
+                    <article key={record.id} className="grade-list-item">
                         <button
                             type="button"
-                            className="grade-list-item__info grade-list-item__info--action"
+                            className="grade-list-item__info"
                             onClick={() => onOpenEditDialog?.(record)}
                         >
                             <strong>{pageStartIndex + index + 1}. {record.name}</strong>
@@ -110,12 +107,12 @@ export default function GradeListSection({
 
                         <div className="grade-list-score">
                             <span>Miệng</span>
-                            <strong>{formatScore(record.oral)}</strong>
+                            <strong>{getDisplayScore(record.oralScores)}</strong>
                         </div>
 
                         <div className="grade-list-score">
                             <span>15 phút</span>
-                            <strong>{formatScore(record.test15)}</strong>
+                            <strong>{getDisplayScore(record.test15Scores)}</strong>
                         </div>
 
                         <div className="grade-list-score">
@@ -134,16 +131,6 @@ export default function GradeListSection({
                                     <span>Học kỳ</span>
                                     <strong className="score-hk">{formatScore(record.average)}</strong>
                                 </div>
-
-                                {record.fullYearAverage ? (
-                                    <>
-                                        <div className="grade-list-divider"></div>
-                                        <div className="grade-list-score">
-                                            <span>Cả năm</span>
-                                            <strong className="score-cn">{formatScore(record.fullYearAverage)}</strong>
-                                        </div>
-                                    </>
-                                ) : null}
                             </div>
                             <span className={`grade-list-rank rank-${record.rank}`}>
                                 {RANK_LABELS[record.rank] || record.rank}
@@ -153,12 +140,9 @@ export default function GradeListSection({
                         <button
                             type="button"
                             className="grade-list-action"
-                            onClick={() => {
-                                onSelectStudent?.(record.id);
-                                onOpenEntryDialog?.();
-                            }}
+                            onClick={() => onOpenEditDialog?.(record)}
                         >
-                            Chọn
+                            Sửa
                         </button>
                     </article>
                 ))}
@@ -166,23 +150,22 @@ export default function GradeListSection({
                 {filteredRecords.length === 0 ? (
                     <div className="grade-list-empty">
                         {searchValue.trim()
-                            ? "Không tìm thấy học sinh phù hợp với từ khoá đã nhập."
-                            : "Chưa có dữ liệu học sinh cho lớp/môn/học kỳ này."}
+                            ? "Không tìm thấy học sinh phù hợp."
+                            : "Chưa có dữ liệu học sinh."}
                     </div>
                 ) : (
                     <div className="grade-list-pagination-row">
-                        <div className="grade-list-pagination" aria-label="Phân trang danh sách học sinh">
+                        <div className="grade-list-pagination">
                             <button
                                 type="button"
                                 className="grade-list-page-btn"
                                 onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
                                 disabled={currentPage <= 1}
-                                aria-label="Trang trước"
                             >
                                 <FiChevronLeft />
                             </button>
 
-                            <p className="grade-list-page-indicator" aria-live="polite">
+                            <p className="grade-list-page-indicator">
                                 <span>{currentPage}</span>
                                 <small>/ {totalPages}</small>
                             </p>
@@ -192,7 +175,6 @@ export default function GradeListSection({
                                 className="grade-list-page-btn"
                                 onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
                                 disabled={currentPage >= totalPages}
-                                aria-label="Trang sau"
                             >
                                 <FiChevronRight />
                             </button>
@@ -203,6 +185,3 @@ export default function GradeListSection({
         </SectionCard>
     );
 }
-
-
-

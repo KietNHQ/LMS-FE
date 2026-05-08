@@ -118,3 +118,4 @@ export default function LessonDetailModal({ lesson, onClose, onEdit, onOpenRevie
         </Modal>
     );
 }
+

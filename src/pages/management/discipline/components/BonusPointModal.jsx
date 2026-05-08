@@ -294,3 +294,4 @@ export default function BonusPointModal({ isOpen, onClose, onSuccess, initialCla
         </div>
     );
 }
+

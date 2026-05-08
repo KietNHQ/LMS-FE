@@ -1,10 +1,9 @@
-import React, { useState } from "react";
-import { FaRegMoon } from "react-icons/fa";
-import { BsFillSunFill } from "react-icons/bs";
+import React, { useState, useEffect, useMemo } from "react";
 import PersonRoundedIcon from "@mui/icons-material/PersonRounded";
 import AccessTimeRoundedIcon from "@mui/icons-material/AccessTimeRounded";
 import "./StudentWeeklyScheduleSection.css";
-import { getStudentWeekLessonsById, getStartOfIsoWeek, STATUS_META } from "../../../../../utils/timetableShared";
+import { getStartOfIsoWeek, STATUS_META, SUBJECT_COLOR_MAP } from "../../../../../utils/timetableShared";
+import { studentService } from "../../../../../services/pages/student/studentService";
 
 const DAY_NAMES = ["Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6", "Thứ 7", "CN"];
 const PERIOD_TIME = {
@@ -37,17 +36,28 @@ function isToday(date) {
   return date.toDateString() === today.toDateString();
 }
 
-export default function StudentWeeklyScheduleSection({ weekOffset, studentId, onSelectDay, onLessonSelect }) {
-  const [sessionView, setSessionView] = useState("morning");
+export default function StudentWeeklyScheduleSection({ 
+  weekOffset, 
+  studentId, 
+  onSelectDay, 
+  onLessonSelect,
+  lessons = [],
+  isLoading = false,
+  error = null,
+  sessionView = "morning",
+  setSessionView,
+  selectedSubject = "Tất cả"
+}) {
   const days = getWeekDates(weekOffset);
-  const weekStart = days[0];
-  const lessons = getStudentWeekLessonsById(studentId, weekStart);
+
+  const filteredLessons = useMemo(() => {
+    if (selectedSubject === "Tất cả") return lessons;
+    return lessons.filter((l) => l.subject === selectedSubject);
+  }, [lessons, selectedSubject]);
 
   const getCellLesson = (dayIdx, period) => {
     const dayKey = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"][dayIdx];
-    const lesson = lessons.find((l) => l.day === dayKey && l.periodStart <= period && l.periodEnd >= period);
-    if (!lesson) return null;
-    return lesson;
+    return filteredLessons.find((l) => l.day === dayKey && l.periodStart <= period && l.periodEnd >= period) || null;
   };
 
   const isMorning = sessionView === "morning";
@@ -70,28 +80,24 @@ export default function StudentWeeklyScheduleSection({ weekOffset, studentId, on
     };
   };
 
+  if (isLoading) {
+    return (
+      <div className="weekly-schedule-section">
+        <div className="weekly-table-empty">Đang tải thời khóa biểu...</div>
+      </div>
+    );
+  }
+
+  if (error && lessons.length === 0) {
+    return (
+      <div className="weekly-schedule-section">
+        <div className="weekly-table-empty">{error}</div>
+      </div>
+    );
+  }
+
   return (
     <div className="weekly-schedule-section">
-      <div className="weekly-header-bar">
-        <p className="weekly-schedule-title">Thời khóa biểu tuần</p>
-        <button
-          type="button"
-          className={`tt-session-toggle-btn ${isMorning ? "tt-session-toggle-morning" : "tt-session-toggle-afternoon"}`}
-          onClick={() => setSessionView(isMorning ? "afternoon" : "morning")}
-        >
-          <span className="tt-session-toggle-icon-wrap">
-            {!isMorning ? (
-              <FaRegMoon className="tt-session-toggle-icon moon" />
-            ) : (
-              <BsFillSunFill className="tt-session-toggle-icon sun" />
-            )}
-          </span>
-          <span className={`tt-session-toggle-label ${isMorning ? "moon" : "sun"}`}>
-            Đổi sang 5 tiết {isMorning ? "chiều" : "sáng"}
-          </span>
-        </button>
-      </div>
-
       <div className="weekly-table-wrapper">
         <table className="weekly-table">
           <thead>
@@ -148,7 +154,7 @@ export default function StudentWeeklyScheduleSection({ weekOffset, studentId, on
                             </span>
                             <span>
                               <AccessTimeRoundedIcon />
-                              {PERIOD_TIME[period].split(" - ")[0]} - {PERIOD_TIME[period].split(" - ")[1]}
+                              {PERIOD_TIME[period].split(" - ")[0]}
                             </span>
                           </div>
                         </div>
@@ -164,3 +170,4 @@ export default function StudentWeeklyScheduleSection({ weekOffset, studentId, on
     </div>
   );
 }
+

@@ -18,3 +18,4 @@ export default function SectionCard({ title, subtitle, actions = null, children 
     </section>
   );
 }
+

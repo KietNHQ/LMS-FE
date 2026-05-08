@@ -28,6 +28,7 @@ export default function StudentDashboard() {
     // 1. Lấy thông tin từ localStorage ngay khi mount
     useEffect(() => {
         const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
+        console.log("[StudentDashboard] Profile from localStorage:", storedUser?.profile);
         if (storedUser?.profile) {
             setLocalProfile(storedUser.profile);
         }
@@ -36,15 +37,21 @@ export default function StudentDashboard() {
     useEffect(() => {
         const fetchDashboardData = async () => {
             setIsLoading(true);
+            const hasAuth = !!localStorage.getItem("accessToken");
+
             try {
-                // Thử gọi dữ liệu thật từ Backend
+                if (!hasAuth) {
+                    setIsLoading(false);
+                    return;
+                }
+
                 const response = await studentService.getDashboard({ mock: false });
+                
                 if (response.success) {
                     setDashboardData(response.data);
                 }
             } catch (error) {
-                console.warn("Backend Student Dashboard API not ready yet, using empty states.");
-                // Backend chưa có API này, để dashboardData = null để dùng fallback
+                console.warn("Student Dashboard API error:", error);
             } finally {
                 setTimeout(() => setIsLoading(false), 500);
             }
@@ -116,10 +123,10 @@ export default function StudentDashboard() {
         <div className="student-dashboard-content">
             <div className="student-dashboard-top-panel">
                 <WelcomeHeader
-                    studentName={localProfile?.fullName?.split(" ").pop() || "Học sinh"}
+                    studentName={localProfile?.fullName?.split(" ").pop() || "User"}
                     classNameLabel={localProfile?.className || "—"}
                     studentCode={localProfile?.studentCode || "—"}
-                    homeroomTeacher={localProfile?.homeroomTeacher || "Chưa cập nhật"}
+                    homeroomTeacher={localProfile?.homeroomTeacher || "—"}
                 />
 
                 <div className="student-dashboard-toolbar">

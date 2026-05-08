@@ -17,7 +17,7 @@ const PERIOD_TIME = {
   10: "16:25 - 17:10",
 };
 
-export default function StudentDailyScheduleSection({ weekOffset, selectedDay, studentId, onLessonSelect }) {
+export default function StudentDailyScheduleSection({ weekOffset, selectedDay, lessons = [], onLessonSelect }) {
   const days = [];
   const curr = new Date();
   const day = curr.getDay() || 7;
@@ -31,11 +31,10 @@ export default function StudentDailyScheduleSection({ weekOffset, selectedDay, s
   }
 
   const selectedDate = days[selectedDay];
-  const lessons = getStudentWeekLessonsById(studentId, days[0]);
   const dayKeys = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
   const dayKey = dayKeys[selectedDay];
 
-  const dayLessons = lessons
+  const dayLessons = (lessons || [])
     .filter((l) => l.day === dayKey)
     .sort((a, b) => a.periodStart - b.periodStart);
 
@@ -123,3 +122,4 @@ export default function StudentDailyScheduleSection({ weekOffset, selectedDay, s
     </div>
   );
 }
+

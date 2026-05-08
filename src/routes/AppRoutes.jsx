@@ -131,8 +131,9 @@ const RootRedirect = () => {
     const user = userString ? JSON.parse(userString) : null;
 
     if (!user) {
-        // Nếu chưa đăng nhập, quay về trang Login để Admin có thể đăng nhập
-        return <Navigate to="/login" replace />;
+        // TẠM THỜI: Nếu chưa đăng nhập, cho phép vào thẳng trang học sinh để xem giao diện (Guest Mode)
+        // Khi nào xong hết logic auth sẽ chuyển lại về /login
+        return <Navigate to="/student/dashboard" replace />;
     }
 
     const role = (user.role || localStorage.getItem('userRole') || "").toLowerCase();

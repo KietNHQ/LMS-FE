@@ -24,15 +24,11 @@
 }
 
 .theme-teacher .common-page-header {
-  border: 1px solid var(--teacher-border-soft);
-  border-radius: 14px;
-  padding: 14px;
-  background: linear-gradient(
-    120deg,
-    color-mix(in srgb, var(--teacher-primary-soft) 88%, #ffffff 12%) 0%,
-    #ffffff 60%
-  );
-  box-shadow: var(--admin-shadow-sm);
+  padding: 10px 0 !important;
+  background: transparent !important;
+  border: none !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
 }
 
 .theme-teacher .common-page-header .common-page-header__eyebrow {

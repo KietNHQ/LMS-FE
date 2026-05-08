@@ -157,3 +157,4 @@ const AttendanceTab = ({ reportData, formatPercent }) => {
 };
 
 export default AttendanceTab;
+

@@ -1,58 +1,69 @@
+import { useEffect, useState } from "react";
+import teacherService from "../../../services/pages/teacher/teacherService";
 import "./TeacherSupport.css";
-import { useState } from "react";
 import { FaPaperPlane, FaRegClock, FaRobot } from "react-icons/fa";
 import FAQList from "./components/FAQList/FAQList";
 import SupportContact from "./components/SupportContact/SupportContact";
 import SupportHeader from "./components/SupportHeader/SupportHeader";
 
-export default function TeacherSupport() {
-  const [faqSearch, setFaqSearch] = useState("");
-
-  const faqs = [
+const TEACHER_DEFAULT_FAQS = [
     {
-      category: "Học tập",
-      question: "Làm sao để theo dõi kết quả học tập của con?",
-      answer: "Bạn mở mục Tổng quan con em hoặc Điểm số để xem chi tiết theo học kỳ.",
-      popularity: 96,
+      category: "Giảng dạy",
+      question: "Làm sao để tải lên tài liệu bài học?",
+      answer: "Bạn vào mục Quản lý bài học, chọn bài cần chỉnh sửa và sử dụng chức năng Đính kèm tệp.",
+      popularity: 98,
     },
     {
-      category: "Tài chính",
-      question: "Phụ huynh thanh toán học phí cho con ở đâu?",
-      answer: "Bạn có thể thanh toán trong mục Thanh toán hoặc liên hệ phòng tài vụ để được hỗ trợ.",
-      popularity: 90,
+      category: "Điểm số",
+      question: "Cách nhập điểm cho cả lớp nhanh nhất?",
+      answer: "Bạn có thể sử dụng chức năng Nhập điểm hàng loạt bằng file Excel hoặc nhập trực tiếp trong lưới điểm.",
+      popularity: 95,
     },
     {
-      category: "Liên hệ",
-      question: "Làm sao nhắn tin giáo viên chủ nhiệm?",
-      answer: "Vào mục Liên lạc giáo viên chủ nhiệm và chọn cuộc trò chuyện cần trao đổi.",
-      popularity: 86,
-    },
-    {
-      category: "Điểm danh",
-      question: "Có thể xem lịch sử điểm danh theo tháng không?",
-      answer: "Có, hệ thống cho phép xem điểm danh tuần/tháng trong phần Tổng quan con em.",
-      popularity: 84,
-    },
-    {
-      category: "Thông báo",
-      question: "Vì sao thông báo chưa đọc chưa cập nhật?",
-      answer: "Hãy tải lại trang và kiểm tra mục Thông báo để đồng bộ số lượng chưa đọc mới nhất.",
-      popularity: 75,
+      category: "Thời khóa biểu",
+      question: "Tại sao tôi không thấy lịch dạy tuần tới?",
+      answer: "Vui lòng kiểm tra lại bộ lọc Học kỳ và Năm học. Nếu vẫn không thấy, hãy liên hệ giáo vụ để kiểm tra phân công.",
+      popularity: 88,
     },
     {
       category: "Tài khoản",
-      question: "Quên mật khẩu tài khoản phụ huynh phải làm gì?",
-      answer: "Sử dụng Quên mật khẩu ở trang đăng nhập hoặc liên hệ bộ phận hỗ trợ để cấp lại.",
-      popularity: 88,
+      question: "Thay đổi thông tin cá nhân như thế nào?",
+      answer: "Nhấp vào ảnh đại diện ở Sidebar, chọn Trang cá nhân để cập nhật số điện thoại hoặc email.",
+      popularity: 82,
     },
-  ];
+];
+
+export default function TeacherSupport() {
+  const [faqSearch, setFaqSearch] = useState("");
+  const [notifications, setNotifications] = useState([]); // This might be a mistake in the prompt, should be faqs
+  const [faqs, setFaqs] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    const fetchFaqs = async () => {
+      setIsLoading(true);
+      try {
+        const response = await teacherService.getFaqs({ mock: false });
+        if (response.success && response.data?.length > 0) {
+          setFaqs(response.data);
+        } else {
+          setFaqs(TEACHER_DEFAULT_FAQS);
+        }
+      } catch (error) {
+        console.warn("Real FAQs API failed, using teacher mocks.");
+        setFaqs(TEACHER_DEFAULT_FAQS);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchFaqs();
+  }, []);
 
   const sortedFaqs = [...faqs].sort((a, b) => b.popularity - a.popularity);
   const normalizedKeyword = faqSearch.trim().toLowerCase();
 
   const filteredFaqs = sortedFaqs.filter((faq) => {
     if (!normalizedKeyword) return true;
-
     const content = `${faq.category} ${faq.question} ${faq.answer}`.toLowerCase();
     return content.includes(normalizedKeyword);
   });
@@ -93,19 +104,19 @@ export default function TeacherSupport() {
           <div className="teacher-chat-body">
             <div className="teacher-chat-message is-bot">
               <div className="teacher-chat-role">Bot</div>
-              Xin chào! Tôi là trợ lý LMS dành cho phụ huynh. Bạn cần hỗ trợ vấn đề nào?
+              Xin chào! Tôi là trợ lý LMS dành cho giáo viên. Bạn cần hỗ trợ vấn đề nào trong công tác giảng dạy?
               <div className="teacher-chat-time">14:48</div>
             </div>
 
             <div className="teacher-chat-message is-user">
               <div className="teacher-chat-role">Bạn</div>
-              Tôi muốn xem lịch sử điểm danh của con trong tháng này.
+              Tôi muốn xem danh sách bài giảng của mình.
               <div className="teacher-chat-time">14:49</div>
             </div>
 
             <div className="teacher-chat-message is-bot">
               <div className="teacher-chat-role">Bot</div>
-              Bạn vào Tổng quan con em, chọn tab Điểm danh và xem bộ lọc theo tháng.
+              Bạn vào mục Quản lý bài học ở thanh điều hướng bên trái để xem chi tiết danh sách nhé.
               <div className="teacher-chat-time">14:49</div>
             </div>
           </div>

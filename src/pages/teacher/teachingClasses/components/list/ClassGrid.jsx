@@ -26,3 +26,4 @@ const ClassGrid = ({ classes, onClassClick }) => {
 };
 
 export default ClassGrid;
+

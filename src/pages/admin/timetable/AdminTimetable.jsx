@@ -9,7 +9,7 @@ import { SchoolYearTermSelector } from "../../../components/common";
 import { useSchoolYearTerm } from "../../../hooks/useSchoolYearTerm";
 import { FiUsers, FiCalendar, FiClock, FiBook, FiUser, FiMapPin, FiActivity, FiX, FiCheckCircle, FiSave, FiPlus } from "react-icons/fi";
 import { buildAdminInitialSessions, CLASS_OPTIONS, WEEK_DAYS, STATUS_META, MODE_META, getPeriodRangeLabel, SUBJECT_COLOR_MAP } from "../../../utils/timetableShared";
-import timetableService from "../../../services/pages/admin/timetable/timetableService";
+import timetableService from "../../../services/pages/management/timetable/timetableService";
 
 const classOptions = CLASS_OPTIONS;
 // Tạo blockOptions từ classOptions (lấy ký tự đầu, loại trùng)
@@ -609,3 +609,4 @@ export default function AdminTimetable() {
         </div>
     );
 }
+

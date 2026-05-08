@@ -7,6 +7,10 @@ import {
     BiBook,
     BiWorld,
     BiLeaf,
+    BiTrophy,
+    BiMedal,
+    BiBarChartAlt2,
+    BiSearch,
 } from "react-icons/bi";
 import {
     FaSquareRootAlt,
@@ -211,18 +215,35 @@ export default function StudentGrades() {
 
                     <div className="grades-stats">
                         <div className="grades-card">
-                            <h2 className="blue">{summaryStats.avg.toFixed(2)}</h2>
-                            <p>{activeTab === "year" ? "TB Cả năm" : `TB Học kỳ ${activeTab === "hk1" ? "1" : "2"}`}</p>
+                            <div className="grades-card-icon icon-blue">
+                                <BiBarChartAlt2 />
+                            </div>
+                            <div className="grades-card-content">
+                                <h2 className="blue">{summaryStats.avg.toFixed(2)}</h2>
+                                <p>{activeTab === "year" ? "TB Cả năm" : `TB Học kỳ ${activeTab === "hk1" ? "1" : "2"}`}</p>
+                            </div>
                         </div>
+
                         <div className="grades-card">
-                            <h2 className={summaryStats.rank === "Giỏi" ? "rank-good" : "rank-fair"}>
-                                {summaryStats.rank}
-                            </h2>
-                            <p>Xếp loại học lực</p>
+                            <div className={`grades-card-icon ${summaryStats.rank === "Giỏi" ? "icon-gold" : "icon-silver"}`}>
+                                {summaryStats.rank === "Giỏi" ? <BiTrophy /> : <BiMedal />}
+                            </div>
+                            <div className="grades-card-content">
+                                <h2 className={summaryStats.rank === "Giỏi" ? "rank-good-text" : "rank-fair-text"}>
+                                    {summaryStats.rank}
+                                </h2>
+                                <p>Xếp loại học lực</p>
+                            </div>
                         </div>
+
                         <div className="grades-card">
-                            <h2 className="green">{summaryStats.count}</h2>
-                            <p>Số môn học</p>
+                            <div className="grades-card-icon icon-green">
+                                <BiBook />
+                            </div>
+                            <div className="grades-card-content">
+                                <h2 className="green">{summaryStats.count}</h2>
+                                <p>Số môn học</p>
+                            </div>
                         </div>
                     </div>
 
@@ -294,7 +315,15 @@ export default function StudentGrades() {
                                 )}
                             </React.Fragment>
                         )) : (
-                            <div className="empty-table-state">Chưa có dữ liệu điểm cho năm học này.</div>
+                            <div className="empty-table-state">
+                                <div className="empty-state-icon">
+                                    <BiSearch />
+                                </div>
+                                <div className="empty-state-content">
+                                    <h3>Không có dữ liệu điểm</h3>
+                                    <p>Chưa có dữ liệu điểm cho năm học {selectedSchoolYear}.</p>
+                                </div>
+                            </div>
                         )}
                     </div>
                 </>
@@ -302,3 +331,4 @@ export default function StudentGrades() {
         </div>
     );
 }
+

@@ -22,6 +22,27 @@ function formatDisplayDate(dateString) {
     return dateString;
 }
 
+// Helper component for indeterminate checkbox
+function IndeterminateCheckbox({ checked, indeterminate, onChange, className, ...props }) {
+    const ref = useRef();
+    useEffect(() => {
+        if (ref.current) {
+            ref.current.indeterminate = indeterminate;
+        }
+    }, [indeterminate]);
+
+    return (
+        <input
+            type="checkbox"
+            ref={ref}
+            className={className}
+            checked={checked}
+            onChange={onChange}
+            {...props}
+        />
+    );
+}
+
 export default function ManagerInformationSection({
     mode = "view",
     formData,
@@ -245,7 +266,17 @@ export default function ManagerInformationSection({
                                     <label>Ngày sinh</label>
                                     <input
                                         type="date"
-                                        value={formData.dob}
+                                        value={(() => {
+                                            const dob = formData.dob || formData.profile?.dob;
+                                            if (!dob || dob === "—" || dob === "--") return "";
+                                            
+                                            if (/^\d{4}-\d{2}-\d{2}/.test(dob)) return dob.slice(0, 10);
+                                            const parts = String(dob).split("/");
+                                            if (parts.length === 3 && parts[2].length === 4) {
+                                                return `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
+                                            }
+                                            return "";
+                                        })()}
                                         onChange={(e) => onChange("dob", e.target.value)}
                                     />
                                 </div>
@@ -254,7 +285,11 @@ export default function ManagerInformationSection({
                                     <label>Số điện thoại</label>
                                     <input
                                         type="tel"
-                                        value={formData.phone}
+                                        value={(() => {
+                                            const ph = formData.phone || formData.profile?.phone;
+                                            if (!ph || ph === "—" || ph === "--") return "";
+                                            return ph;
+                                        })()}
                                         onChange={(e) => onChange("phone", e.target.value)}
                                         placeholder="09xx xxx xxx"
                                         maxLength={10}
@@ -365,10 +400,13 @@ export default function ManagerInformationSection({
                                                 onClick={() => setExpandedGroups(p => p.includes(g.id) ? p.filter(id => id !== g.id) : [...p, g.id])}
                                             >
                                                 <div className="perm-group-left">
-                                                    <input 
-                                                        type="checkbox" 
+                                                    <IndeterminateCheckbox 
                                                         className="perm-group-master-check"
-                                                        checked={g.permissions.every(p => permissions.includes(p.id))} 
+                                                        checked={g.permissions.every(p => permissions.includes(p.id))}
+                                                        indeterminate={
+                                                            g.permissions.some(p => permissions.includes(p.id)) && 
+                                                            !g.permissions.every(p => permissions.includes(p.id))
+                                                        }
                                                         onChange={e => handleGroupToggle(g.id, e.target.checked)}
                                                         onClick={e => e.stopPropagation()} 
                                                     />
@@ -451,3 +489,4 @@ function SelectInternal({ value, options, onChange }) {
         </div>
     );
 }
+

@@ -147,7 +147,7 @@
 }
 
 .custom-dropdown-list {
-  max-height: 110px !important;
+  max-height: 350px;
   overflow-y: auto;
   scrollbar-width: thin;
   scrollbar-color: #e2e8f0 transparent;

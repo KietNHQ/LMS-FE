@@ -7,7 +7,7 @@ import ClassListSection from "./components/classListSection/classListSection";
 import ClassInfoSection from "./components/classInfoSection/classInfoSection";
 import { SchoolYearTermSelector, PageHeader, Pagination, LoadingSpinner } from "../../../components/common";
 import { useSchoolYearTerm } from "../../../hooks/useSchoolYearTerm";
-import { classesService } from "../../../services/pages/admin/classes";
+import { classesService } from "../../../services/pages/management/classes";
 
 const ITEMS_PER_PAGE = 6;
 

@@ -16,7 +16,7 @@ import ClassReportTab from "./tabs/ClassReportTab";
 import {
   fetchAdminReport,
   getReportFilterOptions,
-} from "../../../services/pages/admin/reports/reportService";
+} from "../../../services/pages/management/reports/reportService";
 
 const CURRENCY_FORMATTER = new Intl.NumberFormat("vi-VN", {
   style: "currency",

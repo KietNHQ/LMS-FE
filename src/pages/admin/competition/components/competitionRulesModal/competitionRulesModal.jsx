@@ -160,3 +160,4 @@ const CompetitionRulesModal = ({ isOpen, onClose, rules, onSave }) => {
 };
 
 export default CompetitionRulesModal;
+

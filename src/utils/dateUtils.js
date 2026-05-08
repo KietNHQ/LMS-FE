@@ -34,3 +34,4 @@ export const shiftSchoolYear = (yearRange, direction) => {
   const delta = direction === "next" ? 1 : -1;
   return `${start + delta}-${end + delta}`;
 };
+

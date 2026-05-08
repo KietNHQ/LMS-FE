@@ -9,9 +9,11 @@ import QuizCard from "./components/QuizCard/QuizCard";
 import QuizTakingView from "./components/QuizTakingView/QuizTakingView";
 import ResultSummary from "./components/ResultSummary/ResultSummary";
 
-import { quizList } from "./data/quizData";
+import { quizList as STUDENT_QUIZZES_MOCK } from "./data/quizData";
 import { SchoolYearTermSelector } from "../../../components/common";
+import { LoadingSpinner } from "../../../components/common";
 import { useSchoolYearTerm } from "../../../hooks/useSchoolYearTerm";
+import studentService from "../../../services/pages/student/studentService";
 
 const ITEMS_PER_PAGE = 4;
 
@@ -22,23 +24,80 @@ export default function StudentQuiz() {
     const [subjectFilter, setSubjectFilter] = useState("all");
     const [currentPage, setCurrentPage] = useState(1);
 
+    const [quizzes, setQuizzes] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+
     const [selectedQuiz, setSelectedQuiz] = useState(null);
     const [quizResult, setQuizResult] = useState(null);
 
+    const fetchQuizzes = async () => {
+        try {
+            setLoading(true);
+            const response = await studentService.listQuizzes({
+                schoolYearId: selectedSchoolYear?.id,
+                semesterId: selectedTerm?.id
+            });
+            if (response.success) {
+                // Map backend data to UI format if needed
+                const mappedQuizzes = (response.data || []).map(q => {
+                    const latestAttempt = q.quiz_attempts?.[0];
+                    let status = q.is_published ? "open" : "closed";
+                    
+                    if (latestAttempt?.status === "submitted" || latestAttempt?.status === "graded") {
+                        status = "done";
+                    } else if (q.start_date && new Date(q.start_date) > new Date()) {
+                        status = "upcoming";
+                    } else if (q.end_date && new Date(q.end_date) < new Date()) {
+                        status = "closed";
+                    }
+
+                    return {
+                        id: q.id,
+                        title: q.title,
+                        description: q.description || "Không có mô tả",
+                        subject: q.class_teacher_subject?.subject_assignments?.display_name || "Môn học",
+                        teacher: q.class_teacher_subject?.teachers ? 
+                            `${q.class_teacher_subject.teachers.surname} ${q.class_teacher_subject.teachers.given_name}` : 
+                            "Giáo viên",
+                        duration: q.duration_minutes || 0,
+                        dueDate: q.end_date ? new Date(q.end_date).toLocaleDateString("vi-VN") : "Không thời hạn",
+                        status,
+                        type: q.quiz_type === "exam" ? "Bài thi" : q.quiz_type === "practice" ? "Luyện tập" : "Bài tập",
+                        questionsCount: q._count?.questions || 0,
+                        score: latestAttempt?.total_score || latestAttempt?.totalScore
+                    };
+                });
+                setQuizzes(mappedQuizzes);
+            } else {
+                setError(response.message || "Không thể tải danh sách bài kiểm tra");
+            }
+        } catch (err) {
+            console.error("Fetch quizzes error:", err);
+            setError("Đã xảy ra lỗi khi kết nối máy chủ");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    React.useEffect(() => {
+        fetchQuizzes();
+    }, [selectedSchoolYear, selectedTerm]);
+
     const subjects = useMemo(() => {
-        return [...new Set(quizList.map((quiz) => quiz.subject))];
-    }, []);
+        return [...new Set(quizzes.map((quiz) => quiz.subject))];
+    }, [quizzes]);
 
     const stats = useMemo(() => {
         return {
-            total: quizList.length,
-            open: quizList.filter((quiz) => quiz.status === "open").length,
-            done: quizList.filter((quiz) => quiz.status === "done").length,
+            total: quizzes.length,
+            open: quizzes.filter((quiz) => quiz.status === "open").length,
+            done: quizzes.filter((quiz) => quiz.status === "done").length,
         };
-    }, []);
+    }, [quizzes]);
 
     const filteredQuizzes = useMemo(() => {
-        return quizList.filter((quiz) => {
+        return quizzes.filter((quiz) => {
             const matchesSearch =
                 quiz.title.toLowerCase().includes(search.toLowerCase()) ||
                 quiz.subject.toLowerCase().includes(search.toLowerCase()) ||
@@ -52,7 +111,7 @@ export default function StudentQuiz() {
 
             return matchesSearch && matchesStatus && matchesSubject;
         });
-    }, [search, statusFilter, subjectFilter]);
+    }, [quizzes, search, statusFilter, subjectFilter]);
 
     const totalPages = useMemo(() => {
         return Math.max(1, Math.ceil(filteredQuizzes.length / ITEMS_PER_PAGE));
@@ -65,30 +124,76 @@ export default function StudentQuiz() {
         return filteredQuizzes.slice(start, start + ITEMS_PER_PAGE);
     }, [filteredQuizzes, visibleCurrentPage]);
 
-    const handleStartQuiz = (quiz) => {
-        if (quiz.status !== "open") return;
-        setQuizResult(null);
-        setSelectedQuiz(quiz);
+    const handleStartQuiz = async (quiz) => {
+        try {
+            setLoading(true);
+            const response = await studentService.startQuiz({ id: quiz.id });
+            if (response.success) {
+                const quizData = response.data.quiz;
+                const attemptData = response.data.attempt;
+                const questions = response.data.questions || [];
+
+                setSelectedQuiz({
+                    ...quiz,
+                    questions: questions.map(q => ({
+                        id: q.id,
+                        text: q.question_text,
+                        type: q.question_type,
+                        points: q.points,
+                        options: q.quiz_answers?.map(a => a.answer_text) || [],
+                        quiz_answers: q.quiz_answers // Keep original for ID lookup
+                    })),
+                    attemptId: attemptData.id,
+                    timeRemaining: response.data.timeRemaining
+                });
+                setQuizResult(null);
+            } else {
+                setError(response.message || "Không thể bắt đầu bài kiểm tra");
+            }
+        } catch (err) {
+            console.error("Start quiz error:", err);
+            setError("Lỗi khi bắt đầu bài kiểm tra");
+        } finally {
+            setLoading(false);
+        }
     };
 
-    const handleSubmitQuiz = (quiz, answers) => {
-        const correctCount = quiz.questions.filter(
-            (question) => answers[question.id] === question.correctAnswer
-        ).length;
+    const handleSubmitQuiz = async (quiz, answers) => {
+        try {
+            setLoading(true);
+            const responses = Object.entries(answers).map(([qId, ans]) => ({
+                questionId: parseInt(qId),
+                answerId: quiz.questions.find(q => q.id === parseInt(qId))
+                    ?.quiz_answers?.find(a => a.answer_text === ans)?.id,
+                essayAnswer: typeof ans === "string" ? ans : undefined
+            }));
 
-        const total = quiz.questions.length;
-        const score = Number(((correctCount / total) * 10).toFixed(1));
+            const response = await studentService.submitQuiz({
+                attemptId: quiz.attemptId,
+                responses
+            });
 
-        setQuizResult({
-            quizTitle: quiz.title,
-            score,
-            correctCount,
-            total,
-            answers,
-            questions: quiz.questions,
-        });
-
-        setSelectedQuiz(null);
+            if (response.success) {
+                const result = response.data;
+                setQuizResult({
+                    quizTitle: quiz.title,
+                    score: result.score_final,
+                    correctCount: result.score_raw, // This might need mapping from BE
+                    total: quiz.questions.length,
+                    answers,
+                    questions: quiz.questions,
+                });
+                setSelectedQuiz(null);
+                fetchQuizzes(); // Refresh list to show 'done' status
+            } else {
+                alert(response.message || "Lỗi khi nộp bài");
+            }
+        } catch (err) {
+            console.error("Submit quiz error:", err);
+            alert("Lỗi khi nộp bài");
+        } finally {
+            setLoading(false);
+        }
     };
 
     const handleBackToList = () => {
@@ -132,20 +237,34 @@ export default function StudentQuiz() {
                     />
 
                     <Card className="student-quiz-main-card" bodyClassName="student-quiz-main-card__body">
-                        <div className="student-quiz-grid">
-                            {paginatedQuizzes.map((quiz) => (
-                                <QuizCard
-                                    key={quiz.id}
-                                    quiz={quiz}
-                                    onStart={handleStartQuiz}
-                                />
-                            ))}
-                        </div>
+                        {loading ? (
+                            <div className="student-quiz-loading">
+                                <LoadingSpinner />
+                                <p>Đang tải danh sách bài kiểm tra...</p>
+                            </div>
+                        ) : error ? (
+                            <div className="student-quiz-error">
+                                <p>{error}</p>
+                                <button onClick={fetchQuizzes} className="student-quiz-retry-btn">
+                                    Thử lại
+                                </button>
+                            </div>
+                        ) : (
+                            <div className="student-quiz-grid">
+                                {paginatedQuizzes.map((quiz) => (
+                                    <QuizCard
+                                        key={quiz.id}
+                                        quiz={quiz}
+                                        onStart={handleStartQuiz}
+                                    />
+                                ))}
+                            </div>
+                        )}
 
-                        {filteredQuizzes.length === 0 && (
+                        {!loading && !error && filteredQuizzes.length === 0 && (
                             <div className="student-quiz-empty">
-                                <h3>Không tìm thấy bài kiểm tra phù hợp</h3>
-                                <p>Hãy thử thay đổi từ khóa hoặc bộ lọc.</p>
+                                <h3>Không tìm thấy bài kiểm tra nào</h3>
+                                <p>Hiện tại chưa có bài kiểm tra nào được giao cho bạn trong khoảng thời gian này.</p>
                             </div>
                         )}
 
@@ -200,5 +319,6 @@ export default function StudentQuiz() {
         </div>
     );
 }
+
 
 

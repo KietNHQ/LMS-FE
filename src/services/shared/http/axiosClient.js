@@ -40,8 +40,9 @@ axiosClient.interceptors.response.use(
     const errorData = error.response?.data;
 
     // 1. Xu ly loi bat buoc doi mat khau (BE Issue #10)
-    if (error.response?.status === 403 && errorData?.error === "REQUIRE_PASSWORD_CHANGE") {
-      // Co the emit event hoac luu vao store de hien thi Dialog doi mat khau bat buoc
+    if (error.response?.status === 403 && (errorData?.error === "REQUIRE_PASSWORD_CHANGE" || errorData?.message?.includes("đổi mật khẩu"))) {
+      // Phát sự kiện toàn hệ thống để các Layout bắt được và hiện Dialog
+      window.dispatchEvent(new CustomEvent("require-password-change"));
       console.warn("User must change password:", errorData.message);
       return Promise.reject(error);
     }
@@ -87,9 +88,16 @@ axiosClient.interceptors.response.use(
         return axiosClient(originalRequest);
       } catch (_error) {
         processQueue(_error, null);
-        localStorage.clear();
-        sessionStorage.clear();
-        window.location.href = "/login";
+        
+        // Chỉ redirect nếu thực sự có dấu hiệu là token hết hạn (đã từng đăng nhập)
+        // Nếu là Guest (không có refreshToken) thì không được đá ra /login
+        const hasLoggedBefore = localStorage.getItem("refreshToken") || sessionStorage.getItem("refreshToken");
+        if (hasLoggedBefore) {
+            localStorage.clear();
+            sessionStorage.clear();
+            window.location.href = "/login";
+        }
+        
         return Promise.reject(_error);
       } finally {
         isRefreshing = false;
@@ -101,4 +109,5 @@ axiosClient.interceptors.response.use(
 );
 
 export default axiosClient;
+
 

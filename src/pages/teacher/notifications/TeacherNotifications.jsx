@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import teacherService from "../../../services/pages/teacher/teacherService";
 import "./TeacherNotifications.css";
 
 import NotificationHeader from "./components/NotificationHeader/NotificationHeader";
@@ -57,8 +58,6 @@ const TEACHER_UNREAD_COUNT_KEY = "teacher_unread_notifications_count";
 const TEACHER_UNREAD_COUNT_EVENT = "teacher-notification-count-updated";
 
 export default function TeacherNotifications() {
-
-
   const studentClasses = useMemo(
     () => [...new Set(CHILDREN.map((child) => child.class.slice(0, 2)))],
     []
@@ -66,8 +65,41 @@ export default function TeacherNotifications() {
 
   const [filter, setFilter] = useState("all");
   const [showOnlyMarked, setShowOnlyMarked] = useState(false);
-  const [notifications, setNotifications] = useState(INITIAL_NOTIFICATIONS);
+  const [notifications, setNotifications] = useState([]);
   const [selected, setSelected] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    const fetchNotifications = async () => {
+      setIsLoading(true);
+      try {
+        const response = await teacherService.getNotifications({ mock: false });
+        if (response.success && response.data) {
+          const mapped = response.data.map(n => ({
+            id: n.id,
+            title: n.title,
+            content: n.content,
+            date: n.created_at || n.date,
+            unread: n.unread === true || n.is_read === false || n.status === "unread",
+            class: n.type || n.class || "teacher",
+            important: n.is_important || n.important || false
+          }));
+          setNotifications(mapped);
+          console.log("Teacher Notifications loaded from real API:", mapped.length, "items");
+        } else {
+          // If response is success but data is empty, it's real empty data
+          setNotifications([]);
+        }
+      } catch (error) {
+        console.error("Failed to fetch real notifications:", error);
+        // Do not fallback to mock data, let the user know it's empty/error
+        setNotifications([]);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchNotifications();
+  }, []);
 
   const markedCount = useMemo(
     () => notifications.filter((n) => n.important).length,

@@ -306,3 +306,4 @@ export default function ViolationRecordModal({ isOpen, onClose, onSuccess, incid
         </div>
     );
 }
+

@@ -33,3 +33,4 @@ const Pagination = ({ effectivePage, totalPages, onPrevPage, onNextPage }) => {
 };
 
 export default Pagination;
+

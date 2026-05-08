@@ -89,3 +89,4 @@ export default function PeriodClosingWizard({ onClose, onLockComplete }) {
         </div>
     );
 }
+

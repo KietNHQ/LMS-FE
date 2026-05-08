@@ -47,17 +47,14 @@ const STUDENT_PROFILE_MOCK = {
 };
 
 const STUDENT_DASHBOARD_MOCK = {
-  profile: STUDENT_PROFILE_MOCK,
+  profile: null,
   summary: {
-    averageScore: 8.6,
-    attendanceRate: 95,
-    upcomingTests: 3,
-    unreadNotifications: 4,
+    averageScore: 0,
+    attendanceRate: 0,
+    upcomingTests: 0,
+    unreadNotifications: 0,
   },
-  upcomingTests: [
-    { id: 1, subject: "Toán", date: "2026-04-24", title: "Kiểm tra 15 phút" },
-    { id: 2, subject: "Vật lý", date: "2026-04-26", title: "Kiểm tra chương 2" },
-  ],
+  upcomingTests: [],
 };
 
 const STUDENT_GRADES_MOCK = {
@@ -82,9 +79,36 @@ const STUDENT_CLASSES_MOCK = [
 ];
 
 const STUDENT_SCHEDULE_MOCK = [
-  { id: 1, day: "Thứ 2", time: "07:30 - 09:00", subject: "Toán", room: "A101" },
-  { id: 2, day: "Thứ 3", time: "09:45 - 11:15", subject: "Tiếng Anh", room: "B203" },
-  { id: 3, day: "Thứ 4", time: "13:00 - 14:30", subject: "Vật lý", room: "C104" },
+  {
+    id: 1,
+    day_of_week: 1,
+    start_time: "2026-05-07T07:00:00.000Z",
+    room: "P201",
+    class_teacher_subject: {
+      subject_assignments: { display_name: "Toán" },
+      teachers: { given_name: "Huỳnh", surname: "Trần" }
+    }
+  },
+  {
+    id: 2,
+    day_of_week: 2,
+    start_time: "07:50:00", // Test string format
+    room: "P302",
+    class_teacher_subject: {
+      subject_assignments: { display_name: "Tiếng Anh" },
+      teachers: { given_name: "Mai", surname: "Nguyễn" }
+    }
+  },
+  {
+    id: 3,
+    day_of_week: 3,
+    start_time: "2026-05-07T08:45:00.000Z",
+    room: "P105",
+    class_teacher_subject: {
+      subject_assignments: { display_name: "Ngữ Văn" },
+      teachers: { given_name: "Long", surname: "Phạm" }
+    }
+  }
 ];
 
 const STUDENT_NOTIFICATIONS_MOCK = [
@@ -152,12 +176,12 @@ const STUDENT_ENDPOINTS = [
   { key: "get_classes", method: "GET", path: "/api/v1/classes", module: "classes", mock: () => STUDENT_CLASSES_MOCK },
   { key: "get_classes_by_id", method: "GET", path: "/api/v1/classes/:id", module: "classes", mock: (input) => STUDENT_CLASSES_MOCK.find((item) => `${item.id}` === `${input.pathParams?.id}`) || null },
   { key: "get_classes_by_id_schedule", method: "GET", path: "/api/v1/classes/:id/schedule", module: "schedule", mock: () => STUDENT_SCHEDULE_MOCK },
-  { key: "get_student_schedule", method: "GET", path: "/api/v1/timetable/student", module: "schedule", mock: () => STUDENT_SCHEDULE_MOCK },
-  { key: "get_student_notifications", method: "GET", path: "/api/v1/notifications/student", module: "notifications", mock: () => STUDENT_NOTIFICATIONS_MOCK },
-  { key: "patch_student_notifications_mark_all_read", method: "PATCH", path: "/api/v1/notifications/student/mark-all-read", module: "notifications", mock: () => ({ updated: true }) },
-  { key: "patch_student_notifications_by_id_read", method: "PATCH", path: "/api/v1/notifications/student/:id/read", module: "notifications", mock: (input) => ({ id: input.pathParams?.id, unread: false }) },
-  { key: "get_student_support_faqs", method: "GET", path: "/api/v1/support/student/faqs", module: "support", mock: () => STUDENT_FAQS_MOCK },
-  { key: "post_student_support_tickets", method: "POST", path: "/api/v1/support/student/tickets", module: "support", mock: (input) => ({ id: Date.now(), ...(input.body || {}), status: "open" }) },
+  { key: "get_student_schedule", method: "GET", path: "/api/v1/timetable", module: "schedule", mock: () => STUDENT_SCHEDULE_MOCK },
+  { key: "get_student_notifications", method: "GET", path: "/api/v1/notifications/my", module: "notifications", mock: () => STUDENT_NOTIFICATIONS_MOCK },
+  { key: "patch_student_notifications_mark_all_read", method: "PUT", path: "/api/v1/notifications/my/read-all", module: "notifications", mock: () => ({ updated: true }) },
+  { key: "patch_student_notifications_by_id_read", method: "PUT", path: "/api/v1/notifications/my/:id/read", module: "notifications", mock: (input) => ({ id: input.pathParams?.id, unread: false }) },
+  { key: "get_student_support_faqs", method: "GET", path: "/api/v1/communications/faqs", module: "support", mock: () => STUDENT_FAQS_MOCK },
+  { key: "post_student_support_tickets", method: "POST", path: "/api/v1/communications/tickets", module: "support", mock: (input) => ({ id: Date.now(), ...(input.body || {}), status: "open" }) },
   { key: "get_quizzes", method: "GET", path: "/api/v1/quizzes", module: "quiz", mock: () => STUDENT_QUIZZES_MOCK },
   { key: "get_quizzes_by_id", method: "GET", path: "/api/v1/quizzes/:id", module: "quiz", mock: (input) => {
       const matched = STUDENT_QUIZZES_MOCK.find((item) => `${item.id}` === `${input.pathParams?.id}`);
@@ -183,6 +207,8 @@ const STUDENT_ENDPOINTS = [
 
 const createEndpointCaller = (endpoint) => async (input = {}) => {
   const shouldMock = input.mock !== false;
+  
+  console.log(`[studentService] Calling ${endpoint.key} (path: ${endpoint.path}), shouldMock: ${shouldMock}`);
 
   if (shouldMock) {
     await wait(input.delayMs ?? DEFAULT_DELAY_MS);
@@ -259,4 +285,5 @@ export const studentService = {
 };
 
 export default studentService;
+
 

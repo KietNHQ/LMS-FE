@@ -3,7 +3,7 @@ import { PageHeader, WeekPicker, EventCalendar } from "../../../../components/co
 import DisciplineHeaderActions from "../components/DisciplineHeaderActions";
 import Select from "../../../../components/ui/Select/Select";
 import { useSchoolYearTerm } from "../../../../hooks/useSchoolYearTerm";
-import { vpDisciplineService } from "../../../../services/pages/vp-discipline";
+import { vpDisciplineService } from "../../../../services/pages/management/vp-discipline";
 import { FiAlertTriangle, FiUsers, FiClock, FiAward, FiBarChart2, FiArrowRight } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
 import { INITIAL_CALENDAR_EVENTS, CALENDAR_EVENT_TYPES } from "../../../../components/common/EventCalendar/eventData";
@@ -329,3 +329,4 @@ export default function VpDisciplineDashboard() {
         </div>
     );
 }
+

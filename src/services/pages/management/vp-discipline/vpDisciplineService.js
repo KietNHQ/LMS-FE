@@ -1,4 +1,4 @@
-import { createScopedApiService } from "../admin/generated/createScopedApiService";
+import { createScopedApiService } from "../../admin/generated/createScopedApiService";
 
 const VP_DISCIPLINE_MODULES = [
   "dashboard",
@@ -43,4 +43,7 @@ export const vpDisciplineService = {
 };
 
 export default vpDisciplineService;
+
+
+
 

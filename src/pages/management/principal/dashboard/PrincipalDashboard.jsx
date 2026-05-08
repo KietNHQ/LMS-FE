@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { PageHeader, SchoolYearTermSelector, EventCalendar, LoadingSpinner } from "../../../../components/common";
 import { useSchoolYearTerm } from "../../../../hooks/useSchoolYearTerm";
-import { principalService } from "../../../../services/pages/principal";
+import { principalService } from "../../../../services/pages/management/principal";
 import {
     FiUsers, FiUserCheck, FiHome, FiDollarSign, FiStar, FiActivity, 
     FiShield, FiBell, FiTrendingUp, FiCheckCircle, FiBarChart2, FiAlertCircle,
@@ -328,3 +328,4 @@ export default function PrincipalDashboard() {
         </div>
     );
 }
+

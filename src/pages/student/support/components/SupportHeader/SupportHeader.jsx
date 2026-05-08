@@ -2,17 +2,18 @@ import "./SupportHeader.css";
 
 export default function SupportHeader({ chatStatus = "Sẵn sàng"}) {
   return (
-    <header className="parent-support-header">
+    <header className="student-support-header">
       <div>
         <h1>Trung tâm hỗ trợ</h1>
       </div>
 
-      <div className="parent-support-header-meta" aria-label="Thông tin hỗ trợ phụ huynh">
-        <span className="parent-support-meta-chip parent-support-meta-chip--accent">
+      <div className="student-support-header-meta" aria-label="Thông tin hỗ trợ học sinh">
+        <span className="student-support-meta-chip student-support-meta-chip--accent">
           Chat: {chatStatus}
         </span>
       </div>
     </header>
   );
 }
+
 

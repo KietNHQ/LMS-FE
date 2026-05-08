@@ -179,3 +179,4 @@ export default function ProfileDialog({ open, role = "student", themeRole, profi
         </div>
     );
 }
+

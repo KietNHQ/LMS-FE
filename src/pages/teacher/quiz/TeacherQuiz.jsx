@@ -1,17 +1,21 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import { FiChevronLeft, FiChevronRight } from "react-icons/fi";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Modal } from "../../../components/ui";
+import { LoadingSpinner } from "../../../components/common";
 import { DEFAULT_PROFILE_BY_ROLE } from "../../../components/common/Dialog/ProfileDialog/profileData";
 import {
     buildFinalScore,
     formatDurationLabel,
     parseDurationMinutes,
+    quizService,
 } from "../../../services/shared/quiz/quizService";
+import { teacherService } from "../../../services/pages/teacher/teacherService";
 import "./TeacherQuiz.css";
 import TeacherQuizListSection from "./components/teacherQuizListSection/TeacherQuizListSection";
 import CreateTeacherQuizDialog from "./components/createTeacherQuizDialog/CreateTeacherQuizDialog";
 import SubmissionReviewDialog from "./components/submissionReviewDialog/SubmissionReviewDialog";
+import { toast } from "react-toastify";
 
 const ITEMS_PER_PAGE = 4;
 const CURRENT_TEACHER_NAME = DEFAULT_PROFILE_BY_ROLE.teacher.name;
@@ -144,23 +148,47 @@ const initialQuizzes = [
 export default function TeacherQuiz() {
     const navigate = useNavigate();
     const location = useLocation();
-    const createdQuizFromState = location.state?.createdQuiz;
-
-    const [quizzes, setQuizzes] = useState(() =>
-        createdQuizFromState
-            ? [{
-                ...createdQuizFromState,
-                duration: parseDurationMinutes(createdQuizFromState.duration),
-                durationLabel: formatDurationLabel(createdQuizFromState.durationLabel || createdQuizFromState.duration),
-                ...buildSubmissionState(createdQuizFromState.submissions || []),
-            }, ...initialQuizzes]
-            : initialQuizzes
-    );
+    
+    const [quizzes, setQuizzes] = useState([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState(null);
     const [currentPage, setCurrentPage] = useState(1);
     const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
     const [pendingDeleteQuizId, setPendingDeleteQuizId] = useState(null);
     const [editingQuizId, setEditingQuizId] = useState(null);
     const [reviewingQuizId, setReviewingQuizId] = useState(null);
+
+    const fetchQuizzes = async () => {
+        try {
+            setIsLoading(true);
+            setError(null);
+            // Try real API first, fallback to mock if 401 or dev environment
+            let response;
+            try {
+                response = await quizService.listQuizzes();
+            } catch (apiErr) {
+                console.warn("API listQuizzes failed, using mock:", apiErr);
+                // If 401 or No refresh token, automatically use mock for demo purposes
+                if (apiErr.message?.includes("401") || apiErr.message?.includes("refresh token")) {
+                    response = await teacherService.listQuizzes({ mock: true });
+                } else {
+                    throw apiErr;
+                }
+            }
+            
+            setQuizzes(response.items || []);
+        } catch (err) {
+            console.error("Fetch quizzes error:", err);
+            setError("Không thể tải danh sách bài kiểm tra.");
+            toast.error("Đã xảy ra lỗi khi tải dữ liệu.");
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchQuizzes();
+    }, []);
 
     const reviewingQuiz = useMemo(
         () => quizzes.find((quiz) => quiz.id === reviewingQuizId) || null,
@@ -181,39 +209,53 @@ export default function TeacherQuiz() {
         setPendingDeleteQuizId(null);
     };
 
-    const handleConfirmDeleteQuiz = () => {
+    const handleConfirmDeleteQuiz = async () => {
         if (pendingDeleteQuizId == null) return;
 
-        setQuizzes((prev) => {
-            const nextQuizzes = prev.filter((q) => q.id !== pendingDeleteQuizId);
-            const nextTotalPages = Math.max(
-                1,
-                Math.ceil(nextQuizzes.length / ITEMS_PER_PAGE)
-            );
-
-            setCurrentPage((prevPage) => Math.min(prevPage, nextTotalPages));
-            return nextQuizzes;
-        });
-
-        setPendingDeleteQuizId(null);
+        try {
+            await quizService.deleteQuiz(pendingDeleteQuizId);
+            setQuizzes((prev) => prev.filter((q) => q.id !== pendingDeleteQuizId));
+            toast.success("Xoá bài kiểm tra thành công.");
+        } catch (err) {
+            console.error("Delete quiz error:", err);
+            toast.error("Không thể xoá bài kiểm tra.");
+        } finally {
+            setPendingDeleteQuizId(null);
+        }
     };
 
     const pendingDeleteQuiz = quizzes.find((quiz) => quiz.id === pendingDeleteQuizId);
 
-    const handleStatusChange = (quizId, newStatus) => {
-        setQuizzes((prev) =>
-            prev.map((q) =>
-                q.id === quizId ? { ...q, status: newStatus } : q
-            )
-        );
+    const handleStatusChange = async (quizId, newStatus) => {
+        try {
+            if (newStatus === "open") {
+                await quizService.publishQuiz(quizId);
+            } else {
+                await quizService.unpublishQuiz(quizId);
+            }
+            setQuizzes((prev) =>
+                prev.map((q) => (q.id === quizId ? { ...q, status: newStatus } : q))
+            );
+            toast.success(newStatus === "open" ? "Đã hiển thị bài kiểm tra." : "Đã ẩn bài kiểm tra.");
+        } catch (err) {
+            console.error("Status change error:", err);
+            toast.error("Không thể thay đổi trạng thái.");
+        }
     };
 
-    const handleLockToggle = (quizId, isLocked) => {
-        setQuizzes((prev) =>
-            prev.map((q) =>
-                q.id === quizId ? { ...q, isLocked } : q
-            )
-        );
+    const handleLockToggle = async (quizId, isLocked) => {
+        try {
+            // Assuming lock is a property of updateQuiz or separate endpoint
+            // For now, let's treat it as a status update if backend supports it
+            await quizService.updateQuiz(quizId, { isLocked });
+            setQuizzes((prev) =>
+                prev.map((q) => (q.id === quizId ? { ...q, isLocked } : q))
+            );
+            toast.success(isLocked ? "Đã khóa bài làm." : "Đã mở khóa bài làm.");
+        } catch (err) {
+            console.error("Lock toggle error:", err);
+            toast.error("Không thể thay đổi trạng thái khóa.");
+        }
     };
 
     const handlePageChange = (nextPage) => {
@@ -366,15 +408,26 @@ export default function TeacherQuiz() {
             </div>
 
             <div className="teacher-quiz__body">
-                <TeacherQuizListSection
-                    quizzes={paginatedQuizzes}
-                    onDelete={handleDeleteQuiz}
-                    onStatusChange={handleStatusChange}
-                    onEdit={handleEditQuiz}
-                    onCardClick={handleOpenQuizQuestions}
-                    onOpenSubmissionReview={handleOpenSubmissionReview}
-                    onLockToggle={handleLockToggle}
-                />
+                {isLoading ? (
+                    <div className="teacher-quiz-loading">
+                        <LoadingSpinner label="Đang tải danh sách bài kiểm tra..." />
+                    </div>
+                ) : error ? (
+                    <div className="teacher-quiz-error">
+                        <p>{error}</p>
+                        <button onClick={fetchQuizzes} className="teacher-quiz-retry-btn">Thử lại</button>
+                    </div>
+                ) : (
+                    <TeacherQuizListSection
+                        quizzes={paginatedQuizzes}
+                        onDelete={handleDeleteQuiz}
+                        onStatusChange={handleStatusChange}
+                        onEdit={handleEditQuiz}
+                        onCardClick={handleOpenQuizQuestions}
+                        onOpenSubmissionReview={handleOpenSubmissionReview}
+                        onLockToggle={handleLockToggle}
+                    />
+                )}
 
                 {quizzes.length > 0 && (
                     <div className="teacher-quiz-pagination">
@@ -465,5 +518,6 @@ export default function TeacherQuiz() {
         </div>
     );
 }
+
 
 

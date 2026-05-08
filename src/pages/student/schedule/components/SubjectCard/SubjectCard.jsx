@@ -68,3 +68,4 @@ export default function SubjectCard({ lesson, getAssessmentIcon }) {
         </div>
     );
 }
+

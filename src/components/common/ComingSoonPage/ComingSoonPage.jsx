@@ -18,3 +18,4 @@ export default function ComingSoonPage({ title = "Trang đang phát triển", de
         </div>
     );
 }
+

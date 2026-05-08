@@ -32,3 +32,4 @@ export default function Tooltip({ text, children, position = "top" }) {
     </div>
   );
 }
+

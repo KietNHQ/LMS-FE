@@ -1,4 +1,4 @@
-import { createScopedApiService } from "../admin/generated/createScopedApiService";
+import { createScopedApiService } from "../../admin/generated/createScopedApiService";
 
 const ACADEMIC_STAFF_MODULES = [
   "dashboard",
@@ -27,4 +27,7 @@ export const academicStaffService = {
 };
 
 export default academicStaffService;
+
+
+
 

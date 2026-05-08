@@ -594,3 +594,4 @@ export default function VpAcademicGrades() {
         </div>
     );
 }
+

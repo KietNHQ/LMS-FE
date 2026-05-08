@@ -596,3 +596,4 @@ const AdminCompetitionDetail = () => {
 };
 
 export default AdminCompetitionDetail;
+

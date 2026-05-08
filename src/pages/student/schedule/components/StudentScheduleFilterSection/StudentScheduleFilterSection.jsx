@@ -1,13 +1,11 @@
 import React, { useRef } from "react";
 import "./StudentScheduleFilterSection.css";
 import { ChevronLeft, ChevronRight, Calendar } from "lucide-react";
+import { FaRegMoon } from "react-icons/fa";
+import { BsFillSunFill } from "react-icons/bs";
 import Select from "../../../../../components/ui/Select/Select";
 
-const quickDays = [
-  { value: -1, label: "Hôm qua" },
-  { value: 0, label: "Hôm nay" },
-  { value: 1, label: "Ngày mai" },
-];
+
 
 function getWeekDates(offset = 0) {
   const now = new Date();
@@ -29,13 +27,20 @@ function formatWeekRange(days) {
   return `${days[0].toLocaleDateString("vi-VN", opts)} - ${days[6].toLocaleDateString("vi-VN", opts)} / ${days[0].getFullYear()}`;
 }
 
-export default function StudentScheduleFilterSection({ weekOffset, setWeekOffset, onQuickDaySelect }) {
+export default function StudentScheduleFilterSection({
+  weekOffset,
+  setWeekOffset,
+  sessionView = "morning",
+  setSessionView,
+  selectedSubject,
+  setSelectedSubject,
+  subjects = []
+}) {
   const days = getWeekDates(weekOffset);
   const dateInputRef = useRef(null);
 
   const goBack = () => setWeekOffset((w) => w - 1);
   const goForward = () => setWeekOffset((w) => w + 1);
-  const goToday = () => setWeekOffset(0);
 
   const handleDateChange = (e) => {
     if (!e.target.value) return;
@@ -67,51 +72,66 @@ export default function StudentScheduleFilterSection({ weekOffset, setWeekOffset
     }
   };
 
+  const isMorning = sessionView === "morning";
+
   return (
     <div className="schedule-filter-section">
-      <div className="schedule-filter-week">
-        <div className="schedule-filter-title-nav">
-          <h1 className="schedule-filter-title">Thời khóa biểu</h1>
-          <div className="schedule-filter-week-nav">
-            <button className="week-nav-btn" onClick={goBack}>
-              <ChevronLeft size={18} />
-            </button>
+      <div className="schedule-filter-left">
+        <div className="schedule-filter-week-nav">
+          <button className="week-nav-btn" onClick={goBack} title="Tuần trước">
+            <ChevronLeft size={18} />
+          </button>
 
-            <div className="week-label" onClick={openPicker} title="Chọn ngày để chuyển tuần">
-              <Calendar size={16} />
-              <span>{formatWeekRange(days)}</span>
-              <input
-                type="date"
-                ref={dateInputRef}
-                onChange={handleDateChange}
-                style={{ position: 'absolute', opacity: 0, width: 0, padding: 0, border: 'none' }}
-                value={days[0].toISOString().split('T')[0]}
-              />
-            </div>
-
-            <button className="week-nav-btn" onClick={goForward}>
-              <ChevronRight size={18} />
-            </button>
+          <div className="week-label" onClick={openPicker} title="Chọn ngày để chuyển tuần">
+            <Calendar size={16} />
+            <span>{formatWeekRange(days)}</span>
+            <input
+              type="date"
+              ref={dateInputRef}
+              onChange={handleDateChange}
+              style={{ position: 'absolute', opacity: 0, width: 0, padding: 0, border: 'none' }}
+              value={days[0].toISOString().split('T')[0]}
+            />
           </div>
+
+          <button className="week-nav-btn" onClick={goForward} title="Tuần sau">
+            <ChevronRight size={18} />
+          </button>
         </div>
 
-        <div className="schedule-filter-actions">
+        <div className="schedule-filter-subjects">
           <Select
-            className="schedule-admin-select schedule-quick-select"
+            className="schedule-admin-select"
             variant="custom"
-            options={quickDays}
-            value={0}
-            onChange={(e) => {
-              const nextOffset = Number(e.target.value);
-              if (typeof onQuickDaySelect === "function") {
-                onQuickDaySelect(nextOffset);
-              } else if (nextOffset === 0) {
-                goToday();
-              }
-            }}
+            options={subjects}
+            value={selectedSubject}
+            onChange={(e) => setSelectedSubject(e.target.value)}
+            placeholder="Lọc môn học"
           />
         </div>
+      </div>
+
+      <div className="schedule-filter-actions">
+        <button
+          type="button"
+          className={`tt-session-toggle-btn ${isMorning ? "tt-session-toggle-morning" : "tt-session-toggle-afternoon"}`}
+          onClick={() => setSessionView(isMorning ? "afternoon" : "morning")}
+        >
+          <span className="tt-session-toggle-icon-wrap">
+            {!isMorning ? (
+              <FaRegMoon className="tt-session-toggle-icon moon" />
+            ) : (
+              <BsFillSunFill className="tt-session-toggle-icon sun" />
+            )}
+          </span>
+          <span className={`tt-session-toggle-label ${isMorning ? "moon" : "sun"}`}>
+            Đổi sang 5 tiết {isMorning ? "chiều" : "sáng"}
+          </span>
+        </button>
+
+
       </div>
     </div>
   );
 }
+

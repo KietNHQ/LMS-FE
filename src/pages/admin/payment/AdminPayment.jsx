@@ -6,7 +6,7 @@ import TuitionFeeSection from "./components/tuitionFeeSection";
 import TransferInfoSection from "./components/transferInfoSection";
 import SchoolExpenditureSection from "./components/schoolExpenditureSection";
 import "./AdminPayment.css";
-import paymentService from "../../../services/pages/admin/payment/paymentService";
+import paymentService from "../../../services/pages/management/payment/paymentService";
 
 // --- MOCK DATA ---
 const resolveTermKeyByLabel = (term) => {
@@ -203,4 +203,5 @@ const AdminPayment = () => {
 };
 
 export default AdminPayment;
+
 

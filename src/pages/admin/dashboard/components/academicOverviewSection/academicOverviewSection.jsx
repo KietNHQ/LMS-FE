@@ -66,3 +66,4 @@ const AcademicOverviewSection = () => {
 };
 
 export default AcademicOverviewSection;
+

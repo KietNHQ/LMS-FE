@@ -121,7 +121,17 @@ export default function ParentInformationSection({
                             <label>Ngày sinh</label>
                             <input
                                 type="date"
-                                value={formData.dob || ""}
+                                value={(() => {
+                                    const dob = formData.dob || formData.profile?.dob;
+                                    if (!dob || dob === "" || dob === "--" || dob === "—") return "";
+                                    
+                                    if (/^\d{4}-\d{2}-\d{2}/.test(dob)) return dob.slice(0, 10);
+                                    const parts = String(dob).split("/");
+                                    if (parts.length === 3 && parts[2].length === 4) {
+                                        return `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
+                                    }
+                                    return "";
+                                })()}
                                 onChange={(e) => onChange("dob", e.target.value)}
                                 disabled={isViewOnly}
                             />
@@ -141,7 +151,11 @@ export default function ParentInformationSection({
                             <label>Số điện thoại</label>
                             <input
                                 type="text"
-                                value={formData.phone || ""}
+                                value={(() => {
+                                    const ph = formData.phone || formData.profile?.phone;
+                                    if (!ph || ph === "—" || ph === "--") return "";
+                                    return ph;
+                                })()}
                                 onChange={(e) => onChange("phone", e.target.value)}
                                 disabled={isViewOnly}
                                 placeholder="Đủ 10 số, VD: 0912345678"
@@ -219,3 +233,4 @@ export default function ParentInformationSection({
         </div>
     );
 }
+

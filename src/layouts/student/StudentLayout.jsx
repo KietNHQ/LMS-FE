@@ -17,6 +17,40 @@ export default function StudentLayout() {
         return () => clearTimeout(timer);
     }, [location.pathname]);
 
+    // [NEW] Fetch notification count on layout mount to sync sidebar badge
+    useEffect(() => {
+        const syncNotificationCount = async () => {
+            try {
+                const { studentService } = await import("../../services/pages/student/studentService");
+                
+                let response;
+                try {
+                    response = await studentService.listNotifications({ mock: false });
+                } catch (err) {
+                    console.warn("Real Student Notifications API failed, trying mock:", err);
+                    response = await studentService.listNotifications({ mock: true });
+                }
+                
+                if (response.success && response.data) {
+                    const unreadCount = response.data.filter(n => 
+                        n.unread === true || n.is_read === false || n.status === "unread"
+                    ).length;
+                    
+                    const finalCount = unreadCount || (response.isMock ? 3 : 0);
+                    localStorage.setItem("student_unread_notifications_count", String(finalCount));
+                    window.dispatchEvent(
+                        new CustomEvent("student-notification-count-updated", {
+                            detail: finalCount,
+                        })
+                    );
+                }
+            } catch (err) {
+                console.warn("Failed to sync student notification count:", err);
+            }
+        };
+        syncNotificationCount();
+    }, []);
+
     // Đọc từ localStorage
     const storedUser = (() => {
         try {

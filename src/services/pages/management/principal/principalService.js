@@ -1,5 +1,5 @@
-import { createScopedApiService } from "../admin/generated/createScopedApiService";
-import { adminDashboardService } from "../admin/dashboard/dashboardService";
+import { createScopedApiService } from "../../admin/generated/createScopedApiService";
+import { adminDashboardService } from "../../admin/dashboard/dashboardService";
 
 const PRINCIPAL_MODULES = [
   "dashboard",
@@ -33,4 +33,7 @@ export const principalService = {
 };
 
 export default principalService;
+
+
+
 

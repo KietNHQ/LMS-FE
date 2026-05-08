@@ -17,6 +17,40 @@ export default function ParentLayout() {
         return () => clearTimeout(timer);
     }, [location.pathname]);
 
+    // [NEW] Fetch notification count on layout mount to sync sidebar badge
+    useEffect(() => {
+        const syncNotificationCount = async () => {
+            try {
+                const { parentService } = await import("../../services/pages/parent/parentService");
+                
+                let response;
+                try {
+                    response = await parentService.listNotifications({ mock: false });
+                } catch (err) {
+                    console.warn("Real Parent Notifications API failed, trying mock:", err);
+                    response = await parentService.listNotifications({ mock: true });
+                }
+                
+                if (response.success && response.data) {
+                    const unreadCount = response.data.filter(n => 
+                        n.unread === true || n.is_read === false || n.status === "unread"
+                    ).length;
+                    
+                    const finalCount = unreadCount || (response.isMock ? 2 : 0);
+                    localStorage.setItem("parent_unread_notifications_count", String(finalCount));
+                    window.dispatchEvent(
+                        new CustomEvent("parent-notification-count-updated", {
+                            detail: finalCount,
+                        })
+                    );
+                }
+            } catch (err) {
+                console.warn("Failed to sync parent notification count:", err);
+            }
+        };
+        syncNotificationCount();
+    }, []);
+
     // Đọc từ localStorage
     const storedUser = (() => {
         try {

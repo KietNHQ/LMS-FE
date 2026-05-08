@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { PageHeader, SchoolYearTermSelector } from "../../../../components/common";
 import { useSchoolYearTerm } from "../../../../hooks/useSchoolYearTerm";
-import { financeService } from "../../../../services/pages/finance";
+import { financeService } from "../../../../services/pages/management/finance";
 import {
     FiAlertCircle,
     FiAlertTriangle,
@@ -685,3 +685,4 @@ export function FinanceDashboard() {
         </div>
     );
 }
+

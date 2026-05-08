@@ -14,14 +14,20 @@ export const PERMISSIONS = {
     CLASS_ALLOCATION_MANAGE: 'class_allocation:manage',
 
     // 4. Nhóm Điểm số (Grade)
-    GRADE_VIEW: 'grades:read',
-    GRADE_CREATE: 'grades:create',
-    GRADE_FINALIZE: 'grades:finalize',
-    GRADE_UNLOCK: 'grades:unlock',
+    GRADE_VIEW: 'grade:read',
+    GRADE_CREATE: 'grade:create',
+    GRADE_FINALIZE: 'grade:finalize',
+    GRADE_UNLOCK: 'grade:unlock',
 
-    // 5. Nhóm Kiểm tra (Exam)
+    // 5. Nhóm Kiểm tra (Exam & Quiz)
     EXAM_VIEW: 'exam:read',
     EXAM_MANAGE: 'exam:manage',
+    QUIZ_VIEW: 'quiz:read',
+    QUIZ_MANAGE: 'quiz:manage',
+    
+    // 5.1 Nhóm Thời khóa biểu (Timetable)
+    TIMETABLE_VIEW: 'timetable:read',
+    TIMETABLE_MANAGE: 'timetable:manage',
 
     // 6. Nhóm Nề nếp (Discipline)
     DISCIPLINE_VIEW: 'discipline:read',
@@ -30,6 +36,8 @@ export const PERMISSIONS = {
     // 7. Nhóm Tài chính (Fees)
     FEES_VIEW: 'fees:read',
     FEES_MANAGE: 'fees:manage',
+    FINANCE_TUITION_VIEW: 'fees:read',
+    FINANCE_TUITION_MANAGE: 'fees:manage',
     
     // 8. Nhóm Thông báo (Notification)
     NOTIFICATION_VIEW: 'notifications:read',
@@ -63,6 +71,9 @@ export const PERMISSIONS = {
     // 16. Nhóm Phê duyệt (Approvals)
     APPROVAL_REQUEST: 'approvals:request',
     APPROVAL_PROCESS: 'approvals:process',
+
+    // 17. Nhóm Thi đua (Competition)
+    COMPETITION_MANAGE: 'reward_types:manage',
 };
 
 export const MANAGEMENT_TITLES = [
@@ -120,6 +131,8 @@ export const PERMISSION_GROUPS = [
             { id: PERMISSIONS.GRADE_FINALIZE, label: "Khóa điểm" },
             { id: PERMISSIONS.EXAM_VIEW, label: "Xem kỳ thi" },
             { id: PERMISSIONS.EXAM_MANAGE, label: "Quản lý kỳ thi" },
+            { id: PERMISSIONS.QUIZ_VIEW, label: "Xem bài kiểm tra" },
+            { id: PERMISSIONS.QUIZ_MANAGE, label: "Quản lý bài kiểm tra" },
         ]
     },
     {
@@ -162,3 +175,4 @@ export const PERMISSION_GROUPS = [
 ];
 
 export const permissionSidebarMap = [];
+

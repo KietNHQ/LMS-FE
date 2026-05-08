@@ -4,7 +4,12 @@ import { BsFillSunFill } from "react-icons/bs";
 import SchoolRoundedIcon from "@mui/icons-material/SchoolRounded";
 import AccessTimeRoundedIcon from "@mui/icons-material/AccessTimeRounded";
 import "./WeeklyScheduleSection.css";
-import { getTeacherWeekLessons, getStartOfIsoWeek } from "../../../../../utils/timetableShared";
+import { 
+  getTeacherWeekLessons, 
+  getStartOfIsoWeek, 
+  SUBJECT_COLOR_MAP,
+  SUBJECT_DISPLAY 
+} from "../../../../../utils/timetableShared";
 
 const DAY_NAMES = ["Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6", "Thứ 7", "CN"];
 const PERIODS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
@@ -49,11 +54,45 @@ function isToday(date) {
   return date.toDateString() === today.toDateString();
 }
 
-export default function WeeklyScheduleSection({ weekOffset, selectedClass, onSelectDay, onLessonSelect }) {
-  const [sessionView, setSessionView] = useState("morning");
+export default function WeeklyScheduleSection({ 
+  weekOffset, 
+  selectedClass, 
+  onSelectDay, 
+  onLessonSelect,
+  sessionView,
+  setSessionView,
+  apiData = [],
+  isLoading = false
+}) {
   const days = getWeekDates(weekOffset);
   const weekStart = days[0];
-  const lessons = getTeacherWeekLessons(weekStart, selectedClass);
+  
+    // Logic map từ API sang format của UI
+    const mappedLessons = React.useMemo(() => {
+      const baseLessons = getTeacherWeekLessons(weekStart, selectedClass);
+      
+      if (!apiData || apiData.length === 0) return baseLessons;
+      
+      // Map API data to UI format
+      return apiData.map((item, idx) => {
+        const subjectKey = item.subject_code || "Toan";
+        return {
+          id: item.id || idx,
+          day: item.day_of_week || "Monday",
+          periodStart: item.period_number,
+          periodEnd: item.period_number,
+          subject: item.subject_name || SUBJECT_DISPLAY[subjectKey] || subjectKey,
+          className: item.class_name || "Lớp",
+          room: item.room_name || "Phòng học",
+          teacher: item.teacher_name || "Giáo viên",
+          color: item.color || SUBJECT_COLOR_MAP[subjectKey] || "teal",
+          note: item.notes || "",
+          status: item.status || "normal"
+        };
+      });
+    }, [apiData, weekStart, selectedClass]);
+
+  const lessons = mappedLessons;
 
   const getCellLesson = (dayIdx, period) => {
     const dayKey = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"][dayIdx];
@@ -67,7 +106,17 @@ export default function WeeklyScheduleSection({ weekOffset, selectedClass, onSel
       students: 35,
       color: lesson.color,
       note: lesson.note,
-      teacher: lesson.teacher,
+      teacher: (() => {
+        if (!lesson.teacher) return "Chưa phân công";
+        // Assuming lesson.teacher is "Surname GivenName" or we need to split it differently
+        // But getTeacherWeekLessons returns a lesson with .teacher string.
+        // Actually, let's just use the same logic but handle string split.
+        const parts = lesson.teacher.split(" ");
+        if (parts.length < 2) return lesson.teacher;
+        const givenName = parts.pop();
+        const initials = parts.map(s => s[0].toUpperCase()).join(".");
+        return `Thầy ${initials ? initials + "." : ""}${givenName}`;
+      })(),
       status: lesson.status,
       periodStart: lesson.periodStart,
       periodEnd: lesson.periodEnd,
@@ -100,26 +149,6 @@ export default function WeeklyScheduleSection({ weekOffset, selectedClass, onSel
 
   return (
     <div className="weekly-schedule-section">
-      <div className="weekly-header-bar">
-        <p className="weekly-schedule-title">Thời khóa biểu tuần</p>
-        <button
-          type="button"
-          className={`tt-session-toggle-btn ${isMorning ? "tt-session-toggle-morning" : "tt-session-toggle-afternoon"}`}
-          onClick={() => setSessionView(isMorning ? "afternoon" : "morning")}
-        >
-          <span className="tt-session-toggle-icon-wrap">
-            {!isMorning ? (
-              <FaRegMoon className="tt-session-toggle-icon moon" />
-            ) : (
-              <BsFillSunFill className="tt-session-toggle-icon sun" />
-            )}
-          </span>
-          <span className={`tt-session-toggle-label ${isMorning ? "moon" : "sun"}`}>
-            Đổi sang 5 tiết {isMorning ? "chiều" : "sáng"}
-          </span>
-        </button>
-      </div>
-
       <div className="weekly-table-wrapper">
         <table className="weekly-table">
           <thead>
@@ -193,3 +222,4 @@ export default function WeeklyScheduleSection({ weekOffset, selectedClass, onSel
     </div>
   );
 }
+

@@ -90,6 +90,7 @@ export default function AllUsers({ onCountChange, schoolYear, term, hasPermissio
 
     const [allSystemPermissions, setAllSystemPermissions] = useState([]);
     const [permissionMap, setPermissionMap] = useState({}); // key -> id mapping
+    const [permissionRevMap, setPermissionRevMap] = useState({}); // id -> key mapping
 
     const closeConfirm = () => {
         setConfirmConfig(prev => ({ ...prev, isOpen: false }));
@@ -136,11 +137,16 @@ export default function AllUsers({ onCountChange, schoolYear, term, hasPermissio
                 setAllSystemPermissions(perms);
                 
                 const map = {};
+                const revMap = {};
                 perms.forEach(p => {
                     const key = `${p.resource}:${p.action}`;
-                    if (p.id) map[key] = p.id;
+                    if (p.id) {
+                        map[key] = p.id;
+                        revMap[p.id] = key;
+                    }
                 });
                 setPermissionMap(map);
+                setPermissionRevMap(revMap);
             } catch (err) {
                 console.error("Failed to load system permissions for AllUsers:", err);
             }
@@ -541,12 +547,15 @@ export default function AllUsers({ onCountChange, schoolYear, term, hasPermissio
             try {
                 const rawPerms = await permissionService.getUserPermissions(user.id);
                 const perms = Array.isArray(rawPerms) 
-                    ? rawPerms.map(p => {
-                        if (typeof p === 'object' && p.resource && p.action) {
-                            return `${p.resource}:${p.action}`;
-                        }
-                        return typeof p === 'object' ? p.key || p.id : p;
-                    }) 
+                    ? rawPerms
+                        .filter(p => p.granted !== false) // Chỉ lấy các quyền được granted
+                        .map(p => {
+                            if (typeof p === 'object' && p.resource && p.action) {
+                                return `${p.resource}:${p.action}`;
+                            }
+                            const id = typeof p === 'object' ? p.id : p;
+                            return permissionRevMap[id] || (typeof p === 'object' ? p.key : p);
+                        }) 
                     : [];
                 setSelectedUser(prev => prev?.id === user.id ? { ...prev, permissions: perms } : prev);
             } catch (err) {
@@ -564,12 +573,15 @@ export default function AllUsers({ onCountChange, schoolYear, term, hasPermissio
             try {
                 const rawPerms = await permissionService.getUserPermissions(user.id);
                 const perms = Array.isArray(rawPerms) 
-                    ? rawPerms.map(p => {
-                        if (typeof p === 'object' && p.resource && p.action) {
-                            return `${p.resource}:${p.action}`;
-                        }
-                        return typeof p === 'object' ? p.key || p.id : p;
-                    }) 
+                    ? rawPerms
+                        .filter(p => p.granted !== false) // Chỉ lấy các quyền được granted
+                        .map(p => {
+                            if (typeof p === 'object' && p.resource && p.action) {
+                                return `${p.resource}:${p.action}`;
+                            }
+                            const id = typeof p === 'object' ? p.id : p;
+                            return permissionRevMap[id] || (typeof p === 'object' ? p.key : p);
+                        }) 
                     : [];
                 setSelectedUser(prev => prev?.id === user.id ? { ...prev, permissions: perms } : prev);
             } catch (err) {
@@ -863,3 +875,4 @@ export default function AllUsers({ onCountChange, schoolYear, term, hasPermissio
         </div>
     );
 }
+

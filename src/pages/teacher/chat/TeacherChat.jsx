@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useEffect, useRef } from "react";
 import { FiSearch, FiSend, FiUsers, FiMessageSquare, FiHash, FiUser, FiInfo } from "react-icons/fi";
 import { homeroomData } from "../homeroom/data/homeroomData";
+import { teacherService } from "../../../services/pages/teacher/teacherService";
 import "./TeacherChat.css";
 
 const ROOMS = [
@@ -22,11 +23,19 @@ export default function TeacherChat() {
     const [searchQuery, setSearchQuery] = useState("");
     const [inputValue, setInputValue] = useState("");
     const [messagesByTarget, setMessagesByTarget] = useState({});
+    const [apiContacts, setApiContacts] = useState([]);
+    const [isLoading, setIsLoading] = useState(false);
     const messagesEndRef = useRef(null);
 
     const activeRoom = useMemo(() => ROOMS.find(r => r.id === activeRoomId), [activeRoomId]);
 
     const targets = useMemo(() => {
+        // If API has data, use it (filtered by roomId if BE supports it)
+        if (apiContacts.length > 0) {
+            return apiContacts.filter(c => c.roomId === activeRoomId || !c.roomId);
+        }
+
+        // Fallback to existing mock logic
         if (activeRoomId === "homeroom") {
             return (homeroomData.students || []).map(s => ({
                 id: `parent-${s.id}`,
@@ -49,7 +58,7 @@ export default function TeacherChat() {
         return [
             { id: "admin-support", name: "Quản trị viên Hệ thống", subLabel: "Hỗ trợ 24/7", avatar: "A", type: "admin" }
         ];
-    }, [activeRoomId]);
+    }, [activeRoomId, apiContacts]);
 
     const filteredTargets = useMemo(() => {
         const query = searchQuery.toLowerCase().trim();
@@ -69,11 +78,59 @@ export default function TeacherChat() {
     }, [selectedTarget, messagesByTarget]);
 
     useEffect(() => {
+        const fetchContacts = async () => {
+            setIsLoading(true);
+            try {
+                // Try real API
+                const response = await teacherService.getChatContacts({ mock: false });
+                if (response.success && response.data) {
+                    setApiContacts(response.data);
+                }
+            } catch (err) {
+                console.warn("Real Chat API failed, using service mock:", err);
+                // Fallback to service mock explicitly
+                try {
+                    const mockRes = await teacherService.getChatContacts({ mock: true });
+                    if (mockRes.success && mockRes.data) {
+                        setApiContacts(mockRes.data);
+                    }
+                } catch (mockErr) {
+                    console.error("Service mock also failed:", mockErr);
+                }
+            } finally {
+                setIsLoading(false);
+            }
+        };
+        fetchContacts();
+    }, []);
+
+    useEffect(() => {
+        if (!selectedTarget) return;
+        const fetchMessages = async () => {
+            try {
+                const response = await teacherService.getChatMessages({ 
+                    mock: false,
+                    pathParams: { targetId: selectedTarget.id }
+                });
+                if (response.success && response.data) {
+                    setMessagesByTarget(prev => ({
+                        ...prev,
+                        [selectedTarget.id]: response.data
+                    }));
+                }
+            } catch (err) {
+                console.error("Chat API messages error:", err);
+            }
+        };
+        fetchMessages();
+    }, [selectedTarget]);
+
+    useEffect(() => {
         setSelectedTarget(null);
         setSearchQuery("");
     }, [activeRoomId]);
 
-    const handleSendMessage = (e) => {
+    const handleSendMessage = async (e) => {
         e.preventDefault();
         const text = inputValue.trim();
         if (!selectedTarget || !text) return;
@@ -85,12 +142,27 @@ export default function TeacherChat() {
             time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
         };
 
+        // Update UI optimistically
         setMessagesByTarget(prev => ({
             ...prev,
             [selectedTarget.id]: [...(prev[selectedTarget.id] || []), newMessage]
         }));
-
         setInputValue("");
+
+        // Call API
+        try {
+            await teacherService.sendMessage({
+                mock: false,
+                body: {
+                    targetId: selectedTarget.id,
+                    text: text,
+                    timestamp: new Date().toISOString()
+                }
+            });
+        } catch (err) {
+            console.error("Failed to send message via API:", err);
+            // Optional: Show error to user or revert UI
+        }
     };
 
     return (
@@ -198,3 +270,4 @@ export default function TeacherChat() {
         </div>
     );
 }
+

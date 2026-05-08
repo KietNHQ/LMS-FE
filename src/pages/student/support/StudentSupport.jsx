@@ -11,14 +11,14 @@ export default function StudentSupport() {
   const faqs = [
     {
       category: "Học tập",
-      question: "Làm sao để theo dõi kết quả học tập của con?",
-      answer: "Bạn mở mục Tổng quan con em hoặc Điểm số để xem chi tiết theo học kỳ.",
+      question: "Làm sao để xem thời khóa biểu tuần này?",
+      answer: "Bạn mở mục Thời khóa biểu để xem chi tiết các tiết học theo ngày/tuần.",
       popularity: 96,
     },
     {
       category: "Tài chính",
-      question: "Phụ huynh thanh toán học phí cho con ở đâu?",
-      answer: "Bạn có thể thanh toán trong mục Thanh toán hoặc liên hệ phòng tài vụ để được hỗ trợ.",
+      question: "Làm sao để xem điểm các bài kiểm tra?",
+      answer: "Bạn vào mục Điểm số để xem danh sách điểm các môn học đã được cập nhật.",
       popularity: 90,
     },
     {
@@ -29,8 +29,8 @@ export default function StudentSupport() {
     },
     {
       category: "Điểm danh",
-      question: "Có thể xem lịch sử điểm danh theo tháng không?",
-      answer: "Có, hệ thống cho phép xem điểm danh tuần/tháng trong phần Tổng quan con em.",
+      question: "Tôi có thể xem lịch thi ở đâu?",
+      answer: "Lịch thi được cập nhật trong mục Thông báo hoặc Lịch học tập của bạn.",
       popularity: 84,
     },
     {
@@ -41,7 +41,7 @@ export default function StudentSupport() {
     },
     {
       category: "Tài khoản",
-      question: "Quên mật khẩu tài khoản phụ huynh phải làm gì?",
+      question: "Quên mật khẩu tài khoản học sinh phải làm gì?",
       answer: "Sử dụng Quên mật khẩu ở trang đăng nhập hoặc liên hệ bộ phận hỗ trợ để cấp lại.",
       popularity: 88,
     },
@@ -93,19 +93,19 @@ export default function StudentSupport() {
           <div className="student-chat-body">
             <div className="student-chat-message is-bot">
               <div className="student-chat-role">Bot</div>
-              Xin chào! Tôi là trợ lý LMS dành cho phụ huynh. Bạn cần hỗ trợ vấn đề nào?
+              Xin chào! Tôi là trợ lý LMS dành cho học sinh. Bạn cần hỗ trợ vấn đề nào?
               <div className="student-chat-time">14:48</div>
             </div>
 
             <div className="student-chat-message is-user">
               <div className="student-chat-role">Bạn</div>
-              Tôi muốn xem lịch sử điểm danh của con trong tháng này.
+              Tôi muốn xem lịch thi tháng này.
               <div className="student-chat-time">14:49</div>
             </div>
 
             <div className="student-chat-message is-bot">
               <div className="student-chat-role">Bot</div>
-              Bạn vào Tổng quan con em, chọn tab Điểm danh và xem bộ lọc theo tháng.
+              Bạn vào mục Lịch học tập, chọn tab Lịch thi để xem chi tiết nhé.
               <div className="student-chat-time">14:49</div>
             </div>
           </div>
