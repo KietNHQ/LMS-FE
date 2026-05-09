@@ -122,39 +122,46 @@ export const useGetMe = () => {
         queryKey: ['me'],
         queryFn: async () => {
             const response = await authService.getMe();
-            const user = response?.data ?? response;
+            // Backend trả về { success: true, data: { user: {...}, profile: {...} } }
+            // Hoặc đôi khi chỉ trả về object data trực tiếp tùy vào cấu hình axiosClient
+            const data = response?.data ?? response;
             
+            // Tách user và profile
+            const user = data?.user ?? data;
+            const profile = data?.profile ?? null;
+            
+            if (!user || !user.id) {
+                console.warn("useGetMe: User data is incomplete", data);
+                return null;
+            }
+
             // [WORKAROUND] Luôn fetch permissions tươi từ DB cho các role quản lý/nhân viên
-            // vì permissions nhúng trong JWT bị "stale" (cũ) ngay khi Admin thay đổi.
-            const staffRoles = ['admin', 'quản trị viên', 'management', 'quản lý', 'principal', 'vp_academic', 'vp_discipline', 'academic_staff', 'finance_staff', 'teacher', 'giáo viên'];
+            const staffRoles = ['admin', 'quản trị viên', 'management', 'quản lý', 'principal', 'vp_academic', 'vp_discipline', 'academic_staff', 'finance_staff', 'teacher', 'giáo viên', 'manager'];
             const userRole = user.role?.toLowerCase();
             
-            if (user && (staffRoles.includes(userRole) || !user.permissions || user.permissions.length === 0)) {
+            if (staffRoles.includes(userRole) || !user.permissions || user.permissions.length === 0) {
                 try {
-                    // Import động để tránh vòng lặp phụ thuộc (circular dependency)
                     const { permissionService } = await import('../services/pages/admin/users/permissionService');
                     const perms = await permissionService.getUserPermissions(user.id);
-                    // Đảm bảo perms là mảng trước khi gán
                     user.permissions = Array.isArray(perms) ? perms : [];
                 } catch (err) {
-                    console.error("Failed to fetch fresh permissions:", err);
+                    console.error("Failed to fetch fresh permissions for user:", user.id, err);
                 }
             }
             
             // Sync to storage
-            if (user) {
-                const normalizedUser = {
-                    ...user,
-                    permissions: normalizePermissions(user.permissions)
-                };
-                const isLocal = !!localStorage.getItem('user');
-                const storage = isLocal ? localStorage : sessionStorage;
-                storage.setItem('user', JSON.stringify(normalizedUser));
-                if (user.role) storage.setItem('userRole', user.role);
-                return normalizedUser;
-            }
+            const normalizedUser = {
+                ...user,
+                profile, // Đính kèm profile vào object user để dùng ở FE
+                permissions: normalizePermissions(user.permissions)
+            };
             
-            return user;
+            const isLocal = !!localStorage.getItem('user');
+            const storage = isLocal ? localStorage : sessionStorage;
+            storage.setItem('user', JSON.stringify(normalizedUser));
+            if (user.role) storage.setItem('userRole', user.role);
+            
+            return normalizedUser;
         },
         retry: false,
         staleTime: 30 * 1000, // Fetch every 30s to keep permissions fresh
@@ -163,7 +170,34 @@ export const useGetMe = () => {
 
 export const useChangePassword = () => {
     return useMutation({
-        mutationFn: (data) => authService.changePassword(data)
+        mutationFn: (data) => authService.changePassword(data),
+        onSuccess: (response) => {
+            const { session } = response.data || {};
+            if (session?.accessToken) {
+                // Xác định storage đang dùng (ưu tiên localStorage nếu có accessToken ở đó)
+                const isLocal = !!localStorage.getItem('accessToken');
+                const storage = isLocal ? localStorage : sessionStorage;
+                
+                storage.setItem('accessToken', session.accessToken);
+                if (session.refreshToken) {
+                    storage.setItem('refreshToken', session.refreshToken);
+                }
+                
+                // Cập nhật lại trạng thái requirePasswordChange trong object user ở storage
+                const userStr = storage.getItem('user');
+                if (userStr) {
+                    try {
+                        const user = JSON.parse(userStr);
+                        // Cập nhật cả 2 định dạng để đảm bảo tương thích
+                        user.requirePasswordChange = false;
+                        user.require_password_change = false;
+                        storage.setItem('user', JSON.stringify(user));
+                    } catch (err) {
+                        console.error("Failed to update user in storage:", err);
+                    }
+                }
+            }
+        }
     });
 };
 export const useListUsers = (params) => {
