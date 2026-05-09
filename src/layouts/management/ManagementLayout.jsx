@@ -43,7 +43,8 @@ export default function ManagementLayout() {
                 
                 let response;
                 try {
-                    response = await adminApiService.get_notifications({ mock: false });
+                    // Ưu tiên dùng endpoint "my" để lấy thông báo cá nhân, tránh lỗi 403 nếu không phải Admin
+                    response = await adminApiService.get_notifications_my({ mock: false });
                 } catch (err) {
                     console.warn("Real Management Notifications API failed, trying mock:", err);
                     response = await adminApiService.get_notifications({ mock: true });
@@ -51,9 +52,10 @@ export default function ManagementLayout() {
                 
                 if (response.success) {
                     const data = response.data || [];
-                    const unreadCount = Array.isArray(data) ? data.filter(n => 
+                    // Lấy unreadCount từ data (BE trả về data: [], unreadCount: x) hoặc tự tính
+                    const unreadCount = response.unreadCount ?? (Array.isArray(data) ? data.filter(n => 
                         n.unread === true || n.is_read === false || n.status === "unread"
-                    ).length : 0;
+                    ).length : 0);
                     
                     const finalCount = unreadCount || (response.isMock ? 8 : 0);
                     localStorage.setItem("admin_unread_notifications_count", String(finalCount));
