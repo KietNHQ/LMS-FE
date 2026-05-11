@@ -128,7 +128,7 @@ const buildCreatePayload = (formData = {}) => {
     payload.studentIds = profile.studentIds || [];
   } else if (role === "manager" || role === "admin") {
     payload.title = profile.title || null;
-    payload.permission_ids = profile.permission_ids || profile.permissions || [];
+    payload.permissions = profile.permission_ids || profile.permissions || [];
   }
 
   return payload;
@@ -147,7 +147,7 @@ const buildUpdatePayload = (formData = {}) => {
     birthDate: dob || undefined,
     status: statusToApi[formData.status] || undefined,
     gender: formData.profile?.gender || undefined,
-    permission_ids: formData.permission_ids || formData.permissions || formData.profile?.permissions || undefined,
+    permissions: formData.permission_ids || formData.permissions || formData.profile?.permissions || undefined,
   };
 };
 

@@ -287,7 +287,7 @@ export default function AdminManagers({ onCountChange, schoolYear, term, hasPerm
                 
                 updatedFormData.profile = {
                     ...updatedFormData.profile,
-                    permission_ids: permissionIds
+                    permissions: permissionIds
                 };
             }
 
