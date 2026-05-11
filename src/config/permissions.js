@@ -64,6 +64,7 @@ export const PERMISSIONS = {
     // 14. Hệ thống (Audit & Permissions)
     AUDIT_LOG_VIEW: 'audit_logs:read',
     PERMISSION_MANAGE: 'permissions:manage',
+    DASHBOARD_VIEW: 'dashboard:read',
     
     // 15. Nhóm Báo cáo (Reports)
     REPORT_VIEW: 'reports:read',
@@ -92,10 +93,10 @@ export const MANAGEMENT_TITLES = [
         PERMISSIONS.STUDENT_VIEW
     ] },
     { label: "Kế toán", value: "finance", permissions: [
-        PERMISSIONS.USER_VIEW, PERMISSIONS.FEES_VIEW, PERMISSIONS.FEES_MANAGE
+        PERMISSIONS.USER_VIEW, PERMISSIONS.FEES_VIEW, PERMISSIONS.FEES_MANAGE, PERMISSIONS.DASHBOARD_VIEW
     ] },
     { label: "Tổ trưởng bộ môn", value: "dept_head", permissions: [
-        PERMISSIONS.USER_VIEW, PERMISSIONS.TEACHER_VIEW, PERMISSIONS.DEPARTMENT_MANAGE
+        PERMISSIONS.USER_VIEW, PERMISSIONS.TEACHER_VIEW, PERMISSIONS.DEPARTMENT_MANAGE, PERMISSIONS.DASHBOARD_VIEW
     ] },
 ];
 
@@ -110,6 +111,7 @@ export const PERMISSION_GROUPS = [
             { id: PERMISSIONS.USER_DELETE, label: "Xóa người dùng" },
             { id: PERMISSIONS.PERMISSION_MANAGE, label: "Quản lý phân quyền" },
             { id: PERMISSIONS.AUDIT_LOG_VIEW, label: "Xem nhật ký hệ thống" },
+            { id: PERMISSIONS.DASHBOARD_VIEW, label: "Xem Dashboard" },
         ]
     },
     {

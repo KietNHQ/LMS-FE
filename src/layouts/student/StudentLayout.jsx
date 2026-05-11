@@ -2,12 +2,21 @@ import React, { useState, Suspense, useEffect } from "react";
 import { Outlet, useLocation } from "react-router-dom";
 import Sidebar from "../../components/sidebar/Sidebar";
 import { LoadingAnimationBook } from "../../components/common";
+import ChangePasswordDialog from "../../components/common/Dialog/ChangePasswordDialog/ChangePasswordDialog";
 import "./StudentLayout.css";
 
 export default function StudentLayout() {
     const [isCollapsed, setIsCollapsed] = useState(false);
     const location = useLocation();
     const [isPageTransitioning, setIsPageTransitioning] = useState(false);
+    const [forcePasswordChange, setForcePasswordChange] = useState(false);
+
+    // Lắng nghe sự kiện bắt buộc đổi mật khẩu từ axiosClient
+    useEffect(() => {
+        const handleForceChange = () => setForcePasswordChange(true);
+        window.addEventListener("require-password-change", handleForceChange);
+        return () => window.removeEventListener("require-password-change", handleForceChange);
+    }, []);
 
     useEffect(() => {
         setIsPageTransitioning(true);
@@ -90,6 +99,18 @@ export default function StudentLayout() {
                     )}
                 </div>
             </main>
+
+            {/* MANDATORY PASSWORD CHANGE DIALOG */}
+            {(storedUser.requirePasswordChange || storedUser.require_password_change || forcePasswordChange) && (
+                <ChangePasswordDialog
+                    open={true}
+                    role="student"
+                    isMandatory={true}
+                    onClose={() => {
+                        window.location.reload();
+                    }}
+                />
+            )}
         </div>
     );
 }
