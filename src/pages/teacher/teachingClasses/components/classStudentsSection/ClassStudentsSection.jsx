@@ -1,5 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { FiSearch } from "react-icons/fi";
+import { toast } from "react-toastify";
+import teacherService from "../../../../../services/pages/teacher/teacherService";
 import "./ClassStudentsSection.css";
 
 // Utilities
@@ -21,7 +23,7 @@ import Pagination from "./subcomponents/Pagination";
 
 const ITEMS_PER_PAGE = 8;
 
-const ClassStudentsSection = ({ students, readOnly = false }) => {
+const ClassStudentsSection = ({ classId, students, readOnly = false }) => {
   // --- State ---
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
@@ -39,66 +41,9 @@ const ClassStudentsSection = ({ students, readOnly = false }) => {
   const [isLessonReviewDialogOpen, setIsLessonReviewDialogOpen] = useState(false);
   const [lessonScore, setLessonScore] = useState("");
   const [lessonNote, setLessonNote] = useState("");
-  const [lessonReviews, setLessonReviews] = useState(() => {
-    const now = new Date();
-    const todayKey = toDateKey(now);
-    const yesterdayKey = shiftDateKey(now, -1);
-    const lastWeekKey = shiftDateKey(now, -7);
-
-    const buildAttendanceSnapshot = (presentCount) =>
-        students.reduce((acc, student, index) => {
-          acc[student.id] = index < presentCount;
-          return acc;
-        }, {});
-
-    const buildStudentReviewSnapshot = (text) =>
-        students.reduce((acc, student, index) => {
-          acc[student.id] = index < 5 ? `${text} (${index + 1})` : "";
-          return acc;
-        }, {});
-
-    return [
-      {
-        id: 1,
-        lessonLabel: "Hôm nay",
-        lessonTime: `Tiết 2, 07:15 - 08:00 - ${now.toLocaleDateString("vi-VN")}`,
-        attended: Math.max(students.length - 1, 0),
-        absent: Math.min(1, students.length),
-        score: "A",
-        note: "Lớp học tập trung tốt, chỉ 1 học sinh vắng.",
-        reviewDate: todayKey,
-        attendanceSnapshot: buildAttendanceSnapshot(Math.max(students.length - 1, 0)),
-        studentReviewSnapshot: buildStudentReviewSnapshot("Theo dõi tốt"),
-        createdAt: new Date(now.getTime() - 30 * 60 * 1000).toLocaleString("vi-VN"),
-      },
-      {
-        id: 2,
-        lessonLabel: "Hôm qua",
-        lessonTime: `Tiết 3, 08:15 - 09:00 - ${new Date(now.getTime() - 24 * 60 * 60 * 1000).toLocaleDateString("vi-VN")}`,
-        attended: Math.max(students.length - 3, 0),
-        absent: Math.min(3, students.length),
-        score: "B+",
-        note: "Hôm qua vắng hơi nhiều, cần nhắc nhở chuyên cần.",
-        reviewDate: yesterdayKey,
-        attendanceSnapshot: buildAttendanceSnapshot(Math.max(students.length - 3, 0)),
-        studentReviewSnapshot: buildStudentReviewSnapshot("Cần củng cố"),
-        createdAt: new Date(now.getTime() - 24 * 60 * 60 * 1000).toLocaleString("vi-VN"),
-      },
-      {
-        id: 3,
-        lessonLabel: "Tuần trước",
-        lessonTime: `Tiết 5, 14:00 - 14:45 - ${new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toLocaleDateString("vi-VN")}`,
-        attended: Math.max(students.length - 5, 0),
-        absent: Math.min(5, students.length),
-        score: "C+",
-        note: "Tiết tuần trước vắng nhiều, tiến độ bài chậm.",
-        reviewDate: lastWeekKey,
-        attendanceSnapshot: buildAttendanceSnapshot(Math.max(students.length - 5, 0)),
-        studentReviewSnapshot: buildStudentReviewSnapshot("Thiếu tập trung"),
-        createdAt: new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toLocaleString("vi-VN"),
-      },
-    ];
-  });
+  const [currentSchedule, setCurrentSchedule] = useState(null);
+  const [teachingDays, setTeachingDays] = useState([]);
+  const [lessonReviews, setLessonReviews] = useState([]);
 
   // Timeline & Calendar State
   const [todayLessonInfo, setTodayLessonInfo] = useState(() => getCurrentLessonInfo(new Date()));
@@ -107,38 +52,47 @@ const ClassStudentsSection = ({ students, readOnly = false }) => {
   const [calendarViewDate, setCalendarViewDate] = useState(() => parseDateKey(toDateKey(new Date())));
 
   // --- Derived State ---
-  const totalStudents = students.length;
-  const markedAttendedCount = Object.values(studentAttendance).filter(Boolean).length;
-  const attendedToday = markedAttendedCount;
-  const absentToday = Math.max(totalStudents - attendedToday, 0);
-  const todayLabel = new Date().toLocaleDateString("vi-VN");
-
-  const currentLessonLabel = `Tiết học ${lessonReviews.length + 1}`;
-  const currentLessonTime = `${todayLessonInfo.periodLabel === "Ngoài khung tiết" ? "Tiết 1" : todayLessonInfo.periodLabel} - ${todayLabel}`;
-
-  const availableReviewDates = useMemo(
-      () => [...new Set(lessonReviews.map((review) => review.reviewDate))].sort((a, b) => b.localeCompare(a)),
-      [lessonReviews]
-  );
-  const availableReviewDateSet = useMemo(() => new Set(availableReviewDates), [availableReviewDates]);
+  const filteredStudents = useMemo(() => {
+    if (!students) return [];
+    return students.filter((s) =>
+      s.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (s.id && s.id.toString().includes(searchTerm))
+    );
+  }, [students, searchTerm]);
 
   const reviewsForSelectedDate = useMemo(
-      () => lessonReviews.filter((review) => review.reviewDate === selectedHistoryDate),
-      [lessonReviews, selectedHistoryDate]
+    () => lessonReviews.filter((review) => review.reviewDate === selectedHistoryDate),
+    [lessonReviews, selectedHistoryDate]
   );
 
   const selectedDateLatestReview = reviewsForSelectedDate[0] || null;
 
-  const filteredStudents = students.filter((student) =>
-      student.name.toLowerCase().includes(searchTerm.toLowerCase())
+  const totalStudents = students?.length || 0;
+  const attendedToday = useMemo(() => {
+    return (students || []).filter(s => studentAttendance[s.id]).length;
+  }, [students, studentAttendance]);
+
+  const absentToday = Math.max(totalStudents - attendedToday, 0);
+  const selectedDateObj = parseDateKey(selectedHistoryDate);
+  const selectedDateLabel = selectedDateObj.toLocaleDateString("vi-VN");
+
+  const currentLessonLabel = currentSchedule ? `Tiết học thực tế (Tiết ${currentSchedule.id || "?"})` : `Tiết học dự kiến (${lessonReviews.length + 1})`;
+  const currentLessonTime = currentSchedule 
+    ? `${currentSchedule.start_time?.substring(0, 5)} - ${currentSchedule.end_time?.substring(0, 5)} - ${selectedDateLabel}`
+    : `${todayLessonInfo?.periodLabel || "Tiết 1"} - ${selectedDateLabel}`;
+
+  const availableReviewDates = useMemo(
+    () => [...new Set(lessonReviews.map((review) => review.reviewDate))].sort((a, b) => b.localeCompare(a)),
+    [lessonReviews]
   );
+  const availableReviewDateSet = useMemo(() => new Set(availableReviewDates), [availableReviewDates]);
 
   const totalPages = Math.max(1, Math.ceil(filteredStudents.length / ITEMS_PER_PAGE));
   const effectivePage = Math.min(currentPage, totalPages);
 
   const paginatedStudents = filteredStudents.slice(
-      (effectivePage - 1) * ITEMS_PER_PAGE,
-      effectivePage * ITEMS_PER_PAGE
+    (effectivePage - 1) * ITEMS_PER_PAGE,
+    effectivePage * ITEMS_PER_PAGE
   );
 
   const reviewTotalPoints = useMemo(
@@ -148,15 +102,92 @@ const ClassStudentsSection = ({ students, readOnly = false }) => {
 
   // --- Effects ---
   useEffect(() => {
-    if (!selectedDateLatestReview) return;
-    setStudentAttendance(selectedDateLatestReview.attendanceSnapshot || {});
-    setStudentReviews(selectedDateLatestReview.studentReviewSnapshot || {});
+    if (selectedDateLatestReview) {
+      setStudentAttendance(selectedDateLatestReview.attendanceSnapshot || {});
+      setStudentReviews(selectedDateLatestReview.studentReviewSnapshot || {});
+    } else {
+      // Nếu không có lịch sử cho ngày này, reset trạng thái để giáo viên điểm danh mới
+      setStudentAttendance({});
+      setStudentReviews({});
+    }
     setCurrentPage(1);
   }, [selectedDateLatestReview]);
 
   useEffect(() => {
     setCalendarViewDate(parseDateKey(selectedHistoryDate));
   }, [selectedHistoryDate]);
+
+  // Tải lịch sử đánh giá từ BE
+  useEffect(() => {
+    const fetchHistory = async () => {
+      if (!classId) return;
+      try {
+        const res = await teacherService.getLessonEvaluations({
+          mock: false,
+          pathParams: { classId }
+        });
+        if (res.success && res.data) {
+          const history = res.data.map(item => ({
+            id: item.id,
+            lessonLabel: `Tiết ${item.period_id || ""}`,
+            lessonTime: `${item.start_time ? item.start_time.substring(0, 5) : ""} - ${new Date(item.evaluation_date).toLocaleDateString("vi-VN")}`,
+            attended: item.present_count || 0,
+            absent: item.absent_count || 0,
+            score: item.score,
+            note: item.note,
+            studentReports: item.student_reports || [],
+            reviewDate: toDateKey(new Date(item.evaluation_date)),
+            createdAt: new Date(item.created_at).toLocaleString("vi-VN"),
+          }));
+          if (history.length > 0) {
+            setLessonReviews(history);
+          }
+        }
+      } catch (err) {
+        console.error("Failed to fetch evaluations:", err);
+      }
+    };
+    fetchHistory();
+  }, [classId]);
+
+  // Lấy TKB hiện tại dựa trên ngày đang chọn
+  useEffect(() => {
+    const fetchCurrentSchedule = async () => {
+      if (!classId) return;
+      try {
+        const res = await teacherService.getCurrentSchedule({
+          mock: false,
+          pathParams: { classId },
+          params: { date: selectedHistoryDate } // Gửi ngày đang chọn lên BE
+        });
+        if (res.success) {
+          setCurrentSchedule(res.data || null);
+        }
+      } catch (err) {
+        console.error("Failed to fetch current schedule:", err);
+      }
+    };
+    fetchCurrentSchedule();
+  }, [classId, selectedHistoryDate]);
+
+  // Lấy các thứ có lịch dạy trong tuần
+  useEffect(() => {
+    const fetchTeachingDays = async () => {
+      if (!classId) return;
+      try {
+        const res = await teacherService.getTeachingDays({
+          mock: false,
+          pathParams: { classId }
+        });
+        if (res.success && res.data) {
+          setTeachingDays(res.data);
+        }
+      } catch (err) {
+        console.error("Failed to fetch teaching days:", err);
+      }
+    };
+    fetchTeachingDays();
+  }, [classId]);
 
   // --- Handlers ---
   const handleBackToToday = () => setSelectedHistoryDate(toDateKey(new Date()));
@@ -253,39 +284,88 @@ const ClassStudentsSection = ({ students, readOnly = false }) => {
     }));
   };
 
-  const handleAddLessonReview = (event) => {
+  const handleAddLessonReview = async (event) => {
     event.preventDefault();
     if (!lessonScore.trim() || !lessonNote.trim()) return;
 
-    const reviewDateKey = toDateKey(new Date());
-    const attendanceSnapshot = students.reduce((acc, student) => {
-      acc[student.id] = !!studentAttendance[student.id];
-      return acc;
-    }, {});
-    const studentReviewSnapshot = students.reduce((acc, student) => {
-      acc[student.id] = studentReviews[student.id] || "";
-      return acc;
-    }, {});
+    try {
+      const reviewDateKey = selectedHistoryDate;
+      
+      // 1. Lưu điểm danh
+      const attendanceData = (students || []).map(student => ({
+        studentEnrollmentId: student.enrollmentId,
+        status: studentAttendance[student.id] ? "present" : "absent",
+        note: studentReviews[student.id]?.summary || ""
+      }));
 
-    const newReview = {
-      id: Date.now(),
-      lessonLabel: currentLessonLabel,
-      lessonTime: currentLessonTime,
-      attended: attendedToday,
-      absent: absentToday,
-      score: lessonScore.trim().toUpperCase(),
-      note: lessonNote.trim(),
-      reviewDate: reviewDateKey,
-      attendanceSnapshot,
-      studentReviewSnapshot,
-      createdAt: new Date().toLocaleString("vi-VN"),
-    };
+      await teacherService.saveAttendance({
+        mock: false,
+        body: {
+          periodId: currentSchedule?.id || 1, 
+          date: reviewDateKey,
+          attendances: attendanceData
+        }
+      });
 
-    setLessonReviews((prev) => [newReview, ...prev]);
-    setSelectedHistoryDate(reviewDateKey);
-    setIsLessonReviewDialogOpen(false);
-    setLessonScore("");
-    setLessonNote("");
+      // 3. Thu thập báo cáo chi tiết từng học sinh
+      const studentReports = [];
+      Object.keys(studentReviews).forEach(studentId => {
+        const review = studentReviews[studentId];
+        if (review && review.entries && review.entries.length > 0) {
+          const student = (students || []).find(s => s.id.toString() === studentId.toString());
+          if (student) {
+            review.entries.forEach(entry => {
+              studentReports.push({
+                studentEnrollmentId: student.enrollmentId,
+                category: entry.category,
+                content: typeof entry.content === 'object' ? entry.content.label : entry.content,
+                points: entry.pts,
+                note: entry.note || ""
+              });
+            });
+          }
+        }
+      });
+
+      // 4. Lưu đánh giá tiết học & Ghi nhận chi tiết
+      const evaluationRes = await teacherService.saveLessonEvaluation({
+        mock: false,
+        body: {
+          classId: classId,
+          periodId: currentSchedule?.id || 1,
+          evaluationDate: reviewDateKey,
+          score: lessonScore.trim().toUpperCase(),
+          note: lessonNote.trim(),
+          studentReports: studentReports
+        }
+      });
+
+      if (evaluationRes.success) {
+        toast.success("Đã lưu đánh giá và điểm danh thành công!");
+        
+        // Cập nhật local state
+        const newReview = {
+          id: evaluationRes.data.id || Date.now(),
+          lessonLabel: currentLessonLabel,
+          lessonTime: currentLessonTime,
+          attended: attendedToday,
+          absent: absentToday,
+          score: lessonScore.trim().toUpperCase(),
+          note: lessonNote.trim(),
+          reviewDate: reviewDateKey,
+          createdAt: new Date().toLocaleString("vi-VN"),
+        };
+
+        setLessonReviews((prev) => [newReview, ...prev]);
+        setSelectedHistoryDate(reviewDateKey);
+        setIsLessonReviewDialogOpen(false);
+        setLessonScore("");
+        setLessonNote("");
+      }
+    } catch (err) {
+      console.error("Failed to save evaluation:", err);
+      toast.error("Không thể lưu đánh giá. Vui lòng thử lại.");
+    }
   };
 
   // Calendar Helpers
@@ -300,6 +380,7 @@ const ClassStudentsSection = ({ students, readOnly = false }) => {
     const dayOffset = idx - firstWeekday + 1;
     const dateObj = new Date(calendarViewDate.getFullYear(), calendarViewDate.getMonth(), dayOffset);
     const dateKey = toDateKey(dateObj);
+    const dayOfWeekInDB = dateObj.getDay() + 1;
     return {
       dateObj,
       dateKey,
@@ -308,6 +389,7 @@ const ClassStudentsSection = ({ students, readOnly = false }) => {
       isSelected: dateKey === selectedHistoryDate,
       isToday: dateKey === toDateKey(new Date()),
       hasReview: availableReviewDateSet.has(dateKey),
+      hasLesson: teachingDays.includes(dayOfWeekInDB),
     };
   });
 

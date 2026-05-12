@@ -2,6 +2,7 @@ import React, { useState, Suspense, useEffect } from "react";
 import { Outlet, useLocation } from "react-router-dom";
 import Sidebar from "../../components/sidebar/Sidebar";
 import { LoadingAnimationBook } from "../../components/common";
+import { useGetMe } from "../../hooks/useAuth";
 import ChangePasswordDialog from "../../components/common/Dialog/ChangePasswordDialog/ChangePasswordDialog";
 import "./TeacherLayout.css";
 
@@ -25,6 +26,9 @@ export default function TeacherLayout() {
         }, 600);
         return () => clearTimeout(timer);
     }, [location.pathname]);
+
+    // Tự động đồng bộ thông tin người dùng và quyền hạn từ Server
+    const { data: latestUser } = useGetMe();
 
     // [NEW] Fetch notification count on layout mount to sync sidebar badge
     useEffect(() => {
@@ -59,23 +63,25 @@ export default function TeacherLayout() {
         syncNotificationCount();
     }, []);
 
-    // Đọc từ localStorage
+    // Đọc từ cả localStorage và sessionStorage để đảm bảo không mất data
     const storedUser = (() => {
         try {
-            return JSON.parse(localStorage.getItem("user") || "{}");
+            const userStr = localStorage.getItem("user") || sessionStorage.getItem("user");
+            return JSON.parse(userStr || "{}");
         } catch {
             return {};
         }
     })();
 
-    const userName = storedUser.fullName || storedUser.name || "Giáo viên";
-    const userEmail = storedUser.email || "";
+    const userToUse = latestUser || storedUser;
+    const userName = userToUse.fullName || userToUse.name || "Giáo viên";
+    const userEmail = userToUse.email || "";
 
     return (
         <div className={`teacher-layout theme-teacher ${isCollapsed ? "collapsed" : ""}`}>
             <Sidebar
                 role="teacher"
-                user={storedUser}
+                user={userToUse}
                 userName={userName}
                 userEmail={userEmail}
                 isCollapsed={isCollapsed}

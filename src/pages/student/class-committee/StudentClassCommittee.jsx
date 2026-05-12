@@ -1,4 +1,6 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
+import studentService from "../../../services/pages/student/studentService";
+import teacherService from "../../../services/pages/teacher/teacherService";
 import "./StudentClassCommittee.css";
 import ClassPresidentTab from "./tabs/ClassPresidentTab";
 import AcademicVicePresidentTab from "./tabs/AcademicVicePresidentTab";
@@ -27,6 +29,27 @@ const officerTabs = [
 
 export default function StudentClassCommittee() {
   const [activeTab, setActiveTab] = useState("class-president");
+  const [classId, setClassId] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  const storedUser = JSON.parse(localStorage.getItem("user") || sessionStorage.getItem("user") || "{}");
+  const studentId = storedUser.profile?.id || storedUser.studentId;
+
+  useEffect(() => {
+    const fetchContext = async () => {
+      try {
+        const res = await studentService.getDashboard({ mock: false });
+        if (res.success && res.data && res.data.profile) {
+          setClassData(res.data.profile.class_id || res.data.profile.current_class_id);
+        }
+      } catch (error) {
+        console.error("Failed to fetch student context:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchContext();
+  }, []);
 
   const activeOfficer = useMemo(
     () => officerTabs.find((item) => item.key === activeTab) ?? officerTabs[0],
@@ -61,9 +84,15 @@ export default function StudentClassCommittee() {
       </div>
 
       <div className="student-class-committee-content-area">
-        {activeTab === "class-president" && <ClassPresidentTab />}
-        {activeTab === "academic-vice-president" && <AcademicVicePresidentTab />}
-        {activeTab === "class-secretary" && <ClassSecretaryTab />}
+        {isLoading ? (
+          <div className="loading-container">Đang tải dữ liệu...</div>
+        ) : (
+          <>
+            {activeTab === "class-president" && <ClassPresidentTab classId={classId} />}
+            {activeTab === "academic-vice-president" && <AcademicVicePresidentTab classId={classId} />}
+            {activeTab === "class-secretary" && <ClassSecretaryTab classId={classId} />}
+          </>
+        )}
       </div>
     </div>
   );

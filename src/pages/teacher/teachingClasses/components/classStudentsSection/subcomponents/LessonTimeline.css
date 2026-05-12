@@ -323,3 +323,42 @@
     width: 100%;
   }
 }
+
+.lesson-history-reports {
+  margin: 10px 0;
+  padding: 8px;
+  background: rgba(255, 255, 255, 0.5);
+  border-radius: 6px;
+  font-size: 0.9rem;
+}
+.lesson-history-reports strong {
+  display: block;
+  margin-bottom: 4px;
+  color: #1a56db;
+}
+.lesson-history-reports-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.lesson-history-report-item {
+  margin-bottom: 2px;
+  color: #4b5563;
+}
+
+.lesson-calendar-day.has-lesson {
+  font-weight: 900 !important;
+  color: var(--tc-primary-strong, #0f766e);
+  position: relative;
+}
+.lesson-calendar-day.has-lesson::after {
+  content: " \;
+ position: absolute;
+ bottom: 4px;
+ left: 50%;
+ transform: translateX(-50%);
+ width: 4px;
+ height: 4px;
+ background-color: var(--tc-primary-strong, #0f766e);
+ border-radius: 50%;
+}

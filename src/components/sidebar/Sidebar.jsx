@@ -359,7 +359,7 @@ export default function Sidebar({
                 })();
 
                 // [NEW] Kiểm tra xem tài khoản này có vai trò nhân viên/giáo viên hay không
-                const staffRoles = ['admin', 'quản trị viên', 'teacher', 'giáo viên', 'management', 'quản lý', 'principal', 'hiệu trưởng', 'vp_academic', 'vp_discipline', 'academic_staff', 'finance_staff'];
+                const staffRoles = ['admin', 'quản trị viên', 'teacher', 'giáo viên', 'manager', 'management', 'quản lý', 'principal', 'hiệu trưởng', 'vp_academic', 'vp_discipline', 'academic_staff', 'finance_staff'];
                 const primaryRole = currentUser?.role?.toLowerCase();
                 const hasStaffRole = staffRoles.includes(primaryRole);
 
@@ -389,7 +389,7 @@ export default function Sidebar({
                         
                         if (primaryRole === 'admin' || primaryRole === 'quản trị viên') {
                             navigate('/admin/dashboard');
-                        } else if (['quản lý', 'hiệu trưởng', 'phó ht học vụ', 'phó ht nề nếp', 'giáo vụ', 'tài chính', 'tổ trưởng bộ môn'].includes(primaryRole)) {
+                        } else if (['manager', 'management', 'quản lý', 'hiệu trưởng', 'phó ht học vụ', 'phó ht nề nếp', 'giáo vụ', 'tài chính', 'tổ trưởng bộ môn'].includes(primaryRole)) {
                             navigate('/management/dashboard');
                         } else if (primaryRole === 'teacher' || primaryRole === 'giáo viên') {
                             navigate('/teacher/dashboard');

@@ -85,15 +85,27 @@ DEFAULT_PROFILE_BY_ROLE.manager = DEFAULT_PROFILE_BY_ROLE.management;
 export function getProfileByRole(role, profile) {
     const defaultProfile = DEFAULT_PROFILE_BY_ROLE[role] || DEFAULT_PROFILE_BY_ROLE.student;
     
-    // Merge real profile into default, handling field mapping (fullName -> name)
+    // [FIX] Profile from server comes as { ..., profile: { real_data } }
+    // We need to flatten it for the UI components
+    const serverProfileDetails = profile?.profile || {};
+    
+    // Merge order: Default < Base User Info < Server Profile Details
     const mergedProfile = {
         ...defaultProfile,
-        ...(profile || {})
+        ...(profile || {}),
+        ...serverProfileDetails
     };
 
     // Mapping fields if they exist in the incoming profile but not in the default schema
     if (profile?.fullName && !profile.name) {
         mergedProfile.name = profile.fullName;
+    }
+
+    // [NEW] Prioritize server-side data for teachers/students
+    if (serverProfileDetails.subject) mergedProfile.subject = serverProfileDetails.subject;
+    if (serverProfileDetails.homeroomClass) mergedProfile.homeroomClass = serverProfileDetails.homeroomClass;
+    if (serverProfileDetails.achievements && Array.isArray(serverProfileDetails.achievements)) {
+        mergedProfile.achievements = serverProfileDetails.achievements;
     }
 
     // Ensure permissions are correctly prioritized if they exist in profile

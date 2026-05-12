@@ -2,6 +2,7 @@ import React, { useState, Suspense, useEffect } from "react";
 import { Outlet, useLocation } from "react-router-dom";
 import Sidebar from "../../components/sidebar/Sidebar";
 import { LoadingAnimationBook } from "../../components/common";
+import { useGetMe } from "../../hooks/useAuth";
 import ChangePasswordDialog from "../../components/common/Dialog/ChangePasswordDialog/ChangePasswordDialog";
 import "./StudentLayout.css";
 
@@ -17,6 +18,9 @@ export default function StudentLayout() {
         window.addEventListener("require-password-change", handleForceChange);
         return () => window.removeEventListener("require-password-change", handleForceChange);
     }, []);
+
+    // Tự động đồng bộ thông tin người dùng và quyền hạn từ Server
+    const { data: latestUser } = useGetMe();
 
     useEffect(() => {
         setIsPageTransitioning(true);
@@ -60,22 +64,25 @@ export default function StudentLayout() {
         syncNotificationCount();
     }, []);
 
-    // Đọc từ localStorage
+    // Đọc từ cả localStorage và sessionStorage
     const storedUser = (() => {
         try {
-            return JSON.parse(localStorage.getItem("user") || "{}");
+            const userStr = localStorage.getItem("user") || sessionStorage.getItem("user");
+            return JSON.parse(userStr || "{}");
         } catch {
             return {};
         }
     })();
 
-    const userName = storedUser.fullName || storedUser.name || "Học sinh";
-    const userEmail = storedUser.email || "";
+    const userToUse = latestUser || storedUser;
+    const userName = userToUse.fullName || userToUse.name || "Học sinh";
+    const userEmail = userToUse.email || "";
 
     return (
         <div className={`student-layout ${isCollapsed ? "collapsed" : ""}`}>
             <Sidebar
                 role="student"
+                user={userToUse}
                 userName={userName}
                 userEmail={userEmail}
                 isCollapsed={isCollapsed}

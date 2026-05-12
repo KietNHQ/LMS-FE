@@ -9,6 +9,12 @@ export const PERMISSIONS = {
     CLASS_VIEW: 'classes:read',
     CLASS_MANAGE: 'classes:manage',
     
+    // 2.1 Nhóm Bài học (Lessons)
+    LESSONS_VIEW: 'lessons:read',
+    LESSONS_CREATE: 'lessons:create',
+    LESSONS_UPDATE: 'lessons:update',
+    LESSONS_DELETE: 'lessons:delete',
+    
     // 3. Nhóm Phân công lớp (Class Allocation)
     CLASS_ALLOCATION_VIEW: 'class_allocation:read',
     CLASS_ALLOCATION_MANAGE: 'class_allocation:manage',
@@ -68,6 +74,7 @@ export const PERMISSIONS = {
     
     // 15. Nhóm Báo cáo (Reports)
     REPORT_VIEW: 'reports:read',
+    REPORTS_VIEW: 'reports:read',
 
     // 16. Nhóm Phê duyệt (Approvals)
     APPROVAL_REQUEST: 'approvals:request',
@@ -122,6 +129,10 @@ export const PERMISSION_GROUPS = [
             { id: PERMISSIONS.CLASS_MANAGE, label: "Quản lý lớp học" },
             { id: PERMISSIONS.CLASS_ALLOCATION_VIEW, label: "Xem phân công lớp" },
             { id: PERMISSIONS.CLASS_ALLOCATION_MANAGE, label: "Quản lý phân công" },
+            { id: PERMISSIONS.LESSONS_VIEW, label: "Xem bài học" },
+            { id: PERMISSIONS.LESSONS_CREATE, label: "Tạo bài học" },
+            { id: PERMISSIONS.LESSONS_UPDATE, label: "Sửa bài học" },
+            { id: PERMISSIONS.LESSONS_DELETE, label: "Xóa bài học" },
         ]
     },
     {
