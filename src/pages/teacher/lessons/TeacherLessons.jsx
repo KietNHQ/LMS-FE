@@ -95,7 +95,6 @@ export default function TeacherLessons() {
                     schoolYear: selectedSchoolYear,
                     term: selectedTerm,
                 },
-                mock: true, // Allow mock data for now
             });
 
             if (response.success) {
@@ -207,7 +206,6 @@ export default function TeacherLessons() {
 
             const response = await teacherService.createLesson({
                 body: payload,
-                mock: true,
             });
 
             if (response.success) {
@@ -225,7 +223,6 @@ export default function TeacherLessons() {
             const response = await teacherService.updateLesson({
                 pathParams: { id: lessonId },
                 body: { isPinned: !isCurrentlyPinned },
-                mock: true,
             });
 
             if (response.success) {
@@ -246,7 +243,6 @@ export default function TeacherLessons() {
         try {
             const response = await teacherService.deleteLesson({
                 pathParams: { id: lessonId },
-                mock: true,
             });
 
             if (response.success) {
@@ -288,12 +284,10 @@ export default function TeacherLessons() {
                 response = await teacherService.updateLesson({
                     pathParams: { id: editingLessonId },
                     body: payload,
-                    mock: true,
                 });
             } else {
                 response = await teacherService.createLesson({
                     body: payload,
-                    mock: true,
                 });
             }
 

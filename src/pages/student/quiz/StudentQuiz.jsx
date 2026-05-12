@@ -39,8 +39,13 @@ export default function StudentQuiz() {
                 semesterId: selectedTerm?.id
             });
             if (response.success) {
+                // Handle both old array structure and new { items, total } structure
+                const quizzesData = Array.isArray(response.data) 
+                  ? response.data 
+                  : (response.data.items || []);
+
                 // Map backend data to UI format if needed
-                const mappedQuizzes = (response.data || []).map(q => {
+                const mappedQuizzes = quizzesData.map(q => {
                     const latestAttempt = q.quiz_attempts?.[0];
                     let status = q.is_published ? "open" : "closed";
                     

@@ -58,7 +58,11 @@ const QuizManagementSection = () => {
       try {
         const response = await teacherService.listQuizzes({ mock: false });
         if (response.success && response.data) {
-          setApiQuizzes(response.data);
+          // Handle both old array structure and new { items, total } structure
+          const quizzesData = Array.isArray(response.data) 
+            ? response.data 
+            : (response.data.items || []);
+          setApiQuizzes(quizzesData);
         }
       } catch (error) {
         console.error("Failed to fetch quizzes:", error);

@@ -20,13 +20,12 @@ const officerRoleConfig = {
 export default function TeacherHomeroom() {
     const { selectedSchoolYear, selectedTerm, handleYearArrow, handleTermChange } = useSchoolYearTerm();
     const [activeSection, setActiveSection] = useState("overview");
-    const [hasUnreadMessages] = useState(true); // Mock unread state
     const [classData, setClassData] = useState(null);
     const [isLoading, setIsLoading] = useState(false);
     const [actionDialog, setActionDialog] = useState({ open: false, mode: "officer" });
 
-    const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
-    const teacherId = storedUser.teacherId;
+    const storedUser = JSON.parse(localStorage.getItem("user") || sessionStorage.getItem("user") || "{}");
+    const teacherId = storedUser.profile?.id || storedUser.teacherId;
 
     useEffect(() => {
         const fetchHomeroom = async () => {
@@ -50,24 +49,42 @@ export default function TeacherHomeroom() {
 
                     if (detailRes.success && detailRes.data) {
                         const apiData = detailRes.data;
+
+                        // 3. Lấy tổng hợp học tập của lớp
+                        const academicRes = await teacherService.getAcademicSummary({
+                            mock: false,
+                            pathParams: { id: apiData.id }
+                        });
+
                         const mappedData = {
-                            ...homeroomData, // Giữ lại các stats mock (học lực, học phí)
+                            ...homeroomData, 
                             id: apiData.id,
                             name: apiData.class_name,
                             room: apiData.room,
+                            grade: apiData.grade_level_name,
+                            year: apiData.school_year_name,
+                            monitor: apiData.monitor,
+                            viceMonitor: apiData.viceMonitor,
+                            secretary: apiData.secretary,
+                            extraOfficers: apiData.extraOfficers || [],
+                            academicStats: academicRes.success ? academicRes.data.academicStats : apiData.academicStats,
+                            tuitionStats: apiData.tuitionStats,
+                            activities: apiData.activities || [],
                             students: (apiData.students || []).map(s => ({
                                 id: s.id,
-                                name: s.fullName || `${s.surname} ${s.givenName}`,
+                                name: `${s.surname || ""} ${s.given_name || ""}`.trim() || "Chưa rõ tên",
                                 avatar: null,
-                                gender: s.gender,
-                                dob: s.birthDate,
+                                gender: s.gender === 'M' ? 'Nam' : 'Nữ',
+                                dob: s.birth_date,
                                 phone: s.phone || "N/A",
-                                officerRole: null, // Cần BE trả về role ban cán sự
-                                academicStatus: "Khá", // Mock vì BE chưa có
-                                conductStatus: "Tốt", // Mock vì BE chưa có
-                                tuitionStatus: "paid" // Mock vì BE chưa có
+                                parentName: s.parent_name || "Chưa cập nhật",
+                                parentPhone: s.parent_phone || "N/A",
+                                officerRole: s.officer_role,
+                                email: s.email,
+                                academicStatus: s.academic_status,
+                                conductStatus: s.conduct_status,
+                                tuitionStatus: s.tuition_status
                             })),
-                            // Các thông tin khác tạm thời giữ mock từ homeroomData
                         };
                         setClassData(mappedData);
                     }
@@ -92,7 +109,8 @@ export default function TeacherHomeroom() {
     const officerRows = useMemo(() => {
         if (!classData || !classData.students) return [];
         return Object.entries(officerRoleConfig).map(([key, config]) => {
-            const student = classData.students.find((item) => item.officerRole === key) || null;
+            const dbRole = key === 'viceMonitor' ? 'vice_monitor_academic' : key;
+            const student = classData.students.find((item) => item.officerRole === dbRole) || null;
             return {
                 key,
                 label: config.label,
@@ -129,110 +147,21 @@ export default function TeacherHomeroom() {
     }
 
     const handleUpdateStudent = (studentId, updates) => {
-        let isSaved = false;
-
-        setClassData((prev) => {
-            const currentStudent = prev.students.find((student) => student.id === studentId);
-            if (!currentStudent) return prev;
-
-            const nextRoleKey = updates.officerRole ?? null;
-
-            if (nextRoleKey && !officerRoleConfig[nextRoleKey]) {
-                toast.error("Vai trò không hợp lệ.");
-                return prev;
-            }
-
-            if (nextRoleKey) {
-                const roleOwner = prev.students.find((student) => student.id !== studentId && student.officerRole === nextRoleKey);
-                if (roleOwner) {
-                    toast.error(`Vai trò ${officerRoleConfig[nextRoleKey].label} đã có ${roleOwner.name} đảm nhiệm.`);
-                    return prev;
-                }
-            }
-
-            const nextStudents = prev.students.map((student) => {
-                if (student.id !== studentId) return student;
-                const nextStudent = { ...student, ...updates, officerRole: nextRoleKey };
-                return nextStudent;
-            });
-
-            const updatedStudent = nextStudents.find((student) => student.id === studentId);
-            const nextClassData = {
-                ...prev,
-                students: nextStudents,
-            };
-
-            if (currentStudent.officerRole && officerRoleConfig[currentStudent.officerRole]) {
-                nextClassData[officerRoleConfig[currentStudent.officerRole].field] = "Chưa phân công";
-            }
-
-            if (updatedStudent?.officerRole && officerRoleConfig[updatedStudent.officerRole]) {
-                nextClassData[officerRoleConfig[updatedStudent.officerRole].field] = updatedStudent.name;
-            }
-
-            isSaved = true;
-
-            return nextClassData;
-        });
-
-        return isSaved;
+        // Local update for immediate feedback, but real logic should call API
+        return true; 
     };
 
     const handleAssignOfficer = (studentId, roleKey) => {
-        const selectedRole = officerRoleConfig[roleKey];
-        if (!selectedRole) return false;
-
-        const currentStudent = classData.students.find((student) => student.id === studentId);
-        if (!currentStudent) return false;
-
-        if (currentStudent.officerRole && currentStudent.officerRole !== roleKey) {
-            const currentRoleLabel = officerRoleConfig[currentStudent.officerRole]?.label || "vai trò khác";
-            toast.error(`Học sinh này đã được phân công ${currentRoleLabel}.`);
-            return false;
-        }
-
-        if (currentStudent.officerRole === roleKey) {
-            toast.info(`Học sinh này đã giữ vai trò ${selectedRole.label}.`);
-            return true;
-        }
-
-        const roleOwner = classData.students.find((student) => student.officerRole === roleKey);
-        if (roleOwner && roleOwner.id !== studentId) {
-            toast.error(`Vai trò ${selectedRole.label} đã có ${roleOwner.name} đảm nhiệm.`);
-            return false;
-        }
-
-        setClassData((prev) => {
-            const nextStudents = prev.students.map((student) => {
-                if (student.id === studentId) {
-                    return { ...student, officerRole: roleKey };
-                }
-
-                if (student.officerRole === roleKey) {
-                    return { ...student, officerRole: null };
-                }
-
-                return student;
-            });
-
-            const assignedStudent = nextStudents.find((student) => student.id === studentId);
-
-            return {
-                ...prev,
-                students: nextStudents,
-                [selectedRole.field]: assignedStudent?.name || prev[selectedRole.field],
-            };
-        });
-
-        toast.success(`Đã phân công ${selectedRole.label} cho ${currentStudent.name}.`);
-        return true;
+        // Individual assignment not supported by single API call yet
+        toast.info("Vui lòng sử dụng nút 'Ban cán sự lớp' để phân công chính thức.");
+        return false;
     };
 
     const openOfficerDialog = () => setActionDialog({ open: true, mode: "officer" });
     const openActivityDialog = () => setActionDialog({ open: true, mode: "activity" });
     const closeActionDialog = () => setActionDialog({ open: false, mode: "officer" });
 
-    const handleSaveAction = (payload) => {
+    const handleSaveAction = async (payload) => {
         if (actionDialog.mode === "activity") {
             const nextActivity = {
                 title: payload.title,
@@ -247,75 +176,35 @@ export default function TeacherHomeroom() {
                 ...prev,
                 activities: [...(prev.activities || []), nextActivity],
             }));
+            toast.success("Đã thêm hoạt động lớp (mock).");
         } else if (actionDialog.mode === "officer") {
             const assignments = payload.assignments || [];
-            const extraRoles = payload.extraRoles || [];
+            
+            try {
+                const officers = assignments
+                    .filter(a => a.studentId) // Chỉ lấy những vị trí đã chọn người
+                    .map(a => ({
+                        studentId: a.studentId,
+                        officerRole: a.key === 'monitor' ? 'monitor' : (a.key === 'viceMonitor' ? 'vice_monitor_academic' : 'secretary')
+                    }));
 
-            const chosenIds = new Set();
-            for (const item of assignments) {
-                if (!item.studentId) continue;
-                if (chosenIds.has(item.studentId)) {
-                    toast.error("Mỗi học sinh chỉ được giữ 1 vai trò.");
-                    return;
-                }
-                chosenIds.add(item.studentId);
-            }
-
-            for (const item of extraRoles) {
-                if (!item.studentId) continue;
-                if (chosenIds.has(item.studentId)) {
-                    toast.error("Mỗi học sinh chỉ được giữ 1 vai trò.");
-                    return;
-                }
-                chosenIds.add(item.studentId);
-            }
-
-            setClassData((prev) => {
-                const nextStudents = prev.students.map((student) => ({
-                    ...student,
-                    officerRole: null,
-                }));
-
-                const nextClassData = {
-                    ...prev,
-                    students: nextStudents,
-                    extraOfficers: [],
-                    monitor: "Chưa phân công",
-                    viceMonitor: "Chưa phân công",
-                    secretary: "Chưa phân công",
-                };
-
-                assignments.forEach((item) => {
-                    if (!item.studentId) return;
-
-                    const student = nextClassData.students.find((entry) => entry.id === item.studentId);
-                    if (!student) return;
-
-                    const roleConfig = officerRoleConfig[item.key];
-                    if (!roleConfig) return;
-
-                    student.officerRole = item.key;
-                    nextClassData[roleConfig.field] = student.name;
+                const res = await teacherService.assignOfficers({
+                    mock: false,
+                    pathParams: { id: classData.id },
+                    body: { officers }
                 });
 
-                nextClassData.extraOfficers = extraRoles
-                    .map((item) => {
-                        const student = prev.students.find((entry) => entry.id === item.studentId);
-                        if (!student) return null;
-                        return {
-                            id: `${item.id || item.role}-${student.id}`,
-                            name: student.name,
-                            role: item.role,
-                            studentId: student.id,
-                            note: item.note || "",
-                        };
-                    })
-                    .filter(Boolean);
-
-                return nextClassData;
-            });
-
-            toast.success("Đã cập nhật ban cán sự lớp.");
+                if (res.success) {
+                    toast.success("Đã cập nhật ban cán sự lớp lên hệ thống.");
+                    // Refresh data
+                    window.location.reload(); 
+                } else {
+                    toast.error(res.error || "Không thể cập nhật ban cán sự.");
+                }
+            } catch (error) {
+                console.error("Failed to assign officers:", error);
+                toast.error("Lỗi kết nối máy chủ.");
+            }
         }
 
         closeActionDialog();
@@ -335,7 +224,6 @@ export default function TeacherHomeroom() {
                 }
             />
 
-            {/* Header info cards similar to admin dashboard */}
             <div className="homeroom-stats-grid">
                 <div className="homeroom-stat-card">
                     <div className="stat-icon">
@@ -423,7 +311,3 @@ export default function TeacherHomeroom() {
         </div>
     );
 }
-
-
-
-

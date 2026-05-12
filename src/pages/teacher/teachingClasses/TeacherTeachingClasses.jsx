@@ -16,10 +16,20 @@ const TeacherTeachingClasses = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [activeToolbarFilter, setActiveToolbarFilter] = useState("all");
 
-  const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
-  const teacherId = storedUser.teacherId;
+  const storedUser = (() => {
+    try {
+      const userStr = localStorage.getItem("user") || sessionStorage.getItem("user");
+      return JSON.parse(userStr || "{}");
+    } catch {
+      return {};
+    }
+  })();
+
+  // Thử lấy ID từ nhiều nguồn khác nhau
+  const teacherId = storedUser.profile?.id || storedUser.teacherId || (storedUser.role === 'teacher' ? storedUser.id : null);
 
   useEffect(() => {
+    console.log("TeacherTeachingClasses: teacherId =", teacherId, "from user:", storedUser);
     const fetchClasses = async () => {
       if (!teacherId) return;
       setIsLoading(true);
@@ -36,11 +46,12 @@ const TeacherTeachingClasses = () => {
             name: item.class_name,
             grade: item.grade_level?.replace("Khối ", "") || "10",
             subject: item.subject_name,
-            year: selectedSchoolYear, // Fallback to current selected
-            term: selectedTerm,       // Fallback to current selected
+            year: selectedSchoolYear,
+            term: selectedTerm,
             status: "Đang hoạt động",
-            teacher: "Chưa cập nhật", // BE chưa trả về tên GVCN trong list này
-            students: [], // Sẽ load ở trang detail
+            teacher: item.homeroom_teacher_name || "Chưa cập nhật",
+            // Tạo mảng dummy có ID để tránh crash khi vào trang detail trước khi load xong students
+            students: Array.from({ length: parseInt(item.actual_students) || 0 }, (_, i) => ({ id: `dummy-${i}`, name: "Đang tải..." })),
             paidStudents: 0
           }));
           setClasses(mapped);

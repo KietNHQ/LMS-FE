@@ -59,7 +59,7 @@ const HistoryCalendar = ({
                     type="button"
                     className={`lesson-calendar-day ${cell.isCurrentMonth ? "" : "out-month"} ${
                       cell.hasReview ? "has-review" : ""
-                    } ${cell.isSelected ? "selected" : ""} ${cell.isToday ? "today" : ""}`.trim()}
+                    } ${cell.hasLesson ? "has-lesson" : ""} ${cell.isSelected ? "selected" : ""} ${cell.isToday ? "today" : ""}`.trim()}
                     onClick={() => onSelectDate(cell.dateKey)}
                   >
                     {cell.day}

@@ -17,10 +17,10 @@ const UpcomingScheduleSection = ({ classes: apiClasses }) => {
   const classes = apiClasses && apiClasses.length > 0 
     ? apiClasses.map(c => ({
         name: c.class_name || c.name,
-        students: c.max_students || 0,
-        role: c.homeroom_teacher_id ? "GVCN" : "GVBM",
-        type: c.homeroom_teacher_id ? "LỚP CHỦ NHIỆM" : "LỚP GIẢNG DẠY",
-        isHomeroom: !!c.homeroom_teacher_id,
+        students: c.actual_students || c.max_students || 0,
+        role: c.role || (c.isHomeroom ? "GVCN" : "GVBM"),
+        type: c.role === "GVCN" || c.isHomeroom ? "LỚP CHỦ NHIỆM" : "LỚP GIẢNG DẠY",
+        isHomeroom: c.isHomeroom ?? !!c.homeroom_teacher_id,
         grade: c.grade_level || "10"
       }))
     : hardcodedClasses;

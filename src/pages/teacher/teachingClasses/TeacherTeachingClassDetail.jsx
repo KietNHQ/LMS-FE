@@ -11,6 +11,8 @@ const TeacherTeachingClassDetail = () => {
   const { classId } = useParams();
   const { state } = useLocation();
   const navigate = useNavigate();
+  const storedUser = JSON.parse(localStorage.getItem("user") || sessionStorage.getItem("user") || "{}");
+  const teacherId = storedUser.profile?.id || storedUser.teacherId;
   const [classData, setClassData] = React.useState(state?.classData || null);
   const [isLoading, setIsLoading] = React.useState(false);
 
@@ -30,14 +32,15 @@ const TeacherTeachingClassDetail = () => {
           // Map API students to UI format
           const mappedStudents = studentsRes.data.map(s => ({
             id: s.id,
-            name: s.fullName || `${s.surname} ${s.givenName}`,
+            name: s.full_name || s.fullName || `${s.surname || ""} ${s.given_name || s.givenName || ""}`.trim() || "Chưa rõ tên",
             dob: s.birthDate,
             email: s.email,
             gender: s.gender,
             className: classData?.name || "Lớp",
             status: "Đang học",
-            parentName: "Chưa cập nhật",
-            parentPhone: "N/A"
+            enrollmentId: s.enrollment_id,
+            parentName: s.parent_name || "Chưa cập nhật",
+            parentPhone: s.parent_phone || "N/A"
           }));
           updatedClassData.students = mappedStudents;
         }
@@ -83,10 +86,12 @@ const TeacherTeachingClassDetail = () => {
   return (
     <div className="class-detail-page">
       <ClassDetailHeader classData={classData} onBack={handleBack} />
-      <ClassStudentsSection students={classData.students} />
+      <ClassStudentsSection 
+        classId={classId}
+        students={classData.students} 
+      />
     </div>
   );
 };
 
 export default TeacherTeachingClassDetail;
-
