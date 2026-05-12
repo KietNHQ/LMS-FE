@@ -220,12 +220,12 @@ const teacherEndpointRegistry = [
   { key: "get_classes_by_id_students", method: "GET", path: "/classes/:id/students", module: "classes", mock: () => ([{ id: 1, name: "Nguyễn Văn A", status: "Đang học" }, { id: 2, name: "Trần Thị B", status: "Đang học" }]) },
   { key: "get_classes_by_id_subjects", method: "GET", path: "/classes/:id/subjects", module: "classes", mock: () => ([{ id: 1, name: "Toán" }, { id: 2, name: "Văn" }]) },
   { key: "get_classes_by_id_schedule", method: "GET", path: "/classes/:id/schedule", module: "classes", mock: () => ([{ id: 1, title: "Tiết 1 - Toán" }, { id: 2, title: "Tiết 2 - Văn" }]) },
-  { key: "get_lessons", method: "GET", path: "/lessons", module: "lessons", mock: () => TEACHER_LESSONS_MOCK },
-  { key: "get_lessons_by_id", method: "GET", path: "/lessons/:id", module: "lessons", mock: (input) => TEACHER_LESSONS_MOCK.find((item) => `${item.id}` === `${input.pathParams?.id}`) || null },
-  { key: "post_lessons", method: "POST", path: "/lessons", module: "lessons", mock: (input) => ({ id: Date.now(), ...(input.body || {}), status: "Bản nháp" }) },
-  { key: "put_lessons_by_id", method: "PUT", path: "/lessons/:id", module: "lessons", mock: (input) => ({ id: input.pathParams?.id, ...(input.body || {}) }) },
-  { key: "delete_lessons_by_id", method: "DELETE", path: "/lessons/:id", module: "lessons", mock: (input) => ({ id: input.pathParams?.id, deleted: true }) },
-  { key: "post_lessons_by_id_publish", method: "POST", path: "/lessons/:id/publish", module: "lessons", mock: (input) => ({ id: input.pathParams?.id, status: "Đã xuất bản" }) },
+  { key: "get_lessons", method: "GET", path: "/lessons", module: "lessons" },
+  { key: "get_lessons_by_id", method: "GET", path: "/lessons/:id", module: "lessons" },
+  { key: "post_lessons", method: "POST", path: "/lessons", module: "lessons" },
+  { key: "put_lessons_by_id", method: "PUT", path: "/lessons/:id", module: "lessons" },
+  { key: "delete_lessons_by_id", method: "DELETE", path: "/lessons/:id", module: "lessons" },
+  { key: "post_lessons_by_id_publish", method: "POST", path: "/lessons/:id/publish", module: "lessons" },
   { 
     key: "get_quizzes", 
     method: "GET", 
@@ -316,11 +316,20 @@ const teacherEndpointRegistry = [
   { key: "get_chat_messages", method: "GET", path: "/chat/messages/:targetId", module: "chat", mock: () => ([]) },
   { key: "post_chat_message", method: "POST", path: "/chat/messages", module: "chat", mock: (input) => ({ id: Date.now(), ...input.body }) },
   { key: "get_faqs", method: "GET", path: "/support/faqs", module: "support", mock: () => ([]) },
+  { key: "post_attendance", method: "POST", path: "/teachers/attendance", module: "teacher", mock: (input) => ({ success: true, data: input.body }) },
+  { key: "post_lesson_evaluation", method: "POST", path: "/teachers/lesson-evaluations", module: "teacher", mock: (input) => ({ success: true, data: input.body }) },
+  { key: "get_lesson_evaluations", method: "GET", path: "/teachers/classes/:classId/lesson-evaluations", module: "teacher", mock: () => ({ success: true, data: [] }) },
+  { key: "get_current_schedule", method: "GET", path: "/teachers/classes/:classId/current-schedule", module: "teacher", mock: () => ({ success: true, data: null }) },
+  { key: "get_teaching_days", method: "GET", path: "/teachers/classes/:classId/teaching-days", module: "teacher", mock: () => ({ success: true, data: [] }) },
+  { key: "get_homeroom_classes", method: "GET", path: "/teachers/:id/homeroom-classes", module: "teacher", mock: () => ({ success: true, data: [] }) },
+  { key: "get_academic_summary", method: "GET", path: "/classes/:id/academic-summary", module: "classes", mock: () => ({ success: true, data: { academicStats: { excellent: 0, good: 0, average: 0, weak: 0 }, studentPerformance: [] } }) },
+  { key: "patch_class_officers", method: "PATCH", path: "/classes/:id/officers", module: "classes", mock: () => ({ success: true, message: "Cập nhật ban cán sự thành công" }) },
+  { key: "post_class_broadcast", method: "POST", path: "/notifications/class/:id/broadcast", module: "notifications", mock: () => ({ success: true, message: "Gửi thông báo thành công" }) },
 ];
 
 const createEndpointCaller = (endpoint) => {
   return async (input = {}) => {
-    const shouldMock = input.mock !== false;
+    const shouldMock = input.mock === true || (input.mock !== false && typeof endpoint.mock === "function");
     if (shouldMock) {
       await wait(input.delayMs ?? DEFAULT_DELAY_MS);
       const data = typeof endpoint.mock === "function" ? endpoint.mock(input) : null;
@@ -411,9 +420,17 @@ export const teacherService = {
   getChatMessages: (input) => endpointCallers.get_chat_messages(input),
   sendMessage: (input) => endpointCallers.post_chat_message(input),
   getFaqs: (input) => endpointCallers.get_faqs(input),
+  saveAttendance: (input) => endpointCallers.post_attendance(input),
+  saveLessonEvaluation: (input) => endpointCallers.post_lesson_evaluation(input),
+  getLessonEvaluations: (input) => endpointCallers.get_lesson_evaluations(input),
+  getCurrentSchedule: (input) => endpointCallers.get_current_schedule(input),
+  getTeachingDays: (input) => endpointCallers.get_teaching_days(input),
+  getHomeroomClasses: (input) => endpointCallers.get_homeroom_classes(input),
+  getAcademicSummary: (input) => endpointCallers.get_academic_summary(input),
+  assignOfficers: (input) => endpointCallers.patch_class_officers(input),
+  broadcastToClass: (input) => endpointCallers.post_class_broadcast(input),
+  getClassDetails: (input) => endpointCallers.get_classes_by_id(input),
   endpointCallers,
 };
 
 export default teacherService;
-
-

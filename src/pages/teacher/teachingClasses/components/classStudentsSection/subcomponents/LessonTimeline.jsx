@@ -83,6 +83,20 @@ const LessonTimeline = ({
                   <p className="lesson-history-attendance">
                     Đi học: <strong>{review.attended}</strong> | Vắng: <strong>{review.absent}</strong>
                   </p>
+                  
+                  {review.studentReports && review.studentReports.length > 0 && (
+                    <div className="lesson-history-reports">
+                      <strong>Ghi nhận học sinh:</strong>
+                      <ul className="lesson-history-reports-list">
+                        {review.studentReports.map((report, idx) => (
+                          <li key={idx} className="lesson-history-report-item">
+                            • {report.surname || ""} {report.given_name || ""}: {report.category} - {typeof report.content === 'object' ? (report.content.label || "N/A") : report.content} ({report.points > 0 ? "+" : ""}{report.points}đ)
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
                   <p className="lesson-history-note">{review.note}</p>
                   <small>{review.createdAt}</small>
                 </div>

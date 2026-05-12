@@ -1,25 +1,58 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
+import teacherService from "../../../../services/pages/teacher/teacherService";
 import ClassStudentsSection from "../../../teacher/teachingClasses/components/classStudentsSection/ClassStudentsSection";
 import "./AcademicVicePresidentTab.css";
 
-const MOCK_STUDENTS = [
-  { id: 1, name: "Phạm Nam", dob: "20/04/2008", parentName: "Vũ Thị F", phone: "0993957973" },
-  { id: 2, name: "Tạ Vấn", dob: "14/11/2009", parentName: "Nguyễn Văn A", phone: "0915756683" },
-  { id: 3, name: "Đặng Hải", dob: "24/05/2008", parentName: "Bùi Thị H", phone: "0933430244" },
-  { id: 4, name: "Bùi Quốc", dob: "07/07/2008", parentName: "Bùi Thị H", phone: "0918194519" },
-  { id: 5, name: "Hoàng Yến", dob: "16/11/2009", parentName: "Vũ Thị F", phone: "0967455452" },
-  { id: 6, name: "Nguyễn Linh", dob: "09/04/2008", parentName: "Đặng Văn G", phone: "0964397511" },
-  { id: 7, name: "Lê Toàn", dob: "09/06/2008", parentName: "Đặng Văn G", phone: "0956383884" },
-  { id: 8, name: "Phạm Nam", dob: "20/10/2009", parentName: "Tạ Thị K", phone: "0939159795" },
-];
+export default function AcademicVicePresidentTab({ classId }) {
+  const [students, setStudents] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [academicStats, setAcademicStats] = useState(null);
 
-export default function AcademicVicePresidentTab() {
+  useEffect(() => {
+    const fetchAcademicData = async () => {
+      if (!classId) return;
+      setIsLoading(true);
+      try {
+        const res = await teacherService.getAcademicSummary({
+          mock: false,
+          pathParams: { id: classId }
+        });
+        if (res.success && res.data) {
+          setStudents((res.data.studentPerformance || []).map(s => ({
+            id: s.id,
+            name: s.fullName,
+            dob: s.dob || "N/A",
+            parentName: s.parentName || "N/A",
+            phone: s.phone || "N/A",
+            averageScore: s.averageScore,
+            assessment: s.assessment
+          })));
+          setAcademicStats(res.data.academicStats);
+        }
+      } catch (error) {
+        console.error("Failed to fetch academic summary:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchAcademicData();
+  }, [classId]);
+
+  if (isLoading) return <div className="avp-loading">Đang tải dữ liệu học tập...</div>;
+
   return (
     <div className="academic-vice-president-tab tc-student-theme-override">
+      {academicStats && (
+        <div className="academic-stats-summary">
+          <div className="stat-item excellent">Giỏi: {academicStats.excellent}</div>
+          <div className="stat-item good">Khá: {academicStats.good}</div>
+          <div className="stat-item average">Trung bình: {academicStats.average}</div>
+          <div className="stat-item weak">Yếu: {academicStats.weak}</div>
+        </div>
+      )}
       <div className="avp-tracking">
-        <ClassStudentsSection students={MOCK_STUDENTS} readOnly={true} />
+        <ClassStudentsSection students={students} readOnly={true} />
       </div>
     </div>
   );
 }
-
