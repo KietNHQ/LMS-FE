@@ -8,10 +8,94 @@
 }
 
 .homeroom-students-list-header {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.homeroom-students-filters {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex: 1;
+  min-width: 300px;
+}
+
+.homeroom-students-search-box {
+  position: relative;
+  flex: 1;
+  max-width: 300px;
+}
+
+.homeroom-students-search-box svg {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #94a3b8;
+  font-size: 16px;
+}
+
+.homeroom-students-search-box input {
+  width: 100%;
+  padding: 10px 16px 10px 42px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  font-size: 14px;
+  color: #1e293b;
+  transition: all 0.2s ease;
+}
+
+.homeroom-students-search-box input:focus {
+  outline: none;
+  border-color: #3b82f6;
+  background: #ffffff;
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+}
+
+.homeroom-students-filter-group {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.homeroom-students-gender-select {
+  min-width: 180px;
+}
+
+.homeroom-students-sort-toggle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  color: #475569;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.homeroom-students-sort-toggle:hover {
+  background: #e2e8f0;
+  border-color: #cbd5e1;
+  color: #1e293b;
+}
+
+.homeroom-students-sort-toggle:active {
+  transform: scale(0.96);
+}
+
+.homeroom-students-sort-toggle svg {
+  font-size: 16px;
+  color: #3b82f6;
 }
 
 .homeroom-students-list-kicker {

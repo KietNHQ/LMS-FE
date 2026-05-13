@@ -138,6 +138,19 @@
   transform: translateY(10px) scale(0.98);
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   z-index: 1100;
+  transform-origin: top;
+}
+
+/* UPWARD OPENING SUPPORT */
+.custom-dropdown-menu.open-up {
+  top: auto;
+  bottom: calc(100% + 8px);
+  transform-origin: bottom;
+  transform: translateY(-10px) scale(0.98);
+}
+
+.custom-dropdown-menu.open-up.show {
+  transform: translateY(0) scale(1);
 }
 
 .custom-dropdown-menu.show {
@@ -147,19 +160,28 @@
 }
 
 .custom-dropdown-list {
-  max-height: 350px;
+  max-height: 200px;
   overflow-y: auto;
   scrollbar-width: thin;
-  scrollbar-color: #e2e8f0 transparent;
+  scrollbar-color: #cbd5e1 #f8fafc;
 }
 
 .custom-dropdown-list::-webkit-scrollbar {
-  width: 4px;
+  width: 6px;
+}
+
+.custom-dropdown-list::-webkit-scrollbar-track {
+  background: #f8fafc;
+  border-radius: 10px;
 }
 
 .custom-dropdown-list::-webkit-scrollbar-thumb {
-  background: #e2e8f0;
+  background: #cbd5e1;
   border-radius: 10px;
+}
+
+.custom-dropdown-list::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
 }
 
 .custom-dropdown-item {
@@ -180,9 +202,16 @@
   text-align: left;
 }
 
-.custom-dropdown-item:hover {
+.custom-dropdown-item:hover:not(.disabled) {
   background: #f1f5f9;
   color: #0f172a;
+}
+
+.custom-dropdown-item.disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  background: #f8fafc;
+  color: #94a3b8;
 }
 
 .custom-dropdown-item.active {
@@ -252,7 +281,7 @@
 }
 
 /* TEACHER - Professional Teal */
-:root { --teacher-navy: #134e4a; }
+.teacher-layout { --teacher-navy: #134e4a; }
 .teacher-layout .custom-dropdown-trigger.open {
   border-color: var(--teacher-navy);
   box-shadow: 0 0 0 4px rgba(19, 78, 74, 0.08);
@@ -262,7 +291,7 @@
 }
 
 /* PARENT - Royal Indigo */
-:root { --parent-navy: #312e81; }
+.parent-layout { --parent-navy: #312e81; }
 .parent-layout .custom-dropdown-trigger.open {
   border-color: var(--parent-navy);
   box-shadow: 0 0 0 4px rgba(49, 46, 129, 0.08);
@@ -272,7 +301,7 @@
 }
 
 /* STUDENT - SaaS Blue */
-:root { --student-navy: #1e3a8a; }
+.student-layout { --student-navy: #1e3a8a; }
 .student-layout .custom-dropdown-trigger.open {
   border-color: var(--student-navy);
   box-shadow: 0 0 0 4px rgba(30, 58, 138, 0.08);

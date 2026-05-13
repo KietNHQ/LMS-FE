@@ -1,8 +1,14 @@
 import React from "react";
-import { FiStar, FiClock, FiMapPin, FiInfo, FiActivity, FiTrendingUp, FiCheckCircle, FiPlus } from "react-icons/fi";
+import { FiStar, FiClock, FiMapPin, FiInfo, FiActivity, FiTrendingUp, FiCheckCircle, FiPlus, FiEdit3, FiTrash2 } from "react-icons/fi";
 import "./HomeroomOverviewSection.css";
 
-export default function HomeroomOverviewSection({ data, onAddOfficersClick, onCreateActivityClick }) {
+export default function HomeroomOverviewSection({ 
+    data, 
+    onAddOfficersClick, 
+    onCreateActivityClick,
+    onEditActivityClick,
+    onDeleteActivityClick
+}) {
     if (!data) return null;
 
     const totalStudents = data.students?.length || 0;
@@ -33,7 +39,7 @@ export default function HomeroomOverviewSection({ data, onAddOfficersClick, onCr
 
     return (
         <div className="homeroom-overview-section">
-            
+
             {/* Top row: Detailed Stats */}
             <div className="overview-stats-row">
                 {/* Academic Performance Card */}
@@ -163,11 +169,11 @@ export default function HomeroomOverviewSection({ data, onAddOfficersClick, onCr
                         <h2>Ban Cán Sự Lớp</h2>
                         <button
                             type="button"
-                            className="overview-header-action-btn"
+                            className="overview-header-action-btn icon-only"
                             onClick={() => onAddOfficersClick?.(data)}
+                            title="Phân công ban cán sự"
                         >
-                            <FiPlus />
-                            <span>Phân công ban cán sự</span>
+                            <FiEdit3 />
                         </button>
                     </div>
                     <div className="card-content officers-list">
@@ -195,11 +201,11 @@ export default function HomeroomOverviewSection({ data, onAddOfficersClick, onCr
                         <h2>Kế hoạch & Hoạt động</h2>
                         <button
                             type="button"
-                            className="overview-header-action-btn"
+                            className="overview-header-action-btn icon-only"
                             onClick={() => onCreateActivityClick?.(data)}
+                            title="Tạo hoạt động"
                         >
                             <FiPlus />
-                            <span>Tạo hoạt động</span>
                         </button>
                     </div>
                     <div className="card-content">
@@ -211,14 +217,35 @@ export default function HomeroomOverviewSection({ data, onAddOfficersClick, onCr
                                             <div className={`timeline-dot type-${activity.type}`}></div>
                                         </div>
                                         <div className="activity-details">
-                                            <h4>{activity.title}</h4>
-                                            <div className="activity-meta">
-                                                <span className="meta-item">
-                                                    <FiClock className="icon" /> {activity.time}
-                                                </span>
-                                                <span className="meta-item">
-                                                    <FiMapPin className="icon" /> {activity.location}
-                                                </span>
+                                            <div className="activity-content-wrapper">
+                                                <h4>{activity.title}</h4>
+                                                <div className="activity-meta">
+                                                    <span className="meta-item">
+                                                        <FiClock className="icon" /> {activity.time}
+                                                    </span>
+                                                    <span className="meta-item">
+                                                        <FiMapPin className="icon" /> {activity.location}
+                                                    </span>
+                                                </div>
+                                            </div>
+
+                                            <div className="activity-actions">
+                                                <button
+                                                    type="button"
+                                                    className="action-btn edit"
+                                                    title="Chỉnh sửa"
+                                                    onClick={() => onEditActivityClick?.(activity)}
+                                                >
+                                                    <FiEdit3 />
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    className="action-btn delete"
+                                                    title="Xóa"
+                                                    onClick={() => onDeleteActivityClick?.(activity)}
+                                                >
+                                                    <FiTrash2 />
+                                                </button>
                                             </div>
                                         </div>
                                     </li>

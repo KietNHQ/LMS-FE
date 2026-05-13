@@ -61,17 +61,27 @@
   gap: 12px;
 }
 
+.homeroom-student-detail-dialog__grid {
+  min-height: 420px; /* Add space for custom dropdowns */
+}
+
 .homeroom-student-detail-dialog__info-grid > div,
 .homeroom-student-detail-dialog__grid label,
+.homeroom-student-detail-dialog__custom-field,
 .homeroom-student-detail-dialog__meta > div {
   background: #ffffff;
   border: 1px solid #dfe5f0;
   border-radius: 14px;
   padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  transition: all 0.2s ease;
 }
 
 .homeroom-student-detail-dialog__info-grid span,
-.homeroom-student-detail-dialog__grid span,
+.homeroom-student-detail-dialog__grid label span,
+.homeroom-student-detail-dialog__custom-field > span,
 .homeroom-student-detail-dialog__meta span {
   display: block;
   font-size: 12px;
@@ -80,6 +90,44 @@
   letter-spacing: 0.05em;
   color: #6f7c91;
   margin-bottom: 6px;
+}
+
+/* Style custom Select inside dialog to match native inputs */
+.homeroom-student-detail-dialog__custom-field .ui-select {
+  margin: 0;
+}
+
+.homeroom-student-detail-dialog__custom-field .custom-dropdown-trigger {
+  border: 1px solid #dfe5f0 !important;
+  border-radius: 10px !important;
+  padding: 10px 12px !important;
+  background: #fff !important;
+  height: 42px !important;
+  transition: all 0.2s ease;
+  box-shadow: none !important;
+}
+
+.homeroom-student-detail-dialog__custom-field .custom-dropdown-trigger:focus,
+.homeroom-student-detail-dialog__custom-field .custom-dropdown-trigger.open {
+  border-color: #2563ff !important;
+  box-shadow: 0 0 0 3px rgba(37, 99, 255, 0.12) !important;
+}
+
+.homeroom-student-detail-dialog__custom-field .custom-dropdown-trigger-content span {
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  color: #16233b !important;
+  text-transform: none !important;
+}
+
+.homeroom-student-detail-dialog__custom-field .custom-dropdown-menu {
+  z-index: 9999 !important;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1) !important;
+}
+
+.homeroom-student-detail-dialog__custom-field .custom-dropdown-item span {
+  text-transform: none !important;
+  font-weight: 600;
 }
 
 .homeroom-student-detail-dialog__info-grid strong,
@@ -109,84 +157,23 @@
   box-shadow: 0 0 0 3px rgba(37, 99, 255, 0.12);
 }
 
+.homeroom-student-detail-dialog__clickable-stat {
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.homeroom-student-detail-dialog__clickable-stat:hover {
+  background: #f0f7ff !important;
+  border-color: #2563ff !important;
+}
+
+
 .homeroom-student-detail-dialog__meta {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 12px;
 }
 
-.homeroom-student-detail-dialog__roles {
-  display: grid;
-  gap: 10px;
-  padding: 16px;
-  border-radius: 18px;
-  background: #f9fbff;
-  border: 1px solid #dfe5f0;
-}
-
-.homeroom-student-detail-dialog__roles-header span {
-  display: block;
-  font-size: 12px;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: #2563ff;
-}
-
-.homeroom-student-detail-dialog__roles-header strong {
-  display: block;
-  margin-top: 4px;
-  color: #16233b;
-  font-size: 15px;
-}
-
-.homeroom-student-detail-dialog__role-list {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 10px;
-}
-
-.homeroom-student-detail-dialog__role-card {
-  border: 1px solid #dfe5f0;
-  border-radius: 14px;
-  background: #ffffff;
-  padding: 12px;
-  text-align: left;
-  cursor: pointer;
-  transition: all 0.18s ease;
-}
-
-.homeroom-student-detail-dialog__role-card:hover:not(:disabled) {
-  border-color: #2563ff;
-  box-shadow: 0 10px 20px rgba(37, 99, 255, 0.12);
-  transform: translateY(-1px);
-}
-
-.homeroom-student-detail-dialog__role-card.active {
-  border-color: #2563ff;
-  background: linear-gradient(180deg, #eef4ff 0%, #ffffff 100%);
-}
-
-.homeroom-student-detail-dialog__role-card:disabled {
-  cursor: not-allowed;
-  opacity: 0.62;
-}
-
-.homeroom-student-detail-dialog__role-card span {
-  display: block;
-  font-size: 12px;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: #6f7c91;
-}
-
-.homeroom-student-detail-dialog__role-card strong {
-  display: block;
-  margin-top: 8px;
-  color: #16233b;
-  font-size: 14px;
-}
 
 .homeroom-student-detail-dialog__actions {
   display: flex;

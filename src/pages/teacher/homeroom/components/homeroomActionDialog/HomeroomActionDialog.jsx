@@ -1,6 +1,6 @@
 import React, { useMemo, useRef, useState } from "react";
 import { Input, Modal, Select } from "../../../../../components/ui";
-import { FiPlus, FiCalendar, FiUsers, FiClock, FiTrash2 } from "react-icons/fi";
+import { FiPlus, FiCalendar, FiUsers, FiClock, FiTrash2, FiCheckCircle } from "react-icons/fi";
 import "./HomeroomActionDialog.css";
 
 const activityTypeOptions = [
@@ -27,10 +27,24 @@ const initialActivityForm = {
   note: "",
 };
 
-export default function HomeroomActionDialog({ open, mode, onClose, onSubmit, students = [], officerRows = [], extraOfficers = [] }) {
+export default function HomeroomActionDialog({ open, mode, onClose, onSubmit, students = [], officerRows = [], extraOfficers = [], editingData = null }) {
   const initialForm = useMemo(
     () => {
-      if (mode === "activity") return initialActivityForm;
+      if (mode === "activity") {
+        if (editingData) {
+          // Cố gắng parse ngày tháng từ chuỗi "HH:mm ..., DD/MM" nếu có thể
+          // Nhưng tốt nhất là dùng dữ liệu gốc nếu có
+          return {
+            title: editingData.title || "",
+            type: editingData.type || "meeting",
+            schedule: editingData.schedule || "", // Giả định BE sẽ có trường này
+            hour: editingData.hour || editingData.time?.split(' ')[0] || "",
+            location: editingData.location || "",
+            note: editingData.note || "",
+          };
+        }
+        return initialActivityForm;
+      }
 
       return {
         assignments: officerRows.map((role) => ({
@@ -50,7 +64,7 @@ export default function HomeroomActionDialog({ open, mode, onClose, onSubmit, st
   );
 
   const [form, setForm] = useState(initialForm);
-  const [isTimeConfirmed, setIsTimeConfirmed] = useState(false);
+  const [isTimeConfirmed, setIsTimeConfirmed] = useState(!!editingData);
   const scheduleInputRef = useRef(null);
   const hourInputRef = useRef(null);
 
@@ -210,60 +224,34 @@ export default function HomeroomActionDialog({ open, mode, onClose, onSubmit, st
     <Modal
       open={open}
       onClose={onClose}
-      title={isActivity ? "Tạo hoạt động mới" : "Phân công ban cán sự"}
+      title={isOfficerMode ? "Phân công ban cán sự" : (editingData ? "Chỉnh sửa hoạt động" : "Tạo hoạt động mới")}
       className="homeroom-action-dialog"
     >
       <div className="homeroom-action-dialog__content">
-        <div className="homeroom-action-dialog__intro">
-          <div className="homeroom-action-dialog__icon">
-            {isActivity ? <FiCalendar /> : <FiUsers />}
-          </div>
-          <div>
-            <h4>{isActivity ? "Kế hoạch & Hoạt động" : "Ban Cán Sự Lớp"}</h4>
-            <p>
-              {isActivity
-                ? "Thêm một hoạt động mới cho lớp chủ nhiệm."
-                : "Chọn học sinh trong lớp cho từng vai trò; các vai trò phụ sẽ được tự tạo ngay trong cùng một dialog."}
-            </p>
-          </div>
-        </div>
 
         {isOfficerMode ? (
           <>
-            <div className="homeroom-action-dialog__hint-box">
-              <strong>Chỉ 1 học sinh giữ 1 vai trò</strong>
-              <span>Vai trò nào đã có người nắm sẽ tự khóa để tránh trùng.</span>
-            </div>
 
             <div className="homeroom-action-dialog__officer-section">
-              <div className="homeroom-action-dialog__section-header">
-                <div>
-                  <span>Vai trò chính</span>
-                  <strong>Phân công 3 vị trí cốt lõi</strong>
-                </div>
-              </div>
-
-              <div className="homeroom-action-dialog__officer-grid">
+              <div className="homeroom-action-dialog__section-title">Vai trò chính</div>
+              <div className="homeroom-action-dialog__officer-rows">
                 {(form.assignments || []).map((assignment, index) => (
-                  <div key={assignment.key} className="homeroom-action-dialog__officer-card">
-                    <span>{assignment.label}</span>
-                    <select
-                      className="homeroom-action-dialog__native-select"
-                      value={assignment.studentId}
-                      onChange={(event) => updateAssignment(index, event.target.value)}
-                      size="5"
-                    >
-                      <option value="">Chọn học sinh</option>
-                      {students.map((student) => {
-                        const isTakenByAnotherRole = selectedStudentIds.includes(student.id) && student.id !== assignment.studentId;
-                        return (
-                          <option key={student.id} value={student.id} disabled={isTakenByAnotherRole}>
-                            {student.name}
-                          </option>
-                        );
-                      })}
-                    </select>
-                    <small>{students.find((student) => student.id === assignment.studentId)?.name || "Chưa phân công"}</small>
+                  <div key={assignment.key} className="homeroom-action-dialog__role-row">
+                    <div className="role-label">{assignment.label}</div>
+                    <div className="role-select">
+                      <Select
+                        variant="custom"
+                        searchable={true}
+                        placeholder="Chọn học sinh..."
+                        options={students.map((s) => ({
+                          value: s.id,
+                          label: s.name,
+                          disabled: selectedStudentIds.includes(s.id) && s.id !== assignment.studentId,
+                        }))}
+                        value={assignment.studentId}
+                        onChange={(event) => updateAssignment(index, event.target.value)}
+                      />
+                    </div>
                   </div>
                 ))}
               </div>
@@ -271,39 +259,44 @@ export default function HomeroomActionDialog({ open, mode, onClose, onSubmit, st
 
             <div className="homeroom-action-dialog__officer-section">
               <div className="homeroom-action-dialog__section-header homeroom-action-dialog__section-header--space-between">
-                <div>
-                  <span>Vai trò phụ</span>
-                  <strong>Tự thêm và phân công các vai trò khác</strong>
-                </div>
-                <button type="button" className="homeroom-action-dialog__add-role-btn" onClick={addExtraRole}>
-                  <FiPlus />
-                  <span>Thêm vai trò phụ</span>
+                <div className="homeroom-action-dialog__section-title">Vai trò phụ</div>
+                <button type="button" className="homeroom-action-dialog__add-role-btn-lite" onClick={addExtraRole}>
+                  <FiPlus /> Thêm vai trò
                 </button>
               </div>
 
               <div className="homeroom-action-dialog__extra-role-list">
                 {(form.extraRoles || []).length === 0 ? (
                   <div className="homeroom-action-dialog__empty-extra-role">
-                    Chưa có vai trò phụ nào. Bấm “Thêm vai trò phụ” để tạo thêm.
+                    Chưa có vai trò phụ nào được thiết lập.
                   </div>
                 ) : (
                   (form.extraRoles || []).map((item, index) => (
-                    <div key={item.id} className="homeroom-action-dialog__extra-role-row">
-                      <Input
-                        label="Tên vai trò"
-                        placeholder="Ví dụ: Lớp phó nề nếp"
-                        value={item.role}
-                        onChange={(event) => updateExtraRole(index, "role", event.target.value)}
-                      />
-                      <Select
-                        label="Học sinh"
-                        variant="native"
-                        options={students.map((student) => ({ value: student.id, label: student.name }))}
-                        placeholder="Chọn học sinh"
-                        value={item.studentId}
-                        onChange={(event) => updateExtraRole(index, "studentId", event.target.value)}
-                      />
-                      <button type="button" className="homeroom-action-dialog__remove-role-btn" onClick={() => removeExtraRole(index)} aria-label="Xóa vai trò phụ">
+                    <div key={item.id} className="homeroom-action-dialog__role-row extra">
+                      <div className="role-input">
+                        <input
+                          type="text"
+                          placeholder="Tên vai trò (VD: Lớp phó văn thể)"
+                          value={item.role}
+                          onChange={(event) => updateExtraRole(index, "role", event.target.value)}
+                        />
+                      </div>
+                      <div className="role-select">
+                        <Select
+                          variant="custom"
+                          searchable={true}
+                          menuDirection="up"
+                          placeholder="Học sinh..."
+                          options={students.map((s) => ({
+                            value: s.id,
+                            label: s.name,
+                            disabled: selectedStudentIds.includes(s.id) && s.id !== item.studentId,
+                          }))}
+                          value={item.studentId}
+                          onChange={(event) => updateExtraRole(index, "studentId", event.target.value)}
+                        />
+                      </div>
+                      <button type="button" className="homeroom-action-dialog__remove-role-btn-lite" onClick={() => removeExtraRole(index)}>
                         <FiTrash2 />
                       </button>
                     </div>
@@ -342,28 +335,44 @@ export default function HomeroomActionDialog({ open, mode, onClose, onSubmit, st
             </div>
           </>
         ) : (
-          <>
-            <Input
-              label="Tên hoạt động"
-              placeholder="Ví dụ: Họp phụ huynh giữa kỳ"
-              value={form.title}
-              onChange={(event) => handleChange("title", event.target.value)}
-            />
+          <div className="homeroom-action-dialog__form-grid">
+            <div className="homeroom-action-dialog__field full-width">
+              <Input
+                label="Tên hoạt động"
+                placeholder="Ví dụ: Họp phụ huynh giữa kỳ"
+                value={form.title}
+                onChange={(event) => handleChange("title", event.target.value)}
+              />
+            </div>
 
-            <Select
-              label="Loại hoạt động"
-              variant="custom"
-              className="homeroom-action-dialog__admin-select"
-              options={activityTypeOptions}
-              value={form.type}
-              onChange={(event) => handleChange("type", event.target.value)}
-            />
+            <div className="homeroom-action-dialog__field">
+              <Select
+                label="Loại hoạt động"
+                variant="custom"
+                className="homeroom-action-dialog__admin-select"
+                options={activityTypeOptions}
+                value={form.type}
+                onChange={(event) => handleChange("type", event.target.value)}
+              />
+            </div>
+
+            <div className="homeroom-action-dialog__field">
+              <Select
+                label="Địa điểm"
+                variant="custom"
+                className="homeroom-action-dialog__admin-select"
+                options={locationOptions}
+                placeholder="Chọn địa điểm"
+                value={form.location}
+                onChange={(event) => handleChange("location", event.target.value)}
+              />
+            </div>
 
             <div className="homeroom-action-dialog__field">
               <label htmlFor="homeroom-activity-schedule">
                 <span className="homeroom-action-dialog__label-with-icon">
                   <FiCalendar />
-                  <span>Lịch</span>
+                  <span>Ngày tổ chức</span>
                 </span>
               </label>
               <div className="homeroom-action-dialog__picker-wrap">
@@ -390,7 +399,7 @@ export default function HomeroomActionDialog({ open, mode, onClose, onSubmit, st
               <label htmlFor="homeroom-activity-hour">
                 <span className="homeroom-action-dialog__label-with-icon">
                   <FiClock />
-                  <span>Giờ</span>
+                  <span>Giờ bắt đầu</span>
                 </span>
               </label>
               <div className="homeroom-action-dialog__picker-wrap">
@@ -413,41 +422,33 @@ export default function HomeroomActionDialog({ open, mode, onClose, onSubmit, st
               </div>
             </div>
 
-            <div className="homeroom-action-dialog__time-confirm-row">
-              <div className="homeroom-action-dialog__time-preview">
-                <span>Lịch giờ đã chọn</span>
-                <strong>{getTimePreview()}</strong>
+            <div className="homeroom-action-dialog__field full-width">
+              <div className="homeroom-action-dialog__time-confirm-row">
+                <div className="homeroom-action-dialog__time-preview">
+                  <span>Thời gian đã chọn:</span>
+                  <strong>{getTimePreview()}</strong>
+                </div>
+                <button
+                  type="button"
+                  className={`homeroom-action-dialog__confirm-btn ${isTimeConfirmed ? "is-confirmed" : ""}`}
+                  onClick={handleConfirmTime}
+                >
+                  {isTimeConfirmed ? "Đã xác nhận" : "Xác nhận lịch giờ"}
+                </button>
               </div>
-              <button
-                type="button"
-                className={`homeroom-action-dialog__confirm-btn ${isTimeConfirmed ? "is-confirmed" : ""}`}
-                onClick={handleConfirmTime}
-              >
-                {isTimeConfirmed ? "Đã xác nhận" : "Xác nhận lịch giờ"}
-              </button>
             </div>
 
-            <Select
-              label="Địa điểm"
-              variant="custom"
-              className="homeroom-action-dialog__admin-select"
-              options={locationOptions}
-              placeholder="Chọn địa điểm"
-              value={form.location}
-              onChange={(event) => handleChange("location", event.target.value)}
-            />
-
-            <div className="homeroom-action-dialog__field">
-              <label htmlFor="homeroom-activity-note">Ghi chú</label>
+            <div className="homeroom-action-dialog__field full-width">
+              <label htmlFor="homeroom-activity-note">Ghi chú (không bắt buộc)</label>
               <textarea
                 id="homeroom-activity-note"
                 rows="3"
-                placeholder="Ví dụ: Chuẩn bị danh sách phụ huynh"
+                placeholder="Ví dụ: Chuẩn bị danh sách phụ huynh, tài liệu họp..."
                 value={form.note}
                 onChange={(event) => handleChange("note", event.target.value)}
               />
             </div>
-          </>
+          </div>
         )}
 
         <div className="homeroom-action-dialog__actions">
@@ -455,8 +456,8 @@ export default function HomeroomActionDialog({ open, mode, onClose, onSubmit, st
             Hủy
           </button>
           <button type="button" className="homeroom-action-dialog__submit" onClick={handleSubmit}>
-            <FiPlus />
-            {isActivity ? "Tạo hoạt động" : "Thêm ban cán sự"}
+            {editingData ? <FiCheckCircle /> : <FiPlus />}
+            {isActivity ? (editingData ? "Cập nhật hoạt động" : "Tạo hoạt động") : "Thêm ban cán sự"}
           </button>
         </div>
       </div>

@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
-import { FiEdit2, FiUserPlus, FiUsers } from "react-icons/fi";
 import HomeroomStudentDetailDialog from "./HomeroomStudentDetailDialog";
+import Select from "../../../../../components/ui/Select/Select";
+import { FiArrowDown, FiArrowUp, FiSearch, FiUserPlus, FiUsers, FiChevronDown } from "react-icons/fi";
 import "./HomeroomStudentsSection.css";
 
 function formatDate(dateString) {
@@ -30,12 +31,15 @@ function getRoleClass(roleKey) {
 export default function HomeroomStudentsSection({
     students = [],
     officers = [],
-    onUpdateStudent,
-    onAssignOfficer,
     onBanCanSuLopClick,
+    onViewAttendance,
 }) {
     const [activeStudentId, setActiveStudentId] = useState(null);
-    const [dialogMode, setDialogMode] = useState("view");
+
+    // Filter states
+    const [searchTerm, setSearchTerm] = useState("");
+    const [genderFilter, setGenderFilter] = useState("all");
+    const [sortOrder, setSortOrder] = useState("asc"); // 'asc' | 'desc'
 
     const activeStudent = useMemo(
         () => students.find((student) => student.id === activeStudentId) || null,
@@ -49,41 +53,82 @@ export default function HomeroomStudentsSection({
         }, {});
     }, [officers]);
 
-    const openStudentDialog = (student, mode = "view") => {
+    const filteredStudents = useMemo(() => {
+        let result = [...students];
+
+        // 1. Search filter
+        if (searchTerm) {
+            const lowSearch = searchTerm.toLowerCase();
+            result = result.filter(s =>
+                s.name.toLowerCase().includes(lowSearch) ||
+                s.email?.toLowerCase().includes(lowSearch)
+            );
+        }
+
+        // 2. Gender filter
+        if (genderFilter !== "all") {
+            result = result.filter(s => s.gender === genderFilter);
+        }
+
+        // 3. Sorting (A-Z, Z-A)
+        result.sort((a, b) => {
+            const nameA = a.name.split(" ").pop().toLowerCase();
+            const nameB = b.name.split(" ").pop().toLowerCase();
+            if (sortOrder === "asc") return nameA.localeCompare(nameB);
+            return nameB.localeCompare(nameA);
+        });
+
+        return result;
+    }, [students, searchTerm, genderFilter, sortOrder]);
+
+    const openStudentDialog = (student) => {
         setActiveStudentId(student.id);
-        setDialogMode(mode);
     };
 
     const closeStudentDialog = () => {
         setActiveStudentId(null);
-        setDialogMode("view");
     };
 
-    const handleSaveStudent = (studentId, payload) => {
-        const saved = onUpdateStudent?.(studentId, payload);
-        if (saved) {
-            setDialogMode("view");
-        }
-    };
-
-    const handleAssignOfficer = (studentId, roleKey) => {
-        const assigned = onAssignOfficer?.(studentId, roleKey);
-        if (assigned) {
-            setDialogMode("view");
-        }
-    };
 
     return (
         <div className="homeroom-students-section homeroom-students-list-card">
             <div className="homeroom-students-list-header">
-                <div>
-                    <span className="homeroom-students-list-kicker">
-                        <FiUsers />
-                        <span>Danh sách học sinh</span>
-                    </span>
-                    <h2>Quản lý học sinh lớp chủ nhiệm</h2>
-                    <p>Click vào từng thẻ để xem chi tiết. Phần thao tác chỉ cho phép chỉnh sửa và cấp quyền ban cán sự cho học sinh đó.</p>
+                <div className="homeroom-students-filters">
+                    <div className="homeroom-students-search-box">
+                        <FiSearch />
+                        <input
+                            type="text"
+                            placeholder="Tìm kiếm học sinh..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                        />
+                    </div>
+
+                    <div className="homeroom-students-filter-group">
+                        <Select
+                            variant="custom"
+                            className="homeroom-students-gender-select"
+                            value={genderFilter}
+                            onChange={(e) => setGenderFilter(e.target.value)}
+                            options={[
+                                { value: "all", label: "Tất cả giới tính" },
+                                { value: "Nam", label: "Nam" },
+                                { value: "Nữ", label: "Nữ" },
+                            ]}
+                        />
+
+                        <button
+                            type="button"
+                            className="homeroom-students-sort-toggle"
+                            onClick={() => setSortOrder(prev => prev === "asc" ? "desc" : "asc")}
+                            title={sortOrder === "asc" ? "Sắp xếp: A - Z" : "Sắp xếp: Z - A"}
+                        >
+                            {sortOrder === "asc" ? <FiArrowUp /> : <FiArrowDown />}
+                            <span>{sortOrder === "asc" ? "A - Z" : "Z - A"}</span>
+                        </button>
+                    </div>
                 </div>
+
                 <button
                     type="button"
                     className="homeroom-students-list-badge"
@@ -104,20 +149,19 @@ export default function HomeroomStudentsSection({
                             <th>PHỤ HUYNH</th>
                             <th>SĐT PHỤ HUYNH</th>
                             <th>VAI TRÒ</th>
-                            <th>THAO TÁC</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {students.length === 0 ? (
+                        {filteredStudents.length === 0 ? (
                             <tr>
-                                <td colSpan="7" className="homeroom-students-empty-row">Không có dữ liệu học sinh.</td>
+                                <td colSpan="6" className="homeroom-students-empty-row">Không tìm thấy học sinh phù hợp.</td>
                             </tr>
                         ) : (
-                            students.map((student) => (
+                            filteredStudents.map((student) => (
                                 <tr
                                     key={student.id}
                                     className="homeroom-students-row"
-                                    onClick={() => openStudentDialog(student, "view")}
+                                    onClick={() => openStudentDialog(student)}
                                 >
                                     <td>
                                         <div className="homeroom-students-main-info">
@@ -147,28 +191,6 @@ export default function HomeroomStudentsSection({
                                             {officerLabelByStudentId[student.id] || "Chưa phân công"}
                                         </span>
                                     </td>
-                                    <td onClick={(e) => e.stopPropagation()}>
-                                        <div className="homeroom-students-row-actions">
-                                            <button
-                                                type="button"
-                                                className="homeroom-students-icon-btn"
-                                                onClick={() => openStudentDialog(student, "edit")}
-                                                title="Chỉnh sửa"
-                                                aria-label="Chỉnh sửa"
-                                            >
-                                                <FiEdit2 />
-                                            </button>
-                                            <button
-                                                type="button"
-                                                className="homeroom-students-icon-btn primary"
-                                                onClick={() => openStudentDialog(student, "view")}
-                                                title="Cấp quyền"
-                                                aria-label="Cấp quyền"
-                                            >
-                                                <FiUserPlus />
-                                            </button>
-                                        </div>
-                                    </td>
                                 </tr>
                             ))
                         )}
@@ -178,16 +200,13 @@ export default function HomeroomStudentsSection({
 
             <HomeroomStudentDetailDialog
                 open={Boolean(activeStudent)}
-                mode={dialogMode}
                 student={activeStudent}
                 officerRows={officers}
                 onClose={closeStudentDialog}
-                onEdit={(student) => {
-                    if (!student) return;
-                    setDialogMode("edit");
+                onViewAttendance={(student) => {
+                    closeStudentDialog();
+                    onViewAttendance?.(student);
                 }}
-                onSave={handleSaveStudent}
-                onAssignOfficer={handleAssignOfficer}
             />
         </div>
     );

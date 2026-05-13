@@ -24,7 +24,7 @@ const officerRoleConfig = {
 export default function TeacherHomeroom() {
     const { selectedSchoolYear, selectedTerm, handleYearArrow, handleTermChange } = useSchoolYearTerm();
     const [activeSection, setActiveSection] = useState("overview");
-    const [actionDialog, setActionDialog] = useState({ open: false, mode: "officer" });
+    const [actionDialog, setActionDialog] = useState({ open: false, mode: "officer", editingData: null });
     const location = useLocation();
 
     // Xử lý chuyển tab từ URL params
@@ -44,7 +44,7 @@ export default function TeacherHomeroom() {
         queryKey: ["teacher-homeroom", teacherId, selectedSchoolYear],
         queryFn: async () => {
             if (!teacherId) return null;
-            
+
             try {
                 // Thử gọi API Consolidated trước
                 const consolidatedRes = await teacherService.getConsolidatedHomeroom({
@@ -55,11 +55,11 @@ export default function TeacherHomeroom() {
                     return mapApiDataToUI(consolidatedRes.data);
                 }
             } catch (e) {
-                console.warn("Consolidated Homeroom API not ready, falling back to multiple calls");
+                // Silently fallback to multiple calls if consolidated API is not ready
             }
 
             // Fallback: Gọi chuỗi API cũ
-            const homeroomRes = await teacherService.getHomeroomClasses({ 
+            const homeroomRes = await teacherService.getHomeroomClasses({
                 mock: false,
                 pathParams: { id: teacherId }
             });
@@ -75,7 +75,7 @@ export default function TeacherHomeroom() {
                     return mapApiDataToUI(detailRes.data, academicRes.success ? academicRes.data : null);
                 }
             }
-            
+
             return homeroomData;
         },
         enabled: !!teacherId,
@@ -84,7 +84,7 @@ export default function TeacherHomeroom() {
     // Hàm mapping dữ liệu từ API sang cấu trúc UI
     const mapApiDataToUI = (apiData, academicData = null) => {
         return {
-            ...homeroomData, 
+            ...homeroomData,
             id: apiData.id,
             name: apiData.class_name,
             room: apiData.room,
@@ -161,7 +161,7 @@ export default function TeacherHomeroom() {
 
     const handleUpdateStudent = (studentId, updates) => {
         // Local update logic
-        return true; 
+        return true;
     };
 
     const handleAssignOfficer = (studentId, roleKey) => {
@@ -169,9 +169,20 @@ export default function TeacherHomeroom() {
         return false;
     };
 
-    const openOfficerDialog = () => setActionDialog({ open: true, mode: "officer" });
-    const openActivityDialog = () => setActionDialog({ open: true, mode: "activity" });
-    const closeActionDialog = () => setActionDialog({ open: false, mode: "officer" });
+    const openOfficerDialog = () => setActionDialog({ open: true, mode: "officer", editingData: null });
+    const openActivityDialog = (activity = null) => setActionDialog({ open: true, mode: "activity", editingData: activity });
+    const closeActionDialog = () => setActionDialog({ open: false, mode: "officer", editingData: null });
+
+    const handleEditActivity = (activity) => {
+        openActivityDialog(activity);
+    };
+
+    const handleDeleteActivity = (activity) => {
+        if (window.confirm(`Bạn có chắc chắn muốn xóa hoạt động "${activity.title}"?`)) {
+            toast.error(`Đã xóa hoạt động: ${activity.title}`);
+            // Sau này gọi API xóa ở đây
+        }
+    };
 
     const handleSaveAction = async (payload) => {
         if (actionDialog.mode === "activity") {
@@ -279,16 +290,20 @@ export default function TeacherHomeroom() {
                     <HomeroomOverviewSection
                         data={classData}
                         onAddOfficersClick={openOfficerDialog}
-                        onCreateActivityClick={openActivityDialog}
+                        onCreateActivityClick={() => openActivityDialog()}
+                        onEditActivityClick={handleEditActivity}
+                        onDeleteActivityClick={handleDeleteActivity}
                     />
                 )}
                 {activeSection === "students" && (
                     <HomeroomStudentsSection
                         students={classData.students}
                         officers={officerRows}
-                        onUpdateStudent={handleUpdateStudent}
-                        onAssignOfficer={handleAssignOfficer}
                         onBanCanSuLopClick={openOfficerDialog}
+                        onViewAttendance={(student) => {
+                            setActiveSection("attendance");
+                            window.scrollTo({ top: 0, behavior: 'smooth' });
+                        }}
                     />
                 )}
                 {activeSection === "attendance" && <HomeroomAttendanceSection data={classData} />}
@@ -298,6 +313,7 @@ export default function TeacherHomeroom() {
                 key={`${actionDialog.mode}-${actionDialog.open ? "open" : "closed"}`}
                 open={actionDialog.open}
                 mode={actionDialog.mode}
+                editingData={actionDialog.editingData}
                 students={classData.students}
                 officerRows={officerRows}
                 extraOfficers={classData.extraOfficers || []}

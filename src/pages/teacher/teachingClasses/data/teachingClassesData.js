@@ -8,6 +8,10 @@ const vietnameseLastNames = [
   "Nguyễn", "Trần", "Phạm", "Hoàng", "Lê", "Vũ", "Đặng", "Bùi", "Đinh", "Tạ",
 ];
 
+const vietnameseMiddleNames = [
+  "Văn", "Thị", "Minh", "Đức", "Thanh", "Anh", "Hữu", "Quang", "Xuân", "Ngọc",
+];
+
 const parentNames = [
   "Nguyễn Văn A", "Trần Thị B", "Phạm Văn C", "Hoàng Thị D", "Lê Văn E",
   "Vũ Thị F", "Đặng Văn G", "Bùi Thị H", "Đinh Văn I", "Tạ Thị K",
@@ -16,7 +20,8 @@ const parentNames = [
 function generateStudent(id, className, teacher) {
   const firstName = vietnameseFirstNames[Math.floor(Math.random() * vietnameseFirstNames.length)];
   const lastName = vietnameseLastNames[Math.floor(Math.random() * vietnameseLastNames.length)];
-  const name = `${lastName} ${firstName}`;
+  const middleName = vietnameseMiddleNames[Math.floor(Math.random() * vietnameseMiddleNames.length)];
+  const name = `${lastName} ${middleName} ${firstName}`;
 
   const birthYear = 2008 + Math.floor(Math.random() * 2);
   const birthMonth = String(Math.floor(Math.random() * 12) + 1).padStart(2, "0");
@@ -56,6 +61,7 @@ function generateStudent(id, className, teacher) {
     parentPhone,
     enrollmentDate,
     tuitionPaid,
+    violations: Math.random() > 0.7 ? Math.floor(Math.random() * 4) : 0, // Mock violations
   };
 }
 

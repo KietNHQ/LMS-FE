@@ -31,6 +31,7 @@ export default function Select({
   onBlur,
   searchable = false,
   searchPlaceholder = "Tìm kiếm...",
+  menuDirection = "down",
   ...props
 }) {
   const [isFocused, setIsFocused] = useState(false);
@@ -42,6 +43,8 @@ export default function Select({
     return options.map((option) => ({
       value: getOptionValue(option),
       label: getOptionLabel(option),
+      disabled: option.disabled || false,
+      color: option.color || null,
     }));
   }, [options]);
 
@@ -135,7 +138,7 @@ export default function Select({
             <FiChevronDown className="dropdown-arrow" />
           </button>
 
-          <div className={`custom-dropdown-menu ${isOpen ? "show" : ""}`} role="listbox">
+          <div className={`custom-dropdown-menu ${isOpen ? "show" : ""} ${menuDirection === "up" ? "open-up" : ""}`} role="listbox">
             {searchable ? (
               <div className="custom-dropdown-search">
                 <input
@@ -157,12 +160,14 @@ export default function Select({
                     <button
                       key={String(option.value)}
                       type="button"
-                      className={`custom-dropdown-item ${isActive ? "active" : ""}`}
+                      className={`custom-dropdown-item ${isActive ? "active" : ""} ${option.disabled ? "disabled" : ""}`}
                       onClick={() => {
+                        if (option.disabled) return;
                         emitChange(option.value);
                         setIsOpen(false);
                         setSearchTerm("");
                       }}
+                      disabled={option.disabled}
                     >
                       {option.color && (
                         <span className={`event-calendar__legend-color event-calendar__event--${option.color}`} style={{ width: '12px', height: '12px', borderRadius: '3px', flexShrink: 0 }}></span>
