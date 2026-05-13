@@ -73,23 +73,37 @@ export default function WeeklyScheduleSection({
       
       if (!apiData || apiData.length === 0) return baseLessons;
       
+      const dayMapping = {
+        2: "Monday",
+        3: "Tuesday",
+        4: "Wednesday",
+        5: "Thursday",
+        6: "Friday",
+        7: "Saturday",
+        8: "Sunday"
+      };
+
       // Map API data to UI format
-      return apiData.map((item, idx) => {
+      const apiLessons = apiData.map((item, idx) => {
         const subjectKey = item.subject_code || "Toan";
         return {
           id: item.id || idx,
-          day: item.day_of_week || "Monday",
+          day: dayMapping[item.day_of_week] || item.day_of_week,
           periodStart: item.period_number,
           periodEnd: item.period_number,
           subject: item.subject_name || SUBJECT_DISPLAY[subjectKey] || subjectKey,
           className: item.class_name || "Lớp",
-          room: item.room_name || "Phòng học",
+          room: item.room || "Phòng học",
           teacher: item.teacher_name || "Giáo viên",
           color: item.color || SUBJECT_COLOR_MAP[subjectKey] || "teal",
           note: item.notes || "",
-          status: item.status || "normal"
+          status: item.status || "normal",
+          start_time: item.start_time,
+          end_time: item.end_time
         };
       });
+
+      return apiLessons;
     }, [apiData, weekStart, selectedClass]);
 
   const lessons = mappedLessons;
@@ -108,9 +122,6 @@ export default function WeeklyScheduleSection({
       note: lesson.note,
       teacher: (() => {
         if (!lesson.teacher) return "Chưa phân công";
-        // Assuming lesson.teacher is "Surname GivenName" or we need to split it differently
-        // But getTeacherWeekLessons returns a lesson with .teacher string.
-        // Actually, let's just use the same logic but handle string split.
         const parts = lesson.teacher.split(" ");
         if (parts.length < 2) return lesson.teacher;
         const givenName = parts.pop();
@@ -120,8 +131,8 @@ export default function WeeklyScheduleSection({
       status: lesson.status,
       periodStart: lesson.periodStart,
       periodEnd: lesson.periodEnd,
-      start: lesson.start,
-      end: lesson.end,
+      start: lesson.start_time,
+      end: lesson.end_time,
     };
   };
 
@@ -206,7 +217,10 @@ export default function WeeklyScheduleSection({
                             </span>
                             <span>
                               <AccessTimeRoundedIcon />
-                              {PERIOD_TIME[period].split(" - ")[0]} - {PERIOD_TIME[period].split(" - ")[1]}
+                              {lesson.start && lesson.end 
+                                ? `${lesson.start} - ${lesson.end}`
+                                : `${PERIOD_TIME[period].split(" - ")[0]} - ${PERIOD_TIME[period].split(" - ")[1]}`
+                              }
                             </span>
                           </div>
                         </div>

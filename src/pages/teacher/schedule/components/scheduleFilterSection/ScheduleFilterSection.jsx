@@ -37,7 +37,8 @@ export default function ScheduleFilterSection({
   selectedClass, 
   setSelectedClass,
   sessionView = "morning",
-  setSessionView
+  setSessionView,
+  availableClasses = []
 }) {
   const days = getWeekDates(weekOffset);
   const dateInputRef = useRef(null);
@@ -79,11 +80,12 @@ export default function ScheduleFilterSection({
 
   // Cascading Filter Logic
   const filteredClasses = useMemo(() => {
-    if (selectedGrade === "Tất cả") return ["Tất cả"];
+    const baseList = availableClasses.length > 0 ? availableClasses : CLASS_OPTIONS;
+    if (selectedGrade === "Tất cả") return ["Tất cả", ...baseList];
     const gradeNum = selectedGrade.split(" ")[1]; // "10", "11", "12"
-    const filtered = CLASS_OPTIONS.filter(cls => cls.startsWith(gradeNum));
+    const filtered = baseList.filter(cls => cls.startsWith(gradeNum));
     return ["Tất cả", ...filtered];
-  }, [selectedGrade]);
+  }, [selectedGrade, availableClasses]);
 
   const handleGradeChange = (e) => {
     setSelectedGrade(e.target.value);

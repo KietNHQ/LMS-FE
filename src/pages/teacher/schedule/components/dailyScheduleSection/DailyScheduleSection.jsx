@@ -58,7 +58,13 @@ function groupLessonsByClass(lessons) {
   );
 }
 
-export default function DailyScheduleSection({ weekOffset, selectedDay, selectedClass, onLessonSelect }) {
+export default function DailyScheduleSection({ 
+  weekOffset, 
+  selectedDay, 
+  selectedClass, 
+  onLessonSelect,
+  apiData = []
+}) {
   const [currentTime, setCurrentTime] = useState(new Date());
 
   useEffect(() => {
@@ -69,24 +75,60 @@ export default function DailyScheduleSection({ weekOffset, selectedDay, selected
   const days = getWeekDates(weekOffset);
   const date = days[selectedDay];
   const weekStart = days[0];
-  const allLessons = getTeacherWeekLessons(weekStart, selectedClass);
+  
   const dayKey = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"][selectedDay];
 
-  const lessons = allLessons
-    .filter((item) => item.day === dayKey)
-    .sort((a, b) => a.periodStart - b.periodStart)
-    .map((item) => ({
-      period: item.periodStart,
-      subject: item.subject,
-      class: item.className,
-      room: item.room,
-      students: 35,
-      color: item.color,
-      note: item.note,
-      periodEnd: item.periodEnd,
-      status: item.status,
-      timeRange: item.timeRange,
-    }));
+  const lessons = React.useMemo(() => {
+    if (apiData && apiData.length > 0) {
+      const dayMapping = {
+        2: "Monday",
+        3: "Tuesday",
+        4: "Wednesday",
+        5: "Thursday",
+        6: "Friday",
+        7: "Saturday",
+        8: "Sunday"
+      };
+
+      return apiData
+        .filter(item => {
+          const itemDay = dayMapping[item.day_of_week] || item.day_of_week;
+          const classMatch = selectedClass === "Tất cả" || item.class_name === selectedClass;
+          return itemDay === dayKey && classMatch;
+        })
+        .sort((a, b) => a.period_number - b.period_number)
+        .map(item => ({
+          period: item.period_number,
+          subject: item.subject_name,
+          class: item.class_name,
+          room: item.room,
+          students: 35,
+          color: item.color || "teal",
+          note: item.notes || "",
+          periodEnd: item.period_number,
+          status: item.status || "normal",
+          start_time: item.start_time,
+          end_time: item.end_time,
+        }));
+    }
+
+    const allLessons = getTeacherWeekLessons(weekStart, selectedClass);
+    return allLessons
+      .filter((item) => item.day === dayKey)
+      .sort((a, b) => a.periodStart - b.periodStart)
+      .map((item) => ({
+        period: item.periodStart,
+        subject: item.subject,
+        class: item.className,
+        room: item.room,
+        students: 35,
+        color: item.color,
+        note: item.note,
+        periodEnd: item.periodEnd,
+        status: item.status,
+        timeRange: item.timeRange,
+      }));
+  }, [apiData, dayKey, weekStart, selectedClass]);
 
   const groupedLessons = groupLessonsByClass(lessons);
   const classCount = Object.keys(groupedLessons).length;
@@ -164,7 +206,10 @@ export default function DailyScheduleSection({ weekOffset, selectedDay, selected
               <div className="daily-class-items">
                 {classLessons.map((lesson, idx) => {
                   const status = getLessonStatus(lesson.note);
-                  const { start } = formatTimeRange(lesson.period);
+                  const startTimeStr = lesson.start_time || formatTimeRange(lesson.period).start;
+                  const fullTimeStr = lesson.start_time && lesson.end_time 
+                    ? `${lesson.start_time} - ${lesson.end_time}`
+                    : PERIOD_TIME[lesson.period];
 
                   return (
                     <div
@@ -176,7 +221,7 @@ export default function DailyScheduleSection({ weekOffset, selectedDay, selected
                       <div className="daily-period-badge">
                         <span>Tiết</span>
                         <strong>{lesson.period}</strong>
-                        <small>{start}</small>
+                        <small>{startTimeStr}</small>
                       </div>
 
                       {/* Info */}
@@ -212,7 +257,7 @@ export default function DailyScheduleSection({ weekOffset, selectedDay, selected
                         <p className="daily-note">{lesson.note}</p>
                         <div className="daily-meta">
                           <span className="daily-time-full">
-                            <Clock size={12} /> {PERIOD_TIME[lesson.period]}
+                            <Clock size={12} /> {fullTimeStr}
                           </span>
                           <span>
                             <Users size={12} /> {lesson.students} HS

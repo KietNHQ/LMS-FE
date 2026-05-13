@@ -6,39 +6,9 @@ import LessonDetailModal from "./components/lessonDetailModal/LessonDetailModal"
 import { PageHeader, SchoolYearTermSelector } from "../../../components/common";
 import { useSchoolYearTerm } from "../../../hooks/useSchoolYearTerm";
 import teacherService from "../../../services/pages/teacher/teacherService";
+import { useGetMe } from "../../../hooks/useAuth";
 import "./TeacherLessons.css";
 import { useEffect } from "react";
-
-const ASSIGNED_SUBJECT = {
-    id: "math-10",
-    code: "MATH",
-    name: "Toán",
-    teacherName: "Nguyễn Văn A",
-};
-
-const TEACHING_BLOCKS = ["Khối 10", "Khối 11", "Khối 12"];
-const CLASSES_BY_BLOCK = {
-    "Khối 10": ["10A1", "10A2", "10A3", "10A4"],
-    "Khối 11": ["11A1", "11A2", "11A3", "11A4"],
-    "Khối 12": ["12A1", "12A2", "12A3", "12A4"],
-};
-
-
-function createEmptyForm() {
-    return {
-        title: "",
-        gradeBlock: TEACHING_BLOCKS[0],
-        className: CLASSES_BY_BLOCK[TEACHING_BLOCKS[0]][0],
-        chapter: "Chương 1",
-        date: "",
-        period: "Tiết 1",
-        room: "",
-        objective: "",
-        content: "",
-        materials: "",
-        homework: "",
-    };
-}
 
 function toAttachmentMeta(file) {
     return {
@@ -48,6 +18,79 @@ function toAttachmentMeta(file) {
 }
 
 export default function TeacherLessons() {
+    const { data: user } = useGetMe();
+    
+    // Derive teaching structures from assignments
+    const { teachingBlocks, classesByBlock, assignmentsMap } = useMemo(() => {
+        const assignments = user?.profile?.teachingAssignments || [];
+        const blocks = new Set();
+        const map = {};
+        const fullMap = {}; // key: className, value: assignment object
+
+        assignments.forEach(a => {
+            const blockName = `Khối ${a.grade_level}`;
+            blocks.add(blockName);
+            if (!map[blockName]) map[blockName] = [];
+            if (!map[blockName].includes(a.class_name)) {
+                map[blockName].push(a.class_name);
+            }
+            fullMap[a.class_name] = a;
+        });
+
+        return {
+            teachingBlocks: Array.from(blocks).sort(),
+            classesByBlock: map,
+            assignmentsMap: fullMap
+        };
+    }, [user]);
+
+    // Initial form state factory
+    const createEmptyForm = () => {
+        const firstBlock = teachingBlocks[0] || "";
+        const firstClass = classesByBlock[firstBlock]?.[0] || "";
+        return {
+            title: "",
+            gradeBlock: firstBlock,
+            className: firstClass,
+            chapter: "Chương 1",
+            date: "",
+            period: "Tiết 1",
+            room: "",
+            objective: "",
+            content: "",
+            materials: "",
+            homework: "",
+        };
+    };
+
+    const [formValues, setFormValues] = useState(createEmptyForm);
+
+    // [NEW] Sync form defaults when data arrives
+    useEffect(() => {
+        if (user && teachingBlocks.length > 0 && !formValues.gradeBlock) {
+            setFormValues(createEmptyForm());
+        }
+    }, [user, teachingBlocks, classesByBlock]);
+
+    // Derive subject from current form selection or profile
+    const assignedSubject = useMemo(() => {
+        const currentClass = assignmentsMap[formValues?.className];
+        if (currentClass) {
+            return {
+                name: currentClass.subject_name,
+                code: currentClass.subject_name.includes("Toán") ? "MATH" : "ENG",
+            };
+        }
+        
+        if (!user || !user.profile) return { name: "Đang tải...", code: "" };
+        const subjectStr = user.profile.subject || "Chưa phân công";
+        return {
+            name: subjectStr.split(",")[0].trim(),
+            code: subjectStr.includes("Toán") ? "MATH" : "ENG",
+            fullName: subjectStr
+        };
+    }, [user, assignmentsMap, formValues?.className]);
+
     const {
         selectedSchoolYear = "2025-2026",
         selectedTerm = "hk1",
@@ -72,7 +115,6 @@ export default function TeacherLessons() {
     const [reviewLesson, setReviewLesson] = useState(null);
     const [attachedFiles, setAttachedFiles] = useState([]);
 
-    const [formValues, setFormValues] = useState(createEmptyForm());
     const pinnedLessonSet = useMemo(() => new Set(pinnedLessonIds), [pinnedLessonIds]);
 
     const termLessons = useMemo(() => {
@@ -84,7 +126,7 @@ export default function TeacherLessons() {
     }, [lessons, selectedSchoolYear, selectedTerm]);
 
     const statusOptions = ["Tất cả", "Đã xuất bản", "Bản nháp", "Chờ duyệt"];
-    const blockOptions = ["Tất cả khối", ...TEACHING_BLOCKS];
+    const blockOptions = ["Tất cả khối", ...teachingBlocks];
 
     const fetchLessons = async () => {
         setIsLoading(true);
@@ -148,7 +190,7 @@ export default function TeacherLessons() {
     const handleFormChange = (field, value) => {
         setFormValues((prev) => {
             if (field === "gradeBlock") {
-                const nextClasses = CLASSES_BY_BLOCK[value] || [];
+                const nextClasses = classesByBlock[value] || [];
                 const keepCurrentClass = nextClasses.includes(prev.className);
                 return {
                     ...prev,
@@ -175,9 +217,9 @@ export default function TeacherLessons() {
         setEditingLessonId(lesson.id);
         setFormValues({
             title: lesson.title,
-            gradeBlock: lesson.gradeBlock || TEACHING_BLOCKS[0],
+            gradeBlock: lesson.gradeBlock || teachingBlocks[0],
             className:
-                lesson.className || CLASSES_BY_BLOCK[lesson.gradeBlock || TEACHING_BLOCKS[0]]?.[0] || "",
+                lesson.className || classesByBlock[lesson.gradeBlock || teachingBlocks[0]]?.[0] || "",
             chapter: lesson.chapter,
             date: lesson.date,
             period: lesson.period,
@@ -304,7 +346,7 @@ export default function TeacherLessons() {
         <div className="teacher-lessons-page teacher-lessons">
             <PageHeader
                 title="Quản lý bài học"
-                eyebrow={`Môn ${ASSIGNED_SUBJECT.code} • ${summary.total} bài trong học kỳ hiện tại`}
+                eyebrow={`Môn ${assignedSubject.name} • ${summary.total} bài trong học kỳ hiện tại`}
                 actions={
                     <div className="teacher-lessons-header-actions">
                         <SchoolYearTermSelector
@@ -362,9 +404,9 @@ export default function TeacherLessons() {
                 className="teacher-create-lesson-modal"
             >
                 <CreateEditLessonSection
-                    subject={ASSIGNED_SUBJECT}
-                    blockOptions={TEACHING_BLOCKS}
-                    classesByBlock={CLASSES_BY_BLOCK}
+                    subject={assignedSubject}
+                    blockOptions={teachingBlocks}
+                    classesByBlock={classesByBlock}
                     formValues={formValues}
                     onChangeForm={handleFormChange}
                     attachedFiles={attachedFiles}

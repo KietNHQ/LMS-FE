@@ -242,7 +242,7 @@ const teacherEndpointRegistry = [
   { 
     key: "get_timetable", 
     method: "GET", 
-    path: "/timetable", 
+    path: "/teachers/me/timetable", 
     module: "timetable", 
     mock: () => ([
       {
