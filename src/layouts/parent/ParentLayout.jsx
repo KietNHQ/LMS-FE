@@ -1,13 +1,19 @@
 import React, { useState, Suspense, useEffect } from "react";
 import { Outlet, useLocation } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
 import Sidebar from "../../components/sidebar/Sidebar";
 import { LoadingAnimationBook } from "../../components/common";
+import { parentService } from "../../services/pages/parent/parentService";
 import "./ParentLayout.css";
+import { formatName } from "../../utils/nameUtils";
+
 
 export default function ParentLayout() {
     const [isCollapsed, setIsCollapsed] = useState(false);
     const location = useLocation();
     const [isPageTransitioning, setIsPageTransitioning] = useState(false);
+
+    const queryClient = useQueryClient();
 
     useEffect(() => {
         setIsPageTransitioning(true);
@@ -16,6 +22,46 @@ export default function ParentLayout() {
         }, 600);
         return () => clearTimeout(timer);
     }, [location.pathname]);
+
+    // [NEW] Background JS Chunk Prefetching
+    useEffect(() => {
+        const prefetchChunks = () => {
+            import("../../pages/parent/dashboard/ParentDashboard");
+            import("../../pages/parent/children-overview/ParentChildrenOverview");
+            import("../../pages/parent/notifications/ParentNotifications");
+            import("../../pages/parent/messages/ParentMessages");
+            import("../../pages/parent/payments/ParentPayments");
+        };
+        
+        if (window.requestIdleCallback) {
+            window.requestIdleCallback(prefetchChunks);
+        } else {
+            setTimeout(prefetchChunks, 2000);
+        }
+    }, []);
+
+    // [NEW] Hệ thống Load ngầm (Prefetching) cho Phụ huynh
+    useEffect(() => {
+        const prefetchData = async () => {
+            await Promise.allSettled([
+                // 1. Prefetch danh sách con cái
+                queryClient.prefetchQuery({
+                    queryKey: ["parent-children"],
+                    queryFn: () => parentService.listChildren({ mock: false }),
+                    staleTime: 10 * 60 * 1000,
+                }),
+                
+                // 2. Prefetch thông báo
+                queryClient.prefetchQuery({
+                    queryKey: ["parent-notifications"],
+                    queryFn: () => parentService.listNotifications({ mock: false }),
+                    staleTime: 2 * 60 * 1000,
+                })
+            ]);
+        };
+
+        prefetchData();
+    }, [queryClient]);
 
     // [NEW] Fetch notification count on layout mount to sync sidebar badge
     useEffect(() => {
@@ -60,7 +106,7 @@ export default function ParentLayout() {
         }
     })();
 
-    const userName = storedUser.fullName || storedUser.name || "Phụ huynh";
+    const userName = formatName(storedUser, { fallback: "Phụ huynh" });
     const userEmail = storedUser.email || "";
 
     return (

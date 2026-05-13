@@ -10,13 +10,25 @@ const StudentsTable = ({
   onOpenReview, 
   effectivePage, 
   itemsPerPage,
-  readOnly
+  readOnly,
+  selectedStudentIds,
+  onToggleSelect,
+  onSelectAll
 }) => {
+  const isAllSelected = students.length > 0 && students.every(s => selectedStudentIds.has(s.id));
+
   return (
     <div className="table-wrapper">
       <table className="students-table">
         <thead>
           <tr>
+            <th className="select-cell">
+              <input 
+                type="checkbox" 
+                checked={isAllSelected}
+                onChange={(e) => onSelectAll(e.target.checked)}
+              />
+            </th>
             <th>STT</th>
             <th className="student-name-header">HỌC SINH</th>
             <th>NGÀY SINH</th>
@@ -28,7 +40,14 @@ const StudentsTable = ({
         </thead>
         <tbody>
           {students.map((student, index) => (
-            <tr key={student.id}>
+            <tr key={student.id} className={selectedStudentIds.has(student.id) ? "row-selected" : ""}>
+              <td className="select-cell">
+                <input 
+                  type="checkbox" 
+                  checked={selectedStudentIds.has(student.id)}
+                  onChange={() => onToggleSelect(student.id)}
+                />
+              </td>
               <td className="student-index-cell">
                 {(effectivePage - 1) * itemsPerPage + index + 1}
               </td>

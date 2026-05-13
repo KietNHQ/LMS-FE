@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import teacherService from "../../../services/pages/teacher/teacherService";
 import "./TeacherDashboard.css";
 import SchoolYearTermSelector from "../../../components/common/SchoolYearTermSelector/SchoolYearTermSelector";
@@ -14,28 +15,36 @@ import QuizManagementSection from "./components/quizManagementSection/QuizManage
 const TeacherDashboard = () => {
   const [selectedSchoolYear, setSelectedSchoolYear] = useState("2024-2025");
   const [selectedTerm, setSelectedTerm] = useState("hk2");
-  const [isLoading, setIsLoading] = useState(true);
-  const [dashboardData, setDashboardData] = useState(null);
 
-  useEffect(() => {
-    const fetchDashboardData = async () => {
-      setIsLoading(true);
-      try {
-        // Gọi API thực tế từ teacherService
-        const response = await teacherService.getDashboard({ mock: false });
-        if (response.success) {
-          setDashboardData(response.data);
-        }
-      } catch (error) {
-        console.error("Failed to fetch teacher dashboard:", error);
-      } finally {
-        // Giả lập delay 1 chút để UI mượt
-        setTimeout(() => setIsLoading(false), 600);
+  // Sử dụng TanStack Query để quản lý dữ liệu dashboard
+  const { data: dashboardResponse, isLoading, error } = useQuery({
+    queryKey: ["teacher-dashboard", selectedSchoolYear, selectedTerm],
+    queryFn: () => teacherService.getDashboard({ 
+      mock: false,
+      params: { schoolYear: selectedSchoolYear, term: selectedTerm }
+    }),
+    staleTime: 5 * 60 * 1000, // 5 phút
+  });
+
+  const dashboardData = React.useMemo(() => {
+    const rawData = dashboardResponse?.success ? dashboardResponse.data : null;
+    if (!rawData) return null;
+
+    const data = { ...rawData };
+    // Trích xuất tên lớp chủ nhiệm nếu chưa có trong stats
+    if (data.classes && data.stats && !data.stats.homeroomClassName) {
+      const homeroom = data.classes.find(c => 
+        c.isHomeroom || 
+        c.role === 'GVCN' || 
+        c.role === 'LỚP CHỦ NHIỆM' ||
+        c.type === 'LỚP CHỦ NHIỆM'
+      );
+      if (homeroom) {
+        data.stats.homeroomClassName = homeroom.class_name || homeroom.name;
       }
-    };
-
-    fetchDashboardData();
-  }, [selectedSchoolYear, selectedTerm]);
+    }
+    return data;
+  }, [dashboardResponse]);
 
   const handleYearChange = (direction) => {
     const years = selectedSchoolYear.split("-").map(Number);
@@ -46,12 +55,21 @@ const TeacherDashboard = () => {
     }
   };
 
+  if (error) {
+    return (
+      <div className="teacher-dashboard-error">
+        <h3>Đã xảy ra lỗi khi tải dữ liệu</h3>
+        <p>{error.message}</p>
+      </div>
+    );
+  }
+
   return (
     <div className="teacher-dashboard-container theme-teacher">
       {/* Header */}
       <div className="teacher-dashboard-header">
         <div className="header-left">
-          <h2>Xin chào, Hương!</h2>
+          <h2>Xin chào, Giáo viên!</h2>
         </div>
         <SchoolYearTermSelector
           selectedSchoolYear={selectedSchoolYear}
@@ -72,17 +90,17 @@ const TeacherDashboard = () => {
 
           {/* Middle */}
           <div className="teacher-dashboard-middle">
-            {/* Classes in charge (moved from right) */}
+            {/* Classes in charge */}
             <UpcomingScheduleSection classes={dashboardData?.classes} />
 
-            {/* Event Calendar (new) */}
+            {/* Event Calendar */}
             <div className="teacher-dashboard-calendar">
               <EventCalendar
                 title="Lịch Sự Kiện"
                 themeClass="theme-teacher"
                 userRole="teacher"
                 isCompact={true}
-                currentUser="Lê Minh hoàng"
+                currentUser="Giáo viên"
                 eventTypes={CALENDAR_EVENT_TYPES}
                 initialEvents={INITIAL_CALENDAR_EVENTS}
                 selectedSchoolYear={selectedSchoolYear}
@@ -97,10 +115,9 @@ const TeacherDashboard = () => {
             </div>
           </div>
 
-
           {/* Bottom */}
           <div className="teacher-dashboard-bottom">
-            <RecentActivitiesSection />
+            <RecentActivitiesSection activities={dashboardData?.recentActivity} />
             <QuizManagementSection />
           </div>
         </>

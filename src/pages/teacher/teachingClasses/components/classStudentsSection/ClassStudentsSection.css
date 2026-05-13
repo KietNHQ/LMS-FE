@@ -1281,3 +1281,72 @@
     font-size: 11px;
   }
 }
+.students-card-actions-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  justify-content: space-between;
+  margin-top: 18px;
+  margin-bottom: 12px;
+}
+
+.bulk-actions-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  background: #f0fdfa;
+  border: 1px solid var(--tc-border);
+  border-radius: 12px;
+  padding: 0 12px;
+  height: 40px;
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.selection-count {
+  font-size: 13px;
+  color: var(--tc-text-main);
+}
+
+.bulk-btn-group {
+  display: flex;
+  gap: 8px;
+}
+
+.bulk-btn {
+  min-height: 32px;
+  padding: 0 14px;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.bulk-btn.attend {
+  background: #dcfce7;
+  color: #166534;
+  border-color: #86efac;
+}
+
+.bulk-btn.absent {
+  background: #fee2e2;
+  color: #991b1b;
+  border-color: #fca5a5;
+}
+
+.bulk-btn.review {
+  background: var(--tc-primary-strong);
+  color: #ffffff;
+}
+
+.bulk-btn:hover {
+  filter: brightness(0.95);
+  transform: translateY(-1px);
+}

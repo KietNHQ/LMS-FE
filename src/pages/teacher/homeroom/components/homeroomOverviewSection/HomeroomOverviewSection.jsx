@@ -5,8 +5,11 @@ import "./HomeroomOverviewSection.css";
 export default function HomeroomOverviewSection({ data, onAddOfficersClick, onCreateActivityClick }) {
     if (!data) return null;
 
-    const totalStudents = data.students.length;
-    const academic = data.academicStats;
+    const totalStudents = data.students?.length || 0;
+    // Safely get stats with defaults
+    const academic = data.academicStats || { excellent: 0, good: 0, average: 0, weak: 0 };
+    const tuition = data.tuitionStats || { paid: 0, unpaid: 0 };
+
     const officers = [
         { name: data.monitor, role: "Lớp trưởng", avatar: "M", gradient: "monitor-gradient" },
         { name: data.viceMonitor, role: "Lớp phó học tập", avatar: "V", gradient: "vice-gradient" },
@@ -20,13 +23,13 @@ export default function HomeroomOverviewSection({ data, onAddOfficersClick, onCr
         })),
     ].filter((officer) => officer.name);
 
-    // Calculate percentages
-    const excPct = (academic.excellent / totalStudents) * 100;
-    const goodPct = (academic.good / totalStudents) * 100;
-    const avgPct = (academic.average / totalStudents) * 100;
-    const weakPct = (academic.weak / totalStudents) * 100;
+    // Calculate percentages safely
+    const excPct = totalStudents > 0 ? ((academic.excellent || 0) / totalStudents) * 100 : 0;
+    const goodPct = totalStudents > 0 ? ((academic.good || 0) / totalStudents) * 100 : 0;
+    const avgPct = totalStudents > 0 ? ((academic.average || 0) / totalStudents) * 100 : 0;
+    const weakPct = totalStudents > 0 ? ((academic.weak || 0) / totalStudents) * 100 : 0;
 
-    const paidPct = (data.tuitionStats.paid / totalStudents) * 100;
+    const paidPct = totalStudents > 0 ? ((tuition.paid || 0) / totalStudents) * 100 : 0;
 
     return (
         <div className="homeroom-overview-section">
@@ -104,11 +107,11 @@ export default function HomeroomOverviewSection({ data, onAddOfficersClick, onCr
                         <div className="tuition-legend">
                             <div className="legend-item">
                                 <span className="legend-dot paid"></span>
-                                <span>Đã đóng: <strong>{data.tuitionStats.paid} HS</strong></span>
+                                <span>Đã đóng: <strong>{tuition.paid} HS</strong></span>
                             </div>
                             <div className="legend-item">
                                 <span className="legend-dot unpaid"></span>
-                                <span>Chưa đóng: <strong>{data.tuitionStats.unpaid} HS</strong></span>
+                                <span>Chưa đóng: <strong>{tuition.unpaid} HS</strong></span>
                             </div>
                         </div>
                     </div>

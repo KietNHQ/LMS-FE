@@ -1,10 +1,16 @@
 import React, { useState, Suspense, useEffect } from "react";
 import { Outlet, useLocation } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
 import Sidebar from "../../components/sidebar/Sidebar";
 import { LoadingAnimationBook } from "../../components/common";
 import { useGetMe } from "../../hooks/useAuth";
+import { principalService } from "../../services/pages/management/principal";
+import { vpAcademicService } from "../../services/pages/management/vp-academic";
+import { getCurrentSchoolYear, getCurrentTerm } from "../../utils/dateUtils";
 import ChangePasswordDialog from "../../components/common/Dialog/ChangePasswordDialog/ChangePasswordDialog";
 import "./ManagementLayout.css";
+import { formatName } from "../../utils/nameUtils";
+
 
 /**
  * ManagementLayout - Layout chung duy nhất cho tất cả cán bộ nhân viên.
@@ -23,6 +29,57 @@ export default function ManagementLayout() {
     }, []);
     // Tự động đồng bộ thông tin người dùng và quyền hạn từ Server
     const { data: latestUser } = useGetMe();
+    const queryClient = useQueryClient();
+
+    // [NEW] Background JS Chunk Prefetching
+    useEffect(() => {
+        const prefetchChunks = () => {
+            import("../../pages/management/dashboard/index.js");
+            import("../../pages/management/users/index.js");
+            import("../../pages/management/classes/index.js");
+            import("../../pages/management/grades/index.js");
+            import("../../pages/management/timetable/index.js");
+            import("../../pages/management/notifications/index.js");
+        };
+        
+        if (window.requestIdleCallback) {
+            window.requestIdleCallback(prefetchChunks);
+        } else {
+            setTimeout(prefetchChunks, 2000);
+        }
+    }, []);
+
+    // [NEW] Hệ thống Load ngầm (Prefetching) cho Quản lý
+    useEffect(() => {
+        if (!latestUser) return;
+
+        const schoolYear = getCurrentSchoolYear();
+        const term = getCurrentTerm();
+
+        const prefetchData = async () => {
+            await Promise.allSettled([
+                // 1. Prefetch Dashboard
+                queryClient.prefetchQuery({
+                    queryKey: ["management-dashboard", schoolYear, term],
+                    queryFn: () => principalService.getDashboardOverview({
+                        params: { schoolYear, term }
+                    }),
+                    staleTime: 5 * 60 * 1000,
+                }),
+
+                // 2. Prefetch Academic Stats (cho PHT Chuyên môn)
+                queryClient.prefetchQuery({
+                    queryKey: ["academic-stats", schoolYear, term],
+                    queryFn: () => vpAcademicService.getAssessmentWorkflowStats(term, {
+                        params: { schoolYearId: schoolYear },
+                    }),
+                    staleTime: 5 * 60 * 1000,
+                })
+            ]);
+        };
+
+        prefetchData();
+    }, [latestUser, queryClient]);
 
     // Hiệu ứng "Quyển sách" mỗi khi đổi trang (đáp ứng yêu cầu trải nghiệm mượt mà)
     useEffect(() => {
@@ -84,7 +141,7 @@ export default function ManagementLayout() {
 
     const baseUser = latestUser || storedUser;
     const userToUse = baseUser;
-    const userName = userToUse.fullName || userToUse.name || userToUse.email?.split("@")[0] || "Người dùng";
+    const userName = formatName(userToUse, { fallback: "Người dùng" });
     const userEmail = userToUse.email || "";
     const userPermissions = userToUse.permissions || null;
 

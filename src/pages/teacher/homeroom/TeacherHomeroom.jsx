@@ -1,4 +1,6 @@
 import React, { useMemo, useState, useEffect } from "react";
+import { useLocation } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import teacherService from "../../../services/pages/teacher/teacherService";
 import { PageHeader, SchoolYearTermSelector } from "../../../components/common";
 import HomeroomOverviewSection from "./components/homeroomOverviewSection/HomeroomOverviewSection";
@@ -10,6 +12,8 @@ import { useSchoolYearTerm } from "../../../hooks/useSchoolYearTerm";
 import { FiUsers, FiAward, FiCalendar, FiInfo } from "react-icons/fi";
 import { toast } from "react-toastify";
 import "./TeacherHomeroom.css";
+import { formatName } from "../../../utils/nameUtils";
+
 
 const officerRoleConfig = {
     monitor: { label: "Lớp trưởng", field: "monitor" },
@@ -20,87 +24,96 @@ const officerRoleConfig = {
 export default function TeacherHomeroom() {
     const { selectedSchoolYear, selectedTerm, handleYearArrow, handleTermChange } = useSchoolYearTerm();
     const [activeSection, setActiveSection] = useState("overview");
-    const [classData, setClassData] = useState(null);
-    const [isLoading, setIsLoading] = useState(false);
     const [actionDialog, setActionDialog] = useState({ open: false, mode: "officer" });
+    const location = useLocation();
+
+    // Xử lý chuyển tab từ URL params
+    useEffect(() => {
+        const params = new URLSearchParams(location.search);
+        const tab = params.get("tab");
+        if (tab === "attendance") {
+            setActiveSection("attendance");
+        }
+    }, [location.search]);
 
     const storedUser = JSON.parse(localStorage.getItem("user") || sessionStorage.getItem("user") || "{}");
     const teacherId = storedUser.profile?.id || storedUser.teacherId;
 
-    useEffect(() => {
-        const fetchHomeroom = async () => {
-            if (!teacherId) return;
-            setIsLoading(true);
+    // Sử dụng TanStack Query cho dữ liệu lớp chủ nhiệm
+    const { data: classData, isLoading, refetch } = useQuery({
+        queryKey: ["teacher-homeroom", teacherId, selectedSchoolYear],
+        queryFn: async () => {
+            if (!teacherId) return null;
+            
             try {
-                // 1. Lấy danh sách lớp chủ nhiệm
-                const homeroomRes = await teacherService.getHomeroomClasses({ 
-                    mock: false,
-                    pathParams: { id: teacherId }
+                // Thử gọi API Consolidated trước
+                const consolidatedRes = await teacherService.getConsolidatedHomeroom({
+                    pathParams: { id: teacherId },
+                    params: { schoolYear: selectedSchoolYear }
                 });
-
-                if (homeroomRes.success && homeroomRes.data && homeroomRes.data.length > 0) {
-                    const firstClass = homeroomRes.data[0];
-                    
-                    // 2. Lấy chi tiết lớp đó (học sinh, môn học...)
-                    const detailRes = await teacherService.getClassDetails({
-                        mock: false,
-                        pathParams: { id: firstClass.id }
-                    });
-
-                    if (detailRes.success && detailRes.data) {
-                        const apiData = detailRes.data;
-
-                        // 3. Lấy tổng hợp học tập của lớp
-                        const academicRes = await teacherService.getAcademicSummary({
-                            mock: false,
-                            pathParams: { id: apiData.id }
-                        });
-
-                        const mappedData = {
-                            ...homeroomData, 
-                            id: apiData.id,
-                            name: apiData.class_name,
-                            room: apiData.room,
-                            grade: apiData.grade_level_name,
-                            year: apiData.school_year_name,
-                            monitor: apiData.monitor,
-                            viceMonitor: apiData.viceMonitor,
-                            secretary: apiData.secretary,
-                            extraOfficers: apiData.extraOfficers || [],
-                            academicStats: academicRes.success ? academicRes.data.academicStats : apiData.academicStats,
-                            tuitionStats: apiData.tuitionStats,
-                            activities: apiData.activities || [],
-                            students: (apiData.students || []).map(s => ({
-                                id: s.id,
-                                name: `${s.surname || ""} ${s.given_name || ""}`.trim() || "Chưa rõ tên",
-                                avatar: null,
-                                gender: s.gender === 'M' ? 'Nam' : 'Nữ',
-                                dob: s.birth_date,
-                                phone: s.phone || "N/A",
-                                parentName: s.parent_name || "Chưa cập nhật",
-                                parentPhone: s.parent_phone || "N/A",
-                                officerRole: s.officer_role,
-                                email: s.email,
-                                academicStatus: s.academic_status,
-                                conductStatus: s.conduct_status,
-                                tuitionStatus: s.tuition_status
-                            })),
-                        };
-                        setClassData(mappedData);
-                    }
-                } else {
-                    setClassData(homeroomData);
+                if (consolidatedRes.success && consolidatedRes.data) {
+                    return mapApiDataToUI(consolidatedRes.data);
                 }
-            } catch (error) {
-                console.error("Failed to fetch homeroom data:", error);
-                setClassData(homeroomData);
-            } finally {
-                setIsLoading(false);
+            } catch (e) {
+                console.warn("Consolidated Homeroom API not ready, falling back to multiple calls");
             }
-        };
 
-        fetchHomeroom();
-    }, [teacherId]);
+            // Fallback: Gọi chuỗi API cũ
+            const homeroomRes = await teacherService.getHomeroomClasses({ 
+                mock: false,
+                pathParams: { id: teacherId }
+            });
+
+            if (homeroomRes.success && homeroomRes.data && homeroomRes.data.length > 0) {
+                const firstClass = homeroomRes.data[0];
+                const [detailRes, academicRes] = await Promise.all([
+                    teacherService.getClassDetails({ pathParams: { id: firstClass.id } }),
+                    teacherService.getAcademicSummary({ pathParams: { id: firstClass.id } })
+                ]);
+
+                if (detailRes.success && detailRes.data) {
+                    return mapApiDataToUI(detailRes.data, academicRes.success ? academicRes.data : null);
+                }
+            }
+            
+            return homeroomData;
+        },
+        enabled: !!teacherId,
+    });
+
+    // Hàm mapping dữ liệu từ API sang cấu trúc UI
+    const mapApiDataToUI = (apiData, academicData = null) => {
+        return {
+            ...homeroomData, 
+            id: apiData.id,
+            name: apiData.class_name,
+            room: apiData.room,
+            grade: apiData.grade_level_name,
+            year: apiData.school_year_name,
+            monitor: apiData.monitor,
+            viceMonitor: apiData.viceMonitor,
+            secretary: apiData.secretary,
+            extraOfficers: apiData.extraOfficers || [],
+            academicStats: academicData ? academicData.academicStats : apiData.academicStats,
+            tuitionStats: apiData.tuitionStats,
+            activities: apiData.activities || [],
+            students: (apiData.students || []).map(s => ({
+                id: s.id,
+                name: formatName(s),
+                avatar: null,
+                gender: s.gender === 'M' ? 'Nam' : 'Nữ',
+                dob: s.birth_date,
+                phone: s.phone || "N/A",
+                parentName: s.parent_name || "Chưa cập nhật",
+                parentPhone: s.parent_phone || "N/A",
+                officerRole: s.officer_role,
+                email: s.email,
+                academicStatus: s.academic_status,
+                conductStatus: s.conduct_status,
+                tuitionStatus: s.tuition_status
+            })),
+        };
+    };
 
     const handleSectionChange = (section) => {
         setActiveSection(section);
@@ -147,12 +160,11 @@ export default function TeacherHomeroom() {
     }
 
     const handleUpdateStudent = (studentId, updates) => {
-        // Local update for immediate feedback, but real logic should call API
+        // Local update logic
         return true; 
     };
 
     const handleAssignOfficer = (studentId, roleKey) => {
-        // Individual assignment not supported by single API call yet
         toast.info("Vui lòng sử dụng nút 'Ban cán sự lớp' để phân công chính thức.");
         return false;
     };
@@ -163,41 +175,26 @@ export default function TeacherHomeroom() {
 
     const handleSaveAction = async (payload) => {
         if (actionDialog.mode === "activity") {
-            const nextActivity = {
-                title: payload.title,
-                type: payload.type,
-                time: payload.time,
-                location: payload.location,
-                status: "upcoming",
-                note: payload.note,
-            };
-
-            setClassData((prev) => ({
-                ...prev,
-                activities: [...(prev.activities || []), nextActivity],
-            }));
+            // Mock logic or call specific API
             toast.success("Đã thêm hoạt động lớp (mock).");
         } else if (actionDialog.mode === "officer") {
             const assignments = payload.assignments || [];
-            
             try {
                 const officers = assignments
-                    .filter(a => a.studentId) // Chỉ lấy những vị trí đã chọn người
+                    .filter(a => a.studentId)
                     .map(a => ({
                         studentId: a.studentId,
                         officerRole: a.key === 'monitor' ? 'monitor' : (a.key === 'viceMonitor' ? 'vice_monitor_academic' : 'secretary')
                     }));
 
                 const res = await teacherService.assignOfficers({
-                    mock: false,
                     pathParams: { id: classData.id },
                     body: { officers }
                 });
 
                 if (res.success) {
-                    toast.success("Đã cập nhật ban cán sự lớp lên hệ thống.");
-                    // Refresh data
-                    window.location.reload(); 
+                    toast.success("Đã cập nhật ban cán sự lớp thành công.");
+                    refetch();
                 } else {
                     toast.error(res.error || "Không thể cập nhật ban cán sự.");
                 }
@@ -206,7 +203,6 @@ export default function TeacherHomeroom() {
                 toast.error("Lỗi kết nối máy chủ.");
             }
         }
-
         closeActionDialog();
     };
 
@@ -231,7 +227,7 @@ export default function TeacherHomeroom() {
                     </div>
                     <div className="stat-info">
                         <h3>Sĩ số</h3>
-                        <p>{classData.students.length} học sinh</p>
+                        <p>{classData.students?.length || 0} học sinh</p>
                     </div>
                 </div>
                 <div className="homeroom-stat-card">

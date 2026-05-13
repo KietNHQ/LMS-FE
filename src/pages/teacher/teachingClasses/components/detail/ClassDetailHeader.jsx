@@ -1,4 +1,5 @@
 import React from "react";
+import { getTermLabel, getAcademicWeek } from "../../utils/teachingClassesUtils";
 import "./ClassDetailHeader.css";
 
 const ClassDetailHeader = ({ classData, onBack }) => {
@@ -25,11 +26,13 @@ const ClassDetailHeader = ({ classData, onBack }) => {
         </div>
         <div className="info-item">
           <span className="info-label">Tổng số học sinh</span>
-          <span className="info-value">{classData.students.length}</span>
+          <span className="info-value">{classData.students?.length || 0}</span>
         </div>
         <div className="info-item">
           <span className="info-label">Năm học</span>
-          <span className="info-value">{classData.year}</span>
+          <span className="info-value">
+            {classData.year} • {getTermLabel(classData.term)} • Tuần {getAcademicWeek(new Date())}
+          </span>
         </div>
       </div>
     </div>

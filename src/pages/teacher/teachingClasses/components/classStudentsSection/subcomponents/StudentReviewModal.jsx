@@ -19,13 +19,15 @@ const StudentReviewModal = ({
   onRemoveEntry, 
   reviewTotalPoints, 
   onSave,
-  readOnly
+  readOnly,
+  bulkCount = 0
 }) => {
-  if (!student) return null;
+  const isOpen = !!student || bulkCount > 0;
+  if (!isOpen) return null;
 
   return (
     <Modal
-      open={!!student}
+      open={isOpen}
       onClose={onClose}
       title={readOnly ? "Thông tin ghi nhận" : "Điền thông tin ghi nhận"}
       className="tc-review-modal"
@@ -33,17 +35,17 @@ const StudentReviewModal = ({
       <div className="tc-review-dialog-content">
         <div className="tc-review-dialog-student">
           <div className="tc-review-dialog-avatar">
-            {student.name.charAt(0).toUpperCase()}
+            {student ? student.name.charAt(0).toUpperCase() : bulkCount}
           </div>
           <div className="tc-review-dialog-student-info">
             <div className="tc-review-dialog-student-title-row">
-              <h4>{student.name}</h4>
+              <h4>{student ? student.name : `Đánh giá cho ${bulkCount} học sinh`}</h4>
               <span className={`tc-review-dialog-score-badge ${reviewTotalPoints >= 0 ? "positive" : "negative"}`}>
                 {reviewTotalPoints > 0 ? `+${reviewTotalPoints}` : reviewTotalPoints} điểm
               </span>
             </div>
             <p>
-              {student.parentName} • {student.parentPhone}
+              {student ? `${student.parentName} • ${student.parentPhone}` : "Áp dụng đánh giá hàng loạt cho các mục đã chọn"}
             </p>
           </div>
         </div>
@@ -71,23 +73,42 @@ const StudentReviewModal = ({
                 <label className="tc-detail-label" htmlFor="review-content">
                   Nội dung
                 </label>
-                <Select
-                  variant="custom"
-                  id="review-content"
-                  value={reviewContent.label}
-                  onChange={(e) => {
-                    const nextContent = REVIEW_CONTENT_MAPPING[reviewCategory].find(
-                      (item) => item.label === e.target.value
-                    );
-                    if (nextContent) {
-                      onContentChange(nextContent);
-                    }
-                  }}
-                  options={REVIEW_CONTENT_MAPPING[reviewCategory].map((item) => ({
-                    value: item.label,
-                    label: item.label
-                  }))}
-                />
+                {reviewCategory === "Đánh giá thường xuyên (Điểm miệng)" ? (
+                  <input
+                    id="review-content"
+                    className="tc-input"
+                    type="number"
+                    min="0"
+                    max="10"
+                    step="0.1"
+                    value={reviewContent.label.replace("Điểm ", "")}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      if (val === "" || (parseFloat(val) >= 0 && parseFloat(val) <= 10)) {
+                        onContentChange({ label: `Điểm ${val}`, pts: 0 });
+                      }
+                    }}
+                    placeholder="Nhập điểm (0-10)..."
+                  />
+                ) : (
+                  <Select
+                    variant="custom"
+                    id="review-content"
+                    value={reviewContent.label}
+                    onChange={(e) => {
+                      const nextContent = REVIEW_CONTENT_MAPPING[reviewCategory].find(
+                        (item) => item.label === e.target.value
+                      );
+                      if (nextContent) {
+                        onContentChange(nextContent);
+                      }
+                    }}
+                    options={REVIEW_CONTENT_MAPPING[reviewCategory].map((item) => ({
+                      value: item.label,
+                      label: item.label
+                    }))}
+                  />
+                )}
               </div>
 
               <div className="tc-review-dialog-field tc-review-dialog-field--full">

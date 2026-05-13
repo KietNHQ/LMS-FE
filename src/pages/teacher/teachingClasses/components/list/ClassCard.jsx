@@ -25,7 +25,7 @@ const ClassCard = ({ cls, onClick }) => {
             <PiStudent />
             Học sinh
           </span>
-          <strong>{cls.students.length}</strong>
+          <strong>{cls.studentsCount ?? cls.students?.length ?? 0}</strong>
         </div>
       </div>
 

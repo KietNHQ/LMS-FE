@@ -1,5 +1,6 @@
 import { useMemo, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import "./StudentDashboard.css";
 import {
     HiOutlineTrophy,
@@ -21,44 +22,27 @@ import { studentService } from "../../../services/pages/student/studentService";
 export default function StudentDashboard() {
     const navigate = useNavigate();
     const { selectedSchoolYear, selectedTerm, handleYearArrow, handleTermChange } = useSchoolYearTerm();
-    const [isLoading, setIsLoading] = useState(true);
-    const [dashboardData, setDashboardData] = useState(null);
     const [localProfile, setLocalProfile] = useState(null);
 
     // 1. Lấy thông tin từ localStorage ngay khi mount
     useEffect(() => {
         const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
-        console.log("[StudentDashboard] Profile from localStorage:", storedUser?.profile);
         if (storedUser?.profile) {
             setLocalProfile(storedUser.profile);
         }
     }, []);
 
-    useEffect(() => {
-        const fetchDashboardData = async () => {
-            setIsLoading(true);
-            const hasAuth = !!localStorage.getItem("accessToken");
+    // 2. Sử dụng TanStack Query để quản lý dữ liệu dashboard
+    const { data: response, isLoading } = useQuery({
+        queryKey: ["student-dashboard", selectedSchoolYear, selectedTerm],
+        queryFn: () => studentService.getDashboard({ 
+            mock: false,
+            params: { schoolYear: selectedSchoolYear, term: selectedTerm }
+        }),
+        staleTime: 5 * 60 * 1000,
+    });
 
-            try {
-                if (!hasAuth) {
-                    setIsLoading(false);
-                    return;
-                }
-
-                const response = await studentService.getDashboard({ mock: false });
-                
-                if (response.success) {
-                    setDashboardData(response.data);
-                }
-            } catch (error) {
-                console.warn("Student Dashboard API error:", error);
-            } finally {
-                setTimeout(() => setIsLoading(false), 500);
-            }
-        };
-
-        fetchDashboardData();
-    }, [selectedSchoolYear, selectedTerm]);
+    const dashboardData = response?.success ? response.data : null;
 
     // 2. Xử lý các con số thống kê (Stats)
     const statsCards = useMemo(() => {
@@ -79,6 +63,7 @@ export default function StudentDashboard() {
                 ),
                 icon: HiOutlineTrophy,
                 color: "blue",
+                path: "/student/grades"
             },
             {
                 id: "weekly-progress",
@@ -88,6 +73,7 @@ export default function StudentDashboard() {
                 progressPercent: weekProgress,
                 icon: HiOutlineCalendarDays,
                 color: "green",
+                path: "/student/timetable"
             },
             {
                 id: "today-subject",
@@ -100,6 +86,7 @@ export default function StudentDashboard() {
                 ),
                 icon: HiOutlineClock,
                 color: "purple",
+                path: "/student/timetable"
             },
             {
                 id: "upcoming-quiz",
@@ -115,6 +102,7 @@ export default function StudentDashboard() {
                 ),
                 icon: HiOutlineClipboardDocumentList,
                 color: "orange",
+                path: "/student/quiz"
             },
         ];
     }, [dashboardData]);

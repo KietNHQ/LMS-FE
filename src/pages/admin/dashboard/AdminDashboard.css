@@ -69,9 +69,14 @@
     transition: all 0.2s ease;
 }
 
+.stat-card.clickable {
+    cursor: pointer;
+}
+
 .stat-card:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    transform: translateY(-5px);
+    box-shadow: 0 12px 20px -5px rgba(0, 0, 0, 0.15);
+    border-color: #6366f1;
 }
 
 .stat-icon {

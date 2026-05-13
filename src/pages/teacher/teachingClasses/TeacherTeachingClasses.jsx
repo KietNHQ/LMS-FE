@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import teacherService from "../../../services/pages/teacher/teacherService";
 import { useNavigate } from "react-router-dom";
 import "./TeacherTeachingClasses.css";
@@ -7,80 +8,70 @@ import { useSchoolYearTerm } from "../../../hooks/useSchoolYearTerm";
 import { teachingClassesData } from "./data/teachingClassesData";
 import ClassToolbar from "./components/list/ClassToolbar";
 import ClassGrid from "./components/list/ClassGrid";
+import { formatName } from "../../../utils/nameUtils";
+
 
 const TeacherTeachingClasses = () => {
-  const [classes, setClasses] = useState([]);
-  const [isLoading, setIsLoading] = useState(false);
   const { selectedSchoolYear, selectedTerm, handleYearArrow, handleTermChange } = useSchoolYearTerm();
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
   const [activeToolbarFilter, setActiveToolbarFilter] = useState("all");
 
-  const storedUser = (() => {
-    try {
-      const userStr = localStorage.getItem("user") || sessionStorage.getItem("user");
-      return JSON.parse(userStr || "{}");
-    } catch {
-      return {};
-    }
-  })();
-
-  // Thử lấy ID từ nhiều nguồn khác nhau
+  const storedUser = JSON.parse(localStorage.getItem("user") || sessionStorage.getItem("user") || "{}");
   const teacherId = storedUser.profile?.id || storedUser.teacherId || (storedUser.role === 'teacher' ? storedUser.id : null);
 
-  useEffect(() => {
-    console.log("TeacherTeachingClasses: teacherId =", teacherId, "from user:", storedUser);
-    const fetchClasses = async () => {
-      if (!teacherId) return;
-      setIsLoading(true);
+  // Sử dụng TanStack Query cho danh sách lớp giảng dạy
+  const { data: classesResponse, isLoading } = useQuery({
+    queryKey: ["teacher-teaching-classes", teacherId, selectedSchoolYear],
+    queryFn: async () => {
+      if (!teacherId) return { success: false, data: [] };
+      
+      // Ưu tiên gọi API consolidated mới, nếu lỗi thì fallback về API cũ
       try {
-        const response = await teacherService.getTeacherSubjects({ 
-          mock: false,
-          pathParams: { id: teacherId },
+        const response = await teacherService.getConsolidatedTeachingClasses({
           params: { schoolYear: selectedSchoolYear }
         });
-
-        if (response.success && response.data && response.data.length > 0) {
-          const mapped = response.data.map(item => ({
-            id: item.class_id,
-            name: item.class_name,
-            grade: item.grade_level?.replace("Khối ", "") || "10",
-            subject: item.subject_name,
-            year: selectedSchoolYear,
-            term: selectedTerm,
-            status: "Đang hoạt động",
-            teacher: item.homeroom_teacher_name || "Chưa cập nhật",
-            // Tạo mảng dummy có ID để tránh crash khi vào trang detail trước khi load xong students
-            students: Array.from({ length: parseInt(item.actual_students) || 0 }, (_, i) => ({ id: `dummy-${i}`, name: "Đang tải..." })),
-            paidStudents: 0
-          }));
-          setClasses(mapped);
-        } else {
-          setClasses(teachingClassesData);
-        }
-      } catch (error) {
-        console.error("Failed to fetch teaching classes:", error);
-        setClasses(teachingClassesData);
-      } finally {
-        setIsLoading(false);
+        if (response.success) return response;
+      } catch (e) {
+        console.warn("Consolidated API not ready, falling back to legacy API");
       }
-    };
 
-    fetchClasses();
-  }, [teacherId, selectedSchoolYear, selectedTerm]);
-
-  const filteredClasses = classes.filter((cls) => {
-    // Nếu là data thật, ta đã map year/term trùng với filter ở trên
-    // Nếu là data mock, ta check filter
-    const matchYear = cls.year === selectedSchoolYear;
-    const matchTerm = cls.term === selectedTerm;
-    const matchSearch = cls.name.toLowerCase().includes(searchTerm.toLowerCase());
-    return matchYear && matchTerm && matchSearch;
+      return teacherService.getTeacherSubjects({ 
+        mock: false,
+        pathParams: { id: teacherId },
+        params: { schoolYear: selectedSchoolYear }
+      });
+    },
+    enabled: !!teacherId,
   });
 
-  const visibleClasses = filteredClasses.filter((cls) => {
-    if (activeToolbarFilter === "all") return true;
-    return cls.grade === activeToolbarFilter;
+  const rawClasses = classesResponse?.success && classesResponse.data ? classesResponse.data : [];
+  
+  // Mapping logic tập trung
+  const classes = rawClasses.length > 0 
+    ? rawClasses.map(item => {
+        // Tối ưu hiển thị tên GVCN: Ưu tiên Full Name hoặc ghép Họ + Tên theo đúng chuẩn VN
+        const teacherName = formatName(item);
+
+        return {
+          id: item.class_id || item.id,
+          name: item.class_name || item.name,
+          grade: (item.grade_level || "10").replace("Khối ", ""),
+          subject: item.subject_name || "N/A",
+          year: selectedSchoolYear,
+          term: selectedTerm,
+          status: "Đang hoạt động",
+          teacher: teacherName || "Chưa cập nhật",
+          studentsCount: parseInt(item.actual_students) || 0,
+          students: []
+        };
+      })
+    : (isLoading ? [] : teachingClassesData);
+
+  const filteredClasses = classes.filter((cls) => {
+    const matchSearch = cls.name.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchFilter = activeToolbarFilter === "all" || cls.grade === activeToolbarFilter;
+    return matchSearch && matchFilter;
   });
 
   const handleClassClick = (cls) => {
@@ -111,10 +102,14 @@ const TeacherTeachingClasses = () => {
       />
 
       <div className="admin-classes-body">
-        <ClassGrid 
-          classes={visibleClasses} 
-          onClassClick={handleClassClick} 
-        />
+        {isLoading ? (
+          <div className="loading-state">Đang tải danh sách lớp...</div>
+        ) : (
+          <ClassGrid 
+            classes={filteredClasses} 
+            onClassClick={handleClassClick} 
+          />
+        )}
       </div>
     </div>
   );

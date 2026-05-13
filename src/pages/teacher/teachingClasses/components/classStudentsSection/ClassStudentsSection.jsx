@@ -44,6 +44,14 @@ const ClassStudentsSection = ({ classId, students, readOnly = false }) => {
   const [currentSchedule, setCurrentSchedule] = useState(null);
   const [teachingDays, setTeachingDays] = useState([]);
   const [lessonReviews, setLessonReviews] = useState([]);
+  const [isDoublePeriod, setIsDoublePeriod] = useState(false);
+  const [selectedStudentIds, setSelectedStudentIds] = useState(new Set());
+  const [isBulkReviewOpen, setIsBulkReviewOpen] = useState(false);
+  const [gradeItems, setGradeItems] = useState([]);
+  const [editingEvaluationId, setEditingEvaluationId] = useState(null);
+  const [lessonPeriodOptions, setLessonPeriodOptions] = useState([]);
+  const [selectedLessonPeriod, setSelectedLessonPeriod] = useState("");
+  const [todayPeriods, setTodayPeriods] = useState([]); // Danh sách các tiết dạy hôm nay
 
   // Timeline & Calendar State
   const [todayLessonInfo, setTodayLessonInfo] = useState(() => getCurrentLessonInfo(new Date()));
@@ -76,10 +84,15 @@ const ClassStudentsSection = ({ classId, students, readOnly = false }) => {
   const selectedDateObj = parseDateKey(selectedHistoryDate);
   const selectedDateLabel = selectedDateObj.toLocaleDateString("vi-VN");
 
-  const currentLessonLabel = currentSchedule ? `Tiết học thực tế (Tiết ${currentSchedule.id || "?"})` : `Tiết học dự kiến (${lessonReviews.length + 1})`;
+  const currentLessonLabel = currentSchedule 
+    ? `Tiết học thực tế (Tiết ${currentSchedule.id || "?"})` 
+    : (todayLessonInfo?.periodLabel || `Tiết học dự kiến (${lessonReviews.length + 1})`);
+
   const currentLessonTime = currentSchedule 
     ? `${currentSchedule.start_time?.substring(0, 5)} - ${currentSchedule.end_time?.substring(0, 5)} - ${selectedDateLabel}`
-    : `${todayLessonInfo?.periodLabel || "Tiết 1"} - ${selectedDateLabel}`;
+    : todayLessonInfo?.timeRange 
+      ? `${todayLessonInfo.timeRange} - ${selectedDateLabel}`
+      : `07:15 - 08:00 - ${selectedDateLabel}`;
 
   const availableReviewDates = useMemo(
     () => [...new Set(lessonReviews.map((review) => review.reviewDate))].sort((a, b) => b.localeCompare(a)),
@@ -150,6 +163,24 @@ const ClassStudentsSection = ({ classId, students, readOnly = false }) => {
     fetchHistory();
   }, [classId]);
 
+  // Tải danh sách cột điểm để hỗ trợ đồng bộ
+  useEffect(() => {
+    const fetchGradeItems = async () => {
+      if (!classId) return;
+      try {
+        const res = await teacherService.listGradeItems({
+          params: { classId }
+        });
+        if (res.success && res.data) {
+          setGradeItems(res.data);
+        }
+      } catch (err) {
+        console.error("Failed to fetch grade items:", err);
+      }
+    };
+    fetchGradeItems();
+  }, [classId]);
+
   // Lấy TKB hiện tại dựa trên ngày đang chọn
   useEffect(() => {
     const fetchCurrentSchedule = async () => {
@@ -189,12 +220,42 @@ const ClassStudentsSection = ({ classId, students, readOnly = false }) => {
     fetchTeachingDays();
   }, [classId]);
 
+  // Lấy toàn bộ TKB của lớp để biết chính xác các tiết của giáo viên hôm nay
+  useEffect(() => {
+    const fetchFullSchedule = async () => {
+      if (!classId) return;
+      try {
+        const res = await teacherService.getClassSchedule({
+          pathParams: { id: classId }
+        });
+        if (res.success && res.data) {
+          const todayDayOfWeek = new Date().getDay() + 1; // 1 (CN) - 7 (T7)
+          const periodsToday = res.data.filter(s => s.day_of_week === todayDayOfWeek);
+          setTodayPeriods(periodsToday);
+        }
+      } catch (err) {
+        console.error("Failed to fetch full schedule:", err);
+      }
+    };
+    fetchFullSchedule();
+  }, [classId]);
+
   // --- Handlers ---
   const handleBackToToday = () => setSelectedHistoryDate(toDateKey(new Date()));
 
   const openReviewDialog = (student) => {
-    setReviewDialogStudent(student);
-    const existingReview = normalizeStoredReview(studentReviews[student.id]);
+    if (!student) {
+      // Đánh giá loạt
+      setIsBulkReviewOpen(true);
+      setReviewDialogStudent(null);
+    } else {
+      // Đánh giá lẻ
+      setReviewDialogStudent(student);
+      setIsBulkReviewOpen(false);
+    }
+    
+    // Nếu là đánh giá lẻ cho 1 học sinh, lấy lại dữ liệu cũ của học sinh đó (nếu có)
+    const existingReview = student ? normalizeStoredReview(studentReviews[student.id]) : null;
 
     setReviewCategory("Vi phạm: Chuyên cần");
     setReviewContent(REVIEW_CONTENT_MAPPING["Vi phạm: Chuyên cần"][0]);
@@ -211,10 +272,12 @@ const ClassStudentsSection = ({ classId, students, readOnly = false }) => {
 
   const closeReviewDialog = () => {
     setReviewDialogStudent(null);
+    setIsBulkReviewOpen(false);
     setReviewCategory("Vi phạm: Chuyên cần");
     setReviewContent(REVIEW_CONTENT_MAPPING["Vi phạm: Chuyên cần"][0]);
     setReviewNote("");
     setReviewEntries([]);
+    // Không reset selectedStudentIds ở đây để giáo viên có thể tiếp tục thao tác khác
   };
 
   const handleReviewCategoryChange = (category) => {
@@ -241,8 +304,8 @@ const ClassStudentsSection = ({ classId, students, readOnly = false }) => {
     setReviewEntries((currentEntries) => currentEntries.filter((entry) => entry.id !== entryId));
   };
 
-  const saveReview = () => {
-    if (!reviewDialogStudent) return;
+  const saveReview = async () => {
+    if (!reviewDialogStudent && selectedStudentIds.size === 0) return;
 
     const entriesToSave = reviewEntries.length > 0 ? reviewEntries : [
       {
@@ -266,15 +329,59 @@ const ClassStudentsSection = ({ classId, students, readOnly = false }) => {
       `Tổng: ${totalPoints > 0 ? `+${totalPoints}` : totalPoints}`,
     ].filter(Boolean).join(" • ");
 
-    setStudentReviews((prev) => ({
-      ...prev,
-      [reviewDialogStudent.id]: {
-        summary: reviewText,
-        entries: entriesToSave,
-        totalPoints,
-      },
-    }));
+    const targets = reviewDialogStudent ? [reviewDialogStudent.id] : Array.from(selectedStudentIds);
+    
+    setStudentReviews((prev) => {
+      const next = { ...prev };
+      targets.forEach(id => {
+        next[id] = {
+          summary: reviewText,
+          entries: entriesToSave,
+          totalPoints,
+        };
+      });
+      return next;
+    });
+
+    toast.success(`Đã lưu ghi nhận cho ${targets.length} học sinh`);
+    
+    // ĐỒNG BỘ SANG SỔ ĐIỂM (Nếu có điểm miệng)
+    const oralEntry = reviewEntries.find(e => e.category === "Đánh giá thường xuyên (Điểm miệng)");
+    if (oralEntry) {
+      const scoreStr = oralEntry.content?.label?.replace("Điểm ", "").trim();
+      const scoreNum = parseFloat(scoreStr);
+      
+      if (!isNaN(scoreNum)) {
+        // Tìm cột điểm "Miệng" hoặc "TX1"
+        const oralGradeItem = gradeItems.find(item => 
+          item.name.toLowerCase().includes("miệng") || 
+          item.name.toLowerCase().includes("thường xuyên 1") ||
+          item.code?.toLowerCase() === "tx1"
+        );
+        
+        if (oralGradeItem) {
+          try {
+            const gradePayload = targets.map(sId => ({
+              studentId: sId,
+              gradeItemId: oralGradeItem.id,
+              value: scoreNum,
+              note: `Ghi nhận từ tiết học ${currentLessonLabel} ngày ${toDateKey(new Date())}`
+            }));
+            
+            await teacherService.bulkUpdateGrades({ body: gradePayload });
+            toast.success(`Đã đồng bộ điểm ${scoreNum} vào cột "${oralGradeItem.name}" trong sổ điểm!`);
+          } catch (syncErr) {
+            console.error("Grade sync failed:", syncErr);
+            toast.error("Ghi nhận thành công nhưng không thể đồng bộ sang sổ điểm.");
+          }
+        } else {
+          toast.info("Không tìm thấy cột điểm 'Miệng' để đồng bộ tự động.");
+        }
+      }
+    }
+
     closeReviewDialog();
+    if (isBulkReviewOpen) setSelectedStudentIds(new Set());
   };
 
   const toggleAttendance = (studentId) => {
@@ -284,90 +391,273 @@ const ClassStudentsSection = ({ classId, students, readOnly = false }) => {
     }));
   };
 
-  const handleAddLessonReview = async (event) => {
-    event.preventDefault();
-    if (!lessonScore.trim() || !lessonNote.trim()) return;
+  const handleToggleSelect = (studentId) => {
+    setSelectedStudentIds(prev => {
+      const next = new Set(prev);
+      if (next.has(studentId)) next.delete(studentId);
+      else next.add(studentId);
+      return next;
+    });
+  };
 
-    try {
-      const reviewDateKey = selectedHistoryDate;
-      
-      // 1. Lưu điểm danh
-      const attendanceData = (students || []).map(student => ({
-        studentEnrollmentId: student.enrollmentId,
-        status: studentAttendance[student.id] ? "present" : "absent",
-        note: studentReviews[student.id]?.summary || ""
-      }));
-
-      await teacherService.saveAttendance({
-        mock: false,
-        body: {
-          periodId: currentSchedule?.id || 1, 
-          date: reviewDateKey,
-          attendances: attendanceData
-        }
-      });
-
-      // 3. Thu thập báo cáo chi tiết từng học sinh
-      const studentReports = [];
-      Object.keys(studentReviews).forEach(studentId => {
-        const review = studentReviews[studentId];
-        if (review && review.entries && review.entries.length > 0) {
-          const student = (students || []).find(s => s.id.toString() === studentId.toString());
-          if (student) {
-            review.entries.forEach(entry => {
-              studentReports.push({
-                studentEnrollmentId: student.enrollmentId,
-                category: entry.category,
-                content: typeof entry.content === 'object' ? entry.content.label : entry.content,
-                points: entry.pts,
-                note: entry.note || ""
-              });
-            });
-          }
-        }
-      });
-
-      // 4. Lưu đánh giá tiết học & Ghi nhận chi tiết
-      const evaluationRes = await teacherService.saveLessonEvaluation({
-        mock: false,
-        body: {
-          classId: classId,
-          periodId: currentSchedule?.id || 1,
-          evaluationDate: reviewDateKey,
-          score: lessonScore.trim().toUpperCase(),
-          note: lessonNote.trim(),
-          studentReports: studentReports
-        }
-      });
-
-      if (evaluationRes.success) {
-        toast.success("Đã lưu đánh giá và điểm danh thành công!");
-        
-        // Cập nhật local state
-        const newReview = {
-          id: evaluationRes.data.id || Date.now(),
-          lessonLabel: currentLessonLabel,
-          lessonTime: currentLessonTime,
-          attended: attendedToday,
-          absent: absentToday,
-          score: lessonScore.trim().toUpperCase(),
-          note: lessonNote.trim(),
-          reviewDate: reviewDateKey,
-          createdAt: new Date().toLocaleString("vi-VN"),
-        };
-
-        setLessonReviews((prev) => [newReview, ...prev]);
-        setSelectedHistoryDate(reviewDateKey);
-        setIsLessonReviewDialogOpen(false);
-        setLessonScore("");
-        setLessonNote("");
-      }
-    } catch (err) {
-      console.error("Failed to save evaluation:", err);
-      toast.error("Không thể lưu đánh giá. Vui lòng thử lại.");
+  const handleSelectAll = (isAll) => {
+    if (isAll) {
+      setSelectedStudentIds(new Set(filteredStudents.map(s => s.id)));
+    } else {
+      setSelectedStudentIds(new Set());
     }
   };
 
+  const resetLessonForm = () => {
+    setLessonNote("");
+    setLessonScore("");
+    setIsDoublePeriod(false);
+    setEditingEvaluationId(null);
+    setLessonPeriodOptions([]);
+    setSelectedLessonPeriod("");
+    setIsLessonReviewDialogOpen(false);
+    setStudentReviews({});
+  };
+
+  const handleOpenLessonReview = () => {
+    // 1. Xác định các tiết dạy thực tế trong hôm nay từ TKB
+    // Nếu không có dữ liệu TKB thì dùng currentSchedule làm fallback
+    const scheduledPeriods = todayPeriods.length > 0 
+      ? todayPeriods.map(p => p.period_number)
+      : (currentSchedule ? [currentSchedule.period_number] : []);
+
+    const today = toDateKey(new Date());
+    
+    // 2. Lấy danh sách đánh giá đã có cho ngày hôm nay
+    const existingReviews = lessonReviews.filter(r => r.reviewDate === today);
+
+    const options = [];
+
+    // 3. Với mỗi tiết trong lịch dạy, kiểm tra xem đã đánh giá chưa
+    scheduledPeriods.forEach(pNum => {
+      const review = existingReviews.find(r => 
+        r.lessonLabel.includes(`Tiết ${pNum}`) || 
+        (r.isDoublePeriod && r.lessonLabel.includes(`Tiết ${pNum}`))
+      );
+
+      if (review) {
+        options.push({
+          value: review.id,
+          label: `Tiết ${pNum} (Đã đánh giá)`,
+          isExisting: true,
+          review: review
+        });
+      } else {
+        options.push({
+          value: `new_${pNum}`,
+          label: `Tiết ${pNum} (Chưa đánh giá) - Tạo mới`,
+          isExisting: false,
+          periodNum: pNum
+        });
+      }
+    });
+
+    if (options.length > 0) {
+      setLessonPeriodOptions(options.map(o => ({ value: o.value, label: o.label })));
+      
+      // Mặc định: Ưu tiên chọn cái "Chưa đánh giá" đầu tiên, hoặc cái "Đã đánh giá" đầu tiên
+      const defaultOption = options.find(o => !o.isExisting) || options[0];
+      setSelectedLessonPeriod(defaultOption.value);
+      
+      if (defaultOption.isExisting) {
+        handleEditLessonReview(defaultOption.review);
+      } else {
+        // Reset form cho tạo mới
+        setEditingEvaluationId(null);
+        setLessonScore("");
+        setLessonNote("");
+        setStudentReviews({});
+      }
+      
+      setIsLessonReviewDialogOpen(true);
+    } else {
+      // Trường hợp không thấy trong TKB (dạy thay/ngoại lệ)
+      setIsLessonReviewDialogOpen(true);
+    }
+  };
+
+  const handleLessonPeriodSelect = (val) => {
+    setSelectedLessonPeriod(val);
+    if (val.toString().startsWith("new_")) {
+      setEditingEvaluationId(null);
+      setLessonScore("");
+      setLessonNote("");
+      setStudentReviews({});
+    } else {
+      const review = lessonReviews.find(r => r.id === val);
+      if (review) {
+        handleEditLessonReview(review, false);
+      }
+    }
+  };
+
+  const handleEditLessonReview = (review, shouldOpenModal = true) => {
+    setEditingEvaluationId(review.id);
+    
+    // Chuẩn hóa điểm số để khớp với Select options
+    const rawScore = review.score || "";
+    let normalizedScore = "";
+    if (rawScore.includes("A")) normalizedScore = "A (Tốt)";
+    else if (rawScore.includes("B")) normalizedScore = "B (Khá)";
+    else if (rawScore.includes("C")) normalizedScore = "C (Trung bình)";
+    else if (rawScore.includes("D")) normalizedScore = "D (Yếu)";
+    
+    setLessonScore(normalizedScore);
+    setLessonNote(review.note);
+    setIsDoublePeriod(review.isDoublePeriod || false);
+    
+    // Khôi phục đánh giá từng học sinh
+    const restoredReviews = {};
+    if (review.studentReports && review.studentReports.length > 0) {
+      review.studentReports.forEach(report => {
+        const sId = report.student_id || report.student_enrollment_id;
+        if (!sId) return;
+        
+        if (!restoredReviews[sId]) {
+          restoredReviews[sId] = {
+            summary: report.summary || "",
+            entries: [],
+            totalPoints: 0
+          };
+        }
+        
+        // Chuyển đổi report từ BE sang entry FE
+        const entry = {
+          id: Date.now() + Math.random(),
+          category: report.category,
+          content: typeof report.content === 'string' ? { label: report.content, pts: report.points } : report.content,
+          note: report.note || "",
+          pts: report.points || 0
+        };
+        
+        restoredReviews[sId].entries.push(entry);
+        restoredReviews[sId].totalPoints += entry.pts;
+      });
+    }
+    setStudentReviews(restoredReviews);
+    if (shouldOpenModal) setIsLessonReviewDialogOpen(true);
+  };
+
+  const handleDeleteLessonReview = async (evaluationId) => {
+    if (!window.confirm("Bạn có chắc chắn muốn xóa đánh giá tiết học này?")) return;
+    try {
+      const res = await teacherService.deleteLessonEvaluation({
+        pathParams: { id: evaluationId }
+      });
+      if (res.success) {
+        toast.success("Đã xóa đánh giá tiết học");
+        setLessonReviews(prev => prev.filter(r => r.id !== evaluationId));
+      }
+    } catch (err) {
+      console.error("Failed to delete evaluation:", err);
+      toast.error("Không thể xóa đánh giá");
+    }
+  };
+
+  const handleBulkAttendance = (status) => {
+    if (selectedStudentIds.size === 0) return;
+    setStudentAttendance(prev => {
+      const next = { ...prev };
+      selectedStudentIds.forEach(id => {
+        next[id] = status;
+      });
+      return next;
+    });
+    toast.info(`Đã điểm danh cho ${selectedStudentIds.size} học sinh`);
+  };
+
+  const handleAddLessonReview = async (e) => {
+    e.preventDefault();
+    if (!lessonScore.trim() || !lessonNote.trim()) {
+      toast.error("Vui lòng chọn xếp loại và nhập nhận xét");
+      return;
+    }
+    
+    // Thu thập toàn bộ đánh giá học sinh
+    const studentReports = [];
+    Object.keys(studentReviews).forEach(sId => {
+      const data = studentReviews[sId];
+      if (data && data.entries) {
+        data.entries.forEach(entry => {
+          studentReports.push({
+            studentEnrollmentId: parseInt(sId),
+            category: entry.category,
+            content: typeof entry.content === 'object' ? entry.content.label : entry.content,
+            points: entry.pts,
+            note: entry.note || ""
+          });
+        });
+      }
+    });
+
+    const evaluationData = {
+      period_id: currentSchedule?.period_number || 1,
+      evaluation_date: toDateKey(new Date()),
+      score: lessonScore.trim().toUpperCase(),
+      note: lessonNote.trim(),
+      present_count: attendedToday,
+      absent_count: absentToday,
+      is_double_period: isDoublePeriod,
+      student_reports: studentReports
+    };
+
+    try {
+      let res;
+      if (editingEvaluationId) {
+        res = await teacherService.updateLessonEvaluation({
+          pathParams: { id: editingEvaluationId },
+          body: evaluationData
+        });
+      } else {
+        res = await teacherService.saveLessonEvaluation({
+          body: evaluationData
+        });
+      }
+
+      if (res.success) {
+        toast.success(editingEvaluationId ? "Đã cập nhật đánh giá" : "Đã lưu đánh giá tiết học");
+        
+        // Refresh history
+        const dRes = await teacherService.getTeachingDays({ pathParams: { classId } });
+        if (dRes.success) setTeachingDays(dRes.data);
+
+        // Lấy thời khóa biểu hôm nay để biết chính xác các tiết dạy
+        const schRes = await teacherService.getClassSchedule({ pathParams: { id: classId } });
+        if (schRes.success && schRes.data) {
+          const todayDayOfWeek = new Date().getDay() + 1; // 1 (CN) - 7 (T7)
+          const periodsToday = schRes.data.filter(s => s.day_of_week === todayDayOfWeek);
+          setTodayPeriods(periodsToday);
+        }
+
+        const hRes = await teacherService.getLessonEvaluations({ pathParams: { classId } });
+        if (hRes.success && hRes.data) {
+          const history = hRes.data.map(item => ({
+            id: item.id,
+            lessonLabel: `Tiết ${item.period_id || ""}`,
+            lessonTime: `${item.start_time ? item.start_time.substring(0, 5) : ""} - ${new Date(item.evaluation_date).toLocaleDateString("vi-VN")}`,
+            attended: item.present_count || 0,
+            absent: item.absent_count || 0,
+            score: item.score,
+            note: item.note,
+            studentReports: item.student_reports || [],
+            reviewDate: toDateKey(new Date(item.evaluation_date)),
+            createdAt: new Date(item.created_at).toLocaleString("vi-VN"),
+            isDoublePeriod: item.is_double_period
+          }));
+          setLessonReviews(history);
+        }
+        resetLessonForm();
+      }
+    } catch (err) {
+      console.error("Failed to save evaluation:", err);
+      toast.error("Lỗi khi lưu đánh giá");
+    }
+  };
   // Calendar Helpers
   const calendarMonthLabel = calendarViewDate.toLocaleDateString("vi-VN", {
     month: "long",
@@ -397,30 +687,20 @@ const ClassStudentsSection = ({ classId, students, readOnly = false }) => {
     <div className="students-card">
       <div className="students-card-header">
         <h2 className="students-card-title">Danh sách & đánh giá</h2>
-        <div className="class-detail-search-box">
-          <FiSearch className="class-detail-search-icon" />
-          <input
-            type="text"
-            placeholder="Tìm kiếm học sinh..."
-            value={searchTerm}
-            onChange={(e) => {
-              setSearchTerm(e.target.value);
-              setCurrentPage(1);
-            }}
-          />
-        </div>
       </div>
 
       <LessonTimeline 
         currentLessonTime={currentLessonTime}
-        onOpenLessonReview={() => setIsLessonReviewDialogOpen(true)}
+        onOpenLessonReview={handleOpenLessonReview}
         selectedHistoryDate={selectedHistoryDate}
         setSelectedHistoryDate={setSelectedHistoryDate}
-        onOpenCalendar={() => setIsCalendarOpen(true)}
+        onToggleCalendar={() => setIsCalendarOpen(prev => !prev)}
         isCalendarOpen={isCalendarOpen}
         availableReviewDates={availableReviewDates}
         reviewsForSelectedDate={reviewsForSelectedDate}
         onTodayClick={handleBackToToday}
+        onEditLessonReview={handleEditLessonReview}
+        onDeleteLessonReview={handleDeleteLessonReview}
         readOnly={readOnly}
         calendarProps={{
           calendarMonthLabel,
@@ -433,6 +713,32 @@ const ClassStudentsSection = ({ classId, students, readOnly = false }) => {
           }
         }}
       />
+
+      <div className="students-card-actions-row">
+        <div className="class-detail-search-box">
+          <FiSearch className="class-detail-search-icon" />
+          <input
+            type="text"
+            placeholder="Tìm kiếm học sinh..."
+            value={searchTerm}
+            onChange={(e) => {
+              setSearchTerm(e.target.value);
+              setCurrentPage(1);
+            }}
+          />
+        </div>
+        
+        {selectedStudentIds.size > 0 && (
+          <div className="bulk-actions-toolbar">
+            <span className="selection-count">Đã chọn: <strong>{selectedStudentIds.size}</strong></span>
+            <div className="bulk-btn-group">
+              <button className="bulk-btn attend" onClick={() => handleBulkAttendance(true)}>Đi học loạt</button>
+              <button className="bulk-btn absent" onClick={() => handleBulkAttendance(false)}>Vắng loạt</button>
+              <button className="bulk-btn review" onClick={() => openReviewDialog(null)}>Đánh giá loạt</button>
+            </div>
+          </div>
+        )}
+      </div>
 
       <StudentReviewModal 
         student={reviewDialogStudent}
@@ -449,11 +755,12 @@ const ClassStudentsSection = ({ classId, students, readOnly = false }) => {
         reviewTotalPoints={reviewTotalPoints}
         onSave={saveReview}
         readOnly={readOnly}
+        bulkCount={isBulkReviewOpen ? selectedStudentIds.size : 0}
       />
 
       <LessonReviewModal 
         isOpen={isLessonReviewDialogOpen}
-        onClose={() => setIsLessonReviewDialogOpen(false)}
+        onClose={resetLessonForm}
         onAddReview={handleAddLessonReview}
         currentLessonLabel={currentLessonLabel}
         currentLessonTime={currentLessonTime}
@@ -463,6 +770,12 @@ const ClassStudentsSection = ({ classId, students, readOnly = false }) => {
         setLessonScore={setLessonScore}
         lessonNote={lessonNote}
         setLessonNote={setLessonNote}
+        isDoublePeriod={isDoublePeriod}
+        setIsDoublePeriod={setIsDoublePeriod}
+        periodOptions={lessonPeriodOptions}
+        selectedPeriodId={selectedLessonPeriod}
+        onPeriodSelect={handleLessonPeriodSelect}
+        isEdit={!!editingEvaluationId}
       />
 
       <StudentsTable 
@@ -473,6 +786,9 @@ const ClassStudentsSection = ({ classId, students, readOnly = false }) => {
         effectivePage={effectivePage}
         itemsPerPage={ITEMS_PER_PAGE}
         readOnly={readOnly}
+        selectedStudentIds={selectedStudentIds}
+        onToggleSelect={handleToggleSelect}
+        onSelectAll={handleSelectAll}
       />
 
       <Pagination 

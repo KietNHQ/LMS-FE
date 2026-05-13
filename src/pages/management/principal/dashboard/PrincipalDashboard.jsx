@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { PageHeader, SchoolYearTermSelector, EventCalendar, LoadingSpinner } from "../../../../components/common";
 import { useSchoolYearTerm } from "../../../../hooks/useSchoolYearTerm";
 import { principalService } from "../../../../services/pages/management/principal";
@@ -14,13 +15,23 @@ import "./PrincipalDashboard.css";
 export default function PrincipalDashboard() {
     const { selectedSchoolYear, selectedTerm, handleYearArrow, handleTermChange } = useSchoolYearTerm();
     const navigate = useNavigate();
-    const [isLoading, setIsLoading] = useState(true);
 
-    const [summaryStats, setSummaryStats] = useState({
+    const { data: response, isLoading } = useQuery({
+        queryKey: ["management-dashboard", selectedSchoolYear, selectedTerm],
+        queryFn: () => principalService.getDashboardOverview({ 
+            mock: false,
+            params: { schoolYear: selectedSchoolYear, term: selectedTerm }
+        }),
+        staleTime: 5 * 60 * 1000,
+    });
+
+    const dashboardData = response?.success ? response.data : null;
+
+    const summaryStats = dashboardData?.summary || {
         totalStudents: 1250,
         totalTeachers: 85,
         totalClasses: 42,
-    });
+    };
 
     const [gradeProgress] = useState({
         draft: 12,
@@ -82,25 +93,6 @@ export default function PrincipalDashboard() {
 
     const semesterLabel = selectedTerm === "hk1" ? "Học kỳ 1" : "Học kỳ 2";
 
-    useEffect(() => {
-        setIsLoading(true);
-        const timer = setTimeout(() => setIsLoading(false), 1200);
-        return () => clearTimeout(timer);
-    }, [selectedSchoolYear, selectedTerm]);
-
-    useEffect(() => {
-        let isMounted = true;
-        const fetch = async () => {
-            try {
-                const overview = await principalService.getDashboardOverview();
-                if (!isMounted) return;
-                if (overview.summary) setSummaryStats(overview.summary);
-            } catch (_) {}
-        };
-        fetch();
-        return () => { isMounted = false; };
-    }, [selectedSchoolYear, selectedTerm]);
-
     const finalizedPercent = gradeProgress.total > 0
         ? Math.round((gradeProgress.finalized / gradeProgress.total) * 100) : 0;
 
@@ -135,42 +127,42 @@ export default function PrincipalDashboard() {
 
             {/* Strategic Stats */}
             <div className="principal-dashboard__stats">
-                <div className="pstat-card">
+                <div className="pstat-card clickable" onClick={() => navigate("/management/users?role=student")}>
                     <div className="pstat-card__icon pstat-card__icon--students"><FiUsers /></div>
                     <div className="pstat-card__body">
                         <p className="pstat-card__label">Học sinh</p>
                         <h3 className="pstat-card__value">{summaryStats.totalStudents.toLocaleString()}</h3>
                     </div>
                 </div>
-                <div className="pstat-card">
+                <div className="pstat-card clickable" onClick={() => navigate("/management/users?role=teacher")}>
                     <div className="pstat-card__icon pstat-card__icon--teachers"><FiUserCheck /></div>
                     <div className="pstat-card__body">
                         <p className="pstat-card__label">Giáo viên</p>
                         <h3 className="pstat-card__value">{summaryStats.totalTeachers}</h3>
                     </div>
                 </div>
-                <div className="pstat-card">
+                <div className="pstat-card clickable" onClick={() => navigate("/management/classes")}>
                     <div className="pstat-card__icon pstat-card__icon--classes"><FiHome /></div>
                     <div className="pstat-card__body">
                         <p className="pstat-card__label">Lớp học</p>
                         <h3 className="pstat-card__value">{summaryStats.totalClasses}</h3>
                     </div>
                 </div>
-                <div className="pstat-card">
+                <div className="pstat-card clickable" onClick={() => navigate("/management/finance")}>
                     <div className="pstat-card__icon pstat-card__icon--rate"><FiDollarSign /></div>
                     <div className="pstat-card__body">
                         <p className="pstat-card__label">Thu tài chính</p>
                         <h3 className="pstat-card__value">{revenueStats.collectionRate}%</h3>
                     </div>
                 </div>
-                <div className="pstat-card">
+                <div className="pstat-card clickable" onClick={() => navigate("/management/reports")}>
                     <div className="pstat-card__icon pstat-card__icon--good"><FiStar /></div>
                     <div className="pstat-card__body">
                         <p className="pstat-card__label">Học lực Khá/Giỏi</p>
                         <h3 className="pstat-card__value">{extraStats.goodStudentRate}%</h3>
                     </div>
                 </div>
-                <div className="pstat-card">
+                <div className="pstat-card clickable" onClick={() => navigate("/management/academic")}>
                     <div className="pstat-card__icon pstat-card__icon--attendance"><FiActivity /></div>
                     <div className="pstat-card__body">
                         <p className="pstat-card__label">Chuyên cần</p>

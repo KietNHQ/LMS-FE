@@ -177,6 +177,9 @@
     transition: all 0.2s ease-in-out;
     box-shadow: var(--admin-shadow-sm);
 }
+.pstat-card.clickable {
+    cursor: pointer;
+}
 .pstat-card:hover {
     transform: translateY(-3px);
     box-shadow: var(--admin-shadow-md);

@@ -41,15 +41,16 @@ const createMockResponse = (endpoint, input, data) => ({
 });
 
 const TEACHER_DASHBOARD_MOCK = {
-  summary: {
-    teachingClasses: 4,
+  stats: {
+    totalTeachingClasses: 4,
+    totalHomeroomClasses: 1,
     publishedLessons: 8,
     pendingLessons: 2,
     upcomingEvents: 3,
   },
-  upcomingSchedule: [
-    { id: 1, title: "10A1 - Toán", time: "Tiết 2", date: "2026-04-22" },
-    { id: 2, title: "11A2 - Toán", time: "Tiết 4", date: "2026-04-23" },
+  classes: [
+    { id: 1, class_name: "10A1", time: "Tiết 2", date: "2026-04-22", isHomeroom: true, actual_students: 40 },
+    { id: 2, class_name: "11A2", time: "Tiết 4", date: "2026-04-23", actual_students: 38 },
   ],
   recentActivities: [
     { id: 1, title: "Đã đăng bài giảng Hàm số bậc nhất" },
@@ -318,6 +319,8 @@ const teacherEndpointRegistry = [
   { key: "get_faqs", method: "GET", path: "/support/faqs", module: "support", mock: () => ([]) },
   { key: "post_attendance", method: "POST", path: "/teachers/attendance", module: "teacher", mock: (input) => ({ success: true, data: input.body }) },
   { key: "post_lesson_evaluation", method: "POST", path: "/teachers/lesson-evaluations", module: "teacher", mock: (input) => ({ success: true, data: input.body }) },
+  { key: "put_lesson_evaluation", method: "PUT", path: "/teachers/lesson-evaluations/:id", module: "teacher", mock: (input) => ({ success: true, data: input.body }) },
+  { key: "delete_lesson_evaluation", method: "DELETE", path: "/teachers/lesson-evaluations/:id", module: "teacher", mock: () => ({ success: true }) },
   { key: "get_lesson_evaluations", method: "GET", path: "/teachers/classes/:classId/lesson-evaluations", module: "teacher", mock: () => ({ success: true, data: [] }) },
   { key: "get_current_schedule", method: "GET", path: "/teachers/classes/:classId/current-schedule", module: "teacher", mock: () => ({ success: true, data: null }) },
   { key: "get_teaching_days", method: "GET", path: "/teachers/classes/:classId/teaching-days", module: "teacher", mock: () => ({ success: true, data: [] }) },
@@ -325,6 +328,8 @@ const teacherEndpointRegistry = [
   { key: "get_academic_summary", method: "GET", path: "/classes/:id/academic-summary", module: "classes", mock: () => ({ success: true, data: { academicStats: { excellent: 0, good: 0, average: 0, weak: 0 }, studentPerformance: [] } }) },
   { key: "patch_class_officers", method: "PATCH", path: "/classes/:id/officers", module: "classes", mock: () => ({ success: true, message: "Cập nhật ban cán sự thành công" }) },
   { key: "post_class_broadcast", method: "POST", path: "/notifications/class/:id/broadcast", module: "notifications", mock: () => ({ success: true, message: "Gửi thông báo thành công" }) },
+  { key: "get_consolidated_homeroom", method: "GET", path: "/teachers/:id/homeroom-dashboard", module: "teacher" },
+  { key: "get_consolidated_teaching_classes", method: "GET", path: "/teachers/me/teaching-classes", module: "teacher" },
 ];
 
 const createEndpointCaller = (endpoint) => {
@@ -422,6 +427,8 @@ export const teacherService = {
   getFaqs: (input) => endpointCallers.get_faqs(input),
   saveAttendance: (input) => endpointCallers.post_attendance(input),
   saveLessonEvaluation: (input) => endpointCallers.post_lesson_evaluation(input),
+  updateLessonEvaluation: (input) => endpointCallers.put_lesson_evaluation(input),
+  deleteLessonEvaluation: (input) => endpointCallers.delete_lesson_evaluation(input),
   getLessonEvaluations: (input) => endpointCallers.get_lesson_evaluations(input),
   getCurrentSchedule: (input) => endpointCallers.get_current_schedule(input),
   getTeachingDays: (input) => endpointCallers.get_teaching_days(input),
@@ -430,6 +437,8 @@ export const teacherService = {
   assignOfficers: (input) => endpointCallers.patch_class_officers(input),
   broadcastToClass: (input) => endpointCallers.post_class_broadcast(input),
   getClassDetails: (input) => endpointCallers.get_classes_by_id(input),
+  getConsolidatedHomeroom: (input) => endpointCallers.get_consolidated_homeroom(input),
+  getConsolidatedTeachingClasses: (input) => endpointCallers.get_consolidated_teaching_classes(input),
   endpointCallers,
 };
 

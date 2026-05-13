@@ -1,12 +1,18 @@
-import React, { useState, useEffect } from "react";
+import React from "react";
 import "./RecentActivitiesSection.css";
 import { BookOpen } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 import teacherService from "../../../../../services/pages/teacher/teacherService";
 
-const RecentActivitiesSection = () => {
+const RecentActivitiesSection = ({ activities: propActivities }) => {
   const currentWeek = 28;
-  const [apiLessons, setApiLessons] = useState([]);
-  const [isLoading, setIsLoading] = useState(false);
+
+  // Nếu không có activities truyền từ props, có thể fetch riêng hoặc dùng mock
+  const { data: lessonsResponse, isLoading } = useQuery({
+    queryKey: ["teacher-recent-lessons"],
+    queryFn: () => teacherService.listLessons({ mock: false }),
+    enabled: !propActivities, // Chỉ fetch nếu không có dữ liệu truyền từ dashboard
+  });
 
   const hardcodedLessons = [
     { title: "Hàm số bậc hai và đồ thị", info: "Tiết 2 • Toán • 10A1", time: "10/04/2026 08:30", status: "published", statusLabel: "Đã đăng" },
@@ -14,34 +20,18 @@ const RecentActivitiesSection = () => {
     { title: "Phương trình quy về bậc hai", info: "Tiết 4 • Toán • 11B2", time: "08/04/2026 10:00", status: "published", statusLabel: "Đã đăng" },
   ];
 
-  useEffect(() => {
-    const fetchLessons = async () => {
-      setIsLoading(true);
-      try {
-        const response = await teacherService.listLessons({ mock: false });
-        if (response.success && response.data) {
-          setApiLessons(response.data);
-        }
-      } catch (error) {
-        console.error("Failed to fetch lessons:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    fetchLessons();
-  }, []);
+  const lessonsData = propActivities || (lessonsResponse?.success ? lessonsResponse.data : null);
 
-  const lessons = apiLessons.length > 0 
-    ? apiLessons.map(l => ({
-        title: l.title,
-        info: `${l.period || "N/A"} • ${l.subject_name || "Môn học"} • ${l.class_name || "Lớp"}`,
-        time: new Date(l.created_at || Date.now()).toLocaleString('vi-VN'),
-        status: l.status === 'published' ? 'published' : 'draft',
-        statusLabel: l.status === 'published' ? 'Đã đăng' : 'Nháp'
+  const lessons = lessonsData && lessonsData.length > 0 
+    ? lessonsData.map(l => ({
+        title: l.title || l.content || "Hoạt động mới",
+        info: l.info || `${l.period || "N/A"} • ${l.subject_name || "Môn học"} • ${l.class_name || "Lớp"}`,
+        time: new Date(l.created_at || l.time || Date.now()).toLocaleString('vi-VN'),
+        status: l.status === 'published' || l.status === 'success' ? 'published' : 'draft',
+        statusLabel: l.status === 'published' ? 'Đã đăng' : (l.status === 'draft' ? 'Nháp' : 'Xong')
       }))
     : hardcodedLessons;
 
-  const targetPerWeek = 4;
   const publishedCount = lessons.filter(l => l.status === "published").length;
 
   return (
@@ -50,7 +40,9 @@ const RecentActivitiesSection = () => {
         <div>
           <p className="teacher-dashboard-title">Học liệu Tuần {currentWeek}</p>
           <span className="recent-subtitle">
-            Tuần hiện tại đã đăng <strong>{publishedCount}</strong> bài học
+            {isLoading ? "Đang tải dữ liệu..." : (
+              <>Tuần hiện tại đã đăng <strong>{publishedCount}</strong> bài học</>
+            )}
           </span>
         </div>
       </div>
@@ -67,7 +59,7 @@ const RecentActivitiesSection = () => {
                 <p>{lesson.title}</p>
                 <div className="recent-details">
                   <span>Tuần {currentWeek} • {lesson.info}</span>
-                  <span className="post-date">Đăng lúc: {lesson.time}</span>
+                  <span className="post-date">Thời gian: {lesson.time}</span>
                 </div>
               </div>
             </div>

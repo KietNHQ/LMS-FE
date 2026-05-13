@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from "react";
+import React, { useState, useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { PageHeader, SchoolYearTermSelector, EventCalendar } from "../../../../components/common";
 import { useSchoolYearTerm } from "../../../../hooks/useSchoolYearTerm";
@@ -35,42 +36,29 @@ export default function VpAcademicDashboard() {
         { value: "Thời khóa biểu", label: "Thời khóa biểu" },
     ];
 
-    // Top 4 Primary KPIs
-    const [primaryStats, setPrimaryStats] = useState([
-        { label: "Tiến độ Nhập Điểm", value: "92.5%", trend: "+2.1%", status: "success", icon: <FiCheckCircle /> },
-        { label: "Lớp/Môn Quá Hạn", value: "08", trend: "-2", status: "danger", icon: <FiAlertTriangle /> },
-        { label: "Yêu cầu Chờ Duyệt", value: "05", trend: "+3", status: "warning", icon: <FiUnlock /> },
-        { label: "Sụt giảm Chất lượng", value: "03", trend: "+1", status: "danger", icon: <FiTrendingDown /> },
-    ]);
+    // 1. Sử dụng TanStack Query để quản lý dữ liệu thống kê học vụ
+    const { data: stats } = useQuery({
+        queryKey: ["academic-stats", selectedSchoolYear, selectedTerm],
+        queryFn: () => vpAcademicService.getAssessmentWorkflowStats(selectedTerm, {
+            params: { schoolYearId: selectedSchoolYear },
+        }),
+        staleTime: 5 * 60 * 1000,
+    });
 
-    useEffect(() => {
-        let isMounted = true;
+    // 2. Tính toán các chỉ số KPI dựa trên dữ liệu trả về
+    const primaryStats = useMemo(() => {
+        const pending = Number(stats?.pendingCount ?? stats?.pending ?? stats?.waitingCount ?? 0);
+        const overdue = Number(stats?.overdueCount ?? stats?.overdue ?? 0);
+        const progress = Number(stats?.completionRate ?? stats?.progressRate ?? 0);
+        const qualityDrop = Number(stats?.declineCount ?? stats?.qualityDropCount ?? 0);
 
-        const loadAcademicStats = async () => {
-            try {
-                const stats = await vpAcademicService.getAssessmentWorkflowStats(selectedTerm, {
-                    params: { schoolYearId: selectedSchoolYear },
-                });
-
-                if (!isMounted || !stats) return;
-
-                const pending = Number(stats.pendingCount ?? stats.pending ?? stats.waitingCount ?? 0);
-                const overdue = Number(stats.overdueCount ?? stats.overdue ?? 0);
-                const progress = Number(stats.completionRate ?? stats.progressRate ?? 0);
-                const qualityDrop = Number(stats.declineCount ?? stats.qualityDropCount ?? 0);
-
-                setPrimaryStats((prev) => [
-                    { ...prev[0], value: progress > 0 ? `${progress}%` : prev[0].value },
-                    { ...prev[1], value: overdue > 0 ? `${overdue}` : prev[1].value },
-                    { ...prev[2], value: pending > 0 ? `${pending}` : prev[2].value },
-                    { ...prev[3], value: qualityDrop > 0 ? `${qualityDrop}` : prev[3].value },
-                ]);
-            } catch (_) {}
-        };
-
-        loadAcademicStats();
-        return () => { isMounted = false; };
-    }, [selectedSchoolYear, selectedTerm]);
+        return [
+            { label: "Tiến độ Nhập Điểm", value: progress > 0 ? `${progress}%` : "92.5%", trend: "+2.1%", status: "success", icon: <FiCheckCircle /> },
+            { label: "Lớp/Môn Quá Hạn", value: overdue > 0 ? `${overdue}` : "08", trend: "-2", status: "danger", icon: <FiAlertTriangle /> },
+            { label: "Yêu cầu Chờ Duyệt", value: pending > 0 ? `${pending}` : "05", trend: "+3", status: "warning", icon: <FiUnlock /> },
+            { label: "Sụt giảm Chất lượng", value: qualityDrop > 0 ? `${qualityDrop}` : "03", trend: "+1", status: "danger", icon: <FiTrendingDown /> },
+        ];
+    }, [stats]);
 
     // Filter event types to only allow "Ngày kiểm tra" for VP Academic
     const ACADEMIC_EVENT_TYPES = CALENDAR_EVENT_TYPES.filter(type => type.label === "Ngày kiểm tra");
@@ -90,7 +78,6 @@ export default function VpAcademicDashboard() {
                 }
             />
             
-
             {/* Row 1: Primary Cockpit Stats (KPIs) */}
             <div className="vpa-stats-grid-premium">
                 {primaryStats.map((stat, i) => (
@@ -325,4 +312,3 @@ export default function VpAcademicDashboard() {
         </div>
     );
 }
-

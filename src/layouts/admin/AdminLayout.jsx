@@ -1,8 +1,12 @@
 import React, { useState, Suspense, useEffect } from "react";
 import { Outlet, useLocation } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
 import Sidebar from "../../components/sidebar/Sidebar";
 import { LoadingAnimationBook } from "../../components/common";
+import { adminDashboardService } from "../../services/pages/admin/dashboard/dashboardService";
 import "./AdminLayout.css";
+import { formatName } from "../../utils/nameUtils";
+
 
 export default function AdminLayout() {
     const [isCollapsed, setIsCollapsed] = useState(false);
@@ -10,6 +14,8 @@ export default function AdminLayout() {
     const [isPageTransitioning, setIsPageTransitioning] = useState(false);
 
     // Hiệu ứng "Quyển sách" mỗi khi đổi trang trong Admin
+    const queryClient = useQueryClient();
+
     useEffect(() => {
         setIsPageTransitioning(true);
         const timer = setTimeout(() => {
@@ -18,6 +24,39 @@ export default function AdminLayout() {
 
         return () => clearTimeout(timer);
     }, [location.pathname]);
+
+    // [NEW] Background JS Chunk Prefetching
+    useEffect(() => {
+        const prefetchChunks = () => {
+            import("../../pages/admin/dashboard/AdminDashboard");
+            import("../../pages/admin/users/AdminUsers");
+            import("../../pages/admin/notifications/AdminNotifications");
+            import("../../pages/admin/audit-log/AdminAuditLog");
+            import("../../pages/admin/system-log/AdminSystemLog");
+        };
+        
+        if (window.requestIdleCallback) {
+            window.requestIdleCallback(prefetchChunks);
+        } else {
+            setTimeout(prefetchChunks, 2000);
+        }
+    }, []);
+
+    // [NEW] Hệ thống Load ngầm (Prefetching) cho Admin
+    useEffect(() => {
+        const prefetchData = async () => {
+            await Promise.allSettled([
+                // 1. Prefetch Dashboard
+                queryClient.prefetchQuery({
+                    queryKey: ["admin-dashboard"],
+                    queryFn: () => adminDashboardService.getDashboardOverview(),
+                    staleTime: 5 * 60 * 1000,
+                })
+            ]);
+        };
+
+        prefetchData();
+    }, [queryClient]);
 
     // [NEW] Fetch notification count on layout mount to sync sidebar badge
     useEffect(() => {
@@ -64,7 +103,7 @@ export default function AdminLayout() {
         }
     })();
 
-    const userName = storedUser.fullName || storedUser.name || "Quản trị viên";
+    const userName = formatName(storedUser, { fallback: "Quản trị viên" });
     const userEmail = storedUser.email || "";
 
     return (

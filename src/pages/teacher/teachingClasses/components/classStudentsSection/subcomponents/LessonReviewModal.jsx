@@ -3,18 +3,24 @@ import Modal from "../../../../../../components/ui/Modal/Modal";
 import Select from "../../../../../../components/ui/Select/Select";
 import "./LessonReviewModal.css";
 
-const LessonReviewModal = ({ 
-  isOpen, 
-  onClose, 
-  onAddReview, 
-  currentLessonLabel, 
-  currentLessonTime, 
-  attendedToday, 
-  absentToday, 
-  lessonScore, 
-  setLessonScore, 
-  lessonNote, 
-  setLessonNote 
+const LessonReviewModal = ({
+  isOpen,
+  onClose,
+  onAddReview,
+  currentLessonLabel,
+  currentLessonTime,
+  attendedToday,
+  absentToday,
+  lessonScore,
+  setLessonScore,
+  lessonNote,
+  setLessonNote,
+  isDoublePeriod,
+  setIsDoublePeriod,
+  periodOptions = [],
+  selectedPeriodId = "",
+  onPeriodSelect = () => {},
+  isEdit = false
 }) => {
   return (
     <Modal
@@ -27,7 +33,31 @@ const LessonReviewModal = ({
         <div className="tc-detail-grid">
           <div>
             <span className="tc-detail-label">Mốc tiết học</span>
-            <p className="tc-readonly-value">{currentLessonLabel}</p>
+            <div className="tc-period-selector-wrap">
+              {periodOptions.length > 0 ? (
+                <Select
+                  variant="custom"
+                  value={selectedPeriodId}
+                  onChange={(e) => onPeriodSelect(e.target.value)}
+                  options={periodOptions}
+                  placeholder="-- Chọn tiết học --"
+                />
+              ) : (
+                <p className="tc-readonly-value">{currentLessonLabel}{isDoublePeriod ? " (Tiết đôi)" : ""}</p>
+              )}
+              
+              {/* Chỉ cho chọn Tiết đôi khi không có nhiều option (đang tạo mới hoặc sửa 1 cái đơn) */}
+              {periodOptions.length <= 1 && (
+                <label className="tc-checkbox-label">
+                  <input
+                    type="checkbox"
+                    checked={isDoublePeriod}
+                    onChange={(e) => setIsDoublePeriod(e.target.checked)}
+                  />
+                  Tiết đôi/liền nhau
+                </label>
+              )}
+            </div>
           </div>
 
           <div>
@@ -69,11 +99,18 @@ const LessonReviewModal = ({
               id="lesson-note"
               className="tc-textarea"
               value={lessonNote}
-              onChange={(e) => setLessonNote(e.target.value)}
+              onChange={(e) => {
+                if (e.target.value.length <= 1000) {
+                  setLessonNote(e.target.value);
+                }
+              }}
               placeholder="Nhập nhận xét về mức độ tập trung, thái độ học tập, tiến độ bài học..."
               rows={4}
               required
             />
+            <div className="tc-char-counter">
+              {lessonNote.length}/1000 ký tự
+            </div>
           </div>
         </div>
 

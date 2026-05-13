@@ -225,3 +225,24 @@
     width: 84px;
   }
 }
+.select-cell {
+  width: 40px;
+  text-align: center;
+  padding: 14px 8px !important;
+}
+
+.select-cell input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--tc-primary-strong);
+  cursor: pointer;
+  vertical-align: middle;
+}
+
+.row-selected {
+  background-color: #f0fdfa !important;
+}
+
+.row-selected td {
+  border-bottom-color: #5eead4;
+}

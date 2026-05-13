@@ -16,6 +16,10 @@
   transition: all 0.2s ease;
 }
 
+.teacher-dashboard-card.clickable {
+  cursor: pointer;
+}
+
 .teacher-dashboard-card:hover {
   transform: translateY(-3px);
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);

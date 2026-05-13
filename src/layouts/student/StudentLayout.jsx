@@ -1,10 +1,15 @@
 import React, { useState, Suspense, useEffect } from "react";
 import { Outlet, useLocation } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
 import Sidebar from "../../components/sidebar/Sidebar";
 import { LoadingAnimationBook } from "../../components/common";
 import { useGetMe } from "../../hooks/useAuth";
+import studentService from "../../services/pages/student/studentService";
+import { getCurrentSchoolYear, getCurrentTerm } from "../../utils/dateUtils";
 import ChangePasswordDialog from "../../components/common/Dialog/ChangePasswordDialog/ChangePasswordDialog";
 import "./StudentLayout.css";
+import { formatName } from "../../utils/nameUtils";
+
 
 export default function StudentLayout() {
     const [isCollapsed, setIsCollapsed] = useState(false);
@@ -21,6 +26,7 @@ export default function StudentLayout() {
 
     // Tự động đồng bộ thông tin người dùng và quyền hạn từ Server
     const { data: latestUser } = useGetMe();
+    const queryClient = useQueryClient();
 
     useEffect(() => {
         setIsPageTransitioning(true);
@@ -30,30 +36,83 @@ export default function StudentLayout() {
         return () => clearTimeout(timer);
     }, [location.pathname]);
 
+    // [NEW] Background JS Chunk Prefetching
+    useEffect(() => {
+        const prefetchChunks = () => {
+            import("../../pages/student/classes/StudentClasses");
+            import("../../pages/student/grades/StudentGrades");
+            import("../../pages/student/schedule/StudentSchedule");
+            import("../../pages/student/quiz/StudentQuiz");
+            import("../../pages/student/notification/StudentNotifications");
+        };
+        
+        if (window.requestIdleCallback) {
+            window.requestIdleCallback(prefetchChunks);
+        } else {
+            setTimeout(prefetchChunks, 2000);
+        }
+    }, []);
+
+    // [NEW] Hệ thống Load ngầm (Prefetching) cho Học sinh
+    useEffect(() => {
+        if (!latestUser) return;
+
+        const schoolYear = getCurrentSchoolYear();
+        const term = getCurrentTerm();
+
+        const prefetchData = async () => {
+            // Parallelize all data prefetching
+            await Promise.allSettled([
+                // 1. Prefetch Dashboard
+                queryClient.prefetchQuery({
+                    queryKey: ["student-dashboard", schoolYear, term],
+                    queryFn: () => studentService.getDashboard({
+                        params: { schoolYear, term }
+                    }),
+                    staleTime: 5 * 60 * 1000,
+                }),
+
+                // 2. Prefetch Lớp học
+                queryClient.prefetchQuery({
+                    queryKey: ["student-classes"],
+                    queryFn: () => studentService.listClasses(),
+                    staleTime: 5 * 60 * 1000,
+                }),
+
+                // 3. Prefetch Thời khóa biểu - KEY MUST MATCH StudentSchedule.jsx
+                queryClient.prefetchQuery({
+                    queryKey: ["student-schedule", schoolYear, term],
+                    queryFn: () => studentService.getStudentSchedule(),
+                    staleTime: 5 * 60 * 1000,
+                }),
+
+                // 4. Prefetch Quizzes
+                queryClient.prefetchQuery({
+                    queryKey: ["student-quizzes"],
+                    queryFn: () => studentService.listQuizzes(),
+                    staleTime: 5 * 60 * 1000,
+                })
+            ]);
+        };
+
+        prefetchData();
+    }, [latestUser, queryClient]);
+
     // [NEW] Fetch notification count on layout mount to sync sidebar badge
     useEffect(() => {
         const syncNotificationCount = async () => {
             try {
-                const { studentService } = await import("../../services/pages/student/studentService");
-                
-                let response;
-                try {
-                    response = await studentService.listNotifications({ mock: false });
-                } catch (err) {
-                    console.warn("Real Student Notifications API failed, trying mock:", err);
-                    response = await studentService.listNotifications({ mock: true });
-                }
+                const response = await studentService.listNotifications({ mock: false });
                 
                 if (response.success && response.data) {
                     const unreadCount = response.data.filter(n => 
                         n.unread === true || n.is_read === false || n.status === "unread"
                     ).length;
                     
-                    const finalCount = unreadCount || (response.isMock ? 3 : 0);
-                    localStorage.setItem("student_unread_notifications_count", String(finalCount));
+                    localStorage.setItem("student_unread_notifications_count", String(unreadCount));
                     window.dispatchEvent(
                         new CustomEvent("student-notification-count-updated", {
-                            detail: finalCount,
+                            detail: unreadCount,
                         })
                     );
                 }
@@ -75,7 +134,7 @@ export default function StudentLayout() {
     })();
 
     const userToUse = latestUser || storedUser;
-    const userName = userToUse.fullName || userToUse.name || "Học sinh";
+    const userName = formatName(userToUse, { fallback: "Học sinh" });
     const userEmail = userToUse.email || "";
 
     return (

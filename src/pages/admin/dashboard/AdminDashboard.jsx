@@ -1,30 +1,40 @@
 import { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { FiUsers, FiLock, FiActivity, FiShield, FiAlertTriangle, FiCheckCircle, FiClock, FiList } from "react-icons/fi";
+import { adminDashboardService } from "../../../services/pages/admin/dashboard/dashboardService";
 import "./AdminDashboard.css";
 
 const AdminDashboard = () => {
     const navigate = useNavigate();
     const adminName = localStorage.getItem("email")?.split("@")[0] || "Quản Trị Viên";
 
-    const [stats, setStats] = useState({
-        totalUsers: 1240,
+    const { data: response, isLoading } = useQuery({
+        queryKey: ["admin-dashboard"],
+        queryFn: () => adminDashboardService.getDashboardOverview(),
+        staleTime: 5 * 60 * 1000,
+    });
+
+    const dashboardData = response || null;
+
+    const stats = {
+        totalUsers: dashboardData?.summary?.totalStudents + dashboardData?.summary?.totalTeachers || 1240,
         activeManagers: 12,
         lockedAccounts: 3,
         logsToday: 45
-    });
+    };
 
-    const [auditLogs] = useState([
+    const auditLogs = [
         { id: 1, user: "Nguyen Hoang Quoc Kiet", action: "Cập nhật quyền hạn cho Hiệu trưởng", time: "10 phút trước", type: "success" },
         { id: 2, user: "admin@thptlocal.edu.vn", action: "Khóa tài khoản Giáo viên (GV001)", time: "25 phút trước", type: "warning" },
         { id: 3, user: "admin@thptlocal.edu.vn", action: "Tạo tài khoản Quản lý mới", time: "1 giờ trước", type: "info" },
-    ]);
+    ];
 
-    const [systemLogs] = useState([
+    const systemLogs = [
         { id: 1, event: "Hệ thống", action: "Sao lưu dữ liệu định kỳ", time: "2 giờ trước", icon: <FiActivity /> },
         { id: 2, event: "Tuần 32", action: "Chuyển đổi tuần học tự động", time: "5 giờ trước", icon: <FiClock /> },
         { id: 3, event: "v2.4.5", action: "Cập nhật phiên bản hệ thống", time: "1 ngày trước", icon: <FiCheckCircle /> },
-    ]);
+    ];
 
     const userDistribution = [
         { label: "Học sinh", count: 1050, color: "#6366f1" },
@@ -48,28 +58,28 @@ const AdminDashboard = () => {
             </header>
 
             <section className="admin-dashboard-new__stats">
-                <div className="stat-card">
+                <div className="stat-card clickable" onClick={() => navigate("/admin/users")}>
                     <div className="stat-icon users"><FiUsers /></div>
                     <div className="stat-info">
                         <span className="label">Tổng người dùng</span>
                         <h2 className="value">{stats.totalUsers}</h2>
                     </div>
                 </div>
-                <div className="stat-card">
+                <div className="stat-card clickable" onClick={() => navigate("/admin/users")}>
                     <div className="stat-icon managers"><FiShield /></div>
                     <div className="stat-info">
                         <span className="label">Đội ngũ quản lý</span>
                         <h2 className="value">{stats.activeManagers}</h2>
                     </div>
                 </div>
-                <div className="stat-card">
+                <div className="stat-card clickable" onClick={() => navigate("/admin/users")}>
                     <div className="stat-icon locked"><FiLock /></div>
                     <div className="stat-info">
                         <span className="label">Tài khoản bị khóa</span>
                         <h2 className="value text-danger">{stats.lockedAccounts}</h2>
                     </div>
                 </div>
-                <div className="stat-card">
+                <div className="stat-card clickable" onClick={() => navigate("/admin/audit-log")}>
                     <div className="stat-icon logs"><FiActivity /></div>
                     <div className="stat-info">
                         <span className="label">Nhật ký hôm nay</span>

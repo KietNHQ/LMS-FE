@@ -1,12 +1,13 @@
 import "./ParentDashboard.css";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
 
 import { PageHeader, SchoolYearTermSelector, LoadingSpinner } from "../../../components/common";
 import ChildSwitcher from "./components/ChildSwitcher/ChildSwitcher";
 import OverviewCards from "./components/OverviewCards/OverviewCards";
 import PaymentSummary from "./components/PaymentSummary/PaymentSummary";
 import EventCalendar from "../../../components/common/EventCalendar/EventCalendar";
-import { INITIAL_CALENDAR_EVENTS, CALENDAR_EVENT_TYPES } from "../../../components/common/EventCalendar/eventData";
+import { CALENDAR_EVENT_TYPES } from "../../../components/common/EventCalendar/eventData";
 import UpcomingSchedule from "./components/UpcomingSchedule/UpcomingSchedule";
 import { useSchoolYearTerm } from "../../../hooks/useSchoolYearTerm";
 import { parentService } from "../../../services/pages/parent/parentService";
@@ -14,125 +15,61 @@ import { parentService } from "../../../services/pages/parent/parentService";
 const defaultChildrenData = [];
 
 export default function ParentDashboard() {
-  const [childrenList, setChildrenList] = useState([]);
-  const [selectedChildId, setSelectedChildId] = useState(null);
   const { selectedSchoolYear, selectedTerm, handleYearArrow, handleTermChange } = useSchoolYearTerm();
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [selectedChildId, setSelectedChildId] = useState(null);
 
-  // Fetch children data from API on component mount
+  // 1. Lấy danh sách con cái
+  const { data: childrenResponse, isLoading: isLoadingChildren } = useQuery({
+    queryKey: ["parent-children"],
+    queryFn: () => parentService.listChildren({ mock: false }),
+    staleTime: 10 * 60 * 1000,
+  });
+
+  const childrenList = useMemo(() => {
+    const data = childrenResponse?.data || childrenResponse?.parent_children || childrenResponse || [];
+    return (Array.isArray(data) ? data : [])
+      .filter(c => (c.id || c.studentId) !== "child1" && c.name !== "Nguyễn Minh Tuấn");
+  }, [childrenResponse]);
+
+  // Tự động chọn đứa con đầu tiên nếu chưa chọn
   useEffect(() => {
-    const fetchChildren = async () => {
-      try {
-        setIsLoading(true);
-        setError(null);
+    if (childrenList.length > 0 && !selectedChildId) {
+      setSelectedChildId(childrenList[0].id || childrenList[0].studentId);
+    }
+  }, [childrenList, selectedChildId]);
 
-        // [TỐI ƯU] Lấy dữ liệu từ localStorage trước để hiển thị ngay lập tức
-        const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
-        const localChildren = storedUser?.profile?.linkedStudents || 
-                             storedUser?.linkedStudentIds || [];
-        
-        if (localChildren.length > 0) {
-            // Chuyển đổi format và lọc bỏ dữ liệu mẫu cũ
-            const formattedLocal = localChildren
-                .filter(c => c.id !== "child1" && c.name !== "Nguyễn Minh Tuấn")
-                .map(c => ({
-                    ...c,
-                    id: c.id || c.studentId,
-                    name: c.name || `${c.surname || ""} ${c.given_name || ""}`.trim()
-                }));
-            
-            if (formattedLocal.length > 0) {
-                setChildrenList(formattedLocal);
-                if (!selectedChildId) setSelectedChildId(formattedLocal[0].id);
-            }
-        }
+  // 2. Lấy điểm của đứa con đang chọn
+  const { data: gradesResponse, isLoading: isLoadingGrades } = useQuery({
+    queryKey: ["child-grades", selectedChildId],
+    queryFn: () => parentService.getChildGrades({
+      pathParams: { childId: selectedChildId },
+      mock: false
+    }),
+    enabled: !!selectedChildId,
+    staleTime: 5 * 60 * 1000,
+  });
 
-        const response = await parentService.listChildren({ mock: false });
-        console.log("📋 Parent Children API Response:", response);
+  // 3. Lấy thông báo để đếm số chưa đọc
+  const { data: notificationsResponse } = useQuery({
+    queryKey: ["parent-notifications"],
+    queryFn: () => parentService.listNotifications({ mock: false }),
+    staleTime: 2 * 60 * 1000,
+  });
 
-        const children = response.data || response.parent_children || response || [];
-        const childrenArray = (Array.isArray(children) ? children : [])
-            .filter(c => (c.id || c.studentId) !== "child1" && c.name !== "Nguyễn Minh Tuấn");
+  const unreadCount = useMemo(() => {
+    if (!notificationsResponse?.success || !notificationsResponse?.data) return 0;
+    return notificationsResponse.data.filter(n => n.unread).length;
+  }, [notificationsResponse]);
 
-        if (childrenArray.length > 0) {
-            setChildrenList(childrenArray);
-            if (!selectedChildId) {
-                setSelectedChildId(childrenArray[0].id || childrenArray[0].studentId);
-            }
-        }
-      } catch (err) {
-        // [CẢI TIẾN] Nếu là lỗi 404 (do BE chưa có API) nhưng đã có dữ liệu local thì không báo lỗi đỏ
-        if (err.response?.status === 404 || err.message?.includes("404")) {
-            console.info("ℹ️ Parent API 404 - Using local profile data as fallback.");
-        } else {
-            console.error("❌ Error fetching parent children:", err);
-            // Chỉ hiện lỗi lên UI nếu thực sự không có tí dữ liệu nào (kể cả local)
-            if (childrenList.length === 0) {
-                setError(err.message);
-                setChildrenList(defaultChildrenData);
-                if (defaultChildrenData.length > 0) {
-                    setSelectedChildId(defaultChildrenData[0].id);
-                }
-            }
-        }
-      } finally {
-        setIsLoading(false);
-      }
-    };
+  const selectedChild = useMemo(() => {
+    const child = childrenList.find(c => (c.id || c.studentId) === selectedChildId) || childrenList[0];
+    if (child && gradesResponse?.success) {
+      return { ...child, gradesBySemester: gradesResponse.data };
+    }
+    return child;
+  }, [childrenList, selectedChildId, gradesResponse]);
 
-
-    fetchChildren();
-  }, []);
-
-  // Fetch grades for the selected child whenever selectedChildId changes
-  useEffect(() => {
-    if (!selectedChildId) return;
-
-    const fetchGrades = async () => {
-      try {
-        const response = await parentService.getChildGrades({
-          pathParams: { childId: selectedChildId },
-          mock: false
-        });
-
-        if (response.success && response.data) {
-          setChildrenList(prev => prev.map(child => {
-            if ((child.id || child.studentId) === selectedChildId) {
-              return { ...child, gradesBySemester: response.data };
-            }
-            return child;
-          }));
-        }
-      } catch (err) {
-        console.error("❌ Error fetching child grades:", err);
-      }
-    };
-
-    fetchGrades();
-  }, [selectedChildId]);
-
-  const [unreadCount, setUnreadCount] = useState(0);
-
-  // Fetch notifications to get unread count
-  useEffect(() => {
-    const fetchNotifications = async () => {
-      try {
-        const response = await parentService.listNotifications({ mock: false });
-        if (response.success && response.data) {
-          const count = response.data.filter(n => n.unread).length;
-          setUnreadCount(count);
-        }
-      } catch (err) {
-        console.error("❌ Error fetching notifications for count:", err);
-      }
-    };
-    fetchNotifications();
-  }, []);
-
-  const selectedChild = (childrenList.length > 0 ? childrenList : defaultChildrenData).find(
-    c => (c.id || c.studentId) === selectedChildId
-  ) || (childrenList.length > 0 ? childrenList : defaultChildrenData)[0];
+  const isLoading = isLoadingChildren || (!!selectedChildId && isLoadingGrades);
 
   const calculateAverage = (subjects) => {
     if (!subjects || !Array.isArray(subjects)) return 0;
@@ -146,19 +83,9 @@ export default function ParentDashboard() {
   return (
     <div className="dashboard">
       <PageHeader
-        title="Trang chủ - Dữ liệu thực"
+        title="Trang chủ Phụ huynh"
       />
-      {error && (
-        <div style={{
-          padding: "1rem",
-          marginBottom: "1rem",
-          backgroundColor: "#fef2f2",
-          borderLeft: "4px solid #dc2626",
-          borderRadius: "0.5rem"
-        }}>
-          <strong style={{ color: "#dc2626" }}>⚠️ Lỗi:</strong> {error}
-        </div>
-      )}
+      
       <ChildSwitcher
         childrenList={childrenList.length > 0 ? childrenList : defaultChildrenData}
         selectedChildId={selectedChildId}

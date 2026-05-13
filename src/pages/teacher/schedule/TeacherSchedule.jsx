@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
 import teacherService from "../../../services/pages/teacher/teacherService";
 import WeeklyScheduleSection from "./components/weeklyScheduleSection/WeeklyScheduleSection";
 import DailyScheduleSection from "./components/dailyScheduleSection/DailyScheduleSection";
@@ -51,6 +52,9 @@ function getTodayDayIndex() {
 
 export default function TeacherSchedule() {
   const { selectedSchoolYear, selectedTerm, handleYearArrow, handleTermChange } = useSchoolYearTerm();
+  const storedUser = JSON.parse(localStorage.getItem("user") || sessionStorage.getItem("user") || "{}");
+  const teacherId = storedUser.profile?.id || storedUser.id;
+
   const [weekOffset, setWeekOffset] = useState(0);
   const [selectedGrade, setSelectedGrade] = useState("Tất cả");
   const [selectedClass, setSelectedClass] = useState("Tất cả");
@@ -58,45 +62,29 @@ export default function TeacherSchedule() {
   const [selectedLesson, setSelectedLesson] = useState(null);
   const [isDailyModalOpen, setIsDailyModalOpen] = useState(false);
   const [sessionView, setSessionView] = useState("morning");
-  const [timetableData, setTimetableData] = useState([]);
-  const [isLoading, setIsLoading] = useState(false);
 
-  useEffect(() => {
-    const fetchTimetable = async () => {
-      setIsLoading(true);
+  // Use TanStack Query for timetable
+  const { data: timetableData = [], isLoading } = useQuery({
+    queryKey: ["teacher-schedule", teacherId, selectedSchoolYear, selectedTerm],
+    queryFn: async () => {
       try {
-        let response;
-        try {
-          response = await teacherService.getTimetable({ 
-            mock: false,
-            params: {
-              schoolYear: selectedSchoolYear,
-              term: selectedTerm
-            }
-          });
-        } catch (apiErr) {
-          console.warn("API getTimetable failed, using mock:", apiErr);
-          // Fallback to mock if API fails (401 or not implemented)
-          response = await teacherService.getTimetable({ 
-            mock: true,
-            params: {
-              schoolYear: selectedSchoolYear,
-              term: selectedTerm
-            }
-          });
-        }
-
-        if (response.success && response.data) {
-          setTimetableData(response.data);
-        }
-      } catch (error) {
-        console.error("Failed to fetch timetable:", error);
-      } finally {
-        setIsLoading(false);
+        const response = await teacherService.getTimetable({ 
+          mock: false,
+          params: { schoolYear: selectedSchoolYear, term: selectedTerm }
+        });
+        if (response.success && response.data) return response.data;
+      } catch (apiErr) {
+        console.warn("API getTimetable failed, using mock:", apiErr);
+        const response = await teacherService.getTimetable({ 
+          mock: true,
+          params: { schoolYear: selectedSchoolYear, term: selectedTerm }
+        });
+        if (response.success && response.data) return response.data;
       }
-    };
-    fetchTimetable();
-  }, [selectedSchoolYear, selectedTerm]);
+      return [];
+    },
+    staleTime: 10 * 60 * 1000,
+  });
   
   const handleSelectDay = (idx) => {
     setSelectedDay(idx);

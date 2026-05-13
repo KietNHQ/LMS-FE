@@ -1,8 +1,16 @@
+import { useNavigate } from "react-router-dom";
+
 export default function StatsCards({ cards }) {
+    const navigate = useNavigate();
+
     return (
         <div className="student-stats-grid">
             {cards.map((card) => (
-                <div key={card.id} className="student-stat-card">
+                <div 
+                    key={card.id} 
+                    className={`student-stat-card ${card.path ? "clickable" : ""}`}
+                    onClick={() => card.path && navigate(card.path)}
+                >
                     <div className="student-stat-body">
                         <p className="student-stat-title">{card.title}</p>
                         <h2 className="student-stat-value">{card.value}</h2>

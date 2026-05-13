@@ -1,4 +1,5 @@
 import React, { useMemo, useState, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { FiChevronDown } from "react-icons/fi";
 import {
     BiTrendingUp,
@@ -102,45 +103,39 @@ function getSubjectIcon(subjectName) {
 }
 
 export default function StudentGrades() {
-    const [isLoading, setIsLoading] = useState(true);
-    const [gradesData, setGradesData] = useState([]);
     const [openRowId, setOpenRowId] = useState(null);
     const [activeTab, setActiveTab] = useState("hk1");
     const [selectedSchoolYear, setSelectedSchoolYear] = useState("2025-2026");
 
-    useEffect(() => {
-        const fetchGrades = async () => {
-            setIsLoading(true);
-            try {
-                const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
-                const studentId = storedUser?.profile?.id;
+    const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
+    const studentId = storedUser?.profile?.id;
 
-                if (studentId) {
-                    const response = await studentService.getStudentGrades({ 
-                        pathParams: { id: studentId },
-                        mock: false 
-                    });
-                    
-                    if (response.success && response.data) {
-                        // Backend có thể trả về object hk1, hk2 hoặc array. 
-                        // Chúng ta sẽ chuẩn hóa để dùng trong logic hiển thị.
-                        processGradesResponse(response.data);
-                    }
+    // Use TanStack Query for grades
+    const { data: gradesData = [], isLoading } = useQuery({
+        queryKey: ["student-grades", studentId, selectedSchoolYear],
+        queryFn: async () => {
+            if (!studentId) return [];
+            try {
+                const response = await studentService.getStudentGrades({ 
+                    pathParams: { id: studentId },
+                    mock: false 
+                });
+                
+                if (response.success && response.data) {
+                    return processGradesData(response.data);
                 }
             } catch (error) {
                 console.warn("Failed to fetch grades, using empty state.");
-            } finally {
-                setTimeout(() => setIsLoading(false), 500);
             }
-        };
+            return [];
+        },
+        enabled: !!studentId,
+        staleTime: 10 * 60 * 1000,
+    });
 
-        fetchGrades();
-    }, [selectedSchoolYear]);
-
-    const processGradesResponse = (data) => {
-        // Tạm thời nếu data là mảng các môn học có lồng hk1, hk2
+    function processGradesData(data) {
         if (Array.isArray(data)) {
-            const computed = data.map(subject => {
+            return data.map(subject => {
                 const hk1Avg = calculateSemesterAverage(subject.hk1);
                 const hk2Avg = calculateSemesterAverage(subject.hk2);
                 const yearAvg = calculateYearAverage(hk1Avg, hk2Avg);
@@ -153,9 +148,9 @@ export default function StudentGrades() {
                     trend: getTrend(hk1Avg, hk2Avg)
                 };
             });
-            setGradesData(computed);
         }
-    };
+        return [];
+    }
 
     const summaryStats = useMemo(() => {
         if (gradesData.length === 0) return { avg: 0, rank: "—", count: 0 };

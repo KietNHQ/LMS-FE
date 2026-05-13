@@ -41,15 +41,33 @@ export const LESSON_SLOTS = [
 export const getCurrentLessonInfo = (date) => {
   const currentMinute = toMinutes(date.getHours(), date.getMinutes());
 
-  const matchedSlot = LESSON_SLOTS.find(
+  // Tìm tất cả các tiết đang diễn ra (để hỗ trợ tiết đôi)
+  const matchedSlots = LESSON_SLOTS.filter(
     (slot) => currentMinute >= slot.startMinute && currentMinute < slot.endMinute
   );
 
-  if (matchedSlot) {
+  if (matchedSlots.length > 0) {
+    const periodLabels = matchedSlots.map(s => s.periodLabel).join(", ");
+    const timeRange = matchedSlots.length === 1 
+      ? matchedSlots[0].timeRange 
+      : `${formatTimeRange(matchedSlots[0].startMinute, matchedSlots[matchedSlots.length - 1].endMinute)}`;
+
     return {
-      periodLabel: matchedSlot.periodLabel,
-      sessionLabel: matchedSlot.sessionLabel,
-      timeRange: matchedSlot.timeRange,
+      periodLabel: periodLabels,
+      sessionLabel: matchedSlots[0].sessionLabel,
+      timeRange: timeRange,
+      slots: matchedSlots
+    };
+  }
+
+  // Thử tìm tiết tiếp theo nếu đang trong giờ giải lao
+  const nextSlot = LESSON_SLOTS.find(slot => slot.startMinute > currentMinute);
+  if (nextSlot && (nextSlot.startMinute - currentMinute) <= 20) {
+    return {
+      periodLabel: `Sắp tới: ${nextSlot.periodLabel}`,
+      sessionLabel: nextSlot.sessionLabel,
+      timeRange: nextSlot.timeRange,
+      isUpcoming: true
     };
   }
 
@@ -58,6 +76,23 @@ export const getCurrentLessonInfo = (date) => {
     sessionLabel: date.getHours() < 12 ? "Buổi sáng" : "Buổi chiều",
     timeRange: "",
   };
+};
+
+export const getWeekNumber = (date) => {
+  const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+  const dayNum = d.getUTCDay() || 7;
+  d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+  const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+  return Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+};
+
+// Giả định năm học bắt đầu từ tuần nào đó (ví dụ tuần 36 của năm)
+export const getAcademicWeek = (date) => {
+  const currentWeek = getWeekNumber(date);
+  const schoolStartWeek = 35; // Thường bắt đầu vào đầu tháng 9
+  let week = currentWeek - schoolStartWeek + 1;
+  if (week <= 0) week += 52; 
+  return week > 40 ? 1 : week; // Reset sau 40 tuần học
 };
 
 export const toDateKey = (date) => {
@@ -112,6 +147,9 @@ export const REVIEW_CONTENT_MAPPING = {
     { label: "Giúp đỡ bạn bè được ghi nhận (+10đ)", pts: 10 },
     { label: "Phát hiện sai phạm, báo cáo (+15đ)", pts: 15 },
     { label: "Tiến bộ rõ rệt (+20đ)", pts: 20 },
+  ],
+  "Đánh giá thường xuyên (Điểm miệng)": [
+    { label: "Điểm ", pts: 0 },
   ],
 };
 
