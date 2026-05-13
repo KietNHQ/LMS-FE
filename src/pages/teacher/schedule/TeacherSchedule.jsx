@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import teacherService from "../../../services/pages/teacher/teacherService";
 import WeeklyScheduleSection from "./components/weeklyScheduleSection/WeeklyScheduleSection";
 import DailyScheduleSection from "./components/dailyScheduleSection/DailyScheduleSection";
@@ -109,6 +109,12 @@ export default function TeacherSchedule() {
     : "";
   const reminderList = selectedLesson ? getReminderByType(lessonType) : [];
 
+  const uniqueClasses = useMemo(() => {
+    if (!timetableData || timetableData.length === 0) return [];
+    const classes = [...new Set(timetableData.map(item => item.class_name))].filter(Boolean);
+    return classes.sort();
+  }, [timetableData]);
+
   return (
     <div className="teacher-schedule-page">
       <PageHeader
@@ -133,6 +139,7 @@ export default function TeacherSchedule() {
           setSelectedClass={setSelectedClass}
           sessionView={sessionView}
           setSessionView={setSessionView}
+          availableClasses={uniqueClasses}
         />
 
         <div className="teacher-schedule-content">

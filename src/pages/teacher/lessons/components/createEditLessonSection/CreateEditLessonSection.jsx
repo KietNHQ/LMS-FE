@@ -96,7 +96,7 @@ export default function CreateEditLessonSection({
                         Tên bài học
                         <input
                             type="text"
-                            placeholder="Ví dụ: Hàm số bậc nhất"
+                            placeholder="Ví dụ: Unit 1 - Tenses / Hàm số bậc nhất"
                             value={formValues.title}
                             onChange={(event) => onChangeForm("title", event.target.value)}
                         />
