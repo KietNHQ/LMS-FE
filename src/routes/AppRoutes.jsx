@@ -127,10 +127,18 @@ const ParentSupport = lazy(() => import("../pages/parent/support/ParentSupport")
  * Nếu chưa đăng nhập, mặc định cho vào cổng giáo viên (hoặc trang guest mong muốn)
  */
 const RootRedirect = () => {
-    const userString = localStorage.getItem("user") || sessionStorage.getItem("user");
+    // Chỉ cho phép vào thẳng Dashboard nếu:
+    // 1. Đang có session hoạt động (mở tab)
+    // 2. HOẶC có token local NHƯNG phải có cờ isPersistent=true (đã tích Ghi nhớ)
+    const sessionToken = sessionStorage.getItem("accessToken");
+    const localToken = localStorage.getItem("accessToken");
+    const isPersistent = localStorage.getItem("isPersistent") === "true";
+    
+    const accessToken = sessionToken || (isPersistent ? localToken : null);
+    const userString = sessionToken ? sessionStorage.getItem("user") : (isPersistent ? localStorage.getItem("user") : null);
     const user = userString ? JSON.parse(userString) : null;
 
-    if (!user) {
+    if (!accessToken || !user) {
         return <Navigate to="/login" replace />;
     }
 
@@ -243,9 +251,11 @@ export default function AppRoutes() {
 
 
       <Route path="/student" element={
-        <Suspense fallback={<LoadingAnimationBook fullScreen={true} label="Đang tải không gian học sinh..." />}>
-          <StudentLayout />
-        </Suspense>
+        <ProtectedRoute allowedRoles={["student", "học sinh"]}>
+          <Suspense fallback={<LoadingAnimationBook fullScreen={true} label="Đang tải không gian học sinh..." />}>
+            <StudentLayout />
+          </Suspense>
+        </ProtectedRoute>
       }>
         <Route index element={<Navigate to="dashboard" replace />} />
         <Route path="dashboard" element={<StudentDashboard />} />
@@ -260,9 +270,11 @@ export default function AppRoutes() {
       </Route>
 
       <Route path="/teacher" element={
-        <Suspense fallback={<LoadingAnimationBook fullScreen={true} label="Đang tải không gian giáo viên..." />}>
-          <TeacherLayout />
-        </Suspense>
+        <ProtectedRoute allowedRoles={["teacher", "giáo viên"]}>
+          <Suspense fallback={<LoadingAnimationBook fullScreen={true} label="Đang tải không gian giáo viên..." />}>
+            <TeacherLayout />
+          </Suspense>
+        </ProtectedRoute>
       }>
         <Route index element={<Navigate to="dashboard" replace />} />
         <Route path="dashboard"        element={<TeacherDashboard />} />
@@ -282,9 +294,11 @@ export default function AppRoutes() {
       </Route>
 
         <Route path="/parent" element={
-          <Suspense fallback={<LoadingAnimationBook fullScreen={true} label="Đang tải không gian phụ huynh..." />}>
-            <ParentLayout />
-          </Suspense>
+          <ProtectedRoute allowedRoles={["guardian", "parent", "phụ huynh"]}>
+            <Suspense fallback={<LoadingAnimationBook fullScreen={true} label="Đang tải không gian phụ huynh..." />}>
+              <ParentLayout />
+            </Suspense>
+          </ProtectedRoute>
         }>
             <Route index element={<Navigate to="dashboard" replace />} />
             <Route path="dashboard" element={<ParentDashboard />} />

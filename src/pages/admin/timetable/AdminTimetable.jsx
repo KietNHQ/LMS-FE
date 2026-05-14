@@ -8,7 +8,7 @@ import { Select } from "../../../components/ui";
 import { SchoolYearTermSelector } from "../../../components/common";
 import { useSchoolYearTerm } from "../../../hooks/useSchoolYearTerm";
 import { FiUsers, FiCalendar, FiClock, FiBook, FiUser, FiMapPin, FiActivity, FiX, FiCheckCircle, FiSave, FiPlus } from "react-icons/fi";
-import { CLASS_OPTIONS, WEEK_DAYS, STATUS_META, MODE_META, getPeriodRangeLabel, SUBJECT_COLOR_MAP, SUBJECT_DISPLAY, GDPT_2018_CONFIG, ROOM_OPTIONS } from "../../../utils/timetableShared";
+import { CLASS_OPTIONS, WEEK_DAYS, STATUS_META, MODE_META, getPeriodRangeLabel, SUBJECT_COLOR_MAP, SUBJECT_DISPLAY, GDPT_2018_CONFIG, ROOM_OPTIONS, buildAdminInitialSessions } from "../../../utils/timetableShared";
 import timetableService from "../../../services/pages/management/timetable/timetableService";
 
 const classOptions = CLASS_OPTIONS;

@@ -45,10 +45,17 @@ function Login() {
 
     useEffect(() => {
         // AUTO-REDIRECT NẾU ĐÃ ĐĂNG NHẬP
-        const accessToken = localStorage.getItem("accessToken") || sessionStorage.getItem("accessToken");
-        const userString = localStorage.getItem("user") || sessionStorage.getItem("user");
+        const sessionToken = sessionStorage.getItem("accessToken");
+        const localToken = localStorage.getItem("accessToken");
+        const isPersistent = localStorage.getItem("isPersistent") === "true";
         
-        if (accessToken && userString) {
+        // Chỉ tự động vào nếu: 
+        // 1. Có token trong session (đang mở tab)
+        // 2. HOẶC có token trong local VÀ đã tích "Ghi nhớ"
+        const validToken = sessionToken || (isPersistent && localToken);
+        const userString = sessionToken ? sessionStorage.getItem("user") : (isPersistent ? localStorage.getItem("user") : null);
+        
+        if (validToken && userString) {
             try {
                 const user = JSON.parse(userString);
                 const role = user.role?.toLowerCase();
@@ -79,6 +86,11 @@ function Login() {
     const handleSubmit = async (e) => {
         e.preventDefault();
         setPasswordError(""); // Reset lỗi FE
+
+        // [CRITICAL] Xóa sạch mọi dấu vết cũ trước khi đăng nhập mới
+        // Điều này đảm bảo không có token Admin/Management cũ nào bị "kẹt" lại
+        localStorage.clear();
+        sessionStorage.clear();
 
         // Validate FE: Kiểm tra độ dài mật khẩu
         if (password.length < 6) {

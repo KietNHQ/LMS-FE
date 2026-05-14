@@ -10,7 +10,10 @@ const axiosClient = axios.create({
 
 // Interceptor 1: Tu dong gan JWT vao request
 axiosClient.interceptors.request.use((config) => {
-  const token = localStorage.getItem("accessToken") || sessionStorage.getItem("accessToken");
+  // Chỉ lấy từ localStorage nếu có cờ isPersistent=true
+  const isPersistent = localStorage.getItem("isPersistent") === "true";
+  const token = sessionStorage.getItem("accessToken") || (isPersistent ? localStorage.getItem("accessToken") : null);
+  
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
@@ -71,7 +74,11 @@ axiosClient.interceptors.response.use(
         const refreshToken = localStorage.getItem("refreshToken") || sessionStorage.getItem("refreshToken");
 
         if (!refreshToken) {
-          throw new Error("No refresh token available");
+          // Khong co refresh token -> Buoc logout ngay lap tuc
+          localStorage.clear();
+          sessionStorage.clear();
+          window.location.href = "/login";
+          return Promise.reject(error);
         }
 
         const res = await axios.post(`${import.meta.env.VITE_API_URL}/auth/refresh`, {
@@ -79,7 +86,12 @@ axiosClient.interceptors.response.use(
         });
 
         const { accessToken } = res.data.data;
-        const storage = localStorage.getItem("accessToken") ? localStorage : sessionStorage;
+
+        // [STRICT] Chỉ lưu vào localStorage nếu refreshToken cũng đang nằm ở đó
+        // Điều này ngăn chặn việc token "nhảy" sang localStorage khi đang ở chế độ Session
+        const isPersistent = !!localStorage.getItem("refreshToken");
+        const storage = isPersistent ? localStorage : sessionStorage;
+
         storage.setItem("accessToken", accessToken);
 
         processQueue(null, accessToken);
@@ -89,14 +101,10 @@ axiosClient.interceptors.response.use(
       } catch (_error) {
         processQueue(_error, null);
         
-        // Chỉ redirect nếu thực sự có dấu hiệu là token hết hạn (đã từng đăng nhập)
-        // Nếu là Guest (không có refreshToken) thì không được đá ra /login
-        const hasLoggedBefore = localStorage.getItem("refreshToken") || sessionStorage.getItem("refreshToken");
-        if (hasLoggedBefore) {
-            localStorage.clear();
-            sessionStorage.clear();
-            window.location.href = "/login";
-        }
+        // Neu refresh that bai -> Xoa sach du lieu va logout
+        localStorage.clear();
+        sessionStorage.clear();
+        window.location.href = "/login?expired=true";
         
         return Promise.reject(_error);
       } finally {

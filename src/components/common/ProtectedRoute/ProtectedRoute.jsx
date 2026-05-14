@@ -10,9 +10,14 @@ import { toast } from "react-toastify";
 const ProtectedRoute = ({ children, allowedRoles }) => {
     const location = useLocation();
     
-    // 1. Lấy thông tin từ Storage
-    const accessToken = localStorage.getItem("accessToken") || sessionStorage.getItem("accessToken");
-    const userString = localStorage.getItem("user") || sessionStorage.getItem("user");
+    // 1. Lấy thông tin từ Storage (Chỉ tin tưởng localStorage nếu isPersistent = true)
+    const sessionToken = sessionStorage.getItem("accessToken");
+    const localToken = localStorage.getItem("accessToken");
+    const isPersistent = localStorage.getItem("isPersistent") === "true";
+    
+    const accessToken = sessionToken || (isPersistent ? localToken : null);
+    
+    const userString = sessionToken ? sessionStorage.getItem("user") : (isPersistent ? localStorage.getItem("user") : null);
     const user = userString ? JSON.parse(userString) : null;
 
     // 2. Kiểm tra nếu chưa đăng nhập
@@ -24,7 +29,7 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
     const isDisabled = user.status === "Vô hiệu hóa";
 
     // 4. Kiểm tra quyền truy cập (Role)
-    const userRole = (user.role || localStorage.getItem('userRole') || "").toLowerCase();
+    const userRole = (user?.role || sessionStorage.getItem('userRole') || localStorage.getItem('userRole') || "").toLowerCase();
 
     // SUPER ADMIN BYPASS: Admin/Quản trị viên có quyền vào MỌI NƠI
     const isSuperAdmin = userRole === 'admin' || userRole === 'quản trị viên' || userRole === 'administrator';

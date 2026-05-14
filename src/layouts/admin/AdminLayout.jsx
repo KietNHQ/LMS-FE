@@ -3,6 +3,7 @@ import { Outlet, useLocation } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import Sidebar from "../../components/sidebar/Sidebar";
 import { LoadingAnimationBook } from "../../components/common";
+import { useGetMe } from "../../hooks/useAuth";
 import { adminDashboardService } from "../../services/pages/admin/dashboard/dashboardService";
 import "./AdminLayout.css";
 import { formatName } from "../../utils/nameUtils";
@@ -93,18 +94,24 @@ export default function AdminLayout() {
         syncNotificationCount();
     }, []);
 
-    // Đọc từ localStorage
+    // Tự động đồng bộ thông tin người dùng và quyền hạn từ Server
+    const { data: latestUser } = useGetMe();
+
+    // Đọc thông tin người dùng: Chỉ tin tưởng localStorage nếu isPersistent = true
     const storedUser = (() => {
         try {
-            const userStr = localStorage.getItem("user") || sessionStorage.getItem("user");
+            const isPersistent = localStorage.getItem("isPersistent") === "true";
+            const userStr = sessionStorage.getItem("user") || (isPersistent ? localStorage.getItem("user") : null);
             return JSON.parse(userStr || "{}");
         } catch {
             return {};
         }
     })();
 
-    const userName = formatName(storedUser, { fallback: "Quản trị viên" });
-    const userEmail = storedUser.email || "";
+    const userToUse = latestUser || storedUser;
+    const userName = formatName(userToUse, { fallback: "Quản trị viên" });
+    const userEmail = userToUse.email || "";
+    const userPermissions = userToUse.permissions || null;
 
     return (
         <div className={`admin-layout ${isCollapsed ? "collapsed" : ""}`}>

@@ -4,7 +4,24 @@ import { authService } from "../services/shared/auth/authService";
 import { toast } from 'react-toastify';
 import { PERMISSIONS } from '../config/permissions';
 
-// Helper: Chuyển đổi danh sách quyền từ BE (object) sang FE (string key)
+// Mapping từ Backend ID sang Frontend Key (Dựa trên dữ liệu người dùng cung cấp)
+const PERMISSION_ID_MAP = {
+    "1": "users:read", "2": "users:create", "3": "users:update", "4": "users:delete",
+    "5": "grades:read", "6": "grades:create", "7": "grades:finalize", "8": "grades:unlock",
+    "9": "audit_logs:read", "10": "permissions:manage", "11": "classes:read", "12": "classes:manage",
+    "13": "students:read", "14": "departments:manage", "15": "class_allocation:read", "16": "class_allocation:manage",
+    "17": "exam:read", "18": "exam:manage", "19": "reward_types:read", "20": "reward_types:manage",
+    "21": "discipline:read", "22": "discipline:manage", "23": "attendance:read", "24": "attendance:manage",
+    "25": "fees:read", "26": "fees:manage", "27": "teachers:read", "28": "teachers:manage",
+    "29": "notifications:read", "30": "notifications:manage", "31": "guardians:read", "32": "guardians:create",
+    "33": "guardians:update", "34": "guardians:delete", "35": "students:create", "36": "students:update",
+    "37": "students:delete", "38": "teachers:create", "39": "teachers:update", "40": "teachers:delete",
+    "41": "dashboard:read", "42": "reports:read", "43": "lessons:read", "44": "lessons:create",
+    "45": "lessons:update", "46": "lessons:delete", "47": "classes:assign_officers", "48": "classes:read_summary",
+    "49": "notifications:broadcast"
+};
+
+// Helper: Chuyển đổi danh sách quyền từ BE (object/id) sang FE (string key)
 const normalizePermissions = (permissionsInput) => {
     // Nếu BE bọc quyền trong 1 object { permissions: [...] }
     const permissions = Array.isArray(permissionsInput) 
@@ -14,10 +31,24 @@ const normalizePermissions = (permissionsInput) => {
     if (!Array.isArray(permissions)) return [];
     
     return permissions.map(p => {
+        // Nếu là string key (đúng chuẩn FE)
         if (typeof p === 'string') return p;
+        
+        // Nếu là ID (số hoặc chuỗi số) -> Map sang string key
+        if (typeof p === 'number' || (!isNaN(p) && !isNaN(parseFloat(p)))) {
+            return PERMISSION_ID_MAP[String(p)] || p;
+        }
+
+        // Nếu là object chi tiết { id, resource, action }
         if (typeof p === 'object' && p.resource && p.action) {
             return `${p.resource}:${p.action}`;
         }
+        
+        // Nếu là object có ID
+        if (typeof p === 'object' && p.id) {
+            return PERMISSION_ID_MAP[String(p.id)] || p;
+        }
+
         return p;
     });
 };
@@ -32,6 +63,7 @@ export const useLogin = () => {
             const { rememberMe } = variables;
 
             const storage = rememberMe ? localStorage : sessionStorage;
+            const otherStorage = rememberMe ? sessionStorage : localStorage;
 
             // KIỂM TRA TRẠNG THÁI TÀI KHOẢN
             if (user.status === "Vô hiệu hóa") {
@@ -41,10 +73,20 @@ export const useLogin = () => {
                 return;
             }
 
+            // Dọn dẹp storage đối diện để tránh xung đột dữ liệu cũ
+            otherStorage.removeItem('accessToken');
+            otherStorage.removeItem('refreshToken');
+            otherStorage.removeItem('user');
+            otherStorage.removeItem('userRole');
+
             // LƯU ĐẦY ĐỦ CẢ ACCESS VÀ REFRESH TOKEN
             storage.setItem('accessToken', session.accessToken);
             storage.setItem('refreshToken', session.refreshToken);
             storage.setItem('userRole', user.role);
+            storage.setItem('isPersistent', rememberMe ? 'true' : 'false');
+            
+            // Cấp "giấy thông hành" cho tab hiện tại để vượt qua chốt chặn
+            sessionStorage.setItem('tab_session_id', Date.now().toString() + '_' + Math.random().toString(36).substr(2, 9));
             
             // Chuẩn hóa permissions trước khi lưu
             const normalizedUser = {
@@ -156,8 +198,10 @@ export const useGetMe = () => {
                 permissions: normalizePermissions(user.permissions)
             };
             
-            const isLocal = !!localStorage.getItem('user');
-            const storage = isLocal ? localStorage : sessionStorage;
+            // [STRICT] Chỉ lưu vào localStorage nếu refreshToken cũng đang nằm ở đó
+            const isPersistent = !!localStorage.getItem('refreshToken');
+            const storage = isPersistent ? localStorage : sessionStorage;
+            
             storage.setItem('user', JSON.stringify(normalizedUser));
             if (user.role) storage.setItem('userRole', user.role);
             
@@ -244,7 +288,7 @@ export const useUpdateUser = () => {
 };
 
 export const useCheckPermission = () => {
-    const userString = localStorage.getItem('user');
+    const userString = localStorage.getItem('user') || sessionStorage.getItem('user');
     const user = userString ? JSON.parse(userString) : {};
     
     const hasPermission = (requiredPermission) => {

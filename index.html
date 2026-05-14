@@ -7,7 +7,27 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>lms-fe</title>
+    <title>EduVN - Hệ thống quản lý học tập</title>
+    <script>
+      // [SECURITY CRITICAL] Chặn đứng Zombie Session ngay từ HTML level
+      (function() {
+        var isPersistent = localStorage.getItem("isPersistent") === "true";
+        if (!isPersistent) {
+          // Kiểm tra xem tab này có "giấy thông hành" (sessionStorage flag) không
+          // Nếu không có flag -> Đây là tab mới hoặc tab vừa được Firefox khôi phục từ quá khứ
+          if (!sessionStorage.getItem("tab_authorized_entry")) {
+            console.warn("Security Breach Detected: Restored session without authorization. Purging...");
+            localStorage.removeItem("accessToken");
+            localStorage.removeItem("refreshToken");
+            localStorage.removeItem("user");
+            localStorage.removeItem("userRole");
+            localStorage.removeItem("isPersistent");
+          } else {
+            // Tab đã được cấp phép trong phiên này
+          }
+        }
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>
