@@ -97,10 +97,12 @@ export default function ParentLayout() {
         syncNotificationCount();
     }, []);
 
-    // Đọc từ localStorage
+    // Đọc thông tin người dùng: Chỉ tin tưởng localStorage nếu isPersistent = true
     const storedUser = (() => {
         try {
-            return JSON.parse(localStorage.getItem("user") || "{}");
+            const isPersistent = localStorage.getItem("isPersistent") === "true";
+            const userStr = sessionStorage.getItem("user") || (isPersistent ? localStorage.getItem("user") : null);
+            return JSON.parse(userStr || "{}");
         } catch {
             return {};
         }

@@ -123,10 +123,11 @@ export default function StudentLayout() {
         syncNotificationCount();
     }, []);
 
-    // Đọc từ cả localStorage và sessionStorage
+    // Đọc thông tin người dùng: Chỉ tin tưởng localStorage nếu isPersistent = true
     const storedUser = (() => {
         try {
-            const userStr = localStorage.getItem("user") || sessionStorage.getItem("user");
+            const isPersistent = localStorage.getItem("isPersistent") === "true";
+            const userStr = sessionStorage.getItem("user") || (isPersistent ? localStorage.getItem("user") : null);
             return JSON.parse(userStr || "{}");
         } catch {
             return {};
