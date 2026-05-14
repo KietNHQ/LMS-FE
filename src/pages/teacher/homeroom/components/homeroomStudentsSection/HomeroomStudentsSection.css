@@ -8,94 +8,94 @@
 }
 
 .homeroom-students-list-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 24px;
-  gap: 20px;
-  flex-wrap: wrap;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+    gap: 20px;
+    flex-wrap: wrap;
 }
 
 .homeroom-students-filters {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  flex: 1;
-  min-width: 300px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex: 1;
+    min-width: 300px;
 }
 
 .homeroom-students-search-box {
-  position: relative;
-  flex: 1;
-  max-width: 300px;
+    position: relative;
+    flex: 1;
+    max-width: 300px;
 }
 
 .homeroom-students-search-box svg {
-  position: absolute;
-  left: 14px;
-  top: 50%;
-  transform: translateY(-50%);
-  color: #94a3b8;
-  font-size: 16px;
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #94a3b8;
+    font-size: 16px;
 }
 
 .homeroom-students-search-box input {
-  width: 100%;
-  padding: 10px 16px 10px 42px;
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  border-radius: 12px;
-  font-size: 14px;
-  color: #1e293b;
-  transition: all 0.2s ease;
+    width: 100%;
+    padding: 10px 16px 10px 42px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    font-size: 14px;
+    color: #1e293b;
+    transition: all 0.2s ease;
 }
 
 .homeroom-students-search-box input:focus {
-  outline: none;
-  border-color: #3b82f6;
-  background: #ffffff;
-  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+    outline: none;
+    border-color: #00a699;
+    background: #ffffff;
+    box-shadow: 0 0 0 4px rgba(0, 166, 153, 0.1);
 }
 
 .homeroom-students-filter-group {
-  display: flex;
-  align-items: center;
-  gap: 12px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
 }
 
 .homeroom-students-gender-select {
-  min-width: 180px;
+    min-width: 180px;
 }
 
 .homeroom-students-sort-toggle {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px 16px;
-  background: #f1f5f9;
-  border: 1px solid #e2e8f0;
-  border-radius: 12px;
-  color: #475569;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  white-space: nowrap;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 16px;
+    background: #f1f5f9;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    color: #475569;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
 }
 
 .homeroom-students-sort-toggle:hover {
-  background: #e2e8f0;
-  border-color: #cbd5e1;
-  color: #1e293b;
+    background: #e2e8f0;
+    border-color: #cbd5e1;
+    color: #1e293b;
 }
 
 .homeroom-students-sort-toggle:active {
-  transform: scale(0.96);
+    transform: scale(0.96);
 }
 
 .homeroom-students-sort-toggle svg {
-  font-size: 16px;
-  color: #3b82f6;
+    font-size: 16px;
+    color: #00a699;
 }
 
 .homeroom-students-list-kicker {
@@ -106,7 +106,7 @@
     font-weight: 800;
     text-transform: uppercase;
     letter-spacing: 0.08em;
-    color: #2563ff;
+    color: #00a699;
 }
 
 .homeroom-students-list-header h2 {
@@ -229,6 +229,89 @@
     font-weight: 600;
 }
 
+/* Violation & Attendance Score Badges */
+.homeroom-violation-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    background: #f1f5f9;
+    color: #64748b;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 800;
+    transition: all 0.2s ease;
+}
+
+.homeroom-violation-badge.has-violations {
+    background: #fef2f2;
+    color: #ef4444;
+    border: 1px solid #fee2e2;
+    box-shadow: 0 2px 8px rgba(239, 68, 68, 0.08);
+}
+
+.homeroom-attendance-score-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    margin: 0 auto;
+    width: 90px;
+    padding: 4px;
+    border-radius: 8px;
+    transition: background-color 0.2s ease;
+}
+
+.homeroom-attendance-score-wrap:hover {
+    background: #f8fafc;
+}
+
+.attendance-score-text {
+    display: flex;
+    align-items: baseline;
+    gap: 1px;
+}
+
+.attendance-score-val {
+    font-size: 16px;
+    font-weight: 800;
+    line-height: 1;
+}
+
+.attendance-score-val.high {
+    color: #059669;
+}
+
+.attendance-score-val.low {
+    color: #d97706;
+}
+
+.attendance-score-max {
+    font-size: 11px;
+    font-weight: 700;
+    color: #94a3b8;
+}
+
+.attendance-score-bar-bg {
+    width: 100%;
+    height: 5px;
+    background: #e2e8f0;
+    border-radius: 999px;
+    overflow: hidden;
+}
+
+.attendance-score-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #10b981 0%, #34d399 100%);
+    border-radius: 999px;
+    transition: width 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.attendance-score-val.low~.attendance-score-bar-bg .attendance-score-bar-fill {
+    background: linear-gradient(90deg, #f59e0b 0%, #fbbf24 100%);
+}
+
 .homeroom-students-parent-wrap h5 {
     margin: 0;
     font-size: 14px;
@@ -253,8 +336,8 @@
 }
 
 .homeroom-students-role-badge.role-monitor {
-    background: #eef4ff;
-    color: #2563ff;
+    background: #eefdf5;
+    color: #10b981;
 }
 
 .homeroom-students-role-badge.role-vice {
@@ -297,7 +380,7 @@
 }
 
 .homeroom-students-icon-btn.primary:hover {
-    color: #2563ff;
+    color: #10b981;
 }
 
 .homeroom-students-empty-row {
@@ -307,19 +390,45 @@
 }
 
 .homeroom-students-table th:nth-child(1),
-.homeroom-students-table td:nth-child(1) { width: 26%; }
+.homeroom-students-table td:nth-child(1) {
+    width: 60px;
+    text-align: center;
+}
+
 .homeroom-students-table th:nth-child(2),
-.homeroom-students-table td:nth-child(2) { width: 9%; text-align: center; }
+.homeroom-students-table td:nth-child(2) {
+    width: auto;
+}
+
 .homeroom-students-table th:nth-child(3),
-.homeroom-students-table td:nth-child(3) { width: 11%; text-align: center; }
+.homeroom-students-table td:nth-child(3) {
+    width: 15%;
+    text-align: center;
+}
+
 .homeroom-students-table th:nth-child(4),
-.homeroom-students-table td:nth-child(4) { width: 16%; }
+.homeroom-students-table td:nth-child(4) {
+    width: 15%;
+    text-align: center;
+}
+
 .homeroom-students-table th:nth-child(5),
-.homeroom-students-table td:nth-child(5) { width: 13%; text-align: center; }
+.homeroom-students-table td:nth-child(5) {
+    width: 12%;
+    text-align: center;
+}
+
 .homeroom-students-table th:nth-child(6),
-.homeroom-students-table td:nth-child(6) { width: 12%; text-align: center; }
+.homeroom-students-table td:nth-child(6) {
+    width: 12%;
+    text-align: center;
+}
+
 .homeroom-students-table th:nth-child(7),
-.homeroom-students-table td:nth-child(7) { width: 13%; text-align: center; }
+.homeroom-students-table td:nth-child(7) {
+    width: 10%;
+    text-align: right;
+}
 
 @media (max-width: 1100px) {
     .homeroom-students-list-header {
@@ -347,3 +456,289 @@
     }
 }
 
+/* Merged Section Header Styles */
+.homeroom-students-section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid #eef1f6;
+}
+
+.homeroom-view-tabs {
+    display: flex;
+    gap: 8px;
+    background: #f1f5f9;
+    padding: 4px;
+    border-radius: 12px;
+}
+
+.view-tab-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 700;
+    color: #64748b;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.view-tab-btn svg {
+    font-size: 16px;
+}
+
+.view-tab-btn:hover {
+    color: #1e293b;
+}
+
+.view-tab-btn.active {
+    background: #ffffff;
+    color: #00a699;
+    box-shadow: 0 4px 12px rgba(0, 166, 153, 0.08);
+}
+
+/* Activity Specific Styles - Weekly Filter Only */
+.homeroom-period-switcher {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.period-nav {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: #f1f5f9;
+    padding: 6px 10px;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+    transition: all 0.2s ease;
+}
+
+.period-nav:hover {
+    background: #e2e8f0;
+    border-color: #cbd5e1;
+}
+
+.period-nav button {
+    border: none;
+    background: white;
+    color: #00a699;
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    transition: all 0.2s;
+}
+
+.period-nav button:hover {
+    background: #00a699;
+    color: white;
+    transform: scale(1.05);
+}
+
+.period-nav button:active {
+    transform: scale(0.95);
+}
+
+.period-week-display {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 0 12px;
+    min-width: 100px;
+}
+
+.week-label {
+    font-size: 14px;
+    font-weight: 800;
+    color: #1e293b;
+    line-height: 1.2;
+}
+
+.week-dates {
+    font-size: 11px;
+    font-weight: 600;
+    color: #64748b;
+    line-height: 1.2;
+}
+
+.attendance-date-selector {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 12px;
+    background: #ffffff;
+    border: 1px solid #dfe5f0;
+    border-radius: 10px;
+}
+
+.attendance-date-picker {
+    border: none;
+    outline: none;
+    font-size: 14px;
+    font-weight: 700;
+    color: #1e293b;
+}
+
+/* Activity Stats Row */
+.attendance-quick-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.attendance-stat-card {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 20px;
+    background: #ffffff;
+    border: 1px solid #dfe5f0;
+    border-radius: 16px;
+    transition: transform 0.2s ease;
+}
+
+.attendance-stat-card:hover {
+    transform: translateY(-2px);
+}
+
+.attendance-stat-card .stat-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+}
+
+.stat-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.stat-label {
+    font-size: 13px;
+    font-weight: 700;
+    color: #64748b;
+    margin-bottom: 4px;
+}
+
+.stat-value {
+    font-size: 24px;
+    font-weight: 800;
+    color: #1e293b;
+}
+
+/* Activity Stats Variants */
+.attendance-stat-card.violations .stat-icon {
+    background: #fef2f2;
+    color: #ef4444;
+}
+
+.attendance-stat-card.merit .stat-icon {
+    background: #f0fdf4;
+    color: #10b981;
+}
+
+.attendance-stat-card.attendance .stat-icon {
+    background: #eff6ff;
+    color: #3b82f6;
+}
+
+/* Table Activity Badges */
+.activity-count-badge {
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 700;
+    background: #f8fafc;
+    color: #94a3b8;
+}
+
+.activity-count-badge.violation.active {
+    background: #fee2e2;
+    color: #dc2626;
+}
+
+.activity-count-badge.merit.active {
+    background: #dcfce7;
+    color: #16a34a;
+}
+
+.activity-attendance-rate span {
+    font-weight: 700;
+    color: #059669;
+}
+
+.activity-attendance-rate span.warning {
+    color: #d97706;
+}
+
+.conduct-pill {
+    padding: 4px 12px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.conduct-pill.tốt {
+    background: #dcfce7;
+    color: #16a34a;
+}
+
+.conduct-pill.khá {
+    background: #fef9c3;
+    color: #a16207;
+}
+
+.conduct-pill.trung {
+    background: #fee2e2;
+    color: #dc2626;
+}
+
+.activity-detail-btn {
+    padding: 6px 14px;
+    background: #eff6ff;
+    color: #2563eb;
+    border: none;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.activity-detail-btn:hover {
+    background: #10b981;
+    color: white;
+}
+
+.homeroom-students-row.is-editing {
+    background: #f8fbff !important;
+    cursor: default;
+}
+
+@media (max-width: 768px) {
+    .homeroom-students-section-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 16px;
+    }
+
+    .attendance-quick-stats {
+        grid-template-columns: 1fr;
+    }
+}

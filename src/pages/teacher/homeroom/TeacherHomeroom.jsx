@@ -5,7 +5,6 @@ import teacherService from "../../../services/pages/teacher/teacherService";
 import { PageHeader, SchoolYearTermSelector } from "../../../components/common";
 import HomeroomOverviewSection from "./components/homeroomOverviewSection/HomeroomOverviewSection";
 import HomeroomStudentsSection from "./components/homeroomStudentsSection/HomeroomStudentsSection";
-import HomeroomAttendanceSection from "./components/homeroomAttendanceSection/HomeroomAttendanceSection";
 import HomeroomActionDialog from "./components/homeroomActionDialog/HomeroomActionDialog";
 import { homeroomData } from "./data/homeroomData";
 import { useSchoolYearTerm } from "../../../hooks/useSchoolYearTerm";
@@ -28,11 +27,18 @@ export default function TeacherHomeroom() {
     const location = useLocation();
 
     // Xử lý chuyển tab từ URL params
+    const [initialViewMode, setInitialViewMode] = useState("info");
     useEffect(() => {
         const params = new URLSearchParams(location.search);
         const tab = params.get("tab");
+        const mode = params.get("mode");
+        
         if (tab === "attendance") {
-            setActiveSection("attendance");
+            setActiveSection("students");
+            setInitialViewMode("attendance");
+        } else if (tab === "students") {
+            setActiveSection("students");
+            if (mode) setInitialViewMode(mode);
         }
     }, [location.search]);
 
@@ -110,7 +116,9 @@ export default function TeacherHomeroom() {
                 email: s.email,
                 academicStatus: s.academic_status,
                 conductStatus: s.conduct_status,
-                tuitionStatus: s.tuition_status
+                tuitionStatus: s.tuition_status,
+                violationCount: Math.floor(Math.random() * 5), // Mock violation count
+                attendanceScore: (8.5 + Math.random() * 1.5).toFixed(1) // Mock attendance score out of 10
             })),
         };
     };
@@ -272,16 +280,12 @@ export default function TeacherHomeroom() {
                 <button
                     type="button"
                     className={`section-switch-btn ${activeSection === "students" ? "active" : ""}`}
-                    onClick={() => setActiveSection("students")}
+                    onClick={() => {
+                        setActiveSection("students");
+                        setInitialViewMode("info");
+                    }}
                 >
                     Danh sách học sinh
-                </button>
-                <button
-                    type="button"
-                    className={`section-switch-btn ${activeSection === "attendance" ? "active" : ""}`}
-                    onClick={() => handleSectionChange("attendance")}
-                >
-                    Theo dõi chuyên cần
                 </button>
             </div>
 
@@ -300,13 +304,9 @@ export default function TeacherHomeroom() {
                         students={classData.students}
                         officers={officerRows}
                         onBanCanSuLopClick={openOfficerDialog}
-                        onViewAttendance={(student) => {
-                            setActiveSection("attendance");
-                            window.scrollTo({ top: 0, behavior: 'smooth' });
-                        }}
+                        initialViewMode={initialViewMode}
                     />
                 )}
-                {activeSection === "attendance" && <HomeroomAttendanceSection data={classData} />}
             </div>
 
             <HomeroomActionDialog
