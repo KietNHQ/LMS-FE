@@ -4,6 +4,8 @@ import { useQueryClient } from "@tanstack/react-query";
 import Sidebar from "../../components/sidebar/Sidebar";
 import { LoadingAnimationBook } from "../../components/common";
 import { parentService } from "../../services/pages/parent/parentService";
+import { useGetMe } from "../../hooks/useAuth";
+import ChangePasswordDialog from "../../components/common/Dialog/ChangePasswordDialog/ChangePasswordDialog";
 import "./ParentLayout.css";
 import { formatName } from "../../utils/nameUtils";
 
@@ -12,6 +14,14 @@ export default function ParentLayout() {
     const [isCollapsed, setIsCollapsed] = useState(false);
     const location = useLocation();
     const [isPageTransitioning, setIsPageTransitioning] = useState(false);
+    const [forcePasswordChange, setForcePasswordChange] = useState(false);
+    
+    // Lắng nghe sự kiện bắt buộc đổi mật khẩu từ axiosClient
+    useEffect(() => {
+        const handleForceChange = () => setForcePasswordChange(true);
+        window.addEventListener("require-password-change", handleForceChange);
+        return () => window.removeEventListener("require-password-change", handleForceChange);
+    }, []);
 
     const queryClient = useQueryClient();
 
@@ -63,7 +73,7 @@ export default function ParentLayout() {
         prefetchData();
     }, [queryClient]);
 
-    // [NEW] Fetch notification count on layout mount to sync sidebar badge
+    // [NEW] Fetch notification count on layout mount and then poll every 2 minutes
     useEffect(() => {
         const syncNotificationCount = async () => {
             try {
@@ -95,8 +105,15 @@ export default function ParentLayout() {
             }
         };
         syncNotificationCount();
+        
+        // Setup polling every 2 minutes
+        const intervalId = setInterval(syncNotificationCount, 120000);
+        return () => clearInterval(intervalId);
     }, []);
 
+    // Tự động đồng bộ thông tin người dùng và quyền hạn từ Server
+    const { data: latestUser } = useGetMe();
+    
     // Đọc thông tin người dùng: Chỉ tin tưởng localStorage nếu isPersistent = true
     const storedUser = (() => {
         try {
@@ -108,13 +125,15 @@ export default function ParentLayout() {
         }
     })();
 
-    const userName = formatName(storedUser, { fallback: "Phụ huynh" });
-    const userEmail = storedUser.email || "";
+    const userToUse = latestUser || storedUser;
+    const userName = formatName(userToUse, { fallback: "Phụ huynh" });
+    const userEmail = userToUse.email || "";
 
     return (
         <div className={`parent-layout ${isCollapsed ? "collapsed" : ""}`}>
             <Sidebar
                 role="parent"
+                user={userToUse}
                 userName={userName}
                 userEmail={userEmail}
                 isCollapsed={isCollapsed}
@@ -138,6 +157,18 @@ export default function ParentLayout() {
                     )}
                 </div>
             </main>
+
+            {/* MANDATORY PASSWORD CHANGE DIALOG */}
+            {(userToUse.requirePasswordChange || userToUse.require_password_change || forcePasswordChange) && (
+                <ChangePasswordDialog
+                    open={true}
+                    role="parent"
+                    isMandatory={true}
+                    onClose={() => {
+                        window.location.reload();
+                    }}
+                />
+            )}
         </div>
     );
 }

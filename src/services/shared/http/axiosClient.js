@@ -74,9 +74,12 @@ axiosClient.interceptors.response.use(
         const refreshToken = localStorage.getItem("refreshToken") || sessionStorage.getItem("refreshToken");
 
         if (!refreshToken) {
-          // Khong co refresh token -> Buoc logout ngay lap tuc
-          localStorage.clear();
-          sessionStorage.clear();
+          // targeted cleanup instead of clear()
+          const authItems = ["accessToken", "refreshToken", "user", "userRole", "teacher_unread_notifications_count", "student_unread_notifications_count", "parent_unread_notifications_count"];
+          authItems.forEach(item => {
+            localStorage.removeItem(item);
+            sessionStorage.removeItem(item);
+          });
           window.location.href = "/login";
           return Promise.reject(error);
         }
@@ -101,9 +104,12 @@ axiosClient.interceptors.response.use(
       } catch (_error) {
         processQueue(_error, null);
         
-        // Neu refresh that bai -> Xoa sach du lieu va logout
-        localStorage.clear();
-        sessionStorage.clear();
+        // targeted cleanup instead of clear()
+        const authItems = ["accessToken", "refreshToken", "user", "userRole", "teacher_unread_notifications_count", "student_unread_notifications_count", "parent_unread_notifications_count"];
+        authItems.forEach(item => {
+          localStorage.removeItem(item);
+          sessionStorage.removeItem(item);
+        });
         window.location.href = "/login?expired=true";
         
         return Promise.reject(_error);

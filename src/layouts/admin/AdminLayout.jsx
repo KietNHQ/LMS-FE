@@ -7,15 +7,21 @@ import { useGetMe } from "../../hooks/useAuth";
 import { adminDashboardService } from "../../services/pages/admin/dashboard/dashboardService";
 import "./AdminLayout.css";
 import { formatName } from "../../utils/nameUtils";
+import ChangePasswordDialog from "../../components/common/Dialog/ChangePasswordDialog/ChangePasswordDialog";
 
 
 export default function AdminLayout() {
     const [isCollapsed, setIsCollapsed] = useState(false);
     const location = useLocation();
     const [isPageTransitioning, setIsPageTransitioning] = useState(false);
+    const [forcePasswordChange, setForcePasswordChange] = useState(false);
 
-    // Hiệu ứng "Quyển sách" mỗi khi đổi trang trong Admin
-    const queryClient = useQueryClient();
+    // Lắng nghe sự kiện bắt buộc đổi mật khẩu từ axiosClient
+    useEffect(() => {
+        const handleForceChange = () => setForcePasswordChange(true);
+        window.addEventListener("require-password-change", handleForceChange);
+        return () => window.removeEventListener("require-password-change", handleForceChange);
+    }, []);
 
     useEffect(() => {
         setIsPageTransitioning(true);
@@ -142,6 +148,18 @@ export default function AdminLayout() {
                     )}
                 </div>
             </main>
+
+            {/* MANDATORY PASSWORD CHANGE DIALOG */}
+            {(userToUse.requirePasswordChange || userToUse.require_password_change || forcePasswordChange) && (
+                <ChangePasswordDialog
+                    open={true}
+                    role="admin"
+                    isMandatory={true}
+                    onClose={() => {
+                        window.location.reload();
+                    }}
+                />
+            )}
         </div>
     );
 }

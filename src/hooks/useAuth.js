@@ -67,8 +67,11 @@ export const useLogin = () => {
 
             // KIỂM TRA TRẠNG THÁI TÀI KHOẢN
             if (user.status === "Vô hiệu hóa") {
-                localStorage.clear();
-                sessionStorage.clear();
+                const authItems = ["accessToken", "refreshToken", "user", "userRole", "teacher_unread_notifications_count", "student_unread_notifications_count", "parent_unread_notifications_count"];
+                authItems.forEach(item => {
+                    localStorage.removeItem(item);
+                    sessionStorage.removeItem(item);
+                });
                 toast.error("Tài khoản của bạn đã bị vô hiệu hóa. Vui lòng liên hệ Quản trị viên!");
                 return;
             }
@@ -138,9 +141,12 @@ export const useLogout = () => {
     return useMutation({
         mutationFn: () => authService.logout(),
         onSuccess: () => {
-            // 1. Quét sạch Local/Session Storage
-            localStorage.clear();
-            sessionStorage.clear();
+            // 1. targeted cleanup instead of clear()
+            const authItems = ["accessToken", "refreshToken", "user", "userRole", "teacher_unread_notifications_count", "student_unread_notifications_count", "parent_unread_notifications_count"];
+            authItems.forEach(item => {
+                localStorage.removeItem(item);
+                sessionStorage.removeItem(item);
+            });
 
             // 2. Xóa bộ nhớ đệm của React Query để tránh rò rỉ dữ liệu cũ
             queryClient.clear();
@@ -151,8 +157,11 @@ export const useLogout = () => {
         onError: () => {
             // Kể cả khi Backend báo lỗi (do token đã hết hạn sẵn),
             // ở Frontend vẫn phải clear storage và đá văng ra ngoài
-            localStorage.clear();
-            sessionStorage.clear();
+            const authItems = ["accessToken", "refreshToken", "user", "userRole", "teacher_unread_notifications_count", "student_unread_notifications_count", "parent_unread_notifications_count"];
+            authItems.forEach(item => {
+                localStorage.removeItem(item);
+                sessionStorage.removeItem(item);
+            });
             queryClient.clear();
             navigate('/login');
         }

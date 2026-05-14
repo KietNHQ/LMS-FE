@@ -1,7 +1,7 @@
 import React, { useState } from "react";
-import { useChangePassword } from "../../../../hooks/useAuth";
+import { useChangePassword, useLogout } from "../../../../hooks/useAuth";
 import { toast } from "react-toastify";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, X } from "lucide-react";
 import "./ChangePasswordDialog.css";
 
 export default function ChangePasswordDialog({ open, role = "student", onClose, isMandatory = false }) {
@@ -18,6 +18,7 @@ export default function ChangePasswordDialog({ open, role = "student", onClose, 
 	});
 	const [error, setError] = useState("");
 	const changePasswordMutation = useChangePassword();
+	const logoutMutation = useLogout();
 
 	if (!open) return null;
 
@@ -29,6 +30,17 @@ export default function ChangePasswordDialog({ open, role = "student", onClose, 
 		const { name, value } = event.target;
 		setFormData((prev) => ({ ...prev, [name]: value }));
 		setError("");
+	};
+
+	const handleClose = () => {
+		if (isMandatory) {
+			// If mandatory, closing the dialog means logging out (as requested by user)
+			if (window.confirm("Bạn cần đổi mật khẩu để tiếp tục sử dụng. Bạn có muốn đăng xuất không?")) {
+				logoutMutation.mutate();
+			}
+			return;
+		}
+		onClose?.();
 	};
 
 	const handleSubmit = async (event) => {
@@ -71,11 +83,18 @@ export default function ChangePasswordDialog({ open, role = "student", onClose, 
 	};
 
 	return (
-		<div className="change-password-overlay" onClick={isMandatory ? undefined : onClose}>
+		<div className="change-password-overlay" onClick={isMandatory ? undefined : handleClose}>
 			<div className="change-password-dialog" onClick={(event) => event.stopPropagation()}>
-				<h3>{isAdmin ? "Đặt lại mật khẩu" : "Đổi mật khẩu"}</h3>
-
-				{/* Removed Admin reset notice since it's no longer random */}
+				<div className="change-password-header">
+					<h3>{isAdmin ? "Đặt lại mật khẩu" : "Đổi mật khẩu"}</h3>
+					<button 
+						className="change-password-close-btn" 
+						onClick={handleClose}
+						title={isMandatory ? "Hủy và Đăng xuất" : "Đóng"}
+					>
+						<X size={20} />
+					</button>
+				</div>
 
 				<form onSubmit={handleSubmit} className={`change-password-form role-${role}`}>
 					<label>
@@ -98,47 +117,45 @@ export default function ChangePasswordDialog({ open, role = "student", onClose, 
 						</div>
 					</label>
 
-						<>
-							<label>
-								Mật khẩu mới
-								<div className="password-input-wrapper">
-									<input
-										type={showPasswords.new ? "text" : "password"}
-										name="newPassword"
-										value={formData.newPassword}
-										onChange={handleChange}
-										placeholder="Nhập mật khẩu mới"
-									/>
-									<button
-										type="button"
-										className="password-toggle-btn"
-										onClick={() => togglePasswordVisibility("new")}
-									>
-										{showPasswords.new ? <EyeOff size={18} /> : <Eye size={18} />}
-									</button>
-								</div>
-							</label>
+					<label>
+						Mật khẩu mới
+						<div className="password-input-wrapper">
+							<input
+								type={showPasswords.new ? "text" : "password"}
+								name="newPassword"
+								value={formData.newPassword}
+								onChange={handleChange}
+								placeholder="Nhập mật khẩu mới"
+							/>
+							<button
+								type="button"
+								className="password-toggle-btn"
+								onClick={() => togglePasswordVisibility("new")}
+							>
+								{showPasswords.new ? <EyeOff size={18} /> : <Eye size={18} />}
+							</button>
+						</div>
+					</label>
 
-							<label>
-								Xác nhận mật khẩu mới
-								<div className="password-input-wrapper">
-									<input
-										type={showPasswords.confirm ? "text" : "password"}
-										name="confirmPassword"
-										value={formData.confirmPassword}
-										onChange={handleChange}
-										placeholder="Nhập lại mật khẩu mới"
-									/>
-									<button
-										type="button"
-										className="password-toggle-btn"
-										onClick={() => togglePasswordVisibility("confirm")}
-									>
-										{showPasswords.confirm ? <EyeOff size={18} /> : <Eye size={18} />}
-									</button>
-								</div>
-							</label>
-						</>
+					<label>
+						Xác nhận mật khẩu mới
+						<div className="password-input-wrapper">
+							<input
+								type={showPasswords.confirm ? "text" : "password"}
+								name="confirmPassword"
+								value={formData.confirmPassword}
+								onChange={handleChange}
+								placeholder="Nhập lại mật khẩu mới"
+							/>
+							<button
+								type="button"
+								className="password-toggle-btn"
+								onClick={() => togglePasswordVisibility("confirm")}
+							>
+								{showPasswords.confirm ? <EyeOff size={18} /> : <Eye size={18} />}
+							</button>
+						</div>
+					</label>
 
 					{isMandatory && (
 						<div className="mandatory-password-notice">

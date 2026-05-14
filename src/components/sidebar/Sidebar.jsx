@@ -181,11 +181,12 @@ export default function Sidebar({
   }, []);
 
   useEffect(() => {
-    const handleStorage = (event) => {
+    function handleStorage(event) {
       if (
         event.key &&
         event.key !== STUDENT_UNREAD_COUNT_KEY &&
-        event.key !== PARENT_UNREAD_COUNT_KEY
+        event.key !== PARENT_UNREAD_COUNT_KEY &&
+        event.key !== TEACHER_UNREAD_COUNT_KEY
       ) {
         return;
       }
@@ -195,21 +196,25 @@ export default function Sidebar({
 
       const nextParent = Number(localStorage.getItem(PARENT_UNREAD_COUNT_KEY));
       setParentUnreadCount(Number.isFinite(nextParent) ? nextParent : 0);
-    };
 
-    const handleStudentCustomUpdate = (event) => {
+      const nextTeacher = Number(localStorage.getItem(TEACHER_UNREAD_COUNT_KEY));
+      setTeacherUnreadCount(Number.isFinite(nextTeacher) ? nextTeacher : 0);
+    }
+
+    function handleStudentCustomUpdate(event) {
       const next = Number(event?.detail);
       setStudentUnreadCount(Number.isFinite(next) ? next : 0);
-    };
+    }
 
-    const handleParentCustomUpdate = (event) => {
+    function handleParentCustomUpdate(event) {
       const next = Number(event?.detail);
       setParentUnreadCount(Number.isFinite(next) ? next : 0);
-    };
-    const handleTeacherCustomUpdate = (event) => {
-  const next = Number(event?.detail);
-  setTeacherUnreadCount(Number.isFinite(next) ? next : 0);
-};
+    }
+
+    function handleTeacherCustomUpdate(event) {
+      const next = Number(event?.detail);
+      setTeacherUnreadCount(Number.isFinite(next) ? next : 0);
+    }
 
     window.addEventListener("storage", handleStorage);
     window.addEventListener(STUDENT_UNREAD_COUNT_EVENT, handleStudentCustomUpdate);

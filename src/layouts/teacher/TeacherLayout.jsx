@@ -132,7 +132,7 @@ export default function TeacherLayout() {
         prefetchData();
     }, [latestUser, selectedSchoolYear, selectedTerm, queryClient]);
 
-    // [NEW] Fetch notification count on layout mount to sync sidebar badge
+    // [NEW] Fetch notification count on layout mount and then poll every 2 minutes
     useEffect(() => {
         const syncNotificationCount = async () => {
             try {
@@ -156,6 +156,10 @@ export default function TeacherLayout() {
         };
 
         syncNotificationCount();
+        
+        // Setup polling every 2 minutes
+        const intervalId = setInterval(syncNotificationCount, 120000);
+        return () => clearInterval(intervalId);
     }, []);
 
     // Đọc thông tin người dùng: Chỉ tin tưởng localStorage nếu isPersistent = true

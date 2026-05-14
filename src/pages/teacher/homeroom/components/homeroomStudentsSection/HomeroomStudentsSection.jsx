@@ -88,13 +88,16 @@ export default function HomeroomStudentsSection({
         }, {});
     }, [officers]);
 
-    // Activity Logic (Mocking violations and points)
+    // Activity Logic (Deterministic pseudo-random data based on student ID)
     const getMergedActivityData = (baseStudents) => {
         return baseStudents.map((student) => {
-            const seed = student.id + (periodType === "weekly" ? selectedWeek : selectedSemester);
-            const violations = (seed % 4);
-            const meritPoints = (seed % 6);
-            const attendanceRate = 90 + (seed % 11);
+            // Create a stable seed based on ID and current period context
+            const seed = Number(student.id || 0) + (periodType === "weekly" ? selectedWeek : selectedSemester * 10);
+            
+            // Deterministic "random" values
+            const violations = (seed * 7) % 4;
+            const meritPoints = (seed * 13) % 6;
+            const attendanceRate = 90 + (seed * 3) % 11;
 
             let conduct = "Tốt";
             if (attendanceRate < 95 || violations > 2) conduct = "Khá";
