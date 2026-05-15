@@ -79,6 +79,10 @@ export default function DailyScheduleSection({
   const dayKey = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"][selectedDay];
 
   const lessons = React.useMemo(() => {
+    // Re-create the monday object to avoid mutating dependency warning from React Compiler
+    const monday = getStartOfIsoWeek(new Date());
+    monday.setDate(monday.getDate() + weekOffset * 7);
+
     if (apiData && apiData.length > 0) {
       const dayMapping = {
         2: "Monday",
@@ -112,7 +116,7 @@ export default function DailyScheduleSection({
         }));
     }
 
-    const allLessons = getTeacherWeekLessons(weekStart, selectedClass);
+    const allLessons = getTeacherWeekLessons(monday, selectedClass);
     return allLessons
       .filter((item) => item.day === dayKey)
       .sort((a, b) => a.periodStart - b.periodStart)
@@ -128,7 +132,7 @@ export default function DailyScheduleSection({
         status: item.status,
         timeRange: item.timeRange,
       }));
-  }, [apiData, dayKey, weekStart, selectedClass]);
+  }, [apiData, dayKey, weekOffset, selectedClass]);
 
   const groupedLessons = groupLessonsByClass(lessons);
   const classCount = Object.keys(groupedLessons).length;

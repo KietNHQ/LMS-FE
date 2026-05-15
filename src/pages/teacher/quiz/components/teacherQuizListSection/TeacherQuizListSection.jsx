@@ -18,7 +18,7 @@ const getCreatorText = (quiz) => {
         return `Người tạo: Giáo viên - ${teacherName}`;
     }
 
-    return "Người tạo: Admin";
+    return "Người tạo: Hệ thống";
 };
 
 export default function TeacherQuizListSection({

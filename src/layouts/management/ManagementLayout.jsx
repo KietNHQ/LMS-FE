@@ -35,11 +35,11 @@ export default function ManagementLayout() {
     useEffect(() => {
         const prefetchChunks = () => {
             import("../../pages/management/dashboard/index.js");
-            import("../../pages/management/users/index.js");
-            import("../../pages/management/classes/index.js");
+            import("../../pages/management/users/ManagementUsers");
+            import("../../pages/management/classes/ManagementClasses");
             import("../../pages/management/grades/index.js");
-            import("../../pages/management/timetable/index.js");
-            import("../../pages/management/notifications/index.js");
+            import("../../pages/management/timetable/ManagementTimetable");
+            import("../../pages/management/notifications/ManagementNotifications");
         };
         
         if (window.requestIdleCallback) {
@@ -191,4 +191,5 @@ export default function ManagementLayout() {
         </div>
     );
 }
+
 

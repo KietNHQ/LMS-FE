@@ -36,8 +36,8 @@ export default function AdminLayout() {
     useEffect(() => {
         const prefetchChunks = () => {
             import("../../pages/admin/dashboard/AdminDashboard");
-            import("../../pages/admin/users/AdminUsers");
-            import("../../pages/admin/notifications/AdminNotifications");
+            import("../../pages/management/users/ManagementUsers");
+            import("../../pages/management/notifications/ManagementNotifications");
             import("../../pages/admin/audit-log/AdminAuditLog");
             import("../../pages/admin/system-log/AdminSystemLog");
         };
@@ -163,4 +163,5 @@ export default function AdminLayout() {
         </div>
     );
 }
+
 

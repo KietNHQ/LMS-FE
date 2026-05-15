@@ -13,33 +13,33 @@ const AdminLayout = lazy(() => import("../layouts/admin/AdminLayout"));
 const AdminDashboard = lazy(
   () => import("../pages/admin/dashboard/AdminDashboard")
 );
-const AdminUsers = lazy(() => import("../pages/admin/users/AdminUsers"));
+const AdminUsers = lazy(() => import("../pages/management/users/ManagementUsers"));
 const AdminNotifications = lazy(
-  () => import("../pages/admin/notifications/AdminNotifications")
+  () => import("../pages/management/notifications/ManagementNotifications")
 );
 
 /* ── MANAGEMENT LAYOUT (Thay thế Admin/Principal/VP/Finance Layout) ── */
 const ManagementLayout = lazy(() => import("../layouts/management/ManagementLayout"));
 const ManagementDashboard = lazy(() => import("../pages/management/dashboard/index.js"));
-const ManagementUsers = lazy(() => import("../pages/management/users/index.js"));
-const ManagementClasses = lazy(() => import("../pages/management/classes/index.js"));
-const ManagementClassDetail = lazy(() => import("../pages/management/classes/detail/index.js"));
+const ManagementUsers = lazy(() => import("../pages/management/users/ManagementUsers"));
+const ManagementClasses = lazy(() => import("../pages/management/classes/ManagementClasses"));
+const ManagementClassDetail = lazy(() => import("../pages/management/classes/components/classDetailSection/classDetailSection"));
 const ManagementAcademicDashboard = lazy(() => import("../pages/management/academic/dashboard/VpAcademicDashboard"));
 const ManagementDiscipline = lazy(() => import("../pages/management/discipline/index.js"));
 const ManagementCompetition = lazy(() => import("../pages/management/competition/index.js"));
 const ManagementGrades = lazy(() => import("../pages/management/grades/index.js"));
-const ManagementQuiz = lazy(() => import("../pages/management/quiz/index.js"));
-const ManagementCreateQuiz = lazy(() => import("../pages/management/quiz/create/index.js"));
-const ManagementQuizSubmissions = lazy(() => import("../pages/management/quiz/submissions/index.js"));
+const ManagementQuiz = lazy(() => import("../pages/management/quiz/ManagementQuiz"));
+const ManagementCreateQuiz = lazy(() => import("../pages/management/quiz/create/ManagementCreateQuiz"));
+const ManagementQuizSubmissions = lazy(() => import("../pages/management/quiz/submissions/ManagementQuizSubmissions"));
 const ManagementExams = lazy(() => import("../pages/management/exams/index.js"));
 const ManagementExamRooms = lazy(() => import("../pages/management/exams/rooms/index.js"));
 const ManagementExamRoomDetail = lazy(() => import("../pages/management/exams/rooms/detail.js"));
-const ManagementTimetable = lazy(() => import("../pages/management/timetable/index.js"));
+const ManagementTimetable = lazy(() => import("../pages/management/timetable/ManagementTimetable"));
 const ManagementFinance = lazy(() => import("../pages/management/finance/index.js"));
 const ManagementFinanceDashboard = lazy(() => import("../pages/management/finance/dashboard/FinanceDashboard").then((m) => ({ default: m.FinanceDashboard })));
 const ManagementApprovals = lazy(() => import("../pages/management/approvals/index.js"));
-const ManagementNotifications = lazy(() => import("../pages/management/notifications/index.js"));
-const ManagementReports = lazy(() => import("../pages/management/reports/index.js"));
+const ManagementNotifications = lazy(() => import("../pages/management/notifications/ManagementNotifications"));
+const ManagementReports = lazy(() => import("../pages/management/reports/ManagementReports"));
 const ManagementChat = lazy(() => import("../pages/management/chat/ManagementChat"));
 
 
@@ -312,3 +312,5 @@ export default function AppRoutes() {
     </Routes>
   );
 }
+
+

@@ -1,0 +1,25 @@
+.management-teachers-page {
+    padding: 0;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    min-width: 0;
+}
+
+.management-teachers-page button {
+    transition: transform 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease;
+}
+
+.management-teachers-page button:hover {
+    filter: brightness(0.98);
+}
+
+.management-teachers-pagination-row {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    margin-top: 0.1rem;
+    padding-top: 0.6rem;
+}

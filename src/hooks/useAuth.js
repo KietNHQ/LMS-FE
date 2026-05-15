@@ -192,7 +192,7 @@ export const useGetMe = () => {
             
             if (staffRoles.includes(userRole) || !user.permissions || user.permissions.length === 0) {
                 try {
-                    const { permissionService } = await import('../services/pages/admin/users/permissionService');
+                    const { permissionService } = await import('../services/pages/management/users/permissionService');
                     const perms = await permissionService.getUserPermissions(user.id);
                     user.permissions = Array.isArray(perms) ? perms : [];
                 } catch (err) {

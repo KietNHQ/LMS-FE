@@ -14,11 +14,8 @@ const TeacherTeachingClassDetail = () => {
   const storedUser = JSON.parse(localStorage.getItem("user") || sessionStorage.getItem("user") || "{}");
   const teacherId = storedUser.profile?.id || storedUser.teacherId;
   const [classData, setClassData] = React.useState(state?.classData || null);
-  const [isLoading, setIsLoading] = React.useState(false);
-
   React.useEffect(() => {
     const fetchData = async () => {
-      setIsLoading(true);
       try {
         // Fetch students
         const studentsRes = await teacherService.getClassStudents({
@@ -26,37 +23,37 @@ const TeacherTeachingClassDetail = () => {
           pathParams: { id: classId }
         });
 
-        let updatedClassData = { ...classData };
+        setClassData((prevClassData) => {
+          let updatedClassData = { ...prevClassData };
 
-        if (studentsRes.success && studentsRes.data) {
-          // Map API students to UI format
-          const mappedStudents = studentsRes.data.map(s => ({
-            id: s.id,
-            name: s.full_name || s.fullName || `${s.surname || ""} ${s.given_name || s.givenName || ""}`.trim() || "Chưa rõ tên",
-            dob: s.birthDate,
-            email: s.email,
-            gender: s.gender,
-            className: classData?.name || "Lớp",
-            status: "Đang học",
-            enrollmentId: s.enrollment_id,
-            parentName: s.parent_name || "Chưa cập nhật",
-            parentPhone: s.parent_phone || "N/A"
-          }));
-          updatedClassData.students = mappedStudents;
-        }
+          if (studentsRes.success && studentsRes.data) {
+            // Map API students to UI format
+            const mappedStudents = studentsRes.data.map(s => ({
+              id: s.id,
+              name: s.full_name || s.fullName || `${s.surname || ""} ${s.given_name || s.givenName || ""}`.trim() || "Chưa rõ tên",
+              dob: s.birthDate,
+              email: s.email,
+              gender: s.gender,
+              className: prevClassData?.name || "Lớp",
+              status: "Đang học",
+              enrollmentId: s.enrollment_id,
+              parentName: s.parent_name || "Chưa cập nhật",
+              parentPhone: s.parent_phone || "N/A"
+            }));
+            updatedClassData.students = mappedStudents;
+          }
 
-        // Nếu chưa có classData (vào trực tiếp bằng URL), ta fetch thông tin lớp
-        if (!classData) {
-          // Tạm thời lấy từ mock nếu không có API get class by id chi tiết cho teacher
-          const fallback = teachingClassesData.find((item) => item.id === Number(classId));
-          updatedClassData = { ...fallback, ...updatedClassData };
-        }
+          // Nếu chưa có classData (vào trực tiếp bằng URL), ta fetch thông tin lớp
+          if (!prevClassData) {
+            // Tạm thời lấy từ mock nếu không có API get class by id chi tiết cho teacher
+            const fallback = teachingClassesData.find((item) => item.id === Number(classId));
+            updatedClassData = { ...fallback, ...updatedClassData };
+          }
 
-        setClassData(updatedClassData);
+          return updatedClassData;
+        });
       } catch (error) {
         console.error("Failed to fetch class detail:", error);
-      } finally {
-        setIsLoading(false);
       }
     };
 

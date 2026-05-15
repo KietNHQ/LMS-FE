@@ -69,7 +69,11 @@ export default function WeeklyScheduleSection({
   
     // Logic map từ API sang format của UI
     const mappedLessons = React.useMemo(() => {
-      const baseLessons = getTeacherWeekLessons(weekStart, selectedClass);
+      // Create local date to avoid mutating dependency warning from React Compiler
+      const monday = getStartOfIsoWeek(new Date());
+      monday.setDate(monday.getDate() + weekOffset * 7);
+
+      const baseLessons = getTeacherWeekLessons(monday, selectedClass);
       
       if (!apiData || apiData.length === 0) return baseLessons;
       
@@ -104,7 +108,7 @@ export default function WeeklyScheduleSection({
       });
 
       return apiLessons;
-    }, [apiData, weekStart, selectedClass]);
+    }, [apiData, weekOffset, selectedClass]);
 
   const lessons = mappedLessons;
 

@@ -1,0 +1,193 @@
+/* ===================================================
+   ManagementManagers.css — Tab "Quản lý" chuẩn hóa
+   =================================================== */
+
+@import "../all/components/userDetailSection/userDetailSection.css";
+@import "../all/components/usersSearchFilterSort/usersSearchFilterSort.css";
+
+.management-managers-page {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    animation: managersFadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes managersFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(12px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ── Stats Row ── */
+.management-managers-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.25rem;
+    margin-bottom: 0.5rem;
+}
+
+.management-managers-stat-card {
+    background: #fff;
+    border-radius: 14px;
+    padding: 18px 20px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    border: 1px solid var(--admin-border, #dce5f7);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.management-managers-stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(30, 47, 90, 0.08);
+}
+
+.management-managers-stat-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    flex-shrink: 0;
+}
+
+.stat-icon--navy {
+    background: rgba(30, 47, 90, 0.12);
+    color: #1e2f5a;
+}
+
+.stat-icon--emerald {
+    background: rgba(16, 185, 129, 0.12);
+    color: #10b981;
+}
+
+.stat-icon--rose {
+    background: rgba(244, 63, 94, 0.12);
+    color: #f43f5e;
+}
+
+.management-managers-stat-info p {
+    margin: 0;
+    font-size: 12px;
+    color: var(--admin-text-muted, #7e8eab);
+    font-weight: 500;
+}
+
+.management-managers-stat-info strong {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--admin-text-primary, #1e2f5a);
+}
+
+/* ── Toolbar & Add Button Tweak ── */
+.management-managers-add-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0 20px;
+    height: 41px;
+    background: linear-gradient(135deg, var(--admin-primary, #1e2f5a) 0%, #2a4080 100%);
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    font-size: 0.88rem;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.2s;
+    box-shadow: 0 4px 12px rgba(30, 47, 90, 0.25);
+}
+
+.management-managers-add-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 15px rgba(30, 47, 90, 0.35);
+    filter: brightness(1.1);
+}
+
+.users-filter-group {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.management-managers-filter-select-wrap {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+/* ── Manager-specific Role Chips ── */
+.user-role-chip.principal {
+    background: rgba(124, 58, 237, 0.12);
+    color: #7c3aed;
+}
+
+.user-role-chip.vp-academic {
+    background: rgba(124, 58, 237, 0.12);
+    color: #7c3aed;
+}
+
+.user-role-chip.vp-discipline {
+    background: rgba(244, 63, 94, 0.12);
+    color: #dc2626;
+}
+
+.user-role-chip.finance {
+    background: rgba(16, 185, 129, 0.12);
+    color: #059669;
+}
+
+
+/* ── Role Tags Hover Effect ── */
+.user-role-chip {
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: default;
+    border: 1px solid transparent;
+}
+
+/* Hiệu ứng nhích lên cho TẤT CẢ các thẻ khi hover */
+.user-role-chip:hover {
+    transform: translateY(-2.5px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Hiệu ứng đổi màu NỀN đặc biệt dành cho Admin và Manager */
+.user-role-chip.admin:hover {
+    background-color: #1e293b !important; /* Đổi sang màu tối hơn hoặc màu bạn muốn */
+    color: #ffffff !important;
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+.user-role-chip.manager:hover {
+    background-color: #1e3a8a !important; /* Màu xanh đậm khác biệt */
+    color: #ffffff !important;
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Hiệu ứng cho các thẻ khác (Giáo viên, Phụ huynh...) - Chỉ nhích lên, không đổi màu nền */
+.user-role-chip.teacher:hover {
+    filter: brightness(1.02); /* Chỉ tăng sáng nhẹ, không đổi màu nền chính */
+}
+
+/* ── Disable Row Hover for System Accounts ── */
+.user-detail-row.row-is-system:hover {
+    background-color: #ffffff !important; 
+    box-shadow: none !important;
+    transform: none !important;
+    cursor: default;
+}
+
+/* Pagination Row Styling */
+.management-managers-pagination-row {
+    display: flex;
+    justify-content: center;
+    padding: 1rem 0;
+}
