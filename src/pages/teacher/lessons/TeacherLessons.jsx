@@ -110,6 +110,15 @@ export default function TeacherLessons() {
 
     const [formValues, setFormValues] = useState(createEmptyForm);
     const [pinnedLessonIds, setPinnedLessonIds] = useState([]);
+
+    const currentSubject = useMemo(() => {
+        const assignments = user?.profile?.teachingAssignments || [];
+        const firstAssignment = assignments[0];
+        return {
+            name: firstAssignment?.subject_name || user?.profile?.subject || "Chưa xác định"
+        };
+    }, [user]);
+
     const [filters, setFilters] = useState({
         gradeBlock: "Tất cả khối",
         status: "Tất cả",
@@ -193,19 +202,61 @@ export default function TeacherLessons() {
         setEditingLessonId(null);
     };
 
-    const handleFileChange = (fileList) => {
+    const handleFileChange = async (fileList) => {
         if (!fileList?.length) return;
-        const incoming = Array.from(fileList).map(toAttachmentMeta);
-        setAttachedFiles((prev) => [...prev, ...incoming].slice(0, 5));
+        const uploadToastId = toast.loading("Đang tải tệp lên Cloudinary...");
+        try {
+            const filesArray = Array.from(fileList);
+            const uploadedMeta = [];
+            for (const file of filesArray) {
+                const formData = new FormData();
+                formData.append("file", file);
+                const response = await teacherService.uploadLessonAttachment({
+                    mock: false,
+                    body: formData,
+                    config: {
+                        headers: {
+                            "Content-Type": "multipart/form-data",
+                        }
+                    }
+                });
+                if (response.success && response.data) {
+                    uploadedMeta.push({
+                        name: response.data.name,
+                        size: response.data.size,
+                        url: response.data.url
+                    });
+                } else {
+                    throw new Error("Upload failed");
+                }
+            }
+            setAttachedFiles((prev) => [...prev, ...uploadedMeta].slice(0, 5));
+            toast.update(uploadToastId, { 
+                render: "Tải tệp đính kèm thành công!", 
+                type: "success", 
+                isLoading: false,
+                autoClose: 3000 
+            });
+        } catch (err) {
+            console.error("Cloudinary upload error:", err);
+            toast.update(uploadToastId, { 
+                render: "Lỗi khi tải tệp lên Cloudinary. Vui lòng thử lại.", 
+                type: "error", 
+                isLoading: false,
+                autoClose: 4000 
+            });
+        }
     };
 
     const handleSubmitLesson = (status) => {
+        const assignment = assignmentsMap[formValues.className];
         const payload = {
             ...formValues,
             status,
             schoolYear: selectedSchoolYear,
             term: selectedTerm,
             attachments: attachedFiles,
+            classTeacherSubjectId: assignment?.class_teacher_subject_id ?? null,
         };
 
         if (editingLessonId) {
@@ -258,6 +309,7 @@ export default function TeacherLessons() {
 
             <Modal open={isCreateLessonOpen} title={editingLessonId ? "Chỉnh sửa bài học" : "Tạo bài học"} onClose={handleCloseCreate}>
                 <CreateEditLessonSection
+                    subject={currentSubject}
                     blockOptions={teachingBlocks}
                     classesByBlock={classesByBlock}
                     formValues={formValues}

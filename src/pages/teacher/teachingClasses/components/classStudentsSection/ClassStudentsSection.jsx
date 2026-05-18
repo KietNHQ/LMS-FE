@@ -118,13 +118,109 @@ const ClassStudentsSection = ({ classId, students, readOnly = false }) => {
     if (selectedDateLatestReview) {
       setStudentAttendance(selectedDateLatestReview.attendanceSnapshot || {});
       setStudentReviews(selectedDateLatestReview.studentReviewSnapshot || {});
+      
+      setEditingEvaluationId(selectedDateLatestReview.id);
+      
+      const rawScore = selectedDateLatestReview.score || "";
+      let normalizedScore = "";
+      if (rawScore.includes("A")) normalizedScore = "A (Tốt)";
+      else if (rawScore.includes("B")) normalizedScore = "B (Khá)";
+      else if (rawScore.includes("C")) normalizedScore = "C (Trung bình)";
+      else if (rawScore.includes("D")) normalizedScore = "D (Yếu)";
+      
+      setLessonScore(normalizedScore);
+      setLessonNote(selectedDateLatestReview.note || "");
+      setIsDoublePeriod(selectedDateLatestReview.isDoublePeriod || false);
     } else {
-      // Nếu không có lịch sử cho ngày này, reset trạng thái để giáo viên điểm danh mới
-      setStudentAttendance({});
+      // Nếu không có lịch sử cho ngày này, reset trạng thái để giáo viên điểm danh mới (mặc định tích đi học cho tất cả)
+      const defaultAttendance = {};
+      if (students) {
+        students.forEach(s => {
+          defaultAttendance[s.id] = true;
+        });
+      }
+      setStudentAttendance(defaultAttendance);
       setStudentReviews({});
+      
+      // Quan trọng: Reset toàn bộ form đánh giá tiết học về trạng thái tạo mới
+      setEditingEvaluationId(null);
+      setLessonScore("");
+      setLessonNote("");
+      setIsDoublePeriod(false);
     }
     setCurrentPage(1);
-  }, [selectedDateLatestReview]);
+  }, [selectedDateLatestReview, students]);
+
+  const mapBackendHistory = (resData) => {
+    if (!Array.isArray(resData)) return [];
+    return resData.map(item => {
+      const restoredReviews = {};
+      if (item.student_reports && item.student_reports.length > 0) {
+        item.student_reports.forEach(report => {
+          const sId = report.student_id || report.student_enrollment_id;
+          if (!sId) return;
+          
+          if (!restoredReviews[sId]) {
+            restoredReviews[sId] = {
+              summary: report.summary || "",
+              entries: [],
+              totalPoints: 0
+            };
+          }
+          
+          const entry = {
+            id: report.id || (Date.now() + Math.random()),
+            category: report.category,
+            content: typeof report.content === 'string' ? { label: report.content, pts: report.points } : report.content,
+            note: report.note || "",
+            pts: report.points || 0
+          };
+          
+          restoredReviews[sId].entries.push(entry);
+          restoredReviews[sId].totalPoints += entry.pts;
+        });
+      }
+
+      Object.keys(restoredReviews).forEach(sId => {
+        const data = restoredReviews[sId];
+        if (!data.summary) {
+          const totalPoints = data.totalPoints;
+          data.summary = [
+            data.entries
+              .map((entry) => {
+                const pointLabel = entry.pts > 0 ? `+${entry.pts}` : entry.pts;
+                return [entry.category, typeof entry.content === 'object' ? entry.content.label : entry.content, entry.note, `Điểm: ${pointLabel}`].filter(Boolean).join(" • ");
+              })
+              .join(" || "),
+            `Tổng: ${totalPoints > 0 ? `+${totalPoints}` : totalPoints}`,
+          ].filter(Boolean).join(" • ");
+        }
+      });
+
+      const attendanceSnapshot = item.attendance_snapshot 
+        ? Object.entries(item.attendance_snapshot).reduce((acc, [sId, status]) => {
+            acc[sId] = status === 'present';
+            return acc;
+          }, {}) 
+        : {};
+
+      return {
+        id: item.id,
+        lessonLabel: `Tiết ${item.period_number || item.period_id || ""}`,
+        lessonTime: `${item.start_time ? item.start_time.substring(0, 5) : ""} - ${new Date(item.evaluation_date).toLocaleDateString("vi-VN")}`,
+        attended: item.present_count || 0,
+        absent: item.absent_count || 0,
+        score: item.score,
+        note: item.note,
+        studentReports: item.student_reports || [],
+        reviewDate: toDateKey(new Date(item.evaluation_date)),
+        createdAt: new Date(item.created_at).toLocaleString("vi-VN"),
+        isDoublePeriod: item.is_double_period,
+        attendanceSnapshot,
+        studentReviewSnapshot: restoredReviews
+      };
+    });
+  };
 
   useEffect(() => {
     setCalendarViewDate(parseDateKey(selectedHistoryDate));
@@ -140,18 +236,7 @@ const ClassStudentsSection = ({ classId, students, readOnly = false }) => {
           pathParams: { classId }
         });
         if (res.success && res.data) {
-          const history = res.data.map(item => ({
-            id: item.id,
-            lessonLabel: `Tiết ${item.period_id || ""}`,
-            lessonTime: `${item.start_time ? item.start_time.substring(0, 5) : ""} - ${new Date(item.evaluation_date).toLocaleDateString("vi-VN")}`,
-            attended: item.present_count || 0,
-            absent: item.absent_count || 0,
-            score: item.score,
-            note: item.note,
-            studentReports: item.student_reports || [],
-            reviewDate: toDateKey(new Date(item.evaluation_date)),
-            createdAt: new Date(item.created_at).toLocaleString("vi-VN"),
-          }));
+          const history = mapBackendHistory(res.data);
           if (history.length > 0) {
             setLessonReviews(history);
           }
@@ -229,8 +314,9 @@ const ClassStudentsSection = ({ classId, students, readOnly = false }) => {
           pathParams: { id: classId }
         });
         if (res.success && res.data) {
-          const todayDayOfWeek = new Date().getDay() + 1; // 1 (CN) - 7 (T7)
-          const periodsToday = res.data.filter(s => s.day_of_week === todayDayOfWeek);
+          const selectedDate = parseDateKey(selectedHistoryDate);
+          const selectedDayOfWeek = selectedDate.getDay() + 1; // 1 (CN) - 7 (T7)
+          const periodsToday = res.data.filter(s => s.day_of_week === selectedDayOfWeek);
           setTodayPeriods(periodsToday);
         }
       } catch (err) {
@@ -238,7 +324,7 @@ const ClassStudentsSection = ({ classId, students, readOnly = false }) => {
       }
     };
     fetchFullSchedule();
-  }, [classId]);
+  }, [classId, selectedHistoryDate]);
 
   // --- Handlers ---
   const handleBackToToday = () => setSelectedHistoryDate(toDateKey(new Date()));
@@ -416,7 +502,6 @@ const ClassStudentsSection = ({ classId, students, readOnly = false }) => {
     setLessonPeriodOptions([]);
     setSelectedLessonPeriod("");
     setIsLessonReviewDialogOpen(false);
-    setStudentReviews({});
   };
 
   const handleOpenLessonReview = () => {
@@ -426,10 +511,10 @@ const ClassStudentsSection = ({ classId, students, readOnly = false }) => {
       ? todayPeriods.map(p => p.period_number)
       : (currentSchedule ? [currentSchedule.period_number] : []);
 
-    const today = toDateKey(new Date());
+    const targetDate = selectedHistoryDate;
     
-    // 2. Lấy danh sách đánh giá đã có cho ngày hôm nay
-    const existingReviews = lessonReviews.filter(r => r.reviewDate === today);
+    // 2. Lấy danh sách đánh giá đã có cho ngày được chọn
+    const existingReviews = lessonReviews.filter(r => r.reviewDate === targetDate);
 
     const options = [];
 
@@ -471,7 +556,6 @@ const ClassStudentsSection = ({ classId, students, readOnly = false }) => {
         setEditingEvaluationId(null);
         setLessonScore("");
         setLessonNote("");
-        setStudentReviews({});
       }
       
       setIsLessonReviewDialogOpen(true);
@@ -487,7 +571,6 @@ const ClassStudentsSection = ({ classId, students, readOnly = false }) => {
       setEditingEvaluationId(null);
       setLessonScore("");
       setLessonNote("");
-      setStudentReviews({});
     } else {
       const review = lessonReviews.find(r => r.id === val);
       if (review) {
@@ -581,11 +664,14 @@ const ClassStudentsSection = ({ classId, students, readOnly = false }) => {
     // Thu thập toàn bộ đánh giá học sinh
     const studentReports = [];
     Object.keys(studentReviews).forEach(sId => {
+      const student = students.find(s => s.id === parseInt(sId));
+      if (!student || !(student.enrollmentId || student.enrollment_id)) return;
+
       const data = studentReviews[sId];
       if (data && data.entries) {
         data.entries.forEach(entry => {
           studentReports.push({
-            studentEnrollmentId: parseInt(sId),
+            studentEnrollmentId: student.enrollmentId || student.enrollment_id,
             category: entry.category,
             content: typeof entry.content === 'object' ? entry.content.label : entry.content,
             points: entry.pts,
@@ -595,18 +681,39 @@ const ClassStudentsSection = ({ classId, students, readOnly = false }) => {
       }
     });
 
+    console.log("=== COMPILING LESSON EVALUATION ===");
+    console.log("Drafted studentReviews:", studentReviews);
+    console.log("Compiled studentReports to send:", studentReports);
+
     const evaluationData = {
-      period_id: currentSchedule?.period_number || 1,
-      evaluation_date: toDateKey(new Date()),
+      classId: parseInt(classId),
+      subjectAssignmentId: currentSchedule?.subject_assignment_id || null,
+      periodId: currentSchedule?.id || null, // Sử dụng ID thực của tiết học từ TKB
+      evaluationDate: selectedHistoryDate,
       score: lessonScore.trim().toUpperCase(),
       note: lessonNote.trim(),
-      present_count: attendedToday,
-      absent_count: absentToday,
-      is_double_period: isDoublePeriod,
-      student_reports: studentReports
+      presentCount: attendedToday,
+      absentCount: absentToday,
+      isDoublePeriod: isDoublePeriod,
+      studentReports: studentReports
     };
 
     try {
+      // Điểm danh: Lưu danh sách điểm danh cho tiết học thực tế này
+      if (currentSchedule?.id) {
+        await teacherService.saveAttendance({
+          mock: false,
+          body: {
+            periodId: currentSchedule.id,
+            date: selectedHistoryDate,
+            attendances: students.map(s => ({
+              studentEnrollmentId: s.enrollmentId || s.enrollment_id,
+              status: studentAttendance[s.id] ? "present" : "absent"
+            }))
+          }
+        });
+      }
+
       let res;
       if (editingEvaluationId) {
         res = await teacherService.updateLessonEvaluation({
@@ -623,8 +730,13 @@ const ClassStudentsSection = ({ classId, students, readOnly = false }) => {
         toast.success(editingEvaluationId ? "Đã cập nhật đánh giá" : "Đã lưu đánh giá tiết học");
         
         // Refresh history
-        const dRes = await teacherService.getTeachingDays({ pathParams: { classId } });
-        if (dRes.success) setTeachingDays(dRes.data);
+        const dRes = await teacherService.getTeachingDays({ 
+          mock: false,
+          pathParams: { classId } 
+        });
+        if (dRes.success && Array.isArray(dRes.data)) {
+          setTeachingDays(dRes.data);
+        }
 
         // Lấy thời khóa biểu hôm nay để biết chính xác các tiết dạy
         const schRes = await teacherService.getClassSchedule({ pathParams: { id: classId } });
@@ -634,21 +746,12 @@ const ClassStudentsSection = ({ classId, students, readOnly = false }) => {
           setTodayPeriods(periodsToday);
         }
 
-        const hRes = await teacherService.getLessonEvaluations({ pathParams: { classId } });
-        if (hRes.success && hRes.data) {
-          const history = hRes.data.map(item => ({
-            id: item.id,
-            lessonLabel: `Tiết ${item.period_id || ""}`,
-            lessonTime: `${item.start_time ? item.start_time.substring(0, 5) : ""} - ${new Date(item.evaluation_date).toLocaleDateString("vi-VN")}`,
-            attended: item.present_count || 0,
-            absent: item.absent_count || 0,
-            score: item.score,
-            note: item.note,
-            studentReports: item.student_reports || [],
-            reviewDate: toDateKey(new Date(item.evaluation_date)),
-            createdAt: new Date(item.created_at).toLocaleString("vi-VN"),
-            isDoublePeriod: item.is_double_period
-          }));
+        const hRes = await teacherService.getLessonEvaluations({ 
+          mock: false,
+          pathParams: { classId } 
+        });
+        if (hRes.success && Array.isArray(hRes.data)) {
+          const history = mapBackendHistory(hRes.data);
           setLessonReviews(history);
         }
         resetLessonForm();
@@ -679,7 +782,7 @@ const ClassStudentsSection = ({ classId, students, readOnly = false }) => {
       isSelected: dateKey === selectedHistoryDate,
       isToday: dateKey === toDateKey(new Date()),
       hasReview: availableReviewDateSet.has(dateKey),
-      hasLesson: teachingDays.includes(dayOfWeekInDB),
+      hasLesson: Array.isArray(teachingDays) && teachingDays.includes(dayOfWeekInDB),
     };
   });
 

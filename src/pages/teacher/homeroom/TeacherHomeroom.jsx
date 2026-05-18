@@ -47,7 +47,7 @@ export default function TeacherHomeroom() {
 
     // Sử dụng TanStack Query cho dữ liệu lớp chủ nhiệm
     const { data: classData, isLoading, refetch } = useQuery({
-        queryKey: ["teacher-homeroom", teacherId, selectedSchoolYear],
+        queryKey: ["teacher-homeroom", teacherId, selectedSchoolYear, selectedTerm],
         queryFn: async () => {
             if (!teacherId) return null;
 
@@ -55,7 +55,10 @@ export default function TeacherHomeroom() {
                 // Thử gọi API Consolidated trước
                 const consolidatedRes = await teacherService.getConsolidatedHomeroom({
                     pathParams: { id: teacherId },
-                    params: { schoolYear: selectedSchoolYear }
+                    params: { 
+                        schoolYear: selectedSchoolYear,
+                        term: selectedTerm 
+                    }
                 });
                 if (consolidatedRes.success && consolidatedRes.data) {
                     return mapApiDataToUI(consolidatedRes.data);
@@ -117,8 +120,9 @@ export default function TeacherHomeroom() {
                 academicStatus: s.academic_status,
                 conductStatus: s.conduct_status,
                 tuitionStatus: s.tuition_status,
-                violationCount: Math.floor(Math.random() * 5), // Mock violation count
-                attendanceScore: (8.5 + Math.random() * 1.5).toFixed(1) // Mock attendance score out of 10
+                violationCount: s.violationCount ?? s.violation_count ?? 0,
+                meritCount: s.meritCount ?? s.merit_count ?? 0,
+                attendanceScore: (s.attendanceScore ?? s.attendance_score ?? 10.0).toString()
             })),
         };
     };
