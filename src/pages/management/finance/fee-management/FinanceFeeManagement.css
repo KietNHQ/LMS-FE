@@ -609,28 +609,30 @@
     display: flex;
     flex-direction: column;
     gap: 1.5rem;
-    overflow-y: auto;
+    overflow-y: auto !important;
     flex: 1;
     min-height: 0; /* Critical to enable inner flexbox scrolling */
-    max-height: calc(90vh - 180px); /* Dynamically scale and force scrollbar if form height exceeds screen height minus header/footer */
+    max-height: 520px; /* Bulletproof fixed max-height that fits perfectly on all laptop/desktop screens */
 }
 
 /* Styled scrollbar for the modal body */
 .fee-modal-body::-webkit-scrollbar {
-    width: 6px;
+    width: 8px;
 }
 
 .fee-modal-body::-webkit-scrollbar-track {
-    background: transparent;
+    background: rgba(0, 0, 0, 0.02);
+    border-radius: 4px;
 }
 
 .fee-modal-body::-webkit-scrollbar-thumb {
-    background: var(--fee-border-strong);
-    border-radius: 3px;
+    background: #cbd5e1;
+    border-radius: 4px;
+    transition: background 0.2s ease;
 }
 
 .fee-modal-body::-webkit-scrollbar-thumb:hover {
-    background: var(--fee-text-muted);
+    background: #94a3b8;
 }
 
 .fee-modal-footer {
