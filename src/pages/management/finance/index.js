@@ -1,2 +1,2 @@
-export { default } from "./payment-hub/FinancePaymentHub";
+export { default } from "./fee-management/FinanceFeeManagement";
 

@@ -37,6 +37,7 @@ const ManagementExamRoomDetail = lazy(() => import("../pages/management/exams/ro
 const ManagementTimetable = lazy(() => import("../pages/management/timetable/ManagementTimetable"));
 const ManagementFinance = lazy(() => import("../pages/management/finance/index.js"));
 const ManagementFinanceDashboard = lazy(() => import("../pages/management/finance/dashboard/FinanceDashboard").then((m) => ({ default: m.FinanceDashboard })));
+const ManagementFinancePaymentHub = lazy(() => import("../pages/management/finance/payment-hub/FinancePaymentHub"));
 const ManagementApprovals = lazy(() => import("../pages/management/approvals/index.js"));
 const ManagementNotifications = lazy(() => import("../pages/management/notifications/ManagementNotifications"));
 const ManagementReports = lazy(() => import("../pages/management/reports/ManagementReports"));
@@ -236,6 +237,7 @@ export default function AppRoutes() {
         <Route path="timetable"    element={<ManagementTimetable />} />
         <Route path="finance"      element={<ManagementFinance />} />
         <Route path="finance/dashboard" element={<ManagementFinanceDashboard />} />
+        <Route path="finance/payment-hub" element={<ManagementFinancePaymentHub />} />
         <Route path="approvals"    element={<ManagementApprovals />} />
         <Route path="notifications" element={<ManagementNotifications />} />
         <Route path="reports"      element={<ManagementReports />} />

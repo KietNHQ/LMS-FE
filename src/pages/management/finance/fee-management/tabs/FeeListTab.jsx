@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { FiDollarSign, FiSearch, FiFileText, FiX, FiCheckCircle } from "react-icons/fi";
 import { toast } from "react-toastify";
-import { Pagination } from "../../../../../../components/common";
+import { Pagination } from "../../../../../components/common";
 
 export default function FeeListTab() {
     // Extended Mock Data

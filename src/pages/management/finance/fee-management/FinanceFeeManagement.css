@@ -575,12 +575,14 @@
 .fee-modal {
     background: #ffffff;
     width: 450px;
+    max-height: 90vh;
     border-radius: 1.25rem;
     box-shadow: 0 20px 48px rgba(0, 0, 0, 0.2);
     display: flex;
     flex-direction: column;
     animation: slideUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
     border: 2px solid var(--fee-border);
+    overflow: hidden;
 }
 
 .fee-modal-header {
@@ -591,6 +593,7 @@
     align-items: center;
     background: var(--fee-primary-soft);
     border-radius: 1.25rem 1.25rem 0 0;
+    flex-shrink: 0;
 }
 
 .fee-modal-header h3 {
@@ -606,6 +609,28 @@
     display: flex;
     flex-direction: column;
     gap: 1.5rem;
+    overflow-y: auto;
+    flex: 1;
+    min-height: 0; /* Critical to enable inner flexbox scrolling */
+    max-height: calc(90vh - 180px); /* Dynamically scale and force scrollbar if form height exceeds screen height minus header/footer */
+}
+
+/* Styled scrollbar for the modal body */
+.fee-modal-body::-webkit-scrollbar {
+    width: 6px;
+}
+
+.fee-modal-body::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.fee-modal-body::-webkit-scrollbar-thumb {
+    background: var(--fee-border-strong);
+    border-radius: 3px;
+}
+
+.fee-modal-body::-webkit-scrollbar-thumb:hover {
+    background: var(--fee-text-muted);
 }
 
 .fee-modal-footer {
@@ -614,6 +639,8 @@
     display: flex;
     justify-content: flex-end;
     gap: 1rem;
+    flex-shrink: 0;
+    background: #ffffff;
 }
 
 .fm-row {
@@ -1099,6 +1126,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+
     .fee-panel,
     .fee-summary-bar .fee-stat-card,
     .status-badge.overdue,
@@ -1119,12 +1147,14 @@
         transform: none !important;
     }
 }
+
 /* ── END FX ADDED ── */
 
 @keyframes fadeIn {
     from {
         opacity: 0;
     }
+
     to {
         opacity: 1;
     }
@@ -1135,6 +1165,7 @@
         opacity: 0;
         transform: translateX(-10px);
     }
+
     to {
         opacity: 1;
         transform: translateX(0);
@@ -1146,6 +1177,7 @@
         opacity: 0;
         transform: translateY(20px);
     }
+
     to {
         opacity: 1;
         transform: translateY(0);
@@ -1157,6 +1189,7 @@
         opacity: 0;
         transform: translateY(-10px);
     }
+
     to {
         opacity: 1;
         transform: translateY(0);
@@ -1168,6 +1201,7 @@
         opacity: 0;
         transform: translateY(8px);
     }
+
     to {
         opacity: 1;
         transform: translateY(0);
@@ -1179,6 +1213,7 @@
         opacity: 0;
         transform: translateY(8px) scale(0.98);
     }
+
     100% {
         opacity: 1;
         transform: translateY(0) scale(1);
@@ -1186,20 +1221,24 @@
 }
 
 @keyframes feeBadgePulse {
+
     0%,
     100% {
         box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
     }
+
     50% {
         box-shadow: 0 5px 12px rgba(180, 83, 9, 0.18);
     }
 }
 
 @keyframes feeStepPulse {
+
     0%,
     100% {
         box-shadow: 0 0 0 0 color-mix(in srgb, var(--fee-primary) 28%, transparent);
     }
+
     50% {
         box-shadow: 0 0 0 8px color-mix(in srgb, var(--fee-primary) 0%, transparent);
     }
@@ -1441,3 +1480,438 @@
     }
 }
 
+/* ── FEE CATALOG TAB ── */
+.catalog-cell-code {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+}
+
+.catalog-code-label {
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--fee-text-secondary);
+    letter-spacing: 0.5px;
+}
+
+.catalog-nature-text {
+    font-size: 0.85rem;
+    color: #475569;
+}
+
+.catalog-unit-label {
+    font-size: 0.7rem;
+    color: #94a3b8;
+    display: block;
+}
+
+.catalog-actions {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: center;
+}
+
+.fee-info-icon {
+    font-size: 1.25rem;
+    flex-shrink: 0;
+    margin-top: 0.1rem;
+}
+
+.empty-state-cell {
+    text-align: center;
+    padding: 3rem 1rem;
+    color: var(--fee-text-muted);
+    font-size: 0.9rem;
+}
+
+/* ── FORM 2-COLUMN ROW ── */
+.fm-form-row-2col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+}
+
+@media (max-width: 640px) {
+    .fm-form-row-2col {
+        grid-template-columns: 1fr;
+    }
+}
+
+.fm-form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+}
+
+.fm-form-group label {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--fee-text-primary);
+    letter-spacing: 0.2px;
+}
+
+.fm-form-hint {
+    color: var(--fee-text-muted);
+    font-size: 0.78rem;
+    margin-top: 0.2rem;
+}
+
+.fm-input-with-label {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    position: relative;
+}
+
+.fm-input-with-label .fee-input {
+    padding-right: 3.5rem;
+}
+
+.input-suffix {
+    position: absolute;
+    right: 1rem;
+    color: var(--fee-text-muted);
+    font-size: 0.8rem;
+    font-weight: 600;
+    pointer-events: none;
+}
+
+.fee-input.full-width,
+.fee-select.full-width {
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.fee-input.large-text {
+    font-size: 1.15rem;
+    font-weight: 700;
+    letter-spacing: -0.3px;
+}
+
+.fm-checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: var(--fee-text-primary);
+    cursor: pointer;
+    padding: 0.6rem 0.85rem;
+    background: var(--fee-surface-soft);
+    border-radius: 0.65rem;
+    border: 1px solid var(--fee-border);
+    transition: all 0.2s ease;
+}
+
+.fm-checkbox-label:hover {
+    border-color: var(--fee-border-strong);
+    background: var(--fee-primary-soft);
+}
+
+.fm-checkbox-label input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    accent-color: var(--fee-primary);
+    cursor: pointer;
+}
+
+.btn-close-modal {
+    background: transparent;
+    border: 2px solid var(--fee-border);
+    color: var(--fee-text-muted);
+    width: 36px;
+    height: 36px;
+    border-radius: 0.6rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    flex-shrink: 0;
+}
+
+.btn-close-modal:hover {
+    background: #fef2f2;
+    border-color: #fecaca;
+    color: #dc2626;
+    transform: rotate(90deg);
+}
+
+/* ── DELETE CONFIRM MODAL ── */
+.catalog-delete-modal {
+    width: 440px;
+}
+
+.catalog-delete-header {
+    border-bottom: none;
+}
+
+.catalog-delete-title {
+    display: flex;
+    gap: 0.85rem;
+    align-items: flex-start;
+}
+
+.catalog-delete-icon {
+    width: 42px;
+    height: 42px;
+    border-radius: 0.7rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--fee-danger-soft);
+    color: var(--fee-danger);
+    font-size: 1.2rem;
+    flex-shrink: 0;
+}
+
+.catalog-delete-header h3 {
+    color: var(--fee-danger);
+}
+
+.catalog-btn-danger {
+    background: var(--fee-danger) !important;
+    border-color: var(--fee-danger) !important;
+}
+
+.catalog-btn-danger:hover {
+    background: #8b3a47 !important;
+    border-color: #8b3a47 !important;
+}
+
+/* ── FM CHANGE BOX (thu tiền modal) ── */
+.fm-change-box {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.75rem 1rem;
+    background: var(--fee-success-soft);
+    border: 1px solid #bbdfd2;
+    border-radius: 0.65rem;
+}
+
+.change-label {
+    font-size: 0.82rem;
+    color: var(--fee-success);
+    font-weight: 600;
+}
+
+.change-value {
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: var(--fee-success);
+}
+
+.fee-search-wrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.fee-search-wrap .search-icon {
+    position: absolute;
+    left: 0.85rem;
+    color: var(--fee-text-muted);
+    font-size: 0.95rem;
+    pointer-events: none;
+}
+
+.fee-search-wrap .fee-input {
+    padding-left: 2.5rem;
+}
+
+.animated-fade-in {
+    animation: fadeIn 0.3s ease;
+}
+
+/* ── PREMIUM QR CODE CONFIG SECTION ── */
+.qr-config-section {
+    margin-top: 0.5rem;
+    border: 2px solid var(--fee-border);
+    border-radius: 1.25rem;
+    background: #ffffff;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+    overflow: hidden;
+    transition: all 0.3s ease;
+    animation: fadeIn 0.4s ease-out;
+}
+
+.qr-config-section:hover {
+    border-color: var(--fee-border-strong);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.06);
+}
+
+.qr-config-header {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    padding: 1.25rem 1.5rem;
+    background: var(--fee-primary-soft);
+    border-bottom: 2px solid var(--fee-border);
+}
+
+.qr-config-header svg {
+    font-size: 1.4rem;
+    color: var(--fee-primary);
+    background: rgba(67, 56, 202, 0.1);
+    padding: 0.35rem;
+    border-radius: 0.5rem;
+    box-sizing: content-box;
+    flex-shrink: 0;
+}
+
+.qr-config-header strong {
+    font-size: 0.95rem;
+    font-weight: 800;
+    color: var(--fee-text-primary);
+    letter-spacing: -0.2px;
+}
+
+.qr-config-header .fm-modal-subtitle {
+    margin-top: 0.1rem;
+    font-size: 0.78rem;
+    color: var(--fee-text-muted);
+}
+
+.qr-config-body {
+    display: grid;
+    grid-template-columns: 1fr 200px;
+    gap: 1.5rem;
+    padding: 1.5rem;
+    align-items: start;
+    background: #fafafb;
+}
+
+.qr-config-fields {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+}
+
+/* Form group overrides for QR config to feel premium */
+.qr-config-fields .fm-form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.qr-config-fields .fm-form-group label {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--fee-text-secondary);
+}
+
+.qr-config-fields .fee-input {
+    border-color: var(--fee-border);
+    transition: all 0.25s ease;
+}
+
+.qr-config-fields .fee-input:focus {
+    border-color: var(--fee-primary);
+    box-shadow: 0 0 0 4px rgba(67, 56, 202, 0.08);
+}
+
+.qr-config-fields .fm-form-hint {
+    font-size: 0.72rem;
+    color: var(--fee-text-muted);
+    margin-top: 0.15rem;
+}
+
+/* ── PREMIUM LIVE QR PREVIEW PANEL ── */
+.qr-preview-panel {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 1.25rem;
+    background: #ffffff;
+    border: 2px dashed var(--fee-border-strong);
+    border-radius: 1.1rem;
+    box-shadow: 0 10px 25px rgba(67, 56, 202, 0.04);
+    animation: fadeIn 0.4s ease;
+    transition: all 0.3s ease;
+}
+
+.qr-preview-panel:hover {
+    transform: translateY(-2px);
+    border-color: var(--fee-primary);
+    box-shadow: 0 15px 35px rgba(67, 56, 202, 0.08);
+}
+
+.qr-preview-label {
+    font-size: 0.68rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    color: var(--fee-primary);
+    margin-bottom: 0.75rem;
+    background: rgba(67, 56, 202, 0.08);
+    padding: 0.25rem 0.6rem;
+    border-radius: 10rem;
+}
+
+.qr-preview-img {
+    width: 140px;
+    height: 140px;
+    border-radius: 0.75rem;
+    border: 1px solid var(--fee-border);
+    background: #ffffff;
+    padding: 8px;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+}
+
+.qr-preview-img:hover {
+    transform: scale(1.04);
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.1);
+}
+
+.qr-preview-bank {
+    font-size: 0.82rem;
+    font-weight: 800;
+    color: var(--fee-text-primary);
+    margin-top: 0.75rem;
+}
+
+.qr-preview-account {
+    font-size: 0.78rem;
+    color: var(--fee-text-muted);
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    margin-top: 0.15rem;
+    background: var(--fee-surface-soft);
+    padding: 0.15rem 0.5rem;
+    border-radius: 0.35rem;
+}
+
+@media (max-width: 640px) {
+    .qr-config-body {
+        grid-template-columns: 1fr;
+        gap: 1.25rem;
+    }
+
+    .qr-preview-panel {
+        width: 100%;
+        flex-direction: row;
+        gap: 1.25rem;
+        padding: 1rem;
+        justify-content: flex-start;
+        text-align: left;
+    }
+
+    .qr-preview-label {
+        align-self: flex-start;
+        margin-bottom: 0;
+    }
+
+    .qr-preview-img {
+        width: 90px;
+        height: 90px;
+    }
+
+    .qr-preview-info {
+        display: flex;
+        flex-direction: column;
+    }
+}
