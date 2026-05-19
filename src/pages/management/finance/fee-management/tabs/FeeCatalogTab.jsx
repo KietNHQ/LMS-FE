@@ -16,6 +16,12 @@ const NATURE_OPTIONS = [
     { value: "Collect on behalf", label: "Thu hộ chi hộ" },
 ];
 
+const NATURE_TOOLTIPS = {
+    "School Revenue": "Doanh thu từ các hoạt động giáo dục chính quy, bắt buộc theo quy định của Nhà nước.",
+    "Service Revenue": "Doanh thu từ các dịch vụ tự nguyện, hỗ trợ hoạt động học tập (Bán trú, Xe đưa đón, v.v.).",
+    "Collect on behalf": "Các khoản thu hộ cho bên thứ ba (Bảo hiểm, Đồng phục...) và hoàn trả tương đương, không tính vào doanh thu của nhà trường theo TT24."
+};
+
 const BANK_OPTIONS = [
     { value: "VCB", label: "Vietcombank" },
     { value: "BIDV", label: "BIDV" },
@@ -209,11 +215,7 @@ export default function FeeCatalogTab() {
                             <th>Mã/Tên khoản thu</th>
                             <th>Phân loại</th>
                             <th>
-                                <Tooltip text="Theo Thông tư 24/2024/TT-BTC, các khoản 'Thu hộ chi hộ' cần được hạch toán vào các tài khoản riêng biệt để phục vụ báo cáo đối soát với bên thứ ba (Bảo hiểm, Nhà cung cấp đồng phục). Tránh gộp chung vào Doanh thu sự nghiệp của nhà trường.">
-                                    <span style={{ cursor: "help", display: "inline-flex", alignItems: "center", gap: "4px" }}>
-                                        Tính chất (TT24) <FiInfo size={14} />
-                                    </span>
-                                </Tooltip>
+                                <span>Tính chất (TT24)</span>
                             </th>
                             <th>Định mức (VNĐ)</th>
                             <th>Bắt buộc</th>
@@ -233,7 +235,11 @@ export default function FeeCatalogTab() {
                                     <span className="fee-tag">{CATEGORY_OPTIONS.find(c => c.value === item.category)?.label || item.category}</span>
                                 </td>
                                 <td>
-                                    <span className="catalog-nature-text">{NATURE_OPTIONS.find(n => n.value === item.nature)?.label || item.nature}</span>
+                                    <Tooltip text={NATURE_TOOLTIPS[item.nature] || ""}>
+                                        <span className="catalog-nature-text" style={{ cursor: "help" }}>
+                                            {NATURE_OPTIONS.find(n => n.value === item.nature)?.label || item.nature}
+                                        </span>
+                                    </Tooltip>
                                 </td>
                                 <td className="td-money">
                                     {item.amount.toLocaleString()} ₫
