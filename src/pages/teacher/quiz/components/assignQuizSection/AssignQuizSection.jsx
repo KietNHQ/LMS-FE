@@ -74,11 +74,7 @@ export default function AssignQuizSection({
             return;
         }
 
-        const fileReader = new FileReader();
-        fileReader.onload = () => {
-            onChangeQuestionImage?.(String(fileReader.result || ""));
-        };
-        fileReader.readAsDataURL(selectedFile);
+        onChangeQuestionImage?.(selectedFile);
 
         event.target.value = "";
     };

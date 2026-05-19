@@ -58,8 +58,8 @@ const parseStudent = (item = {}) => {
     name = item.email.split("@")[0];
   }
   return {
-    id: item.id,         // This is student table ID (integer) when from /students endpoint
-    userId: item.user_id || item.userId || item.id, // user UUID for update
+    id: item.user_id || item.userId || item.id,
+    studentTableId: item.id, // student table integer ID
     name,
     email: item.email || "",
     gender: item.gender === "F" ? "Nữ" : item.gender === "M" ? "Nam" : profile.gender || "Nam",
@@ -79,10 +79,11 @@ const parseStudent = (item = {}) => {
 export const studentsService = {
   listStudents: async () => {
     const response = await requestWithFallback(["/students", "/users"], (basePath) => {
+      const params = { page: 1, limit: 2000, _t: Date.now() };
       if (basePath === "/users") {
-        return axiosClient.get(basePath, { params: { role: "student", page: 1, limit: 2000 } });
+        return axiosClient.get(basePath, { params: { ...params, role: "student" } });
       }
-      return axiosClient.get(basePath, { params: { page: 1, limit: 2000 } });
+      return axiosClient.get(basePath, { params });
     });
 
     const payload = getPayload(response);

@@ -7,62 +7,15 @@ import NotificationDialog from "./components/NotificationDialog/NotificationDial
 import NotificationList from "./components/NotificationList/NotificationList";
 import CreateNotificationForm from "./components/CreateNotificationForm/CreateNotificationForm";
 
-const CHILDREN = [
-  { name: "Nguyen Van B", class: "10A1" },
-  { name: "Nguyen Van C", class: "11A2" },
-];
-
-const INITIAL_NOTIFICATIONS = [
-  {
-    id: 1,
-    title: "Lịch thi HK2",
-    content: "Thi bắt đầu từ ngày 20/05/2025",
-    date: "2025-01-15",
-    unread: true,
-    class: "10",
-  },
-  {
-    id: 2,
-    title: "Cập nhật điểm",
-    content: "Điểm học kỳ đã cập nhật",
-    date: "2025-01-08",
-    unread: true,
-    class: "11",
-  },
-  {
-    id: 3,
-    title: "Thông báo hệ thống",
-    content: "Bảo trì hệ thống LMS",
-    date: "2025-01-18",
-    unread: true,
-    class: "12",
-  },
-  {
-    id: 4,
-    title: "Họp phụ huynh",
-    content: "Nhà trường tổ chức họp phụ huynh",
-    date: "2025-01-20",
-    unread: true,
-    class: "teacher",
-  },
-];
-
 const CLASS_LABELS = {
-  "10": "Lớp 10",
-  "11": "Lớp 11",
-  "12": "Lớp 12",
-  teacher: "Giáo viên",
+  system: "Hộp thư chung",
+  class: "Thông báo lớp",
 };
 
 const TEACHER_UNREAD_COUNT_KEY = "teacher_unread_notifications_count";
 const TEACHER_UNREAD_COUNT_EVENT = "teacher-notification-count-updated";
 
 export default function TeacherNotifications() {
-  const studentClasses = useMemo(
-    () => [...new Set(CHILDREN.map((child) => child.class.slice(0, 2)))],
-    []
-  );
-
   const [filter, setFilter] = useState("all");
   const [showOnlyMarked, setShowOnlyMarked] = useState(false);
   const [notifications, setNotifications] = useState([]);
@@ -81,7 +34,7 @@ export default function TeacherNotifications() {
             content: n.content,
             date: n.created_at || n.date,
             unread: n.unread === true || n.is_read === false || n.status === "unread",
-            class: n.type || n.class || "teacher",
+            class: n.target_type === "class" || n.class === "class" ? "class" : "system",
             important: n.is_important || n.important || false
           }));
           setNotifications(mapped);
@@ -120,30 +73,14 @@ export default function TeacherNotifications() {
     );
   }, [unreadCount]);
 
-  const isVisibleForTeacher = useCallback((targetClass) => {
-    return (
-      studentClasses.includes(targetClass) ||
-      targetClass === "teacher" ||
-      targetClass === "12"
-    );
-  }, [studentClasses]);
-
   const classList = useMemo(() => {
-    return [
-      ...new Set(
-        notifications
-          .map((notification) => notification.class)
-          .filter((targetClass) => isVisibleForTeacher(targetClass))
-      ),
-    ];
-  }, [notifications, isVisibleForTeacher]);
+    return ["system", "class"];
+  }, []);
 
   const filteredNotifications = useMemo(() => {
     let result = notifications;
 
-    if (filter === "all") {
-      result = result.filter((notification) => isVisibleForTeacher(notification.class));
-    } else {
+    if (filter !== "all") {
       result = result.filter((notification) => notification.class === filter);
     }
 
@@ -160,7 +97,7 @@ export default function TeacherNotifications() {
       const dateB = new Date(b.date).getTime();
       return dateB - dateA; // Newest first
     });
-  }, [filter, notifications, isVisibleForTeacher, showOnlyMarked]);
+  }, [filter, notifications, showOnlyMarked]);
 
   const getClassLabel = (targetClass) => {
     return CLASS_LABELS[targetClass] || "";

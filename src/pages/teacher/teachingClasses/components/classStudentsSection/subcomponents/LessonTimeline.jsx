@@ -136,11 +136,15 @@ const LessonTimeline = ({
                       <div className="lesson-history-reports">
                         <strong>Ghi nhận học sinh:</strong>
                         <ul className="lesson-history-reports-list">
-                          {review.studentReports.map((report, idx) => (
-                            <li key={idx} className="lesson-history-report-item">
-                              • {report.surname || ""} {report.given_name || ""}: {report.category} - {typeof report.content === 'object' ? (report.content.label || "N/A") : report.content} ({report.points > 0 ? "+" : ""}{report.points}đ)
-                            </li>
-                          ))}
+                          {review.studentReports.map((report, idx) => {
+                            const studentName = report.student_name || `${report.surname || ""} ${report.given_name || ""}`.trim() || "Học sinh";
+                            return (
+                              <li key={idx} className="lesson-history-report-item">
+                                • <strong>{studentName}</strong>: {report.category} - {typeof report.content === 'object' ? (report.content.label || "N/A") : report.content} ({report.points > 0 ? "+" : ""}{report.points}đ)
+                                {report.note && <span className="lesson-report-note-text"> - Ghi chú: <em>{report.note}</em></span>}
+                              </li>
+                            );
+                          })}
                         </ul>
                       </div>
                     )}

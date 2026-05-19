@@ -93,8 +93,11 @@ export default function LessonDetailModal({ lesson, onClose, onEdit, onOpenRevie
                                         <p>{formatSize(file.size)}</p>
                                     </div>
                                     <div className="detail-attachment-actions">
-                                        <button type="button">Tải về</button>
-                                        <button type="button" className="is-danger">Xóa</button>
+                                        {file.url ? (
+                                            <a href={file.url} target="_blank" rel="noopener noreferrer" className="detail-download-link">Tải về</a>
+                                        ) : (
+                                            <span className="detail-no-url">Không khả dụng</span>
+                                        )}
                                     </div>
                                 </li>
                             ))}

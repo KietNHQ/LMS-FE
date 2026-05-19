@@ -16,6 +16,7 @@ export default function AdminLayout() {
     const location = useLocation();
     const [isPageTransitioning, setIsPageTransitioning] = useState(false);
     const [forcePasswordChange, setForcePasswordChange] = useState(false);
+    const queryClient = useQueryClient();
 
     // Lắng nghe sự kiện bắt buộc đổi mật khẩu từ axiosClient
     useEffect(() => {
@@ -42,7 +43,7 @@ export default function AdminLayout() {
             import("../../pages/admin/audit-log/AdminAuditLog");
             import("../../pages/admin/system-log/AdminSystemLog");
         };
-        
+
         if (window.requestIdleCallback) {
             window.requestIdleCallback(prefetchChunks);
         } else {
@@ -71,7 +72,7 @@ export default function AdminLayout() {
         const syncNotificationCount = async () => {
             try {
                 const { adminApiService } = await import("../../services/pages/admin/generated/adminApiService");
-                
+
                 let response;
                 try {
                     response = await adminApiService.get_notifications({ mock: false });
@@ -79,13 +80,13 @@ export default function AdminLayout() {
                     console.warn("Real Admin Notifications API failed, trying mock:", err);
                     response = await adminApiService.get_notifications({ mock: true });
                 }
-                
+
                 if (response.success) {
                     const data = response.data || [];
-                    const unreadCount = Array.isArray(data) ? data.filter(n => 
+                    const unreadCount = Array.isArray(data) ? data.filter(n =>
                         n.unread === true || n.is_read === false || n.status === "unread"
                     ).length : 0;
-                    
+
                     const finalCount = unreadCount || (response.isMock ? 5 : 0);
                     localStorage.setItem("admin_unread_notifications_count", String(finalCount));
                     window.dispatchEvent(

@@ -136,6 +136,8 @@ export default function HomeroomActionDialog({ open, mode, onClose, onSubmit, st
         title: form.title.trim(),
         type: form.type,
         time: `${form.hour.trim()} ${formatDateLabel(form.schedule.trim())}`.trim(),
+        schedule: form.schedule.trim(),
+        hour: form.hour.trim(),
         location: form.location.trim(),
         note: form.note.trim(),
       });
@@ -153,7 +155,8 @@ export default function HomeroomActionDialog({ open, mode, onClose, onSubmit, st
       for (const item of form.assignments || []) {
         if (!item.studentId) continue;
         if (roleMap.has(item.studentId)) {
-          alert("Mỗi học sinh chỉ được giữ 1 vai trò.");
+          const conflictingRole = roleMap.get(item.studentId);
+          alert(`Học sinh đã được gán vai trò "${conflictingRole === 'monitor' ? 'Lớp trưởng' : conflictingRole === 'viceMonitor' ? 'Lớp phó' : 'Bí thư'}". Mỗi học sinh chỉ được giữ 1 vai trò.`);
           return;
         }
         roleMap.set(item.studentId, item.key);
@@ -162,7 +165,7 @@ export default function HomeroomActionDialog({ open, mode, onClose, onSubmit, st
       for (const item of form.extraRoles || []) {
         if (!item.studentId) continue;
         if (roleMap.has(item.studentId)) {
-          alert("Mỗi học sinh chỉ được giữ 1 vai trò.");
+          alert(`Học sinh đã được gán một vai trò khác. Mỗi học sinh chỉ được giữ 1 vai trò.`);
           return;
         }
         roleMap.set(item.studentId, item.id);

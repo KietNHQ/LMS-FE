@@ -157,6 +157,7 @@ export default function TeacherQuiz() {
     const [pendingDeleteQuizId, setPendingDeleteQuizId] = useState(null);
     const [editingQuizId, setEditingQuizId] = useState(null);
     const [reviewingQuizId, setReviewingQuizId] = useState(null);
+    const [publishConfirmQuiz, setPublishConfirmQuiz] = useState(null);
 
     const fetchQuizzes = async () => {
         try {
@@ -229,7 +230,12 @@ export default function TeacherQuiz() {
     const handleStatusChange = async (quizId, newStatus) => {
         try {
             if (newStatus === "open") {
-                await quizService.publishQuiz(quizId);
+                const quiz = quizzes.find((q) => q.id === quizId);
+                if (quiz && quiz.quizType === "exam") {
+                    setPublishConfirmQuiz(quiz);
+                    return;
+                }
+                await quizService.publishQuiz(quizId, { scope: "class" });
             } else {
                 await quizService.unpublishQuiz(quizId);
             }
@@ -240,6 +246,25 @@ export default function TeacherQuiz() {
         } catch (err) {
             console.error("Status change error:", err);
             toast.error("Không thể thay đổi trạng thái.");
+        }
+    };
+
+    const handleConfirmPublish = async (quizId, scope) => {
+        setPublishConfirmQuiz(null);
+        try {
+            await quizService.publishQuiz(quizId, { scope });
+            setQuizzes((prev) =>
+                prev.map((q) => (q.id === quizId ? { ...q, status: "open" } : q))
+            );
+            
+            // Refresh list to fetch newly cloned exams
+            fetchQuizzes();
+            
+            toast.success(scope === "grade" ? "Đã phát đề thi thành công cho toàn bộ lớp thuộc Khối!" : "Đã hiển thị bài kiểm tra.");
+        } catch (err) {
+            console.error("Publish error:", err);
+            const errorMsg = err.response?.data?.error || "Không thể xuất bản bài kiểm tra.";
+            toast.error(errorMsg);
         }
     };
 
@@ -291,12 +316,14 @@ export default function TeacherQuiz() {
         navigate("/teacher/quiz/create", {
             state: {
                 quizMeta: {
+                    id: quiz.id,
                     title: quiz.title,
                     subject: quiz.subject,
                     grade: quiz.grade,
                     duration: quiz.durationLabel || formatDurationLabel(quiz.duration),
                     createdByRole: quiz.createdByRole || "teacher",
                     createdByName: quiz.createdByName || "",
+                    classTeacherSubjectId: quiz.classTeacherSubjectId || quiz.class_teacher_subject_id,
                 },
                 mode: "edit",
             },
@@ -355,33 +382,46 @@ export default function TeacherQuiz() {
         );
     };
 
-    const handleSubmitQuizMeta = (quizMeta) => {
+    const handleSubmitQuizMeta = async (quizMeta) => {
         if (editingQuizId == null) {
             handleCreateQuiz(quizMeta);
             return;
         }
 
-        setQuizzes((prev) =>
-            prev.map((quiz) =>
-                quiz.id === editingQuizId
-                    ? {
-                        ...quiz,
-                        title: quizMeta.title,
-                        subject: quizMeta.subject,
-                        grade: quizMeta.grade,
-                        duration: parseDurationMinutes(quizMeta.duration || quiz.duration),
-                        durationLabel: formatDurationLabel(quizMeta.duration || quiz.durationLabel),
-                        createdByRole: quizMeta.createdByRole,
-                        createdByName:
-                            quizMeta.createdByRole === "teacher"
-                                ? quizMeta.createdByName
-                                : "Quản trị viên",
-                    }
-                    : quiz
-            )
-        );
+        try {
+            await quizService.updateQuiz(editingQuizId, {
+                title: quizMeta.title,
+                duration: quizMeta.duration,
+                classTeacherSubjectId: quizMeta.classTeacherSubjectId,
+            });
 
-        handleCloseCreateDialog();
+            setQuizzes((prev) =>
+                prev.map((quiz) =>
+                    quiz.id === editingQuizId
+                        ? {
+                            ...quiz,
+                            title: quizMeta.title,
+                            subject: quizMeta.subject,
+                            grade: quizMeta.grade,
+                            className: quizMeta.className,
+                            duration: parseDurationMinutes(quizMeta.duration || quiz.duration),
+                            durationLabel: formatDurationLabel(quizMeta.duration || quiz.durationLabel),
+                            createdByRole: quizMeta.createdByRole,
+                            createdByName:
+                                quizMeta.createdByRole === "teacher"
+                                    ? quizMeta.createdByName
+                                    : "Quản trị viên",
+                        }
+                        : quiz
+                )
+            );
+            
+            toast.success("Cập nhật thông tin bài kiểm tra thành công.");
+            handleCloseCreateDialog();
+        } catch (err) {
+            console.error("Failed to update quiz meta:", err);
+            toast.error("Không thể lưu thay đổi bài kiểm tra.");
+        }
     };
 
     const editingQuiz = quizzes.find((quiz) => quiz.id === editingQuizId) || null;
@@ -470,6 +510,8 @@ export default function TeacherQuiz() {
                     title: editingQuiz.title,
                     subject: editingQuiz.subject,
                     grade: editingQuiz.grade,
+                    className: editingQuiz.className,
+                    classTeacherSubjectId: editingQuiz.classTeacherSubjectId,
                     duration: editingQuiz.durationLabel || formatDurationLabel(editingQuiz.duration),
                     createdByRole: editingQuiz.createdByRole || "teacher",
                     createdByName: editingQuiz.createdByName || "",
@@ -512,6 +554,57 @@ export default function TeacherQuiz() {
                         onClick={handleConfirmDeleteQuiz}
                     >
                         Xoá
+                    </button>
+                </div>
+            </Modal>
+
+            {/* Modal Xác nhận xuất bản Đề thi chung */}
+            <Modal
+                open={publishConfirmQuiz !== null}
+                onClose={() => setPublishConfirmQuiz(null)}
+                title="Xuất bản Đề thi chung cả Khối"
+                className="teacher-quiz__publish-confirm-modal"
+            >
+                <div className="teacher-quiz__publish-confirm-content">
+                    <p className="teacher-quiz__publish-confirm-text">
+                        Bạn đang chuẩn bị xuất bản Đề thi định kỳ <strong>"{publishConfirmQuiz?.title}"</strong> môn <strong>{publishConfirmQuiz?.subject}</strong>.
+                    </p>
+                    <p className="teacher-quiz__publish-confirm-note">
+                        Vui lòng lựa chọn phạm vi phát đề thi này:
+                    </p>
+                    
+                    <div className="teacher-quiz__publish-confirm-options">
+                        <button
+                            type="button"
+                            className="teacher-quiz__publish-btn-grade"
+                            onClick={() => handleConfirmPublish(publishConfirmQuiz.id, "grade")}
+                        >
+                            <span className="teacher-quiz__btn-title">Phát đề cả Khối (Khuyên dùng)</span>
+                            <span className="teacher-quiz__btn-desc">
+                                Hệ thống tự động nhân bản đề thi và câu hỏi cho tất cả các lớp thuộc {publishConfirmQuiz?.grade} học môn {publishConfirmQuiz?.subject}.
+                            </span>
+                        </button>
+                        
+                        <button
+                            type="button"
+                            className="teacher-quiz__btn-class"
+                            onClick={() => handleConfirmPublish(publishConfirmQuiz.id, "class")}
+                        >
+                            <span className="teacher-quiz__btn-title">Chỉ phát cho lớp hiện tại ({publishConfirmQuiz?.className})</span>
+                            <span className="teacher-quiz__btn-desc">
+                                Chỉ học sinh thuộc lớp {publishConfirmQuiz?.className} mới nhìn thấy và làm bài thi này.
+                            </span>
+                        </button>
+                    </div>
+                </div>
+                
+                <div className="teacher-quiz__publish-confirm-actions">
+                    <button
+                        type="button"
+                        className="teacher-quiz__publish-confirm-cancel"
+                        onClick={() => setPublishConfirmQuiz(null)}
+                    >
+                        Quay lại
                     </button>
                 </div>
             </Modal>
