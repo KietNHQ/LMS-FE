@@ -1,7 +1,8 @@
 import React, { useState } from "react";
-import { FiPlus, FiEdit2, FiTrash2, FiInfo, FiX, FiCheck, FiAlertTriangle, FiCreditCard } from "react-icons/fi";
+import { FiPlus, FiEdit2, FiTrash2, FiInfo, FiX, FiCheck, FiAlertTriangle, FiCreditCard, FiUpload } from "react-icons/fi";
 import { toast } from "react-toastify";
 import Select from "../../../../../components/ui/Select/Select";
+import { Tooltip } from "../../../../../components/ui";
 
 const CATEGORY_OPTIONS = [
     { value: "Tuition", label: "Học phí" },
@@ -25,10 +26,10 @@ const BANK_OPTIONS = [
 ];
 
 const INITIAL_CATALOG = [
-    { id: 1, code: "HP_CHINH", name: "Học phí chính quy", category: "Tuition", amount: 1200000, nature: "School Revenue", mandatory: true, qrBank: "VCB", qrAccount: "", qrHolder: "", qrTemplate: "" },
-    { id: 2, code: "AN_TRUA", name: "Tiền ăn bán trú", category: "Service", amount: 35000, nature: "Service Revenue", mandatory: false, qrBank: "VCB", qrAccount: "", qrHolder: "", qrTemplate: "" },
-    { id: 3, code: "BHYT", name: "Bảo hiểm y tế", category: "Others", amount: 804600, nature: "Collect on behalf", mandatory: true, qrBank: "VCB", qrAccount: "", qrHolder: "", qrTemplate: "" },
-    { id: 4, code: "DONG_PHUC", name: "Đồng phục học sinh", category: "Others", amount: 650000, nature: "Collect on behalf", mandatory: false, qrBank: "VCB", qrAccount: "", qrHolder: "", qrTemplate: "" },
+    { id: 1, code: "HP_CHINH", name: "Học phí chính quy", category: "Tuition", amount: 1200000, nature: "School Revenue", mandatory: true, qrBank: "Vietcombank", qrAccount: "", qrHolder: "", qrTemplate: "", qrImage: "" },
+    { id: 2, code: "AN_TRUA", name: "Tiền ăn bán trú", category: "Service", amount: 35000, nature: "Service Revenue", mandatory: false, qrBank: "Vietcombank", qrAccount: "", qrHolder: "", qrTemplate: "", qrImage: "" },
+    { id: 3, code: "BHYT", name: "Bảo hiểm y tế", category: "Others", amount: 804600, nature: "Collect on behalf", mandatory: true, qrBank: "Vietcombank", qrAccount: "", qrHolder: "", qrTemplate: "", qrImage: "" },
+    { id: 4, code: "DONG_PHUC", name: "Đồng phục học sinh", category: "Others", amount: 650000, nature: "Collect on behalf", mandatory: false, qrBank: "Vietcombank", qrAccount: "", qrHolder: "", qrTemplate: "", qrImage: "" },
 ];
 
 const EMPTY_FORM = {
@@ -38,10 +39,11 @@ const EMPTY_FORM = {
     amount: "",
     nature: "School Revenue",
     mandatory: true,
-    qrBank: "VCB",
+    qrBank: "Vietcombank",
     qrAccount: "",
     qrHolder: "",
     qrTemplate: "",
+    qrImage: "",
 };
 
 export default function FeeCatalogTab() {
@@ -66,10 +68,11 @@ export default function FeeCatalogTab() {
             amount: item.amount.toString(),
             nature: item.nature,
             mandatory: item.mandatory,
-            qrBank: item.qrBank || "VCB",
+            qrBank: item.qrBank || "Vietcombank",
             qrAccount: item.qrAccount || "",
             qrHolder: item.qrHolder || "",
             qrTemplate: item.qrTemplate || "",
+            qrImage: item.qrImage || "",
         });
         setShowModal(true);
     };
@@ -123,6 +126,7 @@ export default function FeeCatalogTab() {
                             qrAccount: form.qrAccount.trim(),
                             qrHolder: form.qrHolder.trim().toUpperCase(),
                             qrTemplate: form.qrTemplate.trim(),
+                            qrImage: form.qrImage,
                         }
                         : item
                 )
@@ -144,6 +148,7 @@ export default function FeeCatalogTab() {
                     qrAccount: form.qrAccount.trim(),
                     qrHolder: form.qrHolder.trim().toUpperCase(),
                     qrTemplate: form.qrTemplate.trim(),
+                    qrImage: form.qrImage,
                 },
             ]);
             toast.success(`Đã thêm khoản thu "${form.name.trim()}" thành công.`);
@@ -166,6 +171,23 @@ export default function FeeCatalogTab() {
         handleFormChange("amount", raw);
     };
 
+    const handleQrImageUpload = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        if (!file.type.startsWith("image/")) {
+            toast.error("Vui lòng tải lên tệp hình ảnh!");
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = () => {
+            handleFormChange("qrImage", reader.result);
+            toast.success("Tải ảnh QR thành công!");
+        };
+        reader.readAsDataURL(file);
+    };
+
     return (
         <div className="fee-panel">
             <div className="fee-header">
@@ -186,7 +208,13 @@ export default function FeeCatalogTab() {
                         <tr>
                             <th>Mã/Tên khoản thu</th>
                             <th>Phân loại</th>
-                            <th>Tính chất (TT24)</th>
+                            <th>
+                                <Tooltip text="Theo Thông tư 24/2024/TT-BTC, các khoản 'Thu hộ chi hộ' cần được hạch toán vào các tài khoản riêng biệt để phục vụ báo cáo đối soát với bên thứ ba (Bảo hiểm, Nhà cung cấp đồng phục). Tránh gộp chung vào Doanh thu sự nghiệp của nhà trường.">
+                                    <span style={{ cursor: "help", display: "inline-flex", alignItems: "center", gap: "4px" }}>
+                                        Tính chất (TT24) <FiInfo size={14} />
+                                    </span>
+                                </Tooltip>
+                            </th>
                             <th>Định mức (VNĐ)</th>
                             <th>Bắt buộc</th>
                             <th>Thao tác</th>
@@ -237,14 +265,6 @@ export default function FeeCatalogTab() {
                         )}
                     </tbody>
                 </table>
-            </div>
-
-            <div className="fee-info-box">
-                <FiInfo className="fee-info-icon" />
-                <div>
-                    <strong>Hướng dẫn nghiệp vụ</strong>
-                    Theo Thông tư 24/2024/TT-BTC, các khoản "Thu hộ chi hộ" cần được hạch toán vào các tài khoản riêng biệt để phục vụ báo cáo đối soát với bên thứ ba (Bảo hiểm, Nhà cung cấp đồng phục). Tránh gộp chung vào Doanh thu sự nghiệp của nhà trường.
-                </div>
             </div>
 
             {/* ── Modal Thêm/Sửa khoản thu ── */}
@@ -300,7 +320,13 @@ export default function FeeCatalogTab() {
                                     placeholder="Chọn phân loại"
                                 />
                                 <Select
-                                    label="Tính chất (TT24)"
+                                    label={
+                                        <Tooltip text="Theo Thông tư 24/2024/TT-BTC, các khoản 'Thu hộ chi hộ' cần được hạch toán vào các tài khoản riêng biệt để phục vụ báo cáo đối soát với bên thứ ba (Bảo hiểm, Nhà cung cấp đồng phục). Tránh gộp chung vào Doanh thu sự nghiệp của nhà trường.">
+                                            <span style={{ cursor: "help", display: "inline-flex", alignItems: "center", gap: "4px" }}>
+                                                Tính chất (TT24) <FiInfo size={14} />
+                                            </span>
+                                        </Tooltip>
+                                    }
                                     variant="custom"
                                     options={NATURE_OPTIONS}
                                     value={form.nature}
@@ -337,81 +363,107 @@ export default function FeeCatalogTab() {
                                 Bắt buộc (học sinh phải đóng)
                             </label>
 
-                            {/* ── QR Code Config ── */}
-                            <div className="qr-config-section">
-                                <div className="qr-config-header">
-                                    <FiCreditCard />
-                                    <div>
-                                        <strong>Cấu hình mã QR thanh toán</strong>
-                                        <p className="fm-modal-subtitle">Thông tin ngân hàng để tạo mã VietQR cho phụ huynh quét</p>
-                                    </div>
+                            {/* ── Cấu hình QR Thanh Toán ── */}
+                            <div className="fm-section-divider">
+                                <span>Cấu hình VietQR (Tùy chọn)</span>
+                            </div>
+
+                            <div className="fm-form-grid-2">
+                                <div className="fm-form-group">
+                                    <label>Ngân hàng</label>
+                                    <input
+                                        type="text"
+                                        className="fee-input full-width"
+                                        placeholder="VD: Vietcombank, MB, Techcombank..."
+                                        value={form.qrBank}
+                                        onChange={(e) => handleFormChange("qrBank", e.target.value)}
+                                    />
                                 </div>
 
-                                <div className="qr-config-body">
-                                    <div className="qr-config-fields">
-                                        <Select
-                                            label="Ngân hàng"
-                                            variant="custom"
-                                            options={BANK_OPTIONS}
-                                            value={form.qrBank}
-                                            onChange={(e) => handleFormChange("qrBank", e.target.value)}
-                                            placeholder="Chọn ngân hàng"
-                                        />
+                                <div className="fm-form-group">
+                                    <label>Số tài khoản</label>
+                                    <input
+                                        type="text"
+                                        className="fee-input full-width"
+                                        placeholder="VD: 1234567890"
+                                        value={form.qrAccount}
+                                        onChange={(e) => handleFormChange("qrAccount", e.target.value.replace(/\D/g, ""))}
+                                        maxLength={20}
+                                    />
+                                </div>
+                            </div>
 
-                                        <div className="fm-form-group">
-                                            <label>Số tài khoản</label>
-                                            <input
-                                                type="text"
-                                                className="fee-input full-width"
-                                                placeholder="VD: 1234567890"
-                                                value={form.qrAccount}
-                                                onChange={(e) => handleFormChange("qrAccount", e.target.value.replace(/\D/g, ""))}
-                                                maxLength={20}
-                                            />
-                                        </div>
+                            <div className="fm-form-grid-2">
+                                <div className="fm-form-group">
+                                    <label>Chủ tài khoản</label>
+                                    <input
+                                        type="text"
+                                        className="fee-input full-width"
+                                        placeholder="VD: TRUONG THPT ABC"
+                                        value={form.qrHolder}
+                                        onChange={(e) => handleFormChange("qrHolder", e.target.value.toUpperCase())}
+                                    />
+                                </div>
 
-                                        <div className="fm-form-group">
-                                            <label>Chủ tài khoản</label>
-                                            <input
-                                                type="text"
-                                                className="fee-input full-width"
-                                                placeholder="VD: TRUONG THPT ABC"
-                                                value={form.qrHolder}
-                                                onChange={(e) => handleFormChange("qrHolder", e.target.value.toUpperCase())}
-                                            />
-                                        </div>
+                                <div className="fm-form-group fm-form-group-tooltip">
+                                    <label>Nội dung chuyển khoản (mẫu)</label>
+                                    <input
+                                        type="text"
+                                        className="fee-input full-width"
+                                        placeholder="VD: [MaHS] [TenKhoan]"
+                                        value={form.qrTemplate}
+                                        onChange={(e) => handleFormChange("qrTemplate", e.target.value)}
+                                    />
+                                    <small className="fm-form-hint">Dùng [MaHS] để tự động thay thế bằng mã học sinh khi quét</small>
+                                </div>
+                            </div>
 
-                                        <div className="fm-form-group">
-                                            <label>Nội dung chuyển khoản (mẫu)</label>
-                                            <input
-                                                type="text"
-                                                className="fee-input full-width"
-                                                placeholder="VD: [MaHS] [TenKhoan] HK1 2025-2026"
-                                                value={form.qrTemplate}
-                                                onChange={(e) => handleFormChange("qrTemplate", e.target.value)}
-                                            />
-                                            <small className="fm-form-hint">Dùng [MaHS] để tự động thay mã học sinh khi tạo QR</small>
-                                        </div>
-                                    </div>
-
-                                    {form.qrAccount && (
-                                        <div className="qr-preview-panel">
-                                            <span className="qr-preview-label">Xem trước QR</span>
-                                            <img
-                                                className="qr-preview-img"
-                                                src={`https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=${encodeURIComponent(
-                                                    `${BANK_OPTIONS.find(b => b.value === form.qrBank)?.label || ""} | STK: ${form.qrAccount} | ${form.qrHolder} | ${form.qrTemplate || form.name}`
-                                                )}`}
-                                                alt="QR Preview"
-                                            />
-                                            <div className="qr-preview-info">
-                                                <span className="qr-preview-bank">{BANK_OPTIONS.find(b => b.value === form.qrBank)?.label}</span>
-                                                <span className="qr-preview-account">{form.qrAccount}</span>
+                            {/* Tải ảnh QR lên */}
+                            <div className="fm-form-group fm-qr-upload-group">
+                                <label>Hoặc tải lên ảnh mã QR tĩnh (Tùy chọn)</label>
+                                <div className="fm-qr-upload-zone">
+                                    {form.qrImage ? (
+                                        <div className="fm-qr-uploaded-preview">
+                                            <img src={form.qrImage} alt="Uploaded QR" />
+                                            <div className="fm-qr-uploaded-info">
+                                                <strong>Đã tải ảnh QR lên</strong>
+                                                <span>Ảnh QR tĩnh của trường</span>
+                                                <button type="button" className="btn-remove-qr" onClick={() => handleFormChange("qrImage", "")}>Xóa ảnh</button>
                                             </div>
                                         </div>
+                                    ) : (
+                                        <label className="fm-qr-upload-label">
+                                            <FiUpload className="fm-upload-icon" />
+                                            <div className="fm-upload-text-wrap">
+                                                <strong>Chọn tệp ảnh QR</strong>
+                                                <span>Hỗ trợ PNG, JPG, JPEG</span>
+                                            </div>
+                                            <input
+                                                type="file"
+                                                accept="image/*"
+                                                onChange={handleQrImageUpload}
+                                                style={{ display: "none" }}
+                                            />
+                                        </label>
                                     )}
                                 </div>
                             </div>
+
+                            {(form.qrAccount || form.qrImage) && (
+                                <div className="fm-qr-preview-banner">
+                                    <img
+                                        className="fm-qr-banner-img"
+                                        src={form.qrImage || `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(
+                                            `${form.qrBank || ""} | STK: ${form.qrAccount} | ${form.qrHolder} | ${form.qrTemplate || form.name}`
+                                        )}`}
+                                        alt="QR Preview"
+                                    />
+                                    <div className="fm-qr-banner-info">
+                                        <strong>Mã VietQR đã sẵn sàng</strong>
+                                        <span>{form.qrImage ? "Sử dụng ảnh QR tĩnh đã tải lên" : `${form.qrBank} - ${form.qrAccount}`}</span>
+                                    </div>
+                                </div>
+                            )}
                         </div>
 
                         <div className="fee-modal-footer">

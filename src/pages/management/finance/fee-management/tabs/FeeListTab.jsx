@@ -1,7 +1,26 @@
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo } from "react";
 import { FiDollarSign, FiSearch, FiFileText, FiX, FiCheckCircle } from "react-icons/fi";
 import { toast } from "react-toastify";
 import { Pagination } from "../../../../../components/common";
+import Select from "../../../../../components/ui/Select/Select";
+
+const STATUS_OPTIONS = [
+    { value: "all", label: "Tất cả trạng thái" },
+    { value: "unpaid", label: "Chưa đóng" },
+    { value: "paid", label: "Đã đóng" },
+    { value: "overdue", label: "Quá hạn" }
+];
+
+const SCOPE_OPTIONS = [
+    { value: "school", label: "Toàn trường" },
+    { value: "grade", label: "Theo Khối" }
+];
+
+const GRADE_OPTIONS = [
+    { value: "10", label: "Khối 10" },
+    { value: "11", label: "Khối 11" },
+    { value: "12", label: "Khối 12" }
+];
 
 export default function FeeListTab() {
     // Extended Mock Data
@@ -36,9 +55,7 @@ export default function FeeListTab() {
     const [issueEInvoice, setIssueEInvoice] = useState(true);
     const [transactionNote, setTransactionNote] = useState("");
 
-    useEffect(() => {
-        setCurrentPage(1);
-    }, [filterStatus, filterScope, selectedGrade, selectedClass, searchQuery]);
+
 
     // Derived Logic: Available Classes based on Grade
     const availableClasses = useMemo(() => {
@@ -46,6 +63,10 @@ export default function FeeListTab() {
         const classes = [...new Set(students.filter(s => s.grade === selectedGrade).map(s => s.class))];
         return classes.sort();
     }, [selectedGrade, students]);
+
+    const classOptions = useMemo(() => {
+        return availableClasses.map(c => ({ value: c, label: `Lớp ${c}` }));
+    }, [availableClasses]);
 
     // Filtering Logic
     const filteredStudents = useMemo(() => {
@@ -103,44 +124,62 @@ export default function FeeListTab() {
                 <h3>Danh Sách Nộp Học Phí</h3>
                 <div className="fee-toolbar">
                     {/* Status Filter */}
-                    <select className="fee-select" value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)}>
-                        <option value="all">Tất cả trạng thái</option>
-                        <option value="unpaid">Chưa đóng</option>
-                        <option value="paid">Đã đóng</option>
-                        <option value="overdue">Quá hạn</option>
-                    </select>
+                    <Select
+                        variant="custom"
+                        options={STATUS_OPTIONS}
+                        value={filterStatus}
+                        onChange={(e) => {
+                            setFilterStatus(e.target.value);
+                            setCurrentPage(1);
+                        }}
+                        className="fee-select-custom"
+                    />
 
                     {/* Scope Filter */}
-                    <select className="fee-select" value={filterScope} onChange={(e) => {
-                        setFilterScope(e.target.value);
-                        if (e.target.value === 'school') {
-                            setSelectedGrade("");
-                            setSelectedClass("");
-                        }
-                    }}>
-                        <option value="school">Toàn trường</option>
-                        <option value="grade">Theo Khối</option>
-                    </select>
+                    <Select
+                        variant="custom"
+                        options={SCOPE_OPTIONS}
+                        value={filterScope}
+                        onChange={(e) => {
+                            setFilterScope(e.target.value);
+                            setCurrentPage(1);
+                            if (e.target.value === 'school') {
+                                setSelectedGrade("");
+                                setSelectedClass("");
+                            }
+                        }}
+                        className="fee-select-custom"
+                    />
 
                     {/* Conditional Grade Selector */}
                     {filterScope === 'grade' && (
-                        <select className="fee-select animated-fade-in" value={selectedGrade} onChange={(e) => {
-                            setSelectedGrade(e.target.value);
-                            setSelectedClass("");
-                        }}>
-                            <option value="">Chọn Khối</option>
-                            <option value="10">Khối 10</option>
-                            <option value="11">Khối 11</option>
-                            <option value="12">Khối 12</option>
-                        </select>
+                        <Select
+                            variant="custom"
+                            options={GRADE_OPTIONS}
+                            value={selectedGrade}
+                            onChange={(e) => {
+                                setSelectedGrade(e.target.value);
+                                setSelectedClass("");
+                                setCurrentPage(1);
+                            }}
+                            placeholder="Chọn Khối"
+                            className="fee-select-custom animated-fade-in"
+                        />
                     )}
 
                     {/* Sequential Class Selector */}
                     {filterScope === 'grade' && selectedGrade && (
-                        <select className="fee-select animated-fade-in" value={selectedClass} onChange={(e) => setSelectedClass(e.target.value)}>
-                            <option value="">Tất cả Lớp</option>
-                            {availableClasses.map(c => <option key={c} value={c}>Lớp {c}</option>)}
-                        </select>
+                        <Select
+                            variant="custom"
+                            options={classOptions}
+                            value={selectedClass}
+                            onChange={(e) => {
+                                setSelectedClass(e.target.value);
+                                setCurrentPage(1);
+                            }}
+                            placeholder="Tất cả Lớp"
+                            className="fee-select-custom animated-fade-in"
+                        />
                     )}
 
                     {/* Search */}
@@ -151,7 +190,10 @@ export default function FeeListTab() {
                             className="fee-input" 
                             placeholder="Tên HS hoặc Mã số..." 
                             value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
+                            onChange={(e) => {
+                                setSearchQuery(e.target.value);
+                                setCurrentPage(1);
+                            }}
                         />
                     </div>
                 </div>

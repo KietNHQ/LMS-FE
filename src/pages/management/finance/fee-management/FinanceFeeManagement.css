@@ -575,7 +575,7 @@
 .fee-modal {
     background: #ffffff;
     width: 450px;
-    max-height: 90vh;
+    max-height: 80vh !important; /* Cap the modal card height to 80% of the viewport to guarantee it fits on any screen */
     border-radius: 1.25rem;
     box-shadow: 0 20px 48px rgba(0, 0, 0, 0.2);
     display: flex;
@@ -609,10 +609,9 @@
     display: flex;
     flex-direction: column;
     gap: 1.5rem;
-    overflow-y: auto !important;
-    flex: 1;
-    min-height: 0; /* Critical to enable inner flexbox scrolling */
-    max-height: 520px; /* Bulletproof fixed max-height that fits perfectly on all laptop/desktop screens */
+    overflow-y: auto !important; /* Force scrollbar */
+    flex: 1; /* Allow the body to grow and shrink dynamically based on the modal's capped height */
+    min-height: 0; /* CRITICAL: allows the flex child to shrink below its content height and scroll */
 }
 
 /* Styled scrollbar for the modal body */
@@ -1545,17 +1544,166 @@
     gap: 0.4rem;
 }
 
-.fm-form-group label {
+.fm-form-group label,
+.ui-select__label {
     font-size: 0.82rem;
     font-weight: 700;
-    color: var(--fee-text-primary);
+    color: var(--fee-text-primary) !important;
     letter-spacing: 0.2px;
+    display: block;
+    margin-bottom: 0.4rem;
 }
 
 .fm-form-hint {
     color: var(--fee-text-muted);
     font-size: 0.78rem;
     margin-top: 0.2rem;
+}
+
+/* ── PREMIUM FORM GROUP HOVER TOOLTIP ── */
+.fm-form-group-tooltip {
+    position: relative;
+}
+
+.fm-form-group-tooltip .fm-form-hint {
+    position: absolute;
+    bottom: calc(100% + 4px);
+    right: 0;
+    background: #0f172a;
+    color: #ffffff;
+    padding: 0.4rem 0.75rem;
+    border-radius: 0.5rem;
+    font-size: 0.72rem;
+    font-weight: 700;
+    box-shadow: 0 10px 25px rgba(15, 23, 42, 0.15);
+    white-space: nowrap;
+    pointer-events: none;
+    opacity: 0;
+    transform: translateY(4px) scale(0.95);
+    transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+    z-index: 100;
+}
+
+/* Tooltip arrow pointing down */
+.fm-form-group-tooltip .fm-form-hint::after {
+    content: "";
+    position: absolute;
+    top: 100%;
+    right: 15px;
+    border-width: 5px;
+    border-style: solid;
+    border-color: #0f172a transparent transparent transparent;
+}
+
+/* Trigger on hover or focus of elements inside the group */
+.fm-form-group-tooltip:hover .fm-form-hint,
+.fm-form-group-tooltip:focus-within .fm-form-hint {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+}
+
+/* ── STATIC QR CODE UPLOAD ZONE ── */
+.fm-qr-upload-group {
+    margin-top: 1rem;
+}
+
+.fm-qr-upload-zone {
+    border: 2px dashed #cbd5e1;
+    border-radius: 0.75rem;
+    background: #f8fafc;
+    padding: 0.85rem 1rem;
+    transition: all 0.2s ease;
+}
+
+.fm-qr-upload-zone:hover {
+    border-color: var(--fee-primary);
+    background: var(--fee-primary-soft);
+}
+
+.fm-qr-upload-label {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    cursor: pointer;
+    width: 100%;
+}
+
+.fm-upload-icon {
+    font-size: 1.5rem;
+    color: var(--fee-primary);
+    background: #ffffff;
+    padding: 0.5rem;
+    border-radius: 0.5rem;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+}
+
+.fm-upload-text-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    text-align: left;
+}
+
+.fm-upload-text-wrap strong {
+    font-size: 0.85rem;
+    color: var(--fee-text-primary);
+}
+
+.fm-upload-text-wrap span {
+    font-size: 0.72rem;
+    color: var(--fee-text-muted);
+}
+
+/* Uploaded State preview */
+.fm-qr-uploaded-preview {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.fm-qr-uploaded-preview img {
+    width: 60px;
+    height: 60px;
+    object-fit: contain;
+    border-radius: 0.5rem;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    padding: 2px;
+}
+
+.fm-qr-uploaded-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    align-items: flex-start;
+}
+
+.fm-qr-uploaded-info strong {
+    font-size: 0.85rem;
+    color: var(--fee-success);
+}
+
+.fm-qr-uploaded-info span {
+    font-size: 0.72rem;
+    color: var(--fee-text-muted);
+}
+
+.btn-remove-qr {
+    background: none;
+    border: none;
+    color: var(--fee-danger);
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding: 0;
+    margin-top: 0.25rem;
+    cursor: pointer;
+    text-decoration: underline;
+    transition: color 0.2s ease;
+}
+
+.btn-remove-qr:hover {
+    color: #b91c1c;
 }
 
 .fm-input-with-label {
@@ -1726,194 +1874,97 @@
     animation: fadeIn 0.3s ease;
 }
 
-/* ── PREMIUM QR CODE CONFIG SECTION ── */
-.qr-config-section {
-    margin-top: 0.5rem;
-    border: 2px solid var(--fee-border);
-    border-radius: 1.25rem;
-    background: #ffffff;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
-    overflow: hidden;
-    transition: all 0.3s ease;
-    animation: fadeIn 0.4s ease-out;
-}
-
-.qr-config-section:hover {
-    border-color: var(--fee-border-strong);
-    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.06);
-}
-
-.qr-config-header {
+/* ── SECTION DIVIDER ── */
+.fm-section-divider {
     display: flex;
     align-items: center;
     gap: 0.85rem;
-    padding: 1.25rem 1.5rem;
-    background: var(--fee-primary-soft);
-    border-bottom: 2px solid var(--fee-border);
+    margin: 1.5rem 0 1rem 0;
 }
 
-.qr-config-header svg {
-    font-size: 1.4rem;
-    color: var(--fee-primary);
-    background: rgba(67, 56, 202, 0.1);
-    padding: 0.35rem;
-    border-radius: 0.5rem;
-    box-sizing: content-box;
-    flex-shrink: 0;
-}
-
-.qr-config-header strong {
-    font-size: 0.95rem;
+.fm-section-divider span {
+    font-size: 0.82rem;
     font-weight: 800;
-    color: var(--fee-text-primary);
-    letter-spacing: -0.2px;
+    color: var(--fee-primary);
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    white-space: nowrap;
 }
 
-.qr-config-header .fm-modal-subtitle {
-    margin-top: 0.1rem;
-    font-size: 0.78rem;
-    color: var(--fee-text-muted);
+.fm-section-divider::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: var(--fee-border);
 }
 
-.qr-config-body {
+/* ── FORM GRID 2 COLUMNS ── */
+.fm-form-grid-2 {
     display: grid;
-    grid-template-columns: 1fr 200px;
-    gap: 1.5rem;
-    padding: 1.5rem;
-    align-items: start;
-    background: #fafafb;
-}
-
-.qr-config-fields {
-    display: flex;
-    flex-direction: column;
+    grid-template-columns: 1fr 1fr;
     gap: 1.25rem;
 }
 
-/* Form group overrides for QR config to feel premium */
-.qr-config-fields .fm-form-group {
+/* ── QR PREVIEW BANNER ── */
+.fm-qr-preview-banner {
     display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-}
-
-.qr-config-fields .fm-form-group label {
-    font-size: 0.82rem;
-    font-weight: 700;
-    color: var(--fee-text-secondary);
-}
-
-.qr-config-fields .fee-input {
-    border-color: var(--fee-border);
-    transition: all 0.25s ease;
-}
-
-.qr-config-fields .fee-input:focus {
-    border-color: var(--fee-primary);
-    box-shadow: 0 0 0 4px rgba(67, 56, 202, 0.08);
-}
-
-.qr-config-fields .fm-form-hint {
-    font-size: 0.72rem;
-    color: var(--fee-text-muted);
-    margin-top: 0.15rem;
-}
-
-/* ── PREMIUM LIVE QR PREVIEW PANEL ── */
-.qr-preview-panel {
-    display: flex;
-    flex-direction: column;
     align-items: center;
-    justify-content: center;
-    text-align: center;
-    padding: 1.25rem;
-    background: #ffffff;
-    border: 2px dashed var(--fee-border-strong);
-    border-radius: 1.1rem;
-    box-shadow: 0 10px 25px rgba(67, 56, 202, 0.04);
-    animation: fadeIn 0.4s ease;
-    transition: all 0.3s ease;
+    gap: 1.25rem;
+    padding: 1rem 1.25rem;
+    background: var(--fee-primary-soft);
+    border: 1.5px dashed var(--fee-primary);
+    border-radius: 1rem;
+    margin-top: 0.5rem;
+    animation: fadeIn 0.3s ease;
 }
 
-.qr-preview-panel:hover {
-    transform: translateY(-2px);
-    border-color: var(--fee-primary);
-    box-shadow: 0 15px 35px rgba(67, 56, 202, 0.08);
-}
-
-.qr-preview-label {
-    font-size: 0.68rem;
-    font-weight: 800;
-    text-transform: uppercase;
-    letter-spacing: 1.2px;
-    color: var(--fee-primary);
-    margin-bottom: 0.75rem;
-    background: rgba(67, 56, 202, 0.08);
-    padding: 0.25rem 0.6rem;
-    border-radius: 10rem;
-}
-
-.qr-preview-img {
+.fm-qr-banner-img {
     width: 140px;
     height: 140px;
     border-radius: 0.75rem;
     border: 1px solid var(--fee-border);
     background: #ffffff;
-    padding: 8px;
-    transition: all 0.3s ease;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+    padding: 6px;
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.05);
+    flex-shrink: 0;
+    transition: transform 0.2s ease;
+    cursor: zoom-in;
 }
 
-.qr-preview-img:hover {
-    transform: scale(1.04);
-    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.1);
+.fm-qr-banner-img:hover {
+    transform: scale(1.05);
 }
 
-.qr-preview-bank {
-    font-size: 0.82rem;
+.fm-qr-banner-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.fm-qr-banner-info strong {
+    font-size: 0.9rem;
     font-weight: 800;
     color: var(--fee-text-primary);
-    margin-top: 0.75rem;
 }
 
-.qr-preview-account {
+.fm-qr-banner-info span {
     font-size: 0.78rem;
-    color: var(--fee-text-muted);
+    color: var(--fee-text-secondary);
     font-weight: 700;
-    letter-spacing: 0.5px;
-    margin-top: 0.15rem;
-    background: var(--fee-surface-soft);
-    padding: 0.15rem 0.5rem;
-    border-radius: 0.35rem;
 }
 
 @media (max-width: 640px) {
-    .qr-config-body {
+    .fm-form-grid-2 {
         grid-template-columns: 1fr;
-        gap: 1.25rem;
+        gap: 1rem;
     }
+}
 
-    .qr-preview-panel {
-        width: 100%;
-        flex-direction: row;
-        gap: 1.25rem;
-        padding: 1rem;
-        justify-content: flex-start;
-        text-align: left;
-    }
+/* ── CUSTOM SELECT TOOLBAR STYLING ── */
+.fee-toolbar .fee-select-custom {
+    min-width: 180px;
+}
 
-    .qr-preview-label {
-        align-self: flex-start;
-        margin-bottom: 0;
-    }
-
-    .qr-preview-img {
-        width: 90px;
-        height: 90px;
-    }
-
-    .qr-preview-info {
-        display: flex;
-        flex-direction: column;
-    }
+.fee-search-wrap .fee-input {
+    height: 44px;
 }
