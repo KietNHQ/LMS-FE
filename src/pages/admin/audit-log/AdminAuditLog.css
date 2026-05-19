@@ -266,3 +266,33 @@
     align-items: center;
 }
 
+/* Style cho chi tiết thay đổi */
+.change-detail-tag {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 12px;
+    background: #f1f5f9; /* Nền xám nhạt hiện đại */
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    color: #475569;
+    transition: all 0.2s ease;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+}
+
+.change-detail-tag:hover {
+    background: #e2e8f0;
+    border-color: #cbd5e1;
+}
+
+.action-prefix {
+    font-weight: 500;
+    color: #64748b;
+    margin-right: 4px;
+}
+
+.perm-label {
+    font-weight: 700;
+    color: #334155;
+}
+

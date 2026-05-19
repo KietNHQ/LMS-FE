@@ -73,6 +73,8 @@ export default function TeacherSchedule() {
           params: { schoolYear: selectedSchoolYear, term: selectedTerm }
         });
         if (response.success && response.data) return response.data;
+        if (Array.isArray(response)) return response;
+        if (Array.isArray(response?.data)) return response.data;
       } catch (apiErr) {
         console.warn("API getTimetable failed, using mock:", apiErr);
         const response = await teacherService.getTimetable({ 
@@ -80,11 +82,19 @@ export default function TeacherSchedule() {
           params: { schoolYear: selectedSchoolYear, term: selectedTerm }
         });
         if (response.success && response.data) return response.data;
+        if (Array.isArray(response)) return response;
+        if (Array.isArray(response?.data)) return response.data;
       }
       return [];
     },
     staleTime: 10 * 60 * 1000,
   });
+
+  const safeTimetableData = useMemo(() => {
+    if (Array.isArray(timetableData)) return timetableData;
+    if (timetableData && Array.isArray(timetableData.data)) return timetableData.data;
+    return [];
+  }, [timetableData]);
   
   const handleSelectDay = (idx) => {
     setSelectedDay(idx);
@@ -98,10 +108,10 @@ export default function TeacherSchedule() {
   const reminderList = selectedLesson ? getReminderByType(lessonType) : [];
 
   const uniqueClasses = useMemo(() => {
-    if (!timetableData || timetableData.length === 0) return [];
-    const classes = [...new Set(timetableData.map(item => item.class_name))].filter(Boolean);
+    if (!safeTimetableData || safeTimetableData.length === 0) return [];
+    const classes = [...new Set(safeTimetableData.map(item => item.class_name))].filter(Boolean);
     return classes.sort();
-  }, [timetableData]);
+  }, [safeTimetableData]);
 
   return (
     <div className="teacher-schedule-page">
@@ -138,7 +148,7 @@ export default function TeacherSchedule() {
             onLessonSelect={setSelectedLesson}
             sessionView={sessionView}
             setSessionView={setSessionView}
-            apiData={timetableData}
+            apiData={safeTimetableData}
             isLoading={isLoading}
           />
         </div>
@@ -155,7 +165,7 @@ export default function TeacherSchedule() {
           selectedDay={selectedDay}
           selectedClass={selectedClass}
           onLessonSelect={setSelectedLesson}
-          apiData={timetableData}
+          apiData={safeTimetableData}
         />
       </Modal>
 

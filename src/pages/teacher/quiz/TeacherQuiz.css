@@ -249,3 +249,113 @@
 .teacher-quiz-retry-btn:hover {
     background: #9b2c2c;
 }
+
+/* Publish Confirmation Modal */
+.teacher-quiz__publish-confirm-modal {
+    width: min(580px, 100%);
+    background: #ffffff;
+}
+
+.teacher-quiz__publish-confirm-content {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.teacher-quiz__publish-confirm-text {
+    margin: 0;
+    font-size: 16px;
+    line-height: 1.6;
+    color: #1e293b;
+}
+
+.teacher-quiz__publish-confirm-note {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 700;
+    color: #475569;
+}
+
+.teacher-quiz__publish-confirm-options {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 6px;
+}
+
+.teacher-quiz__publish-btn-grade,
+.teacher-quiz__btn-class {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 16px;
+    border-radius: 16px;
+    cursor: pointer;
+    text-align: left;
+    transition: all 0.2s ease-in-out;
+}
+
+.teacher-quiz__publish-btn-grade {
+    border: 2px solid #2a9d8f;
+    background: #f0faf8;
+}
+
+.teacher-quiz__publish-btn-grade:hover {
+    background: #e0f5f2;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 16px rgba(42, 157, 143, 0.12);
+}
+
+.teacher-quiz__btn-class {
+    border: 2px solid #cbd5e1;
+    background: #ffffff;
+}
+
+.teacher-quiz__btn-class:hover {
+    border-color: #94a3b8;
+    background: #f8fafc;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 16px rgba(148, 163, 184, 0.1);
+}
+
+.teacher-quiz__btn-title {
+    font-size: 16px;
+    font-weight: 700;
+    margin-bottom: 4px;
+}
+
+.teacher-quiz__publish-btn-grade .teacher-quiz__btn-title {
+    color: #2a9d8f;
+}
+
+.teacher-quiz__btn-class .teacher-quiz__btn-title {
+    color: #334155;
+}
+
+.teacher-quiz__btn-desc {
+    font-size: 13px;
+    line-height: 1.4;
+    color: #64748b;
+}
+
+.teacher-quiz__publish-confirm-actions {
+    margin-top: 20px;
+    display: flex;
+    justify-content: flex-end;
+}
+
+.teacher-quiz__publish-confirm-cancel {
+    padding: 10px 24px;
+    border: 1px solid #cbd5e1;
+    border-radius: 12px;
+    background: #ffffff;
+    color: #475569;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.teacher-quiz__publish-confirm-cancel:hover {
+    background: #f1f5f9;
+}

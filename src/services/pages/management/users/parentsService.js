@@ -94,7 +94,7 @@ export const parentsService = {
   listParents: async () => {
     // Prefer /guardians endpoint — it has student_guardian join data
     try {
-      const response = await axiosClient.get('/guardians', { params: { page: 1, limit: 2000 } });
+      const response = await axiosClient.get('/guardians', { params: { page: 1, limit: 2000, _t: Date.now() } });
       const payload = getPayload(response);
       const rows = getRows(payload);
       if (rows.length > 0) return rows.map(parseParent);
@@ -106,7 +106,7 @@ export const parentsService = {
     const userRoleCandidates = ['guardian', 'parent'];
     for (const role of userRoleCandidates) {
       try {
-        const response = await axiosClient.get('/users', { params: { role, page: 1, limit: 500 } });
+        const response = await axiosClient.get('/users', { params: { role, page: 1, limit: 500, _t: Date.now() } });
         const payload = getPayload(response);
         const rows = getRows(payload);
         if (rows.length > 0) return rows.map(parseParent);

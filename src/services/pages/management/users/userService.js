@@ -154,7 +154,7 @@ const buildUpdatePayload = (formData = {}) => {
 export const userService = {
   listUsers: async (params = {}) => {
     const response = await requestWithEndpointFallback((basePath) =>
-      axiosClient.get(basePath, { params })
+      axiosClient.get(basePath, { params: { ...params, _t: Date.now() } })
     );
 
     const payload = getPayload(response);

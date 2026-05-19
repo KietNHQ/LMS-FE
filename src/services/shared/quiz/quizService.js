@@ -72,6 +72,7 @@ const mapQuestionFromApi = (question = {}) => {
         questionType: normalizeQuestionTypeFromApi(question.question_type || question.questionType),
         points: Number(question.points || 0),
         order: question.order_num ?? question.order ?? null,
+        questionImage: question.question_image || question.questionImage || question.payload?.questionImage || "",
         answers: answers.map((answer) => ({
             id: answer.id,
             answerText: answer.answer_text || answer.answerText || "",
@@ -85,6 +86,9 @@ const buildQuestionPayload = (questionData = {}) => ({
     questionType: normalizeQuestionTypeToApi(questionData.questionType || questionData.type),
     points: Number(questionData.points ?? questionData.score ?? 1),
     order: toNumber(questionData.order),
+    questionImage: questionData.questionImage || "",
+    options: questionData.options || [],
+    correctAnswer: questionData.correctAnswer || null,
 });
 
 const toFormData = (pairs = {}) => {
@@ -148,7 +152,7 @@ const mapApiQuizToView = (quiz = {}) => {
         quizType: quiz.quiz_type || quiz.quizType || "practice",
         classTeacherSubjectId: quiz.class_teacher_subject_id ?? quiz.classTeacherSubjectId,
         questions:
-            toNumber(quiz.question_count ?? quiz.questionsCount ?? quiz.totalQuestions) || 0,
+            toNumber(quiz.questions_count ?? quiz.question_count ?? quiz.questionsCount ?? quiz.totalQuestions) || 0,
         submissionCount:
             toNumber(quiz.submission_count ?? quiz.submissionCount ?? quiz.totalAttempts) || 0,
         gradingStatus: quiz.grading_status || quiz.gradingStatus || "no-submission",
@@ -282,8 +286,8 @@ async function deleteQuiz(id) {
     return axiosClient.delete(`${QUIZ_ENDPOINT}/${id}`);
 }
 
-async function publishQuiz(id) {
-    return axiosClient.post(`${QUIZ_ENDPOINT}/${id}/publish`);
+async function publishQuiz(id, payload = {}) {
+    return axiosClient.post(`${QUIZ_ENDPOINT}/${id}/publish`, payload);
 }
 
 async function unpublishQuiz(id) {
@@ -411,6 +415,14 @@ async function importQuestionsFromExcel(quizId, file, mode = "append") {
     });
 }
 
+async function uploadQuestionImage(file) {
+    const formData = new FormData();
+    formData.append("file", file);
+    return axiosClient.post(`${QUIZ_ENDPOINT}/questions/upload-image`, formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+    });
+}
+
 const quizService = {
     listClassTeacherSubjects,
     listQuizzes,
@@ -441,6 +453,7 @@ const quizService = {
     previewImportFile,
     importQuizFromExcel,
     importQuestionsFromExcel,
+    uploadQuestionImage,
 };
 
 QUIZ_SERVICE_EXPORTS.push(
@@ -472,7 +485,8 @@ QUIZ_SERVICE_EXPORTS.push(
     downloadImportTemplate,
     previewImportFile,
     importQuizFromExcel,
-    importQuestionsFromExcel
+    importQuestionsFromExcel,
+    uploadQuestionImage
 );
 
 export { quizService };

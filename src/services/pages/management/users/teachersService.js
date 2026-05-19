@@ -38,6 +38,10 @@ const parseTeacher = (item = {}) => {
     }
   }
   
+  if (!name && (item.given_name || item.surname)) {
+    name = `${item.surname || ""} ${item.given_name || ""}`.trim();
+  }
+  
   if (!name && (item.firstName || item.lastName)) {
     name = `${item.lastName || ""} ${item.firstName || ""}`.trim();
   }
@@ -48,7 +52,7 @@ const parseTeacher = (item = {}) => {
   }
 
   return {
-    id: item.id,
+    id: item.user_id || item.id,
     name,
     lastName: item.lastName || item.profile?.lastName || "",
     firstName: item.firstName || item.profile?.firstName || "",
@@ -56,8 +60,8 @@ const parseTeacher = (item = {}) => {
     email: item.email || "",
     role: "Giáo viên",
     phone: item.phone || item.profile?.phone || "—",
-    subject: item.subject || item.profile?.subject || item.subject_name || "",
-    homeroomClass: item.homeroomClass || item.homeroom_class || "",
+    subject: item.subject || item.profile?.subject || item.subjects || item.subject_name || "",
+    homeroomClass: item.homeroomClass || item.homeroom_class || item.homeroom_class_name || "",
     assignedClasses: item.assignedClasses || item.assigned_classes || [],
     status: statusFromApi.get(item.status) || item.status || "Hoạt động",
     createdAt: item.createdAt ? `${item.createdAt}`.slice(0, 10) : "",
@@ -82,10 +86,11 @@ const getRows = (payload) => {
 export const teachersService = {
   listTeachers: async () => {
     const response = await requestWithFallback(["/teachers", "/users"], (basePath) => {
+      const params = { page: 1, limit: 2000, _t: Date.now() };
       if (basePath === "/users") {
-        return axiosClient.get(basePath, { params: { role: "teacher", page: 1, limit: 2000 } });
+        return axiosClient.get(basePath, { params: { ...params, role: "teacher" } });
       }
-      return axiosClient.get(basePath, { params: { page: 1, limit: 2000 } });
+      return axiosClient.get(basePath, { params });
     });
 
     const payload = getPayload(response);

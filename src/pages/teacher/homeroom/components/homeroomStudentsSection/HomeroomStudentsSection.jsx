@@ -88,16 +88,12 @@ export default function HomeroomStudentsSection({
         }, {});
     }, [officers]);
 
-    // Activity Logic (Deterministic pseudo-random data based on student ID)
+    // Activity Logic (Actual stats from DB)
     const getMergedActivityData = (baseStudents) => {
         return baseStudents.map((student) => {
-            // Create a stable seed based on ID and current period context
-            const seed = Number(student.id || 0) + (periodType === "weekly" ? selectedWeek : selectedSemester * 10);
-            
-            // Deterministic "random" values
-            const violations = (seed * 7) % 4;
-            const meritPoints = (seed * 13) % 6;
-            const attendanceRate = 90 + (seed * 3) % 11;
+            const violations = student.violationCount ?? 0;
+            const meritPoints = student.meritCount ?? 0;
+            const attendanceRate = Math.round(parseFloat(student.attendanceScore || 10.0) * 10);
 
             let conduct = "Tốt";
             if (attendanceRate < 95 || violations > 2) conduct = "Khá";
