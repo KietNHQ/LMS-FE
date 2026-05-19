@@ -111,8 +111,17 @@ export default function TeacherSupport() {
       content: userText,
       time: currentTime,
     };
-    setMessages((prev) => [...prev, userMsg]);
+
     const botMsgId = `bot-${Date.now()}`;
+    const initialBotMsg = {
+      id: botMsgId,
+      role: "assistant",
+      content: "Đang suy nghĩ...",
+      isThinking: true,
+      time: currentTime,
+    };
+
+    setMessages((prev) => [...prev, userMsg, initialBotMsg]);
     let botResponseText = "";
 
     try {
@@ -134,17 +143,6 @@ export default function TeacherSupport() {
       if (!response.ok) {
         throw new Error("Không thể kết nối với dịch vụ stream AI");
       }
-
-      // Add the empty bot message to prepare for streaming chunks
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: botMsgId,
-          role: "assistant",
-          content: "",
-          time: new Date().toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" }),
-        },
-      ]);
 
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
@@ -170,7 +168,7 @@ export default function TeacherSupport() {
                 botResponseText += data.content;
                 setMessages((prev) =>
                   prev.map((msg) =>
-                    msg.id === botMsgId ? { ...msg, content: botResponseText } : msg
+                    msg.id === botMsgId ? { ...msg, content: botResponseText, isThinking: false } : msg
                   )
                 );
               } else if (data.type === "conversationId" && data.conversationId) {
@@ -186,31 +184,18 @@ export default function TeacherSupport() {
       }
     } catch (error) {
       console.error("AI Stream Error:", error);
-      setMessages((prev) => {
-        const botMsgExists = prev.some((m) => m.id === botMsgId);
-        if (botMsgExists) {
-          return prev.map((msg) =>
-            msg.id === botMsgId
-              ? {
-                  ...msg,
-                  content: "Xin lỗi, tôi gặp sự cố kết nối với hệ thống AI. Vui lòng thử lại sau.",
-                  isError: true,
-                }
-              : msg
-          );
-        } else {
-          return [
-            ...prev,
-            {
-              id: `err-${Date.now()}`,
-              role: "assistant",
-              content: "Xin lỗi, tôi gặp sự cố kết nối với hệ thống AI. Vui lòng thử lại sau.",
-              time: new Date().toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" }),
-              isError: true,
-            },
-          ];
-        }
-      });
+      setMessages((prev) =>
+        prev.map((msg) =>
+          msg.id === botMsgId
+            ? {
+                ...msg,
+                content: "Xin lỗi, tôi gặp sự cố kết nối với hệ thống AI. Vui lòng thử lại sau.",
+                isError: true,
+                isThinking: false,
+              }
+            : msg
+        )
+      );
     } finally {
       setIsSending(false);
     }
@@ -251,7 +236,7 @@ export default function TeacherSupport() {
             {messages.map((msg) => (
               <div
                 key={msg.id}
-                className={`teacher-chat-message ${msg.role === "assistant" ? "is-bot" : "is-user"} ${msg.isError ? "is-error" : ""}`}
+                className={`teacher-chat-message ${msg.role === "assistant" ? "is-bot" : "is-user"} ${msg.isError ? "is-error" : ""} ${msg.isThinking ? "typing" : ""}`}
               >
                 <div className="teacher-chat-role">
                   {msg.role === "assistant" ? "Bot" : "Bạn"}
@@ -260,12 +245,6 @@ export default function TeacherSupport() {
                 <div className="teacher-chat-time">{msg.time}</div>
               </div>
             ))}
-            {isSending && (
-              <div className="teacher-chat-message is-bot typing">
-                <div className="teacher-chat-role">Bot</div>
-                Đang suy nghĩ...
-              </div>
-            )}
           </div>
 
           <div className="teacher-chat-input">
