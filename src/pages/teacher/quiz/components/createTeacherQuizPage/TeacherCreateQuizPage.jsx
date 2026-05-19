@@ -10,7 +10,10 @@ import {
     DEFAULT_QUIZ_DURATION_LABEL,
     formatDurationLabel,
     parseDurationMinutes,
+    quizService,
 } from "../../../../../services/shared/quiz/quizService";
+import { toast } from "react-toastify";
+import { teacherService } from "../../../../../services/pages/teacher/teacherService";
 import "./TeacherCreateQuizPage.css";
 
 const MAX_QUESTION_SCORE = 10;
@@ -30,18 +33,6 @@ const emptyForm = {
     score: "0.25",
 };
 
-const createQuizFromMeta = (meta = {}) => ({
-    id: Date.now(),
-    title: meta.title || "Bài kiểm tra mới",
-    subject: meta.subject || "",
-    grade: meta.grade || "",
-    className: meta.className || "",
-    duration: formatDurationLabel(meta.duration || DEFAULT_QUIZ_DURATION_LABEL),
-    createdByRole: meta.createdByRole || "teacher",
-    createdByName: meta.createdByName || "",
-    questions: [],
-});
-
 const getQuestionScoreValue = (score) => {
     const parsed = Number.parseFloat(score);
     return Number.isFinite(parsed) ? parsed : 0;
@@ -50,29 +41,66 @@ const getQuestionScoreValue = (score) => {
 const getTotalScore = (questions = []) =>
     questions.reduce((sum, item) => sum + getQuestionScoreValue(item.score), 0);
 
-const buildQuizCardPayload = (quizData, quizCardId) => ({
-    id: quizCardId || Date.now(),
-    title: quizData.title,
-    description: `Bài kiểm tra ${quizData.subject || ""} cho lớp ${quizData.className || ""}`.trim(),
-    subject: quizData.subject || "",
-    grade: quizData.grade || "",
-    className: quizData.className || "",
-    questions: quizData.questions.length,
-    duration: parseDurationMinutes(quizData.duration),
-    durationLabel: formatDurationLabel(quizData.duration),
-    status: "open",
-    createdAt: new Date().toISOString().slice(0, 10),
-    createdByRole: quizData.createdByRole || "teacher",
-    createdByName: quizData.createdByName || "",
-});
+const normalizeQuestionTypeFromApi = (questionType) => {
+    if (questionType === "multiple_choice") return "multiple-choice";
+    if (questionType === "true_false") return "true-false";
+    return questionType || "multiple-choice";
+};
+
+const mapQuestionFromApiToView = (apiQuestion) => {
+    const type = normalizeQuestionTypeFromApi(apiQuestion.questionType || apiQuestion.question_type);
+    const answers = { A: "", B: "", C: "", D: "" };
+    let correctAnswer = "A";
+
+    const apiAnswers = Array.isArray(apiQuestion.quiz_answers)
+        ? apiQuestion.quiz_answers
+        : Array.isArray(apiQuestion.answers)
+            ? apiQuestion.answers
+            : [];
+
+    if (type === "multiple-choice" && apiAnswers.length > 0) {
+        const labels = ["A", "B", "C", "D"];
+        apiAnswers.forEach((ans, idx) => {
+            if (idx < 4) {
+                const label = labels[idx];
+                answers[label] = ans.answer_text || ans.answerText || "";
+                if (ans.is_correct ?? ans.isCorrect) {
+                    correctAnswer = label;
+                }
+            }
+        });
+    }
+
+    return {
+        id: apiQuestion.id,
+        type,
+        question: apiQuestion.questionText || apiQuestion.question_text || "",
+        questionImage: apiQuestion.questionImage || apiQuestion.payload?.questionImage || "",
+        answers,
+        correctAnswer,
+        score: apiQuestion.points || 0.25,
+    };
+};
+
+const creationCache = {};
 
 export default function TeacherCreateQuizPage() {
     const location = useLocation();
     const navigate = useNavigate();
     const routeQuizMeta = location.state?.quizMeta;
 
-    const [quiz, setQuiz] = useState(() => createQuizFromMeta(routeQuizMeta));
-    const [showSetupDialog, setShowSetupDialog] = useState(!routeQuizMeta);
+    const [quiz, setQuiz] = useState({
+        id: null,
+        title: "",
+        subject: "",
+        grade: "",
+        className: "",
+        duration: "",
+        createdByRole: "teacher",
+        createdByName: "",
+        questions: [],
+    });
+    const [showSetupDialog, setShowSetupDialog] = useState(false);
     const [formData, setFormData] = useState(emptyForm);
     const [questionType, setQuestionType] = useState("multiple-choice");
     const [editingQuestionId, setEditingQuestionId] = useState(null);
@@ -94,6 +122,131 @@ export default function TeacherCreateQuizPage() {
             }
         };
     }, []);
+
+    useEffect(() => {
+        const initializeQuiz = async () => {
+            if (routeQuizMeta?.id) {
+                // EDIT MODE
+                try {
+                    const apiQuestions = await quizService.listQuestions(routeQuizMeta.id);
+                    const mappedQuestions = apiQuestions.map(mapQuestionFromApiToView);
+                    setQuiz({
+                        id: routeQuizMeta.id,
+                        title: routeQuizMeta.title || "Bài kiểm tra",
+                        subject: routeQuizMeta.subject || "",
+                        grade: routeQuizMeta.grade || "",
+                        className: routeQuizMeta.className || "",
+                        duration: formatDurationLabel(routeQuizMeta.duration || DEFAULT_QUIZ_DURATION_LABEL),
+                        createdByRole: routeQuizMeta.createdByRole || "teacher",
+                        createdByName: routeQuizMeta.createdByName || "",
+                        questions: mappedQuestions,
+                    });
+                } catch (err) {
+                    console.error("Failed to load questions:", err);
+                    toast.error("Không thể tải danh sách câu hỏi.");
+                }
+            } else if (routeQuizMeta) {
+                // NEW MODE: Create quiz on backend right away so we have a valid quiz ID
+                try {
+                    let targetCtsId = routeQuizMeta.classTeacherSubjectId;
+                    
+                    if (!targetCtsId) {
+                        const storedUser = JSON.parse(localStorage.getItem("user") || sessionStorage.getItem("user") || "{}");
+                        const teacherId = storedUser.profile?.id || storedUser.teacherId || (storedUser.role === 'teacher' ? storedUser.id : null);
+                        
+                        if (teacherId) {
+                            const teacherSubs = await teacherService.getTeacherSubjects({
+                                mock: false,
+                                pathParams: { id: teacherId }
+                            });
+                            if (teacherSubs && teacherSubs.success && Array.isArray(teacherSubs.data)) {
+                                const matched = teacherSubs.data.find(
+                                    a => a.class_name === routeQuizMeta.className &&
+                                         (a.subjects?.[0]?.name === routeQuizMeta.subject || a.subject_name === routeQuizMeta.subject)
+                                );
+                                if (matched) {
+                                    targetCtsId = matched.class_teacher_subject_id || matched.id;
+                                }
+                            }
+                        }
+                    }
+                    
+                    if (!targetCtsId) {
+                        // Ultimate fallback: check listClassTeacherSubjects
+                        const assignments = await quizService.listClassTeacherSubjects();
+                        const matched = assignments.find((item) => item.className === routeQuizMeta.className);
+                        if (matched) {
+                            targetCtsId = matched.value;
+                        }
+                    }
+ 
+                    if (!targetCtsId) {
+                        throw new Error(`Không tìm thấy phân công giảng dạy cho lớp ${routeQuizMeta.className} môn ${routeQuizMeta.subject}.`);
+                    }
+ 
+                    const durationMin = parseDurationMinutes(routeQuizMeta.duration);
+                    
+                    // Create quiz on backend with caching to prevent StrictMode duplicates
+                    const cacheKey = `${routeQuizMeta.title}_${routeQuizMeta.className}_${routeQuizMeta.subject}`;
+                    let response;
+                    if (creationCache[cacheKey]) {
+                        response = await creationCache[cacheKey];
+                    } else {
+                        creationCache[cacheKey] = quizService.createQuiz({
+                            classTeacherSubjectId: targetCtsId,
+                            title: routeQuizMeta.title,
+                            description: `Bài kiểm tra môn ${routeQuizMeta.subject} lớp ${routeQuizMeta.className}`,
+                            durationMinutes: durationMin,
+                            quizType: durationMin >= 45 ? "exam" : "practice",
+                            isPublished: false,
+                        });
+                        try {
+                            response = await creationCache[cacheKey];
+                        } finally {
+                            delete creationCache[cacheKey];
+                        }
+                    }
+ 
+                    const created = response.data?.data || response.data || response;
+                    
+                    // CRITICAL: Replace route state so refreshes don't re-create the quiz!
+                    navigate(".", {
+                        replace: true,
+                        state: {
+                            ...location.state,
+                            quizMeta: {
+                                ...routeQuizMeta,
+                                id: created.id,
+                            }
+                        }
+                    });
+
+                    setQuiz({
+                        id: created.id,
+                        title: routeQuizMeta.title,
+                        subject: routeQuizMeta.subject,
+                        grade: routeQuizMeta.grade,
+                        className: routeQuizMeta.className,
+                        duration: formatDurationLabel(routeQuizMeta.duration),
+                        createdByRole: "teacher",
+                        createdByName: routeQuizMeta.createdByName || "",
+                        questions: [],
+                    });
+                    toast.success("Khởi tạo bài kiểm tra thành công.");
+                } catch (err) {
+                    console.error("Failed to initialize new quiz on backend:", err);
+                    const errorMsg = err.response?.data?.error || err.message || "Không thể tạo bài kiểm tra.";
+                    alert(`Lỗi: ${errorMsg}`);
+                    navigate("/teacher/quiz");
+                }
+            } else {
+                // No meta passed, show setup dialog
+                setShowSetupDialog(true);
+            }
+        };
+
+        initializeQuiz();
+    }, [routeQuizMeta?.id, routeQuizMeta]);
 
     useEffect(() => {
         const mainScrollContainer = document.querySelector(".teacher-layout__main");
@@ -128,8 +281,41 @@ export default function TeacherCreateQuizPage() {
         setFormData((prev) => ({ ...prev, question: value }));
     };
 
-    const handleChangeQuestionImage = (value) => {
-        setFormData((prev) => ({ ...prev, questionImage: value }));
+    const handleChangeQuestionImage = async (value) => {
+        if (value instanceof File) {
+            let loadingToast;
+            try {
+                loadingToast = toast.loading("Đang tải ảnh lên Cloudinary...");
+                const response = await quizService.uploadQuestionImage(value);
+                const uploadResult = response.data?.data || response.data || response;
+                
+                if (uploadResult && uploadResult.url) {
+                    setFormData((prev) => ({ ...prev, questionImage: uploadResult.url }));
+                    toast.update(loadingToast, {
+                        render: "Tải ảnh lên thành công!",
+                        type: "success",
+                        isLoading: false,
+                        autoClose: 2000,
+                    });
+                } else {
+                    throw new Error("Không lấy được URL ảnh.");
+                }
+            } catch (err) {
+                console.error("Cloudinary upload failed:", err);
+                if (loadingToast) {
+                    toast.update(loadingToast, {
+                        render: "Tải ảnh lên Cloudinary thất bại!",
+                        type: "error",
+                        isLoading: false,
+                        autoClose: 3000,
+                    });
+                } else {
+                    toast.error("Tải ảnh lên Cloudinary thất bại!");
+                }
+            }
+        } else {
+            setFormData((prev) => ({ ...prev, questionImage: value }));
+        }
     };
 
     const handleChangeAnswer = (key, value) => {
@@ -210,65 +396,65 @@ export default function TeacherCreateQuizPage() {
             return false;
         }
 
-        // No longer mandatory to have at least 1 question before saving, 
-        // allowing the user to go back even with an empty draft (matching Admin behavior).
-
         return true;
     };
 
-    const saveQuizAndReturnCard = ({ showSuccessAlert = true } = {}) => {
-        if (!validateQuizBeforeSave()) {
-            return null;
-        }
-
-        const nextSavedCard = buildQuizCardPayload(quiz, savedQuizCardPayload?.id);
-        setSavedQuizCardPayload(nextSavedCard);
-
-        if (showSuccessAlert) {
-            alert("Đã lưu bài kiểm tra thành công.");
-        }
-
-        return nextSavedCard;
-    };
-
-    const handleAddOrUpdateQuestion = () => {
+    const handleAddOrUpdateQuestion = async () => {
         if (!validateForm()) return;
 
-        const questionPayload = {
-            id: editingQuestionId ?? Date.now(),
-            type: questionType,
-            question: formData.question.trim(),
-            questionImage: formData.questionImage || "",
-            answers:
-                questionType === "multiple-choice"
-                    ? {
-                        A: formData.answers.A.trim(),
-                        B: formData.answers.B.trim(),
-                        C: formData.answers.C.trim(),
-                        D: formData.answers.D.trim(),
-                    }
-                    : {},
-            correctAnswer:
-                questionType === "multiple-choice" ? formData.correctAnswer : null,
-            score: Number(formData.score) || 0.25,
-        };
+        const apiOptions = questionType === "multiple-choice" ? [
+            { text: formData.answers.A.trim(), isCorrect: formData.correctAnswer === "A" },
+            { text: formData.answers.B.trim(), isCorrect: formData.correctAnswer === "B" },
+            { text: formData.answers.C.trim(), isCorrect: formData.correctAnswer === "C" },
+            { text: formData.answers.D.trim(), isCorrect: formData.correctAnswer === "D" }
+        ] : [];
 
-        const nextQuestions = editingQuestionId
-            ? activeQuiz.questions.map((item) =>
-                item.id === editingQuestionId ? questionPayload : item
-            )
-            : [...activeQuiz.questions, questionPayload];
+        try {
+            let savedQuestion;
+            if (editingQuestionId) {
+                // Delete old and add new to completely replace all question answers and fields safely
+                await quizService.deleteQuestion(quiz.id, editingQuestionId);
+                const response = await quizService.addQuestion(quiz.id, {
+                    question: formData.question.trim(),
+                    type: questionType,
+                    score: Number(formData.score) || 0.25,
+                    questionImage: formData.questionImage || "",
+                    options: apiOptions,
+                    correctAnswer: formData.correctAnswer,
+                });
+                savedQuestion = response.data?.data || response.data || response;
+            } else {
+                const response = await quizService.addQuestion(quiz.id, {
+                    question: formData.question.trim(),
+                    type: questionType,
+                    score: Number(formData.score) || 0.25,
+                    questionImage: formData.questionImage || "",
+                    options: apiOptions,
+                    correctAnswer: formData.correctAnswer,
+                });
+                savedQuestion = response.data?.data || response.data || response;
+            }
 
-        const nextTotalScore = getTotalScore(nextQuestions);
-        if (nextTotalScore > MAX_QUIZ_TOTAL_SCORE) {
-            alert(
-                `Tổng điểm bài kiểm tra không được vượt quá ${MAX_QUIZ_TOTAL_SCORE} điểm.`
-            );
-            return;
+            const mappedSaved = mapQuestionFromApiToView(savedQuestion);
+
+            setQuiz((prev) => {
+                const nextQuestions = editingQuestionId
+                    ? prev.questions.map((item) => (item.id === editingQuestionId ? mappedSaved : item))
+                    : [...prev.questions, mappedSaved];
+                return { ...prev, questions: nextQuestions };
+            });
+
+            toast.success(editingQuestionId ? "Cập nhật câu hỏi thành công." : "Thêm câu hỏi thành công.");
+            resetForm();
+        } catch (err) {
+            console.error("Save question error:", err);
+            let errorMsg = err.response?.data?.error || err.message || "Không thể lưu câu hỏi.";
+            if (err.response?.data?.details && Array.isArray(err.response.data.details)) {
+                const detailMsgs = err.response.data.details.map(d => d.message).join("\n");
+                errorMsg = `${errorMsg}:\n${detailMsgs}`;
+            }
+            alert(`Lỗi: ${errorMsg}`);
         }
-
-        setQuiz((prev) => ({ ...prev, questions: nextQuestions }));
-        resetForm();
     };
 
     const handleDeleteQuestion = (questionId) => {
@@ -279,19 +465,26 @@ export default function TeacherCreateQuizPage() {
         setPendingDeleteQuestionId(null);
     };
 
-    const handleConfirmDeleteQuestion = () => {
+    const handleConfirmDeleteQuestion = async () => {
         if (pendingDeleteQuestionId == null) return;
 
-        setQuiz((prev) => ({
-            ...prev,
-            questions: prev.questions.filter((item) => item.id !== pendingDeleteQuestionId),
-        }));
+        try {
+            await quizService.deleteQuestion(quiz.id, pendingDeleteQuestionId);
+            setQuiz((prev) => ({
+                ...prev,
+                questions: prev.questions.filter((item) => item.id !== pendingDeleteQuestionId),
+            }));
 
-        if (editingQuestionId === pendingDeleteQuestionId) {
-            resetForm();
+            if (editingQuestionId === pendingDeleteQuestionId) {
+                resetForm();
+            }
+            toast.success("Xoá câu hỏi thành công.");
+        } catch (err) {
+            console.error("Delete question error:", err);
+            toast.error("Không thể xoá câu hỏi.");
+        } finally {
+            setPendingDeleteQuestionId(null);
         }
-
-        setPendingDeleteQuestionId(null);
     };
 
     const handleEditQuestion = (question) => {
@@ -400,47 +593,55 @@ export default function TeacherCreateQuizPage() {
         }, 100);
     };
 
-    const handleSetupQuiz = (quizMeta) => {
-        setQuiz((prev) => ({
-            ...prev,
-            title: quizMeta.title,
-            subject: quizMeta.subject,
-            grade: quizMeta.grade,
-            className: quizMeta.className,
-            duration: formatDurationLabel(quizMeta.duration),
-            createdByRole: quizMeta.createdByRole || "teacher",
-            createdByName:
-                quizMeta.createdByRole === "teacher"
-                    ? quizMeta.createdByName || ""
-                    : "Quản trị viên",
-        }));
-        setShowSetupDialog(false);
+    const handleSetupQuiz = async (quizMeta) => {
+        try {
+            const assignments = await quizService.listClassTeacherSubjects();
+            const matched = assignments.find((item) => item.className === quizMeta.className);
+            if (!matched) {
+                throw new Error(`Không tìm thấy lớp học ${quizMeta.className} được phân công.`);
+            }
+
+            const durationMin = parseDurationMinutes(quizMeta.duration);
+
+            const response = await quizService.createQuiz({
+                classTeacherSubjectId: matched.value,
+                title: quizMeta.title,
+                description: `Bài kiểm tra môn ${quizMeta.subject} lớp ${quizMeta.className}`,
+                durationMinutes: durationMin,
+                quizType: durationMin >= 45 ? "exam" : "practice",
+                isPublished: false,
+            });
+
+            const created = response.data?.data || response.data || response;
+
+            setQuiz({
+                id: created.id,
+                title: quizMeta.title,
+                subject: quizMeta.subject,
+                grade: quizMeta.grade,
+                className: quizMeta.className,
+                duration: formatDurationLabel(quizMeta.duration),
+                createdByRole: "teacher",
+                createdByName: quizMeta.createdByName || "",
+                questions: [],
+            });
+            setShowSetupDialog(false);
+            toast.success("Khởi tạo bài kiểm tra thành công.");
+        } catch (err) {
+            console.error("Failed to setup quiz:", err);
+            const errorMsg = err.response?.data?.error || err.message || "Không thể tạo bài kiểm tra.";
+            alert(`Lỗi: ${errorMsg}`);
+        }
     };
 
     const handleBackToQuizList = () => {
-        const savedCard = saveQuizAndReturnCard({ showSuccessAlert: false });
-        if (!savedCard) return;
-
-        navigate("/teacher/quiz", {
-            state: { createdQuiz: savedCard },
-        });
+        if (!validateQuizBeforeSave()) {
+            return;
+        }
+        navigate("/teacher/quiz");
     };
 
     const handleCancelCreateQuiz = () => {
-        if (!quiz.questions.length) {
-            setQuiz(createQuizFromMeta(routeQuizMeta));
-            resetForm();
-            navigate("/teacher/quiz");
-            return;
-        }
-
-        const confirmed = window.confirm(
-            "Bạn có chắc muốn huỷ? Các thay đổi chưa lưu sẽ bị bỏ."
-        );
-        if (!confirmed) return;
-
-        setQuiz(createQuizFromMeta(routeQuizMeta));
-        resetForm();
         navigate("/teacher/quiz");
     };
 

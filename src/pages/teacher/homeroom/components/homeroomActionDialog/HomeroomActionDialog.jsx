@@ -136,6 +136,8 @@ export default function HomeroomActionDialog({ open, mode, onClose, onSubmit, st
         title: form.title.trim(),
         type: form.type,
         time: `${form.hour.trim()} ${formatDateLabel(form.schedule.trim())}`.trim(),
+        schedule: form.schedule.trim(),
+        hour: form.hour.trim(),
         location: form.location.trim(),
         note: form.note.trim(),
       });

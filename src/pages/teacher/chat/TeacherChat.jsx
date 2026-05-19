@@ -24,6 +24,7 @@ export default function TeacherChat() {
     const [inputValue, setInputValue] = useState("");
     const [messagesByTarget, setMessagesByTarget] = useState({});
     const [apiContacts, setApiContacts] = useState([]);
+    const [activeConversationId, setActiveConversationId] = useState(null);
     const [isLoading, setIsLoading] = useState(false);
     const messagesEndRef = useRef(null);
 
@@ -32,7 +33,15 @@ export default function TeacherChat() {
     const targets = useMemo(() => {
         // If API has data, use it (filtered by roomId if BE supports it)
         if (apiContacts.length > 0) {
-            return apiContacts.filter(c => c.roomId === activeRoomId || !c.roomId);
+            if (activeRoomId === "homeroom") {
+                return apiContacts.map(c => ({
+                    id: c.parent_id,
+                    name: c.parent_name,
+                    subLabel: `PH em: ${c.student_name} (${c.class_name})`,
+                    avatar: (c.parent_name || "PH").charAt(0),
+                    type: "parent"
+                }));
+            }
         }
 
         // Fallback to existing mock logic
@@ -88,15 +97,6 @@ export default function TeacherChat() {
                 }
             } catch (err) {
                 console.warn("Real Chat API failed, using service mock:", err);
-                // Fallback to service mock explicitly
-                try {
-                    const mockRes = await teacherService.getChatContacts({ mock: true });
-                    if (mockRes.success && mockRes.data) {
-                        setApiContacts(mockRes.data);
-                    }
-                } catch (mockErr) {
-                    console.error("Service mock also failed:", mockErr);
-                }
             } finally {
                 setIsLoading(false);
             }
@@ -104,26 +104,66 @@ export default function TeacherChat() {
         fetchContacts();
     }, []);
 
+    // Get/Start conversation when contact is clicked
     useEffect(() => {
-        if (!selectedTarget) return;
+        if (!selectedTarget) {
+            setActiveConversationId(null);
+            return;
+        }
+
+        if (selectedTarget.type === "parent") {
+            const getOrCreateConversation = async () => {
+                try {
+                    const response = await teacherService.startHumanChat({
+                        body: {
+                            targetId: selectedTarget.id
+                        },
+                        mock: false
+                    });
+                    if (response.success && response.data?.conversationId) {
+                        setActiveConversationId(response.data.conversationId);
+                    }
+                } catch (err) {
+                    console.error("Failed to get/start human conversation:", err);
+                }
+            };
+            getOrCreateConversation();
+        } else {
+            setActiveConversationId(`mock-${selectedTarget.id}`);
+        }
+    }, [selectedTarget]);
+
+    // Load messages when conversation ID is available
+    useEffect(() => {
+        if (!activeConversationId) return;
+
         const fetchMessages = async () => {
             try {
-                const response = await teacherService.getChatMessages({ 
-                    mock: false,
-                    pathParams: { targetId: selectedTarget.id }
-                });
-                if (response.success && response.data) {
-                    setMessagesByTarget(prev => ({
-                        ...prev,
-                        [selectedTarget.id]: response.data
-                    }));
+                if (typeof activeConversationId === "number" || !activeConversationId.toString().startsWith("mock-")) {
+                    const response = await teacherService.getHumanMessages({
+                        mock: false,
+                        pathParams: { conversationId: activeConversationId }
+                    });
+                    if (response.success && response.messages) {
+                        const mappedMessages = response.messages.map(m => ({
+                            id: m.id,
+                            text: m.content,
+                            from: m.user_id === selectedTarget.id ? "other" : "me",
+                            time: new Date(m.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                        }));
+                        
+                        setMessagesByTarget(prev => ({
+                            ...prev,
+                            [selectedTarget.id]: [...mappedMessages].reverse()
+                        }));
+                    }
                 }
             } catch (err) {
                 console.error("Chat API messages error:", err);
             }
         };
         fetchMessages();
-    }, [selectedTarget]);
+    }, [activeConversationId]);
 
     useEffect(() => {
         setSelectedTarget(null);
@@ -151,17 +191,17 @@ export default function TeacherChat() {
 
         // Call API
         try {
-            await teacherService.sendMessage({
-                mock: false,
-                body: {
-                    targetId: selectedTarget.id,
-                    text: text,
-                    timestamp: new Date().toISOString()
-                }
-            });
+            if (activeConversationId && !activeConversationId.toString().startsWith("mock-")) {
+                await teacherService.sendHumanMessage({
+                    mock: false,
+                    body: {
+                        conversationId: activeConversationId,
+                        message: text
+                    }
+                });
+            }
         } catch (err) {
             console.error("Failed to send message via API:", err);
-            // Optional: Show error to user or revert UI
         }
     };
 

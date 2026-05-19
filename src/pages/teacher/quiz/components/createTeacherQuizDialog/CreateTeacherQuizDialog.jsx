@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { Modal, Select } from "../../../../../components/ui";
 import { DEFAULT_PROFILE_BY_ROLE } from "../../../../../components/common/Dialog/ProfileDialog/profileData";
 import {
@@ -6,16 +6,20 @@ import {
     QUIZ_DURATION_OPTIONS,
     formatDurationLabel,
 } from "../../../../../services/shared/quiz/quizService";
+import teacherService from "../../../../../services/pages/teacher/teacherService";
 import "./CreateTeacherQuizDialog.css";
 
 const CURRENT_TEACHER = DEFAULT_PROFILE_BY_ROLE.teacher;
 const CURRENT_TEACHER_NAME = CURRENT_TEACHER.name;
-// "Toán học" → "Toán" to match subjectOptions
-const CURRENT_TEACHER_SUBJECT = CURRENT_TEACHER.subject?.replace(" học", "") || "";
+
+const extractGradeFromClassName = (className = "") => {
+    const match = String(className).match(/\d+/);
+    return match ? `Khối ${match[0]}` : "";
+};
 
 const defaultForm = {
     title: "",
-    subject: CURRENT_TEACHER_SUBJECT,
+    subject: "",
     grade: "",
     className: "",
     duration: DEFAULT_QUIZ_DURATION_LABEL,
@@ -23,13 +27,6 @@ const defaultForm = {
     createdByName: CURRENT_TEACHER_NAME,
 };
 
-const TEACHER_CLASSES_BY_GRADE = {
-    "Khối 10": ["10A1", "10A2", "10A3", "10A4"],
-    "Khối 11": ["11B1", "11B2", "11B3"],
-    "Khối 12": ["12A1", "12A2", "12A3"],
-};
-
-const gradeOptions = ["Khối 10", "Khối 11", "Khối 12"];
 const durationOptions = QUIZ_DURATION_OPTIONS.map((item) => item.label);
 
 export default function CreateTeacherQuizDialog({
@@ -40,6 +37,8 @@ export default function CreateTeacherQuizDialog({
     submitLabel = "Tạo",
     initialValues,
 }) {
+    const [assignments, setAssignments] = useState([]);
+    const [isLoading, setIsLoading] = useState(false);
     const [formData, setFormData] = useState(() => ({
         title: initialValues?.title || defaultForm.title,
         subject: initialValues?.subject || defaultForm.subject,
@@ -50,11 +49,113 @@ export default function CreateTeacherQuizDialog({
         createdByName: initialValues?.createdByName || CURRENT_TEACHER_NAME,
     }));
 
+    // Fetch live assignments on mount
+    useEffect(() => {
+        if (!open) return;
+
+        const loadAssignments = async () => {
+            setIsLoading(true);
+            try {
+                const storedUser = JSON.parse(localStorage.getItem("user") || sessionStorage.getItem("user") || "{}");
+                const teacherId = storedUser.profile?.id || storedUser.teacherId || (storedUser.role === 'teacher' ? storedUser.id : null);
+                
+                if (teacherId) {
+                    const response = await teacherService.getTeacherSubjects({
+                        mock: false,
+                        pathParams: { id: teacherId },
+                    });
+
+                    if (response && response.success && Array.isArray(response.data)) {
+                        const mappedList = response.data.map(item => {
+                            const subjectName = item.subjects && item.subjects.length > 0
+                                ? item.subjects[0].name
+                                : (item.subject_name || "N/A");
+                            const className = item.class_name || item.name || "";
+                            return {
+                                subject_name: subjectName,
+                                subject_display_name: subjectName,
+                                class_name: className,
+                                class_teacher_subject_id: item.class_teacher_subject_id || item.id,
+                            };
+                        });
+                        setAssignments(mappedList);
+
+                        // If creating, pre-populate if possible
+                        if (!initialValues) {
+                            const subjects = mappedList
+                                .map(a => a.subject_display_name || a.subject_name || "")
+                                .filter(Boolean);
+                            const uniqueSubs = [...new Set(subjects)];
+                            if (uniqueSubs.length > 0) {
+                                setFormData(prev => ({
+                                    ...prev,
+                                    subject: prev.subject || uniqueSubs[0],
+                                }));
+                            }
+                        }
+                    }
+                }
+            } catch (err) {
+                console.error("Failed to load teacher class subjects:", err);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        loadAssignments();
+    }, [open, initialValues]);
+
+    // Keep state in sync with initialValues changes
+    useEffect(() => {
+        if (initialValues) {
+            setFormData({
+                title: initialValues.title || "",
+                subject: initialValues.subject || "",
+                grade: initialValues.grade || "",
+                className: initialValues.className || "",
+                duration: formatDurationLabel(initialValues.duration || DEFAULT_QUIZ_DURATION_LABEL),
+                createdByRole: "teacher",
+                createdByName: initialValues.createdByName || CURRENT_TEACHER_NAME,
+            });
+        }
+    }, [initialValues]);
+
+    // Unique subjects list based on assignments
+    const uniqueSubjects = useMemo(() => {
+        const subjects = assignments
+            .map(a => a.subject_display_name || a.subject_name || "")
+            .filter(Boolean);
+        return [...new Set(subjects)];
+    }, [assignments]);
+
+    // Unique grades based on the selected subject
+    const uniqueGrades = useMemo(() => {
+        if (!formData.subject) return [];
+        const filtered = assignments.filter(
+            a => (a.subject_display_name || a.subject_name || "") === formData.subject
+        );
+        const grades = filtered.map(a => extractGradeFromClassName(a.class_name || ""));
+        return [...new Set(grades)].filter(Boolean);
+    }, [assignments, formData.subject]);
+
+    // Unique classes based on the selected subject and grade
+    const uniqueClasses = useMemo(() => {
+        if (!formData.subject || !formData.grade) return [];
+        const filtered = assignments.filter(
+            a => (a.subject_display_name || a.subject_name || "") === formData.subject &&
+                 extractGradeFromClassName(a.class_name || "") === formData.grade
+        );
+        return [...new Set(filtered.map(a => a.class_name || ""))].filter(Boolean);
+    }, [assignments, formData.subject, formData.grade]);
+
     const handleChange = (key, value) => {
         setFormData((prev) => {
             const next = { ...prev, [key]: value };
-            // Auto-clear class if grade changes
-            if (key === "grade") {
+            // Clear subsequent selections to prevent mismatch
+            if (key === "subject") {
+                next.grade = "";
+                next.className = "";
+            } else if (key === "grade") {
                 next.className = "";
             }
             return next;
@@ -62,12 +163,18 @@ export default function CreateTeacherQuizDialog({
     };
 
     const handleSubmit = () => {
+        const matched = assignments.find(
+            a => (a.subject_display_name || a.subject_name || "") === formData.subject &&
+                 a.class_name === formData.className
+        );
+
         const payload = {
             title: formData.title.trim(),
             subject: formData.subject.trim(),
             grade: formData.grade.trim(),
             className: formData.className.trim(),
             duration: formData.duration,
+            classTeacherSubjectId: matched ? matched.class_teacher_subject_id : (initialValues?.classTeacherSubjectId || null),
             createdByRole: "teacher",
             createdByName: formData.createdByName.trim() || CURRENT_TEACHER_NAME,
         };
@@ -88,50 +195,100 @@ export default function CreateTeacherQuizDialog({
                     <input
                         id="teacher-quiz-title"
                         type="text"
-                        placeholder="Ví dụ: Kiểm tra Toán chương 3"
+                        placeholder="Ví dụ: Kiểm tra Tiếng Anh 15 phút"
                         value={formData.title}
                         onChange={(event) => handleChange("title", event.target.value)}
                     />
                 </div>
 
                 <div className="teacher-create-quiz-dialog__field">
-                    <label htmlFor="teacher-quiz-subject">Môn học</label>
-                    <input
-                        id="teacher-quiz-subject"
-                        type="text"
-                        value={formData.subject}
-                        readOnly
-                    />
+                    {initialValues ? (
+                        <>
+                            <label htmlFor="teacher-quiz-subject">Môn học</label>
+                            <input
+                                id="teacher-quiz-subject"
+                                type="text"
+                                value={formData.subject}
+                                readOnly
+                            />
+                        </>
+                    ) : uniqueSubjects.length > 0 ? (
+                        <Select
+                            label="Môn học"
+                            variant="custom"
+                            className="teacher-create-quiz-dialog__select"
+                            id="teacher-quiz-subject"
+                            name="teacher-quiz-subject"
+                            options={uniqueSubjects}
+                            placeholder="Chọn môn học"
+                            value={formData.subject}
+                            onChange={(event) => handleChange("subject", event.target.value)}
+                        />
+                    ) : (
+                        <>
+                            <label htmlFor="teacher-quiz-subject">Môn học</label>
+                            <input
+                                id="teacher-quiz-subject"
+                                type="text"
+                                value={isLoading ? "Đang tải môn học..." : (formData.subject || "Chưa có môn học")}
+                                readOnly
+                            />
+                        </>
+                    )}
                 </div>
 
-
                 <div className="teacher-create-quiz-dialog__field teacher-create-quiz-dialog__field--half">
-                    <Select
-                        label="Khối"
-                        variant="custom"
-                        className="teacher-create-quiz-dialog__select"
-                        id="teacher-quiz-grade"
-                        name="teacher-quiz-grade"
-                        options={gradeOptions}
-                        placeholder="Chọn khối"
-                        value={formData.grade}
-                        onChange={(event) => handleChange("grade", event.target.value)}
-                    />
+                    {initialValues ? (
+                        <>
+                            <label htmlFor="teacher-quiz-grade">Khối</label>
+                            <input
+                                id="teacher-quiz-grade"
+                                type="text"
+                                value={formData.grade}
+                                readOnly
+                            />
+                        </>
+                    ) : (
+                        <Select
+                            label="Khối"
+                            variant="custom"
+                            className="teacher-create-quiz-dialog__select"
+                            id="teacher-quiz-grade"
+                            name="teacher-quiz-grade"
+                            options={uniqueGrades.length > 0 ? uniqueGrades : ["Khối 10", "Khối 11", "Khối 12"]}
+                            placeholder="Chọn khối"
+                            disabled={!formData.subject}
+                            value={formData.grade}
+                            onChange={(event) => handleChange("grade", event.target.value)}
+                        />
+                    )}
                 </div>
 
                 <div className="teacher-create-quiz-dialog__field teacher-create-quiz-dialog__field--half">
-                    <Select
-                        label="Lớp"
-                        variant="custom"
-                        className="teacher-create-quiz-dialog__select"
-                        id="teacher-quiz-class"
-                        name="teacher-quiz-class"
-                        options={TEACHER_CLASSES_BY_GRADE[formData.grade] || []}
-                        placeholder="Chọn lớp"
-                        disabled={!formData.grade}
-                        value={formData.className}
-                        onChange={(event) => handleChange("className", event.target.value)}
-                    />
+                    {initialValues ? (
+                        <>
+                            <label htmlFor="teacher-quiz-class">Lớp</label>
+                            <input
+                                id="teacher-quiz-class"
+                                type="text"
+                                value={formData.className}
+                                readOnly
+                            />
+                        </>
+                    ) : (
+                        <Select
+                            label="Lớp"
+                            variant="custom"
+                            className="teacher-create-quiz-dialog__select"
+                            id="teacher-quiz-class"
+                            name="teacher-quiz-class"
+                            options={uniqueClasses}
+                            placeholder="Chọn lớp"
+                            disabled={!formData.grade || uniqueClasses.length === 0}
+                            value={formData.className}
+                            onChange={(event) => handleChange("className", event.target.value)}
+                        />
+                    )}
                 </div>
 
                 <div className="teacher-create-quiz-dialog__field teacher-create-quiz-dialog__field--half">
@@ -159,7 +316,3 @@ export default function CreateTeacherQuizDialog({
         </Modal>
     );
 }
-
-
-
-

@@ -105,7 +105,41 @@ export default function TeacherHomeroom() {
             extraOfficers: apiData.extraOfficers || [],
             academicStats: academicData ? academicData.academicStats : apiData.academicStats,
             tuitionStats: apiData.tuitionStats,
-            activities: apiData.activities || [],
+            activities: (apiData.activities || []).map(act => {
+                const actDate = act.activity_date ? new Date(act.activity_date) : null;
+                const actTime = act.activity_time ? new Date(act.activity_time) : null;
+                
+                const schedule = actDate && !isNaN(actDate.getTime()) 
+                    ? actDate.toISOString().split('T')[0] 
+                    : "";
+                
+                let hour = "";
+                if (actTime && !isNaN(actTime.getTime())) {
+                    const h = String(actTime.getUTCHours()).padStart(2, '0');
+                    const m = String(actTime.getUTCMinutes()).padStart(2, '0');
+                    hour = `${h}:${m}`;
+                } else if (typeof act.activity_time === 'string') {
+                    const match = act.activity_time.match(/(\d{2}):(\d{2})/);
+                    if (match) hour = `${match[1]}:${match[2]}`;
+                }
+
+                const displayDate = actDate && !isNaN(actDate.getTime())
+                    ? `${String(actDate.getDate()).padStart(2, '0')}/${String(actDate.getMonth() + 1).padStart(2, '0')}/${actDate.getFullYear()}`
+                    : "";
+                const displayTime = hour ? `${hour} ngày ${displayDate}` : displayDate;
+
+                return {
+                    id: act.id,
+                    title: act.title,
+                    type: act.type,
+                    schedule,
+                    hour,
+                    time: displayTime,
+                    location: act.location,
+                    note: act.description || "",
+                    status: "upcoming"
+                };
+            }),
             students: (apiData.students || []).map(s => ({
                 id: s.id,
                 name: formatName(s),
@@ -189,17 +223,61 @@ export default function TeacherHomeroom() {
         openActivityDialog(activity);
     };
 
-    const handleDeleteActivity = (activity) => {
+    const handleDeleteActivity = async (activity) => {
         if (window.confirm(`Bạn có chắc chắn muốn xóa hoạt động "${activity.title}"?`)) {
-            toast.error(`Đã xóa hoạt động: ${activity.title}`);
-            // Sau này gọi API xóa ở đây
+            try {
+                const res = await teacherService.deleteClassActivity({
+                    pathParams: { id: classData.id, activityId: activity.id }
+                });
+                if (res.success) {
+                    toast.success(`Đã xóa hoạt động: ${activity.title}`);
+                    refetch();
+                } else {
+                    toast.error(res.error || "Không thể xóa hoạt động.");
+                }
+            } catch (error) {
+                console.error("Failed to delete activity:", error);
+                toast.error("Lỗi kết nối máy chủ khi xóa hoạt động.");
+            }
         }
     };
 
     const handleSaveAction = async (payload) => {
         if (actionDialog.mode === "activity") {
-            // Mock logic or call specific API
-            toast.success("Đã thêm hoạt động lớp (mock).");
+            const isEdit = !!actionDialog.editingData;
+            try {
+                const body = {
+                    title: payload.title,
+                    description: payload.note,
+                    activity_date: payload.schedule,
+                    activity_time: payload.hour,
+                    location: payload.location,
+                    type: payload.type
+                };
+
+                let res;
+                if (isEdit) {
+                    res = await teacherService.updateClassActivity({
+                        pathParams: { id: classData.id, activityId: actionDialog.editingData.id },
+                        body
+                    });
+                } else {
+                    res = await teacherService.createClassActivity({
+                        pathParams: { id: classData.id },
+                        body
+                    });
+                }
+
+                if (res.success) {
+                    toast.success(isEdit ? "Cập nhật hoạt động lớp thành công." : "Tạo hoạt động lớp mới thành công.");
+                    refetch();
+                } else {
+                    toast.error(res.error || "Không thể lưu hoạt động lớp.");
+                }
+            } catch (error) {
+                console.error("Failed to save activity:", error);
+                toast.error("Lỗi kết nối máy chủ.");
+            }
         } else if (actionDialog.mode === "officer") {
             const assignments = payload.assignments || [];
             try {

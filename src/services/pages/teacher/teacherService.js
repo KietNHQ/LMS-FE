@@ -317,7 +317,11 @@ const teacherEndpointRegistry = [
   },
   { key: "get_chat_messages", method: "GET", path: "/chat/messages/:targetId", module: "chat", mock: () => ([]) },
   { key: "post_chat_message", method: "POST", path: "/chat/messages", module: "chat", mock: (input) => ({ id: Date.now(), ...input.body }) },
+  { key: "start_human_chat", method: "POST", path: "/chat/human/start", module: "chat" },
+  { key: "get_human_messages", method: "GET", path: "/chat/human/messages/:conversationId", module: "chat" },
+  { key: "send_human_message", method: "POST", path: "/chat/human/message", module: "chat" },
   { key: "get_faqs", method: "GET", path: "/support/faqs", module: "support", mock: () => ([]) },
+  { key: "post_ai_chat", method: "POST", path: "/support/ai/chat", module: "support" },
   { key: "post_attendance", method: "POST", path: "/teachers/attendance", module: "teacher", mock: (input) => input.body },
   { key: "post_lesson_evaluation", method: "POST", path: "/teachers/lesson-evaluations", module: "teacher" },
   { key: "put_lesson_evaluation", method: "PUT", path: "/teachers/lesson-evaluations/:id", module: "teacher" },
@@ -331,6 +335,9 @@ const teacherEndpointRegistry = [
   { key: "post_class_broadcast", method: "POST", path: "/notifications/class/:id/broadcast", module: "notifications", mock: () => ({ message: "Gửi thông báo thành công" }) },
   { key: "get_consolidated_homeroom", method: "GET", path: "/teachers/:id/homeroom-dashboard", module: "teacher" },
   { key: "get_consolidated_teaching_classes", method: "GET", path: "/teachers/me/teaching-classes", module: "teacher" },
+  { key: "post_class_activity", method: "POST", path: "/classes/:id/activities", module: "classes" },
+  { key: "put_class_activity", method: "PUT", path: "/classes/:id/activities/:activityId", module: "classes" },
+  { key: "delete_class_activity", method: "DELETE", path: "/classes/:id/activities/:activityId", module: "classes" },
 ];
 
 const createEndpointCaller = (endpoint) => {
@@ -426,7 +433,11 @@ export const teacherService = {
   getChatContacts: (input) => endpointCallers.get_chat_contacts(input),
   getChatMessages: (input) => endpointCallers.get_chat_messages(input),
   sendMessage: (input) => endpointCallers.post_chat_message(input),
+  startHumanChat: (input) => endpointCallers.start_human_chat(input),
+  getHumanMessages: (input) => endpointCallers.get_human_messages(input),
+  sendHumanMessage: (input) => endpointCallers.send_human_message(input),
   getFaqs: (input) => endpointCallers.get_faqs(input),
+  aiChat: (input) => endpointCallers.post_ai_chat(input),
   saveAttendance: (input) => endpointCallers.post_attendance(input),
   saveLessonEvaluation: (input) => endpointCallers.post_lesson_evaluation(input),
   updateLessonEvaluation: (input) => endpointCallers.put_lesson_evaluation(input),
@@ -441,6 +452,9 @@ export const teacherService = {
   getClassDetails: (input) => endpointCallers.get_classes_by_id(input),
   getConsolidatedHomeroom: (input) => endpointCallers.get_consolidated_homeroom(input),
   getConsolidatedTeachingClasses: (input) => endpointCallers.get_consolidated_teaching_classes(input),
+  createClassActivity: (input) => endpointCallers.post_class_activity(input),
+  updateClassActivity: (input) => endpointCallers.put_class_activity(input),
+  deleteClassActivity: (input) => endpointCallers.delete_class_activity(input),
   endpointCallers,
 };
 
