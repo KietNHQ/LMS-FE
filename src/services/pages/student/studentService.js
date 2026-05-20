@@ -181,7 +181,6 @@ const STUDENT_ENDPOINTS = [
   { key: "patch_student_notifications_mark_all_read", method: "PUT", path: "/api/v1/notifications/my/read-all", module: "notifications", mock: () => ({ updated: true }) },
   { key: "patch_student_notifications_by_id_read", method: "PUT", path: "/api/v1/notifications/my/:id/read", module: "notifications", mock: (input) => ({ id: input.pathParams?.id, unread: false }) },
   { key: "get_student_support_faqs", method: "GET", path: "/api/v1/communications/faqs", module: "support", mock: () => STUDENT_FAQS_MOCK },
-  { key: "post_student_support_tickets", method: "POST", path: "/api/v1/communications/tickets", module: "support", mock: (input) => ({ id: Date.now(), ...(input.body || {}), status: "open" }) },
   { key: "get_quizzes", method: "GET", path: "/api/v1/quizzes", module: "quiz", mock: () => STUDENT_QUIZZES_MOCK },
   { key: "get_quizzes_by_id", method: "GET", path: "/api/v1/quizzes/:id", module: "quiz", mock: (input) => {
       const matched = STUDENT_QUIZZES_MOCK.find((item) => `${item.id}` === `${input.pathParams?.id}`);
@@ -271,7 +270,6 @@ export const studentService = {
   markAllNotificationsRead: (input) => endpointCallers.patch_student_notifications_mark_all_read(input),
   markNotificationRead: (input) => endpointCallers.patch_student_notifications_by_id_read(input),
   listFaqs: (input) => endpointCallers.get_student_support_faqs(input),
-  submitSupportTicket: (input) => endpointCallers.post_student_support_tickets(input),
   listQuizzes: (input) => endpointCallers.get_quizzes(input),
   getQuizById: (input) => endpointCallers.get_quizzes_by_id(input),
   startQuiz: (input) => endpointCallers.post_quizzes_by_id_start(input),

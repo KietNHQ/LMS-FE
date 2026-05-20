@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from "react";
 import "./LeaveRequestSection.css";
+import { parentService } from "../../../../services/pages/parent/parentService";
 
 const fallbackRequests = [
         {
@@ -37,7 +38,7 @@ const normalizeStatus = (value) => {
     return statusMap.pending
 }
 
-export default function LeaveRequestSection({ requests = [] }) {
+export default function LeaveRequestSection({ requests = [], childId, onSuccess }) {
     const [isDialogOpen, setIsDialogOpen] = useState(false)
     const [formData, setFormData] = useState({ reason: "", startDate: "", endDate: "", note: "" })
     const [submitMessage, setSubmitMessage] = useState("")
@@ -48,8 +49,8 @@ export default function LeaveRequestSection({ requests = [] }) {
             const statusInfo = normalizeStatus(item.statusText || item.status)
             return {
                 title: item.title || item.reason || "Đơn xin nghỉ học",
-                date: item.date || "--",
-                approvedBy: item.approvedBy || item.approver || "—",
+                date: item.startDate && item.endDate ? `${item.startDate} đến ${item.endDate}` : (item.date || "--"),
+                approvedBy: item.approvedByRole === "teacher" ? "Giáo viên chủ nhiệm" : (item.approvedByRole === "manager" ? "Quản lý trường" : (item.approvedBy || "—")),
                 status: statusInfo.key,
                 statusText: item.statusText || statusInfo.text
             }
@@ -61,11 +62,30 @@ export default function LeaveRequestSection({ requests = [] }) {
         setFormData((prev) => ({ ...prev, [name]: value }))
     }
 
-    const handleSubmit = (event) => {
+    const handleSubmit = async (event) => {
         event.preventDefault()
-        setSubmitMessage(`Đã tạo đơn demo từ ${formData.startDate} đến ${formData.endDate}.`)
-        setIsDialogOpen(false)
-        setFormData({ reason: "", startDate: "", endDate: "", note: "" })
+        try {
+            const res = await parentService.submitLeaveRequest({
+                body: {
+                    studentEnrollmentId: childId || "child1",
+                    reason: formData.reason,
+                    startDate: formData.startDate,
+                    endDate: formData.endDate,
+                    note: formData.note
+                }
+            })
+            if (res.success) {
+                setSubmitMessage(`Đã gửi đơn xin nghỉ học từ ${formData.startDate} đến ${formData.endDate} thành công!`)
+                setIsDialogOpen(false)
+                setFormData({ reason: "", startDate: "", endDate: "", note: "" })
+                if (onSuccess) onSuccess()
+            } else {
+                setSubmitMessage("Có lỗi xảy ra khi gửi đơn.")
+            }
+        } catch (err) {
+            console.error("Error submitting leave request:", err)
+            setSubmitMessage("Có lỗi xảy ra khi gửi đơn xin nghỉ phép.")
+        }
     }
 
     return (

@@ -26,6 +26,7 @@ const ManagementClasses = lazy(() => import("../pages/management/classes/Managem
 const ManagementClassDetail = lazy(() => import("../pages/management/classes/components/classDetailSection/classDetailSection"));
 const ManagementAcademicDashboard = lazy(() => import("../pages/management/academic/dashboard/VpAcademicDashboard"));
 const ManagementDiscipline = lazy(() => import("../pages/management/discipline/index.js"));
+const ManagementDisciplineReports = lazy(() => import("../pages/management/discipline/ManagementDisciplineReports"));
 const ManagementCompetition = lazy(() => import("../pages/management/competition/index.js"));
 const ManagementGrades = lazy(() => import("../pages/management/grades/index.js"));
 const ManagementQuiz = lazy(() => import("../pages/management/quiz/ManagementQuiz"));
@@ -37,6 +38,7 @@ const ManagementExamRoomDetail = lazy(() => import("../pages/management/exams/ro
 const ManagementTimetable = lazy(() => import("../pages/management/timetable/ManagementTimetable"));
 const ManagementFinance = lazy(() => import("../pages/management/finance/index.js"));
 const ManagementFinanceDashboard = lazy(() => import("../pages/management/finance/dashboard/FinanceDashboard").then((m) => ({ default: m.FinanceDashboard })));
+const ManagementFinancePaymentHub = lazy(() => import("../pages/management/finance/payment-hub/FinancePaymentHub"));
 const ManagementApprovals = lazy(() => import("../pages/management/approvals/index.js"));
 const ManagementNotifications = lazy(() => import("../pages/management/notifications/ManagementNotifications"));
 const ManagementReports = lazy(() => import("../pages/management/reports/ManagementReports"));
@@ -225,6 +227,7 @@ export default function AppRoutes() {
         <Route path="academic"    element={<Navigate to="academic/dashboard" replace />} />
         <Route path="academic/dashboard" element={<ManagementAcademicDashboard />} />
         <Route path="discipline"   element={<ManagementDiscipline />} />
+        <Route path="discipline-reports" element={<ManagementDisciplineReports />} />
         <Route path="competition"  element={<ManagementCompetition />} />
         <Route path="grades"       element={<ManagementGrades />} />
         <Route path="quiz"         element={<ManagementQuiz />} />
@@ -236,6 +239,7 @@ export default function AppRoutes() {
         <Route path="timetable"    element={<ManagementTimetable />} />
         <Route path="finance"      element={<ManagementFinance />} />
         <Route path="finance/dashboard" element={<ManagementFinanceDashboard />} />
+        <Route path="finance/payment-hub" element={<ManagementFinancePaymentHub />} />
         <Route path="approvals"    element={<ManagementApprovals />} />
         <Route path="notifications" element={<ManagementNotifications />} />
         <Route path="reports"      element={<ManagementReports />} />

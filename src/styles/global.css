@@ -186,3 +186,25 @@ ol {
   margin: 1rem 0;
   width: 100%;
 }
+
+/* ─── Teacher Theme – Layout & Component Overrides ──────────────────────────
+   CSS variables for .theme-teacher are defined in variables.css.
+   This section only overrides structural/component behaviour.
+   ─────────────────────────────────────────────────────────────────────────── */
+.theme-teacher .common-page-header {
+  padding: 10px 0 !important;
+  background: transparent !important;
+  border: none !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+
+.theme-teacher .common-page-header .common-page-header__eyebrow {
+  display: none;
+}
+
+.theme-teacher .teacher-lessons,
+.theme-teacher .teacher-grades-page,
+.theme-teacher .teacher-schedule {
+  color: var(--admin-text-primary);
+}

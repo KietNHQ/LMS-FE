@@ -5,7 +5,7 @@ import { PageHeader, SchoolYearTermSelector } from "../../../components/common";
 import { useSchoolYearTerm } from "../../../hooks/useSchoolYearTerm";
 import teacherService from "../../../services/pages/teacher/teacherService";
 import GradeListSection from "./components/gradeListSection/GradeListSection";
-import { FiPlus, FiSave, FiX, FiTrash2 } from "react-icons/fi";
+import { FiPlus, FiSave, FiX, FiTrash2, FiLock, FiUnlock, FiSend } from "react-icons/fi";
 import GradeSummarySection, { GradeSummaryHeader } from "./components/gradeSummarySection/GradeSummarySection";
 import { toast } from "react-toastify";
 import "./TeacherGrades.css";
@@ -54,6 +54,11 @@ export default function TeacherGrades() {
     final: "",
     note: ""
   });
+  
+  // Grade Lock/Unlock State
+  const [lockStatus, setLockStatus] = useState("draft");
+  const [unlockRequestOpen, setUnlockRequestOpen] = useState(false);
+  const [unlockReason, setUnlockReason] = useState("");
 
   // Fetch Classes
   useEffect(() => {
@@ -113,6 +118,30 @@ export default function TeacherGrades() {
     }
   }, [filteredClasses]);
 
+  // Fetch Lock Status
+  const fetchLockStatus = async () => {
+    if (!selectedClassId || !selectedSubjectId) return;
+    try {
+      const response = await teacherService.getGradesLockStatus({
+        params: {
+          classId: selectedClassId,
+          subjectId: selectedSubjectId,
+          schoolYear: selectedSchoolYear,
+          term: selectedTerm
+        },
+        mock: true
+      });
+      if (response.success && response.data) {
+        setLockStatus(response.data.status || "draft");
+      } else {
+        setLockStatus("draft");
+      }
+    } catch (err) {
+      console.error("Fetch lock status error:", err);
+      setLockStatus("draft");
+    }
+  };
+
   // Fetch Grades
   const fetchGrades = async () => {
     if (!selectedClassId || !selectedSubjectId) return;
@@ -130,14 +159,23 @@ export default function TeacherGrades() {
       });
 
       if (response.success) {
-        // Transform API data to UI records if needed
-        // For now, assume API returns the needed structure or use mock if empty
         const data = response.data || [];
         
         // If API returns empty (common in mock), generate some realistic mock data based on the class
         if (data.length === 0) {
           const mockRecords = generateMockRecords(selectedClassId, selectedSubjectId, selectedTerm);
           setRecords(mockRecords);
+          // Persist initial mock records
+          await teacherService.bulkUpdateGrades({
+            body: {
+              classId: selectedClassId,
+              subjectId: selectedSubjectId,
+              schoolYear: selectedSchoolYear,
+              term: selectedTerm,
+              records: mockRecords
+            },
+            mock: true
+          });
         } else {
           setRecords(data);
         }
@@ -154,6 +192,7 @@ export default function TeacherGrades() {
 
   useEffect(() => {
     fetchGrades();
+    fetchLockStatus();
   }, [selectedClassId, selectedSubjectId, selectedSchoolYear, selectedTerm]);
 
   // Derived Summary Stats
@@ -202,9 +241,7 @@ export default function TeacherGrades() {
 
   const handleSaveGrade = async () => {
     try {
-      // In real scenario, call teacherService.updateGrade
-      // For now, update local state
-      setRecords(prev => prev.map(r => {
+      const updatedRecords = records.map(r => {
         if (r.id === editStudentId) {
           const updated = {
             ...r,
@@ -216,13 +253,66 @@ export default function TeacherGrades() {
           return updated;
         }
         return r;
-      }));
+      });
+
+      setRecords(updatedRecords);
+
+      // Persist the updated records
+      await teacherService.bulkUpdateGrades({
+        body: {
+          classId: selectedClassId,
+          subjectId: selectedSubjectId,
+          schoolYear: selectedSchoolYear,
+          term: selectedTerm,
+          records: updatedRecords
+        },
+        mock: true
+      });
       
       toast.success("Đã cập nhật điểm thành công!");
       setEditDialogOpen(false);
     } catch (err) {
+      console.error("Save grade error:", err);
       toast.error("Lỗi khi lưu điểm.");
     }
+  };
+
+  const handleLockGrades = async () => {
+    const confirmed = window.confirm("Bạn có chắc chắn muốn khóa điểm môn học này? Sau khi khóa, bạn sẽ không thể chỉnh sửa điểm nếu không có sự phê duyệt từ Ban giám hiệu.");
+    if (!confirmed) return;
+
+    try {
+      const response = await teacherService.finalizeClassGrades({
+        body: {
+          classId: selectedClassId,
+          subjectId: selectedSubjectId,
+          schoolYear: selectedSchoolYear,
+          term: selectedTerm,
+          status: "locked"
+        },
+        mock: true
+      });
+
+      if (response.success) {
+        setLockStatus("locked");
+        toast.success("Đã khóa điểm môn học thành công!");
+      } else {
+        toast.error("Không thể khóa điểm.");
+      }
+    } catch (err) {
+      console.error("Lock grades error:", err);
+      toast.error("Đã xảy ra lỗi khi khóa điểm.");
+    }
+  };
+
+  const handleSendUnlockRequest = () => {
+    if (!unlockReason.trim()) {
+      toast.warning("Vui lòng nhập lý do yêu cầu mở khóa.");
+      return;
+    }
+
+    toast.success("Yêu cầu mở khóa đã được gửi thành công đến Ban giám hiệu!");
+    setUnlockRequestOpen(false);
   };
 
   const calculateRecordAverage = (draft) => {
@@ -289,7 +379,38 @@ export default function TeacherGrades() {
             />
           </div>
 
-          <div className="teacher-grades-toolbar__meta">
+          <div className="teacher-grades-toolbar__meta" style={{ gap: "12px", display: "flex", alignItems: "center" }}>
+            <span className={`grade-lock-status-badge ${lockStatus === 'locked' ? 'is-locked' : 'is-draft'}`}>
+              {lockStatus === 'locked' ? (
+                <>
+                  <FiLock style={{ marginRight: '6px' }} /> Đã khóa
+                </>
+              ) : (
+                <>
+                  <FiUnlock style={{ marginRight: '6px' }} /> Bản nháp
+                </>
+              )}
+            </span>
+
+            {lockStatus === 'locked' ? (
+              <button 
+                className="teacher-grades-action-btn is-unlock-request"
+                onClick={() => {
+                  setUnlockReason("");
+                  setUnlockRequestOpen(true);
+                }}
+              >
+                <FiSend style={{ marginRight: '6px' }} /> Yêu cầu mở khóa
+              </button>
+            ) : (
+              <button 
+                className="teacher-grades-action-btn is-lock"
+                onClick={handleLockGrades}
+              >
+                <FiLock style={{ marginRight: '6px' }} /> Khóa điểm
+              </button>
+            )}
+
             <span className="grade-entry-badge teacher-grades-teacher-badge">
               GVCN: {currentClass.teacher || "Chưa phân công"}
             </span>
@@ -320,6 +441,7 @@ export default function TeacherGrades() {
             onOpenEditDialog={openEditDialog}
             subjectLabel={currentSubject.name}
             semesterLabel={semesterLabel}
+            isLocked={lockStatus === 'locked'}
           />
         </div>
       )}
@@ -479,8 +601,16 @@ export default function TeacherGrades() {
         <div className="teacher-grade-risk-list">
           {summaryStats.atRiskStudents.map(student => (
             <div 
-              key={student.id} className="teacher-grade-risk-item"
-              onClick={() => { setAtRiskDialogOpen(false); openEditDialog(student); }}
+              key={student.id} 
+              className={`teacher-grade-risk-item ${lockStatus === 'locked' ? 'is-locked-cursor' : ''}`}
+              onClick={() => { 
+                if (lockStatus === 'locked') {
+                  toast.warning("Điểm số đã khóa, không thể chỉnh sửa!");
+                  return;
+                }
+                setAtRiskDialogOpen(false); 
+                openEditDialog(student); 
+              }}
             >
               <div>
                 <strong>{student.name}</strong>
@@ -490,6 +620,39 @@ export default function TeacherGrades() {
             </div>
           ))}
           {summaryStats.atRiskCount === 0 && <p style={{ textAlign: "center", padding: "20px", color: "#64748b" }}>Không có học sinh nào bị cảnh báo.</p>}
+        </div>
+      </Modal>
+
+      {/* Request Unlock Modal */}
+      <Modal
+        open={unlockRequestOpen}
+        title="Yêu cầu mở khóa chỉnh sửa điểm"
+        onClose={() => setUnlockRequestOpen(false)}
+        className="teacher-grade-unlock-request-modal"
+      >
+        <div className="teacher-grade-edit-form">
+          <div className="teacher-grade-edit-meta">
+            <span>{currentClass.name}</span>
+            <span>{currentSubject.name}</span>
+            <span>{semesterLabel}</span>
+          </div>
+          <div className="teacher-grade-edit-note">
+            <span>Lý do yêu cầu mở khóa</span>
+            <textarea
+              rows="4"
+              value={unlockReason}
+              onChange={(e) => setUnlockReason(e.target.value)}
+              placeholder="Nhập lý do chi tiết để Ban giám hiệu xem xét duyệt mở khóa chỉnh sửa..."
+            />
+          </div>
+          <div className="teacher-grade-edit-actions">
+            <button className="teacher-grade-edit-btn is-ghost" onClick={() => setUnlockRequestOpen(false)}>
+              <FiX /> Hủy
+            </button>
+            <button className="teacher-grade-edit-btn is-primary" onClick={handleSendUnlockRequest}>
+              <FiSend /> Gửi yêu cầu
+            </button>
+          </div>
         </div>
       </Modal>
     </div>

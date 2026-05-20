@@ -239,8 +239,76 @@ const teacherEndpointRegistry = [
     }) 
   },
   { key: "get_notifications", method: "GET", path: "/notifications/my", module: "notifications", mock: () => ([]) },
-  { key: "get_tickets", method: "GET", path: "/communications/tickets", module: "support", mock: () => ([]) },
-  { key: "post_tickets", method: "POST", path: "/communications/tickets", module: "support", mock: (input) => ({ id: Date.now(), ...input.body, status: "open" }) },
+  { key: "get_class_leave_requests", method: "GET", path: "/classes/:classId/leave-requests", module: "leave", mock: (input) => {
+      const stored = localStorage.getItem("parent_leave_requests");
+      const list = stored ? JSON.parse(stored) : [];
+      // To provide a rich demo experience, populate some mock items if empty
+      if (list.length === 0) {
+        const fallbacks = [
+          {
+            id: "leave-demo-1",
+            studentEnrollmentId: "child1",
+            student: { id: 1024, fullName: "Nguyễn Minh Tuấn", studentCode: "STU1024" },
+            reason: "Cháu bị sốt cao 39 độ, bác sĩ yêu cầu nghỉ học 2 ngày.",
+            startDate: "2026-05-21",
+            endDate: "2026-05-22",
+            note: "Tôi sẽ gửi kèm giấy xác nhận của bác sĩ sau.",
+            status: "pending",
+            createdAt: new Date().toISOString()
+          },
+          {
+            id: "leave-demo-2",
+            studentEnrollmentId: "child2",
+            student: { id: 1025, fullName: "Nguyễn Thị Ngọc Hà", studentCode: "STU0891" },
+            reason: "Cháu nghỉ đi khám sức khỏe định kỳ cùng gia đình.",
+            startDate: "2026-05-25",
+            endDate: "2026-05-25",
+            note: "",
+            status: "approved",
+            feedback: "Đã duyệt, chúc em luôn mạnh khỏe.",
+            createdAt: new Date().toISOString()
+          }
+        ];
+        localStorage.setItem("parent_leave_requests", JSON.stringify(fallbacks));
+        return fallbacks;
+      }
+      // Populate student details if they are missing in the parent submitted item
+      return list.map(item => ({
+        ...item,
+        student: item.student || {
+          id: item.studentEnrollmentId === "child2" ? 1025 : 1024,
+          fullName: item.studentEnrollmentId === "child2" ? "Nguyễn Thị Ngọc Hà" : "Nguyễn Minh Tuấn",
+          studentCode: item.studentEnrollmentId === "child2" ? "STU0891" : "STU1024"
+        }
+      }));
+    }
+  },
+  { key: "patch_leave_request_status", method: "PATCH", path: "/leave-requests/:id/status", module: "leave", mock: (input) => {
+      const stored = localStorage.getItem("parent_leave_requests");
+      const list = stored ? JSON.parse(stored) : [];
+      const targetId = input.pathParams?.id;
+      let updatedItem = null;
+      const newList = list.map(item => {
+        if (String(item.id) === String(targetId)) {
+          updatedItem = {
+            ...item,
+            status: input.body?.status || "approved",
+            feedback: input.body?.feedback || "Đã phê duyệt đơn xin nghỉ học.",
+            approvedBy: 12,
+            approvedByRole: "teacher",
+            updatedAt: new Date().toISOString()
+          };
+          return updatedItem;
+        }
+        return item;
+      });
+      if (updatedItem) {
+        localStorage.setItem("parent_leave_requests", JSON.stringify(newList));
+        return updatedItem;
+      }
+      return { success: false, message: "Không tìm thấy đơn." };
+    }
+  },
   { 
     key: "get_timetable", 
     method: "GET", 
@@ -285,9 +353,62 @@ const teacherEndpointRegistry = [
       }
     ]) 
   },
-  { key: "get_grades_class", method: "GET", path: "/grades/class/:classId", module: "grades", mock: () => ([]) },
-  { key: "post_grades_bulk", method: "POST", path: "/grades/bulk", module: "grades", mock: (input) => input.body },
+  { 
+    key: "get_grades_class", 
+    method: "GET", 
+    path: "/grades/class/:classId", 
+    module: "grades", 
+    mock: (input) => {
+      const classId = input.pathParams?.classId;
+      const { subjectId, schoolYear, term } = input.params || {};
+      if (!classId || !subjectId || !schoolYear || !term) return [];
+      const key = `grades_${classId}_${subjectId}_${schoolYear}_${term}`;
+      const stored = localStorage.getItem(key);
+      return stored ? JSON.parse(stored) : [];
+    } 
+  },
+  { 
+    key: "post_grades_bulk", 
+    method: "POST", 
+    path: "/grades/bulk", 
+    module: "grades", 
+    mock: (input) => {
+      const { classId, subjectId, schoolYear, term, records } = input.body || {};
+      if (classId && subjectId && schoolYear && term && Array.isArray(records)) {
+        const key = `grades_${classId}_${subjectId}_${schoolYear}_${term}`;
+        localStorage.setItem(key, JSON.stringify(records));
+      }
+      return input.body;
+    } 
+  },
   { key: "put_grades_by_id", method: "PUT", path: "/grades/:id", module: "grades", mock: (input) => ({ id: input.pathParams?.id, ...input.body }) },
+  { 
+    key: "post_grades_finalize_class", 
+    method: "POST", 
+    path: "/grades/finalize-class", 
+    module: "grades", 
+    mock: (input) => {
+      const { classId, subjectId, schoolYear, term, status } = input.body || {};
+      if (classId && subjectId && schoolYear && term && status) {
+        const key = `grades_lock_${classId}_${subjectId}_${schoolYear}_${term}`;
+        localStorage.setItem(key, status);
+      }
+      return { success: true, status };
+    } 
+  },
+  { 
+    key: "get_grades_lock_status", 
+    method: "GET", 
+    path: "/grades/lock-status", 
+    module: "grades", 
+    mock: (input) => {
+      const { classId, subjectId, schoolYear, term } = input.params || {};
+      if (!classId || !subjectId || !schoolYear || !term) return { status: "draft" };
+      const key = `grades_lock_${classId}_${subjectId}_${schoolYear}_${term}`;
+      const status = localStorage.getItem(key) || "draft";
+      return { status };
+    } 
+  },
   { key: "get_grade_items", method: "GET", path: "/grade-items", module: "grades", mock: () => ([]) },
   { 
     key: "get_chat_contacts", 
@@ -423,13 +544,15 @@ export const teacherService = {
   uploadLessonAttachment: (input) => endpointCallers.post_lessons_upload(input),
   listQuizzes: (input) => endpointCallers.get_quizzes(input),
   getNotifications: (input) => endpointCallers.get_notifications(input),
-  getTickets: (input) => endpointCallers.get_tickets(input),
-  createTicket: (input) => endpointCallers.post_tickets(input),
+  getClassLeaveRequests: (input) => endpointCallers.get_class_leave_requests(input),
+  updateLeaveRequestStatus: (input) => endpointCallers.patch_leave_request_status(input),
   getTimetable: (input) => endpointCallers.get_timetable(input),
   getGradesByClass: (input) => endpointCallers.get_grades_class(input),
   bulkUpdateGrades: (input) => endpointCallers.post_grades_bulk(input),
   updateGrade: (input) => endpointCallers.put_grades_by_id(input),
   listGradeItems: (input) => endpointCallers.get_grade_items(input),
+  finalizeClassGrades: (input) => endpointCallers.post_grades_finalize_class(input),
+  getGradesLockStatus: (input) => endpointCallers.get_grades_lock_status(input),
   getChatContacts: (input) => endpointCallers.get_chat_contacts(input),
   getChatMessages: (input) => endpointCallers.get_chat_messages(input),
   sendMessage: (input) => endpointCallers.post_chat_message(input),

@@ -70,6 +70,8 @@ export const adminEndpointRegistry = [
   { key: "post_classes_by_id_students", method: "POST", path: "/api/v1/classes/:id/students", module: "classes", roles: ["admin"], access: "authenticated+role", source: "class.route.js" },
   { key: "delete_classes_by_id_students_by_studentid", method: "DELETE", path: "/api/v1/classes/:id/students/:studentId", module: "classes", roles: ["admin"], access: "authenticated+role", source: "class.route.js" },
   { key: "get_classes_by_id_subjects", method: "GET", path: "/api/v1/classes/:id/subjects", module: "classes", roles: ["admin", "teacher"], access: "authenticated+role", source: "class.route.js" },
+  { key: "get_leave_requests", method: "GET", path: "/api/v1/leave-requests", module: "leave_requests", roles: ["admin", "principal"], access: "authenticated+role", source: "leave-request.route.js" },
+  { key: "patch_leave_request_status_admin", method: "PATCH", path: "/api/v1/leave-requests/:id/status", module: "leave_requests", roles: ["admin", "principal"], access: "authenticated+role", source: "leave-request.route.js" },
   { key: "get_communications_email_logs", method: "GET", path: "/api/v1/communications/email-logs", module: "communications", roles: ["admin"], access: "authenticated+role", source: "communication.route.js" },
   { key: "get_communications_email_templates", method: "GET", path: "/api/v1/communications/email-templates", module: "communications", roles: ["admin"], access: "authenticated+role", source: "communication.route.js" },
   { key: "get_communications_tickets", method: "GET", path: "/api/v1/communications/tickets", module: "communications", roles: ["admin", "teacher", "student", "guardian"], access: "authenticated", source: "communication.route.js" },

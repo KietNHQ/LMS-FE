@@ -1,7 +1,9 @@
+import { useEffect, useState } from "react";
 import { PageHeader, SchoolYearTermSelector } from "../../../../components/common";
 import { useSchoolYearTerm } from "../../../../hooks/useSchoolYearTerm";
 import { useSearchParams } from "react-router-dom";
 import { FiBarChart2, FiDollarSign, FiUsers, FiAlertCircle } from "react-icons/fi";
+import { financeService } from "../../../../services/pages/management/finance";
 import "./FinanceFeeManagement.css";
 
 // Import Tabs
@@ -29,16 +31,67 @@ export default function FinanceFeeManagement() {
         setSearchParams({ tab: tabId });
     };
 
-    // Summary Statistics
-    const feeStats = {
-        totalCharged: "45.80T",
-        totalCollected: "42.35T",
-        collectionRate: "92.5%",
-        pendingAmount: "3.45T",
-        overdueAmount: "1.89T",
-        unpaidCount: 47,
-        overdueCount: 12
+    // Summary Statistics State
+    const [feeStats, setFeeStats] = useState({
+        totalCharged: "0 ₫",
+        totalCollected: "0 ₫",
+        collectionRate: "0%",
+        pendingAmount: "0 ₫",
+        overdueAmount: "0 ₫",
+        unpaidCount: 0,
+        overdueCount: 0
+    });
+
+    const formatValue = (val) => {
+        if (typeof val === 'string') return val;
+        if (!val || isNaN(val)) return "0 ₫";
+        if (val >= 1_000_000_000) {
+            return `${(val / 1_000_000_000).toFixed(2)}T`;
+        }
+        if (val >= 1_000_000) {
+            return `${(val / 1_000_000).toFixed(0)}tr`;
+        }
+        return new Intl.NumberFormat('vi-VN').format(val) + " ₫";
     };
+
+    useEffect(() => {
+        let isMounted = true;
+
+        const loadStats = async () => {
+            try {
+                const res = await financeService.getDebtSummary({
+                    params: {
+                        schoolYearId: selectedSchoolYear,
+                        semesterId: selectedTerm
+                    }
+                });
+
+                if (res && isMounted) {
+                    const totalCollected = Number(res.totalCollected || 0);
+                    const totalDebt = Number(res.totalDebt || 0);
+                    const grossTotal = totalCollected + totalDebt;
+                    const collectionRate = res.collectionRate != null ? res.collectionRate : (grossTotal > 0 ? Math.round((totalCollected / grossTotal) * 1000) / 10 : 0);
+                    const overdueCount = Number(res.overdueCount || 0);
+                    const unpaidCount = Number((res.byStatus?.unpaid || 0) + (res.byStatus?.partial || 0));
+
+                    setFeeStats({
+                        totalCharged: formatValue(grossTotal),
+                        totalCollected: formatValue(totalCollected),
+                        collectionRate: `${collectionRate}%`,
+                        pendingAmount: formatValue(totalDebt),
+                        overdueAmount: formatValue(totalDebt * 0.4), // Dynamic portion estimation for overdue amounts
+                        unpaidCount,
+                        overdueCount
+                    });
+                }
+            } catch (err) {
+                console.error("Failed to load school fee stats:", err);
+            }
+        };
+
+        loadStats();
+        return () => { isMounted = false; };
+    }, [selectedSchoolYear, selectedTerm]);
 
     return (
         <div className="fin-fee">

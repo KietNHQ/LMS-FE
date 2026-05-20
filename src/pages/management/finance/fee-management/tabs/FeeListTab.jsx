@@ -1,24 +1,36 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { FiDollarSign, FiSearch, FiFileText, FiX, FiCheckCircle } from "react-icons/fi";
 import { toast } from "react-toastify";
-import { Pagination } from "../../../../../../components/common";
+import { Pagination } from "../../../../../components/common";
+import Select from "../../../../../components/ui/Select/Select";
+import { financeService } from "../../../../../services/pages/management/finance";
+import { studentsService } from "../../../../../services/pages/management/users";
+import { classesService } from "../../../../../services/pages/management/classes";
 
-export default function FeeListTab() {
-    // Extended Mock Data
-    const [students, setStudents] = useState([
-        { id: "HS001", name: "Nguyễn Văn A", class: "10A1", grade: "10", amount: "4,500,000", reqAmount: 4500000, status: "paid" },
-        { id: "HS002", name: "Trần Thị B", class: "10A1", grade: "10", amount: "4,500,000", reqAmount: 4500000, status: "unpaid" },
-        { id: "HS003", name: "Lê Minh C", class: "10A2", grade: "10", amount: "4,500,000", reqAmount: 4500000, status: "overdue" },
-        { id: "HS004", name: "Hoàng H", class: "11A5", grade: "11", amount: "5,000,000", reqAmount: 5000000, status: "unpaid" },
-        { id: "HS005", name: "Phạm Thu D", class: "11A5", grade: "11", amount: "5,000,000", reqAmount: 5000000, status: "paid" },
-        { id: "HS006", name: "Lý Văn E", class: "12B1", grade: "12", amount: "5,500,000", reqAmount: 5500000, status: "unpaid" },
-        { id: "HS007", name: "Đặng Thị F", class: "12B1", grade: "12", amount: "5,500,000", reqAmount: 5500000, status: "paid" },
-        { id: "HS008", name: "Bùi Văn G", class: "10A2", grade: "10", amount: "4,500,000", reqAmount: 4500000, status: "overdue" },
-        { id: "HS009", name: "Vũ Thị H", class: "10A1", grade: "10", amount: "4,500,000", reqAmount: 4500000, status: "paid" },
-        { id: "HS010", name: "Trịnh Văn I", class: "11A2", grade: "11", amount: "5,000,000", reqAmount: 5000000, status: "unpaid" },
-        { id: "HS011", name: "Đỗ Thị K", class: "11A2", grade: "11", amount: "5,000,000", reqAmount: 5000000, status: "paid" },
-        { id: "HS012", name: "Lương Văn L", class: "12C3", grade: "12", amount: "5,500,000", reqAmount: 5500000, status: "unpaid" },
-    ]);
+const STATUS_OPTIONS = [
+    { value: "all", label: "Tất cả trạng thái" },
+    { value: "unpaid", label: "Chưa đóng" },
+    { value: "paid", label: "Đã đóng" },
+    { value: "overdue", label: "Quá hạn" }
+];
+
+const SCOPE_OPTIONS = [
+    { value: "school", label: "Toàn trường" },
+    { value: "grade", label: "Theo Khối" }
+];
+
+const GRADE_OPTIONS = [
+    { value: "10", label: "Khối 10" },
+    { value: "11", label: "Khối 11" },
+    { value: "12", label: "Khối 12" }
+];
+
+export default function FeeListTab({ schoolYear, term }) {
+    // API Data States
+    const [debts, setDebts] = useState([]);
+    const [allStudentsList, setAllStudentsList] = useState([]);
+    const [classes, setClasses] = useState([]);
+    const [isLoading, setIsLoading] = useState(false);
 
     // States for Filters and Pagination
     const [filterStatus, setFilterStatus] = useState("all");
@@ -36,34 +48,125 @@ export default function FeeListTab() {
     const [issueEInvoice, setIssueEInvoice] = useState(true);
     const [transactionNote, setTransactionNote] = useState("");
 
+    // Load initial student profiles and class catalogs
+    const loadInitialData = async () => {
+        setIsLoading(true);
+        try {
+            const [studentRows, classRows] = await Promise.all([
+                studentsService.listStudents(),
+                classesService.listClasses()
+            ]);
+            setAllStudentsList(studentRows);
+            setClasses(classRows);
+        } catch (err) {
+            console.error("Failed to load initial data for school fees:", err);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    // Load debt accounts whenever context changes
+    const loadDebts = async () => {
+        if (!schoolYear) return;
+        setIsLoading(true);
+        try {
+            const res = await financeService.listDebts({
+                params: {
+                    schoolYearId: schoolYear,
+                    semesterId: term,
+                    limit: 2000 // Get a rich collection for lightning fast client filtering
+                }
+            });
+            if (res && res.data) {
+                setDebts(res.data);
+            }
+        } catch (err) {
+            console.error("Failed to load student debts:", err);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
     useEffect(() => {
-        setCurrentPage(1);
-    }, [filterStatus, filterScope, selectedGrade, selectedClass, searchQuery]);
+        loadInitialData();
+    }, []);
 
-    // Derived Logic: Available Classes based on Grade
-    const availableClasses = useMemo(() => {
+    useEffect(() => {
+        loadDebts();
+    }, [schoolYear, term, filterStatus, selectedClass, filterScope]);
+
+    // Build Sequential Class Options matching chosen Grade Level
+    const classOptions = useMemo(() => {
         if (!selectedGrade) return [];
-        const classes = [...new Set(students.filter(s => s.grade === selectedGrade).map(s => s.class))];
-        return classes.sort();
-    }, [selectedGrade, students]);
+        return classes
+            .filter(c => c.grade === `Khối ${selectedGrade}`)
+            .map(c => ({ value: c.id, label: `Lớp ${c.name}` }));
+    }, [classes, selectedGrade]);
 
-    // Filtering Logic
+    // Parse backend debt items to UI friendly formats
+    const parsedStudents = useMemo(() => {
+        const studentMap = {};
+        allStudentsList.forEach(s => {
+            studentMap[s.id] = s;
+            if (s.studentTableId) {
+                studentMap[s.studentTableId] = s;
+            }
+        });
+
+        return debts.map(d => {
+            const studentProfile = studentMap[d.student_id];
+            const className = studentProfile?.className || "10A1";
+            const grade = className.match(/\d+/) ? className.match(/\d+/)[0] : "10";
+
+            return {
+                id: d.id, // database integer ID of student debt
+                studentCode: d.student_code || studentProfile?.studentCode || "",
+                studentId: d.student_id,
+                name: d.student_name || studentProfile?.name || "Học sinh",
+                class: className,
+                grade: grade,
+                amount: new Intl.NumberFormat('vi-VN').format(d.amount),
+                reqAmount: d.amount - d.paid_amount,
+                originalAmount: d.amount,
+                paidAmount: d.paid_amount,
+                status: d.status
+            };
+        });
+    }, [debts, allStudentsList]);
+
+    // Apply filters matching search query, scope, and status
     const filteredStudents = useMemo(() => {
-        return students.filter(s => {
+        return parsedStudents.filter(s => {
             const matchesStatus = filterStatus === "all" || s.status === filterStatus;
-            const matchesScope = filterScope === "school" || 
-                                 (filterScope === "grade" && (!selectedGrade || s.grade === selectedGrade) && (!selectedClass || s.class === selectedClass));
-            const matchesSearch = s.name.toLowerCase().includes(searchQuery.toLowerCase()) || s.id.toLowerCase().includes(searchQuery.toLowerCase());
             
+            let matchesScope = true;
+            if (filterScope === "grade") {
+                if (selectedGrade && s.grade !== selectedGrade) {
+                    matchesScope = false;
+                }
+                if (selectedClass) {
+                    const targetClassObj = classes.find(c => c.id === Number(selectedClass));
+                    if (targetClassObj && s.class !== targetClassObj.name) {
+                        matchesScope = false;
+                    }
+                }
+            }
+
+            const matchesSearch = searchQuery === "" ||
+                s.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                s.studentCode.toLowerCase().includes(searchQuery.toLowerCase());
+
             return matchesStatus && matchesScope && matchesSearch;
         });
-    }, [students, filterStatus, filterScope, selectedGrade, selectedClass, searchQuery]);
+    }, [parsedStudents, filterStatus, filterScope, selectedGrade, selectedClass, searchQuery, classes]);
 
     // Pagination Logic
     const totalPages = Math.ceil(filteredStudents.length / itemsPerPage);
-    const paginatedStudents = filteredStudents.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+    const paginatedStudents = useMemo(() => {
+        return filteredStudents.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+    }, [filteredStudents, currentPage]);
 
-    // Reset modal states when opening
+    // Reset quick collection overlay states when opening
     const handleOpenModal = (student) => {
         setModalData(student);
         setAmountPaid(student.reqAmount);
@@ -84,15 +187,20 @@ export default function FeeListTab() {
         setAmountPaid(val ? parseInt(val) : 0);
     };
 
-    const handleConfirmPayment = () => {
+    const handleConfirmPayment = async () => {
         if (isUnderpaid) {
             toast.error("Số tiền thu chưa đủ, vui lòng kiểm tra lại.");
             return;
         }
 
-        setStudents(prev => prev.map(s => s.id === modalData.id ? { ...s, status: "paid" } : s));
-        toast.success(`Đã xác nhận thu tiền cho ${modalData.name}`);
-        setModalData(null);
+        try {
+            await financeService.recordDebtPayment(modalData.id, { amount: amountPaid });
+            toast.success(`Đã xác nhận thu học phí thành công cho ${modalData.name}`);
+            setModalData(null);
+            loadDebts();
+        } catch (err) {
+            toast.error("Không thể ghi nhận thanh toán: " + (err.response?.data?.error || err.message));
+        }
     };
 
     const formatMoney = (val) => new Intl.NumberFormat('vi-VN').format(val);
@@ -103,44 +211,62 @@ export default function FeeListTab() {
                 <h3>Danh Sách Nộp Học Phí</h3>
                 <div className="fee-toolbar">
                     {/* Status Filter */}
-                    <select className="fee-select" value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)}>
-                        <option value="all">Tất cả trạng thái</option>
-                        <option value="unpaid">Chưa đóng</option>
-                        <option value="paid">Đã đóng</option>
-                        <option value="overdue">Quá hạn</option>
-                    </select>
+                    <Select
+                        variant="custom"
+                        options={STATUS_OPTIONS}
+                        value={filterStatus}
+                        onChange={(e) => {
+                            setFilterStatus(e.target.value);
+                            setCurrentPage(1);
+                        }}
+                        className="fee-select-custom"
+                    />
 
                     {/* Scope Filter */}
-                    <select className="fee-select" value={filterScope} onChange={(e) => {
-                        setFilterScope(e.target.value);
-                        if (e.target.value === 'school') {
-                            setSelectedGrade("");
-                            setSelectedClass("");
-                        }
-                    }}>
-                        <option value="school">Toàn trường</option>
-                        <option value="grade">Theo Khối</option>
-                    </select>
+                    <Select
+                        variant="custom"
+                        options={SCOPE_OPTIONS}
+                        value={filterScope}
+                        onChange={(e) => {
+                            setFilterScope(e.target.value);
+                            setCurrentPage(1);
+                            if (e.target.value === 'school') {
+                                setSelectedGrade("");
+                                setSelectedClass("");
+                            }
+                        }}
+                        className="fee-select-custom"
+                    />
 
                     {/* Conditional Grade Selector */}
                     {filterScope === 'grade' && (
-                        <select className="fee-select animated-fade-in" value={selectedGrade} onChange={(e) => {
-                            setSelectedGrade(e.target.value);
-                            setSelectedClass("");
-                        }}>
-                            <option value="">Chọn Khối</option>
-                            <option value="10">Khối 10</option>
-                            <option value="11">Khối 11</option>
-                            <option value="12">Khối 12</option>
-                        </select>
+                        <Select
+                            variant="custom"
+                            options={GRADE_OPTIONS}
+                            value={selectedGrade}
+                            onChange={(e) => {
+                                setSelectedGrade(e.target.value);
+                                setSelectedClass("");
+                                setCurrentPage(1);
+                            }}
+                            placeholder="Chọn Khối"
+                            className="fee-select-custom animated-fade-in"
+                        />
                     )}
 
                     {/* Sequential Class Selector */}
                     {filterScope === 'grade' && selectedGrade && (
-                        <select className="fee-select animated-fade-in" value={selectedClass} onChange={(e) => setSelectedClass(e.target.value)}>
-                            <option value="">Tất cả Lớp</option>
-                            {availableClasses.map(c => <option key={c} value={c}>Lớp {c}</option>)}
-                        </select>
+                        <Select
+                            variant="custom"
+                            options={classOptions}
+                            value={selectedClass}
+                            onChange={(e) => {
+                                setSelectedClass(e.target.value);
+                                setCurrentPage(1);
+                            }}
+                            placeholder="Tất cả Lớp"
+                            className="fee-select-custom animated-fade-in"
+                        />
                     )}
 
                     {/* Search */}
@@ -151,7 +277,10 @@ export default function FeeListTab() {
                             className="fee-input" 
                             placeholder="Tên HS hoặc Mã số..." 
                             value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
+                            onChange={(e) => {
+                                setSearchQuery(e.target.value);
+                                setCurrentPage(1);
+                            }}
                         />
                     </div>
                 </div>
@@ -172,7 +301,7 @@ export default function FeeListTab() {
                     <tbody>
                         {paginatedStudents.map(s => (
                             <tr key={s.id}>
-                                <td>{s.id}</td>
+                                <td>{s.studentCode || s.id}</td>
                                 <td><strong>{s.name}</strong></td>
                                 <td>{s.class}</td>
                                 <td className="td-money">{s.amount} ₫</td>
@@ -244,7 +373,7 @@ export default function FeeListTab() {
                             <div className="fm-quick-head">
                                 <div className="fm-quick-student">
                                     <strong>{modalData.name}</strong>
-                                    <span>{modalData.id} | Lớp {modalData.class}</span>
+                                    <span>{modalData.studentCode || modalData.id} | Lớp {modalData.class}</span>
                                 </div>
                                 <div className="fm-quick-due">
                                     <span>Cần thu</span>

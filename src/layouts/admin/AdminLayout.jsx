@@ -11,6 +11,7 @@ import ChangePasswordDialog from "../../components/common/Dialog/ChangePasswordD
 
 
 export default function AdminLayout() {
+    const queryClient = useQueryClient();
     const [isCollapsed, setIsCollapsed] = useState(false);
     const location = useLocation();
     const [isPageTransitioning, setIsPageTransitioning] = useState(false);

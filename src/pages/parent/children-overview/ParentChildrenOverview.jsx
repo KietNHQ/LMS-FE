@@ -26,6 +26,29 @@ export default function ParentChildrenOverview() {
         weeklyRecords: [], allMonthlyRecords: [], records: []
     })
 
+    const [leaveRequests, setLeaveRequests] = useState([])
+
+    const fetchLeaveRequests = async () => {
+        if (!selectedChildId) return;
+        try {
+            const res = await parentService.listLeaveRequests({
+                params: { studentEnrollmentId: selectedChildId }
+            });
+            if (res.success && res.data) {
+                setLeaveRequests(res.data);
+            } else {
+                setLeaveRequests([]);
+            }
+        } catch (err) {
+            console.error("Error fetching leave requests:", err);
+            setLeaveRequests([]);
+        }
+    };
+
+    useEffect(() => {
+        fetchLeaveRequests();
+    }, [selectedChildId]);
+
     // 1. Khởi tạo danh sách con từ localStorage
     useEffect(() => {
         const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
@@ -115,7 +138,6 @@ export default function ParentChildrenOverview() {
     // Giả lập dữ liệu cho các phần chưa có API (sẽ thay bằng API thật sau)
     const scheduleData = []
     const upcomingEvents = []
-    const leaveRequests = []
     const weeklyRecords = []
     const allMonthlyRecords = []
 
@@ -204,7 +226,7 @@ export default function ParentChildrenOverview() {
                             classNameValue={childData.className}
                             selectedChildId={selectedChildId}
                         />
-                        <LeaveRequestSection requests={leaveRequests.slice(0, 3)} compact />
+                        <LeaveRequestSection requests={leaveRequests.slice(0, 3)} compact childId={selectedChildId} onSuccess={fetchLeaveRequests} />
                     </div>
                 </div>
             )}
@@ -234,7 +256,7 @@ export default function ParentChildrenOverview() {
             )}
 
             {activeTab === "leave" && (
-                <LeaveRequestSection requests={leaveRequests} />
+                <LeaveRequestSection requests={leaveRequests} childId={selectedChildId} onSuccess={fetchLeaveRequests} />
             )}
         </div>
     )

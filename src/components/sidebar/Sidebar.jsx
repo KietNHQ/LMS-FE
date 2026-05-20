@@ -6,7 +6,7 @@ import ProfileDialog from "../common/Dialog/ProfileDialog/ProfileDialog";
 import { FiChevronLeft, FiLogOut, FiMenu, FiSettings, FiX, FiRefreshCw } from "react-icons/fi";
 import { FaGraduationCap } from "react-icons/fa";
 import { PERMISSIONS } from "../../config/permissions";
-import { useLogout } from "../../hooks/useAuth";
+import { useLogout, normalizePermissions } from "../../hooks/useAuth";
 import "./Sidebar.css";
 
 const MOBILE_BREAKPOINT = 768;
@@ -45,7 +45,10 @@ export default function Sidebar({
     }
   }, [role]);
 
-  const permissionsToCheck = userPermissions || defaultMockPermissions;
+  const permissionsToCheck = useMemo(() => {
+    const rawPerms = userPermissions || defaultMockPermissions;
+    return normalizePermissions(rawPerms);
+  }, [userPermissions, defaultMockPermissions]);
 
   // [NEW] Filter danh sách sidebar dựa trên permissions thay vì show toàn bộ theo role
   const items = useMemo(() => {

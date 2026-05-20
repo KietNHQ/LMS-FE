@@ -195,3 +195,24 @@
     justify-content: space-between;
   }
 }
+
+/* Lock Indicator and Block Style */
+.grade-list-item__info.is-locked-row {
+  cursor: not-allowed !important;
+}
+
+.grade-list-locked-indicator {
+  padding: 8px 14px;
+  background: rgba(241, 245, 249, 0.8);
+  color: #64748b;
+  font-weight: 700;
+  font-size: 12px;
+  border-radius: 12px;
+  border: 1px dashed #cbd5e1;
+  text-align: center;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  white-space: nowrap;
+}
