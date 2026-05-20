@@ -52,6 +52,7 @@ export default function InvoiceHistory({ invoices }) {
                 <table className="ih-table">
                     <thead>
                         <tr>
+                            <th>Học sinh</th>
                             <th>Mã hóa đơn</th>
                             <th>Học kỳ</th>
                             <th>Phương thức</th>
@@ -65,6 +66,9 @@ export default function InvoiceHistory({ invoices }) {
                             const cfg = getStatusConfig(invoice.dueStatus, invoice.status);
                             return (
                                 <tr key={invoice.id} className={`ih-row ${invoice.status === "paid" ? "ih-row--paid" : ""}`}>
+                                    <td>
+                                        <span className="ih-student">{invoice.childName}</span>
+                                    </td>
                                     <td>
                                         <span className="ih-code">{invoice.invoiceCode}</span>
                                     </td>

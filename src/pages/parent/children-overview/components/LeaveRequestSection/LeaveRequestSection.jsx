@@ -1,30 +1,6 @@
 import React, { useMemo, useState } from "react";
 import "./LeaveRequestSection.css";
-import { parentService } from "../../../../services/pages/parent/parentService";
-
-const fallbackRequests = [
-        {
-            title: "Sốt cao và nghỉ tại nhà",
-            date: "2026-03-01",
-            approvedBy: "Giáo viên chủ nhiệm",
-            status: "approved",
-            statusText: "Đã duyệt",
-        },
-        {
-            title: "Công việc của gia đình",
-            date: "2026-03-08",
-            approvedBy: "—",
-            status: "pending",
-            statusText: "Đang chờ",
-        },
-        {
-            title: "Khám sức khỏe",
-            date: "2026-03-10",
-            approvedBy: "Văn phòng nhà trường",
-            status: "rejected",
-            statusText: "Bị từ chối",
-        },
-]
+import { parentService } from "../../../../../services/pages/parent/parentService";
 
 const statusMap = {
     approved: { key: "approved", text: "Đã duyệt" },
@@ -44,8 +20,8 @@ export default function LeaveRequestSection({ requests = [], childId, onSuccess 
     const [submitMessage, setSubmitMessage] = useState("")
 
     const normalizedRequests = useMemo(() => {
-        const source = requests.length > 0 ? requests : fallbackRequests
-        return source.map((item) => {
+        if (!requests || requests.length === 0) return []
+        return requests.map((item) => {
             const statusInfo = normalizeStatus(item.statusText || item.status)
             return {
                 title: item.title || item.reason || "Đơn xin nghỉ học",
@@ -65,16 +41,17 @@ export default function LeaveRequestSection({ requests = [], childId, onSuccess 
     const handleSubmit = async (event) => {
         event.preventDefault()
         try {
-            const res = await parentService.submitLeaveRequest({
+            const res = await parentService.createLeaveRequest({
                 body: {
-                    studentEnrollmentId: childId || "child1",
+                    studentEnrollmentId: childId,
                     reason: formData.reason,
                     startDate: formData.startDate,
                     endDate: formData.endDate,
                     note: formData.note
-                }
+                },
+                mock: false
             })
-            if (res.success) {
+            if (res?.success) {
                 setSubmitMessage(`Đã gửi đơn xin nghỉ học từ ${formData.startDate} đến ${formData.endDate} thành công!`)
                 setIsDialogOpen(false)
                 setFormData({ reason: "", startDate: "", endDate: "", note: "" })
@@ -99,6 +76,11 @@ export default function LeaveRequestSection({ requests = [], childId, onSuccess 
 
             {submitMessage && <p className="leave-note">{submitMessage}</p>}
 
+            {normalizedRequests.length === 0 ? (
+                <div className="leave-empty">
+                    <p>Chưa có đơn xin nghỉ học nào.</p>
+                </div>
+            ) : (
             <div className="leave-list">
                 {normalizedRequests.map((item, index) => (
                     <div key={index} className="leave-item">
@@ -114,6 +96,7 @@ export default function LeaveRequestSection({ requests = [], childId, onSuccess 
                     </div>
                 ))}
             </div>
+            )}
 
             {isDialogOpen && (
                 <div className="leave-dialog-backdrop" onClick={() => setIsDialogOpen(false)}>

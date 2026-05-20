@@ -47,6 +47,38 @@ function normalizeSchoolYearKey(value = "") {
     return String(value).replace(/\s+/g, "").trim();
 }
 
+// Derive school year from due date (format: "2025-2026" for Sep 2025 - Aug 2026)
+function deriveSchoolYear(dueDate) {
+    if (!dueDate) return "";
+    const date = new Date(dueDate);
+    if (isNaN(date)) return "";
+    const year = date.getFullYear();
+    const month = date.getMonth() + 1; // 1-12
+    // School year: Aug(8) - Jul(7)
+    // If Aug-Dec: currentYear - nextYear
+    // If Jan-Jul: previousYear - currentYear
+    if (month >= 8) {
+        return `${year}-${year + 1}`;
+    } else {
+        return `${year - 1}-${year}`;
+    }
+}
+
+// Derive semester from due date
+function deriveSemester(dueDate) {
+    if (!dueDate) return "Học kỳ";
+    const date = new Date(dueDate);
+    if (isNaN(date)) return "Học kỳ";
+    const month = date.getMonth() + 1; // 1-12
+    // Semester 1: Aug-Jan (months 8-12, 1)
+    // Semester 2: Feb-Jul (months 2-7)
+    if (month >= 8 || month === 1) {
+        return "Học kỳ 1";
+    } else {
+        return "Học kỳ 2";
+    }
+}
+
 function getFallbackPayments() {
     return [];
 }
@@ -72,6 +104,15 @@ function upgradeLegacySingleChildDemoData(list) {
 }
 
 function recomputePayment(record) {
+    console.log("💳 recomputePayment input:", {
+        id: record.id,
+        title: record.title,
+        amount: record.amount,
+        feeAmount: record.feeAmount,
+        feeItems: record.feeItems,
+        paidAmount: record.paidAmount
+    });
+
     const feeSummary = {
         tuition: 0,
         boarding: 0,
@@ -96,15 +137,35 @@ function recomputePayment(record) {
         0
     );
     const paidAmount = record.status === "paid" ? roundMoney(record.paidAmount || payableBeforePaid) : 0;
-    const breakdown = buildBreakdownFromItems(record.feeItems || [], paidAmount).map((item) => {
-        if (item.key === "deduction") {
-            return { ...item, amount: roundMoney(feeSummary.deduction) };
-        }
-        if (item.key === "remaining") {
-            return { ...item, amount: Math.max(roundMoney(payableBeforePaid - paidAmount), 0) };
-        }
-        return item;
+
+    // Nếu không có feeItems, dùng trực tiếp amount từ backend
+    const hasItems = Array.isArray(record.feeItems) && record.feeItems.length > 0;
+    const effectiveAmount = hasItems ? payableBeforePaid : roundMoney(record.amount || record.feeAmount || 0);
+
+    console.log("💳 recomputePayment result:", {
+        feeSummary,
+        payableBeforePaid,
+        effectiveAmount,
+        paidAmount
     });
+
+    const breakdown = hasItems
+        ? buildBreakdownFromItems(record.feeItems || [], paidAmount).map((item) => {
+            if (item.key === "deduction") {
+                return { ...item, amount: roundMoney(feeSummary.deduction) };
+            }
+            if (item.key === "remaining") {
+                return { ...item, amount: Math.max(roundMoney(payableBeforePaid - paidAmount), 0) };
+            }
+            return item;
+        })
+        : [
+            { key: "original", label: "Số tiền gốc", amount: effectiveAmount },
+            { key: "deduction", label: "Giảm giá", amount: roundMoney(record.discountAmount || 0) },
+            { key: "total", label: "Tổng cộng", amount: Math.max(effectiveAmount - roundMoney(record.discountAmount || 0), 0) },
+            { key: "paid", label: "Đã thanh toán", amount: paidAmount },
+            { key: "remaining", label: "Còn lại", amount: Math.max(effectiveAmount - paidAmount - roundMoney(record.discountAmount || 0), 0) },
+        ];
 
     return {
         ...record,
@@ -112,8 +173,8 @@ function recomputePayment(record) {
         discountAmount: roundMoney(record.discountAmount || 0),
         paidAmount,
         breakdown,
-        originalAmount: roundMoney(feeSummary.tuition + feeSummary.boarding + feeSummary.service + feeSummary.extra),
-        finalAmount: roundMoney(payableBeforePaid),
+        originalAmount: effectiveAmount,
+        finalAmount: Math.max(effectiveAmount - roundMoney(record.discountAmount || 0), 0),
         month: (normalizeDate(record.deadline) || "").slice(0, 7),
     };
 }
@@ -153,11 +214,98 @@ export default function ParentPayments() {
                 const response = await parentService.listPayments({ mock: false });
                 console.log("💳 Parent Payments API Response:", response);
 
-                const payments = response.data || response.parent_payments || response || [];
-                const paymentArray = Array.isArray(payments) ? payments : [];
+                // Backend returns: { success: true, data: { invoices: [...], summary: {...} } }
+                // Axios interceptor đã unwrap outer wrapper nên response = { success: true, data: { invoices, summary } }
+                const responseData = response.data || {};
+                console.log("💳 response.data keys:", Object.keys(responseData));
+                console.log("💳 response.data:", responseData);
+
+                // Backend trả về data.invoices là array
+                let paymentArray = [];
+
+                // Thử tìm invoices array
+                if (Array.isArray(responseData.invoices)) {
+                    paymentArray = responseData.invoices;
+                    console.log("💳 Found invoices array:", paymentArray.length);
+                }
+                // Hoặc data là array trực tiếp
+                else if (Array.isArray(responseData)) {
+                    paymentArray = responseData;
+                    console.log("💳 data is array:", paymentArray.length);
+                }
+                // Thử tìm bất kỳ array nào trong data
+                else {
+                    const dataKeys = Object.keys(responseData);
+                    for (const key of dataKeys) {
+                        const value = responseData[key];
+                        if (Array.isArray(value)) {
+                            console.log(`💳 Found array at key "${key}":`, value);
+                            paymentArray = value;
+                            break;
+                        }
+                    }
+                }
+
+                console.log("💳 Final paymentArray:", paymentArray);
 
                 if (paymentArray.length > 0) {
-                    setPaymentList(normalizePaymentList(paymentArray));
+                    console.log("💳 Sample raw invoice from API:", JSON.stringify(paymentArray[0], null, 2));
+
+                    // Map backend fields to FE expected format
+                    const mappedPayments = paymentArray.map(inv => {
+                        const dueDate = inv.due_date || inv.fee_due_date || "";
+                        const schoolYear = inv.school_year_name 
+                            || deriveSchoolYear(dueDate) 
+                            || (inv.school_year_id ? String(inv.school_year_id) : "");
+                        
+                        // Derive semester from due date if not provided
+                        const semester = inv.semester_name 
+                            || (inv.semester_id ? `Học kỳ ${inv.semester_id}` : null)
+                            || deriveSemester(dueDate);
+                        
+                        const amount = parseFloat(inv.amount || 0);
+                        const discountAmount = parseFloat(inv.discount_amount || 0);
+                        const paidAmount = parseFloat(inv.paid_amount || 0);
+                        const finalAmount = Math.max(amount - discountAmount, 0);
+                        
+                        return {
+                            id: inv.id,
+                            title: inv.fee_name || "Học phí",
+                            term: semester,
+                            schoolYear,
+                            grade: "",
+                            className: inv.class_name || "",
+                            childName: inv.student_name || "",
+                            deadline: dueDate,
+                            feeItems: [],
+                            description: inv.description || "",
+                            discountCode: inv.discount_code || "",
+                            discountAmount,
+                            status: inv.status || "unpaid",
+                            paidDate: inv.paid_date || "",
+                            paidAmount,
+                            invoiceCode: inv.invoice_no || inv.invoice_code || "",
+                            amount,
+                            feeAmount: parseFloat(inv.fee_amount || 0),
+                            feeId: inv.fee_id,
+                            studentId: inv.student_id,
+                            // Computed fields
+                            finalAmount,
+                            originalAmount: amount,
+                            breakdown: [
+                                { key: "original", label: "Số tiền gốc", amount },
+                                { key: "deduction", label: "Giảm giá", amount: discountAmount },
+                                { key: "total", label: "Tổng cộng", amount: finalAmount },
+                                { key: "paid", label: "Đã thanh toán", amount: paidAmount },
+                                { key: "remaining", label: "Còn lại", amount: Math.max(finalAmount - paidAmount, 0) },
+                            ],
+                        };
+                    });
+
+                    console.log("💳 Mapped payments sample:", mappedPayments[0]);
+                    console.log("💳 All mapped schoolYears:", mappedPayments.map(p => p.schoolYear));
+
+                    setPaymentList(mappedPayments);
                     return;
                 }
             } catch (err) {
@@ -189,11 +337,15 @@ export default function ParentPayments() {
     }, []);
 
     const childOptions = useMemo(
-        () => ["all", ...Array.from(new Set(paymentList.map((item) => item.childName)))],
+        () => {
+            const options = ["all", ...Array.from(new Set(paymentList.map((item) => item.childName)))];
+            console.log("💳 [DEBUG] childOptions:", options);
+            return options;
+        },
         [paymentList]
     );
     const termOptions = useMemo(
-        () => ["all", ...Array.from(new Set(paymentList.map((item) => item.term || item.title)))],
+        () => ["all", ...Array.from(new Set(paymentList.map((item) => item.term || item.title || "Học phí")))],
         [paymentList]
     );
     const monthOptions = useMemo(
@@ -203,18 +355,22 @@ export default function ParentPayments() {
 
     const filteredPaymentList = useMemo(() => {
         const selectedYearKey = normalizeSchoolYearKey(selectedSchoolYear);
-        const selectedTermLabel = selectedTerm === "hk2" ? "Học kỳ 2" : "Học kỳ 1";
+        console.log("💳 [DEBUG] selectedSchoolYear:", selectedSchoolYear, "normalized:", selectedYearKey);
+        console.log("💳 [DEBUG] childFilter:", childFilter);
+        console.log("💳 [DEBUG] paymentList sample:", paymentList.slice(0, 3).map(p => ({ id: p.id, childName: p.childName, schoolYear: p.schoolYear })));
 
         const filtered = paymentList.filter((item) => {
             const itemYearKey = normalizeSchoolYearKey(item.schoolYear);
             const childPass = childFilter === "all" || item.childName === childFilter;
-            const termFromSelectorPass = (item.term || item.title) === selectedTermLabel;
-            const termPass = termFilter === "all" ? termFromSelectorPass : (item.term || item.title) === termFilter;
+            // "all" = show all terms
+            const termPass = termFilter === "all" || item.term === termFilter || item.title === termFilter;
             const monthPass = monthFilter === "all" || item.month === monthFilter;
             const schoolYearPass = !selectedYearKey || itemYearKey === selectedYearKey;
+            console.log("💳 [DEBUG] item:", item.id, "schoolYear:", item.schoolYear, "normalized:", itemYearKey, "match:", schoolYearPass);
             return childPass && termPass && monthPass && schoolYearPass;
         });
 
+        console.log("💳 [DEBUG] filteredPaymentList count:", filtered.length);
         return filtered.sort((a, b) => {
             const aTime = new Date(a.deadline).getTime();
             const bTime = new Date(b.deadline).getTime();
@@ -224,9 +380,10 @@ export default function ParentPayments() {
 
     const invoiceHistory = useMemo(
         () =>
-            paymentList.map((item) => ({
+            filteredPaymentList.map((item) => ({
                 id: item.id,
-                invoiceCode: item.invoiceCode,
+                childName: item.childName,
+                invoiceCode: item.invoiceCode || `INV-${item.id}`,
                 semester: item.term || item.title,
                 date: item.paidDate || "--",
                 amount: formatCurrency(item.finalAmount),
@@ -234,7 +391,7 @@ export default function ParentPayments() {
                 dueStatus: getDueStatus(item),
                 status: item.status,
             })),
-        [paymentList]
+        [filteredPaymentList]
     );
 
     const summaryData = useMemo(() => {

@@ -11,14 +11,26 @@ export default function PaymentTable({
     onExportPdf,
     onOpenDetail,
 }) {
+    // Debug log
+    if (payment && payment.id === 91) {
+        console.log("💳 PaymentTable payment 91:", payment);
+    }
+    
+    // Defensive: ensure payment is valid
+    if (!payment || typeof payment !== 'object') {
+        console.error("❌ PaymentTable: invalid payment", payment);
+        return null;
+    }
+    
     const isPaid = payment.status === "paid";
+    const breakdown = Array.isArray(payment.breakdown) ? payment.breakdown : [];
     const remainingAmount = useMemo(
-        () => payment.breakdown.find((line) => line.key === "remaining")?.amount ?? payment.finalAmount,
-        [payment.breakdown, payment.finalAmount]
+        () => breakdown.find((line) => line.key === "remaining")?.amount ?? payment.finalAmount ?? 0,
+        [breakdown, payment.finalAmount]
     );
     const paidAmount = useMemo(
-        () => payment.breakdown.find((line) => line.key === "paid")?.amount ?? payment.paidAmount,
-        [payment.breakdown, payment.paidAmount]
+        () => breakdown.find((line) => line.key === "paid")?.amount ?? payment.paidAmount ?? 0,
+        [breakdown, payment.paidAmount]
     );
     const compactAmountLabel = isPaid ? "Da thanh toan" : "Con lai";
     const compactAmount = isPaid ? paidAmount : remainingAmount;

@@ -272,3 +272,58 @@
     background: #e2e8f0;
     border-radius: 10px;
 }
+
+/* Date separator between message groups */
+.msg-date-separator {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 12px 0 8px;
+}
+
+.msg-date-separator span {
+    background: #f1f5f9;
+    color: #64748b;
+    font-size: 0.72rem;
+    font-weight: 600;
+    padding: 3px 12px;
+    border-radius: 999px;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+/* Sender name above bubble */
+.msg-sender {
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: #7c4dff;
+    margin-bottom: 3px;
+    padding: 0 4px;
+}
+
+.msg-other .msg-sender {
+    color: #6366f1;
+}
+
+/* Connection status badge */
+.connection-badge {
+    font-size: 0.7rem;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-weight: 500;
+}
+
+.connection-badge.connected {
+    background: #dcfce7;
+    color: #16a34a;
+}
+
+.connection-badge.disconnected {
+    background: #fee2e2;
+    color: #dc2626;
+}
+
+.connection-badge.error {
+    background: #fef3c7;
+    color: #d97706;
+}

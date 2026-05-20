@@ -4,7 +4,7 @@ export default function PaymentSummary({ selectedChild, yearAvg }) {
   const name = selectedChild?.name || "Chưa có thông tin";
   const initials = name.charAt(0).toUpperCase();
   const className = selectedChild?.className || selectedChild?.class_name || "---";
-  const teacherName = selectedChild?.teacherName || "---";
+  const teacherName = selectedChild?.homeroomTeacher || "---";
   const studentCode = selectedChild?.studentCode || selectedChild?.id || "---";
 
   return ( 
@@ -15,7 +15,7 @@ export default function PaymentSummary({ selectedChild, yearAvg }) {
         <div className="info">
           <h3>{name}</h3>
           <p>Lớp {className} • GVCN: {teacherName}</p>
-          <span>Năm học 2024-2025 • Mã HS: {studentCode}</span>
+          <span>{selectedChild?.schoolYear || "Năm học ---"} • Mã HS: {studentCode}</span>
         </div>
       </div>
 

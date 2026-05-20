@@ -41,13 +41,26 @@ export default function ParentNotifications() {
     const fetchNotifications = async () => {
       try {
         setIsLoading(true);
+        console.log("🔄 [ParentNotifications] Fetching from API...");
+        
         const response = await parentService.listNotifications({ mock: false });
         
+        console.log("📥 [ParentNotifications] API Response:", response);
+        console.log("📥 [ParentNotifications] Response structure:", {
+          success: response?.success,
+          data: response?.data,
+          isArray: Array.isArray(response?.data)
+        });
+        
         if (response.success && response.data) {
+          console.log("✅ [ParentNotifications] Setting notifications:", response.data.length);
           setNotifications(response.data);
+        } else {
+          console.warn("⚠️ [ParentNotifications] Invalid response or no data");
         }
       } catch (err) {
-        console.error("❌ Error fetching notifications:", err);
+        console.error("❌ [ParentNotifications] Error fetching notifications:", err);
+        console.error("❌ [ParentNotifications] Error response:", err?.response?.data);
       } finally {
         setIsLoading(false);
       }
@@ -120,20 +133,24 @@ export default function ParentNotifications() {
 
   const markAllRead = async () => {
     try {
+      console.log("🔄 [ParentNotifications] Marking all as read...");
       await parentService.markAllNotificationsRead({ mock: false });
       setNotifications(prev => prev.map(n => ({ ...n, unread: false })));
+      console.log("✅ [ParentNotifications] All marked as read");
     } catch (err) {
-      console.error("❌ Error marking all read:", err);
+      console.error("❌ [ParentNotifications] Error marking all read:", err);
     }
   };
 
   const openNotification = async (item) => {
     try {
       if (item.unread) {
+        console.log(`🔄 [ParentNotifications] Marking notification ${item.id} as read...`);
         await parentService.markNotificationRead({ 
           pathParams: { id: item.id },
           mock: false 
         });
+        console.log(`✅ [ParentNotifications] Notification ${item.id} marked as read`);
       }
       
       const updated = notifications.map((notification) =>
@@ -143,7 +160,7 @@ export default function ParentNotifications() {
       setNotifications(updated);
       setSelected({ ...item, unread: false });
     } catch (err) {
-      console.error("❌ Error opening notification:", err);
+      console.error("❌ [ParentNotifications] Error opening notification:", err);
       setSelected(item);
     }
   };
@@ -154,16 +171,18 @@ export default function ParentNotifications() {
 
   const toggleImportant = async (id) => {
     try {
+      console.log(`🔄 [ParentNotifications] Toggling important for notification ${id}...`);
       await parentService.toggleNotificationImportant({
         pathParams: { id },
         mock: false
       });
+      console.log(`✅ [ParentNotifications] Toggled important for ${id}`);
 
       setNotifications((prev) =>
         prev.map((n) => (n.id === id ? { ...n, important: !n.important } : n))
       );
     } catch (err) {
-      console.error("❌ Error toggling important:", err);
+      console.error("❌ [ParentNotifications] Error toggling important:", err);
     }
   };
 

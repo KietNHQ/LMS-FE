@@ -202,6 +202,13 @@
     color: #ffffff;
 }
 
+.leave-empty {
+    text-align: center;
+    padding: 1.5rem;
+    color: #6b7280;
+    font-size: 0.9rem;
+}
+
 @media (max-width: 40rem) {
     .leave-form-row {
         grid-template-columns: 1fr;

@@ -1,6 +1,6 @@
 import React from "react";
 import { FiPlus } from "react-icons/fi";
-import "./AccountsOverviewSection.css";
+import "./accountsOverviewSection.css";
 
 export default function AccountsOverviewSection({
     totalUsers,

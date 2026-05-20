@@ -9,10 +9,10 @@ export default function OverviewCards({ yearAvg, hk1Avg, unreadCount }) {
     <div className="cards">
 
       {/* ĐTB CẢ NĂM */}
-      <div className="card clickable" onClick={() => navigate("/parent/grades")}>
+      <div className="card clickable" onClick={() => navigate("/parent/children-overview")}>
         <div>
           <p>ĐTB cả năm</p>
-          <h3>{yearAvg}</h3>
+          <h3>{yearAvg || "--"}</h3>
         </div>
 
         <div className="icon purple">
@@ -21,10 +21,10 @@ export default function OverviewCards({ yearAvg, hk1Avg, unreadCount }) {
       </div>
 
       {/* ĐTB HK1 */}
-      <div className="card clickable" onClick={() => navigate("/parent/grades")}>
+      <div className="card clickable" onClick={() => navigate("/parent/children-overview")}>
         <div>
           <p>ĐTB HK1</p>
-          <h3>{hk1Avg}</h3>
+          <h3>{hk1Avg || "--"}</h3>
         </div>
 
         <div className="icon blue">
@@ -46,7 +46,7 @@ export default function OverviewCards({ yearAvg, hk1Avg, unreadCount }) {
       </div>
 
       {/* HỌC PHÍ */}
-      <div className="card clickable" onClick={() => navigate("/parent/finance")}>
+      <div className="card clickable" onClick={() => navigate("/parent/payments")}>
         <div>
           <p>Học phí chưa đóng</p>
           <h3>---</h3>
