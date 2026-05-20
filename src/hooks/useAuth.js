@@ -22,7 +22,7 @@ const PERMISSION_ID_MAP = {
 };
 
 // Helper: Chuyển đổi danh sách quyền từ BE (object/id) sang FE (string key)
-const normalizePermissions = (permissionsInput) => {
+export const normalizePermissions = (permissionsInput) => {
     // Nếu BE bọc quyền trong 1 object { permissions: [...] }
     const permissions = Array.isArray(permissionsInput) 
         ? permissionsInput 
@@ -300,17 +300,17 @@ export const useCheckPermission = () => {
     const userString = localStorage.getItem('user') || sessionStorage.getItem('user');
     const user = userString ? JSON.parse(userString) : {};
     
+    const normalizedPerms = Array.isArray(user.permissions) 
+        ? normalizePermissions(user.permissions) 
+        : [];
+    
     const hasPermission = (requiredPermission) => {
         // Admin bypass - only for the technical 'admin' role
         const role = user.role?.toLowerCase() || '';
         if (role === 'admin' || role === 'quản trị viên') return true;
         
         // Check if user has the specific permission
-        if (Array.isArray(user.permissions)) {
-            return user.permissions.includes(requiredPermission);
-        }
-        
-        return false;
+        return normalizedPerms.includes(requiredPermission);
     };
 
     return { hasPermission, user };

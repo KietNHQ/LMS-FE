@@ -436,3 +436,81 @@
     justify-content: center;
   }
 }
+
+/* --- Grade Lock and Unlock Styles --- */
+.grade-lock-status-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 16px;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 700;
+  transition: all 0.3s ease;
+  border: 1px solid transparent;
+}
+
+.grade-lock-status-badge.is-draft {
+  background: rgba(245, 158, 11, 0.08);
+  color: #d97706;
+  border-color: rgba(245, 158, 11, 0.2);
+}
+
+.grade-lock-status-badge.is-locked {
+  background: rgba(16, 185, 129, 0.08);
+  color: #059669;
+  border-color: rgba(16, 185, 129, 0.2);
+}
+
+.teacher-grades-action-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 38px;
+  padding: 0 16px;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 1px solid transparent;
+}
+
+.teacher-grades-action-btn.is-lock {
+  background: linear-gradient(135deg, #0f172a, #1e293b);
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.15);
+}
+
+.teacher-grades-action-btn.is-lock:hover {
+  background: linear-gradient(135deg, #1e293b, #334155);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(15, 23, 42, 0.25);
+}
+
+.teacher-grades-action-btn.is-unlock-request {
+  background: rgba(239, 68, 68, 0.08);
+  color: #dc2626;
+  border-color: rgba(239, 68, 68, 0.2);
+}
+
+.teacher-grades-action-btn.is-unlock-request:hover {
+  background: rgba(239, 68, 68, 0.15);
+  border-color: rgba(239, 68, 68, 0.3);
+  transform: translateY(-1px);
+}
+
+.teacher-grade-risk-item.is-locked-cursor {
+  cursor: not-allowed !important;
+  opacity: 0.85;
+}
+
+.teacher-grade-risk-item.is-locked-cursor:hover {
+  transform: none !important;
+  background: #fff !important;
+  border-color: #fee2e2 !important;
+}
+
+/* Glassmorphism details for request unlock modal text area */
+.teacher-grade-unlock-request-modal textarea {
+  resize: none;
+}

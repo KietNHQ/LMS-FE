@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { PageHeader, SchoolYearTermSelector } from "../../../../components/common";
 import Select from "../../../../components/ui/Select/Select";
 import { useSchoolYearTerm } from "../../../../hooks/useSchoolYearTerm";
@@ -166,6 +166,7 @@ const SECTION_OPTIONS = [
   { value: "all", label: "Tất cả luồng" },
   { value: "grades", label: "Chuyên môn" },
   { value: "activities", label: "Kế hoạch & ngân sách" },
+  { value: "leave", label: "Đơn xin phép" },
 ];
 
 function StatusBadge({ status }) {
@@ -265,6 +266,72 @@ export default function PrincipalApprovals() {
   const itemsPerPage = 6;
   const sectionLabel = selectedTerm === "hk1" ? "Học kỳ 1" : "Học kỳ 2";
 
+  // Fetch parent leave requests and merge them with other work items to simulate unified school system
+  useEffect(() => {
+    const loadData = () => {
+      const stored = localStorage.getItem("parent_leave_requests");
+      const rawRequests = stored ? JSON.parse(stored) : [];
+      
+      // Fallback seeds matching teacher homeroom expectations
+      if (rawRequests.length === 0) {
+        const fallbacks = [
+          {
+            id: "leave-demo-1",
+            studentEnrollmentId: "child1",
+            student: { id: 1024, fullName: "Nguyễn Minh Tuấn", studentCode: "STU1024" },
+            reason: "Cháu bị sốt cao 39 độ, bác sĩ yêu cầu nghỉ học 2 ngày.",
+            startDate: "2026-05-21",
+            endDate: "2026-05-22",
+            note: "Tôi sẽ gửi kèm giấy xác nhận của bác sĩ sau.",
+            status: "pending",
+            createdAt: new Date().toISOString()
+          },
+          {
+            id: "leave-demo-2",
+            studentEnrollmentId: "child2",
+            student: { id: 1025, fullName: "Nguyễn Thị Ngọc Hà", studentCode: "STU0891" },
+            reason: "Cháu nghỉ đi khám sức khỏe định kỳ cùng gia đình.",
+            startDate: "2026-05-25",
+            endDate: "2026-05-25",
+            note: "",
+            status: "approved",
+            feedback: "Đã duyệt, chúc em luôn mạnh khỏe.",
+            createdAt: new Date().toISOString()
+          }
+        ];
+        localStorage.setItem("parent_leave_requests", JSON.stringify(fallbacks));
+        rawRequests.push(...fallbacks);
+      }
+
+      // Convert leave requests to the uniform WORK_ITEMS shape
+      const mappedLeaves = rawRequests.map(req => {
+        const studentName = req.student?.fullName || (req.studentEnrollmentId === "child2" ? "Nguyễn Thị Ngọc Hà" : "Nguyễn Minh Tuấn");
+        const shortId = typeof req.id === "string" ? req.id : `leave-${req.id}`;
+        return {
+          id: shortId,
+          section: "leave",
+          sectionLabel: "Đơn xin phép",
+          title: `Đơn xin nghỉ học: ${studentName}`,
+          reference: `#LR-${shortId.replace("leave-", "").slice(0, 6).toUpperCase()}`,
+          requester: `Phụ huynh ${studentName}`,
+          summary: `Lý do: ${req.reason}`,
+          description: `Học sinh: ${studentName}\nThời gian nghỉ: Từ ${req.startDate} đến ${req.endDate}\nLý do: ${req.reason}\n\nGhi chú từ phụ huynh: ${req.note || "Không có"}\n\nÝ kiến phản hồi: ${req.feedback || "Chưa có phản hồi"}`,
+          time: req.createdAt ? new Date(req.createdAt).toLocaleDateString("vi-VN") : "Hôm nay",
+          dueAt: "Sớm nhất",
+          priority: req.status === "pending" ? "Cao" : "Trung bình",
+          status: req.status || "pending",
+        };
+      });
+
+      setItems([...WORK_ITEMS, ...mappedLeaves]);
+    };
+
+    loadData();
+    // Listen for storage changes from other browser tabs/views (Teacher/Parent updates)
+    window.addEventListener("storage", loadData);
+    return () => window.removeEventListener("storage", loadData);
+  }, []);
+
   const metrics = useMemo(() => {
     return {
       total: items.length,
@@ -295,6 +362,30 @@ export default function PrincipalApprovals() {
   const updateItemStatus = (id, status) => {
     setItems((prev) => prev.map((item) => (item.id === id ? { ...item, status } : item)));
     setIsModalOpen(false);
+
+    // Sync status updates back to parent_leave_requests unified mock database
+    if (id.startsWith("leave-") || id.startsWith("leave-demo-")) {
+      const stored = localStorage.getItem("parent_leave_requests");
+      if (stored) {
+        const rawRequests = JSON.parse(stored);
+        const updatedRequests = rawRequests.map(req => {
+          const reqId = typeof req.id === "string" ? req.id : `leave-${req.id}`;
+          if (reqId === id) {
+            return {
+              ...req,
+              status,
+              feedback: status === "approved" ? "Đã phê duyệt bởi Hiệu trưởng/Ban Giám Hiệu." : "Từ chối bởi Hiệu trưởng/Ban Giám Hiệu.",
+              approvedBy: "Principal",
+              approvedByRole: "principal",
+              updatedAt: new Date().toISOString()
+            };
+          }
+          return req;
+        });
+        localStorage.setItem("parent_leave_requests", JSON.stringify(updatedRequests));
+      }
+    }
+
     toast.success(`Đã xử lý yêu cầu ${id}`);
   };
 
@@ -311,6 +402,28 @@ export default function PrincipalApprovals() {
     }
     const ids = new Set(pendingVisible.map((item) => item.id));
     setItems((prev) => prev.map((item) => (ids.has(item.id) ? { ...item, status: "approved" } : item)));
+
+    // Bulk update leave requests status inside localStorage database
+    const stored = localStorage.getItem("parent_leave_requests");
+    if (stored) {
+      const rawRequests = JSON.parse(stored);
+      const updatedRequests = rawRequests.map(req => {
+        const reqId = typeof req.id === "string" ? req.id : `leave-${req.id}`;
+        if (ids.has(reqId)) {
+          return {
+            ...req,
+            status: "approved",
+            feedback: "Đã phê duyệt nhanh bởi Hiệu trưởng/Ban Giám Hiệu.",
+            approvedBy: "Principal",
+            approvedByRole: "principal",
+            updatedAt: new Date().toISOString()
+          };
+        }
+        return req;
+      });
+      localStorage.setItem("parent_leave_requests", JSON.stringify(updatedRequests));
+    }
+
     toast.success(`Đã phê duyệt ${pendingVisible.length} yêu cầu.`);
   };
 

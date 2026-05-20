@@ -188,8 +188,36 @@ const PARENT_ENDPOINTS = [
   { key: "post_parent_payments_by_id_pay", method: "POST", path: "/api/v1/guardians/me/payments/:id/pay", module: "payments", mock: (input) => ({ id: input.pathParams?.id, status: "paid", paidAt: new Date().toISOString() }) },
   { key: "post_parent_payments_apply_discount", method: "POST", path: "/api/v1/guardians/me/payments/apply-discount", module: "payments", mock: (input) => ({ applied: true, code: input.body?.code || "" }) },
   { key: "get_parent_faqs", method: "GET", path: "/api/v1/guardians/me/support/faqs", module: "support", mock: () => PARENT_FAQS_MOCK },
-  { key: "post_parent_support_tickets", method: "POST", path: "/api/v1/guardians/me/support/tickets", module: "support", mock: (input) => ({ id: Date.now(), ...(input.body || {}), status: "open" }) },
-  { key: "get_parent_support_tickets", method: "GET", path: "/api/v1/guardians/me/support/tickets", module: "support", mock: () => [] },
+  { key: "get_parent_leave_requests", method: "GET", path: "/api/v1/guardians/me/leave-requests", module: "leave", mock: (input) => {
+      const stored = localStorage.getItem("parent_leave_requests");
+      const list = stored ? JSON.parse(stored) : [];
+      const childId = input.params?.studentEnrollmentId;
+      if (childId) {
+        return list.filter(item => String(item.studentEnrollmentId) === String(childId));
+      }
+      return list;
+    } 
+  },
+  { key: "post_parent_leave_request", method: "POST", path: "/api/v1/guardians/me/leave-requests", module: "leave", mock: (input) => {
+      const current = localStorage.getItem("parent_leave_requests");
+      const list = current ? JSON.parse(current) : [];
+      const newItem = {
+        id: "leave-" + Date.now(),
+        studentEnrollmentId: input.body?.studentEnrollmentId || "child1",
+        reason: input.body?.reason || "",
+        startDate: input.body?.startDate || "",
+        endDate: input.body?.endDate || "",
+        note: input.body?.note || "",
+        status: "pending",
+        approvedBy: null,
+        feedback: null,
+        createdAt: new Date().toISOString()
+      };
+      list.unshift(newItem);
+      localStorage.setItem("parent_leave_requests", JSON.stringify(list));
+      return newItem;
+    }
+  },
 ];
 
 const createEndpointCaller = (endpoint) => async (input = {}) => {
@@ -254,8 +282,8 @@ export const parentService = {
   payInvoice: (input) => endpointCallers.post_parent_payments_by_id_pay(input),
   applyDiscountCode: (input) => endpointCallers.post_parent_payments_apply_discount(input),
   listFaqs: (input) => endpointCallers.get_parent_faqs(input),
-  listSupportTickets: (input) => endpointCallers.get_parent_support_tickets(input),
-  submitSupportTicket: (input) => endpointCallers.post_parent_support_tickets(input),
+  listLeaveRequests: (input) => endpointCallers.get_parent_leave_requests(input),
+  submitLeaveRequest: (input) => endpointCallers.post_parent_leave_request(input),
 };
 
 export default parentService;

@@ -34,6 +34,7 @@ export default function GradeListSection({
     onOpenEditDialog,
     subjectLabel,
     semesterLabel,
+    isLocked = false,
 }) {
     const [searchValue, setSearchValue] = useState("");
     const [currentPage, setCurrentPage] = useState(1);
@@ -97,8 +98,8 @@ export default function GradeListSection({
                     <article key={record.id} className="grade-list-item">
                         <button
                             type="button"
-                            className="grade-list-item__info"
-                            onClick={() => onOpenEditDialog?.(record)}
+                            className={`grade-list-item__info ${isLocked ? 'is-locked-row' : ''}`}
+                            onClick={() => !isLocked && onOpenEditDialog?.(record)}
                         >
                             <strong>{pageStartIndex + index + 1}. {record.name}</strong>
                             <span>{record.code}</span>
@@ -137,13 +138,19 @@ export default function GradeListSection({
                             </span>
                         </div>
 
-                        <button
-                            type="button"
-                            className="grade-list-action"
-                            onClick={() => onOpenEditDialog?.(record)}
-                        >
-                            Sửa
-                        </button>
+                        {isLocked ? (
+                            <span className="grade-list-locked-indicator">
+                                🔒 Đã khóa
+                            </span>
+                        ) : (
+                            <button
+                                type="button"
+                                className="grade-list-action"
+                                onClick={() => onOpenEditDialog?.(record)}
+                            >
+                                Sửa
+                            </button>
+                        )}
                     </article>
                 ))}
 

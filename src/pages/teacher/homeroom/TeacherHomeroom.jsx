@@ -6,6 +6,7 @@ import { PageHeader, SchoolYearTermSelector } from "../../../components/common";
 import HomeroomOverviewSection from "./components/homeroomOverviewSection/HomeroomOverviewSection";
 import HomeroomStudentsSection from "./components/homeroomStudentsSection/HomeroomStudentsSection";
 import HomeroomActionDialog from "./components/homeroomActionDialog/HomeroomActionDialog";
+import HomeroomLeaveRequestsSection from "./components/homeroomLeaveRequestsSection/HomeroomLeaveRequestsSection";
 import { homeroomData } from "./data/homeroomData";
 import { useSchoolYearTerm } from "../../../hooks/useSchoolYearTerm";
 import { FiUsers, FiAward, FiCalendar, FiInfo } from "react-icons/fi";
@@ -369,6 +370,13 @@ export default function TeacherHomeroom() {
                 >
                     Danh sách học sinh
                 </button>
+                <button
+                    type="button"
+                    className={`section-switch-btn ${activeSection === "leave" ? "active" : ""}`}
+                    onClick={() => setActiveSection("leave")}
+                >
+                    Đơn xin phép
+                </button>
             </div>
 
             <div className="homeroom-section-content">
@@ -388,6 +396,9 @@ export default function TeacherHomeroom() {
                         onBanCanSuLopClick={openOfficerDialog}
                         initialViewMode={initialViewMode}
                     />
+                )}
+                {activeSection === "leave" && (
+                    <HomeroomLeaveRequestsSection classId={classData.id} />
                 )}
             </div>
 

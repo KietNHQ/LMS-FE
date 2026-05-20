@@ -11,6 +11,7 @@ const PRINCIPAL_MODULES = [
   "academic_records",
   "assessment_workflows",
   "attendance",
+  "leave_requests",
   "conduct_evaluations",
   "conduct_locks",
   "discipline",
