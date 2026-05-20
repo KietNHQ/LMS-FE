@@ -38,7 +38,6 @@ export default function TeacherSupport() {
   const [faqs, setFaqs] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
 
-  // Chatbot State
   const [messages, setMessages] = useState([
     {
       id: "init",
@@ -73,7 +72,6 @@ export default function TeacherSupport() {
     fetchFaqs();
   }, []);
 
-  // Auto-scroll chat body on new messages
   useEffect(() => {
     if (chatBodyRef.current) {
       chatBodyRef.current.scrollTop = chatBodyRef.current.scrollHeight;

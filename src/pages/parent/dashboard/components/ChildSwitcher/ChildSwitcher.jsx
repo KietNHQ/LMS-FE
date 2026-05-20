@@ -7,6 +7,12 @@ export default function ChildSwitcher({
   onSelect,
   extraControl = null,
 }) {
+  // Build display name from given_name + surname
+  const getChildName = (child) => {
+    if (child.name) return child.name;
+    return [child.given_name, child.surname].filter(Boolean).join(" ") || "Học sinh";
+  };
+
   return (
     <div className="child-switcher">
       <div className="child-switcher__main">
@@ -16,15 +22,18 @@ export default function ChildSwitcher({
         </div>
 
         <div className="child-switcher__children">
-          {childrenList.map((child) => (
-            <button
-              key={child.id}
-              className={selectedChildId === child.id ? "active" : ""}
-              onClick={() => onSelect(child.id)}
-            >
-              {child.name}
-            </button>
-          ))}
+          {childrenList.map((child) => {
+            const childId = child.id || child.studentId;
+            return (
+              <button
+                key={childId}
+                className={selectedChildId === childId ? "active" : ""}
+                onClick={() => onSelect(childId)}
+              >
+                {getChildName(child)}
+              </button>
+            );
+          })}
         </div>
       </div>
 

@@ -1,74 +1,196 @@
 import "./ParentSupport.css";
-import { useState } from "react";
-import { FaPaperPlane, FaRegClock, FaRobot } from "react-icons/fa";
+import { useState, useRef, useEffect } from "react";
+import { FaPaperPlane, FaRegClock, FaRobot, FaTimes } from "react-icons/fa";
 import FAQList from "./components/FAQList/FAQList";
 import SupportContact from "./components/SupportContact/SupportContact";
 import SupportHeader from "./components/SupportHeader/SupportHeader";
+import { parentService } from "../../../services/pages/parent/parentService";
+
+const MOCK_FAQS = [
+  {
+    id: 1,
+    category: "Học tập",
+    question: "Làm sao để theo dõi kết quả học tập của con?",
+    answer: "Bạn mở mục Tổng quan con em hoặc Điểm số để xem chi tiết theo học kỳ.",
+    keywords: ["điểm", "học tập", "kết quả", "theo dõi", "điểm số"],
+  },
+];
 
 export default function ParentSupport() {
   const [faqSearch, setFaqSearch] = useState("");
+  const [faqs, setFaqs] = useState([]);
+  const [faqLoading, setFaqLoading] = useState(true);
+  const [chatMessages, setChatMessages] = useState([
+    {
+      id: 1,
+      role: "bot",
+      text: "Xin chào! Tôi là trợ lý LMS dành cho phụ huynh. Bạn cần hỗ trợ vấn đề nào? Tôi có thể giúp bạn tìm câu trả lời nhanh hoặc ghi nhận yêu cầu hỗ trợ.",
+      time: new Date().toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" }),
+    },
+  ]);
+  const [inputValue, setInputValue] = useState("");
+  const [isTyping, setIsTyping] = useState(false);
+  const [showQuickActions, setShowQuickActions] = useState(true);
+  const chatBodyRef = useRef(null);
 
-  const faqs = [
-    {
-      category: "Học tập",
-      question: "Làm sao để theo dõi kết quả học tập của con?",
-      answer: "Bạn mở mục Tổng quan con em hoặc Điểm số để xem chi tiết theo học kỳ.",
-      popularity: 96,
-    },
-    {
-      category: "Tài chính",
-      question: "Phụ huynh thanh toán học phí cho con ở đâu?",
-      answer: "Bạn có thể thanh toán trong mục Thanh toán hoặc liên hệ phòng tài vụ để được hỗ trợ.",
-      popularity: 90,
-    },
-    {
-      category: "Liên hệ",
-      question: "Làm sao nhắn tin giáo viên chủ nhiệm?",
-      answer: "Vào mục Liên lạc giáo viên chủ nhiệm và chọn cuộc trò chuyện cần trao đổi.",
-      popularity: 86,
-    },
-    {
-      category: "Điểm danh",
-      question: "Có thể xem lịch sử điểm danh theo tháng không?",
-      answer: "Có, hệ thống cho phép xem điểm danh tuần/tháng trong phần Tổng quan con em.",
-      popularity: 84,
-    },
-    {
-      category: "Thông báo",
-      question: "Vì sao thông báo chưa đọc chưa cập nhật?",
-      answer: "Hãy tải lại trang và kiểm tra mục Thông báo để đồng bộ số lượng chưa đọc mới nhất.",
-      popularity: 75,
-    },
-    {
-      category: "Tài khoản",
-      question: "Quên mật khẩu tài khoản phụ huynh phải làm gì?",
-      answer: "Sử dụng Quên mật khẩu ở trang đăng nhập hoặc liên hệ bộ phận hỗ trợ để cấp lại.",
-      popularity: 88,
-    },
-  ];
+  // Fetch FAQs from API
+  useEffect(() => {
+    const fetchFaqs = async () => {
+      try {
+        const res = await parentService.listFaqs({ mock: false });
+        if (res?.success && Array.isArray(res.data)) {
+          setFaqs(res.data);
+        }
+      } catch (err) {
+        console.error("Error fetching FAQs:", err);
+        setFaqs(MOCK_FAQS);
+      } finally {
+        setFaqLoading(false);
+      }
+    };
+    fetchFaqs();
+  }, []);
 
-  const sortedFaqs = [...faqs].sort((a, b) => b.popularity - a.popularity);
+  // Auto-scroll to bottom when new messages arrive
+  useEffect(() => {
+    if (chatBodyRef.current) {
+      chatBodyRef.current.scrollTop = chatBodyRef.current.scrollHeight;
+    }
+  }, [chatMessages]);
+
+  const normalizeText = (text) => {
+    return text
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/[đĐ]/g, (m) => (m === "đ" ? "d" : "D"));
+  };
+
+  const searchFaq = (query) => {
+    const normalizedQuery = normalizeText(query);
+
+    // Score each FAQ by keyword match
+    const scored = faqs.map((faq) => {
+      let score = 0;
+      const questionNorm = normalizeText(faq.question || faq.title || "");
+      const categoryNorm = normalizeText(faq.category || "");
+
+      // Exact match in question
+      if (questionNorm.includes(normalizedQuery)) score += 10;
+      // Exact match in category
+      if (categoryNorm.includes(normalizedQuery)) score += 5;
+      // Keyword match
+      const keywords = faq.keywords || [];
+      for (const kw of keywords) {
+        if (normalizeText(kw).includes(normalizedQuery) || normalizedQuery.includes(normalizeText(kw))) {
+          score += 3;
+        }
+      }
+      // Word overlap
+      const queryWords = normalizedQuery.split(/\s+/).filter((w) => w.length > 2);
+      for (const word of queryWords) {
+        if (questionNorm.includes(word)) score += 1;
+        if (categoryNorm.includes(word)) score += 0.5;
+      }
+
+      return { faq, score };
+    });
+
+    // Sort by score descending
+    scored.sort((a, b) => b.score - a.score);
+
+    return scored.filter((s) => s.score > 0).slice(0, 3);
+  };
+
+  const formatTime = () => {
+    return new Date().toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" });
+  };
+
+  const handleSendMessage = async () => {
+    const message = inputValue.trim();
+    if (!message) return;
+
+    const userMessage = {
+      id: Date.now(),
+      role: "user",
+      text: message,
+      time: formatTime(),
+    };
+
+    setChatMessages((prev) => [...prev, userMessage]);
+    setInputValue("");
+    setIsTyping(true);
+    setShowQuickActions(false);
+
+    // Simulate bot thinking
+    await new Promise((resolve) => setTimeout(resolve, 500 + Math.random() * 500));
+
+    const results = searchFaq(message);
+
+    let botResponse;
+    if (results.length > 0) {
+      const topResult = results[0];
+      botResponse = {
+        id: Date.now() + 1,
+        role: "bot",
+        text: topResult.faq.answer || topResult.faq.content || "Không có câu trả lời.",
+        category: topResult.faq.category,
+        relatedQuestion: topResult.faq.question || topResult.faq.title,
+        time: formatTime(),
+      };
+    } else {
+      botResponse = {
+        id: Date.now() + 1,
+        role: "bot",
+        text: `Xin lỗi, tôi chưa tìm thấy câu trả lời phù hợp cho "${message}". Bạn có thể:\n\n1. Thử diễn đạt lại câu hỏi\n2. Liên hệ trực tiếp qua thông tin bên dưới\n3. Gửi yêu cầu hỗ trợ để được giải đáp`,
+        time: formatTime(),
+        showContact: true,
+      };
+    }
+
+    setIsTyping(false);
+    setChatMessages((prev) => [...prev, botResponse]);
+  };
+
+  const handleQuickAction = async (question) => {
+    setInputValue(question);
+    await new Promise((resolve) => setTimeout(resolve, 100));
+    handleSendMessage();
+  };
+
+  const handleKeyPress = (e) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handleSendMessage();
+    }
+  };
+
+  // Use API FAQs or fallback to MOCK_FAQS
+  const displayFaqs = faqs.length > 0 ? faqs : MOCK_FAQS;
+
+  const sortedFaqs = [...displayFaqs].sort((a, b) => (b.keywords?.length || 0) - (a.keywords?.length || 0));
   const normalizedKeyword = faqSearch.trim().toLowerCase();
 
   const filteredFaqs = sortedFaqs.filter((faq) => {
     if (!normalizedKeyword) return true;
 
-    const content = `${faq.category} ${faq.question} ${faq.answer}`.toLowerCase();
+    const content = `${faq.category || ""} ${faq.question || faq.title || ""} ${faq.answer || faq.content || ""}`.toLowerCase();
     return content.includes(normalizedKeyword);
   });
 
   const groupedFaqs = filteredFaqs.reduce((acc, faq) => {
-    if (!acc[faq.category]) {
-      acc[faq.category] = [];
+    const cat = faq.category || "Khác";
+    if (!acc[cat]) {
+      acc[cat] = [];
     }
-    acc[faq.category].push(faq);
+    acc[cat].push(faq);
     return acc;
   }, {});
 
   return (
     <div className="parent-support-page">
       <SupportHeader
-        faqCount={filteredFaqs.length}
+        faqCount={faqLoading ? "..." : filteredFaqs.length}
         chatStatus="Hoạt động"
       />
 
@@ -86,33 +208,85 @@ export default function ParentSupport() {
             </h4>
 
             <span className="parent-chat-status">
-              <FaRegClock /> Phản hồi trong 5-10 phút
+              <FaRegClock /> Trực tuyến
             </span>
           </div>
 
-          <div className="parent-chat-body">
-            <div className="parent-chat-message is-bot">
-              <div className="parent-chat-role">Bot</div>
-              Xin chào! Tôi là trợ lý LMS dành cho phụ huynh. Bạn cần hỗ trợ vấn đề nào?
-              <div className="parent-chat-time">14:48</div>
-            </div>
+          <div className="parent-chat-body" ref={chatBodyRef}>
+            {chatMessages.map((msg) => (
+              <div
+                key={msg.id}
+                className={`parent-chat-message ${msg.role === "bot" ? "is-bot" : "is-user"}`}
+              >
+                <div className="parent-chat-role">
+                  {msg.role === "bot" ? "Bot" : "Bạn"}
+                </div>
+                <div className="parent-chat-content">
+                  {msg.text.split("\n").map((line, i) => (
+                    <span key={i}>
+                      {line}
+                      {i < msg.text.split("\n").length - 1 && <br />}
+                    </span>
+                  ))}
+                </div>
+                {msg.category && (
+                  <div className="parent-chat-category">
+                    Chủ đề: {msg.category}
+                  </div>
+                )}
+                {msg.relatedQuestion && (
+                  <div className="parent-chat-related">
+                    Câu hỏi liên quan: {msg.relatedQuestion}
+                  </div>
+                )}
+                <div className="parent-chat-time">{msg.time}</div>
+              </div>
+            ))}
 
-            <div className="parent-chat-message is-user">
-              <div className="parent-chat-role">Bạn</div>
-              Tôi muốn xem lịch sử điểm danh của con trong tháng này.
-              <div className="parent-chat-time">14:49</div>
-            </div>
-
-            <div className="parent-chat-message is-bot">
-              <div className="parent-chat-role">Bot</div>
-              Bạn vào Tổng quan con em, chọn tab Điểm danh và xem bộ lọc theo tháng.
-              <div className="parent-chat-time">14:49</div>
-            </div>
+            {isTyping && (
+              <div className="parent-chat-message is-bot">
+                <div className="parent-chat-role">Bot</div>
+                <div className="parent-chat-typing">
+                  <span></span>
+                  <span></span>
+                  <span></span>
+                </div>
+              </div>
+            )}
           </div>
 
+          {showQuickActions && (
+            <div className="parent-chat-quick-actions">
+              <span className="quick-action-label">Nhanh chóng:</span>
+              <button onClick={() => handleQuickAction("Xem điểm của con")}>
+                Xem điểm
+              </button>
+              <button onClick={() => handleQuickAction("Thanh toán học phí")}>
+                Thanh toán
+              </button>
+              <button onClick={() => handleQuickAction("Liên hệ giáo viên")}>
+                Liên hệ GVCN
+              </button>
+              <button onClick={() => handleQuickAction("Lịch điểm danh")}>
+                Điểm danh
+              </button>
+            </div>
+          )}
+
           <div className="parent-chat-input">
-            <input placeholder="Nhập câu hỏi cần hỗ trợ..." />
-            <button type="button" aria-label="Gửi tin nhắn">
+            <input
+              type="text"
+              placeholder="Nhập câu hỏi cần hỗ trợ..."
+              value={inputValue}
+              onChange={(e) => setInputValue(e.target.value)}
+              onKeyPress={handleKeyPress}
+            />
+            <button
+              type="button"
+              aria-label="Gửi tin nhắn"
+              onClick={handleSendMessage}
+              disabled={!inputValue.trim()}
+            >
               <FaPaperPlane />
             </button>
           </div>

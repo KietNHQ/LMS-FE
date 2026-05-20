@@ -1,5 +1,5 @@
 import React from "react";
-import "./ConfirmationModal.css";
+import "./confirmationModal.css";
 
 export default function ConfirmationModal({ 
     isOpen, 

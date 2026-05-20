@@ -8,18 +8,6 @@ const axiosClient = axios.create({
   timeout: 10000,
 });
 
-// Interceptor 1: Tu dong gan JWT vao request
-axiosClient.interceptors.request.use((config) => {
-  // Chỉ lấy từ localStorage nếu có cờ isPersistent=true
-  const isPersistent = localStorage.getItem("isPersistent") === "true";
-  const token = sessionStorage.getItem("accessToken") || (isPersistent ? localStorage.getItem("accessToken") : null);
-  
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-  return config;
-});
-
 // Ho tro dong bo request khi refresh token
 let isRefreshing = false;
 let failedQueue = [];
@@ -35,16 +23,47 @@ const processQueue = (error, token = null) => {
   failedQueue = [];
 };
 
-// Interceptor 2: Bat 401 va thu refresh token
+// Interceptor 1: Gan JWT + Debug log request
+axiosClient.interceptors.request.use(
+  (config) => {
+    // [DEBUG] Log all API requests
+    console.log(`📤 [API] ${config.method?.toUpperCase()} ${config.baseURL}${config.url}`, {
+      params: config.params,
+      data: config.data
+    });
+
+    // Tu dong gan JWT vao request
+    const isPersistent = localStorage.getItem("isPersistent") === "true";
+    const token = sessionStorage.getItem("accessToken") || (isPersistent ? localStorage.getItem("accessToken") : null);
+    
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
+
+// Interceptor 2: Debug log response + Xu ly 401/403
 axiosClient.interceptors.response.use(
-  (response) => response.data,
+  (response) => {
+    // [DEBUG] Log all API responses
+    console.log(`📥 [API] Response ${response.config.url}:`, response.data);
+    return response.data;
+  },
   async (error) => {
     const originalRequest = error.config;
     const errorData = error.response?.data;
 
+    // [DEBUG] Log errors
+    console.error(`❌ [API] Error ${error.config?.url}:`, {
+      status: error.response?.status,
+      data: error.response?.data,
+      message: error.message
+    });
+
     // 1. Xu ly loi bat buoc doi mat khau (BE Issue #10)
     if (error.response?.status === 403 && (errorData?.error === "REQUIRE_PASSWORD_CHANGE" || errorData?.message?.includes("đổi mật khẩu"))) {
-      // Phát sự kiện toàn hệ thống để các Layout bắt được và hiện Dialog
       window.dispatchEvent(new CustomEvent("require-password-change"));
       console.warn("User must change password:", errorData.message);
       return Promise.reject(error);
@@ -74,7 +93,6 @@ axiosClient.interceptors.response.use(
         const refreshToken = localStorage.getItem("refreshToken") || sessionStorage.getItem("refreshToken");
 
         if (!refreshToken) {
-          // targeted cleanup instead of clear()
           const authItems = ["accessToken", "refreshToken", "user", "userRole", "teacher_unread_notifications_count", "student_unread_notifications_count", "parent_unread_notifications_count"];
           authItems.forEach(item => {
             localStorage.removeItem(item);
@@ -90,8 +108,6 @@ axiosClient.interceptors.response.use(
 
         const { accessToken } = res.data.data;
 
-        // [STRICT] Chỉ lưu vào localStorage nếu refreshToken cũng đang nằm ở đó
-        // Điều này ngăn chặn việc token "nhảy" sang localStorage khi đang ở chế độ Session
         const isPersistent = !!localStorage.getItem("refreshToken");
         const storage = isPersistent ? localStorage : sessionStorage;
 
@@ -104,7 +120,6 @@ axiosClient.interceptors.response.use(
       } catch (_error) {
         processQueue(_error, null);
         
-        // targeted cleanup instead of clear()
         const authItems = ["accessToken", "refreshToken", "user", "userRole", "teacher_unread_notifications_count", "student_unread_notifications_count", "parent_unread_notifications_count"];
         authItems.forEach(item => {
           localStorage.removeItem(item);
@@ -123,5 +138,3 @@ axiosClient.interceptors.response.use(
 );
 
 export default axiosClient;
-
-

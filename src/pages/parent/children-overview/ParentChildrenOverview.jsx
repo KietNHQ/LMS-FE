@@ -20,137 +20,169 @@ export default function ParentChildrenOverview() {
     const [isLoading, setIsLoading] = useState(true)
     const [childData, setChildData] = useState(null)
     const [gradesBySemester, setGradesBySemester] = useState({ hk1: [], hk2: [], year: [] })
-    const [attendanceRecords, setAttendanceRecords] = useState({
-        present: 0, absent: 0, late: 0,
-        weeklySummary: { label: "Tuần này", present: 0, absent: 0, late: 0, total: 0, rate: "0%" },
-        weeklyRecords: [], allMonthlyRecords: [], records: []
-    })
-
+    const [attendanceRecords, setAttendanceRecords] = useState([])
+    const [scheduleData, setScheduleData] = useState([])
+    const [upcomingEvents, setUpcomingEvents] = useState([])
     const [leaveRequests, setLeaveRequests] = useState([])
 
-    const fetchLeaveRequests = async () => {
-        if (!selectedChildId) return;
-        try {
-            const res = await parentService.listLeaveRequests({
-                params: { studentEnrollmentId: selectedChildId }
-            });
-            if (res.success && res.data) {
-                setLeaveRequests(res.data);
-            } else {
-                setLeaveRequests([]);
-            }
-        } catch (err) {
-            console.error("Error fetching leave requests:", err);
-            setLeaveRequests([]);
-        }
-    };
-
+    // 1. Fetch children list tu API
     useEffect(() => {
-        fetchLeaveRequests();
-    }, [selectedChildId]);
-
-    // 1. Khởi tạo danh sách con từ localStorage
-    useEffect(() => {
-        const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
-        const localChildren = storedUser?.profile?.linkedStudents || [];
-        
-        if (localChildren.length > 0) {
-            const formatted = localChildren
-                .filter(c => c.id !== "child1" && c.name !== "Nguyễn Minh Tuấn")
-                .map(c => ({
-                    ...c,
-                    id: c.id || c.studentId,
-                    name: c.name || `${c.surname || ""} ${c.given_name || ""}`.trim(),
-                    avatarLetter: (c.given_name || c.name || "S")[0].toUpperCase(),
-                    avatarColor: "linear-gradient(135deg, #a67cff, #7c4dff)"
-                }));
-            
-            if (formatted.length > 0) {
-                setChildrenList(formatted);
-                if (!selectedChildId) setSelectedChildId(formatted[0].id);
-            }
-        }
-    }, []);
-
-    // 2. Lấy dữ liệu chi tiết khi chọn con hoặc học kỳ
-    useEffect(() => {
-        if (!selectedChildId) return;
-
-        const fetchChildDetails = async () => {
+        const fetchChildren = async () => {
             try {
-                setIsLoading(true);
-                // Tìm thông tin con trong list
-                const currentChild = childrenList.find(c => c.id === selectedChildId);
+                const res = await parentService.listChildren({ mock: false })
+                const children = res?.data || []
+                if (children.length > 0) {
+                    setChildrenList(children)
+                    if (!selectedChildId) {
+                        setSelectedChildId(children[0].id)
+                    }
+                }
+            } catch (err) {
+                console.error("Error fetching children:", err)
+                setChildrenList([])
+            }
+        }
+        fetchChildren()
+    }, [])
+
+    // 2. Fetch grades, attendance, schedule khi doi con
+    useEffect(() => {
+        if (!selectedChildId) return
+
+        const fetchChildData = async () => {
+            try {
+                setIsLoading(true)
+
+                const [gradesRes, attendanceRes, scheduleRes] = await Promise.allSettled([
+                    parentService.getChildGrades({
+                        pathParams: { childId: selectedChildId },
+                        params: { semesterId: selectedTerm === "hk1" ? 1 : 2 },
+                        mock: false
+                    }),
+                    parentService.getChildAttendance({
+                        pathParams: { childId: selectedChildId },
+                        mock: false
+                    }),
+                    parentService.getChildSchedule({
+                        pathParams: { childId: selectedChildId },
+                        mock: false
+                    }),
+                ])
+
+                if (gradesRes.status === "fulfilled" && gradesRes.value?.success) {
+                    setGradesBySemester(gradesRes.value.data)
+                }
+
+                if (attendanceRes.status === "fulfilled" && attendanceRes.value?.success) {
+                    const records = attendanceRes.value.data?.records || attendanceRes.value.data || []
+                    const mappedRecords = records.map(r => ({
+                        day: r.date || r.day || r.attendance_date || "",
+                        status: r.status || r.attendance_status || "",
+                        note: r.note || r.reason || "",
+                    }))
+                    setAttendanceRecords(mappedRecords)
+                }
+
+                if (scheduleRes.status === "fulfilled" && scheduleRes.value?.success) {
+                    const schedule = scheduleRes.value.data || []
+                    setScheduleData(schedule)
+                    setUpcomingEvents(
+                        schedule.map(item => ({
+                            id: item.id,
+                            title: item.subject_name || item.title || "Su kien",
+                            date: item.date || item.day_of_week || "",
+                            type: "schedule",
+                            startTime: item.start_time,
+                            endTime: item.end_time,
+                        }))
+                    )
+                }
+
+                const currentChild = childrenList.find(c => c.id === selectedChildId)
                 if (currentChild) {
                     setChildData({
                         ...currentChild,
-                        schoolYear: selectedSchoolYear,
-                        status: "Đang học",
-                        averageScores: { semester1: "0.0", semester2: "0.0", fullYear: "0.0" }
-                    });
-                }
-
-                // Gọi API lấy điểm thực tế
-                // Lưu ý: API này Backend đã mở tại /api/v1/students/:id/grades
-                const gradesRes = await parentService.getChildGrades({ 
-                    pathParams: { childId: selectedChildId },
-                    mock: false 
-                });
-
-                if (gradesRes.success && gradesRes.data) {
-                    setGradesBySemester(gradesRes.data);
-                } else {
-                    setGradesBySemester({ hk1: [], hk2: [], year: [] });
+                        schoolYear: currentChild.schoolYear || selectedSchoolYear,
+                        status: "Dang hoc",
+                    })
                 }
             } catch (err) {
-                // [CẢI TIẾN] Xử lý lỗi 404 êm đẹp nếu đã có dữ liệu local
-                if (err.response?.status === 404 || err.message?.includes("404")) {
-                    console.info("ℹ️ Child Grades API 404 - Using local profile data.");
-                } else {
-                    console.error("❌ Error fetching child details:", err);
-                }
-                setGradesBySemester({ hk1: [], hk2: [], year: [] });
+                console.error("Error fetching child data:", err)
             } finally {
-                setIsLoading(false);
+                setIsLoading(false)
             }
-        };
+        }
 
-        fetchChildDetails();
-    }, [selectedChildId, selectedSchoolYear, childrenList]);
+        fetchChildData()
+    }, [selectedChildId, selectedTerm, selectedSchoolYear])
+
+    // 3. Fetch leave requests khi doi con
+    useEffect(() => {
+        if (!selectedChildId) return
+        const fetchLeaveRequests = async () => {
+            try {
+                const res = await parentService.listLeaveRequests({
+                    pathParams: { childId: selectedChildId },
+                    mock: false
+                })
+                if (res.success && res.data) {
+                    setLeaveRequests(res.data)
+                } else {
+                    setLeaveRequests([])
+                }
+            } catch (err) {
+                console.error("Error fetching leave requests:", err)
+                setLeaveRequests([])
+            }
+        }
+        fetchLeaveRequests()
+    }, [selectedChildId])
 
     useEffect(() => {
         setSelectedSemester(selectedTerm)
     }, [selectedTerm])
 
-    const buildAttendanceSummary = (label, records) => {
-        const base = { present: 0, absent: 0, late: 0 }
-        const summary = Array.isArray(records) ? records.reduce((acc, item) => {
-            if (item.status === "Có mặt") acc.present += 1
-            else if (item.status === "Vắng mặt") acc.absent += 1
-            else if (item.status === "Đi muộn") acc.late += 1
-            return acc
-        }, base) : base
+    useEffect(() => {
+        if (selectedChildId && childrenList.length > 0) {
+            const currentChild = childrenList.find(c => c.id === selectedChildId)
+            if (currentChild && !childData) {
+                setChildData({
+                    ...currentChild,
+                    schoolYear: currentChild.schoolYear || selectedSchoolYear,
+                    status: "Dang hoc",
+                })
+            }
+        }
+    }, [childrenList, selectedChildId])
+
+    const buildAttendanceSummary = (records) => {
+        const base = { present: 0, absent: 0, late: 0, excused: 0 }
+        const summary = Array.isArray(records)
+            ? records.reduce((acc, item) => {
+                const status = item.status || ""
+                if (status === "present" || status === "Co mat") acc.present += 1
+                else if (status === "absent" || status === "Vang mat") acc.absent += 1
+                else if (status === "late" || status === "Di muon") acc.late += 1
+                else if (status === "excused" || status === "Vang co phep") acc.excused += 1
+                return acc
+            }, base)
+            : base
         const total = Array.isArray(records) ? records.length : 0
         const rate = total > 0 ? `${Math.round((summary.present / total) * 100)}%` : "0%"
-        return { label, ...summary, total, rate }
+        return { label: "Tong ket", ...summary, total, rate }
     }
 
-    // Giả lập dữ liệu cho các phần chưa có API (sẽ thay bằng API thật sau)
-    const scheduleData = []
-    const upcomingEvents = []
-    const weeklyRecords = []
-    const allMonthlyRecords = []
-
-    const weeklySummary = buildAttendanceSummary("Tuần này", weeklyRecords)
+    const weeklySummary = buildAttendanceSummary(attendanceRecords)
 
     const attendanceData = {
         present: weeklySummary.present,
         absent: weeklySummary.absent,
         late: weeklySummary.late,
+        excused: weeklySummary.excused,
         weeklySummary,
-        weeklyRecords,
-        allMonthlyRecords,
-        records: weeklyRecords
+        weeklyRecords: attendanceRecords,
+        allMonthlyRecords: attendanceRecords,
+        records: attendanceRecords,
     }
 
     const handleOverviewCardClick = (semesterKey) => {
@@ -164,13 +196,27 @@ export default function ParentChildrenOverview() {
         setSelectedChildId(id)
         setActiveTab("overview")
         setSelectedSemester(selectedTerm)
+        setGradesBySemester({ hk1: [], hk2: [], year: [] })
+        setAttendanceRecords([])
+        setScheduleData([])
+        setUpcomingEvents([])
+        setLeaveRequests([])
     }
 
     const overviewCurrentSemesterGrades = gradesBySemester?.[selectedTerm] || []
-    const overviewSemesterLabel = selectedTerm === "hk2" ? "Học kỳ II" : "Học kỳ I"
+    const overviewSemesterLabel = selectedTerm === "hk2" ? "Hoc ky II" : "Hoc ky I"
 
-    if (!selectedChildId || !childData) {
-        return <div className="layout-loading-wrapper"><LoadingSpinner size="lg" label="Đang tải dữ liệu con em..." role="parent" /></div>
+    if (!selectedChildId || (!childData && isLoading)) {
+        return <div className="layout-loading-wrapper"><LoadingSpinner size="lg" label="Dang tai du lieu con em..." role="parent" /></div>
+    }
+
+    const refreshLeaveRequests = () => {
+        parentService.listLeaveRequests({
+            pathParams: { childId: selectedChildId },
+            mock: false
+        }).then(res => {
+            if (res.success && res.data) setLeaveRequests(res.data)
+        })
     }
 
     return (
@@ -178,7 +224,7 @@ export default function ParentChildrenOverview() {
             <div className="parent-children-overview-top-panel">
                 <div className="parent-children-overview-header">
                     <div className="page-title-block">
-                        <h1>Tổng quan con em</h1>
+                        <h1>Tong quan con em</h1>
                     </div>
 
                     <div className="parent-children-overview-toolbar">
@@ -201,62 +247,83 @@ export default function ParentChildrenOverview() {
                 />
             </div>
 
-            <ChildHeader child={childData} onStatClick={handleOverviewCardClick} />
+            {childData && (
+                <>
+                    <ChildHeader child={childData} onStatClick={handleOverviewCardClick} />
 
-            <ChildTabs activeTab={activeTab} onChange={setActiveTab} />
+                    <ChildTabs activeTab={activeTab} onChange={setActiveTab} />
 
-            {activeTab === "overview" && (
-                <div className="overview-tab-content">
-                    <div className="overview-top-single">
-                        <GradesSection
-                            compact
-                            grades={overviewCurrentSemesterGrades}
-                            selectedSemester={selectedTerm}
-                            semesterNoteText={overviewSemesterLabel}
-                            highlightSemesterNote
-                        />
-                    </div>
+                    {isLoading ? (
+                        <div className="layout-loading-wrapper">
+                            <LoadingSpinner size="lg" label="Dang cap nhat du lieu..." role="parent" />
+                        </div>
+                    ) : (
+                        <>
+                            {activeTab === "overview" && (
+                                <div className="overview-tab-content">
+                                    <div className="overview-top-single">
+                                        <GradesSection
+                                            compact
+                                            grades={overviewCurrentSemesterGrades}
+                                            selectedSemester={selectedTerm}
+                                            semesterNoteText={overviewSemesterLabel}
+                                            highlightSemesterNote
+                                        />
+                                    </div>
 
-                    <div className="overview-triple-grid">
-                        <AttendanceSection data={attendanceData} compact />
-                        <CalendarSection
-                            schedule={scheduleData}
-                            events={upcomingEvents}
-                            compact
-                            classNameValue={childData.className}
-                            selectedChildId={selectedChildId}
-                        />
-                        <LeaveRequestSection requests={leaveRequests.slice(0, 3)} compact childId={selectedChildId} onSuccess={fetchLeaveRequests} />
-                    </div>
-                </div>
-            )}
+                                    <div className="overview-triple-grid">
+                                        <AttendanceSection data={attendanceData} compact />
+                                        <CalendarSection
+                                            schedule={scheduleData}
+                                            events={upcomingEvents}
+                                            compact
+                                            classNameValue={childData.className}
+                                            selectedChildId={selectedChildId}
+                                        />
+                                        <LeaveRequestSection
+                                            requests={leaveRequests.slice(0, 3)}
+                                            compact
+                                            childId={selectedChildId}
+                                            onSuccess={refreshLeaveRequests}
+                                        />
+                                    </div>
+                                </div>
+                            )}
 
-            {activeTab === "attendance" && (
-                <AttendanceSection data={attendanceData} />
-            )}
+                            {activeTab === "attendance" && (
+                                <AttendanceSection data={attendanceData} />
+                            )}
 
-            {activeTab === "calendar" && (
-                <CalendarSection
-                    schedule={scheduleData}
-                    events={upcomingEvents}
-                    classNameValue={childData.className}
-                    selectedChildId={selectedChildId}
-                />
-            )}
+                            {activeTab === "calendar" && (
+                                <CalendarSection
+                                    schedule={scheduleData}
+                                    events={upcomingEvents}
+                                    classNameValue={childData.className}
+                                    selectedChildId={selectedChildId}
+                                />
+                            )}
 
-            {activeTab === "grades" && (
-                <GradesSection
-                    gradesBySemester={gradesBySemester}
-                    selectedSemester={selectedSemester}
-                    onSemesterChange={(semester) => {
-                        setSelectedSemester(semester)
-                        handleTermChange(semester)
-                    }}
-                />
-            )}
+                            {activeTab === "grades" && (
+                                <GradesSection
+                                    gradesBySemester={gradesBySemester}
+                                    selectedSemester={selectedSemester}
+                                    onSemesterChange={(semester) => {
+                                        setSelectedSemester(semester)
+                                        handleTermChange(semester)
+                                    }}
+                                />
+                            )}
 
-            {activeTab === "leave" && (
-                <LeaveRequestSection requests={leaveRequests} childId={selectedChildId} onSuccess={fetchLeaveRequests} />
+                            {activeTab === "leave" && (
+                                <LeaveRequestSection
+                                    requests={leaveRequests}
+                                    childId={selectedChildId}
+                                    onSuccess={refreshLeaveRequests}
+                                />
+                            )}
+                        </>
+                    )}
+                </>
             )}
         </div>
     )

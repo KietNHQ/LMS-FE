@@ -16,6 +16,7 @@ export default function AdminLayout() {
     const location = useLocation();
     const [isPageTransitioning, setIsPageTransitioning] = useState(false);
     const [forcePasswordChange, setForcePasswordChange] = useState(false);
+    const queryClient = useQueryClient();
 
     // Lắng nghe sự kiện bắt buộc đổi mật khẩu từ axiosClient
     useEffect(() => {

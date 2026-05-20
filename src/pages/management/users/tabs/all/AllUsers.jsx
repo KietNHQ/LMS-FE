@@ -3,7 +3,7 @@ import { FiPlus, FiUsers, FiUserCheck, FiLock } from "react-icons/fi";
 import { PERMISSIONS } from "../../../../../config/permissions";
 import "./AllUsers.css";
 
-import UsersSearchFilterSort from "./components/usersSearchFilterSort/UsersSearchFilterSort";
+import UsersSearchFilterSort from "./components/usersSearchFilterSort/usersSearchFilterSort";
 import UserDetailSection from "./components/userDetailSection/userDetailSection";
 import { CreateUserDialog, Pagination, LoadingSpinner, ConfirmationModal } from "../../../../../components/common";
 import { useCheckPermission } from "../../../../../hooks/useAuth";

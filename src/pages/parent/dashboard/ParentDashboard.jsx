@@ -22,13 +22,15 @@ export default function ParentDashboard() {
   const { data: childrenResponse, isLoading: isLoadingChildren } = useQuery({
     queryKey: ["parent-children"],
     queryFn: () => parentService.listChildren({ mock: false }),
-    staleTime: 10 * 60 * 1000,
+    staleTime: 5 * 60 * 1000,
   });
 
   const childrenList = useMemo(() => {
-    const data = childrenResponse?.data || childrenResponse?.parent_children || childrenResponse || [];
-    return (Array.isArray(data) ? data : [])
-      .filter(c => (c.id || c.studentId) !== "child1" && c.name !== "Nguyễn Minh Tuấn");
+    // API trả về: { success: true, data: [...children] }
+    // Mapper đã chạy nên response.data = mapped array
+    const data = childrenResponse?.data || [];
+    console.log("[DEBUG] childrenList:", data);
+    return Array.isArray(data) ? data : [];
   }, [childrenResponse]);
 
   // Tự động chọn đứa con đầu tiên nếu chưa chọn
@@ -49,6 +51,8 @@ export default function ParentDashboard() {
     staleTime: 5 * 60 * 1000,
   });
 
+  console.log("[DEBUG] gradesResponse:", gradesResponse);
+
   // 3. Lấy thông báo để đếm số chưa đọc
   const { data: notificationsResponse } = useQuery({
     queryKey: ["parent-notifications"],
@@ -64,7 +68,7 @@ export default function ParentDashboard() {
   const selectedChild = useMemo(() => {
     const child = childrenList.find(c => (c.id || c.studentId) === selectedChildId) || childrenList[0];
     if (child && gradesResponse?.success) {
-      return { ...child, gradesBySemester: gradesResponse.data };
+      return { ...gradesResponse.data, ...child, gradesBySemester: gradesResponse.data };
     }
     return child;
   }, [childrenList, selectedChildId, gradesResponse]);
@@ -72,9 +76,11 @@ export default function ParentDashboard() {
   const isLoading = isLoadingChildren || (!!selectedChildId && isLoadingGrades);
 
   const calculateAverage = (subjects) => {
-    if (!subjects || !Array.isArray(subjects)) return 0;
-    const total = subjects.reduce((sum, s) => sum + (s.average || 0), 0);
-    return (total / subjects.length).toFixed(2);
+    if (!subjects || !Array.isArray(subjects) || subjects.length === 0) return 0;
+    const valid = subjects.filter(s => s.score != null && !isNaN(s.score));
+    if (valid.length === 0) return 0;
+    const total = valid.reduce((sum, s) => sum + Number(s.score), 0);
+    return (total / valid.length).toFixed(2);
   };
 
   const hk1Avg = selectedChild?.gradesBySemester?.hk1 ? calculateAverage(selectedChild.gradesBySemester.hk1) : 0;
