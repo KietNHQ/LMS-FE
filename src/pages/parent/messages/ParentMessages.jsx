@@ -1,8 +1,16 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import "./ParentMessages.css";
 import ConversationList from "./components/ConversationList/ConversationList";
 import ChatWindow from "./components/ChatWindow/ChatWindow";
 import { parentService } from "../../../services/pages/parent/parentService";
+import { io } from "socket.io-client";
+
+const getSocketUrl = () => {
+  const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:3000/api/v1";
+  return apiUrl.replace("/api/v1", "");
+};
+
+let socket = null;
 
 const ParentMessages = () => {
   const [selectedTeacher, setSelectedTeacher] = useState(null);
@@ -12,6 +20,19 @@ const ParentMessages = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isSending, setIsSending] = useState(false);
   const [currentUserId, setCurrentUserId] = useState(null);
+  const [connectionStatus, setConnectionStatus] = useState("disconnected");
+
+  const selectedTeacherRef = useRef(null);
+  const teacherListRef = useRef([]);
+
+  // Keep refs updated to avoid stale closures in socket listener
+  useEffect(() => {
+    selectedTeacherRef.current = selectedTeacher;
+  }, [selectedTeacher]);
+
+  useEffect(() => {
+    teacherListRef.current = teacherList;
+  }, [teacherList]);
 
   // Get current user ID from localStorage/sessionStorage
   useEffect(() => {
@@ -26,6 +47,75 @@ const ParentMessages = () => {
     }
   }, []);
 
+  // Load messages when teacher is selected
+  const loadMessages = useCallback(async (teacher) => {
+    console.log("🔄 loadMessages called with teacher:", teacher);
+    console.log("🔄 conversationId:", teacher?.conversationId);
+
+    if (!teacher?.conversationId) {
+      console.log("❌ No conversationId, skipping message load");
+      setMessages([]);
+      return;
+    }
+
+    try {
+      console.log("📡 Calling getMessagesHistory for:", teacher.conversationId);
+      const msgs = await parentService.getMessagesHistory({
+        pathParams: { conversationId: teacher.conversationId },
+        mock: false,
+      });
+      console.log("📨 getMessagesHistory response:", msgs);
+      const messages = msgs?.messages || msgs?.data || msgs || [];
+      setMessages(Array.isArray(messages) ? messages : []);
+    } catch (err) {
+      console.error("❌ Error loading messages:", err);
+      setMessages([]);
+    }
+  }, []);
+
+  // Handle select teacher - auto create chat if conversationId doesn't exist
+  const handleSelectTeacher = useCallback(async (teacher) => {
+    setInputValue("");
+    
+    if (!teacher.conversationId) {
+      setIsLoading(true);
+      try {
+        const res = await parentService.startHumanChat({
+          body: { targetId: teacher.teacherUserId || teacher.teacherId },
+          mock: false,
+        });
+
+        if (res?.success && res.data?.conversationId) {
+          const newConvId = res.data.conversationId;
+          const updatedTeacher = { ...teacher, conversationId: newConvId };
+
+          // Update in list
+          setTeacherList(prevList =>
+            prevList.map(t =>
+              t.teacherId === teacher.teacherId ? updatedTeacher : t
+            )
+          );
+
+          setSelectedTeacher(updatedTeacher);
+          loadMessages(updatedTeacher);
+
+          // Join Socket room
+          if (socket?.connected) {
+            socket.emit("join_conversation", newConvId);
+          }
+          return;
+        }
+      } catch (err) {
+        console.error("Failed to auto-create conversation with GVCN:", err);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    setSelectedTeacher(teacher);
+    loadMessages(teacher);
+  }, [loadMessages]);
+
   // Fetch teachers + conversations on mount
   useEffect(() => {
     let isMounted = true;
@@ -36,7 +126,6 @@ const ParentMessages = () => {
       try {
         // 1. Get teachers with their children
         const teachersRes = await parentService.getTeachers({ mock: false });
-        // Axios interceptor unwraps response.data, so teachersRes = { success, data: [...] }
         let teachers = [];
         if (teachersRes) {
           if (Array.isArray(teachersRes)) {
@@ -87,10 +176,10 @@ const ParentMessages = () => {
         if (!isMounted) return;
         setTeacherList(list);
 
-        // Auto-select first teacher if exists and has conversation
-        const firstWithConv = list.find(t => t.conversationId);
-        if (firstWithConv) {
-          handleSelectTeacher(firstWithConv);
+        // Auto-select first teacher if exists
+        const firstTeacher = list[0];
+        if (firstTeacher) {
+          handleSelectTeacher(firstTeacher);
         }
       } catch (err) {
         console.error("Error fetching teachers:", err);
@@ -105,41 +194,107 @@ const ParentMessages = () => {
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [handleSelectTeacher]);
 
-  // Load messages when teacher is selected
-  const loadMessages = useCallback(async (teacher) => {
-    console.log("🔄 loadMessages called with teacher:", teacher);
-    console.log("🔄 conversationId:", teacher?.conversationId);
+  // Connect Socket.IO client and listen to events
+  useEffect(() => {
+    const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
+    const token = storedUser?.accessToken || localStorage.getItem("accessToken") || sessionStorage.getItem("accessToken") || "";
 
-    if (!teacher?.conversationId) {
-      console.log("❌ No conversationId, skipping message load");
-      setMessages([]);
-      return;
-    }
+    if (!token) return;
 
-    try {
-      console.log("📡 Calling getMessagesHistory for:", teacher.conversationId);
-      const msgs = await parentService.getMessagesHistory({
-        pathParams: { conversationId: teacher.conversationId },
-        mock: false,
+    if (socket) socket.disconnect();
+
+    socket = io(getSocketUrl(), {
+      auth: { token },
+      transports: ["websocket", "polling"],
+      reconnection: true,
+      reconnectionAttempts: 5,
+      reconnectionDelay: 1000,
+    });
+
+    socket.on("connect", () => {
+      setConnectionStatus("connected");
+      console.log("Parent socket connected successfully");
+
+      // Join rooms for all teachers that have conversationIds
+      teacherListRef.current.forEach(t => {
+        if (t.conversationId) {
+          socket.emit("join_conversation", t.conversationId);
+        }
       });
-      console.log("📨 getMessagesHistory response:", msgs);
-      // Response: {success, messages: [...], pagination}
-      const messages = msgs?.messages || msgs?.data || msgs || [];
-      console.log("📝 Parsed messages:", messages);
-      setMessages(Array.isArray(messages) ? messages : []);
-    } catch (err) {
-      console.error("❌ Error loading messages:", err);
-      setMessages([]);
-    }
+    });
+
+    socket.on("disconnect", () => {
+      setConnectionStatus("disconnected");
+    });
+
+    socket.on("connect_error", (err) => {
+      setConnectionStatus("error");
+      console.error("Parent socket connection error:", err.message);
+    });
+
+    // Realtime message handler
+    socket.on("new_message", ({ conversationId, message }) => {
+      console.log("Parent socket: new_message received:", { conversationId, message });
+      const activeTeacher = selectedTeacherRef.current;
+      const currentUserIdStr = String(JSON.parse(localStorage.getItem("user") || "{}")?.id || "");
+      const fromMe = String(message.user_id || message.senderId) === currentUserIdStr;
+
+      // Update current active messages list
+      if (activeTeacher && String(activeTeacher.conversationId) === String(conversationId)) {
+        const formatted = {
+          id: message.id || Date.now(),
+          from: fromMe ? "me" : "other",
+          user_id: message.user_id,
+          role: message.role || (fromMe ? "parent" : "teacher"),
+          content: message.content,
+          text: message.content,
+          createdAt: message.created_at || message.createdAt || new Date().toISOString(),
+        };
+
+        setMessages(prev => {
+          if (prev.some(m => String(m.id) === String(formatted.id))) return prev;
+          // Filter out matching optimistic message to avoid duplicate flicker
+          const filtered = prev.filter(m => !(String(m.id).startsWith("temp-") || typeof m.id === "number") || m.content !== formatted.content);
+          return [...filtered, formatted];
+        });
+      }
+
+      // Update the teacher list metadata (lastMessage and unread)
+      setTeacherList(prevList => {
+        return prevList.map(t => {
+          if (String(t.conversationId) === String(conversationId)) {
+            const isActive = activeTeacher && String(activeTeacher.conversationId) === String(conversationId);
+            return {
+              ...t,
+              lastMessage: message.content,
+              unread: isActive ? 0 : (t.unread || 0) + 1,
+            };
+          }
+          return t;
+        });
+      });
+    });
+
+    return () => {
+      if (socket) {
+        socket.disconnect();
+        socket = null;
+      }
+    };
   }, []);
 
-  const handleSelectTeacher = (teacher) => {
-    setSelectedTeacher(teacher);
-    setInputValue("");
-    loadMessages(teacher);
-  };
+  // When teacher list updates, ensure socket joins any newly added conversation rooms
+  useEffect(() => {
+    if (socket?.connected && teacherList.length > 0) {
+      teacherList.forEach(t => {
+        if (t.conversationId) {
+          socket.emit("join_conversation", t.conversationId);
+        }
+      });
+    }
+  }, [teacherList]);
 
   const handleSendMessage = async () => {
     const text = inputValue.trim();
@@ -174,9 +329,9 @@ const ParentMessages = () => {
         },
         mock: false,
       });
-      loadMessages(selectedTeacher);
     } catch (err) {
       console.error("Error sending message:", err);
+      // Remove optimistic message on error
       setMessages(prev => prev.filter(m => m.id !== tempId));
     } finally {
       setIsSending(false);
@@ -184,10 +339,17 @@ const ParentMessages = () => {
   };
 
   return (
-    <div className="parent-messages">
+    <div className="parent-messages theme-parent">
       <div className="parent-messages-header">
-        <h1>Liên lạc giáo viên chủ nhiệm</h1>
-        <p>Trao đổi nhanh với giáo viên chủ nhiệm về học tập, điểm danh và tình hình của con.</p>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <div>
+            <h1>Liên lạc giáo viên chủ nhiệm</h1>
+            <p>Trao đổi nhanh với giáo viên chủ nhiệm về học tập, điểm danh và tình hình của con.</p>
+          </div>
+          <span className={`connection-badge ${connectionStatus}`}>
+            {connectionStatus === "connected" ? "● Live" : connectionStatus === "error" ? "⚠ Lỗi" : "○ Offline"}
+          </span>
+        </div>
       </div>
 
       <div className="messages-layout">

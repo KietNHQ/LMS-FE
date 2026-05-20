@@ -267,6 +267,7 @@ const PARENT_ENDPOINTS = [
   { key: "post_parent_messages", method: "POST", path: "/chat/human/message", module: "messages" },
   { key: "get_parent_teachers", method: "GET", path: "/guardians/me/teachers", module: "messages" },
   { key: "get_parent_messages_history", method: "GET", path: "/chat/human/messages/:conversationId", module: "messages" },
+  { key: "start_human_chat", method: "POST", path: "/chat/human/start", module: "messages" },
   // Notifications
   { key: "get_parent_notifications", method: "GET", path: "/notifications/my", module: "notifications" },
   { key: "patch_parent_notifications_mark_all_read", method: "PUT", path: "/notifications/my/read-all", module: "notifications" },
@@ -520,6 +521,7 @@ export const parentService = {
   sendMessage: (input) => endpointCallers.post_parent_messages(input),
   getTeachers: (input) => endpointCallers.get_parent_teachers(input),
   getMessagesHistory: (input) => endpointCallers.get_parent_messages_history(input),
+  startHumanChat: (input) => endpointCallers.start_human_chat(input),
   listNotifications: (input) => endpointCallers.get_parent_notifications(input),
   markAllNotificationsRead: (input) => endpointCallers.patch_parent_notifications_mark_all_read(input),
   markNotificationRead: (input) => endpointCallers.patch_parent_notifications_by_id_read(input),

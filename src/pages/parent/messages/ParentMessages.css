@@ -31,3 +31,28 @@
     min-height: 0;
     overflow: hidden;
 }
+
+/* Connection status badge */
+.connection-badge {
+    font-size: 0.75rem;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-weight: 600;
+    align-self: center;
+}
+
+.connection-badge.connected {
+    background: #dcfce7;
+    color: #16a34a;
+}
+
+.connection-badge.disconnected {
+    background: #fee2e2;
+    color: #dc2626;
+}
+
+.connection-badge.error {
+    background: #fef3c7;
+    color: #d97706;
+}
+
