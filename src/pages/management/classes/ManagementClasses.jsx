@@ -114,7 +114,7 @@ export default function ManagementClasses() {
   };
 
   const handleOpenDetail = (classItem) => {
-    navigate(`/admin/classes/${classItem.id}`);
+    navigate(`/management/classes/${classItem.id}`);
   };
 
   const handleSearchKeyword = (event) => {
@@ -168,8 +168,12 @@ export default function ManagementClasses() {
     }
   };
 
-  const handleDeleteClass = async (id) => {
-    const confirmed = window.confirm("Bạn có chắc muốn xóa lớp này không?");
+  const handleDeleteClass = async (classItem) => {
+    const className = typeof classItem === "object" ? classItem.name : classItem;
+    const id = typeof classItem === "object" ? classItem.id : classItem;
+    const confirmed = window.confirm(
+      `Bạn có chắc muốn xóa lớp "${className}" không?\nHành động này không thể hoàn tác.`
+    );
     if (!confirmed) return;
 
     try {
@@ -245,6 +249,7 @@ export default function ManagementClasses() {
             onView={handleOpenDetail}
             onEdit={handleOpenEdit}
             onDelete={handleDeleteClass}
+            onTimetable={(item) => navigate("/management/timetable", { state: { selectedClass: item.name } })}
           />
         ) : (
           <div className="admin-classes-empty-state">

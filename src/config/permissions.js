@@ -94,7 +94,8 @@ export const MANAGEMENT_TITLES = [
     { label: "Hiệu trưởng", value: "principal", permissions: Object.values(PERMISSIONS) },
     { label: "Phó hiệu trưởng (Học vụ)", value: "vp_academic", permissions: [
         PERMISSIONS.USER_VIEW, PERMISSIONS.CLASS_VIEW, PERMISSIONS.GRADE_VIEW, 
-        PERMISSIONS.EXAM_VIEW, PERMISSIONS.TEACHER_VIEW, PERMISSIONS.STUDENT_VIEW
+        PERMISSIONS.EXAM_VIEW, PERMISSIONS.TEACHER_VIEW, PERMISSIONS.STUDENT_VIEW,
+        PERMISSIONS.TIMETABLE_VIEW, PERMISSIONS.TIMETABLE_MANAGE
     ] },
     { label: "Phó hiệu trưởng (Nề nếp)", value: "vp_discipline", permissions: [
         PERMISSIONS.USER_VIEW, PERMISSIONS.DISCIPLINE_VIEW, PERMISSIONS.DISCIPLINE_MANAGE,
@@ -103,7 +104,7 @@ export const MANAGEMENT_TITLES = [
     ] },
     { label: "Giáo vụ", value: "academic_staff", permissions: [
         PERMISSIONS.USER_VIEW, PERMISSIONS.CLASS_VIEW, PERMISSIONS.CLASS_ALLOCATION_VIEW,
-        PERMISSIONS.STUDENT_VIEW
+        PERMISSIONS.STUDENT_VIEW, PERMISSIONS.TIMETABLE_VIEW, PERMISSIONS.TIMETABLE_MANAGE
     ] },
     { label: "Kế toán", value: "finance", permissions: [
         PERMISSIONS.USER_VIEW, PERMISSIONS.FEES_VIEW, PERMISSIONS.FEES_MANAGE, PERMISSIONS.DASHBOARD_VIEW
@@ -139,6 +140,8 @@ export const PERMISSION_GROUPS = [
             { id: PERMISSIONS.LESSONS_CREATE, label: "Tạo bài học" },
             { id: PERMISSIONS.LESSONS_UPDATE, label: "Sửa bài học" },
             { id: PERMISSIONS.LESSONS_DELETE, label: "Xóa bài học" },
+            { id: PERMISSIONS.TIMETABLE_VIEW, label: "Xem thời khóa biểu" },
+            { id: PERMISSIONS.TIMETABLE_MANAGE, label: "Quản lý thời khóa biểu" },
         ]
     },
     {

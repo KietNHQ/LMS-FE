@@ -26,6 +26,8 @@ const defaultForm = {
     name: "10A",
     year: getCurrentYear(),
     teacher: "Trần Thị Hương",
+    max_students: 40,
+    room: "",
 };
 
 export default function ClassInfoSection({
@@ -48,6 +50,8 @@ export default function ClassInfoSection({
                 name: initialData.name || "",
                 year: initialData.year || getCurrentYear(),
                 teacher: initialData.teacher || "Trần Thị Hương",
+                max_students: initialData.max_students ?? initialData.maxStudents ?? 40,
+                room: initialData.room || "",
                 id: initialData.id,
                 students: initialData.students || 0,
                 subjects: initialData.subjects || [],
@@ -60,6 +64,8 @@ export default function ClassInfoSection({
                 name: "10A",
                 year: currentYear,
                 teacher: "Trần Thị Hương",
+                max_students: 40,
+                room: "",
             });
         }
     }, [mode, initialData]);
@@ -115,13 +121,20 @@ export default function ClassInfoSection({
 
         const normalizedName = formData.name.trim();
         const normalizedYear = formData.year.trim();
+        const maxStudents = Number(formData.max_students);
 
         if (!normalizedName || !normalizedYear) return;
+        if (!Number.isFinite(maxStudents) || maxStudents < 1 || maxStudents > 100) {
+            window.alert("Sĩ số tối đa phải từ 1 đến 100.");
+            return;
+        }
 
         onSubmit({
             ...formData,
             name: normalizedName,
             year: normalizedYear,
+            max_students: maxStudents,
+            room: formData.room.trim(),
         });
     };
 
@@ -199,6 +212,33 @@ export default function ClassInfoSection({
                             <span>{formData.teacher}</span>
                             <span className="teacher-chevron">▼</span>
                         </button>
+                    </div>
+
+                    <div className="form-row-2col">
+                        <div className="form-group">
+                            <label htmlFor="max_students">Sĩ số tối đa</label>
+                            <input
+                                id="max_students"
+                                name="max_students"
+                                type="number"
+                                min="1"
+                                max="100"
+                                value={formData.max_students}
+                                onChange={(e) => setFormData((prev) => ({ ...prev, max_students: e.target.value }))}
+                                placeholder="40"
+                            />
+                        </div>
+                        <div className="form-group">
+                            <label htmlFor="room">Phòng học</label>
+                            <input
+                                id="room"
+                                name="room"
+                                type="text"
+                                value={formData.room}
+                                onChange={(e) => setFormData((prev) => ({ ...prev, room: e.target.value }))}
+                                placeholder="A101"
+                            />
+                        </div>
                     </div>
 
                     <div className="class-info-actions">

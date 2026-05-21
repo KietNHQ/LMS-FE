@@ -12,7 +12,7 @@ function getStatusClass(status) {
     return "status-ok";
 }
 
-function SlotCard({ session, onEditSlot, onDeleteSlot }) {
+function SlotCard({ session, onEditSlot, onDeleteSlot, canManage }) {
     if (!session) return null;
 
     return (
@@ -32,14 +32,16 @@ function SlotCard({ session, onEditSlot, onDeleteSlot }) {
                 <div className={`tt-status-pill ${getStatusClass(session.status)}`}>
                     {session.status}
                 </div>
-                <div className="tt-slot-actions" onClick={(e) => e.stopPropagation()}>
-                    <button type="button" className="tt-action-btn edit" onClick={() => onEditSlot(session)} title="Chỉnh sửa">
-                        <FiEdit2 />
-                    </button>
-                    <button type="button" className="tt-action-btn delete" onClick={() => onDeleteSlot(session.id)} title="Gỡ tiết">
-                        <FiTrash2 />
-                    </button>
-                </div>
+                {canManage && (
+                    <div className="tt-slot-actions" onClick={(e) => e.stopPropagation()}>
+                        <button type="button" className="tt-action-btn edit" onClick={() => onEditSlot(session)} title="Chỉnh sửa">
+                            <FiEdit2 />
+                        </button>
+                        <button type="button" className="tt-action-btn delete" onClick={() => onDeleteSlot(session.id)} title="Gỡ tiết">
+                            <FiTrash2 />
+                        </button>
+                    </div>
+                )}
             </div>
         </article>
     );
@@ -59,6 +61,7 @@ export default function ScheduleSlotSection({
     onReset,
     currentPeriods,
     maxPeriods,
+    canManage = false,
 }) {
     const isMorning = sessionView === "morning";
 
@@ -69,14 +72,18 @@ export default function ScheduleSlotSection({
                     <h3>Thời khóa biểu lớp {selectedClass}</h3>
                 </div>
                 <div className="tt-schedule-actions">
-                    <button type="button" className="tt-reset-btn" onClick={onReset} title="Xóa các tiết đang hiển thị">
-                        <FiRefreshCw />
-                        <span>Xóa lịch</span>
-                    </button>
-                    <button type="button" className="tt-add-btn" onClick={onCreateSession}>
-                        <FiPlus />
-                        <span>Thêm tiết học</span>
-                    </button>
+                    {canManage && (
+                        <>
+                            <button type="button" className="tt-reset-btn" onClick={onReset} title="Xóa các tiết đang hiển thị">
+                                <FiRefreshCw />
+                                <span>Xóa lịch</span>
+                            </button>
+                            <button type="button" className="tt-add-btn" onClick={onCreateSession}>
+                                <FiPlus />
+                                <span>Thêm tiết học</span>
+                            </button>
+                        </>
+                    )}
                     <div className="tt-norm-indicator">
                         <FiBookOpen />
                         <span>Định mức: <strong>{currentPeriods}/{maxPeriods || 30}</strong> tiết</span>
@@ -135,8 +142,9 @@ export default function ScheduleSlotSection({
                                                     session={slot}
                                                     onEditSlot={onEditSlot}
                                                     onDeleteSlot={onDeleteSlot}
+                                                    canManage={canManage}
                                                 />
-                                            ) : (
+                                            ) : canManage ? (
                                                 <button
                                                     type="button"
                                                     className="tt-empty-slot-btn"
@@ -145,6 +153,8 @@ export default function ScheduleSlotSection({
                                                     <FiPlus />
                                                     <span>Thêm tiết</span>
                                                 </button>
+                                            ) : (
+                                                <span className="passive-empty-slot">—</span>
                                             )}
                                         </td>
                                     );

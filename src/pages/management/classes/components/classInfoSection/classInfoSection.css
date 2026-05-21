@@ -35,6 +35,12 @@
     gap: 16px;
 }
 
+.form-row-2col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+
 .class-info-form .form-group label {
     display: block;
     margin-bottom: 8px;

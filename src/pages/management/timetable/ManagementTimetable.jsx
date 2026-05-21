@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from "react";
+import { useLocation } from "react-router-dom";
 import "./ManagementTimetable.css";
 import TimetableFiltersSection from "./components/timetableFiltersSection/timetableFiltersSection";
 import ScheduleSlotSection from "./components/scheduleSlotSection/scheduleSlotSection";
@@ -10,6 +11,8 @@ import { useSchoolYearTerm } from "../../../hooks/useSchoolYearTerm";
 import { FiUsers, FiCalendar, FiClock, FiBook, FiUser, FiMapPin, FiActivity, FiX, FiCheckCircle, FiSave, FiPlus } from "react-icons/fi";
 import { CLASS_OPTIONS, WEEK_DAYS, STATUS_META, MODE_META, getPeriodRangeLabel, SUBJECT_COLOR_MAP, SUBJECT_DISPLAY, GDPT_2018_CONFIG, ROOM_OPTIONS, buildAdminInitialSessions } from "../../../utils/timetableShared";
 import timetableService from "../../../services/pages/management/timetable/timetableService";
+import { useCheckPermission } from "../../../hooks/useAuth";
+import { PERMISSIONS } from "../../../config/permissions";
 
 const classOptions = CLASS_OPTIONS;
 // Tạo blockOptions từ classOptions (lấy ký tự đầu, loại trùng)
@@ -290,6 +293,22 @@ function LessonModal({ mode, formData, subjectOptions, onChange, onClose, onSubm
 }
 
 export default function ManagementTimetable() {
+    const { hasPermission } = useCheckPermission();
+    const canManage = hasPermission(PERMISSIONS.TIMETABLE_MANAGE);
+
+    const location = useLocation();
+    const preselectedClass = location.state?.selectedClass;
+
+    const initialBlock = useMemo(() => {
+        if (preselectedClass && classOptions.includes(preselectedClass)) {
+            const block = preselectedClass.slice(0, 2);
+            if (blockOptions.includes(block)) {
+                return block;
+            }
+        }
+        return blockOptions[0];
+    }, [preselectedClass]);
+
     const { 
         selectedSchoolYear = "2025-2026", 
         selectedTerm = "hk1", 
@@ -297,9 +316,17 @@ export default function ManagementTimetable() {
         handleTermChange 
     } = useSchoolYearTerm() || {};
     const [sessions, setSessions] = useState([]);
-    const [selectedBlock, setSelectedBlock] = useState(blockOptions[0]);
+    const [selectedBlock, setSelectedBlock] = useState(initialBlock);
     const filteredClassOptions = useMemo(() => classOptions.filter((c) => c.startsWith(selectedBlock)), [selectedBlock]);
-    const [selectedClass, setSelectedClass] = useState(filteredClassOptions[0]);
+
+    const initialClass = useMemo(() => {
+        if (preselectedClass && classOptions.includes(preselectedClass)) {
+            return preselectedClass;
+        }
+        return filteredClassOptions[0] || classOptions[0];
+    }, [preselectedClass, filteredClassOptions]);
+
+    const [selectedClass, setSelectedClass] = useState(initialClass);
     const [selectedTeacher, setSelectedTeacher] = useState("Tất cả giáo viên");
     const [selectedDay, setSelectedDay] = useState("Tất cả thứ");
     const [searchTerm, setSearchTerm] = useState("");
@@ -750,6 +777,7 @@ export default function ManagementTimetable() {
                         onReset={handleResetTimetable}
                         currentPeriods={sessionsInTermByClass.reduce((sum, s) => sum + ((s.periodEnd || s.period) - s.period + 1), 0)}
                         maxPeriods={GDPT_2018_CONFIG.MAX_WEEKLY_PERIODS}
+                        canManage={canManage}
                     />
                 )}
             </div>

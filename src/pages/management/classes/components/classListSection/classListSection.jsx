@@ -1,5 +1,5 @@
 import React from "react";
-import { FiEdit2, FiTrash2, FiBookOpen } from "react-icons/fi";
+import { FiEdit2, FiTrash2, FiBookOpen, FiCalendar } from "react-icons/fi";
 import { PiStudent } from "react-icons/pi";
 import { LuSchool } from "react-icons/lu";
 import "./classListSection.css";
@@ -10,7 +10,7 @@ const colorMap = {
     purple: "is-purple",
 };
 
-export default function ClassListSection({ classes, onView, onEdit, onDelete }) {
+export default function ClassListSection({ classes, onView, onEdit, onDelete, onTimetable }) {
     return (
         <div className="class-list-grid">
             {classes.map((item) => (
@@ -33,10 +33,13 @@ export default function ClassListSection({ classes, onView, onEdit, onDelete }) 
                         </div>
 
                         <div className="class-list-card__actions" onClick={(e) => e.stopPropagation()}>
+                            <button type="button" onClick={() => onTimetable(item)} title="Xem thời khóa biểu">
+                                <FiCalendar />
+                            </button>
                             <button type="button" onClick={() => onEdit(item)} title="Chỉnh sửa">
                                 <FiEdit2 />
                             </button>
-                            <button type="button" onClick={() => onDelete(item.id)} title="Xóa">
+                            <button type="button" onClick={() => onDelete(item)} title="Xóa">
                                 <FiTrash2 />
                             </button>
                         </div>

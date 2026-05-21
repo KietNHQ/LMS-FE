@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
-import { FiSearch, FiChevronLeft, FiChevronRight, FiEdit2, FiUserX, FiUserCheck } from "react-icons/fi";
+import { FiSearch, FiChevronLeft, FiChevronRight, FiEdit2, FiUserX, FiUserCheck, FiCalendar } from "react-icons/fi";
 import "./classDetailSection.css";
 
 // Helper function to format date DD/MM/YYYY
@@ -352,6 +352,14 @@ export default function ClassDetailSection() {
                     >
                         <span className="info-label">Điểm rèn luyện</span>
                         <span className="info-value score">{classData.diemTong}</span>
+                    </button>
+                    <button
+                        type="button"
+                        className="info-item info-item--timetable-trigger"
+                        onClick={() => navigate("/management/timetable", { state: { selectedClass: classData.name } })}
+                    >
+                        <span className="info-label">Thời khóa biểu</span>
+                        <span className="info-value timetable-btn-text">Xem chi tiết →</span>
                     </button>
                 </div>
             </div>
