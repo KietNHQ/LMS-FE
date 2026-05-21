@@ -4,6 +4,7 @@ import ConversationList from "./components/ConversationList/ConversationList";
 import ChatWindow from "./components/ChatWindow/ChatWindow";
 import { parentService } from "../../../services/pages/parent/parentService";
 import { io } from "socket.io-client";
+import { PageHeader } from "../../../components/common";
 
 const getSocketUrl = () => {
   const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:3000/api/v1";
@@ -340,17 +341,16 @@ const ParentMessages = () => {
 
   return (
     <div className="parent-messages theme-parent">
-      <div className="parent-messages-header">
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <div>
-            <h1>Liên lạc giáo viên chủ nhiệm</h1>
-            <p>Trao đổi nhanh với giáo viên chủ nhiệm về học tập, điểm danh và tình hình của con.</p>
-          </div>
+      <PageHeader 
+        title="Liên lạc giáo viên chủ nhiệm"
+        eyebrow="Liên Lạc"
+        description="Trao đổi nhanh với giáo viên chủ nhiệm về học tập, điểm danh và tình hình của con."
+        actionRight={
           <span className={`connection-badge ${connectionStatus}`}>
             {connectionStatus === "connected" ? "● Live" : connectionStatus === "error" ? "⚠ Lỗi" : "○ Offline"}
           </span>
-        </div>
-      </div>
+        }
+      />
 
       <div className="messages-layout">
         <ConversationList
