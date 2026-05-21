@@ -218,15 +218,15 @@
     width: 28px;
     height: 28px;
     border-radius: 50%;
-    background: #f1f5f9;
-    color: #475569;
+    background: var(--admin-primary-soft, #f5f3ff);
+    color: var(--admin-primary, #7c3aed);
     display: flex;
     align-items: center;
     justify-content: center;
     font-weight: 600;
     font-size: 0.8rem;
     flex-shrink: 0;
-    border: 1px solid #e2e8f0;
+    border: 1px solid var(--admin-border, #ede9fe);
 }
 
 .child-info {

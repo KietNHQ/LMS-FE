@@ -8,6 +8,7 @@ export * from "./competition";
 export * from "./payment";
 export * from "./timetable";
 export * from "./reports";
+export * from "./leave-requests";
 
 
 

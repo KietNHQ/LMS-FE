@@ -114,7 +114,7 @@ export default function ManagementClasses() {
   };
 
   const handleOpenDetail = (classItem) => {
-    navigate(`/admin/classes/${classItem.id}`);
+    navigate(`/management/classes/${classItem.id}`);
   };
 
   const handleSearchKeyword = (event) => {

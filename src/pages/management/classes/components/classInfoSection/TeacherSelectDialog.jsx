@@ -1,37 +1,53 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import "./TeacherSelectDialog.css";
-
-const teacherDatabase = [
-    { id: 1, name: "Trần Thị Hương", subjects: ["Toán", "Vật lý"] },
-    { id: 2, name: "Lê Văn Minh", subjects: ["Toán", "Hóa học"] },
-    { id: 3, name: "Phạm Thị Lan", subjects: ["Sinh học", "Tiếng Anh"] },
-    { id: 4, name: "Nguyễn Văn A", subjects: ["Ngữ văn", "Lịch sử"] },
-    { id: 5, name: "Võ Thị B", subjects: ["Địa lý", "Vật lý"] },
-    { id: 6, name: "Hoàng Văn C", subjects: ["Tiếng Anh", "Toán"] },
-];
-
-const allSubjects = ["Tất cả môn", "Toán", "Vật lý", "Hóa học", "Sinh học", "Ngữ văn", "Tiếng Anh", "Lịch sử", "Địa lý"];
+import { teachersService } from "../../../../../services/pages/management/users/teachersService";
 
 export default function TeacherSelectDialog({ onClose, onSelect, currentTeacher }) {
     const [searchText, setSearchText] = useState("");
+    const [teachers, setTeachers] = useState([]);
+    const [isLoading, setIsLoading] = useState(true);
     const [selectedSubject, setSelectedSubject] = useState("Tất cả môn");
     const [isSubjectDropdownOpen, setIsSubjectDropdownOpen] = useState(false);
 
+    useEffect(() => {
+        const loadTeachers = async () => {
+            setIsLoading(true);
+            try {
+                const data = await teachersService.listTeachers();
+                setTeachers(data);
+            } catch (error) {
+                console.error("Error loading teachers:", error);
+                setTeachers([]);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+        loadTeachers();
+    }, []);
+
+    const allSubjects = useMemo(() => {
+        const subjects = new Set();
+        teachers.forEach((teacher) => {
+            if (teacher.subject) {
+                teacher.subject.split(",").forEach((s) => subjects.add(s.trim()));
+            }
+        });
+        return ["Tất cả môn", ...Array.from(subjects).sort()];
+    }, [teachers]);
+
     const filteredTeachers = useMemo(() => {
-        return teacherDatabase.filter((teacher) => {
-            // Lọc theo tìm kiếm
+        return teachers.filter((teacher) => {
             const matchesSearch = teacher.name
                 .toLowerCase()
                 .includes(searchText.toLowerCase());
 
-            // Lọc theo môn
             const matchesSubject =
                 selectedSubject === "Tất cả môn" ||
-                teacher.subjects.includes(selectedSubject);
+                (teacher.subject && teacher.subject.includes(selectedSubject));
 
             return matchesSearch && matchesSubject;
         });
-    }, [searchText, selectedSubject]);
+    }, [teachers, searchText, selectedSubject]);
 
     return (
         <div className="teacher-select-overlay" onClick={onClose}>
@@ -82,7 +98,9 @@ export default function TeacherSelectDialog({ onClose, onSelect, currentTeacher 
                 </div>
 
                 <div className="teacher-list">
-                    {filteredTeachers.length > 0 ? (
+                    {isLoading ? (
+                        <div className="teacher-empty">Đang tải...</div>
+                    ) : filteredTeachers.length > 0 ? (
                         filteredTeachers.map((teacher) => (
                             <button
                                 key={teacher.id}
@@ -97,7 +115,7 @@ export default function TeacherSelectDialog({ onClose, onSelect, currentTeacher 
                                 <div className="teacher-info">
                                     <div className="teacher-name">{teacher.name}</div>
                                     <div className="teacher-subjects">
-                                        {teacher.subjects.join(", ")}
+                                        {teacher.subject || "—"}
                                     </div>
                                 </div>
                                 {currentTeacher === teacher.name && (

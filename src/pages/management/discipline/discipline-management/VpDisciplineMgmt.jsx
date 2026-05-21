@@ -2,11 +2,12 @@ import { useState, useEffect } from "react";
 import { PageHeader, WeekPicker, Pagination, StatusBadge, LoadingSpinner } from "../../../../components/common";
 import { useSchoolYearTerm } from "../../../../hooks/useSchoolYearTerm";
 import Select from "../../../../components/ui/Select/Select";
-import { FiSearch, FiFilter, FiAward, FiAlertCircle, FiClock, FiCheckCircle, FiChevronLeft, FiChevronRight, FiPlus, FiDownload, FiCalendar, FiActivity, FiArrowRight, FiEdit2, FiTrash2, FiEyeOff, FiEye, FiUser, FiBarChart2, FiLayers, FiShield, FiCheck } from "react-icons/fi";
+import { FiSearch, FiFilter, FiAward, FiAlertCircle, FiClock, FiCheckCircle, FiChevronLeft, FiChevronRight, FiPlus, FiDownload, FiCalendar, FiActivity, FiArrowRight, FiEdit2, FiTrash2, FiEyeOff, FiEye, FiUser, FiBarChart2, FiLayers, FiShield, FiCheck, FiAlertTriangle } from "react-icons/fi";
 import { toast } from "react-toastify";
 import DisciplineHeaderActions from "../components/DisciplineHeaderActions";
 import ViolationRecordModal from "../components/ViolationRecordModal";
 import IncidentHandleModal from "../components/IncidentHandleModal";
+import ManagementLeaveRequests from "../../leave-requests/ManagementLeaveRequests";
 import "./VpDisciplineMgmt.css";
 
 export default function VpDisciplineMgmt() {
@@ -19,6 +20,26 @@ export default function VpDisciplineMgmt() {
     const [hiddenIncidents, setHiddenIncidents] = useState(new Set());
     const [isViolationModalOpen, setIsViolationModalOpen] = useState(false);
     const [searchTerm, setSearchTerm] = useState("");
+    
+    // Tab Navigation States
+    const [activeTab, setActiveTab] = useState("discipline");
+    const [canViewLeaveRequests, setCanViewLeaveRequests] = useState(false);
+
+    useEffect(() => {
+        try {
+            const isPersistent = localStorage.getItem("isPersistent") === "true";
+            const userStr = sessionStorage.getItem("user") || (isPersistent ? localStorage.getItem("user") : null);
+            if (userStr) {
+                const user = JSON.parse(userStr);
+                const perms = user.permissions || [];
+                const role = user.role?.toLowerCase() || "";
+                const hasPerm = perms.includes("leave_requests:read") || perms.includes("leave_requests:manage") || role === "admin" || role === "principal";
+                setCanViewLeaveRequests(hasPerm);
+            }
+        } catch (e) {
+            console.warn("Failed to check permissions in VpDisciplineMgmt", e);
+        }
+    }, []);
     
     // Filter States
     const [selectedGrade, setSelectedGrade] = useState("all");
@@ -145,133 +166,159 @@ export default function VpDisciplineMgmt() {
                 }
             />
 
-            <div className="dm-summary-grid">
-                {categoryStats.map((cat, idx) => (
-                    <div key={idx} className={`dm-status-card ${cat.status}`}>
-                        <div className="card-inner">
-                            <div className="card-top">
-                                <span className="card-label">{cat.title}</span>
-                                <span className={`status-pill`}>{cat.level}</span>
-                            </div>
-                            <div className="card-mid">
-                                <div className="main-count">
-                                    {cat.incidents}
-                                    <span className="count-unit">lượt</span>
-                                </div>
-                                <div className="card-icon-bg">{cat.icon}</div>
-                            </div>
-                            <div className="card-bottom">
-                                <span className="trend-val">{cat.trend} tháng này</span>
-                                <span className="sep">•</span>
-                                <span className="detail-val">{cat.detail}</span>
-                            </div>
-                        </div>
-                    </div>
-                ))}
-            </div>
-
-            <div className="dm-main-container">
-                <div className="dm-panel main-ops-panel-full">
-                    <div className="dm-header-v2">
-                        <div className="dm-toolbar-integrated">
-                            <div className="dm-filters-complex">
-                                <div className="filter-group">
-                                    <label><FiCalendar /> Tuần</label>
-                                    <WeekPicker className="dm-week-picker" value={selectedWeek} onChange={setSelectedWeek} totalWeeks={35} />
-                                </div>
-                                <div className="filter-group">
-                                    <label><FiLayers /> Khối</label>
-                                    <Select variant="custom" value={selectedGrade} onChange={(e) => { setSelectedGrade(e.target.value); setSelectedClass("all"); }} options={[{ value: "all", label: "Tất cả" }, { value: "10", label: "Khối 10" }, { value: "11", label: "Khối 11" }, { value: "12", label: "Khối 12" }]} />
-                                </div>
-                                {selectedGrade !== "all" && (
-                                    <div className="filter-group animate-slide-in">
-                                        <label><FiLayers /> Lớp</label>
-                                        <Select variant="custom" value={selectedClass} onChange={(e) => setSelectedClass(e.target.value)} options={classOptions[selectedGrade]} />
-                                    </div>
-                                )}
-                                <div className="filter-group">
-                                    <label><FiAlertCircle /> Loại lỗi</label>
-                                    <Select variant="custom" value={selectedViolationType} onChange={(e) => setSelectedViolationType(e.target.value)} options={[{ value: "all", label: "Tất cả" }, { value: "late", label: "Đi trễ" }, { value: "absence", label: "Vắng" }, { value: "uniform", label: "Đồng phục" }, { value: "behavior", label: "Thái độ" }]} />
-                                </div>
-                                <div className="filter-group">
-                                    <label><FiActivity /> Mức độ</label>
-                                    <Select variant="custom" value={selectedSeverity} onChange={(e) => setSelectedSeverity(e.target.value)} options={[{ value: "all", label: "Tất cả" }, { value: "low", label: "Nhẹ" }, { value: "med", label: "Vừa" }, { value: "high", label: "Nghiêm trọng" }]} />
-                                </div>
-                            </div>
-                            <div className="dm-primary-actions-compact">
-                                <button className="btn-export-reports"><FiDownload /> Báo cáo</button>
-                                <button className="btn-add-violation-premium" onClick={() => setIsViolationModalOpen(true)}>
-                                    <FiPlus /> Ghi nhận mới
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-
-                    {isLoading ? (
-                        <div className="ui-table-loading">
-                            <LoadingSpinner size="lg" label="Đang cập nhật hồ sơ nề nếp..." />
-                        </div>
-                    ) : (
-                        <>
-                            <div className="dm-table-wrap">
-                                <table className="dm-table-premium">
-                                    <thead>
-                                        <tr>
-                                            <th>Học sinh</th>
-                                            <th>Lớp</th>
-                                            <th>Loại Vi Phạm</th>
-                                            <th>Mức Độ</th>
-                                            <th>Trạng Thái</th>
-                                            <th>Thời Gian</th>
-                                            <th className="th-actions">Thao tác</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {paginatedIncidents.map(incident => (
-                                            <tr key={incident.id} className="row-hover-effect">
-                                                <td className="td-student">
-                                                    <div className="student-profile-mini">
-                                                        <div className="s-avatar">{incident.student.charAt(0)}</div>
-                                                        <span>{incident.student}</span>
-                                                    </div>
-                                                </td>
-                                                <td><span className="class-badge-v2">{incident.class}</span></td>
-                                                <td><span className="violation-type">{incident.type}</span></td>
-                                                <td>
-                                                    <div className="td-level-combined">
-                                                        <span className={`level-pill ${incident.level}`}>
-                                                            {incident.level === 'high' ? 'Nghiêm trọng' : (incident.level === 'med' ? 'Vừa' : 'Nhẹ')}
-                                                        </span>
-                                                        <span className="occurrence-badge">{getOccurrenceCount(incident.student, incident.id, incidents)}</span>
-                                                    </div>
-                                                </td>
-                                                <td>
-                                                    <StatusBadge status={incident.status || 'new'}>
-                                                        {incident.status === 'processing' ? 'Đang xử lý' : (incident.status === 'resolved' ? 'Đã giải quyết' : (incident.status === 'closed' ? 'Đã đóng' : 'Mới'))}
-                                                    </StatusBadge>
-                                                </td>
-                                                <td><span className="td-time">{incident.date}</span></td>
-                                                <td className="dm-td-actions">
-                                                    <div className="dm-action-group">
-                                                        <button className="dm-btn-action edit" title="Sửa" onClick={() => handleEditIncident(incident)}><FiEdit2 /></button>
-                                                        <button className="dm-btn-action process" title="Xử lý" onClick={() => handleOpenIncident(incident)}><FiActivity /></button>
-                                                        <button className="dm-btn-action hide" title="Ẩn" onClick={() => handleToggleHide(incident.id)}><FiEyeOff /></button>
-                                                        <button className="dm-btn-action delete" title="Xóa" onClick={() => handleDeleteIncident(incident.id)}><FiTrash2 /></button>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            </div>
-
-                            <div className="dm-footer-pagination">
-                                <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={(page) => setCurrentPage(page)} />
-                            </div>
-                        </>
-                    )}
+            {/* Elegant Premium Tabs for Tabbed Navigation */}
+            {canViewLeaveRequests && (
+                <div className="dm-portal-tabs-wrapper">
+                    <button
+                        className={`dm-portal-tab-btn ${activeTab === "discipline" ? "active" : ""}`}
+                        onClick={() => setActiveTab("discipline")}
+                    >
+                        <FiAlertTriangle className="tab-icon" />
+                        Hồ sơ vi phạm
+                    </button>
+                    <button
+                        className={`dm-portal-tab-btn ${activeTab === "leave-requests" ? "active" : ""}`}
+                        onClick={() => setActiveTab("leave-requests")}
+                    >
+                        <FiCalendar className="tab-icon" />
+                        Đơn xin nghỉ phép
+                    </button>
                 </div>
-            </div>
+            )}
+
+            {activeTab === "discipline" ? (
+                <>
+                    <div className="dm-summary-grid">
+                        {categoryStats.map((cat, idx) => (
+                            <div key={idx} className={`dm-status-card ${cat.status}`}>
+                                <div className="card-inner">
+                                    <div className="card-top">
+                                        <span className="card-label">{cat.title}</span>
+                                        <span className={`status-pill`}>{cat.level}</span>
+                                    </div>
+                                    <div className="card-mid">
+                                        <div className="main-count">
+                                            {cat.incidents}
+                                            <span className="count-unit">lượt</span>
+                                        </div>
+                                        <div className="card-icon-bg">{cat.icon}</div>
+                                    </div>
+                                    <div className="card-bottom">
+                                        <span className="trend-val">{cat.trend} tháng này</span>
+                                        <span className="sep">•</span>
+                                        <span className="detail-val">{cat.detail}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+
+                    <div className="dm-main-container">
+                        <div className="dm-panel main-ops-panel-full">
+                            <div className="dm-header-v2">
+                                <div className="dm-toolbar-integrated">
+                                    <div className="dm-filters-complex">
+                                        <div className="filter-group">
+                                            <label><FiCalendar /> Tuần</label>
+                                            <WeekPicker className="dm-week-picker" value={selectedWeek} onChange={setSelectedWeek} totalWeeks={35} />
+                                        </div>
+                                        <div className="filter-group">
+                                            <label><FiLayers /> Khối</label>
+                                            <Select variant="custom" value={selectedGrade} onChange={(e) => { setSelectedGrade(e.target.value); setSelectedClass("all"); }} options={[{ value: "all", label: "Tất cả" }, { value: "10", label: "Khối 10" }, { value: "11", label: "Khối 11" }, { value: "12", label: "Khối 12" }]} />
+                                        </div>
+                                        {selectedGrade !== "all" && (
+                                            <div className="filter-group animate-slide-in">
+                                                <label><FiLayers /> Lớp</label>
+                                                <Select variant="custom" value={selectedClass} onChange={(e) => setSelectedClass(e.target.value)} options={classOptions[selectedGrade]} />
+                                            </div>
+                                        )}
+                                        <div className="filter-group">
+                                            <label><FiAlertCircle /> Loại lỗi</label>
+                                            <Select variant="custom" value={selectedViolationType} onChange={(e) => setSelectedViolationType(e.target.value)} options={[{ value: "all", label: "Tất cả" }, { value: "late", label: "Đi trễ" }, { value: "absence", label: "Vắng" }, { value: "uniform", label: "Đồng phục" }, { value: "behavior", label: "Thái độ" }]} />
+                                        </div>
+                                        <div className="filter-group">
+                                            <label><FiActivity /> Mức độ</label>
+                                            <Select variant="custom" value={selectedSeverity} onChange={(e) => setSelectedSeverity(e.target.value)} options={[{ value: "all", label: "Tất cả" }, { value: "low", label: "Nhẹ" }, { value: "med", label: "Vừa" }, { value: "high", label: "Nghiêm trọng" }]} />
+                                        </div>
+                                    </div>
+                                    <div className="dm-primary-actions-compact">
+                                        <button className="btn-export-reports"><FiDownload /> Báo cáo</button>
+                                        <button className="btn-add-violation-premium" onClick={() => setIsViolationModalOpen(true)}>
+                                            <FiPlus /> Ghi nhận mới
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {isLoading ? (
+                                <div className="ui-table-loading">
+                                    <LoadingSpinner size="lg" label="Đang cập nhật hồ sơ nề nếp..." />
+                                </div>
+                            ) : (
+                                <>
+                                    <div className="dm-table-wrap">
+                                        <table className="dm-table-premium">
+                                            <thead>
+                                                <tr>
+                                                    <th>Học sinh</th>
+                                                    <th>Lớp</th>
+                                                    <th>Loại Vi Phạm</th>
+                                                    <th>Mức Độ</th>
+                                                    <th>Trạng Thái</th>
+                                                    <th>Thời Gian</th>
+                                                    <th className="th-actions">Thao tác</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {paginatedIncidents.map(incident => (
+                                                    <tr key={incident.id} className="row-hover-effect">
+                                                        <td className="td-student">
+                                                            <div className="student-profile-mini">
+                                                                <div className="s-avatar">{incident.student.charAt(0)}</div>
+                                                                <span>{incident.student}</span>
+                                                            </div>
+                                                        </td>
+                                                        <td><span className="class-badge-v2">{incident.class}</span></td>
+                                                        <td><span className="violation-type">{incident.type}</span></td>
+                                                        <td>
+                                                            <div className="td-level-combined">
+                                                                <span className={`level-pill ${incident.level}`}>
+                                                                    {incident.level === 'high' ? 'Nghiêm trọng' : (incident.level === 'med' ? 'Vừa' : 'Nhẹ')}
+                                                                </span>
+                                                                <span className="occurrence-badge">{getOccurrenceCount(incident.student, incident.id, incidents)}</span>
+                                                            </div>
+                                                        </td>
+                                                        <td>
+                                                            <StatusBadge status={incident.status || 'new'}>
+                                                                {incident.status === 'processing' ? 'Đang xử lý' : (incident.status === 'resolved' ? 'Đã giải quyết' : (incident.status === 'closed' ? 'Đã đóng' : 'Mới'))}
+                                                            </StatusBadge>
+                                                        </td>
+                                                        <td><span className="td-time">{incident.date}</span></td>
+                                                        <td className="dm-td-actions">
+                                                            <div className="dm-action-group">
+                                                                <button className="dm-btn-action edit" title="Sửa" onClick={() => handleEditIncident(incident)}><FiEdit2 /></button>
+                                                                <button className="dm-btn-action process" title="Xử lý" onClick={() => handleOpenIncident(incident)}><FiActivity /></button>
+                                                                <button className="dm-btn-action hide" title="Ẩn" onClick={() => handleToggleHide(incident.id)}><FiEyeOff /></button>
+                                                                <button className="dm-btn-action delete" title="Xóa" onClick={() => handleDeleteIncident(incident.id)}><FiTrash2 /></button>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
+
+                                    <div className="dm-footer-pagination">
+                                        <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={(page) => setCurrentPage(page)} />
+                                    </div>
+                                </>
+                            )}
+                        </div>
+                    </div>
+                </>
+            ) : (
+                <ManagementLeaveRequests />
+            )}
             <ViolationRecordModal 
                 isOpen={isViolationModalOpen} 
                 onClose={() => {

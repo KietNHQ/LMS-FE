@@ -130,7 +130,7 @@ export default function ParentLayout() {
     const userEmail = userToUse.email || "";
 
     return (
-        <div className={`parent-layout ${isCollapsed ? "collapsed" : ""}`}>
+        <div className={`parent-layout theme-parent ${isCollapsed ? "collapsed" : ""}`}>
             <Sidebar
                 role="parent"
                 user={userToUse}

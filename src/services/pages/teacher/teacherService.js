@@ -239,76 +239,9 @@ const teacherEndpointRegistry = [
     }) 
   },
   { key: "get_notifications", method: "GET", path: "/notifications/my", module: "notifications", mock: () => ([]) },
-  { key: "get_class_leave_requests", method: "GET", path: "/classes/:classId/leave-requests", module: "leave", mock: (input) => {
-      const stored = localStorage.getItem("parent_leave_requests");
-      const list = stored ? JSON.parse(stored) : [];
-      // To provide a rich demo experience, populate some mock items if empty
-      if (list.length === 0) {
-        const fallbacks = [
-          {
-            id: "leave-demo-1",
-            studentEnrollmentId: "child1",
-            student: { id: 1024, fullName: "Nguyễn Minh Tuấn", studentCode: "STU1024" },
-            reason: "Cháu bị sốt cao 39 độ, bác sĩ yêu cầu nghỉ học 2 ngày.",
-            startDate: "2026-05-21",
-            endDate: "2026-05-22",
-            note: "Tôi sẽ gửi kèm giấy xác nhận của bác sĩ sau.",
-            status: "pending",
-            createdAt: new Date().toISOString()
-          },
-          {
-            id: "leave-demo-2",
-            studentEnrollmentId: "child2",
-            student: { id: 1025, fullName: "Nguyễn Thị Ngọc Hà", studentCode: "STU0891" },
-            reason: "Cháu nghỉ đi khám sức khỏe định kỳ cùng gia đình.",
-            startDate: "2026-05-25",
-            endDate: "2026-05-25",
-            note: "",
-            status: "approved",
-            feedback: "Đã duyệt, chúc em luôn mạnh khỏe.",
-            createdAt: new Date().toISOString()
-          }
-        ];
-        localStorage.setItem("parent_leave_requests", JSON.stringify(fallbacks));
-        return fallbacks;
-      }
-      // Populate student details if they are missing in the parent submitted item
-      return list.map(item => ({
-        ...item,
-        student: item.student || {
-          id: item.studentEnrollmentId === "child2" ? 1025 : 1024,
-          fullName: item.studentEnrollmentId === "child2" ? "Nguyễn Thị Ngọc Hà" : "Nguyễn Minh Tuấn",
-          studentCode: item.studentEnrollmentId === "child2" ? "STU0891" : "STU1024"
-        }
-      }));
-    }
-  },
-  { key: "patch_leave_request_status", method: "PATCH", path: "/leave-requests/:id/status", module: "leave", mock: (input) => {
-      const stored = localStorage.getItem("parent_leave_requests");
-      const list = stored ? JSON.parse(stored) : [];
-      const targetId = input.pathParams?.id;
-      let updatedItem = null;
-      const newList = list.map(item => {
-        if (String(item.id) === String(targetId)) {
-          updatedItem = {
-            ...item,
-            status: input.body?.status || "approved",
-            feedback: input.body?.feedback || "Đã phê duyệt đơn xin nghỉ học.",
-            approvedBy: 12,
-            approvedByRole: "teacher",
-            updatedAt: new Date().toISOString()
-          };
-          return updatedItem;
-        }
-        return item;
-      });
-      if (updatedItem) {
-        localStorage.setItem("parent_leave_requests", JSON.stringify(newList));
-        return updatedItem;
-      }
-      return { success: false, message: "Không tìm thấy đơn." };
-    }
-  },
+  // Leave Requests - Real API endpoints (no mock)
+  { key: "get_class_leave_requests", method: "GET", path: "/classes/:classId/leave-requests", module: "leave" },
+  { key: "patch_leave_request_status", method: "PATCH", path: "/leave-requests/:id/approve", module: "leave" },
   { 
     key: "get_timetable", 
     method: "GET", 

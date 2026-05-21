@@ -12,6 +12,58 @@
     width: 100%;
 }
 
+/* ── Elegant Tab Navigation ── */
+.dm-portal-tabs-wrapper {
+    display: flex;
+    gap: 0.5rem;
+    padding: 0.35rem;
+    background: #f1f5f9;
+    border-radius: 14px;
+    width: fit-content;
+    border: 1px solid #e2e8f0;
+    margin-bottom: 0.5rem;
+    align-self: flex-start;
+}
+
+.dm-portal-tab-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.625rem 1.25rem;
+    border-radius: 10px;
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: #64748b;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.dm-portal-tab-btn:hover {
+    color: #1e293b;
+    background: rgba(255, 255, 255, 0.5);
+}
+
+.dm-portal-tab-btn.active {
+    color: var(--admin-primary, #1e2f5a);
+    background: #ffffff;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05), 0 1px 3px rgba(0, 0, 0, 0.02);
+}
+
+.dm-portal-tab-btn .tab-icon {
+    font-size: 1.1rem;
+    transition: transform 0.25s ease;
+}
+
+.dm-portal-tab-btn:hover .tab-icon {
+    transform: scale(1.1);
+}
+
+.dm-portal-tab-btn.active .tab-icon {
+    color: var(--admin-primary, #1e2f5a);
+}
+
 /* ── Clean Status Cards Grid ── */
 .dm-summary-grid {
     display: grid;

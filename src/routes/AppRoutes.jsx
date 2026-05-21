@@ -204,6 +204,7 @@ export default function AppRoutes() {
         <Route path="audit-log"   element={<AdminAuditLog />} />
         <Route path="system-log"  element={<AdminSystemLog />} />
         <Route path="classes"       element={<Navigate to="/management/classes" replace />} />
+        <Route path="classes/*"     element={<Navigate to="/management/classes" replace />} />
         <Route path="quiz"          element={<Navigate to="/management/quiz" replace />} />
         <Route path="timetable"     element={<Navigate to="/management/timetable" replace />} />
         <Route path="payment"       element={<Navigate to="/management/finance" replace />} />

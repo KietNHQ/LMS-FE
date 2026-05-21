@@ -39,6 +39,11 @@ export const PERMISSIONS = {
     DISCIPLINE_VIEW: 'discipline:read',
     DISCIPLINE_MANAGE: 'discipline:manage',
 
+    // 6.1 Nhóm Nghỉ phép (Leave Requests)
+    LEAVE_REQUESTS_VIEW: 'leave_requests:read',
+    LEAVE_REQUESTS_APPROVE: 'leave_requests:approve',
+    LEAVE_REQUESTS_MANAGE: 'leave_requests:manage',
+
     // 7. Nhóm Tài chính (Fees)
     FEES_VIEW: 'fees:read',
     FEES_MANAGE: 'fees:manage',
@@ -93,7 +98,8 @@ export const MANAGEMENT_TITLES = [
     ] },
     { label: "Phó hiệu trưởng (Nề nếp)", value: "vp_discipline", permissions: [
         PERMISSIONS.USER_VIEW, PERMISSIONS.DISCIPLINE_VIEW, PERMISSIONS.DISCIPLINE_MANAGE,
-        PERMISSIONS.REWARD_TYPE_VIEW, PERMISSIONS.NOTIFICATION_VIEW
+        PERMISSIONS.REWARD_TYPE_VIEW, PERMISSIONS.NOTIFICATION_VIEW,
+        PERMISSIONS.LEAVE_REQUESTS_VIEW, PERMISSIONS.LEAVE_REQUESTS_APPROVE
     ] },
     { label: "Giáo vụ", value: "academic_staff", permissions: [
         PERMISSIONS.USER_VIEW, PERMISSIONS.CLASS_VIEW, PERMISSIONS.CLASS_ALLOCATION_VIEW,
@@ -156,6 +162,9 @@ export const PERMISSION_GROUPS = [
             { id: PERMISSIONS.DISCIPLINE_MANAGE, label: "Quản lý nề nếp" },
             { id: PERMISSIONS.DEPARTMENT_MANAGE, label: "Quản lý tổ bộ môn" },
             { id: PERMISSIONS.REWARD_TYPE_MANAGE, label: "Quản lý thi đua" },
+            { id: PERMISSIONS.LEAVE_REQUESTS_VIEW, label: "Xem đơn nghỉ phép" },
+            { id: PERMISSIONS.LEAVE_REQUESTS_APPROVE, label: "Phê duyệt đơn nghỉ phép" },
+            { id: PERMISSIONS.LEAVE_REQUESTS_MANAGE, label: "Quản lý toàn bộ đơn nghỉ phép" },
         ]
     },
     {
