@@ -42,6 +42,9 @@ function round2(num) {
 
 function calculateSemesterAverage(semester) {
     if (!semester) return 0;
+    if (typeof semester.averageScore === "number") {
+        return semester.averageScore;
+    }
     // Chấp nhận cả cấu trúc API phẳng hoặc lồng nhau
     const oral1 = semester.oral1 || semester.oral || 0;
     const oral2 = semester.oral2 || 0;
@@ -107,7 +110,7 @@ export default function StudentGrades() {
     const [activeTab, setActiveTab] = useState("hk1");
     const [selectedSchoolYear, setSelectedSchoolYear] = useState("2025-2026");
 
-    const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
+    const storedUser = JSON.parse(localStorage.getItem("user") || sessionStorage.getItem("user") || "{}");
     const studentId = storedUser?.profile?.id;
 
     // Use TanStack Query for grades
@@ -116,9 +119,10 @@ export default function StudentGrades() {
         queryFn: async () => {
             if (!studentId) return [];
             try {
-                const response = await studentService.getStudentGrades({ 
+                const response = await studentService.getStudentGradeSummary({ 
                     pathParams: { id: studentId },
-                    mock: false 
+                    mock: false,
+                    params: { schoolYear: selectedSchoolYear },
                 });
                 
                 if (response.success && response.data) {
@@ -146,6 +150,28 @@ export default function StudentGrades() {
                     yearAvg,
                     rank: getAcademicRank(yearAvg),
                     trend: getTrend(hk1Avg, hk2Avg)
+                };
+            });
+        }
+        if (Array.isArray(data.subjects)) {
+            return data.subjects.map((subject) => {
+                const hk1Avg = calculateSemesterAverage(subject.hk1);
+                const hk2Avg = calculateSemesterAverage(subject.hk2);
+                const yearAvg = Number.isFinite(subject.yearAvg)
+                    ? subject.yearAvg
+                    : calculateYearAverage(hk1Avg, hk2Avg);
+
+                return {
+                    id: subject.id,
+                    name: subject.name,
+                    className: subject.className,
+                    hk1: subject.hk1 || {},
+                    hk2: subject.hk2 || {},
+                    hk1Avg,
+                    hk2Avg,
+                    yearAvg,
+                    rank: getAcademicRank(yearAvg),
+                    trend: getTrend(hk1Avg, hk2Avg),
                 };
             });
         }

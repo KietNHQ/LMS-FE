@@ -79,6 +79,7 @@ const mapQuestionFromApiToView = (apiQuestion) => {
         answers,
         correctAnswer,
         score: apiQuestion.points || 0.25,
+        order: apiQuestion.order_num ?? apiQuestion.order ?? null,
     };
 };
 
@@ -129,7 +130,12 @@ export default function TeacherCreateQuizPage() {
                 // EDIT MODE
                 try {
                     const apiQuestions = await quizService.listQuestions(routeQuizMeta.id);
-                    const mappedQuestions = apiQuestions.map(mapQuestionFromApiToView);
+                    const mappedQuestions = apiQuestions.map((question, index) =>
+                        mapQuestionFromApiToView({
+                            ...question,
+                            order_num: question.order_num ?? question.order ?? index + 1,
+                        })
+                    );
                     setQuiz({
                         id: routeQuizMeta.id,
                         title: routeQuizMeta.title || "Bài kiểm tra",
@@ -411,10 +417,10 @@ export default function TeacherCreateQuizPage() {
 
         try {
             let savedQuestion;
+            const nextOrder = quiz.questions.length + 1;
             if (editingQuestionId) {
-                // Delete old and add new to completely replace all question answers and fields safely
-                await quizService.deleteQuestion(quiz.id, editingQuestionId);
-                const response = await quizService.addQuestion(quiz.id, {
+                // Update existing question in-place to preserve its order_num and position
+                const response = await quizService.updateQuestion(quiz.id, editingQuestionId, {
                     question: formData.question.trim(),
                     type: questionType,
                     score: Number(formData.score) || 0.25,
@@ -431,6 +437,7 @@ export default function TeacherCreateQuizPage() {
                     questionImage: formData.questionImage || "",
                     options: apiOptions,
                     correctAnswer: formData.correctAnswer,
+                    order: nextOrder,
                 });
                 savedQuestion = response.data?.data || response.data || response;
             }
@@ -440,7 +447,7 @@ export default function TeacherCreateQuizPage() {
             setQuiz((prev) => {
                 const nextQuestions = editingQuestionId
                     ? prev.questions.map((item) => (item.id === editingQuestionId ? mappedSaved : item))
-                    : [...prev.questions, mappedSaved];
+                    : [...prev.questions, { ...mappedSaved, order: nextOrder }];
                 return { ...prev, questions: nextQuestions };
             });
 
@@ -470,10 +477,26 @@ export default function TeacherCreateQuizPage() {
 
         try {
             await quizService.deleteQuestion(quiz.id, pendingDeleteQuestionId);
-            setQuiz((prev) => ({
-                ...prev,
-                questions: prev.questions.filter((item) => item.id !== pendingDeleteQuestionId),
-            }));
+            setQuiz((prev) => {
+                const nextQuestions = prev.questions
+                    .filter((item) => item.id !== pendingDeleteQuestionId)
+                    .map((item, index) => ({ ...item, order: index + 1 }));
+
+                Promise.all(
+                    nextQuestions.map((item, index) =>
+                        quizService.updateQuestion(quiz.id, item.id, {
+                            order: index + 1,
+                        })
+                    )
+                ).catch((err) => {
+                    console.error("Failed to renumber questions after delete:", err);
+                });
+
+                return {
+                    ...prev,
+                    questions: nextQuestions,
+                };
+            });
 
             if (editingQuestionId === pendingDeleteQuestionId) {
                 resetForm();
@@ -520,6 +543,22 @@ export default function TeacherCreateQuizPage() {
                 nextQuestions[currentIndex],
             ];
 
+            const renumberedQuestions = nextQuestions.map((item, index) => ({
+                ...item,
+                order: index + 1,
+            }));
+
+            Promise.all(
+                renumberedQuestions.map((item, index) =>
+                    quizService.updateQuestion(quiz.id, item.id, {
+                        order: index + 1,
+                    })
+                )
+            ).catch((err) => {
+                console.error("Failed to persist question order:", err);
+                toast.error("Không thể lưu lại thứ tự câu hỏi.");
+            });
+
             setAnimatedQuestionId(questionId);
             setMoveDirection(direction);
             if (reorderAnimationTimeoutRef.current) {
@@ -530,7 +569,7 @@ export default function TeacherCreateQuizPage() {
                 setMoveDirection(null);
             }, 420);
 
-            return { ...prev, questions: nextQuestions };
+            return { ...prev, questions: renumberedQuestions };
         });
     };
 

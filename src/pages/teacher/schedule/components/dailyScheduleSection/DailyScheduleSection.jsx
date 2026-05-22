@@ -91,7 +91,7 @@ export default function DailyScheduleSection({
         5: "Thursday",
         6: "Friday",
         7: "Saturday",
-        8: "Sunday"
+        1: "Sunday"
       };
 
       return apiData

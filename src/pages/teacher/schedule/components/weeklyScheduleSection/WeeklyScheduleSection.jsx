@@ -84,7 +84,7 @@ export default function WeeklyScheduleSection({
         5: "Thursday",
         6: "Friday",
         7: "Saturday",
-        8: "Sunday"
+        1: "Sunday"
       };
 
       // Map API data to UI format

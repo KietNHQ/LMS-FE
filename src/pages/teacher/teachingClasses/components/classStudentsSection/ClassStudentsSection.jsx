@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { FiSearch } from "react-icons/fi";
 import { toast } from "react-toastify";
 import teacherService from "../../../../../services/pages/teacher/teacherService";
+import studentService from "../../../../../services/pages/student/studentService";
 import "./ClassStudentsSection.css";
 
 // Utilities
@@ -23,7 +24,7 @@ import Pagination from "./subcomponents/Pagination";
 
 const ITEMS_PER_PAGE = 8;
 
-const ClassStudentsSection = ({ classId, students, readOnly = false }) => {
+const ClassStudentsSection = ({ classId, students, readOnly = false, isStudentView = false }) => {
   // --- State ---
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
@@ -63,7 +64,7 @@ const ClassStudentsSection = ({ classId, students, readOnly = false }) => {
   const filteredStudents = useMemo(() => {
     if (!students) return [];
     return students.filter((s) =>
-      s.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (s.name || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
       (s.id && s.id.toString().includes(searchTerm))
     );
   }, [students, searchTerm]);
@@ -231,27 +232,36 @@ const ClassStudentsSection = ({ classId, students, readOnly = false }) => {
     const fetchHistory = async () => {
       if (!classId) return;
       try {
-        const res = await teacherService.getLessonEvaluations({
-          mock: false,
-          pathParams: { classId }
-        });
+        const res = isStudentView
+          ? await studentService.getClassLessonEvaluations({
+              mock: false,
+              pathParams: { classId }
+            })
+          : await teacherService.getLessonEvaluations({
+              mock: false,
+              pathParams: { classId }
+            });
         if (res.success && res.data) {
           const history = mapBackendHistory(res.data);
           if (history.length > 0) {
             setLessonReviews(history);
+          } else {
+            setLessonReviews([]);
           }
+        } else {
+          setLessonReviews([]);
         }
       } catch (err) {
         console.error("Failed to fetch evaluations:", err);
       }
     };
     fetchHistory();
-  }, [classId]);
+  }, [classId, isStudentView]);
 
   // Tải danh sách cột điểm để hỗ trợ đồng bộ
   useEffect(() => {
     const fetchGradeItems = async () => {
-      if (!classId) return;
+      if (!classId || isStudentView) return;
       try {
         const res = await teacherService.listGradeItems({
           params: { classId }
@@ -264,12 +274,12 @@ const ClassStudentsSection = ({ classId, students, readOnly = false }) => {
       }
     };
     fetchGradeItems();
-  }, [classId]);
+  }, [classId, isStudentView]);
 
   // Lấy TKB hiện tại dựa trên ngày đang chọn
   useEffect(() => {
     const fetchCurrentSchedule = async () => {
-      if (!classId) return;
+      if (!classId || isStudentView) return;
       try {
         const res = await teacherService.getCurrentSchedule({
           mock: false,
@@ -284,12 +294,12 @@ const ClassStudentsSection = ({ classId, students, readOnly = false }) => {
       }
     };
     fetchCurrentSchedule();
-  }, [classId, selectedHistoryDate]);
+  }, [classId, selectedHistoryDate, isStudentView]);
 
   // Lấy các thứ có lịch dạy trong tuần
   useEffect(() => {
     const fetchTeachingDays = async () => {
-      if (!classId) return;
+      if (!classId || isStudentView) return;
       try {
         const res = await teacherService.getTeachingDays({
           mock: false,
@@ -303,12 +313,12 @@ const ClassStudentsSection = ({ classId, students, readOnly = false }) => {
       }
     };
     fetchTeachingDays();
-  }, [classId]);
+  }, [classId, isStudentView]);
 
   // Lấy toàn bộ TKB của lớp để biết chính xác các tiết của giáo viên hôm nay
   useEffect(() => {
     const fetchFullSchedule = async () => {
-      if (!classId) return;
+      if (!classId || isStudentView) return;
       try {
         const res = await teacherService.getClassSchedule({
           pathParams: { id: classId }
@@ -324,7 +334,7 @@ const ClassStudentsSection = ({ classId, students, readOnly = false }) => {
       }
     };
     fetchFullSchedule();
-  }, [classId, selectedHistoryDate]);
+  }, [classId, selectedHistoryDate, isStudentView]);
 
   // --- Handlers ---
   const handleBackToToday = () => setSelectedHistoryDate(toDateKey(new Date()));

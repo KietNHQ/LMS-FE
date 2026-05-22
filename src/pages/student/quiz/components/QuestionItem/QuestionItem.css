@@ -28,6 +28,22 @@
   line-height: 1.6;
 }
 
+.question-item-image-wrap {
+  margin-bottom: 1rem;
+  border-radius: 1rem;
+  overflow: hidden;
+  border: 1px solid #e2e9f7;
+  background: #f8fbff;
+}
+
+.question-item-image {
+  display: block;
+  width: 100%;
+  max-height: 320px;
+  object-fit: contain;
+  background: #f8fbff;
+}
+
 .question-item-options {
   display: grid;
   gap: 0.85rem;

@@ -13,24 +13,51 @@ export default function AcademicVicePresidentTab({ classId }) {
       if (!classId) return;
       setIsLoading(true);
       try {
-        const res = await teacherService.getAcademicSummary({
-          mock: false,
-          pathParams: { id: classId }
-        });
-        if (res.success && res.data) {
-          setStudents((res.data.studentPerformance || []).map(s => ({
-            id: s.id,
-            name: s.fullName,
-            dob: s.dob || "N/A",
-            parentName: s.parentName || "N/A",
-            phone: s.phone || "N/A",
-            averageScore: s.averageScore,
-            assessment: s.assessment
-          })));
-          setAcademicStats(res.data.academicStats);
+        // Fetch classmates and academic summary in parallel
+        const [studentsRes, summaryRes] = await Promise.all([
+          teacherService.getClassStudents({
+            mock: false,
+            pathParams: { id: classId }
+          }),
+          teacherService.getAcademicSummary({
+            mock: false,
+            pathParams: { id: classId }
+          })
+        ]);
+
+        if (studentsRes.success && studentsRes.data) {
+          const performanceMap = {};
+          if (summaryRes.success && summaryRes.data?.studentPerformance) {
+            summaryRes.data.studentPerformance.forEach(p => {
+              performanceMap[p.studentId] = p;
+            });
+          }
+
+          const mappedStudents = studentsRes.data.map(s => {
+            const perf = performanceMap[s.id] || {};
+            return {
+              id: s.id,
+              name: s.full_name || s.fullName || `${s.surname || ""} ${s.given_name || s.givenName || ""}`.trim() || "Chưa rõ tên",
+              dob: s.birth_date || s.birthDate || null,
+              email: s.email,
+              gender: s.gender,
+              status: "Đang học",
+              enrollmentId: s.enrollment_id,
+              parentName: s.parent_name || "Chưa cập nhật",
+              parentPhone: s.parent_phone || "N/A",
+              averageScore: perf.totalPoints || 0,
+              assessment: perf.reports?.length ? `${perf.reports.length} vi phạm` : "Không có vi phạm"
+            };
+          });
+
+          setStudents(mappedStudents);
+        }
+
+        if (summaryRes.success && summaryRes.data) {
+          setAcademicStats(summaryRes.data.academicStats);
         }
       } catch (error) {
-        console.error("Failed to fetch academic summary:", error);
+        console.error("Failed to fetch academic summary and student list:", error);
       } finally {
         setIsLoading(false);
       }
@@ -51,8 +78,9 @@ export default function AcademicVicePresidentTab({ classId }) {
         </div>
       )}
       <div className="avp-tracking">
-        <ClassStudentsSection students={students} readOnly={true} />
+        <ClassStudentsSection classId={classId} students={students} readOnly={true} isStudentView={true} />
       </div>
     </div>
   );
 }
+

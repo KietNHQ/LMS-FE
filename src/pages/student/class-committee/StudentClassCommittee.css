@@ -363,3 +363,90 @@
   }
 }
 
+/* ---- Disabled tab (không phải role của mình) ---- */
+.student-class-committee-tab.disabled {
+  opacity: 0.42;
+  cursor: not-allowed;
+  pointer-events: none;
+  background: linear-gradient(180deg, #f5f6f8 0%, #eef0f4 100%);
+  border-color: #e3e7ef;
+  box-shadow: none;
+}
+
+.student-class-committee-tab.disabled:hover {
+  transform: none;
+  box-shadow: none;
+}
+
+.student-class-committee-tab.disabled .student-class-committee-tab__icon {
+  background: #e8eaf0;
+  color: #9ca3af;
+}
+
+/* Dot indicator — chức vụ của mình */
+.tab-my-role-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #22c55e;
+  flex-shrink: 0;
+  margin-left: auto;
+  animation: pulse-dot 2.2s ease-in-out infinite;
+}
+
+.student-class-committee-tab.active .tab-my-role-dot {
+  background: #86efac;
+}
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.6; transform: scale(1.35); }
+}
+
+/* Officer role badge dưới title */
+.officer-role-badge {
+  margin: 6px 0 0 !important;
+  font-size: 13px !important;
+  color: #5f6f89 !important;
+}
+
+.officer-role-badge strong {
+  color: #2563ff;
+  font-weight: 700;
+}
+
+/* Empty state — không phải BCS */
+.committee-not-officer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 72px 32px;
+  text-align: center;
+  background: linear-gradient(180deg, #f8fbff 0%, #ffffff 100%);
+  border: 1px solid #dfe5f0;
+  border-radius: 24px;
+  box-shadow: 0 10px 28px rgba(22, 35, 59, 0.05);
+  margin-top: 8px;
+}
+
+.committee-not-officer__icon {
+  font-size: 52px;
+  margin-bottom: 16px;
+  filter: grayscale(0.2);
+}
+
+.committee-not-officer h2 {
+  margin: 0 0 12px;
+  font-size: 22px;
+  font-weight: 800;
+  color: #16233b;
+}
+
+.committee-not-officer p {
+  margin: 0;
+  font-size: 15px;
+  color: #6f7c91;
+  max-width: 380px;
+  line-height: 1.7;
+}

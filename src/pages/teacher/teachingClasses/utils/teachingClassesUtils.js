@@ -199,7 +199,10 @@ export const getTermLabel = (term) => (term === "hk1" ? "Học kỳ 1" : "Học 
 
 export const formatDate = (dateString) => {
   if (!dateString) return "";
-  const [year, month, day] = dateString.split("-");
+  const pureDate = dateString.includes("T") ? dateString.split("T")[0] : dateString;
+  const parts = pureDate.split("-");
+  if (parts.length !== 3) return dateString;
+  const [year, month, day] = parts;
   return `${day}/${month}/${year}`;
 };
 

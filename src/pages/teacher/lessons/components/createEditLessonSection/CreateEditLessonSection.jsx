@@ -26,8 +26,21 @@ export default function CreateEditLessonSection({
     onSaveDraft,
     onPublish,
     isDialog = false,
+    timetable = [],
 }) {
     const classOptions = classesByBlock?.[formValues.gradeBlock] || [];
+
+    const matchedSlot = React.useMemo(() => {
+        if (!formValues.date || !formValues.className || !timetable?.length) return null;
+        const dateObj = new Date(formValues.date);
+        if (isNaN(dateObj.getTime())) return null;
+        const dayOfWeek = dateObj.getDay() + 1; // 1 = Sunday, 2 = Monday, ...
+        return timetable.find(
+            (slot) =>
+                slot.class_name === formValues.className &&
+                slot.day_of_week === dayOfWeek
+        );
+    }, [formValues.date, formValues.className, timetable]);
 
     const handleAttachmentInput = (event) => {
         if (typeof onFileChange === "function") {
@@ -144,6 +157,16 @@ export default function CreateEditLessonSection({
                             onChange={(event) => onChangeForm("room", event.target.value)}
                         />
                     </label>
+
+                    {matchedSlot ? (
+                        <div className="timetable-match-success">
+                            ✓ Đã khớp lịch dạy (Thời khóa biểu): Tiết {matchedSlot.period_number} - Phòng {matchedSlot.room || "Chưa xác định"} (Tự động điền)
+                        </div>
+                    ) : formValues.date ? (
+                        <div className="timetable-match-warning">
+                            ⚠ Không tìm thấy lịch dạy chính thức cho lớp {formValues.className} vào ngày này trong thời khóa biểu.
+                        </div>
+                    ) : null}
                 </div>
             </section>
 
