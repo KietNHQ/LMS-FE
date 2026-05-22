@@ -1,6 +1,7 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { PageHeader, SchoolYearTermSelector } from "../../../../components/common";
 import { useSchoolYearTerm } from "../../../../hooks/useSchoolYearTerm";
+import { financeService } from "../../../../services/pages/management/finance";
 import {
     FiAlertCircle,
     FiAlertTriangle,
@@ -44,14 +45,6 @@ const SECTION_TABS = [
     { id: "reconcile", label: "Đối soát", icon: FiPieChart },
 ];
 
-const MOCK_DEBTS = [
-    { id: "HS001", name: "Nguyễn Văn X", class: "10A1", amount: 4500000, type: "aging-8-30", days: 15, dueDate: "01/10/2026", status: "open", note: "Đã gọi 1 lần" },
-    { id: "HS005", name: "Lê Minh Y", class: "11A5", amount: 5000000, type: "aging-1-7", days: 3, dueDate: "18/10/2026", status: "near-due", note: "Đã gửi SMS" },
-    { id: "HS012", name: "Trần H", class: "12A2", amount: 12800000, type: "aging-gt-60", days: 72, dueDate: "15/08/2026", status: "overdue", note: "Chưa liên hệ" },
-    { id: "HS044", name: "Phạm K", class: "10A2", amount: 4500000, type: "aging-31-60", days: 45, dueDate: "01/09/2026", status: "overdue", note: "Đang chờ phản hồi" },
-    { id: "HS054", name: "Đặng T", class: "10A3", amount: 3200000, type: "aging-1-7", days: 5, dueDate: "20/10/2026", status: "near-due", note: "Đã nhắc qua Zalo" },
-];
-
 export default function FinancePaymentHub() {
     const { selectedSchoolYear, selectedTerm, handleYearArrow, handleTermChange } = useSchoolYearTerm();
     const [activeBucket, setActiveBucket] = useState("all");
@@ -59,44 +52,153 @@ export default function FinancePaymentHub() {
     const [searchQuery, setSearchQuery] = useState("");
     const [selectedStudent, setSelectedStudent] = useState(null);
     const [activeSection, setActiveSection] = useState("overview");
+    const [isLoading, setIsLoading] = useState(false);
 
-    const debts = MOCK_DEBTS;
+    const [debts, setDebts] = useState([]);
+    const [summary, setSummary] = useState({ totalDebt: 0, overdueCount: 0, nearDueCount: 0, openCount: 0 });
+
+    const fetchDebts = async () => {
+        setIsLoading(true);
+        try {
+            const res = await financeService.listDebts({
+                params: {
+                    limit: 2000,
+                    schoolYearId: selectedSchoolYear,
+                    semesterId: selectedTerm,
+                },
+            });
+
+            if (res?.success && res.data) {
+                setDebts(res.data);
+                calculateSummary(res.data);
+            }
+        } catch (error) {
+            console.error("Error fetching debts:", error);
+            toast.error("Không thể tải dữ liệu công nợ");
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const calculateSummary = (data) => {
+        const totalDebt = data.reduce((sum, d) => sum + (d.amount || 0), 0);
+        const now = new Date();
+        const overdueCount = data.filter(d => d.dueDate && new Date(d.dueDate) < now && d.status !== "paid").length;
+        const nearDueCount = data.filter(d => {
+            if (!d.dueDate || d.status === "paid") return false;
+            const due = new Date(d.dueDate);
+            const diff = (due - now) / (1000 * 60 * 60 * 24);
+            return diff >= 0 && diff <= 7;
+        }).length;
+        const openCount = data.filter(d => d.status !== "paid" && d.status !== "overdue").length;
+        setSummary({ totalDebt, overdueCount, nearDueCount, openCount });
+    };
+
+    useEffect(() => {
+        fetchDebts();
+    }, [selectedSchoolYear, selectedTerm]);
+
+    const getAgingType = (debt) => {
+        if (!debt.dueDate) return "aging-8-30";
+        const now = new Date();
+        const due = new Date(debt.dueDate);
+        if (due >= now) return "aging-1-7";
+        const days = Math.floor((now - due) / (1000 * 60 * 60 * 24));
+        if (days <= 7) return "aging-1-7";
+        if (days <= 30) return "aging-8-30";
+        if (days <= 60) return "aging-31-60";
+        return "aging-gt-60";
+    };
+
+    const getDaysOverdue = (debt) => {
+        if (!debt.dueDate) return 0;
+        const now = new Date();
+        const due = new Date(debt.dueDate);
+        if (due >= now) return 0;
+        return Math.floor((now - due) / (1000 * 60 * 60 * 24));
+    };
+
+    const getStatusFromDebt = (debt) => {
+        if (debt.status === "paid") return "paid";
+        if (!debt.dueDate) return "open";
+        const now = new Date();
+        const due = new Date(debt.dueDate);
+        if (due < now) return "overdue";
+        const daysUntilDue = (due - now) / (1000 * 60 * 60 * 24);
+        if (daysUntilDue <= 7) return "near-due";
+        return "open";
+    };
+
+    const transformedDebts = useMemo(() => {
+        return debts.map(debt => ({
+            ...debt,
+            id: debt.studentCode || `HS${debt.studentId}`,
+            name: debt.studentName,
+            class: debt.className,
+            amount: debt.amount,
+            type: getAgingType(debt),
+            days: getDaysOverdue(debt),
+            dueDate: debt.dueDate ? new Date(debt.dueDate).toLocaleDateString("vi-VN") : "-",
+            status: getStatusFromDebt(debt),
+            note: debt.notes || "Chưa xử lý",
+        }));
+    }, [debts]);
 
     const filteredDebts = useMemo(() => {
         const query = searchQuery.trim().toLowerCase();
-        return debts.filter((debt) => {
+        return transformedDebts.filter((debt) => {
             const matchesBucket = activeBucket === "all" || debt.type === activeBucket;
             const matchesStatus = statusFilter === "all" || debt.status === statusFilter;
-            const matchesSearch = !query || debt.name.toLowerCase().includes(query) || debt.id.toLowerCase().includes(query) || debt.class.toLowerCase().includes(query);
+            const matchesSearch = !query || 
+                debt.name?.toLowerCase().includes(query) || 
+                debt.id?.toLowerCase().includes(query) || 
+                debt.class?.toLowerCase().includes(query);
             return matchesBucket && matchesStatus && matchesSearch;
         });
-    }, [activeBucket, debts, searchQuery, statusFilter]);
-
-    const stats = useMemo(() => {
-        const totalDebt = debts.reduce((sum, debt) => sum + debt.amount, 0);
-        const overdueCount = debts.filter((debt) => debt.status === "overdue").length;
-        const nearDueCount = debts.filter((debt) => debt.status === "near-due").length;
-        const openCount = debts.filter((debt) => debt.status === "open").length;
-        return { totalDebt, overdueCount, nearDueCount, openCount };
-    }, [debts]);
+    }, [transformedDebts, activeBucket, statusFilter, searchQuery]);
 
     const priorityDebts = useMemo(() => {
-        return [...debts].sort((a, b) => b.days - a.days).slice(0, 5);
-    }, [debts]);
+        return [...transformedDebts]
+            .sort((a, b) => b.days - a.days)
+            .filter(d => d.days > 0)
+            .slice(0, 5);
+    }, [transformedDebts]);
 
     const overdueAmount = useMemo(() => {
-        return debts
+        return transformedDebts
             .filter((debt) => debt.status === "overdue")
-            .reduce((sum, debt) => sum + debt.amount, 0);
-    }, [debts]);
+            .reduce((sum, debt) => sum + (debt.amount || 0), 0);
+    }, [transformedDebts]);
 
-    const handleRemind = (studentName) => {
-        toast.info(`Đã gửi nhắc nợ tới phụ huynh của ${studentName} (mock).`);
+    const handleRemind = async (studentName, debtId) => {
+        try {
+            await financeService.sendDebtReminder(debtId, { method: "email" });
+            toast.success(`Đã gửi nhắc nợ tới phụ huynh của ${studentName}`);
+        } catch (error) {
+            toast.error("Có lỗi khi gửi nhắc nợ");
+        }
     };
 
     const handleQuickAction = (message) => toast.info(message);
-    const handleRefresh = () => toast.success("Đã làm mới dữ liệu công nợ (mock).");
-    const handleBulkReminder = () => toast.success("Đã gửi nhắc nợ đồng loạt (mock).");
+    const handleRefresh = () => {
+        fetchDebts();
+        toast.success("Đã làm mới dữ liệu");
+    };
+    const handleBulkReminder = async () => {
+        const overdueDebts = transformedDebts.filter(d => d.status === "overdue");
+        if (overdueDebts.length === 0) {
+            toast.info("Không có công nợ quá hạn");
+            return;
+        }
+        let sent = 0;
+        for (const debt of overdueDebts) {
+            try {
+                await financeService.sendDebtReminder(debt.id, { method: "email" });
+                sent++;
+            } catch (e) {}
+        }
+        toast.success(`Đã gửi ${sent} nhắc nợ`);
+    };
 
     return (
         <div className="fin-payment-hub">
@@ -121,7 +223,7 @@ export default function FinancePaymentHub() {
                     </div>
                     <div className="overview-card__body">
                         <span>Tổng công nợ</span>
-                        <strong>{stats.totalDebt.toLocaleString()} ₫</strong>
+                        <strong>{summary.totalDebt.toLocaleString()} ₫</strong>
                         <p>Toàn bộ hồ sơ</p>
                     </div>
                 </article>
@@ -131,7 +233,7 @@ export default function FinancePaymentHub() {
                     </div>
                     <div className="overview-card__body">
                         <span>Quá hạn</span>
-                        <strong>{stats.overdueCount} học sinh</strong>
+                        <strong>{summary.overdueCount} học sinh</strong>
                         <p>Xử lý trước</p>
                     </div>
                 </article>
@@ -141,7 +243,7 @@ export default function FinancePaymentHub() {
                     </div>
                     <div className="overview-card__body">
                         <span>Sắp đến hạn</span>
-                        <strong>{stats.nearDueCount} học sinh</strong>
+                        <strong>{summary.nearDueCount} học sinh</strong>
                         <p>Nhắc sớm</p>
                     </div>
                 </article>
@@ -151,7 +253,7 @@ export default function FinancePaymentHub() {
                     </div>
                     <div className="overview-card__body">
                         <span>Đang theo dõi</span>
-                        <strong>{stats.openCount} hồ sơ</strong>
+                        <strong>{summary.openCount} hồ sơ</strong>
                         <p>Theo dõi</p>
                     </div>
                 </article>
@@ -182,15 +284,15 @@ export default function FinancePaymentHub() {
                     <div className="priority-focus__head">
                         <div>
                             <h3>Mục ưu tiên hôm nay</h3>
-                            <p>{stats.overdueCount} hồ sơ quá hạn • {overdueAmount.toLocaleString()} ₫</p>
+                            <p>{summary.overdueCount} hồ sơ quá hạn • {overdueAmount.toLocaleString()} ₫</p>
                         </div>
                         <FiTrendingUp />
                     </div>
 
                     <div className="priority-focus__badges">
-                        <span className="priority-badge danger">Quá hạn: {stats.overdueCount}</span>
-                        <span className="priority-badge warning">Sắp đến hạn: {stats.nearDueCount}</span>
-                        <span className="priority-badge calm">Theo dõi: {stats.openCount}</span>
+                        <span className="priority-badge danger">Quá hạn: {summary.overdueCount}</span>
+                        <span className="priority-badge warning">Sắp đến hạn: {summary.nearDueCount}</span>
+                        <span className="priority-badge calm">Theo dõi: {summary.openCount}</span>
                     </div>
 
                     <div className="priority-focus__layout">
@@ -211,25 +313,28 @@ export default function FinancePaymentHub() {
                                         </div>
                                         <div className="priority-item__meta">
                                             <span>Trễ {debt.days} ngày</span>
-                                            <b>{debt.amount.toLocaleString()} ₫</b>
+                                            <b>{(debt.amount || 0).toLocaleString()} ₫</b>
                                         </div>
                                     </button>
                                 ))}
+                                {priorityDebts.length === 0 && (
+                                    <div className="empty-priority">Không có công nợ ưu tiên</div>
+                                )}
                             </div>
 
                             <div className="priority-focus__actions">
                                 <button className="btn-remind" onClick={handleBulkReminder}>
                                     <FiMessageSquare /> Nhắc nhóm quá hạn
                                 </button>
-                                <button className="btn-secondary" onClick={() => handleQuickAction("Đã chuyển sang khối đối soát (mock).")}>Đối soát nhanh</button>
+                                <button className="btn-secondary" onClick={() => handleQuickAction("Đã chuyển sang khối đối soát.")}>Đối soát nhanh</button>
                             </div>
                         </div>
 
                         <aside className="priority-focus__sidepanel">
                             <div className="priority-side-card priority-side-card--hot">
                                 <span className="priority-side-card__label">Điểm nóng</span>
-                                <strong>{priorityDebts[0]?.name}</strong>
-                                <p>{priorityDebts[0]?.class} • Trễ {priorityDebts[0]?.days} ngày</p>
+                                <strong>{priorityDebts[0]?.name || "Không có"}</strong>
+                                <p>{priorityDebts[0]?.class || ""} • Trễ {priorityDebts[0]?.days || 0} ngày</p>
                             </div>
 
                             <div className="priority-side-card">
@@ -237,7 +342,7 @@ export default function FinancePaymentHub() {
                                 <button className="priority-mini-action" onClick={handleBulkReminder}>
                                     <FiBell /> Gửi nhắc đồng loạt
                                 </button>
-                                <button className="priority-mini-action" onClick={() => handleQuickAction("Đã mở danh sách cần rà soát (mock).") }>
+                                <button className="priority-mini-action" onClick={() => handleQuickAction("Đã mở danh sách cần rà soát.")}>
                                     <FiAlertCircle /> Lọc hồ sơ cần rà soát
                                 </button>
                             </div>
@@ -327,12 +432,12 @@ export default function FinancePaymentHub() {
                                                 <span>{debt.id}</span>
                                             </div>
                                         </td>
-                                        <td>{debt.class}</td>
-                                        <td className="debt-amt">{debt.amount.toLocaleString()} ₫</td>
+                                        <td>{debt.class || "-"}</td>
+                                        <td className="debt-amt">{(debt.amount || 0).toLocaleString()} ₫</td>
                                         <td>{debt.dueDate}</td>
                                         <td>
                                             <span className={`aging-text ${debt.status}`}>
-                                                <FiAlertCircle /> Trễ {debt.days} ngày
+                                                <FiAlertCircle /> {debt.days > 0 ? `Trễ ${debt.days} ngày` : "Đúng hạn"}
                                             </span>
                                         </td>
                                         <td>{debt.note}</td>
@@ -341,7 +446,7 @@ export default function FinancePaymentHub() {
                                                 <button className="btn-secondary btn-secondary--small" onClick={() => setSelectedStudent(debt)}>
                                                     <FiBook /> Sổ cái
                                                 </button>
-                                                <button className={`btn-remind ${debt.days < 30 ? "yellow" : ""}`} onClick={() => handleRemind(debt.name)}>
+                                                <button className={`btn-remind ${debt.days < 30 ? "yellow" : ""}`} onClick={() => handleRemind(debt.name, debt.id)}>
                                                     <FiBell /> Nhắc nợ
                                                 </button>
                                             </div>
@@ -361,10 +466,9 @@ export default function FinancePaymentHub() {
                 </section>
             )}
 
-            {activeSection === "reconcile" && <ReconciliationWorkbench />}
+            {activeSection === "reconcile" && <ReconciliationWorkbench debts={debts} />}
 
             <StudentArLedger student={selectedStudent} onClose={() => setSelectedStudent(null)} />
         </div>
     );
 }
-

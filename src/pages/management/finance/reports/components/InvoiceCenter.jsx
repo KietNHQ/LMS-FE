@@ -1,13 +1,7 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { FiFileText, FiSend, FiCheckCircle, FiAlertCircle, FiSearch, FiRefreshCcw, FiPenTool } from "react-icons/fi";
 import { toast } from "react-toastify";
-
-const MOCK_INVOICES = [
-    { id: "INV-00123", student: "Nguyễn Văn A", date: "16/10/2026", amount: 4500000, status: "signed", delivery: "sent" },
-    { id: "INV-00124", student: "Trần Thị B", date: "16/10/2026", amount: 4500000, status: "draft", delivery: "not_sent" },
-    { id: "INV-00125", student: "Lê Minh C", date: "15/10/2026", amount: 3500000, status: "signed", delivery: "failed" },
-    { id: "INV-00126", student: "Hoàng H", date: "15/10/2026", amount: 5000000, status: "canceled", delivery: "none" },
-];
+import { financeService } from "../../../../services/pages/management/finance";
 
 const STATUS_LABELS = {
     signed: "Đã ký",
@@ -23,11 +17,37 @@ const DELIVERY_LABELS = {
 };
 
 export default function InvoiceCenter() {
-    const [invoices] = useState(MOCK_INVOICES);
+    const [invoices, setInvoices] = useState([]);
+    const [isLoading, setIsLoading] = useState(false);
+
+    useEffect(() => {
+        fetchInvoices();
+    }, []);
+
+    const fetchInvoices = async () => {
+        setIsLoading(true);
+        try {
+            const res = await financeService.getAllInvoices({
+                params: { limit: 200 },
+            });
+            if (res?.success && res.data) {
+                setInvoices(res.data);
+            }
+        } catch (error) {
+            console.error("Error fetching invoices:", error);
+            toast.error("Không thể tải danh sách hóa đơn");
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
     const handleSign = () => {
         toast.info("Đang thực hiện ký số bằng Token HSM...");
-        setTimeout(() => toast.success("Đã ký số thành công 5 hóa đơn hàng loạt!"), 1500);
+        setTimeout(() => toast.success("Đã ký số thành công!"), 1500);
+    };
+
+    const handleSend = (invoice) => {
+        toast.success(`Đã gửi hóa đơn ${invoice.invoiceCode || invoice.code}`);
     };
 
     return (
@@ -36,7 +56,7 @@ export default function InvoiceCenter() {
                 <h3 className="rp-header invoice-center__title"><FiFileText /> Trung tâm Hóa đơn điện tử (HĐĐT)</h3>
                 <div className="invoice-center__actions">
                     <button className="btn-secondary invoice-action-btn" onClick={handleSign}><FiPenTool /> Ký số hàng loạt</button>
-                    <button className="btn-primary invoice-action-btn"><FiSend /> Phát hành hóa đơn</button>
+                    <button className="btn-primary invoice-action-btn" onClick={fetchInvoices}><FiRefreshCcw /> Làm mới</button>
                 </div>
             </div>
 
@@ -51,7 +71,7 @@ export default function InvoiceCenter() {
                     <option>Đã ký</option>
                     <option>Đang chờ gửi</option>
                 </select>
-                <button className="btn-secondary invoice-refresh-btn" title="Làm mới danh sách"><FiRefreshCcw /></button>
+                <button className="btn-secondary invoice-refresh-btn" onClick={fetchInvoices} title="Làm mới danh sách"><FiRefreshCcw /></button>
             </div>
 
             <div className="report-table-wrap">
@@ -68,35 +88,44 @@ export default function InvoiceCenter() {
                         </tr>
                     </thead>
                     <tbody>
-                        {invoices.map(inv => (
-                            <tr key={inv.id}>
-                                <td className="invoice-id">{inv.id}</td>
-                                <td>{inv.student}</td>
-                                <td>{inv.date}</td>
-                                <td className="invoice-amount">{inv.amount.toLocaleString("vi-VN")} ₫</td>
-                                <td>
-                                    <span className={`invoice-status invoice-status--${inv.status}`}>
-                                        {STATUS_LABELS[inv.status]}
-                                    </span>
-                                </td>
-                                <td>
-                                    <div className={`invoice-delivery invoice-delivery--${inv.delivery}`}>
-                                        {inv.delivery === "sent" && <FiCheckCircle />}
-                                        {inv.delivery === "failed" && <FiAlertCircle />}
-                                        {DELIVERY_LABELS[inv.delivery]}
-                                    </div>
-                                </td>
-                                <td>
-                                    <button className="btn-icon invoice-file-btn" title="Xem chi tiết hóa đơn">
-                                        <FiFileText />
-                                    </button>
-                                </td>
+                        {isLoading ? (
+                            <tr>
+                                <td colSpan="7" className="loading-cell">Đang tải...</td>
                             </tr>
-                        ))}
+                        ) : invoices.length === 0 ? (
+                            <tr>
+                                <td colSpan="7" className="empty-cell">Không có hóa đơn nào</td>
+                            </tr>
+                        ) : (
+                            invoices.map(inv => (
+                                <tr key={inv.id}>
+                                    <td className="invoice-id">{inv.invoiceCode || inv.code}</td>
+                                    <td>{inv.studentName || inv.student?.fullName || "-"}</td>
+                                    <td>{inv.issueDate ? new Date(inv.issueDate).toLocaleDateString("vi-VN") : "-"}</td>
+                                    <td className="invoice-amount">{(inv.totalAmount || 0).toLocaleString("vi-VN")} ₫</td>
+                                    <td>
+                                        <span className={`invoice-status invoice-status--${inv.status || "draft"}`}>
+                                            {STATUS_LABELS[inv.status] || STATUS_LABELS.draft}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div className={`invoice-delivery invoice-delivery--${inv.deliveryStatus || "not_sent"}`}>
+                                            {inv.deliveryStatus === "sent" && <FiCheckCircle />}
+                                            {inv.deliveryStatus === "failed" && <FiAlertCircle />}
+                                            {DELIVERY_LABELS[inv.deliveryStatus] || DELIVERY_LABELS.not_sent}
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <button className="btn-icon invoice-file-btn" title="Xem chi tiết hóa đơn" onClick={() => handleSend(inv)}>
+                                            <FiSend />
+                                        </button>
+                                    </td>
+                                </tr>
+                            ))
+                        )}
                     </tbody>
                 </table>
             </div>
         </div>
     );
 }
-

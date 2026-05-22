@@ -313,7 +313,7 @@ export default function ManagementTimetable() {
     const [loadError, setLoadError] = useState("");
 
     // Mapping for Day of Week
-    const apiDayToLabel = ["Chủ nhật", "Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6", "Thứ 7"];
+    const apiDayToLabel = ["", "Chủ nhật", "Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6", "Thứ 7"];
 
     // Fetch data from API
     React.useEffect(() => {

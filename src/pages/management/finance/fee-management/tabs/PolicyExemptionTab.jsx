@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { FiUserPlus, FiCheckCircle, FiXCircle, FiFileText, FiSearch, FiX } from "react-icons/fi";
 import { toast } from "react-toastify";
 import Select from "../../../../../components/ui/Select/Select";
@@ -37,7 +37,8 @@ const INITIAL_STATUS_OPTIONS = [
 ];
 
 export default function PolicyExemptionTab() {
-    const [policies, setPolicies] = useState(MOCK_POLICIES);
+    const [policies, setPolicies] = useState([]);
+    const [isLoading, setIsLoading] = useState(false);
     const [searchQuery, setSearchQuery] = useState("");
     const [filterStatus, setFilterStatus] = useState("all");
     const [showAddModal, setShowAddModal] = useState(false);
@@ -51,8 +52,44 @@ export default function PolicyExemptionTab() {
         type: "",
         reason: "",
         decisionNo: "",
-        status: "Pending"
+        status: "pending"
     });
+
+    // Fetch from API
+    useEffect(() => {
+        fetchPolicies();
+    }, [filterStatus]);
+
+    const fetchPolicies = async () => {
+        setIsLoading(true);
+        try {
+            const res = await financeService.listDebts({
+                params: {
+                    limit: 200,
+                    status: filterStatus !== "all" ? filterStatus : undefined,
+                },
+            });
+
+            if (res?.success && res.data) {
+                const policyData = res.data.map(debt => ({
+                    id: debt.id,
+                    studentId: debt.studentCode || `HS${debt.studentId?.slice(0, 6)}`,
+                    name: debt.studentName,
+                    class: debt.className,
+                    type: debt.type || "Support",
+                    reason: debt.description || "Chính sách miễn giảm",
+                    status: debt.status === "paid" ? "approved" : debt.status,
+                    decisionNo: debt.decisionNo || "-",
+                    createdAt: debt.createdAt,
+                }));
+                setPolicies(policyData);
+            }
+        } catch (error) {
+            console.error("Error fetching policies:", error);
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
     const STUDENT_OPTIONS = useMemo(() => {
         return MOCK_STUDENTS_LIST.map(s => ({
@@ -64,21 +101,32 @@ export default function PolicyExemptionTab() {
     const filteredPolicies = useMemo(() => {
         return policies.filter(p => {
             const matchesStatus = filterStatus === "all" || p.status === filterStatus;
-            const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                                  p.studentId.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                                  p.decisionNo.toLowerCase().includes(searchQuery.toLowerCase());
+            const matchesSearch = p.name?.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                                  p.studentId?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                                  p.decisionNo?.toLowerCase().includes(searchQuery.toLowerCase());
             return matchesStatus && matchesSearch;
         });
     }, [policies, filterStatus, searchQuery]);
 
-    const handleApprove = (id) => {
-        setPolicies(prev => prev.map(p => p.id === id ? { ...p, status: "Approved", decisionNo: `QD-${Math.floor(100 + Math.random() * 900)}/2026` } : p));
-        toast.success("Đã phê duyệt hồ sơ miễn giảm thành công.");
+    const handleApprove = async (id) => {
+        try {
+            await financeService.updateDebt(id, { status: "approved" });
+            setPolicies(prev => prev.map(p => p.id === id ? { ...p, status: "approved" } : p));
+            toast.success("Đã phê duyệt hồ sơ miễn giảm thành công.");
+        } catch (error) {
+            toast.error("Có lỗi xảy ra khi phê duyệt.");
+        }
     };
 
-    const handleReject = (id) => {
-        setPolicies(prev => prev.filter(p => p.id !== id));
-        toast.error("Đã từ chối hồ sơ miễn giảm.");
+    const handleReject = async (id) => {
+        if (!window.confirm("Bạn có chắc muốn từ chối hồ sơ này?")) return;
+        try {
+            await financeService.deleteDebt(id);
+            setPolicies(prev => prev.filter(p => p.id !== id));
+            toast.success("Đã từ chối hồ sơ miễn giảm.");
+        } catch (error) {
+            toast.error("Có lỗi xảy ra khi từ chối.");
+        }
     };
 
     const openAddModal = () => {

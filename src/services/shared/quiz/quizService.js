@@ -91,6 +91,42 @@ const buildQuestionPayload = (questionData = {}) => ({
     correctAnswer: questionData.correctAnswer || null,
 });
 
+const buildQuestionUpdatePayload = (questionData = {}) => {
+    const payload = {};
+
+    if (questionData.questionText !== undefined || questionData.question !== undefined) {
+        const text = String(questionData.questionText || questionData.question || "").trim();
+        if (text) payload.questionText = text;
+    }
+
+    if (questionData.questionType !== undefined || questionData.type !== undefined) {
+        payload.questionType = normalizeQuestionTypeToApi(questionData.questionType || questionData.type);
+    }
+
+    if (questionData.points !== undefined || questionData.score !== undefined) {
+        payload.points = Number(questionData.points ?? questionData.score ?? 1);
+    }
+
+    if (questionData.order !== undefined) {
+        const order = toNumber(questionData.order);
+        if (order !== undefined) payload.order = order;
+    }
+
+    if (questionData.questionImage !== undefined) {
+        payload.questionImage = questionData.questionImage || "";
+    }
+
+    if (questionData.options !== undefined) {
+        payload.options = questionData.options;
+    }
+
+    if (questionData.correctAnswer !== undefined) {
+        payload.correctAnswer = questionData.correctAnswer;
+    }
+
+    return payload;
+};
+
 const toFormData = (pairs = {}) => {
     const formData = new FormData();
     Object.entries(pairs).forEach(([key, value]) => {
@@ -309,7 +345,7 @@ async function addQuestion(quizId, questionData = {}) {
 }
 
 async function updateQuestion(quizId, questionId, questionData = {}) {
-    const payload = buildQuestionPayload(questionData);
+    const payload = buildQuestionUpdatePayload(questionData);
     return axiosClient.put(`${QUIZ_ENDPOINT}/${quizId}/questions/${questionId}`, payload);
 }
 

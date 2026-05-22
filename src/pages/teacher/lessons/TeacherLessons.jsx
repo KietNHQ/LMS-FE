@@ -30,7 +30,10 @@ export default function TeacherLessons() {
 
     // Derive teaching structures from assignments
     const { teachingBlocks, classesByBlock, assignmentsMap } = useMemo(() => {
-        const assignments = user?.profile?.teachingAssignments || [];
+        const rawAssignments = user?.profile?.teachingAssignments || [];
+        const assignments = rawAssignments.filter(
+            a => a.school_year === selectedSchoolYear && a.term === selectedTerm
+        );
         const blocks = new Set();
         const map = {};
         const fullMap = {};
@@ -50,7 +53,7 @@ export default function TeacherLessons() {
             classesByBlock: map,
             assignmentsMap: fullMap
         };
-    }, [user]);
+    }, [user, selectedSchoolYear, selectedTerm]);
 
     // Fetch lessons using TanStack Query
     const { data: lessonsResponse, isLoading, error } = useQuery({
@@ -61,6 +64,17 @@ export default function TeacherLessons() {
     });
 
     const lessons = lessonsResponse?.success ? lessonsResponse.data : [];
+
+    // Fetch timetable for auto-fill period and room lookup
+    const { data: timetableResponse } = useQuery({
+        queryKey: ["teacher-timetable", selectedSchoolYear, selectedTerm],
+        queryFn: () => teacherService.getTimetable({
+            mock: false,
+            params: { schoolYear: selectedSchoolYear, term: selectedTerm }
+        }),
+    });
+
+    const timetable = timetableResponse?.success ? timetableResponse.data : [];
 
     // Mutations for CRUD
     const createMutation = useMutation({
@@ -163,16 +177,32 @@ export default function TeacherLessons() {
 
     const handleFormChange = (field, value) => {
         setFormValues((prev) => {
+            let nextValues = { ...prev, [field]: value };
             if (field === "gradeBlock") {
                 const nextClasses = classesByBlock[value] || [];
                 const keepCurrentClass = nextClasses.includes(prev.className);
-                return {
-                    ...prev,
-                    gradeBlock: value,
-                    className: keepCurrentClass ? prev.className : nextClasses[0] || "",
-                };
+                nextValues.className = keepCurrentClass ? prev.className : nextClasses[0] || "";
             }
-            return { ...prev, [field]: value };
+
+            // Auto-fill period and room based on class and date matching the timetable
+            if (field === "date" || field === "className" || field === "gradeBlock") {
+                if (nextValues.date && nextValues.className) {
+                    const dateObj = new Date(nextValues.date);
+                    if (!isNaN(dateObj.getTime())) {
+                        const dayOfWeek = dateObj.getDay() + 1; // 1 = Sunday, 2 = Monday, ...
+                        const matchedSlot = timetable.find(
+                            (slot) =>
+                                slot.class_name === nextValues.className &&
+                                slot.day_of_week === dayOfWeek
+                        );
+                        if (matchedSlot) {
+                            nextValues.period = `Tiết ${matchedSlot.period_number}`;
+                            nextValues.room = matchedSlot.room || "";
+                        }
+                    }
+                }
+            }
+            return nextValues;
         });
     };
 
@@ -187,7 +217,17 @@ export default function TeacherLessons() {
         const lesson = lessons.find((item) => item.id === lessonId);
         if (!lesson) return;
         setEditingLessonId(lesson.id);
-        setFormValues({ ...lesson });
+        
+        // Format the date to YYYY-MM-DD for HTML input[type="date"]
+        let formattedDate = "";
+        if (lesson.date) {
+            formattedDate = typeof lesson.date === "string" ? lesson.date.substring(0, 10) : new Date(lesson.date).toISOString().substring(0, 10);
+        }
+
+        setFormValues({ 
+            ...lesson,
+            date: formattedDate
+        });
         setAttachedFiles(lesson.attachments || []);
         setIsCreateLessonOpen(true);
     };
@@ -253,6 +293,7 @@ export default function TeacherLessons() {
         const payload = {
             ...formValues,
             status,
+            isPublished: status === "Đã xuất bản",
             schoolYear: selectedSchoolYear,
             term: selectedTerm,
             attachments: attachedFiles,
@@ -319,6 +360,7 @@ export default function TeacherLessons() {
                     onRemoveFile={(idx) => setAttachedFiles(prev => prev.filter((_, i) => i !== idx))}
                     onSaveDraft={() => handleSubmitLesson("Bản nháp")}
                     onPublish={() => handleSubmitLesson("Đã xuất bản")}
+                    timetable={timetable}
                     isDialog
                 />
             </Modal>

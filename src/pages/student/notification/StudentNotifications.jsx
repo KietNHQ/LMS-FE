@@ -35,7 +35,7 @@ export default function StudentNotifications() {
         setIsLoading(true);
         setError("");
         
-        const hasAuth = !!localStorage.getItem("accessToken");
+        const hasAuth = !!(localStorage.getItem("accessToken") || sessionStorage.getItem("accessToken"));
         if (!hasAuth) {
           localStorage.setItem(STUDENT_UNREAD_COUNT_KEY, "0");
           window.dispatchEvent(
@@ -168,7 +168,7 @@ export default function StudentNotifications() {
     setNotifications(updated);
 
     try {
-      const hasAuth = !!localStorage.getItem("accessToken");
+      const hasAuth = !!(localStorage.getItem("accessToken") || sessionStorage.getItem("accessToken"));
       await notificationService.markAllNotificationsRead({ mock: !hasAuth });
     } catch (markError) {
       console.error("Không thể đánh dấu tất cả là đã đọc:", markError);
@@ -194,7 +194,7 @@ export default function StudentNotifications() {
     setSelected(nextItem);
 
     try {
-      const hasAuth = !!localStorage.getItem("accessToken");
+      const hasAuth = !!(localStorage.getItem("accessToken") || sessionStorage.getItem("accessToken"));
       await notificationService.markNotificationRead(item.id, { mock: !hasAuth });
     } catch (readError) {
       console.error("Không thể đánh dấu thông báo đã đọc:", readError);

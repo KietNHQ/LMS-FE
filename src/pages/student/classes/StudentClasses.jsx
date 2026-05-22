@@ -43,13 +43,23 @@ export default function StudentClasses() {
         const fetchData = async () => {
             setIsLoading(true);
             try {
+                const storedUser = JSON.parse(localStorage.getItem("user") || sessionStorage.getItem("user") || "{}");
+                const studentId = storedUser?.profile?.id || storedUser?.id;
+
                 // 1. Lấy danh sách lớp học
-                const classesRes = await studentService.getClasses({ mock: false });
+                const classesRes = await studentService.getClasses({
+                    pathParams: { id: studentId },
+                    params: {
+                        schoolYear: selectedSchoolYear,
+                        term: selectedTerm
+                    },
+                    mock: false
+                });
                 if (classesRes.success && Array.isArray(classesRes.data)) {
                     // Chuẩn hóa dữ liệu nếu Backend trả về format khác FE mong đợi
                     const normalized = classesRes.data.map(c => ({
                         id: c.id,
-                        title: c.subject || c.className || "Môn học",
+                        title: c.title || c.subject || "Môn học",
                         code: c.code || "N/A",
                         teacher: c.teacher || "Chưa cập nhật",
                         schedule: c.schedule || "Chưa cập nhật",
@@ -57,7 +67,7 @@ export default function StudentClasses() {
                         completedLessons: c.completedLessons || 0,
                         totalLessons: c.totalLessons || 25,
                         assignmentsPending: c.assignmentsPending || 0,
-                        className: c.className || "Lớp",
+                        className: c.className || c.class_name || "Lớp",
                         room: c.room || "—",
                         assignments: c.assignments || []
                     }));

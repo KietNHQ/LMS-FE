@@ -1,6 +1,7 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { PageHeader, SchoolYearTermSelector } from "../../../../components/common";
 import { useSchoolYearTerm } from "../../../../hooks/useSchoolYearTerm";
+import { financeService } from "../../../../services/pages/management/finance";
 import {
     FiAlertCircle,
     FiCheck,
@@ -67,86 +68,6 @@ const TYPE_LABEL = {
     adjustment: "Điều chỉnh bút toán",
 };
 
-const MOCK_REQUESTS = [
-    {
-        id: "APR-2026-091",
-        type: "refund",
-        requester: "Thu ngân Phạm K",
-        requesterRole: "Thu ngân",
-        student: "Nguyễn Quang Minh",
-        detail: "Hoàn phí bán trú do thôi học từ giữa kỳ II.",
-        amount: 1200000,
-        submittedAt: "2026-10-16T08:20:00",
-        dueAt: "2026-10-17T17:00:00",
-        status: "pending",
-        priority: "critical",
-    },
-    {
-        id: "APR-2026-088",
-        type: "discount",
-        requester: "Kế toán Lê Thị M",
-        requesterRole: "Kế toán",
-        student: "Lê Vĩnh Hào",
-        detail: "Giảm 50% phí đồng phục theo biên bản họp hội đồng hỗ trợ.",
-        amount: 450000,
-        submittedAt: "2026-10-15T14:10:00",
-        dueAt: "2026-10-18T16:00:00",
-        status: "pending",
-        priority: "high",
-    },
-    {
-        id: "APR-2026-083",
-        type: "write-off",
-        requester: "Kế toán trưởng Trần D",
-        requesterRole: "Kế toán trưởng",
-        student: "Phan Bảo Khánh",
-        detail: "Xóa nợ khoản khó đòi niên độ 2023 sau đối chiếu đầy đủ chứng từ.",
-        amount: 500000,
-        submittedAt: "2026-10-14T09:30:00",
-        dueAt: "2026-10-20T17:30:00",
-        status: "approved",
-        priority: "medium",
-    },
-    {
-        id: "APR-2026-076",
-        type: "adjustment",
-        requester: "Nhân viên quỹ Võ T",
-        requesterRole: "Nhân viên quỹ",
-        student: "Trương Gia Huy",
-        detail: "Điều chỉnh sai lệch bút toán thu phí tháng 9 do nhập nhầm mã lớp.",
-        amount: 780000,
-        submittedAt: "2026-10-13T10:15:00",
-        dueAt: "2026-10-19T09:00:00",
-        status: "pending",
-        priority: "medium",
-    },
-    {
-        id: "APR-2026-070",
-        type: "refund",
-        requester: "Thu ngân Vũ N",
-        requesterRole: "Thu ngân",
-        student: "Ngô Thiên Phúc",
-        detail: "Hoàn lệ phí CLB do học sinh chuyển trường.",
-        amount: 350000,
-        submittedAt: "2026-10-12T15:05:00",
-        dueAt: "2026-10-16T16:00:00",
-        status: "rejected",
-        priority: "low",
-    },
-    {
-        id: "APR-2026-064",
-        type: "discount",
-        requester: "Kế toán Nguyễn C",
-        requesterRole: "Kế toán",
-        student: "Hoàng Nhật Lam",
-        detail: "Miễn giảm bổ sung học phí theo quyết định mới từ phòng đào tạo.",
-        amount: 2200000,
-        submittedAt: "2026-10-11T11:40:00",
-        dueAt: "2026-10-17T11:30:00",
-        status: "pending",
-        priority: "high",
-    },
-];
 
 function formatCurrency(amount) {
     return `${amount.toLocaleString()} đ`;
@@ -181,7 +102,8 @@ function getSlaLabel(dueAt, status) {
 
 export default function FinanceApprovals() {
     const { selectedSchoolYear, selectedTerm, handleYearArrow, handleTermChange } = useSchoolYearTerm();
-    const [requests, setRequests] = useState(MOCK_REQUESTS);
+    const [requests, setRequests] = useState([]);
+    const [isLoading, setIsLoading] = useState(false);
     const [activeStatus, setActiveStatus] = useState("pending");
     const [typeFilter, setTypeFilter] = useState("all");
     const [priorityFilter, setPriorityFilter] = useState("all");
@@ -189,6 +111,48 @@ export default function FinanceApprovals() {
     const [searchQuery, setSearchQuery] = useState("");
     const [selectedIds, setSelectedIds] = useState([]);
     const [focusedRequestId, setFocusedRequestId] = useState("");
+
+    const fetchRequests = async () => {
+        setIsLoading(true);
+        try {
+            // Using debts as a proxy for approval requests
+            const res = await financeService.listDebts({
+                params: {
+                    limit: 200,
+                    status: activeStatus !== "all" ? activeStatus : undefined,
+                    schoolYearId: selectedSchoolYear,
+                    semesterId: selectedTerm,
+                },
+            });
+
+            if (res?.success && res.data) {
+                // Transform debts into approval-like requests
+                const requestData = res.data.map((debt, index) => ({
+                    id: debt.id || `APR-2026-${String(index + 1).padStart(3, "0")}`,
+                    type: debt.type || "discount",
+                    requester: debt.createdByName || "Kế toán",
+                    requesterRole: debt.createdByRole || "Kế toán viên",
+                    student: debt.studentName,
+                    detail: debt.description || "Yêu cầu duyệt công nợ",
+                    amount: debt.amount || 0,
+                    submittedAt: debt.createdAt,
+                    dueAt: debt.dueDate,
+                    status: debt.status === "paid" ? "approved" : debt.status,
+                    priority: debt.priority || "medium",
+                }));
+                setRequests(requestData);
+            }
+        } catch (error) {
+            console.error("Error fetching requests:", error);
+            setRequests([]);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchRequests();
+    }, [activeStatus, selectedSchoolYear, selectedTerm]);
 
     const statusSummary = useMemo(() => {
         const pending = requests.filter((item) => item.status === "pending");
@@ -250,10 +214,15 @@ export default function FinanceApprovals() {
 
     const isAllPendingSelected = pendingSelectableIds.length > 0 && pendingSelectableIds.every((id) => selectedIds.includes(id));
 
-    const applyStatus = (id, status) => {
-        setRequests((prev) => prev.map((item) => (item.id === id ? { ...item, status } : item)));
-        setSelectedIds((prev) => prev.filter((selectedId) => selectedId !== id));
-        toast.success(status === "approved" ? `Đã phê duyệt hồ sơ ${id}.` : `Đã từ chối hồ sơ ${id}.`);
+    const applyStatus = async (id, status) => {
+        try {
+            await financeService.updateDebt(id, { status, approvalNote: status === "approved" ? "Đã phê duyệt" : "Từ chối" });
+            setRequests((prev) => prev.map((item) => (item.id === id ? { ...item, status } : item)));
+            setSelectedIds((prev) => prev.filter((selectedId) => selectedId !== id));
+            toast.success(status === "approved" ? `Đã phê duyệt hồ sơ ${id}.` : `Đã từ chối hồ sơ ${id}.`);
+        } catch (error) {
+            toast.error("Có lỗi xảy ra khi cập nhật trạng thái");
+        }
     };
 
     const toggleSelect = (id) => {

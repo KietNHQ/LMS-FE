@@ -393,6 +393,8 @@ const teacherEndpointRegistry = [
   { key: "post_class_activity", method: "POST", path: "/classes/:id/activities", module: "classes" },
   { key: "put_class_activity", method: "PUT", path: "/classes/:id/activities/:activityId", module: "classes" },
   { key: "delete_class_activity", method: "DELETE", path: "/classes/:id/activities/:activityId", module: "classes" },
+  // Class Committee endpoints (for AcademicVicePresidentTab)
+  { key: "get_committee_lesson_evaluations", method: "GET", path: "/class-committee/:classId/lesson-evaluations", module: "classes", mock: () => ([]) },
 ];
 
 const createEndpointCaller = (endpoint) => {
@@ -513,6 +515,7 @@ export const teacherService = {
   createClassActivity: (input) => endpointCallers.post_class_activity(input),
   updateClassActivity: (input) => endpointCallers.put_class_activity(input),
   deleteClassActivity: (input) => endpointCallers.delete_class_activity(input),
+  getCommitteeLessonEvaluations: (input) => endpointCallers.get_committee_lesson_evaluations(input),
   endpointCallers,
 };
 

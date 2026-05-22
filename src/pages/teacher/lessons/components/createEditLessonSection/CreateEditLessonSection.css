@@ -282,3 +282,38 @@
     }
 }
 
+.timetable-match-success {
+    grid-column: span 3;
+    background: #e6f6f4;
+    border: 1px solid #11c7b6;
+    color: #0d8479;
+    padding: 10px 14px;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.timetable-match-warning {
+    grid-column: span 3;
+    background: #fff8eb;
+    border: 1px solid #ffb020;
+    color: #b76e00;
+    padding: 10px 14px;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+@media (max-width: 900px) {
+    .timetable-match-success,
+    .timetable-match-warning {
+        grid-column: auto;
+    }
+}
+

@@ -78,136 +78,6 @@ const TARGET_OPTIONS = [
 
 const PRIORITY_LEVEL = { low: 1, medium: 2, high: 3, critical: 4 };
 
-const MOCK_NOTIFICATIONS = [
-    {
-        id: "NOTI-3012",
-        title: "Nhắc nộp báo cáo công nợ tuần 3",
-        summary: "Khối 10 chưa gửi đủ báo cáo đối chiếu công nợ trước 16:30 hôm nay.",
-        reportType: "Công nợ theo khối",
-        target: "Giáo vụ + Kế toán khối 10",
-        channel: "in-app",
-        priority: "critical",
-        status: "unread",
-        requiresAction: true,
-        pinned: true,
-        sentAt: "2026-04-21T08:45:00",
-        dueAt: "2026-04-21T16:30:00",
-        sender: "Hệ thống Tài chính",
-        deliveryRate: 100,
-    },
-    {
-        id: "NOTI-3011",
-        title: "Báo cáo thu học phí tháng 4 đã phát hành",
-        summary: "File tổng hợp đã phát hành và sẵn sàng duyệt.",
-        reportType: "Thu học phí tháng",
-        target: "Ban giám hiệu",
-        channel: "email",
-        priority: "high",
-        status: "read",
-        requiresAction: false,
-        pinned: false,
-        sentAt: "2026-04-21T07:15:00",
-        dueAt: "2026-04-22T12:00:00",
-        sender: "Kế toán trưởng",
-        deliveryRate: 96,
-    },
-    {
-        id: "NOTI-3009",
-        title: "Lịch nhắc xác nhận dữ liệu quyết toán quý",
-        summary: "Thông báo sẽ gửi tự động vào 09:00 ngày mai.",
-        reportType: "Quyết toán quý",
-        target: "Phòng tài vụ + VP học vụ",
-        channel: "sms",
-        priority: "medium",
-        status: "scheduled",
-        requiresAction: false,
-        pinned: false,
-        sentAt: "2026-04-20T15:00:00",
-        dueAt: "2026-04-22T09:00:00",
-        sender: "Kế toán trưởng",
-        deliveryRate: 0,
-    },
-    {
-        id: "NOTI-3008",
-        title: "Cảnh báo thiếu phụ lục báo cáo miễn giảm",
-        summary: "03 hồ sơ miễn giảm thiếu phụ lục hợp lệ.",
-        reportType: "Miễn giảm học phí",
-        target: "Tổ kế toán",
-        channel: "in-app",
-        priority: "high",
-        status: "unread",
-        requiresAction: true,
-        pinned: false,
-        sentAt: "2026-04-20T14:10:00",
-        dueAt: "2026-04-21T15:00:00",
-        sender: "Hệ thống kiểm soát",
-        deliveryRate: 100,
-    },
-    {
-        id: "NOTI-3007",
-        title: "Kết quả đối soát thu hộ bán trú",
-        summary: "Đối soát hoàn tất, còn 2 mục chênh lệch.",
-        reportType: "Đối soát thu hộ",
-        target: "Tài vụ + Thủ quỹ",
-        channel: "email",
-        priority: "medium",
-        status: "read",
-        requiresAction: true,
-        pinned: false,
-        sentAt: "2026-04-20T10:20:00",
-        dueAt: "2026-04-22T10:00:00",
-        sender: "Kế toán tổng hợp",
-        deliveryRate: 93,
-    },
-    {
-        id: "NOTI-3006",
-        title: "Đã chốt báo cáo thu chi tuần",
-        summary: "Phiên bản v1.2 đã chốt và lưu trữ.",
-        reportType: "Thu chi tuần",
-        target: "Phòng tài chính",
-        channel: "in-app",
-        priority: "low",
-        status: "read",
-        requiresAction: false,
-        pinned: false,
-        sentAt: "2026-04-19T17:00:00",
-        dueAt: "2026-04-23T17:00:00",
-        sender: "Hệ thống Tài chính",
-        deliveryRate: 100,
-    },
-    {
-        id: "NOTI-3005",
-        title: "Nhắc bổ sung số liệu công khai tài chính",
-        summary: "Biểu mẫu 02 còn thiếu dữ liệu ở khối 11.",
-        reportType: "Công khai tài chính",
-        target: "Kế toán công khai",
-        channel: "email",
-        priority: "critical",
-        status: "unread",
-        requiresAction: true,
-        pinned: true,
-        sentAt: "2026-04-19T09:30:00",
-        dueAt: "2026-04-21T11:00:00",
-        sender: "Ban kiểm soát nội bộ",
-        deliveryRate: 88,
-    },
-    {
-        id: "NOTI-3004",
-        title: "Lịch phát hành báo cáo tổng hợp cuối tháng",
-        summary: "Lịch gửi nhắc cho toàn bộ nhóm phụ trách đã đặt trước.",
-        reportType: "Tổng hợp cuối tháng",
-        target: "Toàn bộ bộ phận tài chính",
-        channel: "sms",
-        priority: "low",
-        status: "scheduled",
-        requiresAction: false,
-        pinned: false,
-        sentAt: "2026-04-18T13:20:00",
-        dueAt: "2026-04-25T08:30:00",
-        sender: "Kế toán trưởng",
-        deliveryRate: 0,
-    },
-];
 
 function formatDateTime(value) {
     return new Date(value).toLocaleString("vi-VN", {
@@ -238,7 +108,7 @@ function getPriorityLabel(priority) {
 
 export default function FinanceNotifications() {
     const { selectedSchoolYear, selectedTerm, handleYearArrow, handleTermChange } = useSchoolYearTerm();
-    const [notifications, setNotifications] = useState(MOCK_NOTIFICATIONS);
+    const [notifications, setNotifications] = useState([]);
     const [activeTab, setActiveTab] = useState("all");
     const [searchQuery, setSearchQuery] = useState("");
     const [priorityFilter, setPriorityFilter] = useState("all");
@@ -246,7 +116,7 @@ export default function FinanceNotifications() {
     const [sortBy, setSortBy] = useState("newest");
     const [showPinnedOnly, setShowPinnedOnly] = useState(false);
     const [currentPage, setCurrentPage] = useState(1);
-    const [selectedId, setSelectedId] = useState(MOCK_NOTIFICATIONS[0]?.id ?? null);
+    const [selectedId, setSelectedId] = useState(null);
     const [dialogMode, setDialogMode] = useState(null);
     const [composer, setComposer] = useState({
         title: "",

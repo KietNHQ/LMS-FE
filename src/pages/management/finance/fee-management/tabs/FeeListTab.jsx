@@ -52,14 +52,25 @@ export default function FeeListTab({ schoolYear, term }) {
     const loadInitialData = async () => {
         setIsLoading(true);
         try {
-            const [studentRows, classRows] = await Promise.all([
-                studentsService.listStudents(),
+            const [studentRes, classRes] = await Promise.all([
+                studentsService.listStudents({ params: { limit: 2000 } }),
                 classesService.listClasses()
             ]);
-            setAllStudentsList(studentRows);
-            setClasses(classRows);
+            
+            const studentData = studentRes?.success ? studentRes.data : (Array.isArray(studentRes) ? studentRes : []);
+            const classData = classRes?.success ? classRes.data : (Array.isArray(classRes) ? classRes : []);
+            
+            console.log("[FeeListTab] Students loaded:", studentData.length);
+            console.log("[FeeListTab] Classes loaded:", classData.length);
+            console.log("[FeeListTab] Sample student:", studentData[0]);
+            console.log("[FeeListTab] Sample class:", classData[0]);
+            
+            setAllStudentsList(studentData);
+            setClasses(classData);
         } catch (err) {
             console.error("Failed to load initial data for school fees:", err);
+            setAllStudentsList([]);
+            setClasses([]);
         } finally {
             setIsLoading(false);
         }
@@ -67,21 +78,28 @@ export default function FeeListTab({ schoolYear, term }) {
 
     // Load debt accounts whenever context changes
     const loadDebts = async () => {
-        if (!schoolYear) return;
         setIsLoading(true);
         try {
             const res = await financeService.listDebts({
                 params: {
-                    schoolYearId: schoolYear,
-                    semesterId: term,
-                    limit: 2000 // Get a rich collection for lightning fast client filtering
+                    limit: 2000
                 }
             });
-            if (res && res.data) {
+            console.log("[FeeListTab] Debts API response:", res);
+            
+            if (res?.success && res.data) {
                 setDebts(res.data);
+                console.log("[FeeListTab] Debts loaded:", res.data.length);
+            } else if (Array.isArray(res)) {
+                setDebts(res);
+                console.log("[FeeListTab] Debts loaded (array):", res.length);
+            } else {
+                console.log("[FeeListTab] No debts data found");
+                setDebts([]);
             }
         } catch (err) {
             console.error("Failed to load student debts:", err);
+            setDebts([]);
         } finally {
             setIsLoading(false);
         }
@@ -105,31 +123,64 @@ export default function FeeListTab({ schoolYear, term }) {
 
     // Parse backend debt items to UI friendly formats
     const parsedStudents = useMemo(() => {
+        if (!debts.length || !allStudentsList.length) {
+            // If no students list, just use debt data directly
+            if (!allStudentsList.length && debts.length) {
+                console.log("[FeeListTab] No students list, mapping debts directly:", debts.slice(0, 3));
+                return debts.map((d, idx) => ({
+                    id: d.id,
+                    studentCode: d.student_code || d.studentCode || `HS${d.student_id || idx + 1}`,
+                    studentId: d.student_id || d.studentId || idx + 1,
+                    name: d.student_name || d.studentName || d.student?.fullName || "Học sinh",
+                    class: d.className || d.class?.name || "Chưa phân lớp",
+                    grade: "10",
+                    amount: new Intl.NumberFormat('vi-VN').format(d.amount || 0),
+                    reqAmount: (d.amount || 0) - (d.paid_amount ?? d.paidAmount ?? 0),
+                    originalAmount: d.amount || 0,
+                    paidAmount: d.paid_amount ?? d.paidAmount ?? 0,
+                    status: d.status || "unpaid"
+                }));
+            }
+            return [];
+        }
+
         const studentMap = {};
         allStudentsList.forEach(s => {
-            studentMap[s.id] = s;
-            if (s.studentTableId) {
-                studentMap[s.studentTableId] = s;
-            }
+            const sid = s.id || s.studentId || s.student_id || s.userId;
+            const tableId = s.studentTableId || s.student_table_id || s.studentTable?.id;
+            
+            studentMap[sid] = s;
+            if (tableId) studentMap[tableId] = s;
+            
+            const code = s.studentCode || s.student_code || s.code;
+            if (code) studentMap[code] = s;
         });
 
         return debts.map(d => {
-            const studentProfile = studentMap[d.student_id];
-            const className = studentProfile?.className || "10A1";
+            // Support multiple field name formats from debt API
+            const sid = d.student_id || d.studentId || d.student?.id;
+            const studentCode = d.student_code || d.studentCode || d.student?.studentCode || d.student?.code || "";
+            const studentName = d.student_name || d.studentName || d.student?.fullName || d.student?.name || "Học sinh";
+            const paidAmount = d.paid_amount ?? d.paidAmount ?? 0;
+            const debtAmount = d.amount ?? d.totalAmount ?? 0;
+            const debtStatus = d.status || "unpaid";
+            
+            const studentProfile = studentMap[sid] || studentMap[studentCode];
+            const className = studentProfile?.className || studentProfile?.class_name || d.className || d.class?.name || "Chưa phân lớp";
             const grade = className.match(/\d+/) ? className.match(/\d+/)[0] : "10";
 
             return {
-                id: d.id, // database integer ID of student debt
-                studentCode: d.student_code || studentProfile?.studentCode || "",
-                studentId: d.student_id,
-                name: d.student_name || studentProfile?.name || "Học sinh",
+                id: d.id,
+                studentCode: studentCode,
+                studentId: sid,
+                name: studentName,
                 class: className,
                 grade: grade,
-                amount: new Intl.NumberFormat('vi-VN').format(d.amount),
-                reqAmount: d.amount - d.paid_amount,
-                originalAmount: d.amount,
-                paidAmount: d.paid_amount,
-                status: d.status
+                amount: new Intl.NumberFormat('vi-VN').format(debtAmount),
+                reqAmount: debtAmount - paidAmount,
+                originalAmount: debtAmount,
+                paidAmount: paidAmount,
+                status: debtStatus
             };
         });
     }, [debts, allStudentsList]);
@@ -137,7 +188,18 @@ export default function FeeListTab({ schoolYear, term }) {
     // Apply filters matching search query, scope, and status
     const filteredStudents = useMemo(() => {
         return parsedStudents.filter(s => {
-            const matchesStatus = filterStatus === "all" || s.status === filterStatus;
+            // More flexible status matching
+            let matchesStatus = true;
+            if (filterStatus !== "all") {
+                const statusLower = (s.status || "").toLowerCase();
+                if (filterStatus === "unpaid") {
+                    matchesStatus = statusLower === "unpaid" || statusLower === "pending" || statusLower === "open" || !statusLower;
+                } else if (filterStatus === "paid") {
+                    matchesStatus = statusLower === "paid" || statusLower === "completed";
+                } else if (filterStatus === "overdue") {
+                    matchesStatus = statusLower === "overdue" || statusLower === "expired";
+                }
+            }
             
             let matchesScope = true;
             if (filterScope === "grade") {

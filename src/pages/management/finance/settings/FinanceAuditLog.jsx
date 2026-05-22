@@ -20,162 +20,9 @@ import {
 import Modal from "../../../../components/ui/Modal/Modal";
 import { PageHeader, Pagination, SchoolYearTermSelector } from "../../../../components/common";
 import { useSchoolYearTerm } from "../../../../hooks/useSchoolYearTerm";
+import { financeService } from "../../../../services/pages/management/finance";
 import "./FinanceAuditLog.css";
 
-const AUDIT_EVENTS = [
-    {
-        id: "FIN-AUD-001",
-        timestamp: "2026-10-16T14:20:15",
-        actor: "Kế toán Lê Thị M",
-        role: "Kế toán",
-        action: "Xóa biên lai",
-        category: "Chứng từ",
-        module: "Thu phí",
-        entityId: "RCT-772",
-        severity: "high",
-        outcome: "Yêu cầu xác minh",
-        reason: "Sai thông tin học sinh trên biên lai",
-        detail: "Biên lai bị xóa sau khi phát hiện mã học sinh không khớp hồ sơ lớp.",
-        before: "Mã học sinh: HS-2026-118",
-        after: "Đề nghị tạo lại biên lai đúng mã",
-        ip: "10.14.32.8",
-        location: "Phòng tài vụ",
-        tags: ["biên lai", "xóa dữ liệu", "rủi ro cao"],
-    },
-    {
-        id: "FIN-AUD-002",
-        timestamp: "2026-10-16T11:05:42",
-        actor: "Admin",
-        role: "Quản trị",
-        action: "Cập nhật biểu phí",
-        category: "Cấu hình",
-        module: "Học phí",
-        entityId: "HP_CHINH",
-        severity: "medium",
-        outcome: "Đã ghi nhận",
-        reason: "Cập nhật đơn giá học kỳ 2",
-        detail: "Điều chỉnh biểu phí theo quyết nghị hội đồng và áp dụng từ ngày 17/10.",
-        before: "1.250.000 ₫ / học sinh",
-        after: "1.350.000 ₫ / học sinh",
-        ip: "10.14.21.5",
-        location: "Văn phòng kế toán",
-        tags: ["biểu phí", "cập nhật", "phê duyệt"],
-    },
-    {
-        id: "FIN-AUD-003",
-        timestamp: "2026-10-15T09:30:00",
-        actor: "Thu ngân Phạm K",
-        role: "Thu ngân",
-        action: "Duyệt miễn giảm",
-        category: "Chính sách",
-        module: "Miễn giảm",
-        entityId: "HS-001",
-        severity: "high",
-        outcome: "Cần trưởng bộ phận xác nhận",
-        reason: "Điều chỉnh theo quyết định mới",
-        detail: "Miễn giảm 50% phí bán trú cho học sinh thuộc diện ưu tiên.",
-        before: "Miễn giảm 0%",
-        after: "Miễn giảm 50%",
-        ip: "10.14.32.15",
-        location: "Quầy thu phí",
-        tags: ["miễn giảm", "ưu tiên", "kiểm soát"],
-    },
-    {
-        id: "FIN-AUD-004",
-        timestamp: "2026-10-14T16:50:11",
-        actor: "Kế toán Lê Thị M",
-        role: "Kế toán",
-        action: "Ký phát hành hóa đơn",
-        category: "Chứng từ",
-        module: "Hóa đơn",
-        entityId: "INV-552",
-        severity: "low",
-        outcome: "Hoàn tất",
-        reason: "Phát hành định kỳ",
-        detail: "Hóa đơn tháng được ký số và chuyển sang trạng thái đã phát hành.",
-        before: "Trạng thái: Nháp",
-        after: "Trạng thái: Đã phát hành",
-        ip: "10.14.11.19",
-        location: "Phòng kế toán",
-        tags: ["hóa đơn", "phát hành", "đúng hạn"],
-    },
-    {
-        id: "FIN-AUD-005",
-        timestamp: "2026-10-14T08:42:00",
-        actor: "Kế toán trưởng Trần D",
-        role: "Kế toán trưởng",
-        action: "Khóa sổ công nợ",
-        category: "Đối soát",
-        module: "Công nợ",
-        entityId: "AR-10A1",
-        severity: "high",
-        outcome: "Đã khóa",
-        reason: "Chốt dữ liệu cuối ngày",
-        detail: "Khóa sổ tạm thời để phục vụ đối chiếu công nợ và khóa nhập mới.",
-        before: "Mở chỉnh sửa",
-        after: "Chế độ khóa sổ",
-        ip: "10.14.12.4",
-        location: "Khu hành chính",
-        tags: ["khóa sổ", "đối soát", "kiểm soát"],
-    },
-    {
-        id: "FIN-AUD-006",
-        timestamp: "2026-10-13T15:18:00",
-        actor: "Nhân viên quỹ Võ T",
-        role: "Thu ngân",
-        action: "Xuất báo cáo",
-        category: "Báo cáo",
-        module: "Báo cáo cuối ngày",
-        entityId: "RPT-101",
-        severity: "low",
-        outcome: "Hoàn tất",
-        reason: "Gửi báo cáo cho kế toán trưởng",
-        detail: "Xuất file báo cáo doanh thu và đối soát phiếu thu trong ngày.",
-        before: "Chưa xuất",
-        after: "Đã tạo tệp PDF",
-        ip: "10.14.32.29",
-        location: "Phòng thu ngân",
-        tags: ["báo cáo", "xuất file", "pdf"],
-    },
-    {
-        id: "FIN-AUD-007",
-        timestamp: "2026-10-13T09:00:00",
-        actor: "Admin",
-        role: "Quản trị",
-        action: "Thay đổi quyền truy cập",
-        category: "Bảo mật",
-        module: "Phân quyền",
-        entityId: "USR-219",
-        severity: "critical",
-        outcome: "Cần rà soát",
-        reason: "Thêm quyền chỉnh sửa chứng từ",
-        detail: "Tài khoản được mở rộng quyền trên module tài chính để hỗ trợ vận hành.",
-        before: "Chỉ xem",
-        after: "Xem + chỉnh sửa",
-        ip: "10.14.21.5",
-        location: "Văn phòng hệ thống",
-        tags: ["phân quyền", "bảo mật", "rủi ro"],
-    },
-    {
-        id: "FIN-AUD-008",
-        timestamp: "2026-10-12T10:22:45",
-        actor: "Kế toán Lê Thị M",
-        role: "Kế toán",
-        action: "Đối chiếu thanh toán",
-        category: "Đối soát",
-        module: "Thanh toán",
-        entityId: "PAY-884",
-        severity: "medium",
-        outcome: "Khớp dữ liệu",
-        reason: "Đối chiếu giao dịch ngân hàng",
-        detail: "Đã khớp 98% chứng từ, còn 2 giao dịch chờ ngân hàng xác nhận.",
-        before: "Chênh lệch 3 giao dịch",
-        after: "Chênh lệch 2 giao dịch",
-        ip: "10.14.11.19",
-        location: "Phòng kế toán",
-        tags: ["đối soát", "ngân hàng", "thanh toán"],
-    },
-];
 
 const ACTION_OPTIONS = [
     { value: "all", label: "Tất cả hành động" },
@@ -261,34 +108,75 @@ function downloadTextFile(filename, content, mimeType = "text/plain;charset=utf-
 
 export default function FinanceAuditLog() {
     const { selectedSchoolYear, selectedTerm, handleYearArrow, handleTermChange } = useSchoolYearTerm();
+    const [auditLogs, setAuditLogs] = useState([]);
+    const [isLoading, setIsLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState("");
     const [actionFilter, setActionFilter] = useState("all");
     const [moduleFilter, setModuleFilter] = useState("all");
     const [severityFilter, setSeverityFilter] = useState("all");
     const [sortBy, setSortBy] = useState("newest");
     const [currentPage, setCurrentPage] = useState(1);
-    const [selectedLogId, setSelectedLogId] = useState(AUDIT_EVENTS[0]?.id || null);
+    const [selectedLogId, setSelectedLogId] = useState(null);
     const [isDetailDialogOpen, setIsDetailDialogOpen] = useState(false);
 
+    const fetchAuditLogs = async () => {
+        setIsLoading(true);
+        try {
+            const res = await financeService.getAuditLogs({
+                params: {
+                    limit: 200,
+                    schoolYearId: selectedSchoolYear,
+                    semesterId: selectedTerm,
+                },
+            });
+
+            if (res?.success && res.data) {
+                setAuditLogs(res.data);
+                if (res.data.length > 0) {
+                    setSelectedLogId(res.data[0].id);
+                }
+            }
+        } catch (error) {
+            console.error("Error fetching audit logs:", error);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchAuditLogs();
+    }, [selectedSchoolYear, selectedTerm]);
+
     const summary = useMemo(() => {
-        const total = AUDIT_EVENTS.length;
-        const critical = AUDIT_EVENTS.filter((item) => item.severity === "critical").length;
-        const highRisk = AUDIT_EVENTS.filter((item) => item.severity === "critical" || item.severity === "high").length;
-        const modules = new Set(AUDIT_EVENTS.map((item) => item.module)).size;
-        const staff = new Set(AUDIT_EVENTS.map((item) => item.actor)).size;
-        const todayStamp = new Date("2026-10-16T23:59:59").getTime();
-        const recent = AUDIT_EVENTS.filter((item) => new Date(item.timestamp).getTime() >= todayStamp - (1000 * 60 * 60 * 24)).length;
+        const total = auditLogs.length;
+        const critical = auditLogs.filter((item) => item.severity === "critical").length;
+        const highRisk = auditLogs.filter((item) => item.severity === "critical" || item.severity === "high").length;
+        const modules = new Set(auditLogs.map((item) => item.module)).size;
+        const staff = new Set(auditLogs.map((item) => item.actor || item.userName)).size;
+        const todayStamp = new Date().getTime();
+        const recent = auditLogs.filter((item) => {
+            if (!item.timestamp) return false;
+            return new Date(item.timestamp).getTime() >= todayStamp - (1000 * 60 * 60 * 24);
+        }).length;
 
         return { total, critical, highRisk, modules, staff, recent };
-    }, []);
+    }, [auditLogs]);
 
     const filteredLogs = useMemo(() => {
         const keyword = searchTerm.trim().toLowerCase();
 
-        const list = AUDIT_EVENTS.filter((item) => {
-            const searchable = [item.actor, item.role, item.action, item.category, item.module, item.entityId, item.reason, item.detail, item.outcome, item.ip, item.location, ...(item.tags || [])]
-                .join(" ")
-                .toLowerCase();
+        const list = auditLogs.filter((item) => {
+            const searchable = [
+                item.actor || item.userName || "",
+                item.role || item.userRole || "",
+                item.action || "",
+                item.category || "",
+                item.module || "",
+                item.entityId || "",
+                item.reason || "",
+                item.detail || "",
+                item.outcome || "",
+            ].join(" ").toLowerCase();
 
             const matchesSearch = keyword.length === 0 || searchable.includes(keyword);
             const matchesAction = actionFilter === "all" || item.action === actionFilter;
@@ -314,7 +202,7 @@ export default function FinanceAuditLog() {
 
             return new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime();
         });
-    }, [actionFilter, moduleFilter, searchTerm, severityFilter, sortBy]);
+    }, [auditLogs, actionFilter, moduleFilter, searchTerm, severityFilter, sortBy]);
 
     const totalPages = Math.max(1, Math.ceil(filteredLogs.length / PAGE_SIZE));
 

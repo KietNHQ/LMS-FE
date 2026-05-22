@@ -22,13 +22,15 @@ const StudentsTable = ({
       <table className="students-table">
         <thead>
           <tr>
-            <th className="select-cell">
-              <input 
-                type="checkbox" 
-                checked={isAllSelected}
-                onChange={(e) => onSelectAll(e.target.checked)}
-              />
-            </th>
+            {!readOnly && (
+              <th className="select-cell">
+                <input 
+                  type="checkbox" 
+                  checked={isAllSelected}
+                  onChange={(e) => onSelectAll(e.target.checked)}
+                />
+              </th>
+            )}
             <th>STT</th>
             <th className="student-name-header">HỌC SINH</th>
             <th>NGÀY SINH</th>
@@ -40,28 +42,31 @@ const StudentsTable = ({
         </thead>
         <tbody>
           {students.map((student, index) => (
-            <tr key={student.id} className={selectedStudentIds.has(student.id) ? "row-selected" : ""}>
-              <td className="select-cell">
-                <input 
-                  type="checkbox" 
-                  checked={selectedStudentIds.has(student.id)}
-                  onChange={() => onToggleSelect(student.id)}
-                />
-              </td>
+            <tr key={student.id} className={!readOnly && selectedStudentIds.has(student.id) ? "row-selected" : ""}>
+              {!readOnly && (
+                <td className="select-cell">
+                  <input 
+                    type="checkbox" 
+                    checked={selectedStudentIds.has(student.id)}
+                    onChange={() => onToggleSelect(student.id)}
+                  />
+                </td>
+              )}
               <td className="student-index-cell">
                 {(effectivePage - 1) * itemsPerPage + index + 1}
               </td>
+
               <td className="student-name-cell">
                 <div className="student-main-info">
                   <span className="student-avatar">
-                    {student.name.charAt(0).toUpperCase()}
+                    {(student.name || "H").charAt(0).toUpperCase()}
                   </span>
-                  <span className="student-name">{student.name}</span>
+                  <span className="student-name">{student.name || "Chưa rõ tên"}</span>
                 </div>
               </td>
               <td className="student-dob">{formatDate(student.dob)}</td>
-              <td className="student-parent">{student.parentName}</td>
-              <td className="student-phone">{student.parentPhone}</td>
+              <td className="student-parent">{student.parentName || "Chưa cập nhật"}</td>
+              <td className="student-phone">{student.parentPhone || "N/A"}</td>
               
               <td className="student-review-cell">
                 <div className="review-display">
@@ -69,7 +74,7 @@ const StudentsTable = ({
                     type="button"
                     className="review-icon-btn"
                     onClick={() => onOpenReview(student)}
-                    aria-label={`Xem đánh giá học sinh ${student.name}`}
+                    aria-label={`Xem đánh giá học sinh ${student.name || ""}`}
                   >
                     {readOnly ? <FiEye /> : <FiEdit3 />}
                   </button>
@@ -83,7 +88,7 @@ const StudentsTable = ({
                     checked={!!studentAttendance[student.id]}
                     onChange={() => !readOnly && onToggleAttendance(student.id)}
                     disabled={readOnly}
-                    aria-label={`Đi học ${student.name}`}
+                    aria-label={`Đi học ${student.name || ""}`}
                   />
                 </label>
               </td>
