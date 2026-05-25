@@ -32,19 +32,36 @@ export default function ReconciliationWorkbench({ debts = [] }) {
 
     const handleMatch = async (debtId) => {
         try {
-            await financeService.recordDebtPayment(debtId, { amount: 0 });
+            await financeService.updateDebt(debtId, { body: { status: "reconciled" } });
             toast.success("Đã đối soát thành công");
-            // Refresh would be handled by parent
         } catch (error) {
             toast.error("Có lỗi khi đối soát");
         }
     };
 
     const handleAutoMatch = async () => {
-        toast.info("Đang tự động đối soát...");
-        setTimeout(() => {
-            toast.success("Hoàn tất đối soát tự động");
-        }, 1500);
+        if (unmatched.length === 0) {
+            toast.info("Không có công nợ nào cần đối soát");
+            return;
+        }
+        setIsLoading(true);
+        toast.info(`Đang đối soát ${unmatched.length} công nợ...`);
+        let success = 0;
+        let failed = 0;
+        for (const debt of unmatched) {
+            try {
+                await financeService.updateDebt(debt.id, { body: { status: "reconciled" } });
+                success++;
+            } catch (e) {
+                failed++;
+            }
+        }
+        setIsLoading(false);
+        if (failed === 0) {
+            toast.success(`Hoàn tất đối soát ${success} công nợ`);
+        } else {
+            toast.warning(`Đã đối soát ${success} công nợ, ${failed} thất bại`);
+        }
     };
 
     const formatCurrency = (value) => {

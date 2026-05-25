@@ -28,8 +28,8 @@ const STATUS_TABS = [
 const TYPE_OPTIONS = [
     { id: "all", label: "Tất cả loại" },
     { id: "refund", label: "Hoàn phí" },
-    { id: "discount", label: "Miễn giảm thủ công" },
-    { id: "write-off", label: "Xóa nợ" },
+    { id: "debt_relief", label: "Miễn giảm" },
+    { id: "write_off", label: "Xóa nợ" },
     { id: "adjustment", label: "Điều chỉnh bút toán" },
 ];
 
@@ -63,8 +63,8 @@ const PRIORITY_LABEL = {
 
 const TYPE_LABEL = {
     refund: "Hoàn phí",
-    discount: "Miễn giảm thủ công",
-    "write-off": "Xóa nợ",
+    debt_relief: "Miễn giảm",
+    write_off: "Xóa nợ",
     adjustment: "Điều chỉnh bút toán",
 };
 
@@ -74,6 +74,7 @@ function formatCurrency(amount) {
 }
 
 function formatDateTime(isoDate) {
+    if (!isoDate) return "—";
     return new Date(isoDate).toLocaleString("vi-VN", {
         day: "2-digit",
         month: "2-digit",
@@ -81,6 +82,31 @@ function formatDateTime(isoDate) {
         hour: "2-digit",
         minute: "2-digit",
     });
+}
+
+function transformRequest(record) {
+    return {
+        id: record.id,
+        type: record.request_type,
+        requester: record.requester_name || "—",
+        requesterRole: record.requester_role || "—",
+        student: [record.student_surname, record.student_given_name].filter(Boolean).join(" ") || record.student_id || "—",
+        detail: record.reason || record.description || "—",
+        amount: parseFloat(record.request_amount || 0),
+        submittedAt: record.created_at,
+        dueAt: record.sla_due_at,
+        status: record.status,
+        priority: record.priority || "medium",
+        requestAmount: parseFloat(record.request_amount || 0),
+        originalAmount: parseFloat(record.original_amount || 0),
+        adjustedAmount: parseFloat(record.adjusted_amount || 0),
+        feeName: record.fee_name,
+        description: record.description,
+        reason: record.reason,
+        reviewedBy: record.reviewed_by_name,
+        reviewedAt: record.reviewed_at,
+        approvalNote: record.approval_note,
+    };
 }
 
 function getSlaLabel(dueAt, status) {
@@ -115,32 +141,16 @@ export default function FinanceApprovals() {
     const fetchRequests = async () => {
         setIsLoading(true);
         try {
-            // Using debts as a proxy for approval requests
-            const res = await financeService.listDebts({
+            const res = await financeService.listApprovals({
                 params: {
                     limit: 200,
                     status: activeStatus !== "all" ? activeStatus : undefined,
-                    schoolYearId: selectedSchoolYear,
-                    semesterId: selectedTerm,
+                    studentId: undefined,
                 },
             });
 
             if (res?.success && res.data) {
-                // Transform debts into approval-like requests
-                const requestData = res.data.map((debt, index) => ({
-                    id: debt.id || `APR-2026-${String(index + 1).padStart(3, "0")}`,
-                    type: debt.type || "discount",
-                    requester: debt.createdByName || "Kế toán",
-                    requesterRole: debt.createdByRole || "Kế toán viên",
-                    student: debt.studentName,
-                    detail: debt.description || "Yêu cầu duyệt công nợ",
-                    amount: debt.amount || 0,
-                    submittedAt: debt.createdAt,
-                    dueAt: debt.dueDate,
-                    status: debt.status === "paid" ? "approved" : debt.status,
-                    priority: debt.priority || "medium",
-                }));
-                setRequests(requestData);
+                setRequests(res.data.map(transformRequest));
             }
         } catch (error) {
             console.error("Error fetching requests:", error);
@@ -214,12 +224,16 @@ export default function FinanceApprovals() {
 
     const isAllPendingSelected = pendingSelectableIds.length > 0 && pendingSelectableIds.every((id) => selectedIds.includes(id));
 
-    const applyStatus = async (id, status) => {
+    const applyStatus = async (id, newStatus) => {
         try {
-            await financeService.updateDebt(id, { status, approvalNote: status === "approved" ? "Đã phê duyệt" : "Từ chối" });
-            setRequests((prev) => prev.map((item) => (item.id === id ? { ...item, status } : item)));
+            if (newStatus === "approved") {
+                await financeService.approveRequest(id, { note: "Đã phê duyệt" });
+            } else {
+                await financeService.rejectRequest(id, { note: "Từ chối" });
+            }
+            setRequests((prev) => prev.map((item) => (item.id === id ? { ...item, status: newStatus } : item)));
             setSelectedIds((prev) => prev.filter((selectedId) => selectedId !== id));
-            toast.success(status === "approved" ? `Đã phê duyệt hồ sơ ${id}.` : `Đã từ chối hồ sơ ${id}.`);
+            toast.success(newStatus === "approved" ? `Đã phê duyệt hồ sơ ${id}.` : `Đã từ chối hồ sơ ${id}.`);
         } catch (error) {
             toast.error("Có lỗi xảy ra khi cập nhật trạng thái");
         }
@@ -237,7 +251,7 @@ export default function FinanceApprovals() {
         setSelectedIds((prev) => Array.from(new Set([...prev, ...pendingSelectableIds])));
     };
 
-    const approveSelected = () => {
+    const approveSelected = async () => {
         if (selectedRows.length === 0) {
             toast.info("Hãy chọn ít nhất 1 hồ sơ đang chờ duyệt.");
             return;
@@ -249,11 +263,26 @@ export default function FinanceApprovals() {
             return;
         }
 
-        setRequests((prev) =>
-            prev.map((item) => (selectedPending.some((selected) => selected.id === item.id) ? { ...item, status: "approved" } : item))
-        );
-        setSelectedIds([]);
-        toast.success(`Đã phê duyệt ${selectedPending.length} hồ sơ.`);
+        try {
+            await Promise.all(
+                selectedPending.map((item) =>
+                    financeService.approveRequest(item.id, { note: "Đã phê duyệt hàng loạt" }).catch((err) => {
+                        console.warn(`[FinanceApprovals] approve failed for ${item.id}:`, err);
+                    })
+                )
+            );
+            setRequests((prev) =>
+                prev.map((item) =>
+                    selectedPending.some((selected) => selected.id === item.id)
+                        ? { ...item, status: "approved" }
+                        : item
+                )
+            );
+            setSelectedIds([]);
+            toast.success(`Đã phê duyệt ${selectedPending.length} hồ sơ.`);
+        } catch (error) {
+            toast.error("Có lỗi khi phê duyệt hồ sơ.");
+        }
     };
 
     return (

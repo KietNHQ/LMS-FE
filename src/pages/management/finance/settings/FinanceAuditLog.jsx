@@ -125,8 +125,8 @@ export default function FinanceAuditLog() {
             const res = await financeService.getAuditLogs({
                 params: {
                     limit: 200,
-                    schoolYearId: selectedSchoolYear,
-                    semesterId: selectedTerm,
+                    schoolYearId: selectedSchoolYear?.id,
+                    semesterId: selectedTerm?.id,
                 },
             });
 
@@ -261,7 +261,10 @@ export default function FinanceAuditLog() {
             .map((row) => row.map((cell) => `"${String(cell).replaceAll('"', '""')}"`).join(","))
             .join("\n");
 
-        downloadTextFile(`finance-audit-log-${selectedSchoolYear}-${selectedTerm}.csv`, csv, "text/csv;charset=utf-8");
+        // selectedSchoolYear and selectedTerm are objects from useSchoolYearTerm.
+        // Fallback to .label (string) for school year and .toUpperCase() (string) for term.
+        // selectedSchoolYear can be { id, label, ... } or already a string.
+        downloadTextFile(`finance-audit-log-${selectedSchoolYear?.label || selectedSchoolYear || "all"}-${selectedTerm?.toUpperCase() || selectedTerm || "all"}.csv`, csv, "text/csv;charset=utf-8");
     };
 
     const safeCurrentPage = Math.min(currentPage, totalPages);
@@ -521,7 +524,7 @@ export default function FinanceAuditLog() {
                     <div className="audit-footer">
                         <div className="audit-footer__meta">
                             <span>Hiển thị {visibleLogs.length} / {filteredLogs.length}</span>
-                            <span>Năm học {selectedSchoolYear} - {selectedTerm.toUpperCase()}</span>
+                            <span>Năm học {selectedSchoolYear?.label || selectedSchoolYear || "-"} - {selectedTerm?.toUpperCase() || selectedTerm || "-"}</span>
                         </div>
 
                         <Pagination
@@ -609,7 +612,7 @@ export default function FinanceAuditLog() {
                             <article className="audit-dialog-v2__card audit-dialog-v2__card--wide">
                                 <h4>Nhãn phân loại</h4>
                                 <div className="audit-dialog-v2__tags">
-                                    {selectedLog.tags.map((tag) => (
+                                    {(selectedLog.tags || []).map((tag) => (
                                         <span key={tag}>{tag}</span>
                                     ))}
                                 </div>

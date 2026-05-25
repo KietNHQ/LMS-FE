@@ -57,37 +57,37 @@ export default function PrincipalDashboard() {
     });
 
     const [quickInsights] = useState([
-        { id: "reports", label: "Báo cáo Tổng hợp (Toàn trường)", icon: <FiBarChart2 />, path: "/principal/reports", insight: "Cập nhật 5 phút trước", type: "info" },
-        { id: "audit", label: "Audit Logs (Truy xuất Nhật ký)", icon: <FiShield />, path: "/principal/audit-logs", insight: "12 log mới", type: "warning" },
-        { id: "notifications", label: "Gửi Thông báo Chỉ đạo Nóng", icon: <FiBell />, path: "/principal/notifications", insight: "Hệ thống ổn định", type: "success" },
-        { id: "finance", label: "Giám sát Dòng tiền Học đường", icon: <FiDollarSign />, path: "/principal/overview?tab=finance", insight: "Đạt 83% chỉ tiêu", type: "info" },
-        { id: "attendance", label: "Phân tích Chuyên cần Hệ thống", icon: <FiTrendingUp />, path: "/principal/overview?tab=attendance", insight: "-2% so với tuần trước", type: "danger" },
+        { id: "reports", label: "Báo cáo Tổng hợp (Toàn trường)", icon: <FiBarChart2 />, path: "/management/reports", insight: "Cập nhật 5 phút trước", type: "info" },
+        { id: "audit", label: "Audit Logs (Truy xuất Nhật ký)", icon: <FiShield />, path: "/management/audit-logs", insight: "12 log mới", type: "warning" },
+        { id: "notifications", label: "Gửi Thông báo Chỉ đạo Nóng", icon: <FiBell />, path: "/management/notifications", insight: "Hệ thống ổn định", type: "success" },
+        { id: "finance", label: "Giám sát Dòng tiền Học đường", icon: <FiDollarSign />, path: "/management/finance", insight: "Đạt 83% chỉ tiêu", type: "info" },
+        { id: "attendance", label: "Phân tích Chuyên cần Hệ thống", icon: <FiTrendingUp />, path: "/management/academic/dashboard", insight: "-2% so với tuần trước", type: "danger" },
     ]);
 
     const alerts = [
         { 
             id: 1, 
             type: "danger", 
-            icon: <FiAlertCircle />, 
+            icon: <FiAlertCircle />,
             message: "5 lớp chưa nhập đủ điểm giữa kỳ. Hạn chót: 24h tới.", 
             actionText: "Thúc giục ngay", 
-            path: "/principal/approvals" 
+            path: "/management/approvals" 
         },
         { 
             id: 2, 
             type: "warning", 
-            icon: <FiTrendingDown />, 
+            icon: <FiTrendingDown />,
             message: "Lớp 11A2 có tỷ lệ chuyên cần giảm đột ngột (giảm 12%).", 
             actionText: "Xem báo cáo", 
-            path: "/principal/overview?tab=attendance" 
+            path: "/management/academic/dashboard" 
         },
         { 
             id: 3, 
             type: "info", 
-            icon: <FiDollarSign />, 
+            icon: <FiDollarSign />,
             message: "Khối 12 hiện còn 15% học sinh chưa hoàn thành đóng học phí.", 
             actionText: "Xem danh sách", 
-            path: "/principal/overview?tab=finance" 
+            path: "/management/finance" 
         }
     ];
 
@@ -229,13 +229,13 @@ export default function PrincipalDashboard() {
                         <button
                             type="button"
                             className="principal-btn principal-btn--primary"
-                            onClick={() => navigate("/principal/approvals")}
+                            onClick={() => navigate("/management/approvals")}
                         >
                             <FiCheckCircle /> Đi tới Trung tâm Phê duyệt
                         </button>
                         <button 
                             className="principal-btn principal-btn--ghost"
-                            onClick={() => navigate("/principal/overview")}
+                            onClick={() => navigate("/management/reports")}
                         >
                             Xem báo cáo hạ tầng Chuyên môn <span className="btn-arrow">→</span>
                         </button>

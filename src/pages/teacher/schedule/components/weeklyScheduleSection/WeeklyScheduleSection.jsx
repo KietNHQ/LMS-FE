@@ -89,7 +89,7 @@ export default function WeeklyScheduleSection({
 
       // Map API data to UI format
       const apiLessons = apiData.map((item, idx) => {
-        const subjectKey = item.subject_code || "Toan";
+        const subjectKey = item.subject_code || "TOAN";
         return {
           id: item.id || idx,
           day: dayMapping[item.day_of_week] || item.day_of_week,

@@ -24,24 +24,132 @@
 /* ── SUMMARY STATS BAR ── */
 .fee-summary-bar {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+    grid-template-columns: repeat(4, 1fr);
     gap: 0.9rem;
     margin-bottom: 0.5rem;
 }
 
-.fee-stat-card {
+/* .fee-stat-card is the old class — kept for compatibility with tabs */
+.fee-stat-card,
+.fee-stat {
     background: #ffffff;
     border: 2px solid var(--fee-border);
     border-radius: 1rem;
-    padding: 1rem;
+    padding: 1.15rem;
     display: flex;
     align-items: center;
-    gap: 0.8rem;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-    transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+    gap: 0.85rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
     position: relative;
     overflow: hidden;
+    animation: feeCardPop 0.42s ease-out both;
 }
+
+.fee-stat-card::before,
+.fee-stat::before {
+    content: "";
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 4px;
+    border-radius: 1rem 0 0 1rem;
+}
+
+.fee-stat-card:hover,
+.fee-stat:hover {
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+    transform: translateY(-2px);
+    border-color: var(--fee-border-strong);
+}
+
+/* .fee-stat-icon is the old class */
+.fee-stat-icon,
+.fee-stat__icon {
+    width: 50px;
+    height: 50px;
+    border-radius: 0.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.3rem;
+    flex-shrink: 0;
+    color: var(--fee-text-secondary);
+    background: var(--fee-primary-soft);
+}
+
+.fee-stat-card:hover .fee-stat-icon,
+.fee-stat:hover .fee-stat__icon {
+    transform: scale(1.05);
+}
+
+/* .fee-stat-content is the old class */
+.fee-stat-content,
+.fee-stat__content {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    min-width: 0;
+}
+
+.fee-stat__content span {
+    font-size: 0.68rem;
+    color: var(--fee-text-muted);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+}
+
+.fee-stat__content strong {
+    font-size: 1.15rem;
+    font-weight: 800;
+    color: var(--fee-text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.fee-stat__content p {
+    font-size: 0.72rem;
+    color: var(--fee-text-muted);
+    margin: 0;
+}
+
+/* Color variants */
+.fee-stat-card.stat-neutral,
+.fee-stat.stat-neutral { color: var(--fee-text-secondary); }
+.fee-stat-card.stat-neutral::before,
+.fee-stat.stat-neutral::before { background: var(--fee-primary); }
+
+.fee-stat-card.stat-success,
+.fee-stat.stat-success { color: var(--fee-success); }
+.fee-stat-card.stat-success::before,
+.fee-stat.stat-success::before { background: var(--fee-success); }
+.fee-stat-card.stat-success .fee-stat-icon,
+.fee-stat.stat-success .fee-stat__icon { color: var(--fee-success); background: var(--fee-success-soft); }
+
+.fee-stat-card.stat-warning,
+.fee-stat.stat-warning { color: var(--fee-warning); }
+.fee-stat-card.stat-warning::before,
+.fee-stat.stat-warning::before { background: var(--fee-warning); }
+.fee-stat-card.stat-warning .fee-stat-icon,
+.fee-stat.stat-warning .fee-stat__icon { color: var(--fee-warning); background: var(--fee-warning-soft); }
+
+.fee-stat-card.stat-danger,
+.fee-stat.stat-danger { color: var(--fee-danger); }
+.fee-stat-card.stat-danger::before,
+.fee-stat.stat-danger::before { background: var(--fee-danger); }
+.fee-stat-card.stat-danger .fee-stat-icon,
+.fee-stat.stat-danger .fee-stat__icon { color: var(--fee-danger); background: var(--fee-danger-soft); }
+
+/* Animation delays */
+.fee-summary-bar .fee-stat-card:nth-child(1),
+.fee-summary-bar .fee-stat:nth-child(1) { animation-delay: 0.02s; }
+.fee-summary-bar .fee-stat-card:nth-child(2),
+.fee-summary-bar .fee-stat:nth-child(2) { animation-delay: 0.08s; }
+.fee-summary-bar .fee-stat-card:nth-child(3),
+.fee-summary-bar .fee-stat:nth-child(3) { animation-delay: 0.14s; }
+.fee-summary-bar .fee-stat-card:nth-child(4),
+.fee-summary-bar .fee-stat:nth-child(4) { animation-delay: 0.2s; }
 
 .fee-stat-card::before {
     content: "";
@@ -159,7 +267,8 @@
 }
 
 /* ── TAB NAVIGATION ── */
-.fin-fee__tabs {
+.fin-fee__tabs,
+.fee-tabs {
     display: flex;
     gap: 0.5rem;
     border-bottom: 3px solid var(--fee-border);
@@ -168,7 +277,8 @@
     flex-wrap: wrap;
 }
 
-.fin-fee__tab {
+.fin-fee__tab,
+.fee-tab {
     padding: 0.8rem 1.5rem;
     background: transparent;
     border: 2px solid transparent;
@@ -182,14 +292,16 @@
     letter-spacing: 0.3px;
 }
 
-.fin-fee__tab:hover {
+.fin-fee__tab:hover,
+.fee-tab:hover {
     color: var(--fee-text-primary);
     background: var(--fee-surface-soft);
     border-color: var(--fee-border-strong);
     transform: translateY(-2px);
 }
 
-.fin-fee__tab.active {
+.fin-fee__tab.active,
+.fee-tab.active {
     color: color-mix(in srgb, var(--fee-primary) 82%, #1f2937);
     border-bottom-color: var(--fee-primary);
     background: color-mix(in srgb, var(--fee-primary-soft) 70%, #ffffff);
@@ -197,7 +309,8 @@
     box-shadow: 0 2px 6px rgba(67, 56, 202, 0.08);
 }
 
-.fin-fee__content {
+.fin-fee__content,
+.fee-content {
     animation: slideIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
@@ -1250,180 +1363,45 @@
     .fee-summary-bar {
         grid-template-columns: repeat(2, 1fr);
     }
-
-    .fee-stat-card {
-        padding: 1.25rem;
-    }
-
-    .fee-stat-icon {
-        width: 56px;
-        height: 56px;
-        font-size: 1.5rem;
-    }
 }
 
 @media (max-width: 1024px) {
-    .fin-fee {
-        gap: 1.5rem;
-    }
-
-    .fee-header {
-        flex-direction: column;
-        align-items: flex-start;
-    }
-
-    .fee-toolbar {
-        width: 100%;
-    }
-
-    .fee-summary-bar {
-        grid-template-columns: repeat(2, 1fr);
-    }
-
-    .fin-fee__tabs {
-        gap: 0.25rem;
-    }
-
-    .fin-fee__tab {
-        padding: 0.7rem 1.2rem;
-        font-size: 0.9rem;
-    }
-
-    .fee-panel {
-        padding: 1.5rem;
-    }
+    .fin-fee { gap: 1.5rem; }
+    .fee-header { flex-direction: column; align-items: flex-start; }
+    .fee-toolbar { width: 100%; }
+    .fee-summary-bar { grid-template-columns: repeat(2, 1fr); }
+    .fee-tabs, .fin-fee__tabs { gap: 0.25rem; }
+    .fee-tab, .fin-fee__tab { padding: 0.7rem 1.2rem; font-size: 0.9rem; }
+    .fee-panel { padding: 1.5rem; }
 }
 
 @media (max-width: 768px) {
-    .fin-fee {
-        gap: 1.25rem;
-        padding: 0.75rem 0 1.5rem 0;
-    }
-
-    .fee-summary-bar {
-        grid-template-columns: 1fr;
-        gap: 1rem;
-    }
-
-    .fee-stat-card {
-        padding: 0.9rem;
-        gap: 0.75rem;
-    }
-
-    .fee-stat-icon {
-        width: 42px;
-        height: 42px;
-        font-size: 1.1rem;
-    }
-
-    .fee-stat-value {
-        font-size: 1rem;
-    }
-
-    .fin-fee__tabs {
-        gap: 0.25rem;
-        margin-bottom: 1.5rem;
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
-        padding-bottom: 0.75rem;
-    }
-
-    .fin-fee__tab {
-        white-space: nowrap;
-        padding: 0.6rem 1rem;
-        font-size: 0.85rem;
-    }
-
-    .fee-table {
-        font-size: 0.8rem;
-    }
-
-    .fee-table th {
-        padding: 0.75rem 0.6rem;
-        font-size: 0.65rem;
-    }
-
-    .fee-table td {
-        padding: 0.8rem 0.6rem;
-        font-size: 0.8rem;
-    }
-
-    .fee-panel {
-        padding: 1.25rem;
-        border-radius: 0.85rem;
-    }
-
-    .fee-header {
-        margin-bottom: 1.25rem;
-        gap: 1rem;
-    }
-
-    .fee-header h3 {
-        font-size: 1.15rem;
-    }
-
-    .fee-toolbar {
-        gap: 0.75rem;
-    }
-
-    .fee-select,
-    .fee-input {
-        padding: 0.5rem 0.85rem;
-        font-size: 0.8rem;
-    }
-
-    .btn-primary,
-    .btn-secondary {
-        padding: 0.5rem 1rem;
-        font-size: 0.75rem;
-    }
-
-    .fee-modal {
-        width: 90vw;
-        max-width: 580px;
-    }
-
-    .fee-modal-quick-pay {
-        width: 92vw;
-    }
-
-    .fm-method-grid {
-        grid-template-columns: 1fr;
-    }
-
-    .wizard-stepper {
-        grid-template-columns: 1fr;
-        gap: 0.5rem;
-    }
-
-    .step-sep {
-        display: none;
-    }
-
-    .wizard-fee-grid,
-    .wizard-target-grid,
-    .wizard-review-grid,
-    .preview-stats {
-        grid-template-columns: 1fr;
-    }
-
-    .fee-modal-header {
-        padding: 1.5rem;
-    }
-
-    .fee-modal-body {
-        padding: 1.25rem;
-    }
-
-    .fee-modal-footer {
-        padding: 1.25rem;
-    }
-
-    .fee-info-box {
-        flex-direction: column;
-        font-size: 0.8rem;
-        padding: 1rem;
-    }
+    .fin-fee { gap: 1.25rem; padding: 0.75rem 0 1.5rem 0; }
+    .fee-summary-bar { grid-template-columns: 1fr; gap: 1rem; }
+    .fee-stat { padding: 0.9rem; gap: 0.75rem; }
+    .fee-stat__icon { width: 42px; height: 42px; font-size: 1.1rem; }
+    .fee-stat__content strong { font-size: 1rem; }
+    .fee-tabs, .fin-fee__tabs { gap: 0.25rem; margin-bottom: 1.5rem; overflow-x: auto; -webkit-overflow-scrolling: touch; padding-bottom: 0.75rem; }
+    .fee-tab, .fin-fee__tab { white-space: nowrap; padding: 0.6rem 1rem; font-size: 0.85rem; }
+    .fee-table { font-size: 0.8rem; }
+    .fee-table th { padding: 0.75rem 0.6rem; font-size: 0.65rem; }
+    .fee-table td { padding: 0.8rem 0.6rem; font-size: 0.8rem; }
+    .fee-panel { padding: 1.25rem; border-radius: 0.85rem; }
+    .fee-header { margin-bottom: 1.25rem; gap: 1rem; }
+    .fee-header h3 { font-size: 1.15rem; }
+    .fee-toolbar { gap: 0.75rem; }
+    .fee-select, .fee-input { padding: 0.5rem 0.85rem; font-size: 0.8rem; }
+    .btn-primary, .btn-secondary { padding: 0.5rem 1rem; font-size: 0.75rem; }
+    .fee-modal { width: 90vw; max-width: 580px; }
+    .fee-modal-quick-pay { width: 92vw; }
+    .fm-method-grid { grid-template-columns: 1fr; }
+    .wizard-stepper { grid-template-columns: 1fr; gap: 0.5rem; }
+    .step-sep { display: none; }
+    .wizard-fee-grid, .wizard-target-grid, .wizard-review-grid, .preview-stats { grid-template-columns: 1fr; }
+    .fee-modal-header { padding: 1.5rem; }
+    .fee-modal-body { padding: 1.25rem; }
+    .fee-modal-footer { padding: 1.25rem; }
+    .fee-info-box { flex-direction: column; font-size: 0.8rem; padding: 1rem; }
 }
 
 @media (max-width: 480px) {
@@ -1431,29 +1409,11 @@
         gap: 1rem;
     }
 
-    .fee-stat-card {
-        padding: 0.9rem;
-        gap: 0.9rem;
-    }
-
-    .fee-stat-icon {
-        width: 48px;
-        height: 48px;
-        font-size: 1.25rem;
-    }
-
-    .fee-stat-label {
-        font-size: 0.65rem;
-    }
-
-    .fee-stat-value {
-        font-size: 1.15rem;
-    }
-
-    .fin-fee__tab {
-        padding: 0.5rem 0.85rem;
-        font-size: 0.8rem;
-    }
+    .fee-stat { padding: 0.9rem; gap: 0.75rem; }
+    .fee-stat__icon { width: 42px; height: 42px; font-size: 1.1rem; }
+    .fee-stat__content span { font-size: 0.65rem; }
+    .fee-stat__content strong { font-size: 1rem; }
+    .fee-tab, .fin-fee__tab { padding: 0.5rem 0.85rem; font-size: 0.8rem; }
 
     .fee-table th {
         padding: 0.6rem 0.5rem;
@@ -1967,4 +1927,4 @@
 
 .fee-search-wrap .fee-input {
     height: 44px;
-}
+}

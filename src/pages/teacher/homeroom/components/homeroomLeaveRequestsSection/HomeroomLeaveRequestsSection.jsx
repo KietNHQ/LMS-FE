@@ -53,7 +53,7 @@ export default function HomeroomLeaveRequestsSection({ classId }) {
             const res = await teacherService.updateLeaveRequestStatus({
                 pathParams: { id },
                 body: {
-                    status: actionType,
+                    action: actionType,
                     admin_notes: feedback.trim() || (actionType === "approved" ? "Đã đồng ý đơn xin phép." : "Từ chối đơn xin phép.")
                 },
                 mock: false // Use real API

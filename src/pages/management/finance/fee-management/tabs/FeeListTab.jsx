@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from "react";
-import { FiDollarSign, FiSearch, FiFileText, FiX, FiCheckCircle } from "react-icons/fi";
+import { FiDollarSign, FiSearch, FiFileText, FiX, FiCheckCircle, FiSend, FiPrinter } from "react-icons/fi";
 import { toast } from "react-toastify";
 import { Pagination } from "../../../../../components/common";
 import Select from "../../../../../components/ui/Select/Select";
@@ -47,6 +47,9 @@ export default function FeeListTab({ schoolYear, term }) {
     const [paymentMethod, setPaymentMethod] = useState("cash");
     const [issueEInvoice, setIssueEInvoice] = useState(true);
     const [transactionNote, setTransactionNote] = useState("");
+    const [invoiceModal, setInvoiceModal] = useState(null);
+    const [invoiceLoading, setInvoiceLoading] = useState(false);
+    const [invoiceLoading2, setInvoiceLoading2] = useState(false);
 
     // Load initial student profiles and class catalogs
     const loadInitialData = async () => {
@@ -250,22 +253,68 @@ export default function FeeListTab({ schoolYear, term }) {
     };
 
     const handleConfirmPayment = async () => {
+        const paidAmount = typeof amountPaid === 'number' ? amountPaid : parseInt(amountPaid.toString().replace(/,/g, '')) || 0;
+        if (paidAmount <= 0) {
+            toast.error("Số tiền thanh toán phải lớn hơn 0");
+            return;
+        }
         if (isUnderpaid) {
             toast.error("Số tiền thu chưa đủ, vui lòng kiểm tra lại.");
             return;
         }
 
         try {
-            await financeService.recordDebtPayment(modalData.id, { amount: amountPaid });
-            toast.success(`Đã xác nhận thu học phí thành công cho ${modalData.name}`);
-            setModalData(null);
-            loadDebts();
+            const res = await financeService.recordDebtPayment(modalData.id, {
+                body: { amount: paidAmount, paymentMethod },
+            });
+            if (res?.success) {
+                toast.success(`Đã xác nhận thu học phí thành công cho ${modalData.name}`);
+                setModalData(null);
+                loadDebts();
+            } else {
+                toast.error(res?.error?.message || "Có lỗi khi ghi nhận thanh toán.");
+            }
         } catch (err) {
-            toast.error("Không thể ghi nhận thanh toán: " + (err.response?.data?.error || err.message));
+            const msg = err?.response?.data?.error || err?.response?.data?.message || err?.message || "Không rõ lỗi";
+            toast.error("Không thể ghi nhận thanh toán: " + msg);
         }
     };
 
     const formatMoney = (val) => new Intl.NumberFormat('vi-VN').format(val);
+
+    const handleSignInvoice = async (student) => {
+        setInvoiceLoading(true);
+        try {
+            const res = await financeService.signInvoice(student.id);
+            if (res?.success) {
+                toast.success(`Đã ký hóa đơn cho ${student.name}.`);
+                setInvoiceModal(student);
+                loadDebts();
+            } else {
+                toast.error(res?.error?.message || "Có lỗi khi ký hóa đơn.");
+            }
+        } catch (err) {
+            toast.error("Có lỗi khi ký hóa đơn.");
+        } finally {
+            setInvoiceLoading(false);
+        }
+    };
+
+    const handleSendInvoice = async (student) => {
+        setInvoiceLoading2(true);
+        try {
+            const res = await financeService.sendInvoice(student.id, { body: {} });
+            if (res?.success) {
+                toast.success(`Đã gửi hóa đơn cho ${student.name}.`);
+            } else {
+                toast.error(res?.error?.message || "Có lỗi khi gửi hóa đơn.");
+            }
+        } catch (err) {
+            toast.error("Có lỗi khi gửi hóa đơn.");
+        } finally {
+            setInvoiceLoading2(false);
+        }
+    };
 
     return (
         <div className="fee-panel">
@@ -374,14 +423,32 @@ export default function FeeListTab({ schoolYear, term }) {
                                 </td>
                                 <td>
                                     {s.status === 'paid' ? (
-                                        <button
-                                            className="fee-action-btn invoice"
-                                            onClick={() => toast.info("Đang tải hóa đơn PDF...")}
-                                            title="Xem hóa đơn"
-                                            aria-label={`Xem hóa đơn của ${s.name}`}
-                                        >
-                                            <FiFileText />
-                                        </button>
+                                        <div style={{ display: 'flex', gap: '0.25rem' }}>
+                                            <button
+                                                className="fee-action-btn invoice"
+                                                onClick={() => setInvoiceModal(s)}
+                                                title="Xem hóa đơn"
+                                                aria-label={`Xem hóa đơn của ${s.name}`}
+                                            >
+                                                <FiFileText />
+                                            </button>
+                                            <button
+                                                className="fee-action-btn invoice"
+                                                onClick={() => handleSignInvoice(s)}
+                                                title="Ký hóa đơn"
+                                                aria-label={`Ký hóa đơn của ${s.name}`}
+                                            >
+                                                <FiCheckCircle />
+                                            </button>
+                                            <button
+                                                className="fee-action-btn invoice"
+                                                onClick={() => handleSendInvoice(s)}
+                                                title="Gửi hóa đơn"
+                                                aria-label={`Gửi hóa đơn cho ${s.name}`}
+                                            >
+                                                <FiSend />
+                                            </button>
+                                        </div>
                                     ) : (
                                         <button
                                             className="fee-action-btn collect"
@@ -505,6 +572,47 @@ export default function FeeListTab({ schoolYear, term }) {
                             <button className="btn-primary" onClick={handleConfirmPayment} disabled={isUnderpaid}>
                                 <FiCheckCircle /> Xác nhận thu tiền
                             </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Invoice Modal */}
+            {invoiceModal && (
+                <div className="fee-modal-overlay">
+                    <div className="fee-modal">
+                        <div className="fee-modal-header">
+                            <div>
+                                <h3>Hóa đơn điện tử</h3>
+                                <p className="fm-modal-subtitle">{invoiceModal.name} — {invoiceModal.studentCode || invoiceModal.id}</p>
+                            </div>
+                            <button className="btn-close-modal" onClick={() => setInvoiceModal(null)}>
+                                <FiX />
+                            </button>
+                        </div>
+                        <div className="fee-modal-body">
+                            <div style={{ textAlign: "center", padding: "1.5rem 0" }}>
+                                <FiFileText style={{ fontSize: "3rem", color: "#2563eb", marginBottom: "0.5rem" }} />
+                                <h4 style={{ margin: "0.5rem 0" }}>Hóa đơn điện tử</h4>
+                                <p style={{ color: "#64748b", fontSize: "0.85rem" }}>
+                                    Học sinh: <strong>{invoiceModal.name}</strong> — Lớp {invoiceModal.class}
+                                </p>
+                                <p style={{ color: "#64748b", fontSize: "0.85rem" }}>
+                                    Số tiền đã thanh toán: <strong style={{ color: "#16a34a" }}>{formatMoney(invoiceModal.paidAmount)} đ</strong>
+                                </p>
+                            </div>
+                            <div style={{ display: "flex", gap: "0.75rem", justifyContent: "center", marginTop: "1rem" }}>
+                                <button className="btn-secondary" onClick={() => setInvoiceModal(null)}>Đóng</button>
+                                <button
+                                    className="btn-primary"
+                                    onClick={() => {
+                                        window.print();
+                                    }}
+                                    disabled={invoiceLoading}
+                                >
+                                    <FiPrinter /> In hóa đơn
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>

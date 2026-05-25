@@ -159,6 +159,9 @@ export default function TeacherHomeroom() {
                 meritCount: s.meritCount ?? s.merit_count ?? 0,
                 attendanceScore: (s.attendanceScore ?? s.attendance_score ?? 10.0).toString()
             })),
+            classRank: apiData.class_rank || apiData.classRank || null,
+            totalClasses: apiData.total_classes || apiData.totalClasses || null,
+            homeroomSchedule: apiData.homeroom_schedule || apiData.homeroomSchedule || null,
         };
     };
 
@@ -338,7 +341,7 @@ export default function TeacherHomeroom() {
                     </div>
                     <div className="stat-info">
                         <h3>Điểm thi đua</h3>
-                        <p>Hạng 1 / 15</p>
+                        <p>{classData.classRank ? `Hạng ${classData.classRank} / ${classData.totalClasses || "?"}` : "Chưa cập nhật"}</p>
                     </div>
                 </div>
                 <div className="homeroom-stat-card">
@@ -347,7 +350,7 @@ export default function TeacherHomeroom() {
                     </div>
                     <div className="stat-info">
                         <h3>Lịch sinh hoạt</h3>
-                        <p>Thứ 7, Tiết 5</p>
+                        <p>{classData.homeroomSchedule || "Chưa cập nhật"}</p>
                     </div>
                 </div>
             </div>

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import "./ManagementReports.css";
 import { Button, Card, Select } from "../../../components/ui";
 import { 
@@ -47,7 +47,20 @@ function getCurrentTerm() {
 }
 
 const ManagementReports = () => {
-  const filterOptions = useMemo(() => getReportFilterOptions(), []);
+  const [filterOptions, setFilterOptions] = useState({
+    schoolYears: [],
+    classes: [{ value: "all", label: "Tất cả lớp" }],
+    teachers: [{ value: "all", label: "Tất cả giáo viên" }],
+  });
+
+  useEffect(() => {
+    let cancelled = false;
+    getReportFilterOptions().then((opts) => {
+      if (!cancelled) setFilterOptions(opts);
+    });
+    return () => { cancelled = true; };
+  }, []);
+
   const schoolYearOptions = filterOptions.schoolYears;
   const initialSchoolYear = schoolYearOptions.includes(getCurrentSchoolYear())
     ? getCurrentSchoolYear()

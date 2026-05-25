@@ -63,8 +63,8 @@ export default function FinancePaymentHub() {
             const res = await financeService.listDebts({
                 params: {
                     limit: 2000,
-                    schoolYearId: selectedSchoolYear,
-                    semesterId: selectedTerm,
+                    schoolYearId: selectedSchoolYear?.id,
+                    semesterId: selectedTerm?.id,
                 },
             });
 
@@ -132,6 +132,7 @@ export default function FinancePaymentHub() {
     const transformedDebts = useMemo(() => {
         return debts.map(debt => ({
             ...debt,
+            realDebtId: debt.id,
             id: debt.studentCode || `HS${debt.studentId}`,
             name: debt.studentName,
             class: debt.className,
@@ -170,9 +171,9 @@ export default function FinancePaymentHub() {
             .reduce((sum, debt) => sum + (debt.amount || 0), 0);
     }, [transformedDebts]);
 
-    const handleRemind = async (studentName, debtId) => {
+    const handleRemind = async (studentName, debt) => {
         try {
-            await financeService.sendDebtReminder(debtId, { method: "email" });
+            await financeService.sendDebtReminder(debt.realDebtId || debt.id, { body: { method: "email" } });
             toast.success(`Đã gửi nhắc nợ tới phụ huynh của ${studentName}`);
         } catch (error) {
             toast.error("Có lỗi khi gửi nhắc nợ");
@@ -193,7 +194,7 @@ export default function FinancePaymentHub() {
         let sent = 0;
         for (const debt of overdueDebts) {
             try {
-                await financeService.sendDebtReminder(debt.id, { method: "email" });
+                await financeService.sendDebtReminder(debt.realDebtId || debt.id, { body: { method: "email" } });
                 sent++;
             } catch (e) {}
         }
@@ -446,7 +447,7 @@ export default function FinancePaymentHub() {
                                                 <button className="btn-secondary btn-secondary--small" onClick={() => setSelectedStudent(debt)}>
                                                     <FiBook /> Sổ cái
                                                 </button>
-                                                <button className={`btn-remind ${debt.days < 30 ? "yellow" : ""}`} onClick={() => handleRemind(debt.name, debt.id)}>
+                                                <button className={`btn-remind ${debt.days < 30 ? "yellow" : ""}`} onClick={() => handleRemind(debt.name, debt)}>
                                                     <FiBell /> Nhắc nợ
                                                 </button>
                                             </div>

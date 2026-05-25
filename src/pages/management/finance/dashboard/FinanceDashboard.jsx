@@ -8,6 +8,7 @@ import {
     FiBarChart2,
     FiCalendar,
     FiClock,
+    FiLock,
     FiPieChart,
     FiTarget,
 } from "react-icons/fi";
@@ -22,6 +23,7 @@ import {
 } from "recharts";
 import { Link } from "react-router-dom";
 import Modal from "../../../../components/ui/Modal/Modal";
+import PeriodClosingWizard from "./components/PeriodClosingWizard";
 import "./FinanceDashboard.css";
 
 export function FinanceDashboard() {
@@ -29,6 +31,7 @@ export function FinanceDashboard() {
     const [showImpactDialog, setShowImpactDialog] = useState(false);
     const [impactFilter, setImpactFilter] = useState("all");
     const [impactQuery, setImpactQuery] = useState("");
+    const [showPeriodClosing, setShowPeriodClosing] = useState(false);
 
     const [summary, setSummary] = useState({
         actualRevenue: "12.50T",
@@ -353,12 +356,22 @@ export function FinanceDashboard() {
             <PageHeader
                 title="Bảng Điều Khiển Kế Toán"
                 actions={
-                    <SchoolYearTermSelector
-                        selectedSchoolYear={selectedSchoolYear}
-                        selectedTerm={selectedTerm}
-                        onYearChange={handleYearArrow}
-                        onTermChange={handleTermChange}
-                    />
+                    <>
+                        <SchoolYearTermSelector
+                            selectedSchoolYear={selectedSchoolYear}
+                            selectedTerm={selectedTerm}
+                            onYearChange={handleYearArrow}
+                            onTermChange={handleTermChange}
+                        />
+                        <button
+                            type="button"
+                            className="btn-secondary"
+                            style={{ display: "flex", alignItems: "center", gap: "0.35rem" }}
+                            onClick={() => setShowPeriodClosing(true)}
+                        >
+                            <FiLock /> Chốt kỳ
+                        </button>
+                    </>
                 }
             />
 
@@ -682,6 +695,15 @@ export function FinanceDashboard() {
                     </div>
                 </div>
             </Modal>
+
+            {showPeriodClosing && (
+                <PeriodClosingWizard
+                    onClose={() => setShowPeriodClosing(false)}
+                    onLockComplete={() => setShowPeriodClosing(false)}
+                    schoolYearId={selectedSchoolYear?.id}
+                    semesterId={selectedTerm?.id}
+                />
+            )}
         </div>
     );
 }

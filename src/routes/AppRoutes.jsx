@@ -39,6 +39,9 @@ const ManagementTimetable = lazy(() => import("../pages/management/timetable/Man
 const ManagementFinance = lazy(() => import("../pages/management/finance/index.js"));
 const ManagementFinanceDashboard = lazy(() => import("../pages/management/finance/dashboard/FinanceDashboard").then((m) => ({ default: m.FinanceDashboard })));
 const ManagementFinancePaymentHub = lazy(() => import("../pages/management/finance/payment-hub/FinancePaymentHub"));
+const ManagementFinanceDebts = lazy(() => import("../pages/management/finance/debts/FinanceDebts"));
+const ManagementFinanceRevenue = lazy(() => import("../pages/management/finance/revenue/FinanceRevenue"));
+const ManagementFinancePaymentHistory = lazy(() => import("../pages/management/finance/payment-history/FinancePaymentHistory"));
 const ManagementApprovals = lazy(() => import("../pages/management/approvals/index.js"));
 const ManagementNotifications = lazy(() => import("../pages/management/notifications/ManagementNotifications"));
 const ManagementReports = lazy(() => import("../pages/management/reports/ManagementReports"));
@@ -241,6 +244,9 @@ export default function AppRoutes() {
         <Route path="finance"      element={<ManagementFinance />} />
         <Route path="finance/dashboard" element={<ManagementFinanceDashboard />} />
         <Route path="finance/payment-hub" element={<ManagementFinancePaymentHub />} />
+        <Route path="finance/debts" element={<ManagementFinanceDebts />} />
+        <Route path="finance/revenue" element={<ManagementFinanceRevenue />} />
+        <Route path="finance/payment-history" element={<ManagementFinancePaymentHistory />} />
         <Route path="approvals"    element={<ManagementApprovals />} />
         <Route path="notifications" element={<ManagementNotifications />} />
         <Route path="reports"      element={<ManagementReports />} />

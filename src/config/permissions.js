@@ -1,99 +1,127 @@
 export const PERMISSIONS = {
-    // 1. Nhóm Người dùng (User)
+    // 1. Người dùng
     USER_VIEW: 'users:read',
     USER_CREATE: 'users:create',
     USER_UPDATE: 'users:update',
     USER_DELETE: 'users:delete',
-    
-    // 2. Nhóm Lớp học (Class)
+
+    // 2. Lớp học
     CLASS_VIEW: 'classes:read',
     CLASS_MANAGE: 'classes:manage',
-    
-    // 2.1 Nhóm Bài học (Lessons)
+
+    // 3. Phân công lớp
+    CLASS_ALLOCATION_VIEW: 'class_allocation:read',
+    CLASS_ALLOCATION_MANAGE: 'class_allocation:manage',
+
+    // 4. Bài học
     LESSONS_VIEW: 'lessons:read',
     LESSONS_CREATE: 'lessons:create',
     LESSONS_UPDATE: 'lessons:update',
     LESSONS_DELETE: 'lessons:delete',
-    
-    // 3. Nhóm Phân công lớp (Class Allocation)
-    CLASS_ALLOCATION_VIEW: 'class_allocation:read',
-    CLASS_ALLOCATION_MANAGE: 'class_allocation:manage',
 
-    // 4. Nhóm Điểm số (Grade)
+    // 5. Điểm số
     GRADE_VIEW: 'grades:read',
     GRADE_CREATE: 'grades:create',
     GRADE_FINALIZE: 'grades:finalize',
     GRADE_UNLOCK: 'grades:unlock',
 
-    // 5. Nhóm Kiểm tra (Exam & Quiz)
+    // 6. Kiểm tra
     EXAM_VIEW: 'exam:read',
     EXAM_MANAGE: 'exam:manage',
     QUIZ_VIEW: 'quiz:read',
     QUIZ_MANAGE: 'quiz:manage',
-    
-    // 5.1 Nhóm Thời khóa biểu (Timetable)
+
+    // 7. Thời khóa biểu
     TIMETABLE_VIEW: 'timetable:read',
     TIMETABLE_MANAGE: 'timetable:manage',
 
-    // 6. Nhóm Nề nếp (Discipline)
+    // 8. Nề nếp
     DISCIPLINE_VIEW: 'discipline:read',
     DISCIPLINE_MANAGE: 'discipline:manage',
 
-    // 6.1 Nhóm Nghỉ phép (Leave Requests)
+    // 9. Nghỉ phép
     LEAVE_REQUESTS_VIEW: 'leave_requests:read',
     LEAVE_REQUESTS_APPROVE: 'leave_requests:approve',
     LEAVE_REQUESTS_MANAGE: 'leave_requests:manage',
 
-    // 7. Nhóm Tài chính (Fees)
+    // 10. Tài chính / Học phí
     FEES_VIEW: 'fees:read',
+    FEES_CREATE: 'fees:create',
+    FEES_UPDATE: 'fees:update',
+    FEES_DELETE: 'fees:delete',
     FEES_MANAGE: 'fees:manage',
     FINANCE_TUITION_VIEW: 'fees:read',
     FINANCE_TUITION_MANAGE: 'fees:manage',
-    
-    // 8. Nhóm Thông báo (Notification)
+
+    // 11. Công nợ
+    DEBT_VIEW: 'debts:read',
+    DEBT_MANAGE: 'debts:create',
+
+    // 12. Tài khoản ngân hàng
+    SCHOOL_BANK_ACCOUNT_VIEW: 'school_bank_accounts:read',
+    SCHOOL_BANK_ACCOUNT_MANAGE: 'school_bank_accounts:manage',
+
+    // 13. Thông báo thu
+    FEE_NOTICE_VIEW: 'fee_notices:read',
+    FEE_NOTICE_MANAGE: 'fee_notices:manage',
+
+    // 14. Hóa đơn
+    INVOICE_VIEW: 'invoices:read',
+    INVOICE_MANAGE: 'invoices:update',
+
+    // 15. Thông báo
     NOTIFICATION_VIEW: 'notifications:read',
     NOTIFICATION_MANAGE: 'notifications:manage',
 
-    // 9. Nhóm Giáo viên (Teachers)
+    // 16. Giáo viên
     TEACHER_VIEW: 'teachers:read',
     TEACHER_MANAGE: 'teachers:manage',
 
-    // 10. Nhóm Học sinh (Students)
+    // 17. Học sinh
     STUDENT_VIEW: 'students:read',
 
-    // 11. Nhóm Chuyên môn (Departments)
+    // 18. Bộ môn
     DEPARTMENT_MANAGE: 'departments:manage',
 
-    // 12. Nhóm Khen thưởng (Reward Types)
+    // 19. Khen thưởng / Thi đua
     REWARD_TYPE_VIEW: 'reward_types:read',
     REWARD_TYPE_MANAGE: 'reward_types:manage',
 
-    // 13. Nhóm Điểm danh (Attendance)
+    // 20. Điểm danh
     ATTENDANCE_VIEW: 'attendance:read',
     ATTENDANCE_MANAGE: 'attendance:manage',
 
-    // 14. Hệ thống (Audit & Permissions)
-    AUDIT_LOG_VIEW: 'audit_logs:read',
-    PERMISSION_MANAGE: 'permissions:manage',
-    DASHBOARD_VIEW: 'dashboard:read',
-    
-    // 15. Nhóm Báo cáo (Reports)
-    REPORT_VIEW: 'reports:read',
-    REPORTS_VIEW: 'reports:read',
-
-    // 16. Nhóm Phê duyệt (Approvals)
+    // 21. Phê duyệt
     APPROVAL_REQUEST: 'approvals:request',
     APPROVAL_PROCESS: 'approvals:process',
 
-    // 17. Nhóm Thi đua (Competition)
-    COMPETITION_MANAGE: 'reward_types:manage',
+    // 22. Báo cáo
+    REPORT_VIEW: 'reports:read',
+
+    // 23. Hệ thống
+    AUDIT_LOG_VIEW: 'audit_logs:read',
+    PERMISSION_AUDIT_VIEW: 'audit_logs:read',
+    PERMISSION_MANAGE: 'permissions:manage',
+    DASHBOARD_VIEW: 'dashboard:read',
+    SYSTEM_CONFIG_VIEW: 'system_config:read',
+    SYSTEM_CONFIG_UPDATE: 'system_config:update',
+    BACKUP_VIEW: 'backup:read',
+    BACKUP_CREATE: 'backup:create',
+    BACKUP_RESTORE: 'backup:restore',
+    SYSTEM_LOG_VIEW: 'system_logs:read',
+
+    // 24. Môn học & Phòng học
+    SUBJECTS_VIEW: 'subjects:read',
+    SUBJECTS_MANAGE: 'subjects:manage',
+    ROOMS_VIEW: 'rooms:read',
+    ROOMS_MANAGE: 'rooms:manage',
 };
 
 export const MANAGEMENT_TITLES = [
     { label: "Tùy chỉnh", value: "custom", permissions: [] },
     { label: "Hiệu trưởng", value: "principal", permissions: Object.values(PERMISSIONS) },
     { label: "Phó hiệu trưởng (Học vụ)", value: "vp_academic", permissions: [
-        PERMISSIONS.USER_VIEW, PERMISSIONS.CLASS_VIEW, PERMISSIONS.GRADE_VIEW, 
+        PERMISSIONS.USER_VIEW, PERMISSIONS.CLASS_VIEW, PERMISSIONS.GRADE_VIEW,
         PERMISSIONS.EXAM_VIEW, PERMISSIONS.TEACHER_VIEW, PERMISSIONS.STUDENT_VIEW
     ] },
     { label: "Phó hiệu trưởng (Nề nếp)", value: "vp_discipline", permissions: [
@@ -106,10 +134,24 @@ export const MANAGEMENT_TITLES = [
         PERMISSIONS.STUDENT_VIEW
     ] },
     { label: "Kế toán", value: "finance", permissions: [
-        PERMISSIONS.USER_VIEW, PERMISSIONS.FEES_VIEW, PERMISSIONS.FEES_MANAGE, PERMISSIONS.DASHBOARD_VIEW
+        PERMISSIONS.USER_VIEW,
+        PERMISSIONS.FEES_VIEW, PERMISSIONS.FEES_CREATE, PERMISSIONS.FEES_UPDATE, PERMISSIONS.FEES_DELETE, PERMISSIONS.FEES_MANAGE,
+        PERMISSIONS.DEBT_VIEW, PERMISSIONS.DEBT_MANAGE,
+        PERMISSIONS.FEE_NOTICE_VIEW, PERMISSIONS.FEE_NOTICE_MANAGE,
+        PERMISSIONS.SCHOOL_BANK_ACCOUNT_VIEW, PERMISSIONS.SCHOOL_BANK_ACCOUNT_MANAGE,
+        PERMISSIONS.INVOICE_VIEW, PERMISSIONS.INVOICE_MANAGE,
+        PERMISSIONS.DASHBOARD_VIEW, PERMISSIONS.REPORT_VIEW,
+        PERMISSIONS.SUBJECTS_VIEW, PERMISSIONS.SUBJECTS_MANAGE,
+        PERMISSIONS.ROOMS_VIEW, PERMISSIONS.ROOMS_MANAGE,
+        PERMISSIONS.APPROVAL_REQUEST, PERMISSIONS.APPROVAL_PROCESS,
     ] },
     { label: "Tổ trưởng bộ môn", value: "dept_head", permissions: [
         PERMISSIONS.USER_VIEW, PERMISSIONS.TEACHER_VIEW, PERMISSIONS.DEPARTMENT_MANAGE, PERMISSIONS.DASHBOARD_VIEW
+    ] },
+    { label: "Quản lý lịch", value: "schedule_manager", permissions: [
+        PERMISSIONS.TIMETABLE_VIEW, PERMISSIONS.TIMETABLE_MANAGE,
+        PERMISSIONS.SUBJECTS_VIEW, PERMISSIONS.ROOMS_VIEW,
+        PERMISSIONS.TEACHER_VIEW, PERMISSIONS.CLASS_VIEW,
     ] },
 ];
 
@@ -172,7 +214,18 @@ export const PERMISSION_GROUPS = [
         label: "Tài chính & Học phí",
         permissions: [
             { id: PERMISSIONS.FEES_VIEW, label: "Xem học phí" },
+            { id: PERMISSIONS.FEES_CREATE, label: "Tạo khoản thu" },
+            { id: PERMISSIONS.FEES_UPDATE, label: "Sửa khoản thu" },
+            { id: PERMISSIONS.FEES_DELETE, label: "Xóa khoản thu" },
             { id: PERMISSIONS.FEES_MANAGE, label: "Quản lý học phí" },
+            { id: PERMISSIONS.DEBT_VIEW, label: "Xem công nợ" },
+            { id: PERMISSIONS.DEBT_MANAGE, label: "Tạo công nợ" },
+            { id: PERMISSIONS.INVOICE_VIEW, label: "Xem hóa đơn" },
+            { id: PERMISSIONS.INVOICE_MANAGE, label: "Ký/gửi hóa đơn" },
+            { id: PERMISSIONS.FEE_NOTICE_VIEW, label: "Xem thông báo thu" },
+            { id: PERMISSIONS.FEE_NOTICE_MANAGE, label: "Quản lý thông báo thu" },
+            { id: PERMISSIONS.SCHOOL_BANK_ACCOUNT_VIEW, label: "Xem tài khoản ngân hàng" },
+            { id: PERMISSIONS.SCHOOL_BANK_ACCOUNT_MANAGE, label: "Quản lý tài khoản ngân hàng" },
         ]
     },
     {
@@ -197,4 +250,3 @@ export const PERMISSION_GROUPS = [
 ];
 
 export const permissionSidebarMap = [];
-

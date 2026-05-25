@@ -26,37 +26,41 @@ const PERIOD_BY_ID = PERIOD_SLOTS.reduce((acc, item) => {
 }, {});
 
 export const SUBJECT_COLOR_MAP = {
-  Toan: "teal",
-  NguVan: "pink",
-  TiengAnh: "blue",
-  VatLy: "orange",
-  HoaHoc: "purple",
-  SinhHoc: "emerald",
-  TinHoc: "indigo",
-  LichSu: "amber",
-  DiaLy: "cyan",
-  GDCD: "rose",
-  TheDuc: "green",
-  QuocPhong: "slate",
-  CongNghe: "brown",
+  TOAN: "teal",
+  VAN: "pink",
+  ANH: "blue",
+  VL: "orange",
+  HOA: "purple",
+  SH: "emerald",
+  TH: "indigo",
+  LS: "amber",
+  DL: "cyan",
+  GDKTPL: "rose",
+  GDTC: "green",
+  GDQPAN: "slate",
+  CN: "brown",
+  HDTN: "sky",
+  AN: "violet",
+  MT: "fuchsia",
 };
 
 export const SUBJECT_DISPLAY = {
-  Toan: "Toán",
-  NguVan: "Ngữ văn",
-  TiengAnh: "Tiếng Anh",
-  VatLy: "Vật lý",
-  HoaHoc: "Hóa học",
-  SinhHoc: "Sinh học",
-  TinHoc: "Tin học",
-  LichSu: "Lịch sử",
-  DiaLy: "Địa lý",
-  GDCD: "Giáo dục công dân",
-  TheDuc: "Giáo dục thể chất",
-  QuocPhong: "QP & AN",
-  CongNghe: "Công nghệ",
-  TraiNghiem: "HĐTN, HN",
-  DiaPhuong: "GD Địa phương",
+  TOAN: "Toán",
+  VAN: "Ngữ văn",
+  ANH: "Tiếng Anh",
+  VL: "Vật lý",
+  HOA: "Hóa học",
+  SH: "Sinh học",
+  TH: "Tin học",
+  LS: "Lịch sử",
+  DL: "Địa lý",
+  GDKTPL: "Giáo dục kinh tế & pháp luật",
+  GDTC: "Giáo dục thể chất",
+  GDQPAN: "GDQP & AN",
+  CN: "Công nghệ",
+  HDTN: "HĐTN, Hướng nghiệp",
+  AN: "Âm nhạc",
+  MT: "Mĩ thuật",
 };
 
 /**
@@ -65,23 +69,22 @@ export const SUBJECT_DISPLAY = {
 export const GDPT_2018_CONFIG = {
   MAX_WEEKLY_PERIODS: 30,
   QUOTAS: {
-    Toan: 4,
-    NguVan: 4,
-    TiengAnh: 3,
-    LichSu: 2,
-    TheDuc: 2,
-    QuocPhong: 1,
-    TraiNghiem: 3,
-    DiaPhuong: 1,
-    VatLy: 3,
-    HoaHoc: 3,
-    SinhHoc: 3,
-    TinHoc: 3,
-    CongNghe: 3,
-    DiaLy: 3,
-    GDCD: 3,
+    TOAN: 4,
+    VAN: 4,
+    ANH: 3,
+    LS: 2,
+    GDTC: 2,
+    GDQPAN: 1,
+    HDTN: 3,
+    VL: 3,
+    HOA: 3,
+    SH: 3,
+    TH: 3,
+    DL: 3,
+    GDKTPL: 3,
+    CN: 3,
   },
-  CONSECUTIVE_SUBJECTS: ["Toan", "NguVan", "VatLy", "HoaHoc", "SinhHoc"],
+  CONSECUTIVE_SUBJECTS: ["TOAN", "VAN", "VL", "HOA", "SH"],
 };
 
 export const STATUS_META = {
@@ -105,7 +108,7 @@ export const ROOM_OPTIONS = [
   "Sân thể dục", "Hội trường", "Thư viện"
 ];
 
-export const CLASS_OPTIONS = ["10A1", "10A2", "11B1", "12A2"];
+export const CLASS_OPTIONS = ["10A1", "10A2", "10A3", "10A4", "11A1", "11A3", "12A1", "12A2", "12A3"];
 
 export const STUDENT_DIRECTORY = [
   {

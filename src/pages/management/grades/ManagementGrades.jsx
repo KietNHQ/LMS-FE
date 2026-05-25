@@ -44,24 +44,31 @@ export default function ManagementGrades() {
       try {
         const semesterValue = selectedTerm === "hk1" ? 1 : 2;
         
-        // Fetch class enrollments/students
-        const classStudents = await studentsService.listStudents({ classId: Number(selectedClassId) }).catch(() => []);
+        // Fetch class students via dedicated endpoint
+        const classStudents = await studentsService.getClassStudents(Number(selectedClassId)).catch(() => []);
         
         // Map student academic records
         const resolvedStudents = await Promise.all(
           classStudents.map(async (student) => {
             try {
-              // Try fetching dynamic GPA & Classification
-              const enrollmentId = student.enrollmentId ?? student.id;
+              // enrollmentId is the student_enrollments.id (integer) — required for grade APIs
+              const enrollmentId = student.enrollmentId || student.id;
               const gpaRes = await gradeService.calculateSemesterGPA({ enrollmentId, semesterId: semesterValue }).catch(() => null);
               const classifyRes = await gradeService.classifySemester({ enrollmentId, semesterId: semesterValue }).catch(() => null);
               const honorsRes = await gradeService.checkHonors({ enrollmentId, schoolYearId: 1 }).catch(() => null);
 
+              const gpaValue = gpaRes?.gpa
+                ? parseFloat(gpaRes.gpa.toFixed(2))
+                : (gpaRes?.gpa === 0 ? 0 : null);
+              const academicData = classifyRes?.data?.academic || classifyRes;
+              const classification = academicData?.classification || academicData?.result || "Chưa xếp loại";
+              const honorsValue = honorsRes?.data?.honors ?? honorsRes?.honors ?? "Không";
+
               return {
                 ...student,
-                gpa: gpaRes?.gpa ?? gpaRes?.averageScore ?? "Chưa tính",
-                classification: classifyRes?.classification ?? classifyRes?.status ?? "Chưa xếp loại",
-                honors: honorsRes?.honors ?? honorsRes?.title ?? "Không"
+                gpa: gpaValue !== null ? gpaValue : "Chưa tính",
+                classification,
+                honors: honorsValue
               };
             } catch (err) {
               return {
@@ -94,10 +101,26 @@ export default function ManagementGrades() {
     setIsLoadingReport(true);
     try {
       const semesterValue = selectedTerm === "hk1" ? 1 : 2;
-      const enrollmentId = student.enrollmentId ?? student.id;
-      
+      const enrollmentId = student.enrollmentId || student.id;
+
       const card = await gradeService.getReportCard(enrollmentId, { semesterId: semesterValue });
-      setReportCardData(card);
+
+      // Map BE response structure to UI expected format
+      const reportCard = {
+        studentName: card?.student?.name || activeReportCard?.name || "—",
+        className: card?.student?.class || activeReportCard?.className || "—",
+        gpa: card?.grades?.gpa != null ? parseFloat(card.grades.gpa.toFixed(2)) : "—",
+        classification: card?.academicClassification?.classification || "Chưa xếp loại",
+        conduct: card?.conductClassification?.conduct || "Tốt",
+        subjects: (card?.grades?.results || []).map(r => ({
+          name: r.subjectName,
+          regular: "—",
+          midterm: "—",
+          final: "—",
+          average: r.averageScore != null ? parseFloat(r.averageScore.toFixed(1)) : "—",
+        })),
+      };
+      setReportCardData(reportCard);
     } catch (err) {
       console.error(err);
       setReportCardData(null);
@@ -116,11 +139,12 @@ export default function ManagementGrades() {
       // Reload grades
       const resolvedStudents = await Promise.all(
         students.map(async (student) => {
-          const enrollmentId = student.enrollmentId ?? student.id;
+          const enrollmentId = student.enrollmentId || student.id;
           const gpaRes = await gradeService.calculateSemesterGPA({ enrollmentId, semesterId: semesterValue }).catch(() => null);
+          const gpaValue = gpaRes?.gpa ? parseFloat(gpaRes.gpa.toFixed(2)) : (gpaRes?.gpa === 0 ? 0 : student.gpa);
           return {
             ...student,
-            gpa: gpaRes?.gpa ?? gpaRes?.averageScore ?? student.gpa
+            gpa: gpaValue !== null ? gpaValue : student.gpa
           };
         })
       );

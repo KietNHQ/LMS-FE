@@ -240,7 +240,7 @@ const teacherEndpointRegistry = [
   },
   { key: "get_notifications", method: "GET", path: "/notifications/my", module: "notifications", mock: () => ([]) },
   // Leave Requests - Real API endpoints (no mock)
-  { key: "get_class_leave_requests", method: "GET", path: "/classes/:classId/leave-requests", module: "leave" },
+  { key: "get_class_leave_requests", method: "GET", path: "/leave-requests/classes/:classId/leave-requests", module: "leave" },
   { key: "patch_leave_request_status", method: "PATCH", path: "/leave-requests/:id/approve", module: "leave" },
   { 
     key: "get_timetable", 

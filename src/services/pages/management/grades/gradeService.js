@@ -85,6 +85,16 @@ export const gradeService = {
     const response = await axiosClient.get(`/grades/student/${studentId}`, { params });
     return getPayload(response);
   },
+
+  // Tổng quan học tập toàn trường (Principal Dashboard)
+  getOverviewSummary: async ({ semesterId, schoolYearId } = {}) => {
+    const params = {
+      ...(semesterId ? { semesterId } : {}),
+      ...(schoolYearId ? { schoolYearId } : {}),
+    };
+    const response = await axiosClient.get(`/grades/overview-summary`, { params });
+    return getPayload(response);
+  },
 };
 
 export default gradeService;

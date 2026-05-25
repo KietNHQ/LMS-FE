@@ -102,6 +102,9 @@ export const sidebarConfig = {
         { label: "Kỳ Thi",             icon: FiCalendar,      path: "/management/exams",        requiredPermissions: [PERMISSIONS.EXAM_VIEW] },
         { label: "Thời Khóa Biểu",    icon: FiCalendar,      path: "/management/timetable",   requiredPermissions: [PERMISSIONS.TIMETABLE_VIEW] },
         { label: "Học Phí & Tài Chính",icon: FiCreditCard,    path: "/management/finance",     requiredPermissions: [PERMISSIONS.FINANCE_TUITION_VIEW] },
+        { label: "  Công nợ chi tiết",  icon: FiAlertCircle,  path: "/management/finance/debts",    requiredPermissions: [PERMISSIONS.FINANCE_TUITION_VIEW] },
+        { label: "  Doanh thu",          icon: FiTrendingUp,   path: "/management/finance/revenue",   requiredPermissions: [PERMISSIONS.FINANCE_TUITION_VIEW] },
+        { label: "  Lịch sử TT",         icon: FiBarChart2,   path: "/management/finance/payment-history", requiredPermissions: [PERMISSIONS.FINANCE_TUITION_VIEW] },
         { label: "Phê Duyệt",          icon: FiCheckSquare,   path: "/management/approvals",    requiredPermissions: [PERMISSIONS.APPROVAL_REQUEST, PERMISSIONS.APPROVAL_PROCESS] },
         { label: "Trò chuyện",         icon: FiMessageSquare, path: "/management/chat" },
         { label: "Thông Báo",          icon: FiBell,          path: "/management/notifications" },
@@ -111,7 +114,7 @@ export const sidebarConfig = {
     admin: [
         { label: "Trang chủ Admin",     icon: FiGrid,             path: "/admin/dashboard" },
         { label: "Quản Lý Tài Khoản",  icon: LuUserCog,          path: "/admin/users",           requiredPermissions: [PERMISSIONS.USER_VIEW] },
-        { label: "Nhật Ký Phân Quyền", icon: FiShield,           path: "/admin/audit-log",       requiredPermissions: [PERMISSIONS.PERMISSION_AUDIT_VIEW] },
+        { label: "Nhật Ký Phân Quyền", icon: FiShield,           path: "/admin/audit-log",       requiredPermissions: [PERMISSIONS.AUDIT_LOG_VIEW] },
         { label: "Log Hệ Thống",       icon: FiActivity,         path: "/admin/system-log",      requiredPermissions: [PERMISSIONS.SYSTEM_LOG_VIEW] },
         { label: "Thông Báo",          icon: FiBell,             path: "/admin/notifications" },
     ],

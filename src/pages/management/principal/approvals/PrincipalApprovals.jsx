@@ -1,159 +1,17 @@
 import { useMemo, useState, useEffect } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { PageHeader, SchoolYearTermSelector } from "../../../../components/common";
 import Select from "../../../../components/ui/Select/Select";
 import { useSchoolYearTerm } from "../../../../hooks/useSchoolYearTerm";
-import { 
-  FiActivity, FiCheckSquare, FiClock, FiSearch, FiFilter, 
-  FiInbox, FiAlertTriangle, FiX, FiCheck, FiChevronLeft, FiChevronRight 
+import { managementLeaveService } from "../../../../services/pages/management/leave-requests/managementLeaveService";
+import {
+  FiActivity, FiCheckSquare, FiClock, FiSearch, FiFilter,
+  FiInbox, FiAlertTriangle, FiX, FiCheck, FiChevronLeft, FiChevronRight
 } from "react-icons/fi";
 import { toast } from "react-toastify";
 import "./PrincipalApprovals.css";
 
-// ... (WORK_ITEMS stays the same)
-
-const WORK_ITEMS = [
-  {
-    id: "G-101",
-    section: "grades",
-    sectionLabel: "Chuyên môn",
-    title: "Sổ điểm HK1 - 10A1",
-    reference: "#GR-101",
-    requester: "PHT. Nguyễn Y",
-    summary: "Đã kiểm tra 100% cột điểm, chờ phê duyệt để khóa sổ.",
-    description: "Toàn bộ giáo viên bộ môn của khối 10A1 đã hoàn tất việc nhập điểm và đánh giá định kỳ. Đã có sự xác nhận chéo từ phía tổ trưởng chuyên môn. Cần ký duyệt cuối cùng để hệ thống chính thức khóa sổ điểm và xuất báo cáo học kỳ.",
-    time: "2 giờ trước",
-    dueAt: "Trước 17:00 hôm nay",
-    priority: "Cao",
-    status: "pending",
-  },
-  {
-    id: "G-102",
-    section: "grades",
-    sectionLabel: "Chuyên môn",
-    title: "Sổ điểm HK1 - 11A5",
-    reference: "#GR-102",
-    requester: "PHT. Nguyễn Y",
-    summary: "Thiếu xác nhận một số đầu điểm học kỳ.",
-    description: "Phát hiện 3 trường hợp học sinh vắng thi học kỳ nhưng chưa có biên bản xử lý đính kèm trong hồ sơ điện tử. Cần rà soát lại trước khi phê duyệt tổng thể.",
-    time: "4 giờ trước",
-    dueAt: "Ngày mai",
-    priority: "Trung bình",
-    status: "pending",
-  },
-  {
-    id: "A-201",
-    section: "activities",
-    sectionLabel: "Kế hoạch & Ngân sách",
-    title: "Ngân sách Hội trại 20/11",
-    reference: "#ACT-201",
-    requester: "Kế toán trưởng",
-    summary: "Dự toán chi tiết đính kèm, cần quyết định cuối cùng.",
-    description: "Đề xuất kinh phí tổ chức Hội trại truyền thống. Đã bao gồm chi phí thuê thiết bị âm thanh, ánh sáng, phần thưởng và công tác an ninh. Ngân sách dự kiến tăng 5% so với năm trước do chi phí vật liệu trang trí tăng.",
-    time: "1 giờ trước",
-    dueAt: "Trong ngày",
-    priority: "Cao",
-    status: "pending",
-  },
-  {
-    id: "A-202",
-    section: "activities",
-    sectionLabel: "Kế hoạch & Ngân sách",
-    title: "Kế hoạch Bồi dưỡng Học sinh giỏi",
-    reference: "#ACT-202",
-    requester: "Tổ chuyên môn Toán",
-    summary: "Đề xuất lịch, kinh phí và danh sách học sinh tham gia.",
-    description: "Kế hoạch tập huấn đội tuyển dự thi cấp Thành phố. Bao gồm 12 buổi học tăng cường vào chiều thứ 7 và sáng chủ nhật. Danh sách gồm 08 học sinh xuất sắc nhất khối 12.",
-    time: "5 giờ trước",
-    dueAt: "Ngày mai",
-    priority: "Trung bình",
-    status: "pending",
-  },
-  {
-    id: "G-103",
-    section: "grades",
-    sectionLabel: "Chuyên môn",
-    title: "Học bạ định kỳ - 12A3",
-    reference: "#GR-103",
-    requester: "Giáo vụ Lê C",
-    summary: "Đã xuất bản PDF, sẵn sàng lưu hồ sơ.",
-    description: "Hoàn tất số hóa học bạ cho lớp 12A3. Tất cả dữ liệu đã được đối soát với bản giấy. Cần phê duyệt để trả hồ sơ cho học sinh nộp hồ sơ xét tuyển Đại học.",
-    time: "Hôm qua",
-    dueAt: "Đã xử lý",
-    priority: "Thấp",
-    status: "approved",
-  },
-  // Extra data for pagination
-  {
-    id: "A-203",
-    section: "activities",
-    sectionLabel: "Kế hoạch & Ngân sách",
-    title: "Bổ sung thiết bị phòng thực hành",
-    reference: "#ACT-203",
-    requester: "Tổ Tin học",
-    summary: "Chờ chốt hạn mức từ hiệu trưởng.",
-    description: "Đề xuất mua mới 20 bộ máy tính phục vụ kỳ thi nghề. Các máy cũ hiện tại đã quá thời gian khấu hao và thường xuyên gặp lỗi phần cứng.",
-    time: "Hôm qua",
-    dueAt: "Đã xử lý",
-    priority: "Trung bình",
-    status: "rejected",
-  },
-  {
-    id: "G-104",
-    section: "grades",
-    sectionLabel: "Chuyên môn",
-    title: "Xác nhận kết quả khảo sát khối 11",
-    reference: "#GR-104",
-    requester: "PHT. Trần D",
-    summary: "Kiểm tra phổ điểm kỳ thi thử năng lực.",
-    description: "Dữ liệu kết quả khảo sát đầu năm của toàn khối 11. Cần xem xét để có hướng điều chỉnh kế hoạch giảng dạy phù hợp cho giai đoạn tiếp theo.",
-    time: "3 ngày trước",
-    dueAt: "Đã xử lý",
-    priority: "Trung bình",
-    status: "approved",
-  },
-  {
-    id: "A-204",
-    section: "activities",
-    sectionLabel: "Kế hoạch & Ngân sách",
-    title: "Phê duyệt chi phí tu bổ sân bóng",
-    reference: "#ACT-204",
-    requester: "Cán bộ hành chính",
-    summary: "Thay cỏ nhân tạo và nâng cấp hệ thống thoát nước.",
-    description: "Dự án cải tạo cơ sở vật chất sân chơi. Khu vực sân bóng hiện bị đọng nước mỗi khi mưa lớn, ảnh hưởng đến hoạt động giáo dục thể chất.",
-    time: "Hôm qua",
-    dueAt: "Tuần này",
-    priority: "Thấp",
-    status: "pending",
-  },
-  {
-    id: "G-105",
-    section: "grades",
-    sectionLabel: "Chuyên môn",
-    title: "Đề xuất điều chỉnh phân phối chương trình",
-    reference: "#GR-105",
-    requester: "Tổ Ngữ Văn",
-    summary: "Thay đổi một số tiết ôn tập cho khối 12.",
-    description: "Đề xuất tăng cường các tiết rèn kỹ năng viết đoạn văn nghị luận xã hội nhằm bám sát cấu trúc đề thi mới của Bộ GD&ĐT.",
-    time: "2 giờ trước",
-    dueAt: "Ngày mai",
-    priority: "Trung bình",
-    status: "pending",
-  },
-  {
-    id: "A-205",
-    section: "activities",
-    sectionLabel: "Kế hoạch & Ngân sách",
-    title: "Ngân sách tổ chức Lễ khai giảng",
-    reference: "#ACT-205",
-    requester: "Phòng Tài vụ",
-    summary: "Các hạng mục âm thanh, khánh tiết và tiệc trà.",
-    description: "Dự toán chi tiết cho buổi lễ quan trọng nhất đầu năm học. Đã được các phòng ban chuyên môn liên quan thẩm định kỹ lưỡng.",
-    time: "Hôm qua",
-    dueAt: "Tuần sau",
-    priority: "Cao",
-    status: "pending",
-  },
-];
+// WORK_ITEMS removed. Data now comes from managementLeaveService via useQuery.
 
 const STATUS_OPTIONS = [
   { value: "all", label: "Tất cả" },
@@ -237,10 +95,10 @@ function ItemModal({ item, isOpen, onClose, onAction }) {
         <div className="modal-footer">
           {item.status === "pending" ? (
             <div className="modal-actions">
-              <button className="btn-modal-reject" onClick={() => onAction(item.id, "rejected")}>
+              <button className="btn-modal-reject" onClick={() => onAction(item.id, "rejected")} disabled={processMutation.isPending}>
                 <FiX /> Từ chối yêu cầu
               </button>
-              <button className="btn-modal-approve" onClick={() => onAction(item.id, "approved")}>
+              <button className="btn-modal-approve" onClick={() => onAction(item.id, "approved")} disabled={processMutation.isPending}>
                 <FiCheck /> Phê duyệt ngay
               </button>
             </div>
@@ -258,7 +116,7 @@ export default function PrincipalApprovals() {
   const [activeSection, setActiveSection] = useState("all");
   const [activeStatus, setActiveStatus] = useState("pending");
   const [searchTerm, setSearchTerm] = useState("");
-  const [items, setItems] = useState(WORK_ITEMS);
+  const [items, setItems] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedItem, setSelectedItem] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -266,71 +124,34 @@ export default function PrincipalApprovals() {
   const itemsPerPage = 6;
   const sectionLabel = selectedTerm === "hk1" ? "Học kỳ 1" : "Học kỳ 2";
 
-  // Fetch parent leave requests and merge them with other work items to simulate unified school system
+  const queryClient = useQueryClient();
+
+  // Fetch leave requests from backend via managementLeaveService
+  const { data: leaveResponse, isLoading } = useQuery({
+    queryKey: ["management-leave-requests", activeStatus],
+    queryFn: () => managementLeaveService.getLeaveRequests({ status: activeStatus, limit: 100 }),
+  });
+
+  // Map API response to WORK_ITEMS shape
   useEffect(() => {
-    const loadData = () => {
-      const stored = localStorage.getItem("parent_leave_requests");
-      const rawRequests = stored ? JSON.parse(stored) : [];
-      
-      // Fallback seeds matching teacher homeroom expectations
-      if (rawRequests.length === 0) {
-        const fallbacks = [
-          {
-            id: "leave-demo-1",
-            studentEnrollmentId: "child1",
-            student: { id: 1024, fullName: "Nguyễn Minh Tuấn", studentCode: "STU1024" },
-            reason: "Cháu bị sốt cao 39 độ, bác sĩ yêu cầu nghỉ học 2 ngày.",
-            startDate: "2026-05-21",
-            endDate: "2026-05-22",
-            note: "Tôi sẽ gửi kèm giấy xác nhận của bác sĩ sau.",
-            status: "pending",
-            createdAt: new Date().toISOString()
-          },
-          {
-            id: "leave-demo-2",
-            studentEnrollmentId: "child2",
-            student: { id: 1025, fullName: "Nguyễn Thị Ngọc Hà", studentCode: "STU0891" },
-            reason: "Cháu nghỉ đi khám sức khỏe định kỳ cùng gia đình.",
-            startDate: "2026-05-25",
-            endDate: "2026-05-25",
-            note: "",
-            status: "approved",
-            feedback: "Đã duyệt, chúc em luôn mạnh khỏe.",
-            createdAt: new Date().toISOString()
-          }
-        ];
-        localStorage.setItem("parent_leave_requests", JSON.stringify(fallbacks));
-        rawRequests.push(...fallbacks);
-      }
-
-      // Convert leave requests to the uniform WORK_ITEMS shape
-      const mappedLeaves = rawRequests.map(req => {
-        const studentName = req.student?.fullName || (req.studentEnrollmentId === "child2" ? "Nguyễn Thị Ngọc Hà" : "Nguyễn Minh Tuấn");
-        const shortId = typeof req.id === "string" ? req.id : `leave-${req.id}`;
-        return {
-          id: shortId,
-          section: "leave",
-          sectionLabel: "Đơn xin phép",
-          title: `Đơn xin nghỉ học: ${studentName}`,
-          reference: `#LR-${shortId.replace("leave-", "").slice(0, 6).toUpperCase()}`,
-          requester: `Phụ huynh ${studentName}`,
-          summary: `Lý do: ${req.reason}`,
-          description: `Học sinh: ${studentName}\nThời gian nghỉ: Từ ${req.startDate} đến ${req.endDate}\nLý do: ${req.reason}\n\nGhi chú từ phụ huynh: ${req.note || "Không có"}\n\nÝ kiến phản hồi: ${req.feedback || "Chưa có phản hồi"}`,
-          time: req.createdAt ? new Date(req.createdAt).toLocaleDateString("vi-VN") : "Hôm nay",
-          dueAt: "Sớm nhất",
-          priority: req.status === "pending" ? "Cao" : "Trung bình",
-          status: req.status || "pending",
-        };
-      });
-
-      setItems([...WORK_ITEMS, ...mappedLeaves]);
-    };
-
-    loadData();
-    // Listen for storage changes from other browser tabs/views (Teacher/Parent updates)
-    window.addEventListener("storage", loadData);
-    return () => window.removeEventListener("storage", loadData);
-  }, []);
+    if (!leaveResponse?.data) return;
+    const mappedLeaves = leaveResponse.data.map(req => ({
+      id: String(req.id),
+      section: "leave",
+      sectionLabel: "Đơn xin phép",
+      title: `Đơn xin nghỉ học: ${req.studentName || req.student?.fullName || "Học sinh"}`,
+      reference: `#LR-${String(req.id).slice(0, 6).toUpperCase()}`,
+      requester: `Phụ huynh ${req.guardianName || ""}`,
+      summary: `Lý do: ${req.reason}`,
+      description: `Học sinh: ${req.studentName || req.student?.fullName || ""}\nMã HS: ${req.studentCode || ""}\nLớp: ${req.className || ""}\nThời gian nghỉ: Từ ${req.startDate} đến ${req.endDate}\nSố ngày: ${req.totalDays || 1}\nLý do: ${req.reason}\n\nGhi chú phụ huynh: ${req.note || "Không có"}\n\nÝ kiến BGH: ${req.adminNotes || "Chưa có"}\nNgười duyệt: ${req.reviewedByName || "Chưa xử lý"}\nLúc: ${req.reviewedAt || ""}`,
+      time: req.createdAt ? new Date(req.createdAt).toLocaleDateString("vi-VN") : "Hôm nay",
+      dueAt: "Sớm nhất",
+      priority: req.status === "pending" ? "Cao" : "Trung bình",
+      status: req.status || "pending",
+    }));
+    setItems(mappedLeaves);
+    setCurrentPage(1);
+  }, [leaveResponse]);
 
   const metrics = useMemo(() => {
     return {
@@ -359,39 +180,42 @@ export default function PrincipalApprovals() {
     return filteredItems.slice(start, start + itemsPerPage);
   }, [filteredItems, currentPage]);
 
-  const updateItemStatus = (id, status) => {
-    setItems((prev) => prev.map((item) => (item.id === id ? { ...item, status } : item)));
-    setIsModalOpen(false);
-
-    // Sync status updates back to parent_leave_requests unified mock database
-    if (id.startsWith("leave-") || id.startsWith("leave-demo-")) {
-      const stored = localStorage.getItem("parent_leave_requests");
-      if (stored) {
-        const rawRequests = JSON.parse(stored);
-        const updatedRequests = rawRequests.map(req => {
-          const reqId = typeof req.id === "string" ? req.id : `leave-${req.id}`;
-          if (reqId === id) {
-            return {
-              ...req,
-              status,
-              feedback: status === "approved" ? "Đã phê duyệt bởi Hiệu trưởng/Ban Giám Hiệu." : "Từ chối bởi Hiệu trưởng/Ban Giám Hiệu.",
-              approvedBy: "Principal",
-              approvedByRole: "principal",
-              updatedAt: new Date().toISOString()
-            };
-          }
-          return req;
-        });
-        localStorage.setItem("parent_leave_requests", JSON.stringify(updatedRequests));
+  const processMutation = useMutation({
+    mutationFn: ({ id, status, adminNotes }) => {
+      if (status === "approved") {
+        return managementLeaveService.approveLeaveRequest(id, adminNotes);
+      } else {
+        return managementLeaveService.rejectLeaveRequest(id, adminNotes);
       }
-    }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["management-leave-requests"] });
+      setIsModalOpen(false);
+      toast.success("Đã xử lý yêu cầu");
+    },
+    onError: () => {
+      toast.error("Xử lý thất bại. Vui lòng thử lại.");
+    },
+  });
 
-    toast.success(`Đã xử lý yêu cầu ${id}`);
-  };
+  const bulkMutation = useMutation({
+    mutationFn: (ids) => {
+      const promises = ids.map(id =>
+        managementLeaveService.approveLeaveRequest(id, "Duyệt nhanh")
+      );
+      return Promise.all(promises);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["management-leave-requests"] });
+      toast.success(`Đã phê duyệt yêu cầu`);
+    },
+    onError: () => {
+      toast.error("Duyệt nhiều thất bại. Vui lòng thử lại.");
+    },
+  });
 
-  const openItemDetail = (item) => {
-    setSelectedItem(item);
-    setIsModalOpen(true);
+  const updateItemStatus = (id, status, adminNotes = "") => {
+    processMutation.mutate({ id, status, adminNotes });
   };
 
   const bulkApprove = () => {
@@ -400,31 +224,13 @@ export default function PrincipalApprovals() {
       toast.info("Không có yêu cầu chờ duyệt.");
       return;
     }
-    const ids = new Set(pendingVisible.map((item) => item.id));
-    setItems((prev) => prev.map((item) => (ids.has(item.id) ? { ...item, status: "approved" } : item)));
+    const ids = pendingVisible.map((item) => item.id);
+    bulkMutation.mutate(ids);
+  };
 
-    // Bulk update leave requests status inside localStorage database
-    const stored = localStorage.getItem("parent_leave_requests");
-    if (stored) {
-      const rawRequests = JSON.parse(stored);
-      const updatedRequests = rawRequests.map(req => {
-        const reqId = typeof req.id === "string" ? req.id : `leave-${req.id}`;
-        if (ids.has(reqId)) {
-          return {
-            ...req,
-            status: "approved",
-            feedback: "Đã phê duyệt nhanh bởi Hiệu trưởng/Ban Giám Hiệu.",
-            approvedBy: "Principal",
-            approvedByRole: "principal",
-            updatedAt: new Date().toISOString()
-          };
-        }
-        return req;
-      });
-      localStorage.setItem("parent_leave_requests", JSON.stringify(updatedRequests));
-    }
-
-    toast.success(`Đã phê duyệt ${pendingVisible.length} yêu cầu.`);
+  const openItemDetail = (item) => {
+    setSelectedItem(item);
+    setIsModalOpen(true);
   };
 
   return (
@@ -507,7 +313,7 @@ export default function PrincipalApprovals() {
           />
         </div>
 
-        <button className="bulk-approve-btn" onClick={bulkApprove}>
+        <button className="bulk-approve-btn" onClick={bulkApprove} disabled={bulkMutation.isPending}>
           <FiCheckSquare /> Phê duyệt nhanh
         </button>
       </div>
@@ -532,7 +338,12 @@ export default function PrincipalApprovals() {
         </div>
 
         <div className="table-wrapper">
-          {visibleItems.length === 0 ? (
+          {isLoading ? (
+            <div className="empty-state">
+              <div className="loading-spinner" />
+              <p>Đang tải yêu cầu...</p>
+            </div>
+          ) : visibleItems.length === 0 ? (
             <div className="empty-state">
               <FiAlertTriangle />
               <p>Không tìm thấy yêu cầu phù hợp.</p>

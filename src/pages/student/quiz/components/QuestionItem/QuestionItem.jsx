@@ -69,7 +69,7 @@ export default function QuestionItem({
             <div className="question-item-options">
                 {options.map((option, optionIndex) => (
                     <AnswerOption
-                        key={option}
+                        key={`${option}-${optionIndex}`}
                         label={labels[optionIndex]}
                         option={option}
                         selected={selectedAnswer === option}

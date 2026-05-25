@@ -1,7 +1,8 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { FiFileText, FiSend, FiCheckCircle, FiAlertCircle, FiSearch, FiRefreshCcw, FiPenTool } from "react-icons/fi";
 import { toast } from "react-toastify";
 import { financeService } from "../../../../services/pages/management/finance";
+import { useSchoolYearTerm } from "../../../../../hooks/useSchoolYearTerm";
 
 const STATUS_LABELS = {
     signed: "Đã ký",
@@ -16,22 +17,44 @@ const DELIVERY_LABELS = {
     none: "-",
 };
 
-export default function InvoiceCenter() {
+const normalizeInvoice = (inv) => {
+    const base = {
+        id: inv.id,
+        invoiceCode: inv.invoice_no || inv.invoiceCode || "",
+        studentName: inv.student_given_name && inv.student_surname
+            ? `${inv.student_surname} ${inv.student_given_name}`
+            : inv.studentName || inv.student?.fullName || "-",
+        issueDate: inv.created_at || inv.issueDate,
+        totalAmount: parseFloat(inv.total_amount || inv.amount || inv.amount_paid || 0),
+        amountPaid: parseFloat(inv.paid_amount || inv.amount_paid || 0),
+        status: inv.signed ? "signed" : (inv.status || "draft"),
+        deliveryStatus: inv.sent ? "sent" : (inv.deliveryStatus || "not_sent"),
+    };
+    return { ...base, ...inv };
+};
+
+export default function InvoiceCenter({ invoices: propInvoices }) {
+    const { selectedSchoolYear, selectedTerm } = useSchoolYearTerm();
     const [invoices, setInvoices] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
 
-    useEffect(() => {
-        fetchInvoices();
-    }, []);
-
-    const fetchInvoices = async () => {
+    const fetchInvoices = useCallback(async () => {
         setIsLoading(true);
         try {
             const res = await financeService.getAllInvoices({
-                params: { limit: 200 },
+                params: {
+                    schoolYearId: selectedSchoolYear?.id,
+                    semesterId: selectedTerm?.id,
+                    limit: 200,
+                },
             });
             if (res?.success && res.data) {
-                setInvoices(res.data);
+                const rows = Array.isArray(res.data)
+                    ? res.data
+                    : Array.isArray(res.data?.items)
+                    ? res.data.items
+                    : [];
+                setInvoices(rows.map(normalizeInvoice));
             }
         } catch (error) {
             console.error("Error fetching invoices:", error);
@@ -39,15 +62,49 @@ export default function InvoiceCenter() {
         } finally {
             setIsLoading(false);
         }
+    }, [selectedSchoolYear?.id, selectedTerm?.id]);
+
+    useEffect(() => {
+        if (propInvoices && propInvoices.length > 0) {
+            setInvoices(propInvoices.map(normalizeInvoice));
+        } else {
+            fetchInvoices();
+        }
+    }, [propInvoices, fetchInvoices]);
+
+    const handleSign = async () => {
+        const unpaidInvoices = invoices.filter((inv) => !inv.signed && (inv.status === "unpaid" || inv.status === "partial"));
+        if (unpaidInvoices.length === 0) {
+            toast.warning("Không có hóa đơn nào để ký.");
+            return;
+        }
+        let signedCount = 0;
+        for (const inv of unpaidInvoices) {
+            try {
+                await financeService.signInvoice(inv.id);
+                signedCount++;
+            } catch (err) {
+                console.error(`[InvoiceCenter] sign error for invoice ${inv.id}:`, err);
+            }
+        }
+        if (signedCount > 0) {
+            toast.success(`Đã ký số ${signedCount} hóa đơn.`);
+            fetchInvoices();
+        } else {
+            toast.error("Không thể ký hóa đơn. Kiểm tra quyền.");
+        }
     };
 
-    const handleSign = () => {
-        toast.info("Đang thực hiện ký số bằng Token HSM...");
-        setTimeout(() => toast.success("Đã ký số thành công!"), 1500);
-    };
-
-    const handleSend = (invoice) => {
-        toast.success(`Đã gửi hóa đơn ${invoice.invoiceCode || invoice.code}`);
+    const handleSend = async (invoice) => {
+        try {
+            await financeService.sendInvoice(invoice.id, { body: { channel: "email" } });
+            toast.success(`Đã gửi hóa đơn ${invoice.invoiceCode} qua email`);
+            fetchInvoices();
+        } catch (err) {
+            console.error("[InvoiceCenter] send error:", err);
+            const msg = err?.response?.data?.error || err?.message || "Đã xảy ra lỗi";
+            toast.error(typeof msg === "string" ? msg : JSON.stringify(msg));
+        }
     };
 
     return (
@@ -100,7 +157,7 @@ export default function InvoiceCenter() {
                             invoices.map(inv => (
                                 <tr key={inv.id}>
                                     <td className="invoice-id">{inv.invoiceCode || inv.code}</td>
-                                    <td>{inv.studentName || inv.student?.fullName || "-"}</td>
+                                    <td>{inv.studentName || "-"}</td>
                                     <td>{inv.issueDate ? new Date(inv.issueDate).toLocaleDateString("vi-VN") : "-"}</td>
                                     <td className="invoice-amount">{(inv.totalAmount || 0).toLocaleString("vi-VN")} ₫</td>
                                     <td>
@@ -116,7 +173,7 @@ export default function InvoiceCenter() {
                                         </div>
                                     </td>
                                     <td>
-                                        <button className="btn-icon invoice-file-btn" title="Xem chi tiết hóa đơn" onClick={() => handleSend(inv)}>
+                                        <button className="btn-icon invoice-file-btn" title="Gửi hóa đơn" onClick={() => handleSend(inv)}>
                                             <FiSend />
                                         </button>
                                     </td>

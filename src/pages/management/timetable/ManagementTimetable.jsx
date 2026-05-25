@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useCallback } from "react";
 import "./ManagementTimetable.css";
 import TimetableFiltersSection from "./components/timetableFiltersSection/timetableFiltersSection";
 import ScheduleSlotSection from "./components/scheduleSlotSection/scheduleSlotSection";
@@ -8,16 +8,10 @@ import { Select } from "../../../components/ui";
 import { SchoolYearTermSelector } from "../../../components/common";
 import { useSchoolYearTerm } from "../../../hooks/useSchoolYearTerm";
 import { FiUsers, FiCalendar, FiClock, FiBook, FiUser, FiMapPin, FiActivity, FiX, FiCheckCircle, FiSave, FiPlus } from "react-icons/fi";
-import { CLASS_OPTIONS, WEEK_DAYS, STATUS_META, MODE_META, getPeriodRangeLabel, SUBJECT_COLOR_MAP, SUBJECT_DISPLAY, GDPT_2018_CONFIG, ROOM_OPTIONS, buildAdminInitialSessions } from "../../../utils/timetableShared";
+import { WEEK_DAYS, STATUS_META, MODE_META, getPeriodRangeLabel, SUBJECT_COLOR_MAP, GDPT_2018_CONFIG } from "../../../utils/timetableShared";
 import timetableService from "../../../services/pages/management/timetable/timetableService";
-
-const classOptions = CLASS_OPTIONS;
-// Tạo blockOptions từ classOptions (lấy ký tự đầu, loại trùng)
-const blockOptions = Array.from(new Set(classOptions.map((c) => c.slice(0, 2))));
-const dayOptions = WEEK_DAYS.map((item) => item.label);
-const periodOptions = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
-const subjectOptions = Object.keys(SUBJECT_DISPLAY);
-
+import { adminApiService } from "../../../services/pages/admin/generated";
+import axiosClient from "../../../services/shared/http/axiosClient";
 
 const getErrorMessage = (error, fallback) => {
     const apiError = error?.response?.data?.error;
@@ -25,55 +19,23 @@ const getErrorMessage = (error, fallback) => {
     return apiMessage || apiError || fallback;
 };
 
-const initialSessions = buildAdminInitialSessions();
-
-// Teacher catalog remains the same but subjects will map to the new Vietnamese keys
-// In a real app, this would come from a TeacherService
-const teacherCatalog = [
-    { name: "Trần Thị Hương", subject: "Toan" },
-    { name: "Phạm Văn Long", subject: "NguVan" },
-    { name: "Nguyễn Thị Mai", subject: "TiengAnh" },
-    { name: "Đỗ Hải Yến", subject: "VatLy" },
-    { name: "Lê Văn Minh", subject: "HoaHoc" },
-    { name: "Vũ Minh", subject: "TinHoc" },
-    { name: "Ngô Đức", subject: "LichSu" },
-    { name: "Võ Văn Khánh", subject: "DiaLy" },
-    { name: "Phạm Thị Lan", subject: "SinhHoc" },
-    { name: "Hương Nguyễn", subject: "GDCD" },
-];
-
-const subjectTeacherMap = teacherCatalog.reduce((acc, item) => {
-    if (!acc[item.subject]) acc[item.subject] = [];
-    acc[item.subject].push(item.name);
-    return acc;
-}, {});
-
-function getTeachersBySubject(subject) {
-    return subjectTeacherMap[subject] || [];
-}
-
-const defaultSubject = subjectOptions[0] || "";
-const defaultTeacher = getTeachersBySubject(defaultSubject)[0] || "";
-
-const emptyForm = {
-    className: "10A1",
-    day: "Thứ 2",
-    period: 1,
-    periodEnd: 1,
-    subject: defaultSubject,
-    teacher: defaultTeacher,
-    room: ROOM_OPTIONS[0],
-    status: STATUS_META.normal.label,
-    note: "",
-    mode: MODE_META.offline,
-};
+const dayOptions = WEEK_DAYS.map((item) => item.label);
+const periodOptions = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 
 function normalizeText(value) {
     return String(value || "").trim().toLowerCase();
 }
 
-function LessonModal({ mode, formData, subjectOptions, onChange, onClose, onSubmit, allSessions, activeSessionId }) {
-    const teacherOptionsBySubject = getTeachersBySubject(formData.subject);
+function LessonModal({ mode, formData, onChange, onClose, onSubmit, allSessions, activeSessionId, realTeachers, realRooms, realSubjects, realClasses, subjectDisplayToCode }) {
+    const allTeacherNames = (realTeachers || []).map(t => t.label || t.value).filter(Boolean);
+    const classOptions = (realClasses || []).map(c => c.value || c).filter(Boolean);
+    const subjectOptions = (realSubjects || []).map(s => s.value || s).filter(Boolean);
+    const roomOptions = (realRooms || []).map(r => r.value || r).filter(Boolean);
+
+    const isConsecutiveSubject = (displayName) => {
+        const code = (subjectDisplayToCode || {})[displayName] || displayName;
+        return GDPT_2018_CONFIG.CONSECUTIVE_SUBJECTS.includes(code);
+    };
 
     // [NEW] Kiểm tra xem giáo viên có bận ở lớp khác không
     const getTeacherStatus = (teacherName) => {
@@ -104,18 +66,22 @@ function LessonModal({ mode, formData, subjectOptions, onChange, onClose, onSubm
 
     // [NEW] Kiểm tra định mức môn học của lớp hiện tại
     const classSessions = allSessions.filter(s => s.className === formData.className);
+    const currentSubjectCode = subjectDisplayToCode[formData.subject] || formData.subject;
     const currentSubjectPeriods = classSessions
-        .filter(s => s.subjectKey === formData.subject && s.id !== activeSessionId)
+        .filter(s => s.subjectKey === currentSubjectCode && s.id !== activeSessionId)
         .reduce((sum, s) => sum + ((s.periodEnd || s.period) - s.period + 1), 0);
     
     const newPeriodsToAdd = (formData.periodEnd || formData.period) - formData.period + 1;
     const totalSubjectPeriods = currentSubjectPeriods + newPeriodsToAdd;
     
-    const quota = GDPT_2018_CONFIG.QUOTAS[formData.subject] || 3;
+    const quota = GDPT_2018_CONFIG.QUOTAS[currentSubjectCode] || 3;
     const isOverQuota = totalSubjectPeriods > quota;
 
-    // Helper để tạo synthetic event tương thích với handleFormChange
     const emit = (name, value) => onChange({ target: { name, value } });
+
+    if (!formData) {
+        return <div className="admin-timetable-modal-overlay"><div className="admin-timetable-modal exp-modal-card lesson-modal-wide"><div className="modal-body">Đang tải...</div></div></div>;
+    }
 
     return (
         <div className="admin-timetable-modal-overlay">
@@ -169,10 +135,10 @@ function LessonModal({ mode, formData, subjectOptions, onChange, onClose, onSubm
                                 options={periodOptions
                                     .filter((item) => item >= formData.period)
                                     .map((item) => ({ value: String(item), label: `Tiết ${item}` }))}
-                                disabled={GDPT_2018_CONFIG.CONSECUTIVE_SUBJECTS.includes(formData.subject)}
+                                disabled={isConsecutiveSubject(formData.subject)}
                                 onChange={(e) => emit("periodEnd", Number(e.target.value))}
                             />
-                            {GDPT_2018_CONFIG.CONSECUTIVE_SUBJECTS.includes(formData.subject) && (
+                            {isConsecutiveSubject(formData.subject) && (
                                 <span className="field-hint-msg">Môn học này mặc định là tiết đôi.</span>
                             )}
                         </div>
@@ -188,7 +154,7 @@ function LessonModal({ mode, formData, subjectOptions, onChange, onClose, onSubm
                             <Select
                                 variant="custom"
                                 value={formData.subject}
-                                options={subjectOptions.map((key) => ({ value: key, label: SUBJECT_DISPLAY[key] || key }))}
+                                options={subjectOptions.map((key) => ({ value: key, label: key }))}
                                 onChange={(e) => emit("subject", e.target.value)}
                             />
                         </div>
@@ -200,7 +166,7 @@ function LessonModal({ mode, formData, subjectOptions, onChange, onClose, onSubm
                                 searchable={true}
                                 className={currentRoomStatus?.busy ? 'select-error' : ''}
                                 value={formData.room}
-                                options={ROOM_OPTIONS.map(r => ({ value: r, label: r }))}
+                                options={roomOptions.map((r) => ({ value: r, label: r }))}
                                 onChange={(e) => emit("room", e.target.value)}
                             />
                             {currentRoomStatus?.busy && (
@@ -217,17 +183,17 @@ function LessonModal({ mode, formData, subjectOptions, onChange, onClose, onSubm
                                 className={currentTeacherStatus?.busy ? 'select-error' : ''}
                                 value={formData.teacher}
                                 options={
-                                    teacherOptionsBySubject.length === 0
-                                        ? [{ value: "", label: "Không có giáo viên cho môn này" }]
-                                        : teacherOptionsBySubject.map((name) => {
+                                    allTeacherNames.length === 0
+                                        ? [{ value: "", label: "Không có giáo viên" }]
+                                        : allTeacherNames.map((name) => {
                                             const status = getTeacherStatus(name);
-                                            return { 
-                                                value: name, 
-                                                label: status?.busy ? `${name} (Đang bận - Lớp ${status.class})` : `${name} (Sẵn sàng)` 
+                                            return {
+                                                value: name,
+                                                label: status?.busy ? `${name} (Đang bận - Lớp ${status.class})` : `${name}`
                                             };
                                         })
                                 }
-                                disabled={teacherOptionsBySubject.length === 0}
+                                disabled={allTeacherNames.length === 0}
                                 onChange={(e) => emit("teacher", e.target.value)}
                             />
                             {currentTeacherStatus?.busy && (
@@ -297,9 +263,8 @@ export default function ManagementTimetable() {
         handleTermChange 
     } = useSchoolYearTerm() || {};
     const [sessions, setSessions] = useState([]);
-    const [selectedBlock, setSelectedBlock] = useState(blockOptions[0]);
-    const filteredClassOptions = useMemo(() => classOptions.filter((c) => c.startsWith(selectedBlock)), [selectedBlock]);
-    const [selectedClass, setSelectedClass] = useState(filteredClassOptions[0]);
+    const [selectedBlock, setSelectedBlock] = useState("10");
+    const [selectedClass, setSelectedClass] = useState("");
     const [selectedTeacher, setSelectedTeacher] = useState("Tất cả giáo viên");
     const [selectedDay, setSelectedDay] = useState("Tất cả thứ");
     const [searchTerm, setSearchTerm] = useState("");
@@ -307,10 +272,95 @@ export default function ManagementTimetable() {
 
     const [activeModalMode, setActiveModalMode] = useState(null);
     const [activeSessionId, setActiveSessionId] = useState(null);
-    const [formData, setFormData] = useState(emptyForm);
+    const [formData, setFormData] = useState(null);
     const [isConflictModalOpen, setIsConflictModalOpen] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [loadError, setLoadError] = useState("");
+
+    // Real data for dropdowns
+    const [realSubjects, setRealSubjects] = useState([]);
+    const [realRooms, setRealRooms] = useState([]);
+    const [realTeachers, setRealTeachers] = useState([]);
+    const [realClasses, setRealClasses] = useState([]);
+
+    const fetchCatalogData = useCallback(async () => {
+        try {
+            const [subjectsRes, roomsRes, teachersRes, classesRes] = await Promise.all([
+                adminApiService.get_subjects(),
+                axiosClient.get("/rooms"),
+                adminApiService.get_teachers(),
+                adminApiService.get_classes(),
+            ]);
+
+            const subjects = (subjectsRes?.data || []).map(s => ({
+                value: s.name,   // display name for form value
+                label: s.name,   // display name for dropdown label
+                code: s.code,     // subject code for API/subjectKey
+            }));
+            const rooms = (roomsRes?.data || []).map(r => ({
+                value: r.name,
+                label: `${r.name} (Tòa ${r.building || "?"})`,
+            }));
+            const teachers = (teachersRes?.data || []).map(t => ({
+                value: t.fullName || t.full_name || t.name || "",
+                label: t.fullName || t.full_name || t.name || "",
+            }));
+            const classes = (classesRes?.data || []).map(c => ({
+                value: c.class_name || c.name || "",
+                label: c.class_name || c.name || "",
+            }));
+
+            setRealSubjects(subjects);
+            setRealRooms(rooms);
+            setRealTeachers(teachers);
+            setRealClasses(classes);
+
+            if (classes.length > 0 && !selectedClass) {
+                setSelectedClass(classes[0].value);
+            }
+        } catch (e) {
+            console.warn("Failed to fetch catalog data:", e);
+        }
+    }, [selectedClass]);
+
+    React.useEffect(() => { fetchCatalogData(); }, [fetchCatalogData]);
+
+    // Derived options
+    const classOptions = realClasses.map(c => c.value);
+    const blockOptions = Array.from(new Set(classOptions.map((c) => c.slice(0, 2))));
+    const filteredClassOptions = useMemo(() => classOptions.filter((c) => c.startsWith(selectedBlock)), [classOptions, selectedBlock]);
+
+    // Build display-name -> code and code -> display-name maps from realSubjects
+    const subjectDisplayToCode = useMemo(() => {
+        const m = {};
+        (realSubjects || []).forEach(s => { if (s.code) m[s.label] = s.code; });
+        return m;
+    }, [realSubjects]);
+
+    const subjectCodeToDisplay = useMemo(() => {
+        const m = {};
+        (realSubjects || []).forEach(s => { if (s.code) m[s.code] = s.label; });
+        return m;
+    }, [realSubjects]);
+
+    const isConsecutiveSubject = (displayName) => {
+        const code = subjectDisplayToCode[displayName] || displayName;
+        return GDPT_2018_CONFIG.CONSECUTIVE_SUBJECTS.includes(code);
+    };
+
+    // Default emptyForm derived from real data
+    const emptyForm = useMemo(() => ({
+        className: realClasses[0]?.value || "",
+        day: "Thứ 2",
+        period: 1,
+        periodEnd: 1,
+        subject: realSubjects[0]?.label || "",
+        teacher: realTeachers[0]?.label || "",
+        room: realRooms[0]?.value || "",
+        status: STATUS_META.normal.label,
+        note: "",
+        mode: MODE_META.offline,
+    }), [realSubjects, realRooms, realTeachers, realClasses]);
 
     // Mapping for Day of Week
     const apiDayToLabel = ["", "Chủ nhật", "Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6", "Thứ 7"];
@@ -341,7 +391,7 @@ export default function ManagementTimetable() {
                         period: p.period_number || 1,
                         periodEnd: p.period_number || 1, // API usually returns per period, so start=end
                         subject: subjectName,
-                        subjectKey: p.class_teacher_subject?.subject_assignments?.subject_code || "Toan",
+                        subjectKey: p.class_teacher_subject?.subject_assignments?.subject_code || "TOAN",
                         teacher: teacherName,
                         room: p.room || "—",
                         status: STATUS_META.normal.label,
@@ -487,7 +537,8 @@ export default function ManagementTimetable() {
     }, [timetableSessions]);
 
     const getInitialPeriodEnd = (subject, period) => {
-        if (GDPT_2018_CONFIG.CONSECUTIVE_SUBJECTS.includes(subject)) {
+        const code = subjectDisplayToCode[subject] || subject;
+        if (GDPT_2018_CONFIG.CONSECUTIVE_SUBJECTS.includes(code)) {
             if (period < 5 || (period >= 6 && period < 10)) {
                 return period + 1;
             }
@@ -521,18 +572,13 @@ export default function ManagementTimetable() {
     };
 
     const openEditModal = (session) => {
-        const teachersOfSubject = getTeachersBySubject(session.subject);
-        const safeTeacher = teachersOfSubject.includes(session.teacher)
-            ? session.teacher
-            : (teachersOfSubject[0] || "");
-
         setFormData({
             className: session.className,
             day: session.day,
             period: session.period,
             periodEnd: session.periodEnd || session.period,
-            subject: session.subjectKey || "Toan",
-            teacher: safeTeacher,
+            subject: session.subjectKey || "",
+            teacher: session.teacher || "",
             room: session.room,
             status: session.status,
             note: session.note || "",
@@ -555,12 +601,9 @@ export default function ManagementTimetable() {
             const nextData = { ...prev };
             
             if (name === "subject") {
-                const teachersOfSubject = getTeachersBySubject(value);
                 nextData.subject = value;
-                nextData.teacher = teachersOfSubject[0] || "";
-                
-                // [NEW] Tự động thiết lập tiết đôi cho môn Toán, Văn, Lý, Hóa, Sinh
-                if (GDPT_2018_CONFIG.CONSECUTIVE_SUBJECTS.includes(value)) {
+
+                if (isConsecutiveSubject(value)) {
                     if (prev.period < 5 || (prev.period >= 6 && prev.period < 10)) {
                         nextData.periodEnd = prev.period + 1;
                     }
@@ -570,8 +613,7 @@ export default function ManagementTimetable() {
             } else if (name === "period") {
                 const p = Number(value);
                 nextData.period = p;
-                // Giữ nguyên khoảng cách nếu là môn tiết đôi
-                if (GDPT_2018_CONFIG.CONSECUTIVE_SUBJECTS.includes(prev.subject)) {
+                if (isConsecutiveSubject(prev.subject)) {
                     if (p < 5 || (p >= 6 && p < 10)) {
                         nextData.periodEnd = p + 1;
                     } else {
@@ -609,19 +651,13 @@ export default function ManagementTimetable() {
     };
 
     const handleSubmitModal = () => {
-        if (!formData.subject.trim() || !formData.teacher.trim() || !formData.room.trim()) {
-            window.alert("Vui lòng nhập đầy đủ môn học, giáo viên và phòng học.");
+        if (!formData.subject.trim()) {
+            window.alert("Vui lòng chọn môn học.");
             return;
         }
 
         if (formData.periodEnd < formData.period) {
-            window.alert("Tiet ket thuc phai lon hon hoac bang tiet bat dau.");
-            return;
-        }
-
-        const validTeachers = getTeachersBySubject(formData.subject);
-        if (!validTeachers.includes(formData.teacher)) {
-            window.alert("Giáo viên không thuộc môn đã chọn. Vui lòng chọn lại.");
+            window.alert("Tiết kết thúc phải lớn hơn hoặc bằng tiết bắt đầu.");
             return;
         }
 
@@ -639,7 +675,7 @@ export default function ManagementTimetable() {
         const quota = GDPT_2018_CONFIG.QUOTAS[formData.subject] || 3;
         
         if (totalSubjectPeriods > quota) {
-            window.alert(`Môn ${SUBJECT_DISPLAY[formData.subject] || formData.subject} đã vượt quá định mức ${quota} tiết/tuần (Hiện tại: ${totalSubjectPeriods} tiết).`);
+            window.alert(`Môn ${formData.subject} đã vượt quá định mức ${quota} tiết/tuần (Hiện tại: ${totalSubjectPeriods} tiết).`);
             return;
         }
 
@@ -670,13 +706,13 @@ export default function ManagementTimetable() {
                     ? {
                         ...item,
                         ...formData,
-                        subject: SUBJECT_DISPLAY[formData.subject] || formData.subject,
-                        subjectKey: formData.subject,
+                        subject: formData.subject,
+                        subjectKey: subjectDisplayToCode[formData.subject] || formData.subject,
                         year: selectedSchoolYear,
                         term: selectedTerm,
                         start: getPeriodRangeLabel(formData.period, formData.period).split(" - ")[0],
                         end: getPeriodRangeLabel(formData.period, formData.periodEnd).split(" - ")[1],
-                        color: SUBJECT_COLOR_MAP[formData.subject] || "teal",
+                        color: SUBJECT_COLOR_MAP[subjectDisplayToCode[formData.subject] || formData.subject] || "teal",
                     }
                     : item
             )));
@@ -687,11 +723,11 @@ export default function ManagementTimetable() {
                     year: selectedSchoolYear,
                     term: selectedTerm,
                     ...formData,
-                    subject: SUBJECT_DISPLAY[formData.subject] || formData.subject,
-                    subjectKey: formData.subject,
+                    subject: formData.subject,
+                    subjectKey: subjectDisplayToCode[formData.subject] || formData.subject,
                     start: getPeriodRangeLabel(formData.period, formData.period).split(" - ")[0],
                     end: getPeriodRangeLabel(formData.period, formData.periodEnd).split(" - ")[1],
-                    color: SUBJECT_COLOR_MAP[formData.subject] || "teal",
+                    color: SUBJECT_COLOR_MAP[subjectDisplayToCode[formData.subject] || formData.subject] || "teal",
                 },
                 ...prev,
             ]);
@@ -754,16 +790,20 @@ export default function ManagementTimetable() {
                 )}
             </div>
 
-            {activeModalMode && (
+            {activeModalMode && formData && (
                 <LessonModal
                     mode={activeModalMode}
                     formData={formData}
-                    subjectOptions={subjectOptions}
                     allSessions={sessions}
                     activeSessionId={activeSessionId}
                     onChange={handleFormChange}
                     onClose={closeModal}
                     onSubmit={handleSubmitModal}
+                    realTeachers={realTeachers}
+                    realRooms={realRooms}
+                    realSubjects={realSubjects}
+                    realClasses={realClasses}
+                    subjectDisplayToCode={subjectDisplayToCode}
                 />
             )}
 

@@ -122,6 +122,37 @@
 .state--new { background: #e0f2fe; color: #0c4a6e; }
 .state--reviewed { background: #dcfce7; color: #166534; }
 .state--escalated { background: #fee2e2; color: #991b1b; }
+.state--pending { background: #fef3c7; color: #92400e; }
+.state--approved { background: #dcfce7; color: #166534; }
+.state--rejected { background: #fee2e2; color: #991b1b; }
+
+.points {
+    padding: 0.18rem 0.45rem;
+    border-radius: 999px;
+    font-size: 0.72rem;
+    font-weight: 700;
+}
+.points--low { background: #dcfce7; color: #166534; }
+.points--high { background: #fee2e2; color: #991b1b; }
+
+.student-cell {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+.student-avatar {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: #3b82f6;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.7rem;
+    font-weight: 700;
+    flex-shrink: 0;
+}
 
 .vpd-violations__actions {
     display: flex;

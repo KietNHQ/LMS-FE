@@ -57,9 +57,10 @@ const parseStudent = (item = {}) => {
   if (!name && item.email) {
     name = item.email.split("@")[0];
   }
-  return {
+    return {
     id: item.user_id || item.userId || item.id,
     studentTableId: item.id, // student table integer ID
+    enrollmentId: item.enrollment_id || null, // student_enrollments.id (integer) — required for gradeService calls
     name,
     email: item.email || "",
     gender: item.gender === "F" ? "Nữ" : item.gender === "M" ? "Nam" : profile.gender || "Nam",
@@ -88,6 +89,14 @@ export const studentsService = {
 
     const payload = getPayload(response);
     return getRows(payload).map(parseStudent);
+  },
+
+  // Lấy danh sách học sinh theo lớp
+  getClassStudents: async (classId) => {
+    const response = await axiosClient.get(`/classes/${classId}/students`);
+    const payload = getPayload(response);
+    const rows = Array.isArray(payload) ? payload : (payload.data || payload.students || []);
+    return rows.map(parseStudent);
   },
 
   createStudent: async (formData) => {

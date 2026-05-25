@@ -172,6 +172,33 @@
     justify-content: flex-end;
 }
 
+.approval-student-cell {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+.approval-avatar {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: #3b82f6;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.7rem;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+.approval-points {
+    padding: 0.18rem 0.45rem;
+    border-radius: 999px;
+    font-size: 0.72rem;
+    font-weight: 700;
+}
+.approval-points.low { background: #dcfce7; color: #166534; }
+.approval-points.high { background: #fee2e2; color: #991b1b; }
+
 @media (max-width: 900px) {
     .vpd-approvals__summary,
     .vpd-approvals__toolbar {

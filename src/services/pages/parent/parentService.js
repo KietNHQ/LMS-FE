@@ -177,8 +177,16 @@ const PARENT_ENDPOINTS = [
   { key: "get_parent_child_grades", method: "GET", path: "/students/:childId/grades", module: "children", mock: () => ({ semester1: [], semester2: [], year: [] }) },
   { key: "get_parent_child_attendance", method: "GET", path: "/guardians/me/children/:childId/attendance", module: "children", mock: () => ({ weekly: [], monthly: [] }) },
   { key: "get_parent_child_schedule", method: "GET", path: "/guardians/me/children/:childId/schedule", module: "children", mock: () => [] },
-  { key: "get_parent_messages", method: "GET", path: "/guardians/me/messages", module: "messages", mock: () => PARENT_MESSAGES_MOCK },
-  { key: "post_parent_messages", method: "POST", path: "/guardians/me/messages", module: "messages", mock: (input) => ({ id: Date.now(), ...(input.body || {}), createdAt: new Date().toISOString() }) },
+  // Teachers: list of homeroom teachers for all children
+  { key: "get_parent_teachers", method: "GET", path: "/guardians/me/teachers", module: "messages", mock: () => [] },
+  // Human chat: conversations list (for existing chats sidebar)
+  { key: "get_parent_conversations", method: "GET", path: "/chat/human/conversations", module: "messages", mock: () => PARENT_MESSAGES_MOCK },
+  // Human chat: messages in a conversation
+  { key: "get_parent_messages_history", method: "GET", path: "/chat/human/messages/:conversationId", module: "messages", mock: () => ({ messages: [] }) },
+  // Human chat: start a new conversation with a teacher
+  { key: "post_parent_start_conversation", method: "POST", path: "/chat/human/start", module: "messages", mock: (input) => ({ conversationId: `conv-${Date.now()}`, isNew: true, createdAt: new Date().toISOString() }) },
+  // Human chat: send a message (in existing conversation)
+  { key: "post_parent_send_message", method: "POST", path: "/chat/human/message", module: "messages", mock: (input) => ({ id: Date.now(), ...(input.body || {}), createdAt: new Date().toISOString() }) },
   { key: "get_parent_notifications", method: "GET", path: "/guardians/me/notifications", module: "notifications", mock: () => PARENT_NOTIFICATIONS_MOCK },
   { key: "patch_parent_notifications_mark_all_read", method: "PATCH", path: "/guardians/me/notifications/mark-all-read", module: "notifications", mock: () => ({ updated: true }) },
   { key: "patch_parent_notifications_by_id_read", method: "PATCH", path: "/guardians/me/notifications/:id/read", module: "notifications", mock: (input) => ({ id: input.pathParams?.id, unread: false }) },
@@ -190,6 +198,12 @@ const PARENT_ENDPOINTS = [
   { key: "get_parent_faqs", method: "GET", path: "/guardians/me/support/faqs", module: "support", mock: () => PARENT_FAQS_MOCK },
   { key: "post_parent_support_tickets", method: "POST", path: "/guardians/me/support/tickets", module: "support", mock: (input) => ({ id: Date.now(), ...(input.body || {}), status: "open" }) },
   { key: "get_parent_support_tickets", method: "GET", path: "/guardians/me/support/tickets", module: "support", mock: () => [] },
+  // Leave requests: list for parent's children
+  { key: "get_parent_leave_requests", method: "GET", path: "/guardians/me/leave-requests", module: "children", mock: () => [] },
+  // Leave requests: create a new request
+  { key: "post_parent_leave_requests", method: "POST", path: "/guardians/me/leave-requests", module: "children", mock: () => ({ success: true }) },
+  // Leave requests: cancel a request
+  { key: "delete_parent_leave_requests", method: "DELETE", path: "/guardians/me/leave-requests/:id", module: "children", mock: () => ({ success: true }) },
 ];
 
 const createEndpointCaller = (endpoint) => async (input = {}) => {
@@ -243,8 +257,18 @@ export const parentService = {
   getChildGrades: (input) => endpointCallers.get_parent_child_grades(input),
   getChildAttendance: (input) => endpointCallers.get_parent_child_attendance(input),
   getChildSchedule: (input) => endpointCallers.get_parent_child_schedule(input),
-  listMessages: (input) => endpointCallers.get_parent_messages(input),
-  sendMessage: (input) => endpointCallers.post_parent_messages(input),
+  // Human chat: get list of homeroom teachers for children
+  getTeachers: (input) => endpointCallers.get_parent_teachers(input),
+  // Human chat: get existing conversations list
+  getConversations: (input) => endpointCallers.get_parent_conversations(input),
+  // Human chat: get messages in a conversation
+  getMessagesHistory: (input) => endpointCallers.get_parent_messages_history(input),
+  // Human chat: start a new conversation with a teacher
+  startHumanChat: (input) => endpointCallers.post_parent_start_conversation(input),
+  // Human chat: send a message (in existing conversation)
+  sendMessage: (input) => endpointCallers.post_parent_send_message(input),
+  // Deprecated: keep for backwards compat, maps to getConversations
+  listMessages: (input) => endpointCallers.get_parent_conversations(input),
   listNotifications: (input) => endpointCallers.get_parent_notifications(input),
   markAllNotificationsRead: (input) => endpointCallers.patch_parent_notifications_mark_all_read(input),
   markNotificationRead: (input) => endpointCallers.patch_parent_notifications_by_id_read(input),
@@ -256,6 +280,9 @@ export const parentService = {
   listFaqs: (input) => endpointCallers.get_parent_faqs(input),
   listSupportTickets: (input) => endpointCallers.get_parent_support_tickets(input),
   submitSupportTicket: (input) => endpointCallers.post_parent_support_tickets(input),
+  listLeaveRequests: (input) => endpointCallers.get_parent_leave_requests(input),
+  createLeaveRequest: (input) => endpointCallers.post_parent_leave_requests(input),
+  cancelLeaveRequest: (input) => endpointCallers.delete_parent_leave_requests(input),
 };
 
 export default parentService;

@@ -267,6 +267,23 @@
 
 .suggestion-pill svg { font-size: 1rem; }
 
+.score-cell {
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    font-weight: 700;
+}
+.score-cell.good { background: #f0fdf4; color: #15803d; }
+.score-cell.low { background: #fef9c3; color: #d97706; }
+
+.cd-loading, .cd-error {
+    padding: 2rem;
+    text-align: center;
+    color: #64748b;
+    font-size: 0.9rem;
+}
+.cd-error { color: #dc2626; }
+
 .cd-table-premium-wrap { padding: 0 1rem 1rem; }
 
 .dm-footer-pagination {

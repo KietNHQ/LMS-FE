@@ -161,19 +161,34 @@ const ParentMessages = () => {
           }
         }
 
-        // 3. Build teacher list with conversationId
-        const list = teachers.map(t => {
+        // 3. Build teacher list with conversationId — DEDUPLICATE by teacherId
+        // If multiple children share the same homeroom teacher, show ONE entry with all children
+        const teacherMap = {};
+        for (const t of teachers) {
           const teacherId = t.teacherUserId || t.teacherId;
-          return {
-            id: `teacher-${teacherId}`,
-            teacherId: teacherId,
-            teacherUserId: t.teacherUserId,
-            name: t.teacherName || "Giáo viên chủ nhiệm",
-            className: t.classNames?.[0] || t.className || "",
-            children: t.children || [],
-            conversationId: convMap[teacherId] || null,
-          };
-        });
+          if (!teacherId) continue;
+          if (!teacherMap[teacherId]) {
+            teacherMap[teacherId] = {
+              id: `teacher-${teacherId}`,
+              teacherId: teacherId,
+              teacherUserId: t.teacherUserId,
+              name: t.teacherName || "Giáo viên chủ nhiệm",
+              children: [],
+              conversationId: convMap[teacherId] || null,
+            };
+          }
+          teacherMap[teacherId].children.push({
+            studentId: t.studentId,
+            studentName: t.studentName,
+            className: t.className,
+          });
+        }
+
+        // If no conversationId yet, build className from the children
+        const list = Object.values(teacherMap).map(t => ({
+          ...t,
+          className: t.children.map(c => c.className).filter(Boolean).join(", ") || "",
+        }));
 
         if (!isMounted) return;
         setTeacherList(list);
