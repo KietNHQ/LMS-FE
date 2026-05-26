@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { toast } from "react-toastify";
 import "./ParentPayments.css";
 import Modal from "../../../components/ui/Modal/Modal";
 import { Select } from "../../../components/ui";
@@ -265,8 +266,11 @@ export default function ParentPayments() {
                         
                         const amount = parseFloat(inv.amount || 0);
                         const discountAmount = parseFloat(inv.discount_amount || 0);
-                        const paidAmount = parseFloat(inv.paid_amount || 0);
+                        const rawPaidAmount = parseFloat(inv.paid_amount || 0);
                         const finalAmount = Math.max(amount - discountAmount, 0);
+                        // Fix: if status is "paid" but paid_amount is 0, show full amount as paid
+                        const isPaid = inv.status === "paid";
+                        const paidAmount = isPaid && rawPaidAmount === 0 ? finalAmount : rawPaidAmount;
                         
                         return {
                             id: inv.id,
@@ -516,26 +520,53 @@ export default function ParentPayments() {
         ? `https://img.vietqr.io/image/${BANK_INFO.bin}-${BANK_INFO.accountNumber}-compact2.png?amount=${selectedPayment.finalAmount}&addInfo=${encodeURIComponent(transferNote)}&accountName=${encodeURIComponent(BANK_INFO.accountName)}`
         : "";
 
-    const confirmPaid = () => {
+    const confirmPaid = async () => {
         if (!selectedPayment) return;
 
-        const paidDate = getToday();
+        setIsQrDialogOpen(false);
 
+        let apiResponse;
+        try {
+            apiResponse = await parentService.payInvoice({
+                pathParams: { id: String(selectedPayment.id) },
+                body: { amount: selectedPayment.finalAmount, paymentMethod: "bank_transfer" },
+                mock: false,
+            });
+        } catch (err) {
+            toast.error("Không thể ghi nhận thanh toán: " + (err?.message || err?.error || "Lỗi không xác định"));
+            return;
+        }
+
+        toast.success("Đã ghi nhận thanh toán thành công. Nhà trường sẽ xác nhận trong thời gian sớm nhất.");
+
+        const paidDate = getToday();
         setPaymentList((prev) => {
             const next = prev.map((item) => {
                 if (item.id !== selectedPayment.id) return item;
+                // Use data from API response if available, otherwise fall back to computed values
+                const apiData = apiResponse?.data;
+                console.log("💳 confirmPaid apiResponse:", JSON.stringify(apiResponse, null, 2));
+                const status = apiData?.status || "paid";
+                const paidAmount = apiData?.paid_amount !== undefined
+                    ? parseFloat(apiData.paid_amount)
+                    : item.finalAmount;
+                const paidDate = apiData?.paid_date || getToday();
+                console.log("💳 confirmPaid computed values:", { status, paidAmount, paidDate, itemStatus: item.status });
                 return recomputePayment({
                     ...item,
-                    status: "paid",
+                    status,
                     paidDate,
-                    paidAmount: item.finalAmount,
+                    paidAmount,
                 });
             });
             saveJson(PAYMENT_STORAGE_KEYS.PARENT_RECORDS, next);
             return next;
         });
 
-        setIsQrDialogOpen(false);
+        // Dispatch event so admin-side payment hub can reflect the update
+        window.dispatchEvent(new CustomEvent("parent-payment-confirmed", {
+            detail: { paymentId: selectedPayment.id }
+        }));
     };
 
     const exportPdf = (payment) => {

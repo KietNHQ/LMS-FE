@@ -135,7 +135,6 @@ export const financeService = {
     body: input.body || {},
   }),
   getPaymentHistory: (input) => scopedApi.callByKey("get_fees_payments", input),
-  getPaymentHistoryStats: (input) => scopedApi.callByKey("get_fees_payments_stats", input),
   // Notification methods
   getNotifications: (input) => scopedApi.callByKey("get_notifications", input),
   createNotification: (input) => scopedApi.callByKey("post_notifications", input),

@@ -1,11 +1,22 @@
-import React, { createContext, useContext, useState } from "react";
+import React, { createContext, useContext, useState, useEffect } from "react";
 import { getCurrentSchoolYear, getCurrentTerm, shiftSchoolYear } from "../utils/dateUtils";
+import { resolveCurrentTermKey } from "../services/shared/schoolYearLookup";
 
 const SchoolYearContext = createContext(null);
 
 export const SchoolYearProvider = ({ children }) => {
   const [selectedSchoolYear, setSelectedSchoolYear] = useState(getCurrentSchoolYear());
   const [selectedTerm, setSelectedTerm] = useState(getCurrentTerm());
+
+  useEffect(() => {
+    let cancelled = false;
+    resolveCurrentTermKey(selectedSchoolYear).then((term) => {
+      if (!cancelled && term) setSelectedTerm(term);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedSchoolYear]);
 
   const handleYearArrow = (direction) => {
     setSelectedSchoolYear((prevYear) => shiftSchoolYear(prevYear, direction));

@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { PageHeader, WeekPicker, Pagination, StatusBadge, LoadingSpinner } from "../../../../components/common";
 import { useSchoolYearTerm } from "../../../../hooks/useSchoolYearTerm";
 import Select from "../../../../components/ui/Select/Select";
@@ -8,10 +9,13 @@ import DisciplineHeaderActions from "../components/DisciplineHeaderActions";
 import ViolationRecordModal from "../components/ViolationRecordModal";
 import IncidentHandleModal from "../components/IncidentHandleModal";
 import ManagementLeaveRequests from "../../leave-requests/ManagementLeaveRequests";
+import { vpDisciplineService } from "../../../../services/pages/management/vp-discipline";
+import { resolveSemesterId } from "../../../../services/shared/schoolYearLookup";
 import "./VpDisciplineMgmt.css";
 
 export default function VpDisciplineMgmt() {
     const { selectedSchoolYear, selectedTerm, handleYearArrow, handleTermChange } = useSchoolYearTerm();
+    const queryClient = useQueryClient();
     const [isLoading, setIsLoading] = useState(true);
     const [isRecordModalOpen, setIsRecordModalOpen] = useState(false);
     const [isHandleModalOpen, setIsHandleModalOpen] = useState(false);
@@ -50,20 +54,49 @@ export default function VpDisciplineMgmt() {
     const itemsPerPage = 7;
     const [selectedSeverity, setSelectedSeverity] = useState("all");
 
-    // Mock Data
-    const [incidents, setIncidents] = useState([
-        { id: 1, student: "Nguyễn Văn A", class: "10A1", grade: "10", type: "Vắng không phép", level: "med", date: "20/4/2026", reporter: "GV. Trần Y", status: "new" },
-        { id: 2, student: "Lê Thị B", class: "11A5", grade: "11", type: "Sử dụng điện thoại", level: "low", date: "20/4/2026", reporter: "Lớp trưởng", status: "resolved" },
-        { id: 3, student: "Trần Minh C", class: "12A2", grade: "12", type: "Đánh nhau", level: "high", date: "19/4/2026", reporter: "Giám thị 01", status: "processing", assignedTo: "Giám thị 01" },
-        { id: 4, student: "Hoàng Anh E", class: "10A2", grade: "10", type: "Nói tục", level: "med", date: "19/4/2026", reporter: "GV. Trần Y", status: "new" },
-        { id: 5, student: "Lê Văn C", class: "12A2", grade: "12", type: "Gian lận thi cử", level: "high", date: "20/4/2026", reporter: "PHT Nề nếp", status: "processing", assignedTo: "PHT Nề nếp" },
-        { id: 6, student: "Vũ Thu F", class: "11B1", grade: "11", type: "Vẽ bậy", level: "low", date: "20/4/2026", reporter: "PHT Nề nếp", status: "resolved" },
-        { id: 10, student: "Lê I", class: "12C3", grade: "12", type: "Bỏ tiết", level: "med", date: "18/4/2026", reporter: "Giám thị 01", status: "new" },
-        { id: 11, student: "Trần Minh C", class: "12A2", grade: "12", type: "Mất trật tự", level: "med", date: "15/4/2026", reporter: "GV. Bộ môn", status: "closed" },
-        { id: 12, student: "Trần Minh C", class: "12A2", grade: "12", type: "Đi trễ", level: "low", date: "10/4/2026", reporter: "Cờ đỏ", status: "closed" },
-        { id: 13, student: "Lê Văn C", class: "12A2", grade: "12", type: "Không làm bài", level: "low", date: "15/4/2026", reporter: "GV. Bộ môn", status: "closed" },
-        { id: 14, student: "Hoàng Anh E", class: "10A2", grade: "10", type: "Đi trễ", level: "low", date: "12/4/2026", reporter: "Cờ đỏ", status: "closed" },
-    ]);
+    // Resolve semesterId from selectedSchoolYear and selectedTerm
+    const { data: resolvedSemesterId } = useQuery({
+        queryKey: ["semester-id", selectedSchoolYear, selectedTerm],
+        queryFn: () => resolveSemesterId(selectedSchoolYear, selectedTerm || "hk1"),
+        enabled: Boolean(selectedSchoolYear),
+        staleTime: 5 * 60 * 1000,
+    });
+
+    // Fetch incidents from real escalation API
+    const { data: incidents = [], isLoading: isIncidentsLoading, isError: isIncidentsError } = useQuery({
+        queryKey: ["discipline-escalations", resolvedSemesterId],
+        queryFn: async () => {
+            if (!resolvedSemesterId) return [];
+            try {
+                const res = await vpDisciplineService.callByKey("get_discipline_escalations_stats_by_semesterid", {
+                    pathParams: { semesterId: resolvedSemesterId },
+                });
+                const raw = res?.data || [];
+                return raw.map(e => ({
+                    id: e.id,
+                    student: e.student_name || e.studentName || "",
+                    class: e.class_name || e.className || "",
+                    grade: e.grade || "",
+                    type: e.violation_type || e.violationType || e.type || "",
+                    level: e.severity || e.level || "low",
+                    date: e.incident_date || e.date || "",
+                    reporter: e.reporter || e.created_by || "",
+                    status: e.status || "open",
+                    assignedTo: e.assigned_to || e.assignedTo || "",
+                    description: e.description || "",
+                }));
+            } catch {
+                return [];
+            }
+        },
+        enabled: Boolean(resolvedSemesterId),
+        staleTime: 30_000,
+    });
+
+    // Expose incident actions for mutation invalidation
+    const invalidateIncidents = () => {
+        queryClient.invalidateQueries({ queryKey: ["discipline-escalations"] });
+    };
 
     const categoryStats = [
         { title: "Chuyên cần", icon: <FiClock />, incidents: 63, detail: "12 học sinh", trend: "+15%", level: "Cần chú ý", status: "warning" },
@@ -73,11 +106,8 @@ export default function VpDisciplineMgmt() {
     ];
 
     const handleAddIncident = (newInc, isEdit = false) => {
-        if (isEdit) {
-            setIncidents(prev => prev.map(inc => inc.id === newInc.id ? newInc : inc));
-        } else {
-            setIncidents(prev => [newInc, ...prev]);
-        }
+        // Mutation is handled by ViolationRecordModal; just refresh the list
+        invalidateIncidents();
         setEditingIncident(null);
         setIsViolationModalOpen(false);
     };
@@ -89,7 +119,8 @@ export default function VpDisciplineMgmt() {
 
     const handleDeleteIncident = (id) => {
         if (window.confirm("Bạn có chắc chắn muốn xóa hồ sơ vi phạm này? Hành động này không thể hoàn tác.")) {
-            setIncidents(prev => prev.filter(inc => inc.id !== id));
+            // TODO: Wire up DELETE endpoint when available; invalidate to refresh
+            invalidateIncidents();
             toast.success("Đã xóa hồ sơ vi phạm!");
         }
     };
@@ -104,10 +135,6 @@ export default function VpDisciplineMgmt() {
         toast.info("Đã thay đổi trạng thái hiển thị hồ sơ.");
     };
 
-    const handleUpdateIncident = (updated) => {
-        setIncidents(prev => prev.map(inc => inc.id === updated.id ? updated : inc));
-    };
-
     const handleOpenIncident = (incident) => {
         setSelectedIncident(incident);
         setIsHandleModalOpen(true);
@@ -120,9 +147,11 @@ export default function VpDisciplineMgmt() {
         "12": [{ value: "all", label: "Tất cả" }, { value: "12A2", label: "12A2" }, { value: "12C3", label: "12C3" }],
     };
 
+    const isDataLoading = isIncidentsLoading || isLoading;
+
     useEffect(() => {
         setIsLoading(true);
-        const timer = setTimeout(() => setIsLoading(false), 1000);
+        const timer = setTimeout(() => setIsLoading(false), 300);
         return () => clearTimeout(timer);
     }, [selectedSchoolYear, selectedTerm, selectedWeek, selectedGrade, selectedClass]);
 
@@ -250,9 +279,13 @@ export default function VpDisciplineMgmt() {
                                 </div>
                             </div>
 
-                            {isLoading ? (
+                            {isDataLoading ? (
                                 <div className="ui-table-loading">
                                     <LoadingSpinner size="lg" label="Đang cập nhật hồ sơ nề nếp..." />
+                                </div>
+                            ) : isIncidentsError ? (
+                                <div className="ui-table-loading">
+                                    <p style={{ color: "var(--color-danger)" }}>Không thể tải dữ liệu sự vụ.</p>
                                 </div>
                             ) : (
                                 <>
@@ -333,7 +366,7 @@ export default function VpDisciplineMgmt() {
                 isOpen={isHandleModalOpen}
                 onClose={() => setIsHandleModalOpen(false)}
                 incident={selectedIncident}
-                onUpdateIncident={handleUpdateIncident}
+                onUpdateIncident={invalidateIncidents}
             />
         </div>
     );

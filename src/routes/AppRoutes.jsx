@@ -27,6 +27,8 @@ const ManagementClassDetail = lazy(() => import("../pages/management/classes/com
 const ManagementAcademicDashboard = lazy(() => import("../pages/management/academic/dashboard/VpAcademicDashboard"));
 const ManagementDiscipline = lazy(() => import("../pages/management/discipline/index.js"));
 const ManagementDisciplineReports = lazy(() => import("../pages/management/discipline/ManagementDisciplineReports"));
+const ManagementTranscriptExport = lazy(() => import("../pages/management/discipline/export/VpTranscriptExport"));
+const ManagementBonusPoints = lazy(() => import("../pages/management/discipline/bonus-points"));
 const ManagementCompetition = lazy(() => import("../pages/management/competition/index.js"));
 const ManagementGrades = lazy(() => import("../pages/management/grades/index.js"));
 const ManagementQuiz = lazy(() => import("../pages/management/quiz/ManagementQuiz"));
@@ -232,6 +234,8 @@ export default function AppRoutes() {
         <Route path="academic/dashboard" element={<ManagementAcademicDashboard />} />
         <Route path="discipline"   element={<ManagementDiscipline />} />
         <Route path="discipline-reports" element={<ManagementDisciplineReports />} />
+        <Route path="discipline/export" element={<ManagementTranscriptExport />} />
+        <Route path="discipline/bonus-points" element={<ManagementBonusPoints />} />
         <Route path="competition"  element={<ManagementCompetition />} />
         <Route path="grades"       element={<ManagementGrades />} />
         <Route path="quiz"         element={<ManagementQuiz />} />

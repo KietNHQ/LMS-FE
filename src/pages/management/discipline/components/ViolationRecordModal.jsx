@@ -1,35 +1,98 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { FiX, FiCheck, FiUser, FiCalendar, FiPlus, FiAlertCircle, FiInfo, FiSearch, FiLayers, FiAlertOctagon, FiActivity, FiEdit2 } from "react-icons/fi";
 import { toast } from "react-toastify";
+import { useQuery } from "@tanstack/react-query";
 import Select from "../../../../components/ui/Select/Select";
+import { vpDisciplineService } from "../../../../services/pages/management/vp-discipline";
+import { resolveSemesterId } from "../../../../services/shared/schoolYearLookup";
 import "./ViolationRecordModal.css";
 
-const MOCK_STUDENTS = [
-    { id: "HS001", name: "Nguyễn Văn A", class: "10A1", grade: "10", dob: "12/05/2010", parentName: "Nguyễn Văn B" },
-    { id: "HS002", name: "Trần Thị B", class: "11A5", grade: "11", dob: "22/08/2009", parentName: "Trần Văn C" },
-    { id: "HS003", name: "Lê Văn C", class: "12A2", grade: "12", dob: "05/02/2008", parentName: "Lê Thị D" },
-    { id: "HS004", name: "Phạm Minh D", class: "10A1", grade: "10", dob: "15/11/2010", parentName: "Phạm Văn E" },
-    { id: "HS005", name: "Hoàng Anh E", class: "10A2", grade: "10", dob: "30/01/2010", parentName: "Hoàng Văn F" },
-    { id: "HS006", name: "Vũ Thu F", class: "11B1", grade: "11", dob: "14/07/2009", parentName: "Vũ Văn G" },
-];
+// REMOVED: MOCK_STUDENTS - now fetched from API
+// REMOVED: VIOLATION_CATEGORIES - now fetched from API
 
-const VIOLATION_CATEGORIES = [
-    { value: "attendance", label: "Chuyên cần", types: ["Đi trễ", "Vắng không phép", "Trốn học/Bỏ tiết", "Bỏ giờ trong tiết"] },
-    { value: "discipline", label: "Nề nếp - Tác phong", types: ["Đồng phục/tác phong", "Mất trật tự", "Nói tục/chửi thề", "Dùng ĐT trái phép", "Gây gổ/Đánh nhau"] },
-    { value: "property", label: "Tài sản - Môi trường", types: ["Hư hỏng tài sản", "Vẽ bậy", "Vứt rác bừa bãi", "Không tắt điện/quạt"] },
-    { value: "academic", label: "Học tập", types: ["Không làm bài tập", "Không mang sách vở", "Gian lận thi cử", "Không tham gia ngoại khóa"] },
-];
-
-export default function ViolationRecordModal({ isOpen, onClose, onSuccess, incidents = [], editData = null }) {
+export default function ViolationRecordModal({ isOpen, onClose, onSuccess, incidents = [], editData = null, selectedSchoolYear, selectedTerm }) {
     const [selectedGrade, setSelectedGrade] = useState("10");
     const [selectedClass, setSelectedClass] = useState("");
     const [selectedStudentId, setSelectedStudentId] = useState("");
-    const [selectedCategory, setSelectedCategory] = useState("attendance");
+    const [selectedCategory, setSelectedCategory] = useState("");
     const [selectedType, setSelectedType] = useState("");
     const [selectedLevel, setSelectedLevel] = useState("low");
     const [comment, setComment] = useState("");
 
     const isEdit = !!editData;
+
+    // Resolve semesterId for API calls
+    const { data: semesterId } = useQuery({
+        queryKey: ["semester-id", selectedSchoolYear, selectedTerm],
+        queryFn: () => resolveSemesterId(selectedSchoolYear, selectedTerm || "hk1"),
+        enabled: Boolean(selectedSchoolYear),
+    });
+
+    // Fetch students from API
+    const { data: apiStudents = [] } = useQuery({
+        queryKey: ["class-students", selectedClass],
+        queryFn: async () => {
+            const res = await vpDisciplineService.callByKey("get_classes_by_id_students", {
+                pathParams: { id: selectedClass },
+            });
+            return res?.data || res || [];
+        },
+        enabled: Boolean(selectedClass),
+    });
+
+    // Fetch violation types from API
+    const { data: apiViolationTypes = [] } = useQuery({
+        queryKey: ["violation-types"],
+        queryFn: async () => {
+            const res = await vpDisciplineService.callByKey("get_violation_types");
+            return res?.data || res || [];
+        },
+    });
+
+    // Transform API students to component format
+    const students = useMemo(() => {
+        return apiStudents.map(s => ({
+            id: s.id || s.student_id || s.enrollmentId || s.studentEnrollmentId,
+            name: s.name || s.full_name || s.studentName || "",
+            class: s.class_name || s.className || s.class || "",
+            grade: s.grade || s.grade_level || s.gradeLevel || selectedGrade,
+            dob: s.dob || s.date_of_birth || s.dateOfBirth || "",
+            parentName: s.parent_name || s.parentName || s.guardianName || "",
+            enrollmentId: s.enrollmentId || s.studentEnrollmentId || s.id,
+        }));
+    }, [apiStudents, selectedGrade]);
+
+    // Build violation categories from API data
+    const violationCategories = useMemo(() => {
+        if (!apiViolationTypes.length) return [];
+        // Group by category if available, otherwise create single category
+        const categoryMap = {};
+        apiViolationTypes.forEach(vt => {
+            const cat = vt.category || vt.violation_category || "other";
+            if (!categoryMap[cat]) {
+                categoryMap[cat] = { value: cat, label: formatCategoryLabel(cat), types: [] };
+            }
+            categoryMap[cat].types.push({
+                value: vt.id,
+                label: vt.name || vt.violation_name || vt.description || "",
+                points: vt.default_points || vt.points || 0,
+                severity: vt.severity || "low",
+            });
+        });
+        return Object.values(categoryMap);
+    }, [apiViolationTypes]);
+
+    const formatCategoryLabel = (cat) => {
+        const labels = {
+            attendance: "Chuyên cần",
+            discipline: "Nề nếp - Tác phong",
+            property: "Tài sản - Môi trường",
+            academic: "Học tập",
+            uniform: "Đồng phục",
+            other: "Khác",
+        };
+        return labels[cat] || cat;
+    };
 
     // Reset or Populate form
     const resetForm = () => {
@@ -38,20 +101,20 @@ export default function ViolationRecordModal({ isOpen, onClose, onSuccess, incid
             setSelectedClass(editData.class || "");
             // In a real app we'd find the student ID by name/class
             // For mock, we'll try to find student by name
-            const student = MOCK_STUDENTS.find(s => s.name === editData.student && s.class === editData.class);
-            setSelectedStudentId(student?.id || "");
-            
+            const student = students.find(s => s.name === editData.student && s.class === editData.class);
+            setSelectedStudentId(student?.id || editData.studentEnrollmentId || "");
+
             // Map category back from type if possible, else default
-            const category = VIOLATION_CATEGORIES.find(c => c.types.includes(editData.type))?.value || "attendance";
+            const category = violationCategories.find(c => c.types.some(t => t.label === editData.type))?.value || editData.category || "";
             setSelectedCategory(category);
-            setSelectedType(editData.type || "");
+            setSelectedType(editData.typeId || editData.type || "");
             setSelectedLevel(editData.level || "low");
             setComment(editData.comment || "");
         } else {
             setSelectedGrade("10");
             setSelectedClass("");
             setSelectedStudentId("");
-            setSelectedCategory("attendance");
+            setSelectedCategory(violationCategories[0]?.value || "");
             setSelectedType("");
             setSelectedLevel("low");
             setComment("");
@@ -73,26 +136,33 @@ export default function ViolationRecordModal({ isOpen, onClose, onSuccess, incid
         setSelectedStudentId("");
     }, [selectedClass]);
 
+    // Update category when violationTypes load
+    useEffect(() => {
+        if (violationCategories.length && !selectedCategory) {
+            setSelectedCategory(violationCategories[0].value);
+        }
+    }, [violationCategories]);
+
     // Options mapping
     const classOptions = useMemo(() => {
-        const classes = [...new Set(MOCK_STUDENTS.filter(s => s.grade === selectedGrade).map(s => s.class))];
+        const classes = [...new Set(students.filter(s => s.grade === selectedGrade).map(s => s.class))];
         return classes.map(c => ({ value: c, label: c }));
-    }, [selectedGrade]);
+    }, [selectedGrade, students]);
 
     const studentOptions = useMemo(() => {
-        return MOCK_STUDENTS
+        return students
             .filter(s => s.class === selectedClass)
             .map(s => ({ value: s.id, label: `${s.name} (${s.id})` }));
-    }, [selectedClass]);
+    }, [selectedClass, students]);
 
     const violationTypeOptions = useMemo(() => {
-        const cat = VIOLATION_CATEGORIES.find(c => c.value === selectedCategory);
-        return cat ? cat.types.map(t => ({ value: t, label: t })) : [];
-    }, [selectedCategory]);
+        const cat = violationCategories.find(c => c.value === selectedCategory);
+        return cat ? cat.types.map(t => ({ value: t.value, label: t.label })) : [];
+    }, [selectedCategory, violationCategories]);
 
-    const selectedStudent = useMemo(() => 
-        MOCK_STUDENTS.find(s => s.id === selectedStudentId), 
-    [selectedStudentId]);
+    const selectedStudent = useMemo(() =>
+        students.find(s => s.id === selectedStudentId),
+    [selectedStudentId, students]);
 
     // Auto Severity Logic
     const severityInfo = useMemo(() => {
@@ -120,31 +190,51 @@ export default function ViolationRecordModal({ isOpen, onClose, onSuccess, incid
 
     if (!isOpen) return null;
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
         if (!selectedStudentId || !selectedType) {
             toast.error("Vui lòng chọn đầy đủ học sinh và loại vi phạm!");
             return;
         }
 
-        const newInc = {
-            id: isEdit ? editData.id : Date.now(),
-            student: selectedStudent.name,
-            class: selectedStudent.class,
-            grade: selectedStudent.grade,
-            type: selectedType,
-            level: selectedLevel,
-            date: isEdit ? editData.date : new Date().toLocaleDateString('vi-VN'),
-            reporter: isEdit ? editData.reporter : "PHT Nề nếp (Tôi)",
-            comment: comment,
-            status: isEdit ? editData.status : "Mới"
-        };
+        const selectedCat = violationCategories.find(c => c.value === selectedCategory);
+        const selectedViolationType = selectedCat?.types.find(t => t.value === selectedType);
 
-        onSuccess(newInc, isEdit);
-        toast.success(isEdit ? "Đã cập nhật thông tin vi phạm!" : `Đã ghi nhận vi phạm cho ${selectedStudent.name}!`);
-        
-        resetForm();
-        onClose();
+        try {
+            if (isEdit) {
+                // Update existing violation
+                await vpDisciplineService.callByKey("put_discipline_violations_by_id", {
+                    pathParams: { id: editData.id },
+                    body: {
+                        violationTypeId: selectedType,
+                        notes: comment,
+                        status: selectedLevel,
+                    },
+                });
+                toast.success("Đã cập nhật thông tin vi phạm!");
+            } else {
+                // Create new violation
+                const selectedStudentData = students.find(s => s.id === selectedStudentId);
+                await vpDisciplineService.callByKey("post_discipline_violations", {
+                    body: {
+                        studentEnrollmentId: selectedStudentData?.enrollmentId || selectedStudentId,
+                        violationTypeId: selectedType,
+                        semesterId: semesterId,
+                        date: new Date().toISOString().split('T')[0],
+                        pointsDeducted: selectedViolationType?.points || 0,
+                        notes: comment,
+                        severity: selectedLevel,
+                    },
+                });
+                toast.success("Đã ghi nhận vi phạm cho " + selectedStudentData?.name + "!");
+            }
+
+            resetForm();
+            onClose();
+            if (onSuccess) onSuccess();
+        } catch (error) {
+            toast.error(error?.message || "Không thể lưu vi phạm. Vui lòng thử lại.");
+        }
     };
 
     const handleCancel = () => {
@@ -239,7 +329,7 @@ export default function ViolationRecordModal({ isOpen, onClose, onSuccess, incid
                                 variant="custom"
                                 value={selectedCategory} 
                                 onChange={e => setSelectedCategory(e.target.value)}
-                                options={VIOLATION_CATEGORIES.map(c => ({ value: c.value, label: c.label }))}
+                                options={violationCategories.map(c => ({ value: c.value, label: c.label }))}
                             />
                         </div>
                         <div className="vrm-field">

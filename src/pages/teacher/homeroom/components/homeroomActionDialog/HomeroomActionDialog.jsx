@@ -9,6 +9,13 @@ const activityTypeOptions = [
   { value: "event", label: "Sự kiện / Thi đua" },
 ];
 
+// Maps FE role keys to DB role values
+const OFFICER_ROLE_DB_MAP = {
+  monitor: "monitor",
+  viceMonitor: "vice_monitor_academic",
+  secretary: "secretary",
+};
+
 const locationOptions = [
   "Phòng học lớp 10A1",
   "Phòng học lớp 10A2",
@@ -154,12 +161,13 @@ export default function HomeroomActionDialog({ open, mode, onClose, onSubmit, st
       const roleMap = new Map();
       for (const item of form.assignments || []) {
         if (!item.studentId) continue;
+        const dbRole = OFFICER_ROLE_DB_MAP[item.key] ?? item.key;
         if (roleMap.has(item.studentId)) {
           const conflictingRole = roleMap.get(item.studentId);
-          alert(`Học sinh đã được gán vai trò "${conflictingRole === 'monitor' ? 'Lớp trưởng' : conflictingRole === 'viceMonitor' ? 'Lớp phó' : 'Bí thư'}". Mỗi học sinh chỉ được giữ 1 vai trò.`);
+          alert(`Học sinh đã được gán vai trò "${conflictingRole === 'monitor' ? 'Lớp trưởng' : conflictingRole === 'vice_monitor_academic' ? 'Lớp phó' : 'Bí thư'}". Mỗi học sinh chỉ được giữ 1 vai trò.`);
           return;
         }
-        roleMap.set(item.studentId, item.key);
+        roleMap.set(item.studentId, dbRole);
       }
 
       for (const item of form.extraRoles || []) {
@@ -173,7 +181,7 @@ export default function HomeroomActionDialog({ open, mode, onClose, onSubmit, st
 
       onSubmit?.({
         assignments: (form.assignments || []).map((item) => ({
-          key: item.key,
+          role: OFFICER_ROLE_DB_MAP[item.key] ?? item.key,
           label: item.label,
           studentId: item.studentId || "",
         })),

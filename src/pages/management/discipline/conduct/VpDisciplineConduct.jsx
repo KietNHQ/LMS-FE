@@ -11,6 +11,7 @@ import {
 import { toast } from "react-toastify";
 import { useQuery } from "@tanstack/react-query";
 import { vpDisciplineService } from "../../../../services/pages/management/vp-discipline";
+import { resolveSemesterId } from "../../../../services/shared/schoolYearLookup";
 import { getWeekDateRange } from "../../../../utils/competitionUtils";
 import "./VpDisciplineConduct.css";
 
@@ -36,8 +37,8 @@ const GRADE_OPTIONS = [
     { value: "", label: "Chưa cập nhật" },
     { value: "Tốt", label: "Tốt" },
     { value: "Khá", label: "Khá" },
-    { value: "Trung bình", label: "Trung bình" },
-    { value: "Yếu", label: "Yếu" },
+    { value: "Đạt", label: "Đạt" },
+    { value: "Chưa đạt", label: "Chưa đạt" },
 ];
 
 export default function VpDisciplineConduct({ isEmbedded = false }) {
@@ -51,6 +52,8 @@ export default function VpDisciplineConduct({ isEmbedded = false }) {
     const [searchTerm, setSearchTerm] = useState("");
     const [currentPage, setCurrentPage] = useState(1);
     const [conductGrades, setConductGrades] = useState({});
+    const [viewMode, setViewMode] = useState("weekly"); // "weekly" | "annual"
+    const [hkSemesterIds, setHkSemesterIds] = useState({ hk1: null, hk2: null });
 
     useEffect(() => {
         if (urlClass) {
@@ -59,6 +62,20 @@ export default function VpDisciplineConduct({ isEmbedded = false }) {
             if (["10", "11", "12"].includes(grade)) setSelectedGrade(grade);
         }
     }, [urlClass]);
+
+    // Resolve HK1/HK2 semester IDs whenever school year changes
+    useEffect(() => {
+        let cancelled = false;
+        const resolve = async () => {
+            const [hk1Id, hk2Id] = await Promise.all([
+                resolveSemesterId(selectedSchoolYear, "hk1"),
+                resolveSemesterId(selectedSchoolYear, "hk2"),
+            ]);
+            if (!cancelled) setHkSemesterIds({ hk1: hk1Id, hk2: hk2Id });
+        };
+        resolve();
+        return () => { cancelled = true; };
+    }, [selectedSchoolYear]);
 
     // Load class list
     const { data: classesData } = useQuery({
@@ -108,6 +125,22 @@ export default function VpDisciplineConduct({ isEmbedded = false }) {
         staleTime: 30_000,
     });
 
+    // Load annual conduct summary for the class
+    const { data: annualData, isLoading: annualLoading, refetch: refetchAnnual } = useQuery({
+        queryKey: ["conduct-class-summary", selectedClass, hkSemesterIds.hk1, hkSemesterIds.hk2],
+        queryFn: async () => {
+            if (!selectedClass || !hkSemesterIds.hk1 || !hkSemesterIds.hk2) return null;
+            const res = await vpDisciplineService.getConductClassSummary(
+                selectedClass,
+                hkSemesterIds.hk1,
+                hkSemesterIds.hk2,
+            );
+            return res?.data || null;
+        },
+        enabled: Boolean(selectedClass && hkSemesterIds.hk1 && hkSemesterIds.hk2),
+        staleTime: 60_000,
+    });
+
     const studentList = useMemo(() => {
         if (!scoresData) return [];
         return scoresData.filter((s) => {
@@ -137,25 +170,93 @@ export default function VpDisciplineConduct({ isEmbedded = false }) {
         setConductGrades((prev) => ({ ...prev, [enrollmentId]: newGrade }));
     };
 
-    const handleSave = () => {
-        toast.success(`Đã lưu dự kiến hạnh kiểm cho ${classOptions.find((c) => c.value === selectedClass)?.label || selectedClass}`);
+    const handleSaveStudentConduct = async (enrollmentId, semesterId, conductLevel) => {
+        try {
+            await vpDisciplineService.saveStudentConduct(enrollmentId, semesterId, conductLevel);
+            toast.success("Đã lưu hạnh kiểm học sinh.");
+            refetchAnnual();
+        } catch {
+            toast.error("Không thể lưu hạnh kiểm.");
+        }
     };
 
-    const handleApprove = () => {
+    const handleSave = async () => {
+        if (viewMode === "annual" && annualData?.students) {
+            let saved = 0;
+            let errors = 0;
+            for (const [key, value] of Object.entries(conductGrades)) {
+                const [enrollmentId, semesterId] = key.split("__");
+                if (semesterId && value) {
+                    try {
+                        await handleSaveStudentConduct(enrollmentId, semesterId, value);
+                        saved++;
+                    } catch {
+                        errors++;
+                    }
+                }
+            }
+            if (saved === 0 && errors === 0) {
+                toast.info("Không có thay đổi để lưu.");
+            } else if (errors === 0) {
+                toast.success(`Đã lưu ${saved} hạnh kiểm.`);
+                setConductGrades({});
+            } else {
+                toast.error(`Đã lưu ${saved}, thất bại ${errors}.`);
+            }
+            return;
+        }
+        if (Object.keys(conductGrades).length === 0) {
+            toast.info("Không có thay đổi để lưu.");
+            return;
+        }
+        let saved = 0;
+        let errors = 0;
+        for (const [enrollmentId, grade] of Object.entries(conductGrades)) {
+            const semesterId = selectedTerm === "hk2" ? hkSemesterIds.hk2 : hkSemesterIds.hk1;
+            if (!semesterId) continue;
+            try {
+                await handleSaveStudentConduct(enrollmentId, semesterId, grade);
+                saved++;
+            } catch {
+                errors++;
+            }
+        }
+        if (errors === 0) {
+            toast.success(`Đã lưu ${saved} hạnh kiểm.`);
+            setConductGrades({});
+        } else {
+            toast.error(`Đã lưu ${saved}, thất bại ${errors}.`);
+        }
+    };
+
+    const handleApprove = async () => {
         const ungraded = studentList.filter((s) => !conductGrades[s.enrollmentId] && !s.grade);
         if (ungraded.length > 0) {
             toast.error(`Không thể phê duyệt! Còn ${ungraded.length} học sinh chưa được đánh giá hạnh kiểm.`);
             return;
         }
-        toast.success(`Đã phê duyệt dự kiến hạnh kiểm. Thông báo đã được gửi đến GVCN, Phụ huynh và Học sinh.`);
+        try {
+            if (viewMode === "annual") {
+                const semesterId = selectedTerm === "hk2" ? hkSemesterIds.hk2 : hkSemesterIds.hk1;
+                if (semesterId) {
+                    await vpDisciplineService.finalizeConductSemester(semesterId);
+                }
+            } else {
+                await vpDisciplineService.submitConduct(selectedClass);
+            }
+            toast.success(`Đã phê duyệt dự kiến hạnh kiểm. Thông báo đã được gửi đến GVCN, Phụ huynh và Học sinh.`);
+            refetchAnnual();
+        } catch {
+            toast.error("Không thể phê duyệt hạnh kiểm.");
+        }
     };
 
-    // Suggest grade based on violation count
-    const suggestGrade = (violationCount) => {
-        if (violationCount === 0) return "Tốt";
-        if (violationCount <= 3) return "Khá";
-        if (violationCount <= 7) return "Trung bình";
-        return "Yếu";
+    // TT22-aligned suggest grade based on base score and attendance rate
+    const suggestGrade = (baseScore, attendanceRate = 100) => {
+        if (baseScore >= 95 && attendanceRate >= 98) return "Tốt";
+        if (baseScore >= 85 && attendanceRate >= 93) return "Khá";
+        if (baseScore >= 70 && attendanceRate >= 85) return "Đạt";
+        return "Chưa đạt";
     };
 
     // Filter class options by grade
@@ -266,6 +367,27 @@ export default function VpDisciplineConduct({ isEmbedded = false }) {
                             ))}
                         </select>
                     </div>
+                    <div className="filter-group" style={{ minWidth: "180px" }}>
+                        <label><FiLayers /> Chế độ xem</label>
+                        <div style={{ display: "flex", gap: "0.5rem", marginTop: "0.25rem" }}>
+                            <button
+                                type="button"
+                                className={`btn-save-draft ${viewMode === "weekly" ? "" : "btn-outline"}`}
+                                style={{ padding: "0.3rem 0.6rem", fontSize: "0.8rem", flex: 1 }}
+                                onClick={() => setViewMode("weekly")}
+                            >
+                                Tuần
+                            </button>
+                            <button
+                                type="button"
+                                className={`btn-save-draft ${viewMode === "annual" ? "" : "btn-outline"}`}
+                                style={{ padding: "0.3rem 0.6rem", fontSize: "0.8rem", flex: 1 }}
+                                onClick={() => setViewMode("annual")}
+                            >
+                                Cả năm
+                            </button>
+                        </div>
+                    </div>
                     <div className="filter-group" style={{ minWidth: "200px" }}>
                         <label><FiSearch /> Tìm học sinh</label>
                         <div className="ihm-search-box" style={{ margin: 0 }}>
@@ -291,88 +413,188 @@ export default function VpDisciplineConduct({ isEmbedded = false }) {
             <div className="cd-main-panel animate-fade-in">
                 <div className="panel-header">
                     <h3>Dự Kiến Hạnh Kiểm: {classOptions.find((c) => c.value === selectedClass)?.label || selectedClass || "—"}</h3>
-                    <p>
-                        Tuần {selectedWeek} — {startDate} → {endDate}
-                    </p>
+                    {viewMode === "weekly" ? (
+                        <p>Tuần {selectedWeek} — {startDate} → {endDate}</p>
+                    ) : (
+                        <p>Học kỳ I + Học kỳ II — Năm học {selectedSchoolYear}</p>
+                    )}
                 </div>
 
-                <div className="cd-table-premium-wrap">
-                    {scoresLoading && <div className="cd-loading">Đang tải dữ liệu...</div>}
-                    {scoresError && <div className="cd-error">Không thể tải dữ liệu. Hãy thử lại.</div>}
-                    {!scoresLoading && !scoresError && studentList.length === 0 && (
-                        <EmptyState title="Không tìm thấy học sinh" description="Chọn lớp hoặc thay đổi bộ lọc." compact />
-                    )}
-                    {!scoresLoading && !scoresError && studentList.length > 0 && (
-                        <table className="dm-table-premium">
-                            <thead>
-                                <tr>
-                                    <th>Học sinh</th>
-                                    <th className="th-center">Lớp</th>
-                                    <th className="th-center">Vi phạm</th>
-                                    <th>Điểm RL</th>
-                                    <th className="th-center">Hạnh kiểm Dự kiến</th>
-                                    <th>Gợi ý</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {paginatedStudents.map((s) => {
-                                    const currentGrade = conductGrades[s.enrollmentId] || s.grade || "";
-                                    const suggested = suggestGrade(s.violationCount);
-                                    return (
-                                        <tr key={s.enrollmentId || s.studentId}>
-                                            <td className="td-student">
-                                                <div className="student-profile-mini">
-                                                    <div className="s-avatar">{s.studentName?.charAt(0) || "?"}</div>
-                                                    <div>
-                                                        <strong>{s.studentName}</strong>
-                                                        <br />
-                                                        <small>{s.studentCode}</small>
-                                                    </div>
-                                                </div>
-                                            </td>
-                                            <td className="th-center">{s.className}</td>
-                                            <td className="th-center">
-                                                <span className={`viol-count ${s.violationCount > 5 ? "danger" : ""}`}>
-                                                    {s.violationCount} lỗi
-                                                </span>
-                                            </td>
-                                            <td>
-                                                <span className={`score-cell ${s.disciplineScore < 90 ? "low" : "good"}`}>
-                                                    {s.disciplineScore}đ
-                                                </span>
-                                            </td>
-                                            <td className="th-center">
-                                                <div style={{ width: "140px", margin: "0 auto" }}>
-                                                    <Select
-                                                        variant="custom"
-                                                        value={currentGrade}
-                                                        onChange={(e) => handleGradeChange(s.enrollmentId, e.target.value)}
-                                                        options={GRADE_OPTIONS}
-                                                    />
-                                                </div>
-                                            </td>
-                                            <td>
-                                                {s.violationCount > 3 ? (
-                                                    <div className="suggestion-pill warning">
-                                                        <FiAlertCircle /> Đề xuất: {suggested}
-                                                    </div>
-                                                ) : (
-                                                    <div className="suggestion-pill success">
-                                                        <FiCheckCircle /> Đề xuất: Tốt
-                                                    </div>
-                                                )}
-                                            </td>
+                {viewMode === "annual" ? (
+                    <>
+                        {annualLoading && <div className="cd-loading">Đang tải dữ liệu...</div>}
+                        {!annualLoading && !annualData && (
+                            <EmptyState title="Không tìm thấy dữ liệu" description="Chọn lớp để xem tổng kết hạnh kiểm cả năm." compact />
+                        )}
+                        {!annualLoading && annualData && (
+                            <>
+                                {annualData.stats && (
+                                    <div className="cd-stats-grid" style={{ marginBottom: "1rem" }}>
+                                        <div className="cd-stat-card success">
+                                            <div className="stat-card-content">
+                                                <span className="stat-label">Tổng số</span>
+                                                <span className="stat-value">{annualData.stats.total ?? "—"}</span>
+                                            </div>
+                                        </div>
+                                        <div className="cd-stat-card primary">
+                                            <div className="stat-card-content">
+                                                <span className="stat-label">Tốt (HK I)</span>
+                                                <span className="stat-value">{annualData.stats.hk1Levels?.Tốt ?? annualData.stats.hk1Levels?.Tot ?? 0}</span>
+                                            </div>
+                                        </div>
+                                        <div className="cd-stat-card primary">
+                                            <div className="stat-card-content">
+                                                <span className="stat-label">Tốt (HK II)</span>
+                                                <span className="stat-value">{annualData.stats.hk2Levels?.Tốt ?? annualData.stats.hk2Levels?.Tot ?? 0}</span>
+                                            </div>
+                                        </div>
+                                        <div className="cd-stat-card success">
+                                            <div className="stat-card-content">
+                                                <span className="stat-label">Tốt (Cả năm)</span>
+                                                <span className="stat-value">{annualData.stats.annualLevels?.Tốt ?? annualData.stats.annualLevels?.Tot ?? 0}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+                                <div className="cd-table-premium-wrap">
+                                    <table className="dm-table-premium">
+                                        <thead>
+                                            <tr>
+                                                <th>Học sinh</th>
+                                                <th className="th-center">HK I</th>
+                                                <th className="th-center">HK II</th>
+                                                <th className="th-center">Cả năm</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {(annualData.students || []).map((student) => {
+                                                const hk1Key = student.enrollmentId + "__" + hkSemesterIds.hk1;
+                                                const hk2Key = student.enrollmentId + "__" + hkSemesterIds.hk2;
+                                                const hk1Val = conductGrades[hk1Key] || student.hk1Level || "";
+                                                const hk2Val = conductGrades[hk2Key] || student.hk2Level || "";
+                                                const annualVal = student.annualLevel || "";
+                                                return (
+                                                    <tr key={student.enrollmentId}>
+                                                        <td className="td-student">
+                                                            <div className="student-profile-mini">
+                                                                <div className="s-avatar">{(student.studentName || "?").charAt(0)}</div>
+                                                                <div>
+                                                                    <strong>{student.studentName || "—"}</strong>
+                                                                    <br />
+                                                                    <small>{student.studentCode}</small>
+                                                                </div>
+                                                            </div>
+                                                        </td>
+                                                        <td className="th-center">
+                                                            <div style={{ width: "120px", margin: "0 auto" }}>
+                                                                <Select
+                                                                    variant="custom"
+                                                                    value={hk1Val}
+                                                                    onChange={(e) => setConductGrades((prev) => ({ ...prev, [hk1Key]: e.target.value }))}
+                                                                    options={GRADE_OPTIONS}
+                                                                />
+                                                            </div>
+                                                        </td>
+                                                        <td className="th-center">
+                                                            <div style={{ width: "120px", margin: "0 auto" }}>
+                                                                <Select
+                                                                    variant="custom"
+                                                                    value={hk2Val}
+                                                                    onChange={(e) => setConductGrades((prev) => ({ ...prev, [hk2Key]: e.target.value }))}
+                                                                    options={GRADE_OPTIONS}
+                                                                />
+                                                            </div>
+                                                        </td>
+                                                        <td className="th-center">
+                                                            <span className={`suggestion-pill ${annualVal === "Tốt" ? "success" : annualVal ? "warning" : ""}`}>
+                                                                {annualVal || "Chưa có"}
+                                                            </span>
+                                                        </td>
+                                                    </tr>
+                                                );
+                                            })}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </>
+                        )}
+                    </>
+                ) : (
+                    <>
+                        <div className="cd-table-premium-wrap">
+                            {scoresLoading && <div className="cd-loading">Đang tải dữ liệu...</div>}
+                            {scoresError && <div className="cd-error">Không thể tải dữ liệu. Hãy thử lại.</div>}
+                            {!scoresLoading && !scoresError && studentList.length === 0 && (
+                                <EmptyState title="Không tìm thấy học sinh" description="Chọn lớp hoặc thay đổi bộ lọc." compact />
+                            )}
+                            {!scoresLoading && !scoresError && studentList.length > 0 && (
+                                <table className="dm-table-premium">
+                                    <thead>
+                                        <tr>
+                                            <th>Học sinh</th>
+                                            <th className="th-center">Lớp</th>
+                                            <th className="th-center">Vi phạm</th>
+                                            <th>Điểm RL</th>
+                                            <th className="th-center">Hạnh kiểm Dự kiến</th>
+                                            <th>Gợi ý</th>
                                         </tr>
-                                    );
-                                })}
-                            </tbody>
-                        </table>
-                    )}
-                </div>
+                                    </thead>
+                                    <tbody>
+                                        {paginatedStudents.map((s) => {
+                                            const currentGrade = conductGrades[s.enrollmentId] || s.grade || "";
+                                            const suggested = suggestGrade(s.disciplineScore);
+                                            return (
+                                                <tr key={s.enrollmentId || s.studentId}>
+                                                    <td className="td-student">
+                                                        <div className="student-profile-mini">
+                                                            <div className="s-avatar">{s.studentName?.charAt(0) || "?"}</div>
+                                                            <div>
+                                                                <strong>{s.studentName}</strong>
+                                                                <br />
+                                                                <small>{s.studentCode}</small>
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                    <td className="th-center">{s.className}</td>
+                                                    <td className="th-center">
+                                                        <span className={`viol-count ${s.violationCount > 5 ? "danger" : ""}`}>
+                                                            {s.violationCount} lỗi
+                                                        </span>
+                                                    </td>
+                                                    <td>
+                                                        <span className={`score-cell ${s.disciplineScore < 90 ? "low" : "good"}`}>
+                                                            {s.disciplineScore}đ
+                                                        </span>
+                                                    </td>
+                                                    <td className="th-center">
+                                                        <div style={{ width: "140px", margin: "0 auto" }}>
+                                                            <Select
+                                                                variant="custom"
+                                                                value={currentGrade}
+                                                                onChange={(e) => handleGradeChange(s.enrollmentId, e.target.value)}
+                                                                options={GRADE_OPTIONS}
+                                                            />
+                                                        </div>
+                                                    </td>
+                                                    <td>
+                                                        <div className={`suggestion-pill ${suggested === "Tốt" ? "success" : "warning"}`}>
+                                                            {suggested === "Tốt" ? <FiCheckCircle /> : <FiAlertCircle />}
+                                                            Đề xuất: {suggested}
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            );
+                                        })}
+                                    </tbody>
+                                </table>
+                            )}
+                        </div>
 
-                <div className="dm-footer-pagination">
-                    <Pagination currentPage={safePage} totalPages={totalPages} onPageChange={setCurrentPage} />
-                </div>
+                        <div className="dm-footer-pagination">
+                            <Pagination currentPage={safePage} totalPages={totalPages} onPageChange={setCurrentPage} />
+                        </div>
+                    </>
+                )}
             </div>
         </div>
     );

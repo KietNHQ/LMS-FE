@@ -1,0 +1,365 @@
+/* VpTranscriptExport – PL1-PL6 transcript export page */
+
+.vp-transcript-export {
+  padding: 1.5rem 2rem;
+  max-width: 1100px;
+}
+
+/* ── Section ── */
+.transcript-section {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-bottom: 1.25rem;
+}
+
+.transcript-section-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1e293b;
+  margin: 0 0 1rem 0;
+}
+
+.transcript-step-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+.transcript-step-header .transcript-section-title {
+  margin-bottom: 0;
+}
+
+/* ── Header actions ── */
+.transcript-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.transcript-school-year-badge {
+  background: #eff6ff;
+  color: #1d4ed8;
+  border: 1px solid #bfdbfe;
+  border-radius: 6px;
+  padding: 0.25rem 0.75rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+/* ── Search ── */
+.transcript-search-wrapper {
+  position: relative;
+  max-width: 480px;
+}
+
+.transcript-search-box {
+  display: flex;
+  align-items: center;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  padding: 0.5rem 0.75rem;
+  background: #fff;
+  gap: 0.5rem;
+}
+
+.transcript-search-box:focus-within {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+}
+
+.search-icon {
+  color: #9ca3af;
+  flex-shrink: 0;
+}
+
+.transcript-search-input {
+  border: none;
+  outline: none;
+  flex: 1;
+  font-size: 0.9rem;
+  background: transparent;
+  color: #1e293b;
+}
+
+.transcript-search-input::placeholder {
+  color: #9ca3af;
+}
+
+/* ── Student list dropdown ── */
+.transcript-student-list {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  list-style: none;
+  margin: 0;
+  padding: 0.25rem 0;
+  z-index: 50;
+  max-height: 320px;
+  overflow-y: auto;
+}
+
+.transcript-student-item {
+  display: flex;
+  flex-direction: column;
+  padding: 0.6rem 1rem;
+  cursor: pointer;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.transcript-student-item:last-child {
+  border-bottom: none;
+}
+
+.transcript-student-item:hover,
+.transcript-student-item.active {
+  background: #eff6ff;
+}
+
+.transcript-student-item .student-name {
+  font-weight: 600;
+  color: #1e293b;
+  font-size: 0.9rem;
+}
+
+.transcript-student-item .student-meta {
+  font-size: 0.78rem;
+  color: #64748b;
+}
+
+.transcript-searching {
+  padding: 0.5rem 1rem;
+  color: #64748b;
+  font-size: 0.85rem;
+}
+
+/* ── Selected student ── */
+.transcript-selected-student {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: #f0fdf4;
+  border: 1px solid #86efac;
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  margin-top: 0.75rem;
+}
+
+.transcript-selected-student .check-icon {
+  color: #16a34a;
+  flex-shrink: 0;
+}
+
+.transcript-selected-student div {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.transcript-selected-student strong {
+  font-size: 0.95rem;
+  color: #1e293b;
+}
+
+.transcript-selected-student span {
+  font-size: 0.8rem;
+  color: #64748b;
+}
+
+.transcript-clear-btn {
+  background: none;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  padding: 0.3rem 0.75rem;
+  font-size: 0.8rem;
+  color: #374151;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.transcript-clear-btn:hover {
+  background: #f3f4f6;
+}
+
+/* ── Preview button ── */
+.btn-preview {
+  background: #3b82f6;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 0.5rem 1.25rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.btn-preview:hover {
+  background: #2563eb;
+}
+
+.btn-preview:disabled {
+  background: #93c5fd;
+  cursor: not-allowed;
+}
+
+/* ── Summary cards ── */
+.transcript-summary-cards {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.summary-card {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.summary-card.highlight {
+  background: #eff6ff;
+  border-color: #bfdbfe;
+}
+
+.summary-label {
+  font-size: 0.78rem;
+  color: #64748b;
+  text-align: center;
+}
+
+.summary-value {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.summary-card.highlight .summary-value {
+  color: #1d4ed8;
+}
+
+/* ── Preview table ── */
+.transcript-preview-table-wrapper {
+  overflow-x: auto;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+}
+
+.transcript-preview-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+.transcript-preview-table thead {
+  background: #f1f5f9;
+}
+
+.transcript-preview-table th {
+  padding: 0.65rem 1rem;
+  text-align: left;
+  font-weight: 600;
+  color: #475569;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.transcript-preview-table th:not(:first-child) {
+  text-align: center;
+}
+
+.transcript-preview-table td {
+  padding: 0.55rem 1rem;
+  border-bottom: 1px solid #f3f4f6;
+  color: #334155;
+}
+
+.transcript-preview-table td:not(:first-child) {
+  text-align: center;
+}
+
+.transcript-preview-table tbody tr:hover {
+  background: #f8fafc;
+}
+
+.transcript-preview-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.transcript-no-data {
+  color: #64748b;
+  font-size: 0.9rem;
+  text-align: center;
+  padding: 1rem;
+  border: 1px dashed #e5e7eb;
+  border-radius: 8px;
+}
+
+/* ── Export actions ── */
+.transcript-export-actions .transcript-section-title {
+  margin-bottom: 1rem;
+}
+
+.export-buttons {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.btn-export-excel,
+.btn-export-pdf {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.65rem 1.5rem;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+  border: none;
+}
+
+.btn-export-excel {
+  background: #16a34a;
+  color: #fff;
+}
+
+.btn-export-excel:hover {
+  background: #15803d;
+}
+
+.btn-export-excel:disabled {
+  background: #86efac;
+  cursor: not-allowed;
+}
+
+.btn-export-pdf {
+  background: #dc2626;
+  color: #fff;
+}
+
+.btn-export-pdf:hover {
+  background: #b91c1c;
+}
+
+.btn-export-pdf:disabled {
+  background: #fca5a5;
+  cursor: not-allowed;
+}
+
+.export-note {
+  font-size: 0.8rem;
+  color: #64748b;
+  margin: 0;
+}

@@ -2,6 +2,8 @@ import React, { useMemo, useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import teacherService from "../../../services/pages/teacher/teacherService";
+import { vpDisciplineService } from "../../../services/pages/management/vp-discipline/vpDisciplineService";
+import { resolveSemesterId } from "../../../services/shared/schoolYearLookup";
 import { PageHeader, SchoolYearTermSelector } from "../../../components/common";
 import HomeroomOverviewSection from "./components/homeroomOverviewSection/HomeroomOverviewSection";
 import HomeroomStudentsSection from "./components/homeroomStudentsSection/HomeroomStudentsSection";
@@ -29,6 +31,7 @@ export default function TeacherHomeroom() {
 
     // Xử lý chuyển tab từ URL params
     const [initialViewMode, setInitialViewMode] = useState("info");
+    const [hkSemesterIds, setHkSemesterIds] = useState({ hk1: null, hk2: null });
     useEffect(() => {
         const params = new URLSearchParams(location.search);
         const tab = params.get("tab");
@@ -40,8 +43,24 @@ export default function TeacherHomeroom() {
         } else if (tab === "students") {
             setActiveSection("students");
             if (mode) setInitialViewMode(mode);
+        } else if (tab === "conduct") {
+            setActiveSection("conduct");
         }
     }, [location.search]);
+
+    // Resolve HK1/HK2 semester IDs for conduct summary
+    useEffect(() => {
+        let cancelled = false;
+        const resolve = async () => {
+            const [hk1Id, hk2Id] = await Promise.all([
+                resolveSemesterId(selectedSchoolYear, "hk1"),
+                resolveSemesterId(selectedSchoolYear, "hk2"),
+            ]);
+            if (!cancelled) setHkSemesterIds({ hk1: hk1Id, hk2: hk2Id });
+        };
+        resolve();
+        return () => { cancelled = true; };
+    }, [selectedSchoolYear]);
 
     const storedUser = JSON.parse(localStorage.getItem("user") || sessionStorage.getItem("user") || "{}");
     const teacherId = storedUser.profile?.id || storedUser.teacherId;
@@ -89,6 +108,22 @@ export default function TeacherHomeroom() {
             return homeroomData;
         },
         enabled: !!teacherId,
+    });
+
+    // Load conduct summary for homeroom class
+    const { data: conductData, refetch: refetchConduct } = useQuery({
+        queryKey: ["teacher-homeroom-conduct", classData?.id, hkSemesterIds.hk1, hkSemesterIds.hk2],
+        queryFn: async () => {
+            if (!classData?.id || !hkSemesterIds.hk1 || !hkSemesterIds.hk2) return null;
+            const res = await vpDisciplineService.getConductClassSummary(
+                classData.id,
+                hkSemesterIds.hk1,
+                hkSemesterIds.hk2,
+            );
+            return res?.data || null;
+        },
+        enabled: Boolean(classData?.id && hkSemesterIds.hk1 && hkSemesterIds.hk2),
+        staleTime: 60_000,
     });
 
     // Hàm mapping dữ liệu từ API sang cấu trúc UI
@@ -380,6 +415,13 @@ export default function TeacherHomeroom() {
                 >
                     Đơn xin phép
                 </button>
+                <button
+                    type="button"
+                    className={`section-switch-btn ${activeSection === "conduct" ? "active" : ""}`}
+                    onClick={() => setActiveSection("conduct")}
+                >
+                    Hạnh kiểm
+                </button>
             </div>
 
             <div className="homeroom-section-content">
@@ -402,6 +444,88 @@ export default function TeacherHomeroom() {
                 )}
                 {activeSection === "leave" && (
                     <HomeroomLeaveRequestsSection classId={classData.id} />
+                )}
+                {activeSection === "conduct" && (
+                    <div className="homeroom-conduct-section">
+                        <h3>Tổng kết Hạnh kiểm — {selectedSchoolYear}</h3>
+                        {!hkSemesterIds.hk1 || !hkSemesterIds.hk2 ? (
+                            <p>Đang tải dữ liệu...</p>
+                        ) : !conductData ? (
+                            <p>Không có dữ liệu hạnh kiểm cho lớp này.</p>
+                        ) : (
+                            <>
+                                {conductData.stats && (
+                                    <div className="homeroom-stats-grid">
+                                        <div className="homeroom-stat-card">
+                                            <div className="stat-icon"><FiUsers /></div>
+                                            <div className="stat-info">
+                                                <h3>Tổng số</h3>
+                                                <p>{conductData.stats.total ?? "—"} học sinh</p>
+                                            </div>
+                                        </div>
+                                        <div className="homeroom-stat-card">
+                                            <div className="stat-icon"><FiAward /></div>
+                                            <div className="stat-info">
+                                                <h3>Tốt (HK I)</h3>
+                                                <p>{conductData.stats.hk1Levels?.Tốt ?? 0} học sinh</p>
+                                            </div>
+                                        </div>
+                                        <div className="homeroom-stat-card">
+                                            <div className="stat-icon"><FiAward /></div>
+                                            <div className="stat-info">
+                                                <h3>Tốt (HK II)</h3>
+                                                <p>{conductData.stats.hk2Levels?.Tốt ?? 0} học sinh</p>
+                                            </div>
+                                        </div>
+                                        <div className="homeroom-stat-card">
+                                            <div className="stat-icon"><FiAward /></div>
+                                            <div className="stat-info">
+                                                <h3>Tốt (Cả năm)</h3>
+                                                <p>{conductData.stats.annualLevels?.Tốt ?? 0} học sinh</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+                                <div style={{ overflowX: "auto", marginTop: "1rem" }}>
+                                    <table className="dm-table-premium">
+                                        <thead>
+                                            <tr>
+                                                <th>Học sinh</th>
+                                                <th className="th-center">HK I</th>
+                                                <th className="th-center">HK II</th>
+                                                <th className="th-center">Cả năm</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {(conductData.students || []).map((s) => (
+                                                <tr key={s.enrollmentId}>
+                                                    <td>
+                                                        <strong>{s.studentName || "—"}</strong>
+                                                        <br /><small>{s.studentCode}</small>
+                                                    </td>
+                                                    <td className="th-center">
+                                                        <span className={`suggestion-pill ${s.hk1Level === "Tốt" ? "success" : s.hk1Level ? "warning" : ""}`}>
+                                                            {s.hk1Level || "Chưa có"}
+                                                        </span>
+                                                    </td>
+                                                    <td className="th-center">
+                                                        <span className={`suggestion-pill ${s.hk2Level === "Tốt" ? "success" : s.hk2Level ? "warning" : ""}`}>
+                                                            {s.hk2Level || "Chưa có"}
+                                                        </span>
+                                                    </td>
+                                                    <td className="th-center">
+                                                        <span className={`suggestion-pill ${s.annualLevel === "Tốt" ? "success" : s.annualLevel ? "warning" : ""}`}>
+                                                            {s.annualLevel || "Chưa có"}
+                                                        </span>
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </>
+                        )}
+                    </div>
                 )}
             </div>
 

@@ -47,14 +47,13 @@ export default function VpDisciplineCompetition({ isEmbedded = false, onClassCli
     );
 
     const { data: rankingResult, isLoading, isError } = useQuery({
-        queryKey: ["discipline-rankings", startDate, endDate, selectedSchoolYear, selectedTerm],
+        queryKey: ["discipline-rankings", startDate, endDate, selectedTerm?.id],
         queryFn: async () => {
-            const res = await vpDisciplineService.callByKey("get_discipline_class_ranking", {
+            const res = await vpDisciplineService.callByKey("get_discipline_class_rankings", {
                 params: {
                     startDate,
                     endDate,
-                    schoolYear: selectedSchoolYear,
-                    term: selectedTerm,
+                    semesterId: selectedTerm?.id,
                 },
             });
             return res?.data || [];

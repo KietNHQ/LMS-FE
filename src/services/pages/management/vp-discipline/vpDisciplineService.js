@@ -40,6 +40,52 @@ export const vpDisciplineService = {
     ...input,
     pathParams: { semesterId, ...(input.pathParams || {}) },
   }),
+  getConductClassSummary: (classId, hk1SemesterId, hk2SemesterId) =>
+    scopedApi.callByKey("get_conduct_summary_class_by_classid", {
+      pathParams: { classId },
+      params: { hk1SemesterId, hk2SemesterId },
+    }),
+  getStudentAnnualConduct: (enrollmentId, hk1SemesterId, hk2SemesterId) =>
+    scopedApi.callByKey("get_conduct_summary_student_by_enrollmentid", {
+      pathParams: { enrollmentId },
+      params: { hk1SemesterId, hk2SemesterId },
+    }),
+  saveStudentConduct: (enrollmentId, semesterId, conductLevel) =>
+    scopedApi.callByKey("put_conduct_summary_enrollment_by_enrollmentid_semester_by_semesterid", {
+      pathParams: { enrollmentId, semesterId },
+      body: { conductLevel },
+    }),
+  submitConduct: (classId) =>
+    scopedApi.callByKey("post_conduct_by_id_submit", {
+      pathParams: { id: classId },
+    }),
+  finalizeConductSemester: (semesterId) =>
+    scopedApi.callByKey("post_conduct_finalize_semester", {
+      body: { semesterId },
+    }),
+  getPendingCompensations: (input = {}) =>
+    scopedApi.callByKey("get_discipline_pending", input),
+  getCompensationDetails: (id, input = {}) =>
+    scopedApi.callByKey("get_discipline_by_id", {
+      ...input,
+      pathParams: { id },
+    }),
+  markCompensationPaid: (id, input = {}) =>
+    scopedApi.callByKey("put_discipline_by_id_paid", {
+      ...input,
+      pathParams: { id },
+    }),
+  markCompensationWaived: (id, body, input = {}) =>
+    scopedApi.callByKey("put_discipline_by_id_waived", {
+      ...input,
+      pathParams: { id },
+      body,
+    }),
+  requestCompensation: (body, input = {}) =>
+    scopedApi.callByKey("post_discipline_request", {
+      ...input,
+      body,
+    }),
 };
 
 export default vpDisciplineService;

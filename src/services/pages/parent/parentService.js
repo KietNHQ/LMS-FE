@@ -193,7 +193,7 @@ const PARENT_ENDPOINTS = [
   { key: "patch_parent_notifications_by_id_toggle", method: "PATCH", path: "/guardians/me/notifications/:id/toggle-important", module: "notifications", mock: (input) => ({ id: input.pathParams?.id, important: true }) },
   { key: "get_parent_payments", method: "GET", path: "/guardians/me/payments", module: "payments", mock: () => PARENT_PAYMENTS_MOCK },
   { key: "get_parent_payments_by_id", method: "GET", path: "/guardians/me/payments/:id", module: "payments", mock: (input) => PARENT_PAYMENTS_MOCK.find((item) => `${item.id}` === `${input.pathParams?.id}`) || null },
-  { key: "post_parent_payments_by_id_pay", method: "POST", path: "/guardians/me/payments/:id/pay", module: "payments", mock: (input) => ({ id: input.pathParams?.id, status: "paid", paidAt: new Date().toISOString() }) },
+  { key: "post_parent_payments_by_id_pay", method: "POST", path: "/guardians/me/payments/:id/pay", module: "payments" },
   { key: "post_parent_payments_apply_discount", method: "POST", path: "/guardians/me/payments/apply-discount", module: "payments", mock: (input) => ({ applied: true, code: input.body?.code || "" }) },
   { key: "get_parent_faqs", method: "GET", path: "/guardians/me/support/faqs", module: "support", mock: () => PARENT_FAQS_MOCK },
   { key: "post_parent_support_tickets", method: "POST", path: "/guardians/me/support/tickets", module: "support", mock: (input) => ({ id: Date.now(), ...(input.body || {}), status: "open" }) },

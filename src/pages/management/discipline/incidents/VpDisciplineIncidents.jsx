@@ -1,11 +1,13 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { EmptyState, LoadingSpinner, PageHeader, Pagination } from "../../../../components/common";
 import DisciplineHeaderActions from "../components/DisciplineHeaderActions";
+import IncidentHandleModal from "../components/IncidentHandleModal";
 import { useSchoolYearTerm } from "../../../../hooks/useSchoolYearTerm";
+import { resolveSemesterId } from "../../../../services/shared/schoolYearLookup";
 import { FiSearch, FiX } from "react-icons/fi";
 import { toast } from "react-toastify";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { vpDisciplineService } from "../../../../services/pages/management/vp-discipline";
 import "./VpDisciplineIncidents.css";
 
@@ -35,19 +37,31 @@ export default function VpDisciplineIncidents() {
     const [statusFilter, setStatusFilter] = useState(() => searchParams.get("status") || "all");
     const [search, setSearch] = useState(() => searchParams.get("q") || "");
     const [currentPage, setCurrentPage] = useState(() => Number(searchParams.get("page")) || 1);
+    const [selectedIncident, setSelectedIncident] = useState(null);
+    const queryClient = useQueryClient();
+
+    // Resolve semesterId from selectedSchoolYear and selectedTerm
+    const { data: resolvedSemesterId } = useQuery({
+        queryKey: ["semester-id", selectedSchoolYear, selectedTerm],
+        queryFn: () => resolveSemesterId(selectedSchoolYear, selectedTerm || "hk1"),
+        enabled: Boolean(selectedSchoolYear),
+        staleTime: 5 * 60 * 1000, // Cache for 5 minutes
+    });
 
     const { data: incidentsData, isLoading, isError, error } = useQuery({
-        queryKey: ["discipline-escalations", selectedSchoolYear, selectedTerm],
+        queryKey: ["discipline-escalations", resolvedSemesterId],
         queryFn: async () => {
+            if (!resolvedSemesterId) return [];
             try {
                 const res = await vpDisciplineService.callByKey("get_discipline_escalations_stats_by_semesterid", {
-                    pathParams: { semesterId: selectedTerm },
+                    pathParams: { semesterId: resolvedSemesterId },
                 });
                 return res?.data || [];
-            } catch (_) {
+            } catch {
                 return [];
             }
         },
+        enabled: Boolean(resolvedSemesterId),
         select: (data) => {
             if (Array.isArray(data)) return data.map(mapEscalation);
             if (data?.data) return data.data.map(mapEscalation);
@@ -80,6 +94,20 @@ export default function VpDisciplineIncidents() {
     }, [filteredRows, safePage]);
 
     const openCount = incidentsData?.filter((r) => r.status === "open").length || 0;
+
+    const handleResolveIncident = async (incidentId, notes) => {
+        try {
+            await vpDisciplineService.callByKey("put_discipline_escalations_by_id_resolve", {
+                pathParams: { id: incidentId },
+                body: { actionTaken: notes },
+            });
+            toast.success("Đã xử lý sự vụ");
+            queryClient.invalidateQueries({ queryKey: ["discipline-escalations"] });
+            setSelectedIncident(null);
+        } catch (err) {
+            toast.error("Lỗi: " + (err.message || "Không thể cập nhật sự vụ"));
+        }
+    };
 
     return (
         <div className="vpd-incidents">
@@ -171,7 +199,7 @@ export default function VpDisciplineIncidents() {
                             </thead>
                             <tbody>
                                 {pagedRows.map((row) => (
-                                    <tr key={row.id}>
+                                    <tr key={row.id} onClick={() => setSelectedIncident(row)} style={{ cursor: "pointer" }}>
                                         <td>{row.id}</td>
                                         <td>
                                             <strong>{row.title}</strong>
@@ -199,6 +227,13 @@ export default function VpDisciplineIncidents() {
                     </>
                 ) : null}
             </div>
+
+            <IncidentHandleModal
+                isOpen={Boolean(selectedIncident)}
+                onClose={() => setSelectedIncident(null)}
+                incident={selectedIncident}
+                onResolve={handleResolveIncident}
+            />
         </div>
     );
 }

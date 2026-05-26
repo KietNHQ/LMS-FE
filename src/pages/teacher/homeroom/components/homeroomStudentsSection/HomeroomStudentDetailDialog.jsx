@@ -1,6 +1,8 @@
 import { useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { FiX, FiShield, FiAward } from "react-icons/fi";
 import { Modal } from "../../../../../components/ui";
+import { vpDisciplineService } from "../../../../../services/pages/management/vp-discipline/vpDisciplineService";
 import "./HomeroomStudentDetailDialog.css";
 
 function formatDate(dateString) {
@@ -26,6 +28,29 @@ export default function HomeroomStudentDetailDialog({
     () => officerRows.find((role) => role.studentId === student?.id) || null,
     [officerRows, student]
   );
+
+  // Fetch real violations and rewards from API
+  const enrollmentId = student?.enrollmentId ?? student?.id;
+
+  const { data: studentViolations = [] } = useQuery({
+    queryKey: ["student-violations", enrollmentId],
+    queryFn: () => vpDisciplineService.callByKey("get_discipline_violations_student_by_studentenrollmentid", {
+      pathParams: { studentEnrollmentId: enrollmentId },
+    }),
+    enabled: Boolean(enrollmentId),
+  });
+
+  const { data: studentRewards = [] } = useQuery({
+    queryKey: ["student-rewards", enrollmentId],
+    queryFn: () => vpDisciplineService.callByKey("get_discipline_rewards_student_by_studentenrollmentid", {
+      pathParams: { studentEnrollmentId: enrollmentId },
+    }),
+    enabled: Boolean(enrollmentId),
+  });
+
+  // Use parent-provided attendance/merit data if available, fallback to fetched counts
+  const meritPoints = student.meritPoints ?? studentRewards.length ?? 0;
+  const violationCount = studentViolations.length ?? student.violations ?? 0;
 
   return (
     <Modal 
@@ -77,16 +102,16 @@ export default function HomeroomStudentDetailDialog({
                 <span>Vai trò</span>
                 <strong>{currentRole?.label || "Chưa phân công"}</strong>
               </div>
-              <div 
-                className="homeroom-student-detail-dialog__clickable-stat"
-                onClick={() => onViewAttendance?.(student)}
-                title="Click để xem chuyên cần của học sinh này"
-              >
-                <span>Số lần vi phạm</span>
-                <strong style={{ color: (student.violations || 0) > 0 ? "#ef4444" : "#2563ff", textDecoration: "underline" }}>
-                  {student.violations ?? 0} lần
-                </strong>
-              </div>
+                <div
+                  className="homeroom-student-detail-dialog__clickable-stat"
+                  onClick={() => onViewAttendance?.(student)}
+                  title="Click để xem chuyên cần của học sinh này"
+                >
+                  <span>Số lần vi phạm</span>
+                  <strong style={{ color: violationCount > 0 ? "#ef4444" : "#2563ff", textDecoration: "underline" }}>
+                    {violationCount} lần
+                  </strong>
+                </div>
             </div>
           )}
 
@@ -94,41 +119,45 @@ export default function HomeroomStudentDetailDialog({
             <div className="homeroom-student-detail-activity">
               <div className="activity-summary-ribbon">
                 <div className="summary-item violation">
-                  <FiShield /> <span>{student.violations || 0} vi phạm</span>
+                  <FiShield /> <span>{violationCount} vi phạm</span>
                 </div>
                 <div className="summary-item merit">
-                  <FiAward /> <span>{student.meritPoints || 0} khen thưởng</span>
+                  <FiAward /> <span>{meritPoints} khen thưởng</span>
                 </div>
               </div>
 
               <h4>Chi tiết hoạt động (Tuần {selectedWeek || 1})</h4>
-              
+
               <div className="activity-list">
-                {(student.violations || 0) === 0 && (student.meritPoints || 0) === 0 ? (
+                {violationCount === 0 && meritPoints === 0 ? (
                   <p className="no-activity">Không có ghi nhận nào trong tuần này.</p>
                 ) : (
                   <>
-                    {/* Render Violations */}
-                    {[...Array(student.violations || 0)].map((_, i) => (
-                      <div key={`v-${i}`} className="activity-item violation">
+                    {/* Render real Violations */}
+                    {studentViolations.map((violation) => (
+                      <div key={violation.id} className="activity-item violation">
                         <span className="activity-dot"></span>
                         <div className="activity-content">
-                          <strong>Vi phạm: {["Đi trễ", "Sai đồng phục", "Bỏ tiết", "Làm việc riêng"][i % 4]}</strong>
-                          <span className="activity-meta">Thứ {2 + (i % 6)} • Người báo cáo: Giám thị</span>
+                          <strong>Vi phạm: {violation.violationTypeName || violation.description || "—"}</strong>
+                          <span className="activity-meta">
+                            {formatDate(violation.occurredAt || violation.date)} • Người báo cáo: {violation.reporterName || "—"}
+                          </span>
                         </div>
-                        <span className="activity-tag">-1đ</span>
+                        <span className="activity-tag">-{Math.abs(violation.pointDeduction ?? violation.points ?? 0)}đ</span>
                       </div>
                     ))}
-                    
-                    {/* Render Merits */}
-                    {[...Array(student.meritPoints || 0)].map((_, i) => (
-                      <div key={`m-${i}`} className="activity-item merit">
+
+                    {/* Render real Merits/Rewards */}
+                    {studentRewards.map((reward) => (
+                      <div key={reward.id} className="activity-item merit">
                         <span className="activity-dot"></span>
                         <div className="activity-content">
-                          <strong>Khen thưởng: {["Phát biểu xây dựng bài", "Hăng hái phát biểu", "Trực nhật tốt", "Giúp đỡ bạn"][i % 4]}</strong>
-                          <span className="activity-meta">Thứ {2 + (i % 6)} • Người báo cáo: GV Bộ môn</span>
+                          <strong>Khen thưởng: {reward.rewardTypeName || reward.description || "—"}</strong>
+                          <span className="activity-meta">
+                            {formatDate(reward.occurredAt || reward.date)} • Người báo cáo: {reward.reporterName || "—"}
+                          </span>
                         </div>
-                        <span className="activity-tag">+1đ</span>
+                        <span className="activity-tag">+{reward.pointAddition ?? reward.points ?? 0}đ</span>
                       </div>
                     ))}
                   </>

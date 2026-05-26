@@ -1,4 +1,12 @@
 import axiosClient from "../../../shared/http/axiosClient";
+import {
+  getGradeLevelNumber,
+  getSchoolYearName,
+  resolveGradeLevelId,
+  resolveSchoolYearId,
+  getGradeLevelFilterOptions,
+} from "../../../shared/schoolYearLookup";
+import { teachersService } from "../users/teachersService";
 
 const toNumber = (value, fallback = 0) => {
   const parsed = Number(value);
@@ -13,84 +21,7 @@ const getRows = (payload) => {
   return [];
 };
 
-const LOOKUP_CACHE_TTL = 5 * 60 * 1000;
-
-const lookupCache = {
-  gradeLevels: { ts: 0, rows: [] },
-  schoolYears: { ts: 0, rows: [] },
-  teachers: { ts: 0, rows: [] },
-};
-
 const normalizeText = (value) => `${value || ""}`.trim().toLowerCase();
-
-const getCachedRows = async (cacheKey, loader) => {
-  const cached = lookupCache[cacheKey];
-  const now = Date.now();
-  if (cached.rows.length > 0 && now - cached.ts < LOOKUP_CACHE_TTL) {
-    return cached.rows;
-  }
-
-  const rows = await loader();
-  lookupCache[cacheKey] = { ts: now, rows };
-  return rows;
-};
-
-const loadGradeLevels = async () => {
-  try {
-    const payload = await axiosClient.get("/grade-levels");
-    return getRows(payload);
-  } catch {
-    return [];
-  }
-};
-
-const loadSchoolYears = async () => {
-  try {
-    const payload = await axiosClient.get("/school-years");
-    return getRows(payload);
-  } catch {
-    return [];
-  }
-};
-
-const loadTeachers = async () => {
-  try {
-    const payload = await axiosClient.get("/teachers", { params: { page: 1, limit: 500 } });
-    return getRows(payload);
-  } catch {
-    return [];
-  }
-};
-
-const getGradeLevelNumber = (item = {}) => {
-  const level = item.levelNumber ?? item.level_number ?? item.gradeLevelNumber;
-  if (level !== undefined && level !== null) {
-    return `${level}`;
-  }
-  return extractGradeNumber(item.name || item.grade || item.label || "");
-};
-
-const getSchoolYearName = (item = {}) =>
-  item.name || item.school_year_name || item.schoolYearName || item.label || "";
-
-const getTeacherFullName = (item = {}) => {
-  const combined = `${item.surname || item.lastName || ""} ${item.given_name || item.givenName || item.firstName || ""}`.trim();
-  return item.fullName || item.full_name || item.name || combined;
-};
-
-const resolveGradeLevelId = async (gradeNumber) => {
-  const rows = await getCachedRows("gradeLevels", loadGradeLevels);
-  const target = `${gradeNumber || ""}`;
-  const matched = rows.find((row) => getGradeLevelNumber(row) === target);
-  return matched?.id;
-};
-
-const resolveSchoolYearId = async (schoolYearName) => {
-  const rows = await getCachedRows("schoolYears", loadSchoolYears);
-  const target = normalizeText(schoolYearName);
-  const matched = rows.find((row) => normalizeText(getSchoolYearName(row)) === target);
-  return matched?.id;
-};
 
 const resolveTeacherId = async (teacherName) => {
   const normalized = normalizeText(teacherName);
@@ -98,8 +29,8 @@ const resolveTeacherId = async (teacherName) => {
     return undefined;
   }
 
-  const rows = await getCachedRows("teachers", loadTeachers);
-  const matched = rows.find((row) => normalizeText(getTeacherFullName(row)) === normalized);
+  const rows = await teachersService.listTeachers();
+  const matched = rows.find((row) => normalizeText(row.name) === normalized);
   return matched?.id;
 };
 
@@ -173,8 +104,21 @@ const toApiPayload = async (classData = {}) => {
 };
 
 export const classesService = {
-  listClasses: async () => {
-    const response = await axiosClient.get("/classes", { params: { page: 1, limit: 500 } });
+  getGradeLevelFilterOptions,
+
+  listClasses: async ({ schoolYearId, schoolYearName, gradeLevelId, search } = {}) => {
+    const resolvedSchoolYearId =
+      schoolYearId ?? (schoolYearName ? await resolveSchoolYearId(schoolYearName) : undefined);
+
+    const params = {
+      page: 1,
+      limit: 500,
+      ...(resolvedSchoolYearId ? { schoolYearId: toNumber(resolvedSchoolYearId) } : {}),
+      ...(gradeLevelId ? { gradeLevelId: toNumber(gradeLevelId) } : {}),
+      ...(search ? { search } : {}),
+    };
+
+    const response = await axiosClient.get("/classes", { params });
     return getRows(response).map(parseClass);
   },
 

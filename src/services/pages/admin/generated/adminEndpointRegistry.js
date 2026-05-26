@@ -84,6 +84,9 @@ export const adminEndpointRegistry = [
   { key: "delete_conduct_evaluations_by_id", method: "DELETE", path: "/api/v1/conduct-evaluations/:id", module: "conduct_evaluations", roles: ["admin"], access: "authenticated+role", source: "conduct_evaluation.route.js" },
   { key: "get_conduct_evaluations_by_id", method: "GET", path: "/api/v1/conduct-evaluations/:id", module: "conduct_evaluations", roles: ["admin", "teacher"], access: "authenticated+role", source: "conduct_evaluation.route.js" },
   { key: "put_conduct_evaluations_by_id", method: "PUT", path: "/api/v1/conduct-evaluations/:id", module: "conduct_evaluations", roles: ["admin", "teacher"], access: "authenticated+role", source: "conduct_evaluation.route.js" },
+  { key: "get_conduct_summary_class_by_classid", method: "GET", path: "/api/v1/conduct-summary/class/:classId/summary", module: "discipline", roles: ["admin", "teacher"], access: "authenticated+role", source: "conduct-summary.route.js" },
+  { key: "get_conduct_summary_student_by_enrollmentid", method: "GET", path: "/api/v1/conduct-summary/student/:enrollmentId/annual", module: "discipline", roles: ["admin", "teacher"], access: "authenticated+role", source: "conduct-summary.route.js" },
+  { key: "put_conduct_summary_enrollment_by_enrollmentid_semester_by_semesterid", method: "PUT", path: "/api/v1/conduct-summary/enrollment/:enrollmentId/semester/:semesterId", module: "discipline", roles: ["admin", "teacher"], access: "authenticated+role", source: "conduct-summary.route.js" },
   { key: "get_dashboard_admin", method: "GET", path: "/api/v1/dashboard/admin", module: "dashboard", roles: ["admin"], access: "authenticated+role", source: "dashboard.route.js" },
   { key: "get_dashboard_teacher", method: "GET", path: "/api/v1/dashboard/teacher", module: "dashboard", roles: ["admin", "teacher"], access: "authenticated+role", source: "dashboard.route.js" },
   { key: "get_discipline_by_id", method: "GET", path: "/api/v1/discipline/:id", module: "discipline", roles: ["admin", "teacher"], access: "authenticated+role", source: "discipline-compensation.route.js" },
@@ -424,6 +427,17 @@ export const adminEndpointRegistry = [
   { key: "put_violation_types_by_id", method: "PUT", path: "/api/v1/violation-types/:id", module: "violation_types", roles: ["admin"], access: "authenticated+role", source: "violationType.route.js" },
   { key: "put_violation_types_by_id_points", method: "PUT", path: "/api/v1/violation-types/:id/points", module: "violation_types", roles: ["admin"], access: "authenticated+role", source: "violationType.route.js" },
   { key: "patch_violation_types_by_id_toggle", method: "PATCH", path: "/api/v1/violation-types/:id/toggle", module: "violation_types", roles: ["admin"], access: "authenticated+role", source: "violationType.route.js" },
+
+  // Bonus Points (điểm cộng)
+  { key: "get_bonus_points_rules", method: "GET", path: "/api/v1/bonus-points/rules", module: "bonus_points", roles: ["admin", "teacher"], access: "authenticated+role", source: "bonusPoint.route.js" },
+  { key: "post_bonus_points_rules_seed", method: "POST", path: "/api/v1/bonus-points/rules/seed", module: "bonus_points", roles: ["admin"], access: "authenticated+role", source: "bonusPoint.route.js" },
+  { key: "get_bonus_points_student_by_enrollmentid", method: "GET", path: "/api/v1/bonus-points/student/:enrollmentId", module: "bonus_points", roles: ["admin", "teacher"], access: "authenticated+role", source: "bonusPoint.route.js" },
+  { key: "get_bonus_points_student_by_enrollmentid_calculate", method: "GET", path: "/api/v1/bonus-points/student/:enrollmentId/calculate", module: "bonus_points", roles: ["admin", "teacher"], access: "authenticated+role", source: "bonusPoint.route.js" },
+  { key: "get_bonus_points_class_by_classid", method: "GET", path: "/api/v1/bonus-points/class/:classId", module: "bonus_points", roles: ["admin", "teacher"], access: "authenticated+role", source: "bonusPoint.route.js" },
+  { key: "post_bonus_points", method: "POST", path: "/api/v1/bonus-points", module: "bonus_points", roles: ["admin", "teacher"], access: "authenticated+role", source: "bonusPoint.route.js" },
+  { key: "post_bonus_points_bulk", method: "POST", path: "/api/v1/bonus-points/bulk", module: "bonus_points", roles: ["admin", "teacher"], access: "authenticated+role", source: "bonusPoint.route.js" },
+  { key: "put_bonus_points_by_id", method: "PUT", path: "/api/v1/bonus-points/:id", module: "bonus_points", roles: ["admin", "teacher"], access: "authenticated+role", source: "bonusPoint.route.js" },
+  { key: "delete_bonus_points_by_id", method: "DELETE", path: "/api/v1/bonus-points/:id", module: "bonus_points", roles: ["admin"], access: "authenticated+role", source: "bonusPoint.route.js" },
 ];
 
 export const adminEndpointCount = adminEndpointRegistry.length;

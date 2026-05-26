@@ -173,10 +173,8 @@ export default function FinanceDebts() {
     const handleRecordPayment = async (debt, amount) => {
         try {
             const res = await financeService.recordDebtPayment(debt.id, {
-                body: {
-                    amount: parseFloat(amount),
-                    paymentMethod: "cash",
-                },
+                amount: parseFloat(amount),
+                paymentMethod: "cash",
             });
             if (res?.success) {
                 toast.success("Đã ghi nhận thanh toán.");

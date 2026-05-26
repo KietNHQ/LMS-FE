@@ -51,22 +51,34 @@ export default function FinancePaymentHistory() {
     const [page, setPage] = useState(1);
     const PAGE_SIZE = 10;
 
-    // Load stats from dedicated endpoint
+    // Load stats from payment history data
     const loadStats = useCallback(async () => {
         setIsLoading(true);
         try {
-            const payRes = await financeService.getPaymentHistoryStats({
+            const payRes = await financeService.getPaymentHistory({
                 params: {
                     schoolYearId: selectedSchoolYear?.id,
                     semesterId: selectedTerm?.id,
+                    limit: 1000, // Get enough data for stats
                 },
             });
 
             if (payRes?.success) {
-                setStats(payRes.data || { totalAmount: 0, byMethod: {}, count: 0 });
+                const payments = Array.isArray(payRes.data) ? payRes.data : payRes.data?.items || [];
+                const byMethod = {};
+                let totalAmount = 0;
+
+                payments.forEach((p) => {
+                    const method = p.payment_method || "other";
+                    byMethod[method] = (byMethod[method] || 0) + parseFloat(p.amount || 0);
+                    totalAmount += parseFloat(p.amount || 0);
+                });
+
+                setStats({ totalAmount, byMethod, count: payments.length });
             }
         } catch (err) {
             console.error("[FinancePaymentHistory] loadStats error:", err);
+            setStats({ totalAmount: 0, byMethod: {}, count: 0 });
         } finally {
             setIsLoading(false);
         }

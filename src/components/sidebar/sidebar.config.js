@@ -109,6 +109,7 @@ export const sidebarConfig = {
         { label: "Trò chuyện",         icon: FiMessageSquare, path: "/management/chat" },
         { label: "Thông Báo",          icon: FiBell,          path: "/management/notifications" },
         { label: "Báo Cáo",            icon: FiBarChart2,     path: "/management/reports",      requiredPermissions: [PERMISSIONS.REPORT_VIEW] },
+        { label: "  Xuất Học Bạ",     icon: FiDownload,      path: "/management/discipline/export" },
     ],
 
     admin: [

@@ -1,18 +1,23 @@
 import React, { useState, useEffect } from "react";
 import { FiX, FiCheck, FiUser, FiCalendar, FiClock, FiActivity, FiMessageSquare, FiCpu, FiUserPlus, FiShield, FiInfo, FiChevronRight } from "react-icons/fi";
 import { toast } from "react-toastify";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import Select from "../../../../components/ui/Select/Select";
 import StatusBadge from "../../../../components/common/StatusBadge/StatusBadge";
+import { vpDisciplineService } from "../../../../services/pages/management/vp-discipline";
 import "./IncidentHandleModal.css";
 
 const STATUS_FLOW = [
-    { value: 'new', label: 'Mới ghi nhận', color: 'red' },
-    { value: 'processing', label: 'Đang xử lý', color: 'orange' },
+    { value: 'open', label: 'Mới ghi nhận', color: 'red' },
+    { value: 'in_progress', label: 'Đang xử lý', color: 'orange' },
     { value: 'resolved', label: 'Đã giải quyết', color: 'green' },
     { value: 'closed', label: 'Đã đóng', color: 'gray' }
 ];
 
+// NOTE: DISCIPLINE_STAFF should be fetched from API (teachers/discipline staff)
+// For now, keeping as fallback until backend provides staff list
 const DISCIPLINE_STAFF = [
+    { value: "", label: "Chọn nhân sự..." },
     { value: "Giám thị 01", label: "Giám thị 01" },
     { value: "Giám thị 02", label: "Giám thị 02" },
     { value: "GVCN Lớp", label: "GVCN Lớp" },
@@ -20,32 +25,104 @@ const DISCIPLINE_STAFF = [
 ];
 
 export default function IncidentHandleModal({ isOpen, onClose, incident, onUpdateIncident }) {
-    const [activeTab, setActiveTab] = useState("handle"); 
+    const [activeTab, setActiveTab] = useState("handle");
     const [assignedTo, setAssignedTo] = useState("");
     const [note, setNote] = useState("");
     const [status, setStatus] = useState("new");
 
+    const queryClient = useQueryClient();
+
+    // Fetch discipline staff from API (teachers with discipline role)
+    const { data: staffOptions = DISCIPLINE_STAFF } = useQuery({
+        queryKey: ["discipline-staff"],
+        queryFn: async () => {
+            try {
+                const res = await vpDisciplineService.callByKey("get_teachers");
+                const teachers = res?.data || res || [];
+                return [
+                    { value: "", label: "Chọn nhân sự..." },
+                    ...teachers.map(t => ({
+                        value: t.id,
+                        label: t.name || t.full_name || t.teacher_name || "N/A",
+                    })),
+                ];
+            } catch {
+                return DISCIPLINE_STAFF;
+            }
+        },
+    });
+
+    // Mutation for updating incident status/actions
+    const updateIncidentMutation = useMutation({
+        mutationFn: async ({ incidentId, data }) => {
+            // Use escalation resolve endpoint
+            if (data.status === "resolved") {
+                return vpDisciplineService.callByKey("put_discipline_escalations_by_id_resolve", {
+                    pathParams: { id: incidentId },
+                    body: {
+                        actionTaken: data.note || data.actionTaken,
+                        resolvedBy: data.assignedTo,
+                    },
+                });
+            }
+            // Use escalation actions endpoint for other status updates
+            return vpDisciplineService.callByKey("post_discipline_escalations_by_id_actions", {
+                pathParams: { id: incidentId },
+                body: {
+                    status: data.status,
+                    note: data.note,
+                    assignedTo: data.assignedTo,
+                },
+            });
+        },
+        onSuccess: () => {
+            // Invalidate related queries to refetch data
+            queryClient.invalidateQueries({ queryKey: ["discipline-escalations"] });
+            queryClient.invalidateQueries({ queryKey: ["discipline-incidents"] });
+        },
+        onError: (err) => {
+            toast.error(err?.message || "Không thể cập nhật sự vụ. Vui lòng thử lại.");
+        },
+    });
+
     useEffect(() => {
         if (incident) {
-            setAssignedTo(incident.assignedTo || "");
-            setStatus(incident.status || "new");
-            setNote(incident.handleNote || "");
+            setAssignedTo(incident.assignedTo || incident.assigned_to || "");
+            setStatus(incident.status || "open");
+            setNote(incident.handleNote || incident.note || incident.actionTaken || "");
         }
     }, [incident]);
 
     if (!isOpen || !incident) return null;
 
-    const handleSave = () => {
-        const updatedData = {
-            ...incident,
-            status: status,
-            assignedTo: assignedTo,
-            handleNote: note,
-            lastUpdated: new Date().toLocaleDateString('vi-VN'),
-        };
-        onUpdateIncident(updatedData);
-        toast.success(`Đã cập nhật sự vụ cho ${incident.student}`);
-        onClose();
+    const handleSave = async () => {
+        try {
+            await updateIncidentMutation.mutateAsync({
+                incidentId: incident.id,
+                data: {
+                    status,
+                    assignedTo,
+                    note,
+                },
+            });
+
+            const updatedData = {
+                ...incident,
+                status,
+                assignedTo,
+                handleNote: note,
+                lastUpdated: new Date().toLocaleDateString('vi-VN'),
+            };
+            
+            if (onUpdateIncident) {
+                onUpdateIncident(updatedData);
+            }
+            
+            toast.success(`Đã cập nhật sự vụ #${incident.id}`);
+            onClose();
+        } catch {
+            // Error handled by mutation onError
+        }
     };
 
     // Logic to determine if a status step is accessible
@@ -145,7 +222,7 @@ export default function IncidentHandleModal({ isOpen, onClose, incident, onUpdat
                                     <Select 
                                         label="Người phụ trách xử lý"
                                         placeholder="Chọn nhân sự..."
-                                        options={DISCIPLINE_STAFF}
+                                        options={staffOptions}
                                         value={assignedTo}
                                         onChange={(e) => setAssignedTo(e.target.value)}
                                         variant="custom"
@@ -235,8 +312,12 @@ export default function IncidentHandleModal({ isOpen, onClose, incident, onUpdat
 
                 <div className="ihm-footer">
                     <button className="ihm-btn-cancel" onClick={onClose}>Hủy bỏ</button>
-                    <button className="ihm-btn-save" onClick={handleSave}>
-                        <FiCheck /> Cập nhật sự vụ
+                    <button 
+                        className="ihm-btn-save" 
+                        onClick={handleSave}
+                        disabled={updateIncidentMutation.isPending}
+                    >
+                        <FiCheck /> {updateIncidentMutation.isPending ? "Đang lưu..." : "Cập nhật sự vụ"}
                     </button>
                 </div>
             </div>

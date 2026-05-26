@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useCallback } from "react";
+import React, { useMemo, useState, useCallback, useRef, useEffect } from "react";
 import "./ManagementTimetable.css";
 import TimetableFiltersSection from "./components/timetableFiltersSection/timetableFiltersSection";
 import ScheduleSlotSection from "./components/scheduleSlotSection/scheduleSlotSection";
@@ -9,9 +9,14 @@ import { SchoolYearTermSelector } from "../../../components/common";
 import { useSchoolYearTerm } from "../../../hooks/useSchoolYearTerm";
 import { FiUsers, FiCalendar, FiClock, FiBook, FiUser, FiMapPin, FiActivity, FiX, FiCheckCircle, FiSave, FiPlus } from "react-icons/fi";
 import { WEEK_DAYS, STATUS_META, MODE_META, getPeriodRangeLabel, SUBJECT_COLOR_MAP, GDPT_2018_CONFIG } from "../../../utils/timetableShared";
-import timetableService from "../../../services/pages/management/timetable/timetableService";
-import { adminApiService } from "../../../services/pages/admin/generated";
-import axiosClient from "../../../services/shared/http/axiosClient";
+import timetableService, { API_DAY_TO_LABEL } from "../../../services/pages/management/timetable/timetableService";
+import { classesService } from "../../../services/pages/management/classes";
+import {
+    resolveSchoolYearId,
+    resolveSemesterId,
+    dayLabelToApiDayOfWeek,
+} from "../../../services/shared/schoolYearLookup";
+import { loadTimetableStaticCatalog } from "../../../services/pages/management/timetable/timetableCatalogCache";
 
 const getErrorMessage = (error, fallback) => {
     const apiError = error?.response?.data?.error;
@@ -21,6 +26,50 @@ const getErrorMessage = (error, fallback) => {
 
 const dayOptions = WEEK_DAYS.map((item) => item.label);
 const periodOptions = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+
+function mapApiLessonToSession(p, { selectedClass, selectedSchoolYear, selectedTerm }) {
+    const cts = p.class_teacher_subject;
+    const subjectName =
+        cts?.subject_assignments?.display_name ||
+        p.subjectName ||
+        p.subject_name ||
+        "Môn học";
+    const teacherName =
+        cts?.teachers?.fullName ||
+        cts?.teachers?.name ||
+        p.teacherName ||
+        "Chưa phân công";
+    const subjectCode =
+        cts?.subject_assignments?.subject_code ||
+        p.subjectCode ||
+        p.subject_code ||
+        "TOAN";
+    const dayNum = p.day_of_week ?? p.dayOfWeek ?? 2;
+    const period = Number(p.period_number ?? p.period ?? 1);
+    const periodEnd = Number(p.period_end ?? p.periodEnd ?? period);
+    const room = p.room || p.roomName || p.room_name || "—";
+    const range = getPeriodRangeLabel(period, periodEnd);
+
+    return {
+        id: p.id,
+        year: selectedSchoolYear,
+        term: selectedTerm,
+        className: selectedClass,
+        day: API_DAY_TO_LABEL[dayNum] || "Thứ 2",
+        period,
+        periodEnd,
+        subject: subjectName,
+        subjectKey: subjectCode,
+        teacher: teacherName,
+        room,
+        status: STATUS_META.normal.label,
+        note: p.note || "",
+        mode: MODE_META.offline,
+        color: SUBJECT_COLOR_MAP[subjectCode] || "teal",
+        start: range.split(" - ")[0],
+        end: range.split(" - ")[1],
+    };
+}
 
 function normalizeText(value) {
     return String(value || "").trim().toLowerCase();
@@ -256,14 +305,15 @@ function LessonModal({ mode, formData, onChange, onClose, onSubmit, allSessions,
 }
 
 export default function ManagementTimetable() {
-    const { 
-        selectedSchoolYear = "2025-2026", 
-        selectedTerm = "hk1", 
-        handleYearArrow, 
-        handleTermChange 
-    } = useSchoolYearTerm() || {};
+    const {
+        selectedSchoolYear,
+        selectedTerm,
+        handleYearArrow,
+        handleTermChange,
+    } = useSchoolYearTerm();
     const [sessions, setSessions] = useState([]);
-    const [selectedBlock, setSelectedBlock] = useState("10");
+    const [gradeBlockOptions, setGradeBlockOptions] = useState([{ value: "all", label: "Tất cả" }]);
+    const [selectedBlock, setSelectedBlock] = useState("all");
     const [selectedClass, setSelectedClass] = useState("");
     const [selectedTeacher, setSelectedTeacher] = useState("Tất cả giáo viên");
     const [selectedDay, setSelectedDay] = useState("Tất cả thứ");
@@ -282,53 +332,86 @@ export default function ManagementTimetable() {
     const [realRooms, setRealRooms] = useState([]);
     const [realTeachers, setRealTeachers] = useState([]);
     const [realClasses, setRealClasses] = useState([]);
+    const [periodIds, setPeriodIds] = useState({ schoolYearId: null, semesterId: null });
 
-    const fetchCatalogData = useCallback(async () => {
-        try {
-            const [subjectsRes, roomsRes, teachersRes, classesRes] = await Promise.all([
-                adminApiService.get_subjects(),
-                axiosClient.get("/rooms"),
-                adminApiService.get_teachers(),
-                adminApiService.get_classes(),
-            ]);
+    const catalogGenRef = useRef(0);
 
-            const subjects = (subjectsRes?.data || []).map(s => ({
-                value: s.name,   // display name for form value
-                label: s.name,   // display name for dropdown label
-                code: s.code,     // subject code for API/subjectKey
-            }));
-            const rooms = (roomsRes?.data || []).map(r => ({
-                value: r.name,
-                label: `${r.name} (Tòa ${r.building || "?"})`,
-            }));
-            const teachers = (teachersRes?.data || []).map(t => ({
-                value: t.fullName || t.full_name || t.name || "",
-                label: t.fullName || t.full_name || t.name || "",
-            }));
-            const classes = (classesRes?.data || []).map(c => ({
-                value: c.class_name || c.name || "",
-                label: c.class_name || c.name || "",
-            }));
+    useEffect(() => {
+        const gen = ++catalogGenRef.current;
 
-            setRealSubjects(subjects);
-            setRealRooms(rooms);
-            setRealTeachers(teachers);
-            setRealClasses(classes);
+        (async () => {
+            try {
+                const [{ subjects, rooms, teachers, gradeOptions }, classRows] = await Promise.all([
+                    loadTimetableStaticCatalog(),
+                    classesService.listClasses({ schoolYearName: selectedSchoolYear }),
+                ]);
 
-            if (classes.length > 0 && !selectedClass) {
-                setSelectedClass(classes[0].value);
+                if (gen !== catalogGenRef.current) return;
+
+                const classes = classRows.map((c) => ({
+                    id: c.id,
+                    value: c.name,
+                    label: c.name,
+                    gradeNumber: `${c.grade || ""}`.replace(/^khối\s*/i, "").trim(),
+                }));
+
+                setRealSubjects(subjects);
+                setRealRooms(rooms);
+                setRealTeachers(teachers);
+                setRealClasses(classes);
+
+                const blocks = gradeOptions
+                    .filter((g) => g.value !== "all")
+                    .map((g) => ({ value: g.value, label: g.label }));
+                setGradeBlockOptions([{ value: "all", label: "Tất cả" }, ...blocks]);
+
+                setSelectedClass((prev) => {
+                    if (prev && classes.some((c) => c.value === prev)) return prev;
+                    return classes[0]?.value || "";
+                });
+            } catch (e) {
+                if (gen === catalogGenRef.current) {
+                    console.warn("Failed to fetch catalog data:", e);
+                }
             }
-        } catch (e) {
-            console.warn("Failed to fetch catalog data:", e);
-        }
-    }, [selectedClass]);
+        })();
 
-    React.useEffect(() => { fetchCatalogData(); }, [fetchCatalogData]);
+        return () => {
+            catalogGenRef.current += 1;
+        };
+    }, [selectedSchoolYear]);
 
-    // Derived options
-    const classOptions = realClasses.map(c => c.value);
-    const blockOptions = Array.from(new Set(classOptions.map((c) => c.slice(0, 2))));
-    const filteredClassOptions = useMemo(() => classOptions.filter((c) => c.startsWith(selectedBlock)), [classOptions, selectedBlock]);
+    useEffect(() => {
+        let cancelled = false;
+
+        (async () => {
+            const [schoolYearId, semesterId] = await Promise.all([
+                resolveSchoolYearId(selectedSchoolYear),
+                resolveSemesterId(selectedSchoolYear, selectedTerm),
+            ]);
+            if (!cancelled) {
+                setPeriodIds({ schoolYearId: schoolYearId ?? null, semesterId: semesterId ?? null });
+            }
+        })();
+
+        return () => {
+            cancelled = true;
+        };
+    }, [selectedSchoolYear, selectedTerm]);
+
+    const classOptions = realClasses.map((c) => c.value);
+    const blockOptions = gradeBlockOptions;
+    const filteredClassOptions = useMemo(() => {
+        if (selectedBlock === "all") return classOptions;
+        return realClasses
+            .filter((c) => c.gradeNumber === selectedBlock)
+            .map((c) => c.value);
+    }, [classOptions, realClasses, selectedBlock]);
+
+    const selectedClassRecord = useMemo(
+        () => realClasses.find((c) => c.value === selectedClass),
+        [realClasses, selectedClass],
+    );
 
     // Build display-name -> code and code -> display-name maps from realSubjects
     const subjectDisplayToCode = useMemo(() => {
@@ -362,60 +445,80 @@ export default function ManagementTimetable() {
         mode: MODE_META.offline,
     }), [realSubjects, realRooms, realTeachers, realClasses]);
 
-    // Mapping for Day of Week
-    const apiDayToLabel = ["", "Chủ nhật", "Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6", "Thứ 7"];
+    useEffect(() => {
+        const classId = selectedClassRecord?.id;
+        if (!classId || !selectedClass) {
+            setSessions([]);
+            return;
+        }
 
-    // Fetch data from API
-    React.useEffect(() => {
-        const fetchTimetable = async () => {
+        let cancelled = false;
+
+        const timer = setTimeout(async () => {
             setIsLoading(true);
             setLoadError("");
             try {
-                const data = await timetableService.listTimetable();
-                // Map API periods to UI sessions
-                const mapped = data.map(p => {
-                    const subjectName = p.class_teacher_subject?.subject_assignments?.display_name || "Môn học";
-                    const teacherName = p.class_teacher_subject?.teachers?.fullName || p.class_teacher_subject?.teachers?.name || "Chưa phân công";
-                    const className = p.class_teacher_subject?.classes?.class_name || "Lớp";
-                    
-                    // Simple start/end time extraction
-                    const startStr = p.start_time ? String(p.start_time).slice(11, 16) : "";
-                    const endStr = p.end_time ? String(p.end_time).slice(11, 16) : "";
+                const params = {
+                    ...(periodIds.schoolYearId ? { schoolYearId: periodIds.schoolYearId } : {}),
+                    ...(periodIds.semesterId ? { semesterId: periodIds.semesterId } : {}),
+                    classId,
+                };
 
-                    return {
-                        id: p.id,
-                        year: selectedSchoolYear,
-                        term: selectedTerm,
-                        className: className,
-                        day: apiDayToLabel[p.day_of_week] || "Thứ 2",
-                        period: p.period_number || 1,
-                        periodEnd: p.period_number || 1, // API usually returns per period, so start=end
-                        subject: subjectName,
-                        subjectKey: p.class_teacher_subject?.subject_assignments?.subject_code || "TOAN",
-                        teacher: teacherName,
-                        room: p.room || "—",
-                        status: STATUS_META.normal.label,
-                        note: p.note || "",
-                        mode: MODE_META.offline,
-                        color: SUBJECT_COLOR_MAP[p.class_teacher_subject?.subject_assignments?.subject_code] || "teal",
-                        start: startStr,
-                        end: endStr
-                    };
-                });
+                if (selectedDay !== "Tất cả thứ") {
+                    const dayOfWeek = dayLabelToApiDayOfWeek(selectedDay);
+                    if (dayOfWeek) params.dayOfWeek = dayOfWeek;
+                }
+
+                const data = await timetableService.listTimetable(params);
+                if (cancelled) return;
+
+                const mapped = data.map((p) =>
+                    mapApiLessonToSession(p, { selectedClass, selectedSchoolYear, selectedTerm }),
+                );
                 setSessions(mapped);
+
+                const hasMorning = mapped.some((s) => s.period <= 5);
+                const hasAfternoon = mapped.some((s) => s.period >= 6);
+                if (mapped.length > 0 && !hasMorning && hasAfternoon) {
+                    setSessionView("afternoon");
+                }
             } catch (error) {
-                console.warn("Failed to fetch real timetable, using empty data:", error);
-                // setLoadError(getErrorMessage(error, "Không thể tải thời khóa biểu."));
+                if (!cancelled) {
+                    console.warn("Failed to fetch real timetable:", error);
+                    setSessions([]);
+                    if (error?.response?.status === 429) {
+                        setLoadError("Quá nhiều yêu cầu. Vui lòng đợi vài giây rồi tải lại trang.");
+                    } else {
+                        setLoadError(getErrorMessage(error, "Không thể tải thời khóa biểu."));
+                    }
+                }
             } finally {
-                setIsLoading(false);
+                if (!cancelled) {
+                    setIsLoading(false);
+                }
             }
+        }, 350);
+
+        return () => {
+            cancelled = true;
+            clearTimeout(timer);
         };
-        fetchTimetable();
-    }, [selectedSchoolYear, selectedTerm]);
+    }, [
+        periodIds.schoolYearId,
+        periodIds.semesterId,
+        selectedClassRecord?.id,
+        selectedClass,
+        selectedDay,
+        selectedSchoolYear,
+        selectedTerm,
+    ]);
 
 
-    // Khi đổi block, cập nhật selectedClass về lớp đầu tiên của block đó
-    React.useEffect(() => {
+    useEffect(() => {
+        if (filteredClassOptions.length === 0) {
+            if (selectedClass) setSelectedClass("");
+            return;
+        }
         if (!filteredClassOptions.includes(selectedClass)) {
             setSelectedClass(filteredClassOptions[0]);
         }
@@ -423,17 +526,13 @@ export default function ManagementTimetable() {
 
     // Tính lại danh sách giáo viên filter dựa trên tuần, lớp, ngày
     const teacherOptions = useMemo(() => {
-        let filtered = sessions.filter((item) => 
-            item.year === selectedSchoolYear && 
-            item.term === selectedTerm && 
-            item.className === selectedClass
-        );
+        let filtered = sessions;
         if (selectedDay !== "Tất cả thứ") {
             filtered = filtered.filter((item) => item.day === selectedDay);
         }
         const names = Array.from(new Set(filtered.map((item) => item.teacher).filter(Boolean)));
         return ["Tất cả giáo viên", ...names];
-    }, [sessions, selectedSchoolYear, selectedTerm, selectedClass, selectedDay]);
+    }, [sessions, selectedDay]);
 
     // Nếu selectedTeacher không còn hợp lệ thì reset về "Tất cả giáo viên"
     React.useEffect(() => {
@@ -448,25 +547,17 @@ export default function ManagementTimetable() {
         sessionView === "morning" ? periodOptions.slice(0, 5) : periodOptions.slice(5, 10)
     ), [sessionView]);
 
-    const sessionsInTerm = useMemo(
-        () => sessions.filter((item) => item.year === selectedSchoolYear && item.term === selectedTerm),
-        [sessions, selectedSchoolYear, selectedTerm]
-    );
+    const sessionsInTerm = sessions;
 
-    // [NEW] Tính tiến độ xếp lớp
     const progressLabel = useMemo(() => {
-        const classesWithSessions = new Set(sessionsInTerm.map(s => s.className)).size;
+        const classesWithSessions = sessions.length > 0 ? 1 : 0;
         return `${classesWithSessions}/${classOptions.length} lớp`;
-    }, [sessionsInTerm]);
+    }, [sessions, classOptions]);
 
-    const sessionsInTermByClass = useMemo(
-        () => sessionsInTerm.filter((item) => item.className === selectedClass),
-        [sessionsInTerm, selectedClass]
-    );
+    const sessionsInTermByClass = sessions;
 
     const timetableSessions = useMemo(() => {
-        return sessionsInTerm.filter((item) => {
-            const matchesClass = item.className === selectedClass;
+        return sessions.filter((item) => {
             const matchesTeacher = selectedTeacher === "Tất cả giáo viên" || item.teacher === selectedTeacher;
             const matchesDay = selectedDay === "Tất cả thứ" || item.day === selectedDay;
             const keyword = normalizeText(searchTerm);
@@ -476,9 +567,9 @@ export default function ManagementTimetable() {
                 normalizeText(item.teacher).includes(keyword) ||
                 normalizeText(item.room).includes(keyword);
 
-            return matchesClass && matchesTeacher && matchesDay && matchesKeyword;
+            return matchesTeacher && matchesDay && matchesKeyword;
         });
-    }, [sessionsInTerm, selectedClass, selectedTeacher, selectedDay, searchTerm]);
+    }, [sessions, selectedTeacher, selectedDay, searchTerm]);
 
     const conflicts = useMemo(() => {
         const scoped = sessionsInTerm.filter((item) => {
@@ -770,7 +861,11 @@ export default function ManagementTimetable() {
                 {isLoading ? (
                     <div style={{ textAlign: "center", padding: "2rem", color: "#666" }}>Đang tải dữ liệu...</div>
                 ) : loadError ? (
-                    <div style={{ textAlign: "center", padding: "2rem", color: "#666" }}>{loadError}</div>
+                    <div style={{ textAlign: "center", padding: "2rem", color: "#c0392b" }}>{loadError}</div>
+                ) : timetableSessions.length === 0 && sessions.length > 0 ? (
+                    <div style={{ textAlign: "center", padding: "2rem", color: "#666" }}>
+                        Có {sessions.length} tiết nhưng không khớp bộ lọc (thử đổi thứ / giáo viên / buổi Chiều).
+                    </div>
                 ) : (
                     <ScheduleSlotSection
                         selectedClass={selectedClass}

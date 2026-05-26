@@ -1,8 +1,9 @@
 import { useMemo, useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
-import { PageHeader, WeekPicker, StatusBadge, Pagination } from "../../../../components/common";
+import { PageHeader, WeekPicker, StatusBadge, Pagination, LoadingSpinner } from "../../../../components/common";
 import DisciplineHeaderActions from "../components/DisciplineHeaderActions";
 import { useSchoolYearTerm } from "../../../../hooks/useSchoolYearTerm";
+import axiosClient from "../../../../services/shared/http/axiosClient";
 import Select from "../../../../components/ui/Select/Select";
 import {
   FiClock,
@@ -18,21 +19,6 @@ import * as XLSX from "xlsx";
 import BonusPointModal from "../components/BonusPointModal";
 import "./VpDisciplineAttendance.css";
 
-const ATTENDANCE_RECORDS = [
-  { id: 1, studentName: "Nguyễn Văn A", className: "10A1", week: 12, dayOfWeek: 2, reason: "Sốt xuất huyết", type: "excused", points: -1, history: [ { date: "15/10/2026", type: "excused", reason: "Sốt xuất huyết" } ] },
-  { id: 2, studentName: "Trần Thị B", className: "11A5", week: 12, dayOfWeek: 2, reason: "Không rõ lý do", type: "unexcused", points: -5, history: [ { date: "15/10/2026", type: "unexcused", reason: "Không rõ lý do" } ] },
-  { id: 3, studentName: "Lê C", className: "12A2", week: 12, dayOfWeek: 3, reason: "Việc gia đình", type: "excused", points: -1, history: [{ date: "16/10/2026", type: "excused", reason: "Việc gia đình" }] },
-  { id: 4, studentName: "Hoàng D", className: "11A5", week: 12, dayOfWeek: 2, reason: "Ngủ quên", type: "unexcused", points: -5, history: [ { date: "15/10/2026", type: "unexcused", reason: "Ngủ quên" } ] },
-  { id: 92, studentName: "Phạm F", className: "12A1", week: 12, dayOfWeek: 4, reason: "Đến muộn tiết 2", type: "late", points: -2, history: [{ date: "17/10/2026", type: "late", reason: "Đến muộn tiết 2" }] },
-  { id: 93, studentName: "Đỗ G", className: "12A1", week: 12, dayOfWeek: 5, reason: "Trèo tường bỏ tiết 4", type: "skipping", points: -10, history: [{ date: "18/10/2026", type: "skipping", reason: "Trèo tường bỏ tiết 4" }] },
-  { id: 94, studentName: "Ngô H", className: "10A1", week: 12, dayOfWeek: 2, reason: "Bỏ giờ sinh hoạt", type: "skipping", points: -10, history: [{ date: "15/10/2026", type: "skipping", reason: "Bỏ giờ sinh hoạt" }] },
-  { id: 95, studentName: "Lớp 12A1", className: "12A1", week: 12, dayOfWeek: 0, reason: "Thành tích chuyên cần xuất sắc", type: "bonus", points: 10, history: [] },
-  { id: 96, studentName: "Bùi J", className: "11A5", week: 12, dayOfWeek: 3, reason: "Vắng mặt không báo trước", type: "unexcused", points: -5, history: [{ date: "16/10/2026", type: "unexcused", reason: "Vắng mặt không báo trước" }] },
-  { id: 97, studentName: "Phan K", className: "10A2", week: 12, dayOfWeek: 4, reason: "Đi học đúng giờ nhiều ngày", type: "bonus", points: 5, history: [{ date: "17/10/2026", type: "bonus", reason: "Đi học đúng giờ nhiều ngày" }] },
-  { id: 98, studentName: "Võ L", className: "12C3", week: 12, dayOfWeek: 6, reason: "Đến muộn tiết 1", type: "late", points: -2, history: [{ date: "19/10/2026", type: "late", reason: "Đến muộn tiết 1" }] },
-  { id: 99, studentName: "Đặng M", className: "11B1", week: 12, dayOfWeek: 7, reason: "Bỏ tiết tự học", type: "skipping", points: -10, history: [{ date: "20/10/2026", type: "skipping", reason: "Bỏ tiết tự học" }] },
-];
-
 const DAYS = [
     { id: 2, label: "Thứ 2" },
     { id: 3, label: "Thứ 3" },
@@ -45,14 +31,10 @@ const DAYS = [
 export default function VpDisciplineAttendance({ isEmbedded = false }) {
   const [searchParams] = useSearchParams();
   const urlClass = searchParams.get("class");
-  // Force update for 1-row layout refresh
-
-
   const { selectedSchoolYear, selectedTerm, handleYearArrow, handleTermChange } = useSchoolYearTerm();
 
-  const [records, setRecords] = useState(ATTENDANCE_RECORDS);
   const [selectedWeek, setSelectedWeek] = useState(12);
-  const [selectedDay, setSelectedDay] = useState(2); // Monday by default
+  const [selectedDay, setSelectedDay] = useState(2);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedGrade, setSelectedGrade] = useState("all");
   const [selectedClass, setSelectedClass] = useState(urlClass || "all");
@@ -61,7 +43,11 @@ export default function VpDisciplineAttendance({ isEmbedded = false }) {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
-  // Sync with URL
+  // Fetch attendance records from API
+  const [records, setRecords] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
+
   useEffect(() => {
     if (urlClass) {
         setSelectedClass(urlClass);
@@ -69,6 +55,75 @@ export default function VpDisciplineAttendance({ isEmbedded = false }) {
         if (["10", "11", "12"].includes(grade)) setSelectedGrade(grade);
     }
   }, [urlClass]);
+
+  // Fetch attendance data from API
+  useEffect(() => {
+    const fetchAttendanceData = async () => {
+      if (!selectedClass || selectedClass === "all") {
+        setRecords([]);
+        return;
+      }
+
+      setIsLoading(true);
+      setError(null);
+
+      try {
+        // Fetch attendance stats for the class
+        const statsRes = await axiosClient.get(`/attendance/class/${selectedClass}/stats`, {
+          params: { semesterId: selectedTerm },
+        });
+
+        // Fetch daily attendance if week is selected
+        const statsData = statsRes?.data?.data || statsRes?.data || statsRes || {};
+        const details = statsData.details || [];
+
+        // Transform API data to component format
+        const transformedRecords = details.map((student, idx) => ({
+          id: student.enrollment_id || idx + 1,
+          studentName: student.student_name || student.studentName || "Unknown",
+          className: selectedClass,
+          week: selectedWeek,
+          dayOfWeek: selectedDay,
+          reason: student.whole_day_status || student.status || "",
+          type: mapAttendanceStatus(student.whole_day_status || student.status),
+          points: calculatePoints(student.whole_day_status || student.status),
+          history: [],
+        }));
+
+        setRecords(transformedRecords);
+      } catch (err) {
+        console.error("Failed to fetch attendance:", err);
+        setError(err.message || "Không thể tải dữ liệu điểm danh");
+        setRecords([]);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchAttendanceData();
+  }, [selectedClass, selectedTerm, selectedWeek]);
+
+  const mapAttendanceStatus = (status) => {
+    const statusMap = {
+      present: "bonus",
+      absent: "unexcused",
+      late: "late",
+      excused: "excused",
+      permit: "excused",
+    };
+    return statusMap[status] || "unexcused";
+  };
+
+  const calculatePoints = (status) => {
+    const pointMap = {
+      present: 0,
+      absent: -5,
+      late: -2,
+      excused: -1,
+      permit: 0,
+    };
+    return pointMap[status] || 0;
+  };
 
   const classOptions = useMemo(() => {
     const classes = Array.from(new Set(records.map((item) => item.className))).sort();
@@ -195,47 +250,88 @@ export default function VpDisciplineAttendance({ isEmbedded = false }) {
       </div>
 
       <div className="att-stats-grid">
-        <div className="att-stat-card">
-          <div className="stat-card-content">
-            <span className="stat-label">Vắng có phép</span>
-            <span className="stat-value">{dynamicStats.excused}</span>
-            <span className="stat-sub">Tuần {selectedWeek}</span>
+        {isLoading ? (
+          <>
+            <div className="att-stat-card skeleton">
+              <div className="stat-card-content">
+                <LoadingSpinner size="sm" />
+              </div>
+            </div>
+            <div className="att-stat-card skeleton">
+              <div className="stat-card-content">
+                <LoadingSpinner size="sm" />
+              </div>
+            </div>
+            <div className="att-stat-card skeleton">
+              <div className="stat-card-content">
+                <LoadingSpinner size="sm" />
+              </div>
+            </div>
+            <div className="att-stat-card skeleton">
+              <div className="stat-card-content">
+                <LoadingSpinner size="sm" />
+              </div>
+            </div>
+            <div className="att-stat-card primary skeleton">
+              <div className="stat-card-content">
+                <LoadingSpinner size="sm" />
+              </div>
+            </div>
+          </>
+        ) : error ? (
+          <div className="att-error-banner">
+            <span>{error}</span>
           </div>
-        </div>
-        <div className="att-stat-card">
-          <div className="stat-card-content">
-            <span className="stat-label">Vắng không phép</span>
-            <span className="stat-value danger">{dynamicStats.unexcused}</span>
-            <span className="stat-sub">Trừ điểm nặng</span>
+        ) : selectedClass === "all" ? (
+          <div className="att-empty-state">
+            <FiActivity />
+            <span>Vui lòng chọn lớp để xem dữ liệu chuyên cần</span>
           </div>
-        </div>
-        <div className="att-stat-card">
-          <div className="stat-card-content">
-            <span className="stat-label">Đi muộn</span>
-            <span className="stat-value warning">{dynamicStats.late}</span>
-            <span className="stat-sub">Vi phạm tiết đầu</span>
-          </div>
-        </div>
-        <div className="att-stat-card">
-          <div className="stat-card-content">
-            <span className="stat-label">Trốn học / Bỏ tiết</span>
-            <span className="stat-value danger">{dynamicStats.skipping}</span>
-            <span className="stat-sub">Cần xử lý gấp</span>
-          </div>
-        </div>
-        <div className="att-stat-card primary">
-          <div className="stat-card-content">
-            <span className="stat-label">Tổng điểm thi đua</span>
-            <span className="stat-value">{dynamicStats.totalPoints > 0 ? `+${dynamicStats.totalPoints}` : dynamicStats.totalPoints}đ</span>
-            <span className="stat-sub">
-                {selectedDay === 'all' ? (
-                    <span className="rank-badge-mini">Hạng 5 / 24 lớp</span>
-                ) : (
-                    "Toàn tuần"
-                )}
-            </span>
-          </div>
-        </div>
+        ) : (
+          <>
+            <div className="att-stat-card">
+              <div className="stat-card-content">
+                <span className="stat-label">Vắng có phép</span>
+                <span className="stat-value">{dynamicStats.excused}</span>
+                <span className="stat-sub">Tuần {selectedWeek}</span>
+              </div>
+            </div>
+            <div className="att-stat-card">
+              <div className="stat-card-content">
+                <span className="stat-label">Vắng không phép</span>
+                <span className="stat-value danger">{dynamicStats.unexcused}</span>
+                <span className="stat-sub">Trừ điểm nặng</span>
+              </div>
+            </div>
+            <div className="att-stat-card">
+              <div className="stat-card-content">
+                <span className="stat-label">Đi muộn</span>
+                <span className="stat-value warning">{dynamicStats.late}</span>
+                <span className="stat-sub">Vi phạm tiết đầu</span>
+              </div>
+            </div>
+            <div className="att-stat-card">
+              <div className="stat-card-content">
+                <span className="stat-label">Trốn học / Bỏ tiết</span>
+                <span className="stat-value danger">{dynamicStats.skipping}</span>
+                <span className="stat-sub">Cần xử lý gấp</span>
+              </div>
+            </div>
+            <div className="att-stat-card primary">
+              <div className="stat-card-content">
+                <span className="stat-label">Tổng điểm thi đua</span>
+                <span className="stat-value">{dynamicStats.totalPoints > 0 ? `+${dynamicStats.totalPoints}` : dynamicStats.totalPoints}đ</span>
+                <span className="stat-sub">
+                    {selectedDay === 'all' ? (
+                        <span className="rank-badge-mini">{records.length} học sinh</span>
+                    ) : (
+                        "Toàn tuần"
+                    )}
+                </span>
+              </div>
+            </div>
+          </>
+        )}
       </div>
 
       <div className="att-full-panel animate-fade-in">

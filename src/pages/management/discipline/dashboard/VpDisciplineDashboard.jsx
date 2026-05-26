@@ -3,11 +3,15 @@ import { PageHeader, WeekPicker, EventCalendar } from "../../../../components/co
 import DisciplineHeaderActions from "../components/DisciplineHeaderActions";
 import Select from "../../../../components/ui/Select/Select";
 import { useSchoolYearTerm } from "../../../../hooks/useSchoolYearTerm";
+import { resolveSemesterId } from "../../../../services/shared/schoolYearLookup";
 import { vpDisciplineService } from "../../../../services/pages/management/vp-discipline";
 import { FiAlertTriangle, FiUsers, FiClock, FiAward, FiBarChart2, FiArrowRight } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
 import { INITIAL_CALENDAR_EVENTS, CALENDAR_EVENT_TYPES } from "../../../../components/common/EventCalendar/eventData";
 import "./VpDisciplineDashboard.css";
+
+const STATUS_LABELS = { open: "Mở", in_progress: "Đang xử lý", resolved: "Đã giải quyết", closed: "Đóng" };
+const INCIDENT_STATUS_LABELS = { open: "Khẩn cấp", in_progress: "Giao việc", resolved: "Đã xử lý", closed: "Đã đóng" };
 
 export default function VpDisciplineDashboard() {
     const { selectedSchoolYear, selectedTerm, handleYearArrow, handleTermChange } = useSchoolYearTerm();
@@ -16,35 +20,52 @@ export default function VpDisciplineDashboard() {
     const [leaderboardGrade, setLeaderboardGrade] = useState("all");
     const [conductGrade, setConductGrade] = useState("all");
 
-    // Mock Business Data
+    // ── Dashboard state (populated from real API) ──
     const [stats, setStats] = useState({
-        violationsToday: 18,
-        studentsInvolved: 22,
-        attendanceRate: 98.5,
-        topRank: "12A1"
+        violationsToday: 0,
+        studentsInvolved: 0,
+        attendanceRate: 0,
+        topRank: "—",
     });
+    const [alerts, setAlerts] = useState([]);
+    const [incidents, setIncidents] = useState([]);
+    const [fullLeaderboard, setFullLeaderboard] = useState([]);
 
     useEffect(() => {
         let isMounted = true;
 
         const loadDashboardData = async () => {
             try {
-                const [summaryResult, rankingResult] = await Promise.allSettled([
-                    vpDisciplineService.getReportSummary(selectedTerm, {
-                        params: { schoolYearId: selectedSchoolYear },
-                    }),
-                    vpDisciplineService.getClassRankings({
-                        params: { schoolYearId: selectedSchoolYear, semesterId: selectedTerm },
-                    }),
+                const semesterId = await resolveSemesterId(selectedSchoolYear, selectedTerm);
+
+                const [summaryResult, rankingsResult, escalationsResult] = await Promise.allSettled([
+                    semesterId
+                        ? vpDisciplineService.getReportSummary(semesterId, {
+                            params: { schoolYearId: selectedSchoolYear },
+                        })
+                        : Promise.reject(new Error("No semester")),
+                    semesterId
+                        ? vpDisciplineService.getClassRankings({
+                            params: { schoolYearId: selectedSchoolYear, semesterId },
+                        })
+                        : Promise.reject(new Error("No semester")),
+                    semesterId
+                        ? vpDisciplineService.callByKey("get_discipline_escalations_stats_by_semesterid", {
+                            pathParams: { semesterId },
+                        })
+                        : Promise.reject(new Error("No semester")),
                 ]);
 
                 if (!isMounted) return;
 
                 const summary = summaryResult.status === "fulfilled" ? (summaryResult.value || {}) : {};
-                const rankings = rankingResult.status === "fulfilled" ? (rankingResult.value || []) : [];
-                const topRank = Array.isArray(rankings) && rankings.length > 0
-                    ? (rankings[0]?.label || rankings[0]?.className || rankings[0]?.name || "12A1")
-                    : "12A1";
+                const rankings = rankingsResult.status === "fulfilled" ? (rankingsResult.value || []) : [];
+                const escalations = escalationsResult.status === "fulfilled" ? (escalationsResult.value || []) : [];
+
+                const topRank =
+                    Array.isArray(rankings) && rankings.length > 0
+                        ? rankings[0]?.label || rankings[0]?.className || rankings[0]?.name || "—"
+                        : "—";
 
                 setStats((prev) => ({
                     ...prev,
@@ -53,35 +74,54 @@ export default function VpDisciplineDashboard() {
                     attendanceRate: Number(summary.attendanceRate ?? prev.attendanceRate) || prev.attendanceRate,
                     topRank,
                 }));
-            } catch (_) {}
+
+                // ── Alerts: top escalations by priority ──
+                const sortedEscalations = [...(Array.isArray(escalations) ? escalations : [])].sort(
+                    (a, b) => {
+                        const pOrder = { high: 0, medium: 1, low: 2 };
+                        return (pOrder[a.priority] ?? 3) - (pOrder[b.priority] ?? 3);
+                    }
+                );
+                setAlerts(
+                    sortedEscalations.slice(0, 5).map((e, idx) => ({
+                        id: e.id ?? idx,
+                        title: e.title || e.incident_title || `Sự vụ #${e.id}`,
+                        desc: e.description || e.incident_description || "",
+                        path: `/vp-discipline/discipline-management?incident=${e.id}`,
+                    }))
+                );
+
+                // ── Incidents: recent escalations ──
+                setIncidents(
+                    sortedEscalations.slice(0, 3).map((e) => ({
+                        id: e.id,
+                        title: e.title || e.incident_title || "Sự vụ",
+                        subtitle: e.due_date ? `Hạn: ${e.due_date}` : "",
+                        status: INCIDENT_STATUS_LABELS[e.status] || e.status || "Mở",
+                        priority: e.priority,
+                    }))
+                );
+
+                // ── Leaderboard: class rankings ──
+                setFullLeaderboard(
+                    rankings.map((r, idx) => ({
+                        id: r.id ?? idx,
+                        grade: r.grade ?? 0,
+                        name: r.label || r.className || r.name || "—",
+                        score: r.score ?? r.discipline_score ?? 0,
+                        rank: idx + 1,
+                    }))
+                );
+            } catch {
+                // silent — stats remain at zero
+            }
         };
 
-        loadDashboardData();
+        if (selectedSchoolYear && selectedTerm) {
+            loadDashboardData();
+        }
         return () => { isMounted = false; };
     }, [selectedSchoolYear, selectedTerm]);
-
-    const alerts = [
-        { id: 1, title: "Lớp vi phạm nhiều nhất tuần này: 10A3", desc: "Tổng cộng 15 vi phạm. Tăng 50% so với tuần trước. Chủ yếu là đi học trễ.", path: "/vp-discipline/discipline-management?class=10A3" },
-        { id: 2, title: "Lớp có dấu hiệu tụt dốc trong ngày: 11A1", desc: "Hôm nay vắng 4 học sinh không phép và 2 trường hợp vi phạm tác phong.", path: "/vp-discipline/attendance" },
-        { id: 3, title: "Các học sinh vi phạm nhiều nhất trong tháng", desc: "Nguyễn Văn A (12A2), Lê Thị B (10A1)... Cần mời phụ huynh làm việc.", path: "/vp-discipline/discipline-management?filter=serious" },
-    ];
-
-
-
-    const incidents = [
-        { id: 1, title: "Xô xát tại sân trường", subtitle: "Cần xử lý trước 16/10", status: "Khẩn cấp" },
-        { id: 2, title: "Tái phạm đi trễ 3 lần", subtitle: "Gửi hồ sơ GVCN", status: "Giao việc" },
-        { id: 3, title: "Mất trật tự trong giờ học", subtitle: "Hòa giải trực tiếp", status: "Đã xử lý" },
-    ].slice(0, 3);
-
-    const fullLeaderboard = [
-        { id: 1, grade: 12, name: "Lớp 12A1", score: 98.5, rank: 1 },
-        { id: 2, grade: 10, name: "Lớp 10A1", score: 96.0, rank: 2 },
-        { id: 3, grade: 11, name: "Lớp 11A2", score: 92.5, rank: 3 },
-        { id: 4, grade: 12, name: "Lớp 12A5", score: 91.0, rank: 4 },
-        { id: 5, grade: 10, name: "Lớp 10B2", score: 89.5, rank: 5 },
-        { id: 6, grade: 11, name: "Lớp 11C1", score: 88.0, rank: 6 },
-    ];
 
     const filteredLeaderboard = (leaderboardGrade === "all" 
         ? fullLeaderboard 
@@ -221,7 +261,7 @@ export default function VpDisciplineDashboard() {
                                     <strong>{item.title}</strong>
                                     <span>{item.subtitle}</span>
                                 </div>
-                                <span className={`status-chip ${item.status === 'Khẩn cấp' ? 'serious' : item.status === 'Giao việc' ? 'serious' : 'success'}`}>
+                                <span className={`status-chip ${item.priority === 'high' || item.priority === 'medium' ? 'serious' : 'success'}`}>
                                     {item.status}
                                 </span>
                             </div>
