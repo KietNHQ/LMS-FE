@@ -153,12 +153,12 @@ export default function Select({
 
             <div className="custom-dropdown-list">
               {filteredOptions.length ? (
-                filteredOptions.map((option) => {
+                filteredOptions.map((option, index) => {
                   const isActive = String(option.value) === String(value);
 
                   return (
                     <button
-                      key={String(option.value)}
+                      key={`${String(option.value)}-${index}`}
                       type="button"
                       className={`custom-dropdown-item ${isActive ? "active" : ""} ${option.disabled ? "disabled" : ""}`}
                       onClick={() => {

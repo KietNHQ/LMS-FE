@@ -170,6 +170,7 @@ const STUDENT_QUIZ_ATTEMPT_MOCK = {
 
 const STUDENT_ENDPOINTS = [
   { key: "get_student_dashboard", method: "GET", path: "/dashboard/student", module: "dashboard", mock: () => STUDENT_DASHBOARD_MOCK },
+  { key: "get_school_years", method: "GET", path: "/school-years", module: "system", mock: () => ([{ id: 1, name: "2025-2026" }, { id: 2, name: "2024-2025" }]) },
   { key: "get_students_by_id", method: "GET", path: "/students/:id", module: "profile", mock: () => STUDENT_PROFILE_MOCK },
   { key: "get_students_by_id_grades", method: "GET", path: "/students/:id/grades", module: "grades", mock: () => STUDENT_GRADES_MOCK },
   { key: "get_students_by_id_grade_summary", method: "GET", path: "/students/:id/grade-summary", module: "grades", mock: () => STUDENT_GRADES_MOCK },
@@ -269,6 +270,7 @@ export const studentService = {
   getStudentById: (input) => endpointCallers.get_students_by_id(input),
   getStudentGrades: (input) => endpointCallers.get_students_by_id_grades(input),
   getStudentGradeSummary: (input) => endpointCallers.get_students_by_id_grade_summary(input),
+  getSchoolYears: (input) => endpointCallers.get_school_years(input),
   getStudentAttendance: (input) => endpointCallers.get_students_by_id_attendance(input),
   listClasses: (input) => endpointCallers.get_classes(input),
   getClasses: (input) => endpointCallers.get_classes(input),

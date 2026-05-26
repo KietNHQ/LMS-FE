@@ -15,6 +15,8 @@ const QUIZ_LABEL_TO_TYPE = Object.fromEntries(
     QUIZ_TYPE_LABEL_ENTRIES.map(([type, label]) => [label, type])
 );
 
+const ASSESSMENT_TYPES = ["regular", "midterm", "final", "none"];
+
 const getPayload = (response) => response?.data ?? response ?? {};
 
 const getRows = (payload) => {
@@ -42,6 +44,27 @@ const mapQuizTypeToApi = (quizTypeOrLabel) => {
     if (!normalized) return undefined;
     if (QUIZ_TYPE_TO_LABEL[normalized]) return normalized;
     return QUIZ_LABEL_TO_TYPE[normalized] || undefined;
+};
+
+const normalizeAssessmentTypeToApi = (assessmentType) => {
+        const normalized = String(assessmentType || "").trim().toLowerCase();
+        if (!normalized) return undefined;
+        return ASSESSMENT_TYPES.includes(normalized) ? normalized : undefined;
+};
+
+const inferAssessmentType = ({ assessmentType, quizType, durationMinutes }) => {
+        const fromInput = normalizeAssessmentTypeToApi(assessmentType);
+        if (fromInput) return fromInput;
+
+        if (quizType === "exam") {
+            return "midterm";
+        }
+
+        if (Number(durationMinutes || 0) >= 90) {
+            return "final";
+        }
+
+        return "regular";
 };
 
 const normalizeQuestionTypeToApi = (questionType) => {
@@ -186,7 +209,9 @@ const mapApiQuizToView = (quiz = {}) => {
         createdAt: quiz.created_at ? `${quiz.created_at}`.slice(0, 10) : "",
         examType: mapQuizTypeToLabel(quiz.quiz_type || quiz.quizType),
         quizType: quiz.quiz_type || quiz.quizType || "practice",
+        assessmentType: quiz.assessment_type || quiz.assessmentType || "none",
         classTeacherSubjectId: quiz.class_teacher_subject_id ?? quiz.classTeacherSubjectId,
+        semesterId: quiz.semester_id ?? quiz.semesterId ?? quiz.class_teacher_subject?.semester_id ?? quiz.class_teacher_subject?.semesterId ?? null,
         questions:
             toNumber(quiz.questions_count ?? quiz.question_count ?? quiz.questionsCount ?? quiz.totalQuestions) || 0,
         submissionCount:
@@ -206,15 +231,23 @@ const normalizeCreatePayload = (quizData = {}) => {
         quizData.classTeacherSubjectId ?? quizData.class_teacher_subject_id
     );
 
+    const quizType = mapQuizTypeToApi(quizData.quizType || quizData.examType) || "practice";
+    const durationMinutes = parseDurationMinutes(
+        quizData.durationMinutes ?? quizData.durationLabel ?? quizData.duration
+    );
+
     return {
         classTeacherSubjectId,
         lessonId: toNumber(quizData.lessonId ?? quizData.lesson_id) || null,
         title: String(quizData.title || "").trim(),
         description: quizData.description || "",
-        quizType: mapQuizTypeToApi(quizData.quizType || quizData.examType) || "practice",
-        durationMinutes: parseDurationMinutes(
-            quizData.durationMinutes ?? quizData.durationLabel ?? quizData.duration
-        ),
+        quizType,
+        assessmentType: inferAssessmentType({
+            assessmentType: quizData.assessmentType,
+            quizType,
+            durationMinutes,
+        }),
+        durationMinutes,
         maxAttempts: toNumber(quizData.maxAttempts ?? quizData.max_attempts) || 1,
         passScore:
             quizData.passScore === "" || quizData.passScore == null
@@ -232,6 +265,16 @@ const normalizeCreatePayload = (quizData = {}) => {
 };
 
 const normalizeUpdatePayload = (quizData = {}) => {
+    const quizType = mapQuizTypeToApi(quizData.quizType || quizData.examType);
+    const durationMinutes =
+        quizData.durationMinutes === undefined &&
+        quizData.durationLabel === undefined &&
+        quizData.duration === undefined
+            ? undefined
+            : parseDurationMinutes(
+                quizData.durationMinutes ?? quizData.durationLabel ?? quizData.duration
+            );
+
     const payload = {
         title: quizData.title,
         description: quizData.description,
@@ -239,15 +282,16 @@ const normalizeUpdatePayload = (quizData = {}) => {
             quizData.lessonId === undefined
                 ? undefined
                 : toNumber(quizData.lessonId ?? quizData.lesson_id) || null,
-        quizType: mapQuizTypeToApi(quizData.quizType || quizData.examType),
-        durationMinutes:
-            quizData.durationMinutes === undefined &&
-            quizData.durationLabel === undefined &&
-            quizData.duration === undefined
+        quizType,
+        assessmentType:
+            quizData.assessmentType === undefined && quizType === undefined && durationMinutes === undefined
                 ? undefined
-                : parseDurationMinutes(
-                    quizData.durationMinutes ?? quizData.durationLabel ?? quizData.duration
-                ),
+                : inferAssessmentType({
+                    assessmentType: quizData.assessmentType,
+                    quizType,
+                    durationMinutes,
+                }),
+        durationMinutes,
         maxAttempts:
             quizData.maxAttempts === undefined && quizData.max_attempts === undefined
                 ? undefined

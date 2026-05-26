@@ -8,9 +8,7 @@ export default function GradeEntrySection({
     onSave,
     onReset,
 }) {
-    const oralScores = draft.oralScores?.length ? draft.oralScores : [""];
-    const test15Scores = draft.test15Scores?.length ? draft.test15Scores : [""];
-    const oneTietScores = draft.oneTietScores?.length ? draft.oneTietScores : [""];
+    const regularScores = draft.regularScores?.length ? draft.regularScores : [""];
     const midtermScore = draft.midterm ?? "";
 
     const updateScoreList = (field, index, value, values) => {
@@ -46,64 +44,20 @@ export default function GradeEntrySection({
             >
                     <section className="grade-entry-multi-block grade-entry-field--full">
                         <div className="grade-entry-multi-head">
-                            <span>Điểm miệng</span>
-                            <button type="button" className="grade-entry-add-btn" onClick={() => addScore("oralScores", oralScores)}>+</button>
+                            <span>Điểm thường xuyên</span>
+                            <button type="button" className="grade-entry-add-btn" onClick={() => addScore("regularScores", regularScores)}>+</button>
                         </div>
                         <div className="grade-entry-multi-grid">
-                            {oralScores.map((value, index) => (
-                                <label key={`oral-${index}`} className="grade-entry-field">
-                                    <span>Miệng {index + 1}</span>
+                            {regularScores.map((value, index) => (
+                                <label key={`regular-${index}`} className="grade-entry-field">
+                                    <span>Thường xuyên {index + 1}</span>
                                     <input
                                         type="number"
                                         min="0"
                                         max="10"
                                         step="0.1"
                                         value={value}
-                                        onChange={(event) => updateScoreList("oralScores", index, event.target.value, oralScores)}
-                                    />
-                                </label>
-                            ))}
-                        </div>
-                    </section>
-
-                    <section className="grade-entry-multi-block grade-entry-field--full">
-                        <div className="grade-entry-multi-head">
-                            <span>Điểm 15 phút</span>
-                            <button type="button" className="grade-entry-add-btn" onClick={() => addScore("test15Scores", test15Scores)}>+</button>
-                        </div>
-                        <div className="grade-entry-multi-grid">
-                            {test15Scores.map((value, index) => (
-                                <label key={`test15-${index}`} className="grade-entry-field">
-                                    <span>15 phút {index + 1}</span>
-                                    <input
-                                        type="number"
-                                        min="0"
-                                        max="10"
-                                        step="0.1"
-                                        value={value}
-                                        onChange={(event) => updateScoreList("test15Scores", index, event.target.value, test15Scores)}
-                                    />
-                                </label>
-                            ))}
-                        </div>
-                    </section>
-
-                    <section className="grade-entry-multi-block grade-entry-field--full">
-                        <div className="grade-entry-multi-head">
-                            <span>Điểm 1 tiết</span>
-                            <button type="button" className="grade-entry-add-btn" onClick={() => addScore("oneTietScores", oneTietScores)}>+</button>
-                        </div>
-                        <div className="grade-entry-multi-grid">
-                            {oneTietScores.map((value, index) => (
-                                <label key={`one-tiet-${index}`} className="grade-entry-field">
-                                    <span>1 tiết {index + 1}</span>
-                                    <input
-                                        type="number"
-                                        min="0"
-                                        max="10"
-                                        step="0.1"
-                                        value={value}
-                                        onChange={(event) => updateScoreList("oneTietScores", index, event.target.value, oneTietScores)}
+                                        onChange={(event) => updateScoreList("regularScores", index, event.target.value, regularScores)}
                                     />
                                 </label>
                             ))}

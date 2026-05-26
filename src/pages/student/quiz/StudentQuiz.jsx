@@ -193,9 +193,18 @@ export default function StudentQuiz() {
             setLoading(true);
             const responses = Object.entries(answers).map(([qId, ans]) => ({
                 questionId: parseInt(qId),
-                answerId: quiz.questions.find(q => q.id === parseInt(qId))
-                    ?.quiz_answers?.find(a => a.answer_text === ans)?.id,
-                essayAnswer: typeof ans === "string" ? ans : undefined
+                answerId: (() => {
+                    const question = quiz.questions.find(q => q.id === parseInt(qId));
+                    const questionType = String(question?.type || question?.questionType || question?.question_type || "").toLowerCase();
+                    if (questionType === "essay") return undefined;
+                    return question?.quiz_answers?.find(a => a.answer_text === ans)?.id;
+                })(),
+                essayAnswer: (() => {
+                    const question = quiz.questions.find(q => q.id === parseInt(qId));
+                    const questionType = String(question?.type || question?.questionType || question?.question_type || "").toLowerCase();
+                    if (questionType !== "essay") return undefined;
+                    return typeof ans === "string" ? ans : undefined;
+                })()
             }));
 
             const response = await studentService.submitQuiz({
@@ -206,18 +215,39 @@ export default function StudentQuiz() {
 
             if (response.success) {
                 const attempt = response.data?.data || response.data || {};
-                const scoreValue = Number(
-                    attempt.total_score ?? attempt.scoreAuto ?? attempt.score_auto ?? attempt.score ?? 0
-                );
-                const correctCount = quiz.questions.reduce((count, question) => {
+                const hasEssayQuestions = quiz.questions.some((question) => {
+                    const questionType = String(
+                        question?.type || question?.questionType || question?.question_type || ""
+                    ).toLowerCase();
+                    return questionType === "essay";
+                });
+
+                const objectiveQuestions = quiz.questions.filter((question) => {
+                    const questionType = String(
+                        question?.type || question?.questionType || question?.question_type || ""
+                    ).toLowerCase();
+                    return questionType !== "essay";
+                });
+
+                const correctCount = objectiveQuestions.reduce((count, question) => {
                     const selected = answers[question.id];
                     return count + (selected && selected === question.correctAnswer ? 1 : 0);
                 }, 0);
+
+                const isPendingReview = hasEssayQuestions || attempt.status === "pending_review";
+                const autoScore = Number(attempt.score_auto ?? attempt.scoreAuto ?? 0);
+                const manualScore = Number(attempt.score_manual ?? attempt.scoreManual ?? 0);
+                const finalScore = Number(
+                    attempt.total_score ?? attempt.totalScore ?? attempt.score ?? autoScore + manualScore
+                );
                 setQuizResult({
                     quizTitle: quiz.title,
-                    score: scoreValue,
+                    score: isPendingReview ? null : finalScore,
+                    autoScore,
+                    manualScore,
+                    pendingReview: isPendingReview,
                     correctCount,
-                    total: quiz.questions.length,
+                    total: objectiveQuestions.length || quiz.questions.length,
                     answers,
                     questions: quiz.questions.map((question) => ({
                         ...question,

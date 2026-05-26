@@ -39,6 +39,11 @@ function normalizeCorrectAnswer(question) {
     return "";
 }
 
+function normalizeQuestionType(question) {
+    const rawType = question.type || question.questionType || question.question_type || "";
+    return String(rawType).trim().toLowerCase();
+}
+
 export default function QuestionItem({
                                          question,
                                          index,
@@ -52,6 +57,8 @@ export default function QuestionItem({
     const questionImage = normalizeQuestionImage(question);
     const options = normalizeOptions(question);
     const correctAnswer = normalizeCorrectAnswer(question);
+    const questionType = normalizeQuestionType(question);
+    const isEssayQuestion = questionType === "essay";
 
     return (
         <div className="question-item">
@@ -66,23 +73,36 @@ export default function QuestionItem({
                 </div>
             ) : null}
 
-            <div className="question-item-options">
-                {options.map((option, optionIndex) => (
-                    <AnswerOption
-                        key={option}
-                        label={labels[optionIndex]}
-                        option={option}
-                        selected={selectedAnswer === option}
-                        onSelect={() => onChoose(question.id, option)}
+            {isEssayQuestion ? (
+                <div className="question-item-essay">
+                    <textarea
+                        className="question-item-essay-input"
+                        placeholder="Nhập câu trả lời tự luận của bạn..."
+                        value={selectedAnswer || ""}
+                        onChange={(event) => onChoose(question.id, event.target.value)}
                         disabled={disabled}
-                        showResult={showResult}
-                        isCorrect={correctAnswer === option}
-                        isWrong={
-                            selectedAnswer === option && correctAnswer !== option
-                        }
+                        rows={6}
                     />
-                ))}
-            </div>
+                </div>
+            ) : (
+                <div className="question-item-options">
+                    {options.map((option, optionIndex) => (
+                        <AnswerOption
+                            key={optionIndex}
+                            label={labels[optionIndex]}
+                            option={option}
+                            selected={selectedAnswer === option}
+                            onSelect={() => onChoose(question.id, option)}
+                            disabled={disabled}
+                            showResult={showResult}
+                            isCorrect={correctAnswer === option}
+                            isWrong={
+                                selectedAnswer === option && correctAnswer !== option
+                            }
+                        />
+                    ))}
+                </div>
+            )}
         </div>
     );
 }
