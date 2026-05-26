@@ -22,6 +22,9 @@ const defaultForm = {
     subject: "",
     grade: "",
     className: "",
+    semesterId: "",
+    gradingMode: "auto",
+    assessmentType: "regular",
     duration: DEFAULT_QUIZ_DURATION_LABEL,
     createdByRole: "teacher",
     createdByName: CURRENT_TEACHER_NAME,
@@ -38,12 +41,16 @@ export default function CreateTeacherQuizDialog({
     initialValues,
 }) {
     const [assignments, setAssignments] = useState([]);
+    const [semesters, setSemesters] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
     const [formData, setFormData] = useState(() => ({
         title: initialValues?.title || defaultForm.title,
         subject: initialValues?.subject || defaultForm.subject,
         grade: initialValues?.grade || defaultForm.grade,
         className: initialValues?.className || defaultForm.className,
+        semesterId: initialValues?.semesterId || defaultForm.semesterId,
+        gradingMode: initialValues?.gradingMode || defaultForm.gradingMode,
+        assessmentType: initialValues?.assessmentType || defaultForm.assessmentType,
         duration: formatDurationLabel(initialValues?.duration || defaultForm.duration),
         createdByRole: "teacher",
         createdByName: initialValues?.createdByName || CURRENT_TEACHER_NAME,
@@ -60,13 +67,16 @@ export default function CreateTeacherQuizDialog({
                 const teacherId = storedUser.profile?.id || storedUser.teacherId || (storedUser.role === 'teacher' ? storedUser.id : null);
                 
                 if (teacherId) {
-                    const response = await teacherService.getTeacherSubjects({
-                        mock: false,
-                        pathParams: { id: teacherId },
-                    });
+                    const [classRes, semesterRes] = await Promise.all([
+                        teacherService.getTeacherSubjects({
+                            mock: false,
+                            pathParams: { id: teacherId },
+                        }),
+                        teacherService.listSemesters()
+                    ]);
 
-                    if (response && response.success && Array.isArray(response.data)) {
-                        const mappedList = response.data.map(item => {
+                    if (classRes && classRes.success && Array.isArray(classRes.data)) {
+                        const mappedList = classRes.data.map(item => {
                             const subjectName = item.subjects && item.subjects.length > 0
                                 ? item.subjects[0].name
                                 : (item.subject_name || "N/A");
@@ -94,9 +104,15 @@ export default function CreateTeacherQuizDialog({
                             }
                         }
                     }
+                    if (semesterRes && semesterRes.success && Array.isArray(semesterRes.data)) {
+                        setSemesters(semesterRes.data);
+                        if (!initialValues && semesterRes.data.length > 0) {
+                            setFormData(prev => ({ ...prev, semesterId: semesterRes.data[0].id }));
+                        }
+                    }
                 }
             } catch (err) {
-                console.error("Failed to load teacher class subjects:", err);
+                console.error("Failed to load teacher class subjects or semesters:", err);
             } finally {
                 setIsLoading(false);
             }
@@ -113,6 +129,9 @@ export default function CreateTeacherQuizDialog({
                 subject: initialValues.subject || "",
                 grade: initialValues.grade || "",
                 className: initialValues.className || "",
+                semesterId: initialValues.semesterId || "",
+                gradingMode: initialValues.gradingMode || "auto",
+                assessmentType: initialValues.assessmentType || "regular",
                 duration: formatDurationLabel(initialValues.duration || DEFAULT_QUIZ_DURATION_LABEL),
                 createdByRole: "teacher",
                 createdByName: initialValues.createdByName || CURRENT_TEACHER_NAME,
@@ -173,14 +192,17 @@ export default function CreateTeacherQuizDialog({
             subject: formData.subject.trim(),
             grade: formData.grade.trim(),
             className: formData.className.trim(),
+            semesterId: formData.semesterId,
+            gradingMode: formData.gradingMode,
+            assessmentType: formData.assessmentType,
             duration: formData.duration,
             classTeacherSubjectId: matched ? matched.class_teacher_subject_id : (initialValues?.classTeacherSubjectId || null),
             createdByRole: "teacher",
             createdByName: formData.createdByName.trim() || CURRENT_TEACHER_NAME,
         };
 
-        if (!payload.title || !payload.subject || !payload.grade || !payload.className || !payload.duration) {
-            alert("Vui lòng điền đầy đủ tên bài kiểm tra, môn học, khối, lớp và thời lượng.");
+        if (!payload.title || !payload.subject || !payload.grade || !payload.className || !payload.duration || !payload.semesterId) {
+            alert("Vui lòng điền đầy đủ tên bài kiểm tra, môn học, khối, lớp, học kỳ và thời lượng.");
             return;
         }
 
@@ -293,6 +315,23 @@ export default function CreateTeacherQuizDialog({
 
                 <div className="teacher-create-quiz-dialog__field teacher-create-quiz-dialog__field--half">
                     <Select
+                        label="Học kỳ"
+                        variant="custom"
+                        className="teacher-create-quiz-dialog__select"
+                        id="teacher-quiz-semester"
+                        name="teacher-quiz-semester"
+                        options={semesters.map(s => s.name)}
+                        placeholder="Chọn học kỳ"
+                        value={semesters.find(s => s.id === formData.semesterId)?.name || ""}
+                        onChange={(event) => {
+                            const selected = semesters.find(s => s.name === event.target.value);
+                            handleChange("semesterId", selected ? selected.id : "");
+                        }}
+                    />
+                </div>
+
+                <div className="teacher-create-quiz-dialog__field teacher-create-quiz-dialog__field--half">
+                    <Select
                         label="Thời lượng"
                         variant="custom"
                         className="teacher-create-quiz-dialog__select"
@@ -301,6 +340,46 @@ export default function CreateTeacherQuizDialog({
                         options={durationOptions}
                         value={formData.duration}
                         onChange={(event) => handleChange("duration", event.target.value)}
+                    />
+                </div>
+
+                <div className="teacher-create-quiz-dialog__field teacher-create-quiz-dialog__field--half">
+                    <Select
+                        label="Chế độ chấm điểm"
+                        variant="custom"
+                        className="teacher-create-quiz-dialog__select"
+                        id="teacher-quiz-grading-mode"
+                        name="teacher-quiz-grading-mode"
+                        options={["Tự động chấm", "Chấm thủ công", "Hỗn hợp"]}
+                        value={formData.gradingMode === "auto" ? "Tự động chấm" : formData.gradingMode === "manual" ? "Chấm thủ công" : "Hỗn hợp"}
+                        onChange={(event) => {
+                            const val = event.target.value;
+                            handleChange("gradingMode", val === "Tự động chấm" ? "auto" : val === "Chấm thủ công" ? "manual" : "mixed");
+                        }}
+                    />
+                </div>
+
+                <div className="teacher-create-quiz-dialog__field teacher-create-quiz-dialog__field--half">
+                    <Select
+                        label="Mục đích đánh giá"
+                        variant="custom"
+                        className="teacher-create-quiz-dialog__select"
+                        id="teacher-quiz-assessment-type"
+                        name="teacher-quiz-assessment-type"
+                        options={["Không lấy điểm", "Thường xuyên", "Giữa kỳ", "Cuối kỳ"]}
+                        value={
+                            formData.assessmentType === "none" ? "Không lấy điểm" :
+                            formData.assessmentType === "regular" ? "Thường xuyên" :
+                            formData.assessmentType === "midterm" ? "Giữa kỳ" : "Cuối kỳ"
+                        }
+                        onChange={(event) => {
+                            const val = event.target.value;
+                            let type = "regular";
+                            if (val === "Không lấy điểm") type = "none";
+                            if (val === "Giữa kỳ") type = "midterm";
+                            if (val === "Cuối kỳ") type = "final";
+                            handleChange("assessmentType", type);
+                        }}
                     />
                 </div>
 

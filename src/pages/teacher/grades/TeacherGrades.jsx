@@ -28,8 +28,140 @@ function getRank(average) {
   return "weak";
 }
 
+function normalizeClassItem(item = {}) {
+  return {
+    ...item,
+    id: item.id,
+    name: item.name || item.class_name || item.className || "",
+    teacher: item.teacher || item.teacher_name || item.homeroom_teacher_name || item.homeroomTeacher || "",
+    subjects: item.subjects || [],
+  };
+}
+
+function normalizeSubjectItem(item = {}) {
+  return {
+    ...item,
+    id: item.class_teacher_subject_id ?? item.id ?? item.subject_id ?? item.subject_assignment_id,
+    teacherId: item.teacher_id ?? item.teacherId ?? null,
+    name: item.name || item.display_name || item.subject_name || "",
+    code: item.code || item.subject_code || "",
+  };
+}
+
+function normalizeText(value) {
+  return String(value || "")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .trim();
+}
+
+function normalizeSchoolYearLabel(value) {
+  return normalizeText(value).replace(/\s+/g, "");
+}
+
+function normalizeGradeCategory(categoryName = "", gradeItemName = "") {
+  const text = normalizeText(`${categoryName} ${gradeItemName}`);
+
+  if (text.includes("giua ky") || text.includes("midterm")) return "midterm";
+  if (text.includes("cuoi ky") || text.includes("final")) return "final";
+  return "regular";
+}
+
+function toScoreNumber(value) {
+  if (value === null || value === undefined || value === "") return null;
+  const numeric = Number(value);
+  return Number.isFinite(numeric) ? numeric : null;
+}
+
+function buildStudentGradeRecords(students = [], gradeRows = []) {
+  const groupedRows = new Map();
+
+  for (const row of gradeRows) {
+    const enrollmentId = String(row.student_enrollment_id ?? row.enrollment_id ?? row.studentEnrollmentId ?? "");
+    if (!enrollmentId) continue;
+
+    const existing = groupedRows.get(enrollmentId) || [];
+    existing.push({
+      id: row.id,
+      gradeItemId: row.grade_item_id ?? null,
+      gradeItemName: row.grade_item_name || row.name || "",
+      categoryName: row.category_name || "",
+      categoryKey: normalizeGradeCategory(row.category_name, row.grade_item_name || row.name || ""),
+      score: toScoreNumber(row.score),
+      note: row.note || "",
+      enteredAt: row.entered_at || row.created_at || null,
+      maxScore: toScoreNumber(row.max_score),
+    });
+    groupedRows.set(enrollmentId, existing);
+  }
+
+  return students.map((student = {}) => {
+    const enrollmentId = String(student.enrollment_id ?? student.id ?? "");
+    const rows = groupedRows.get(enrollmentId) || [];
+
+    const regularScores = rows
+      .filter((item) => item.categoryKey === "regular")
+      .sort((a, b) => String(a.enteredAt || "").localeCompare(String(b.enteredAt || "")))
+      .map((item, index) => ({
+        id: item.id,
+        label: item.gradeItemName || `Thường xuyên ${index + 1}`,
+        score: item.score,
+        note: item.note,
+        gradeItemId: item.gradeItemId,
+      }));
+
+    const midtermRow = rows.find((item) => item.categoryKey === "midterm") || null;
+    const finalRow = rows.find((item) => item.categoryKey === "final") || null;
+
+    const regularScoresNumbers = regularScores.map((item) => item.score).filter((value) => value !== null);
+    const midtermScore = midtermRow?.score ?? null;
+    const finalScore = finalRow?.score ?? null;
+
+    const weightedSum = regularScoresNumbers.reduce((sum, value) => sum + value, 0)
+      + (midtermScore !== null ? midtermScore * 2 : 0)
+      + (finalScore !== null ? finalScore * 3 : 0);
+    const denominator = regularScoresNumbers.length
+      + (midtermScore !== null ? 2 : 0)
+      + (finalScore !== null ? 3 : 0);
+    const average = denominator ? round1(weightedSum / denominator) : 0;
+    const isProvisional = regularScoresNumbers.length < 2 || midtermScore === null || finalScore === null;
+
+    return {
+      id: enrollmentId,
+      enrollmentId,
+      code: student.student_code || student.code || `HS${enrollmentId}`,
+      name: student.full_name || student.name || `${student.surname || ""} ${student.given_name || ""}`.trim() || `Học sinh ${enrollmentId}`,
+      status: average >= 5 ? "Đạt" : "Chưa đạt",
+      rank: getRank(average),
+      average,
+      isProvisional,
+      regularScores,
+      midtermScore,
+      midtermGradeItemId: midtermRow?.gradeItemId ?? null,
+      finalScore,
+      finalGradeItemId: finalRow?.gradeItemId ?? null,
+      note: rows.map((item) => item.note).find(Boolean) || "",
+      rawGrades: rows,
+    };
+  });
+}
+
+function dedupeById(list = []) {
+  const seen = new Set();
+  return list.filter((item) => {
+    const key = String(item?.id ?? "");
+    if (!key) return false;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
 export default function TeacherGrades() {
   const { selectedSchoolYear, selectedTerm, handleYearArrow, handleTermChange } = useSchoolYearTerm();
+  const storedUser = JSON.parse(localStorage.getItem("user") || sessionStorage.getItem("user") || "{}");
+  const teacherId = storedUser?.profile?.id || storedUser?.id || null;
   
   // State
   const [grades] = useState(["10", "11", "12"]);
@@ -38,6 +170,11 @@ export default function TeacherGrades() {
   const [selectedClassId, setSelectedClassId] = useState("");
   const [subjects, setSubjects] = useState([]);
   const [selectedSubjectId, setSelectedSubjectId] = useState("");
+  const [classSubjects, setClassSubjects] = useState([]);
+  const [schoolYears, setSchoolYears] = useState([]);
+  const [semesters, setSemesters] = useState([]);
+  const [classStudents, setClassStudents] = useState([]);
+  const [gradeRows, setGradeRows] = useState([]);
   const [records, setRecords] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -48,8 +185,7 @@ export default function TeacherGrades() {
   const [atRiskDialogOpen, setAtRiskDialogOpen] = useState(false);
   const [editStudentId, setEditStudentId] = useState(null);
   const [editDraft, setEditDraft] = useState({
-    oralScores: [""],
-    test15Scores: [""],
+    regularScores: [""],
     midterm: "",
     final: "",
     note: ""
@@ -60,13 +196,39 @@ export default function TeacherGrades() {
   const [unlockRequestOpen, setUnlockRequestOpen] = useState(false);
   const [unlockReason, setUnlockReason] = useState("");
 
+  const selectedSemester = useMemo(() => {
+    const orderedSemesters = [...semesters].sort((a, b) => String(a.start_date || a.startDate || "").localeCompare(String(b.start_date || b.startDate || "")));
+    if (!orderedSemesters.length) return null;
+    if (selectedTerm === "hk2") return orderedSemesters[1] || orderedSemesters[0] || null;
+    return orderedSemesters[0] || null;
+  }, [semesters, selectedTerm]);
+
+  const editableSubjectIds = useMemo(() => {
+    return new Set(
+      classSubjects
+        .filter((subject) => String(subject.teacherId ?? "") === String(teacherId))
+        .map((subject) => String(subject.id)),
+    );
+  }, [classSubjects, teacherId]);
+
+  const selectedSubjectEditable = useMemo(() => {
+    return editableSubjectIds.has(String(selectedSubjectId));
+  }, [editableSubjectIds, selectedSubjectId]);
+
   // Fetch Classes
   useEffect(() => {
     const fetchClasses = async () => {
       try {
-        const response = await teacherService.getTeacherClasses({ mock: true });
+        if (!teacherId) return;
+        const response = await teacherService.getConsolidatedTeachingClasses({
+          params: {
+            schoolYear: selectedSchoolYear,
+            term: selectedTerm,
+          },
+          mock: false,
+        });
         if (response.success) {
-          const fetchedClasses = response.data || [];
+          const fetchedClasses = dedupeById((response.data || []).map(normalizeClassItem));
           setClasses(fetchedClasses);
           if (fetchedClasses.length > 0 && !selectedClassId) {
             setSelectedClassId(fetchedClasses[0].id);
@@ -77,40 +239,147 @@ export default function TeacherGrades() {
       }
     };
     fetchClasses();
-  }, []);
+  }, [teacherId, selectedSchoolYear, selectedTerm]);
 
-  // Fetch Subjects when class changes
   useEffect(() => {
-    if (!selectedClassId) return;
-    const fetchSubjects = async () => {
+    const fetchAcademicCalendar = async () => {
       try {
-        const response = await teacherService.getClassSubjects({ 
-          pathParams: { id: selectedClassId },
-          mock: true 
-        });
-        if (response.success) {
-          const fetchedSubjects = response.data || [];
-          setSubjects(fetchedSubjects);
-          if (fetchedSubjects.length > 0) {
-            setSelectedSubjectId(fetchedSubjects[0].id);
-          }
+        const [schoolYearsResponse, currentSchoolYearResponse] = await Promise.all([
+          teacherService.listSchoolYears({ mock: false }),
+          teacherService.getCurrentSchoolYear({ mock: false }),
+        ]);
+
+        const fetchedSchoolYears = schoolYearsResponse.success ? (schoolYearsResponse.data || []) : [];
+        const currentSchoolYear = currentSchoolYearResponse.success ? currentSchoolYearResponse.data : null;
+        setSchoolYears(fetchedSchoolYears);
+
+        const selectedYear = fetchedSchoolYears.find((item) => normalizeSchoolYearLabel(item.name) === normalizeSchoolYearLabel(selectedSchoolYear))
+          || currentSchoolYear
+          || fetchedSchoolYears[0]
+          || null;
+
+        if (!selectedYear?.id) {
+          setSemesters([]);
+          return;
         }
+
+        const semestersResponse = await teacherService.listSemesters({
+          params: { schoolYearId: selectedYear.id },
+          mock: false,
+        });
+
+        setSemesters(semestersResponse.success ? (semestersResponse.data || []) : []);
       } catch (err) {
-        console.error("Fetch subjects error:", err);
+        console.error("Fetch academic calendar error:", err);
+        setSchoolYears([]);
+        setSemesters([]);
       }
     };
-    fetchSubjects();
-  }, [selectedClassId]);
+
+    fetchAcademicCalendar();
+  }, [selectedSchoolYear]);
+
+  // Derive subjects from the selected teaching class (class_teacher_subject rows)
+  useEffect(() => {
+    const fetchClassSubjects = async () => {
+      if (!selectedClassId) {
+        setClassSubjects([]);
+        setSubjects([]);
+        setSelectedSubjectId("");
+        return;
+      }
+
+      try {
+        const response = await teacherService.getClassSubjects({
+          pathParams: { id: selectedClassId },
+          mock: false,
+        });
+        const nextSubjects = dedupeById((response.success ? (response.data || []) : []).map(normalizeSubjectItem));
+        setClassSubjects(nextSubjects);
+        setSubjects(nextSubjects);
+
+        if (nextSubjects.length > 0) {
+          const selectedStillValid = nextSubjects.some((subject) => String(subject.id) === String(selectedSubjectId));
+          if (!selectedStillValid) {
+            setSelectedSubjectId(nextSubjects[0].id);
+          }
+        } else {
+          setSelectedSubjectId("");
+        }
+      } catch (err) {
+        console.error("Fetch class subjects error:", err);
+        setClassSubjects([]);
+        setSubjects([]);
+        setSelectedSubjectId("");
+      }
+    };
+
+    fetchClassSubjects();
+  }, [selectedClassId, selectedSubjectId]);
+
+  // Fetch students + raw grade rows + grade items for the selected class/subject
+  useEffect(() => {
+    const fetchClassGrades = async () => {
+      if (!selectedClassId || !selectedSubjectId) {
+        setRecords([]);
+        return;
+      }
+
+      setIsLoading(true);
+      setError(null);
+
+      try {
+        const [studentsResponse, gradeItemsResponse, gradesResponse] = await Promise.all([
+          teacherService.getClassStudents({
+            pathParams: { id: selectedClassId },
+            mock: false,
+          }),
+          teacherService.listGradeItems({
+            params: {
+              classTeacherSubjectId: selectedSubjectId,
+              semesterId: selectedSemester?.id,
+            },
+            mock: false,
+          }),
+          teacherService.getGradesByClass({
+            pathParams: { classId: selectedClassId },
+            params: selectedSemester?.id ? { semesterId: selectedSemester.id } : undefined,
+            mock: false,
+          }),
+        ]);
+
+        const students = studentsResponse.success ? (studentsResponse.data || []) : [];
+        const gradeItems = gradeItemsResponse?.success ? (gradeItemsResponse.data || []) : [];
+        const gradeItemIds = new Set(gradeItems.map((item) => String(item.id)));
+        const rawGrades = gradesResponse?.success ? (gradesResponse.data || []) : [];
+        const filteredGrades = rawGrades.filter((row) => gradeItemIds.has(String(row.grade_item_id)));
+
+        setClassStudents(students);
+        setGradeRows(filteredGrades);
+        setRecords(buildStudentGradeRecords(students, filteredGrades));
+      } catch (err) {
+        console.error("Fetch class grades error:", err);
+        setError("Đã xảy ra lỗi khi tải dữ liệu điểm số.");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchClassGrades();
+  }, [selectedClassId, selectedSubjectId, selectedSchoolYear, selectedTerm, selectedSemester?.id]);
 
   // Filtered Classes based on Grade
   const filteredClasses = useMemo(() => {
-    return classes.filter(c => c.name.startsWith(selectedGrade));
+    return classes.filter((c) => {
+      const className = String(c?.name || c?.class_name || c?.className || "");
+      return className.startsWith(selectedGrade);
+    });
   }, [classes, selectedGrade]);
 
   // Update selected class if it's no longer in filtered list
   useEffect(() => {
     if (filteredClasses.length > 0) {
-      if (!selectedClassId || !filteredClasses.find(c => c.id === selectedClassId)) {
+      if (!selectedClassId || !filteredClasses.find(c => String(c.id) === String(selectedClassId))) {
         setSelectedClassId(filteredClasses[0].id);
       }
     } else {
@@ -118,83 +387,10 @@ export default function TeacherGrades() {
     }
   }, [filteredClasses]);
 
-  // Fetch Lock Status
-  const fetchLockStatus = async () => {
-    if (!selectedClassId || !selectedSubjectId) return;
-    try {
-      const response = await teacherService.getGradesLockStatus({
-        params: {
-          classId: selectedClassId,
-          subjectId: selectedSubjectId,
-          schoolYear: selectedSchoolYear,
-          term: selectedTerm
-        },
-        mock: true
-      });
-      if (response.success && response.data) {
-        setLockStatus(response.data.status || "draft");
-      } else {
-        setLockStatus("draft");
-      }
-    } catch (err) {
-      console.error("Fetch lock status error:", err);
-      setLockStatus("draft");
-    }
-  };
-
-  // Fetch Grades
-  const fetchGrades = async () => {
-    if (!selectedClassId || !selectedSubjectId) return;
-    setIsLoading(true);
-    setError(null);
-    try {
-      const response = await teacherService.getGradesByClass({
-        pathParams: { classId: selectedClassId },
-        params: { 
-          subjectId: selectedSubjectId,
-          schoolYear: selectedSchoolYear,
-          term: selectedTerm
-        },
-        mock: true
-      });
-
-      if (response.success) {
-        const data = response.data || [];
-        
-        // If API returns empty (common in mock), generate some realistic mock data based on the class
-        if (data.length === 0) {
-          const mockRecords = generateMockRecords(selectedClassId, selectedSubjectId, selectedTerm);
-          setRecords(mockRecords);
-          // Persist initial mock records
-          await teacherService.bulkUpdateGrades({
-            body: {
-              classId: selectedClassId,
-              subjectId: selectedSubjectId,
-              schoolYear: selectedSchoolYear,
-              term: selectedTerm,
-              records: mockRecords
-            },
-            mock: true
-          });
-        } else {
-          setRecords(data);
-        }
-      } else {
-        setError("Không thể tải danh sách điểm.");
-      }
-    } catch (err) {
-      console.error("Fetch grades error:", err);
-      setError("Đã xảy ra lỗi khi tải dữ liệu điểm số.");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   useEffect(() => {
     fetchGrades();
     fetchLockStatus();
   }, [selectedClassId, selectedSubjectId, selectedSchoolYear, selectedTerm]);
-
   // Derived Summary Stats
   const summaryStats = useMemo(() => {
     if (!records.length) return {
@@ -216,24 +412,80 @@ export default function TeacherGrades() {
     };
   }, [records]);
 
+  const fetchLockStatus = async () => {
+    if (!selectedClassId || !selectedSubjectId) return;
+    try {
+      const response = await teacherService.getGradesLockStatus({
+        params: {
+          classId: selectedClassId,
+          subjectId: selectedSubjectId,
+          schoolYear: selectedSchoolYear,
+          term: selectedTerm
+        },
+        mock: false
+      });
+      if (response.success && response.data) {
+        setLockStatus(response.data.status || "draft");
+      } else {
+        setLockStatus("draft");
+      }
+    } catch (err) {
+      console.error("Fetch lock status error:", err);
+      setLockStatus("draft");
+    }
+  };
+
   // Handlers
   const handleClassChange = (e) => setSelectedClassId(e.target.value);
+  const fetchGrades = async () => {
+    if (!selectedClassId || !selectedSubjectId) return;
+    setIsLoading(true);
+    setError(null);
+    try {
+      const [studentsResponse, gradeItemsResponse, gradesResponse] = await Promise.all([
+        teacherService.getClassStudents({
+          pathParams: { id: selectedClassId },
+          mock: false,
+        }),
+        teacherService.listGradeItems({
+          params: {
+            classTeacherSubjectId: selectedSubjectId,
+            semesterId: selectedSemester?.id,
+          },
+          mock: false,
+        }),
+        teacherService.getGradesByClass({
+          pathParams: { classId: selectedClassId },
+          params: selectedSemester?.id ? { semesterId: selectedSemester.id } : undefined,
+          mock: false,
+        }),
+      ]);
+
+      const students = studentsResponse.success ? (studentsResponse.data || []) : [];
+      const gradeItems = gradeItemsResponse?.success ? (gradeItemsResponse.data || []) : [];
+      const gradeItemIds = new Set(gradeItems.map((item) => String(item.id)));
+      const rawGrades = gradesResponse?.success ? (gradesResponse.data || []) : [];
+      const filteredGrades = rawGrades.filter((row) => gradeItemIds.has(String(row.grade_item_id)));
+      setClassStudents(students);
+      setGradeRows(filteredGrades);
+      setRecords(buildStudentGradeRecords(students, filteredGrades));
+    } catch (err) {
+      console.error("Fetch grades error:", err);
+      setError("Đã xảy ra lỗi khi tải dữ liệu điểm số.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
   
   const openEditDialog = (record) => {
     setEditStudentId(record.id);
-    
-    // Ensure at least 2 slots for Oral and 15min
-    let oral = record.oralScores || ["", ""];
-    while (oral.length < 2) oral.push("");
-    
-    let test15 = record.test15Scores || ["", ""];
-    while (test15.length < 2) test15.push("");
 
     setEditDraft({
-      oralScores: oral,
-      test15Scores: test15,
-      midterm: record.midterm || "",
-      final: record.final || "",
+      regularScores: (record.regularScores || []).length 
+        ? record.regularScores.map((item) => ({ score: String(item.score ?? ""), gradeItemId: item.gradeItemId })) 
+        : [{ score: "", gradeItemId: null }],
+      midterm: { score: String(record.midtermScore ?? ""), gradeItemId: record.midtermGradeItemId || null },
+      final: { score: String(record.finalScore ?? ""), gradeItemId: record.finalGradeItemId || null },
       note: record.note || ""
     });
     setEditDialogOpen(true);
@@ -241,36 +493,24 @@ export default function TeacherGrades() {
 
   const handleSaveGrade = async () => {
     try {
-      const updatedRecords = records.map(r => {
-        if (r.id === editStudentId) {
-          const updated = {
-            ...r,
-            ...editDraft,
-            average: calculateRecordAverage(editDraft)
-          };
-          updated.rank = getRank(updated.average);
-          updated.status = updated.average >= 5 ? "Đạt" : "Chưa đạt";
-          return updated;
-        }
-        return r;
-      });
+      const payload = {
+         classTeacherSubjectId: selectedSubjectId,
+         semesterId: selectedSemester?.id,
+         studentEnrollmentId: editStudentId,
+         regularScores: editDraft.regularScores.map(v => ({ score: v.score, gradeItemId: v.gradeItemId })),
+         midterm: { score: editDraft.midterm.score, gradeItemId: editDraft.midterm.gradeItemId },
+         final: { score: editDraft.final.score, gradeItemId: editDraft.final.gradeItemId },
+         note: editDraft.note
+      };
 
-      setRecords(updatedRecords);
-
-      // Persist the updated records
-      await teacherService.bulkUpdateGrades({
-        body: {
-          classId: selectedClassId,
-          subjectId: selectedSubjectId,
-          schoolYear: selectedSchoolYear,
-          term: selectedTerm,
-          records: updatedRecords
-        },
-        mock: true
-      });
-      
-      toast.success("Đã cập nhật điểm thành công!");
-      setEditDialogOpen(false);
+      const res = await teacherService.teacherUpsertGrades({ body: payload, mock: false });
+      if (res && res.success) {
+        toast.success("Đã cập nhật điểm thành công!");
+        setEditDialogOpen(false);
+        fetchGrades();
+      } else {
+        toast.error("Lỗi khi lưu điểm: " + (res?.error || ""));
+      }
     } catch (err) {
       console.error("Save grade error:", err);
       toast.error("Lỗi khi lưu điểm.");
@@ -316,22 +556,28 @@ export default function TeacherGrades() {
   };
 
   const calculateRecordAverage = (draft) => {
-    const oral = (draft.oralScores || []).filter(v => v !== "").map(Number);
-    const test15 = (draft.test15Scores || []).filter(v => v !== "").map(Number);
-    const midterm = draft.midterm !== "" ? Number(draft.midterm) : null;
-    const final = draft.final !== "" ? Number(draft.final) : null;
+    const regular = (draft.regularScores || []).filter(v => v.score !== "").map(v => Number(v.score)).filter((v) => Number.isFinite(v));
+    const midterm = draft.midterm.score !== "" ? Number(draft.midterm.score) : null;
+    const final = draft.final.score !== "" ? Number(draft.final.score) : null;
 
-    const components = [...oral, ...test15];
-    if (midterm !== null) components.push(midterm, midterm); // Weight 2
-    if (final !== null) components.push(final, final, final); // Weight 3
-    
-    if (components.length === 0) return 0;
-    return round1(components.reduce((a, b) => a + b, 0) / components.length);
+    const weightedSum = regular.reduce((a, b) => a + b, 0)
+      + (midterm !== null && Number.isFinite(midterm) ? midterm * 2 : 0)
+      + (final !== null && Number.isFinite(final) ? final * 3 : 0);
+    const denominator = regular.length
+      + (midterm !== null && Number.isFinite(midterm) ? 2 : 0)
+      + (final !== null && Number.isFinite(final) ? 3 : 0);
+
+    if (denominator === 0) return 0;
+    return round1(weightedSum / denominator);
   };
 
   const currentClass = classes.find(c => c.id === selectedClassId) || {};
-  const currentSubject = subjects.find(s => s.id === selectedSubjectId) || {};
+  const currentSubject = subjects.find(s => String(s.id) === String(selectedSubjectId)) || {};
   const semesterLabel = SEMESTERS[selectedTerm]?.label || selectedTerm;
+  const classOptions = useMemo(
+    () => dedupeById(filteredClasses).map((c) => ({ value: c.id, label: c.name || `Lớp ${c.id}` })),
+    [filteredClasses]
+  );
 
   if (error) {
     return (
@@ -373,8 +619,20 @@ export default function TeacherGrades() {
               variant="custom"
               label="Chọn lớp"
               value={selectedClassId}
-              options={filteredClasses.map(c => ({ value: c.id, label: c.name }))}
+              options={classOptions}
               onChange={handleClassChange}
+              searchable
+            />
+            <Select
+              className="teacher-grades-select"
+              variant="custom"
+              label="Môn học"
+              value={selectedSubjectId}
+              options={subjects.map((subject) => ({
+                value: subject.id,
+                label: subject.name,
+              }))}
+              onChange={(e) => setSelectedSubjectId(e.target.value)}
               searchable
             />
           </div>
@@ -429,6 +687,10 @@ export default function TeacherGrades() {
         </div>
       </div>
 
+      <div className="teacher-grades-notice">
+        Dữ liệu lấy trực tiếp từ API gradebook ({records.length} học sinh, {gradeRows.length} dòng điểm) và được gom theo từng học sinh.
+      </div>
+
       {isLoading ? (
         <div className="teacher-grades-loading">
           <div className="spinner"></div>
@@ -442,6 +704,7 @@ export default function TeacherGrades() {
             subjectLabel={currentSubject.name}
             semesterLabel={semesterLabel}
             isLocked={lockStatus === 'locked'}
+            canEdit={selectedSubjectEditable}
           />
         </div>
       )}
@@ -462,13 +725,13 @@ export default function TeacherGrades() {
 
            <section className="grade-entry-score-block">
               <div className="grade-entry-score-block__head">
-                <span>Điểm miệng</span>
+                <span>Điểm thường xuyên</span>
                 <button 
                   className="grade-entry-score-add-btn"
                   onClick={() => {
                     setEditDraft(prev => ({
                       ...prev,
-                      oralScores: [...prev.oralScores, ""]
+                      regularScores: [...prev.regularScores, { score: "", gradeItemId: null }]
                     }));
                   }}
                 >
@@ -476,17 +739,17 @@ export default function TeacherGrades() {
                 </button>
               </div>
               <div className="grade-entry-score-grid">
-                {editDraft.oralScores.map((val, idx) => (
-                  <div key={`oral-${idx}`} className="grade-entry-field">
+                {editDraft.regularScores.map((val, idx) => (
+                  <div key={`regular-${idx}`} className="grade-entry-field">
                     <div className="grade-entry-field__label">
-                      <span>Miệng {idx + 1}</span>
-                      {editDraft.oralScores.length > 2 && (
+                      <span>TX {idx + 1}</span>
+                      {editDraft.regularScores.length > 1 && (
                         <button 
                           className="grade-entry-delete-btn"
                           onClick={() => {
                             setEditDraft(prev => ({
                               ...prev,
-                              oralScores: prev.oralScores.filter((_, i) => i !== idx)
+                              regularScores: prev.regularScores.filter((_, i) => i !== idx)
                             }));
                           }}
                         >
@@ -495,11 +758,11 @@ export default function TeacherGrades() {
                       )}
                     </div>
                     <input 
-                      type="number" step="0.1" min="0" max="10" value={val} 
+                      type="number" step="0.1" min="0" max="10" value={val.score} 
                       onChange={e => {
-                        const next = [...editDraft.oralScores];
-                        next[idx] = e.target.value;
-                        setEditDraft(prev => ({ ...prev, oralScores: next }));
+                        const next = [...editDraft.regularScores];
+                        next[idx].score = e.target.value;
+                        setEditDraft(prev => ({ ...prev, regularScores: next }));
                       }}
                     />
                   </div>
@@ -507,69 +770,22 @@ export default function TeacherGrades() {
               </div>
            </section>
 
-           <section className="grade-entry-score-block">
-              <div className="grade-entry-score-block__head">
-                <span>Điểm 15 phút</span>
-                <button 
-                  className="grade-entry-score-add-btn"
-                  onClick={() => {
-                    setEditDraft(prev => ({
-                      ...prev,
-                      test15Scores: [...prev.test15Scores, ""]
-                    }));
-                  }}
-                >
-                  <FiPlus />
-                </button>
-              </div>
-              <div className="grade-entry-score-grid">
-                {editDraft.test15Scores.map((val, idx) => (
-                  <div key={`test-${idx}`} className="grade-entry-field">
-                    <div className="grade-entry-field__label">
-                      <span>15 phút {idx + 1}</span>
-                      {editDraft.test15Scores.length > 2 && (
-                        <button 
-                          className="grade-entry-delete-btn"
-                          onClick={() => {
-                            setEditDraft(prev => ({
-                              ...prev,
-                              test15Scores: prev.test15Scores.filter((_, i) => i !== idx)
-                            }));
-                          }}
-                        >
-                          <FiTrash2 />
-                        </button>
-                      )}
-                    </div>
-                    <input 
-                      type="number" step="0.1" min="0" max="10" value={val} 
-                      onChange={e => {
-                        const next = [...editDraft.test15Scores];
-                        next[idx] = e.target.value;
-                        setEditDraft(prev => ({ ...prev, test15Scores: next }));
-                      }}
-                    />
-                  </div>
-                ))}
-              </div>
-           </section>
-
-              <div className="teacher-grade-edit-grid">
-                <div className="teacher-grade-edit-note">
-                  <span>Giữa kỳ</span>
-                  <input 
-                    type="number" step="0.1" min="0" max="10" value={editDraft.midterm} 
-                    onChange={e => setEditDraft(prev => ({ ...prev, midterm: e.target.value }))}
-                  />
-                </div>
-                <div className="teacher-grade-edit-note">
-                  <span>Cuối kỳ</span>
-                  <input 
-                    type="number" step="0.1" min="0" max="10" value={editDraft.final} 
-                    onChange={e => setEditDraft(prev => ({ ...prev, final: e.target.value }))}
-                  />
-                </div>
-              </div>
+           <div className="teacher-grade-edit-grid">
+             <div className="teacher-grade-edit-note">
+               <span>Giữa kỳ</span>
+               <input 
+                 type="number" step="0.1" min="0" max="10" value={editDraft.midterm.score} 
+                 onChange={e => setEditDraft(prev => ({ ...prev, midterm: { ...prev.midterm, score: e.target.value } }))}
+               />
+             </div>
+             <div className="teacher-grade-edit-note">
+               <span>Cuối kỳ</span>
+               <input 
+                 type="number" step="0.1" min="0" max="10" value={editDraft.final.score} 
+                 onChange={e => setEditDraft(prev => ({ ...prev, final: { ...prev.final, score: e.target.value } }))}
+               />
+             </div>
+           </div>
 
            <div className="teacher-grade-edit-note">
               <span>Ghi chú</span>

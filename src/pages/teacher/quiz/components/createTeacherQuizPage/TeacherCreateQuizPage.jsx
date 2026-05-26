@@ -204,6 +204,9 @@ export default function TeacherCreateQuizPage() {
                             description: `Bài kiểm tra môn ${routeQuizMeta.subject} lớp ${routeQuizMeta.className}`,
                             durationMinutes: durationMin,
                             quizType: durationMin >= 45 ? "exam" : "practice",
+                            assessmentType: routeQuizMeta.assessmentType || "none",
+                            gradingMode: routeQuizMeta.gradingMode,
+                            semesterId: routeQuizMeta.semesterId,
                             isPublished: false,
                         });
                         try {
@@ -648,6 +651,9 @@ export default function TeacherCreateQuizPage() {
                 description: `Bài kiểm tra môn ${quizMeta.subject} lớp ${quizMeta.className}`,
                 durationMinutes: durationMin,
                 quizType: durationMin >= 45 ? "exam" : "practice",
+                assessmentType: quizMeta.assessmentType || "none",
+                gradingMode: quizMeta.gradingMode,
+                semesterId: quizMeta.semesterId,
                 isPublished: false,
             });
 

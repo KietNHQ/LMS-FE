@@ -29,6 +29,7 @@ import {
 } from "react-icons/fa";
 import "./StudentGrades.css";
 import GradesHeader from "./components/GradesHeader/GradesHeader";
+import GradeDetail from "./components/GradeDetail/GradeDetail";
 import { Button, Select } from "../../../components/ui";
 import { LoadingSpinner } from "../../../components/common";
 import { studentService } from "../../../services/pages/student/studentService";
@@ -108,10 +109,38 @@ function getSubjectIcon(subjectName) {
 export default function StudentGrades() {
     const [openRowId, setOpenRowId] = useState(null);
     const [activeTab, setActiveTab] = useState("hk1");
-    const [selectedSchoolYear, setSelectedSchoolYear] = useState("2025-2026");
+    const [selectedSchoolYear, setSelectedSchoolYear] = useState(null);
 
     const storedUser = JSON.parse(localStorage.getItem("user") || sessionStorage.getItem("user") || "{}");
     const studentId = storedUser?.profile?.id;
+
+    // Fetch school years
+    const { data: schoolYears = [] } = useQuery({
+        queryKey: ["school-years"],
+        queryFn: async () => {
+            try {
+                const response = await studentService.getSchoolYears({ mock: false });
+                if (response.success && response.data) {
+                    return response.data;
+                }
+            } catch (error) {
+                console.warn("Failed to fetch school years");
+            }
+            return [{ id: 1, name: "2025-2026" }, { id: 2, name: "2024-2025" }];
+        },
+        staleTime: 60 * 60 * 1000,
+    });
+
+    useEffect(() => {
+        if (schoolYears.length > 0 && !selectedSchoolYear) {
+            setSelectedSchoolYear(schoolYears[0].id);
+        }
+    }, [schoolYears, selectedSchoolYear]);
+
+    const selectedSchoolYearLabel = useMemo(() => {
+        const matched = schoolYears.find((sy) => sy.id === selectedSchoolYear);
+        return matched?.name || matched?.school_year_name || matched?.schoolYearName || matched?.year || "năm học này";
+    }, [schoolYears, selectedSchoolYear]);
 
     // Use TanStack Query for grades
     const { data: gradesData = [], isLoading } = useQuery({
@@ -133,12 +162,12 @@ export default function StudentGrades() {
             }
             return [];
         },
-        enabled: !!studentId,
+        enabled: !!studentId && !!selectedSchoolYear,
         staleTime: 10 * 60 * 1000,
     });
 
     function processGradesData(data) {
-        if (Array.isArray(data)) {
+            if (Array.isArray(data)) {
             return data.map(subject => {
                 const hk1Avg = calculateSemesterAverage(subject.hk1);
                 const hk2Avg = calculateSemesterAverage(subject.hk2);
@@ -147,7 +176,7 @@ export default function StudentGrades() {
                     ...subject,
                     hk1Avg,
                     hk2Avg,
-                    yearAvg,
+                        yearAvg,
                     rank: getAcademicRank(yearAvg),
                     trend: getTrend(hk1Avg, hk2Avg)
                 };
@@ -157,9 +186,10 @@ export default function StudentGrades() {
             return data.subjects.map((subject) => {
                 const hk1Avg = calculateSemesterAverage(subject.hk1);
                 const hk2Avg = calculateSemesterAverage(subject.hk2);
-                const yearAvg = Number.isFinite(subject.yearAvg)
-                    ? subject.yearAvg
-                    : calculateYearAverage(hk1Avg, hk2Avg);
+                    const yearAvg = Number.isFinite(subject.yearAvg)
+                        ? subject.yearAvg
+                        : calculateYearAverage(hk1Avg, hk2Avg);
+                    const yearIsComplete = subject.yearIsComplete === undefined ? (subject.year && subject.year.isComplete) : subject.yearIsComplete;
 
                 return {
                     id: subject.id,
@@ -169,7 +199,8 @@ export default function StudentGrades() {
                     hk2: subject.hk2 || {},
                     hk1Avg,
                     hk2Avg,
-                    yearAvg,
+                        yearAvg,
+                        yearIsComplete,
                     rank: getAcademicRank(yearAvg),
                     trend: getTrend(hk1Avg, hk2Avg),
                 };
@@ -212,11 +243,8 @@ export default function StudentGrades() {
                                 className="grades-class-select"
                                 label="Năm học"
                                 value={selectedSchoolYear}
-                                options={[
-                                    { value: "2025-2026", label: "2025-2026" },
-                                    { value: "2024-2025", label: "2024-2025" }
-                                ]}
-                                onChange={(e) => setSelectedSchoolYear(e.target.value)}
+                                options={schoolYears.map(sy => ({ value: sy.id, label: sy.name || sy.school_year_name || sy.schoolYearName || sy.year }))}
+                                onChange={(e) => setSelectedSchoolYear(Number(e.target.value))}
                             />
                         </div>
 
@@ -295,6 +323,9 @@ export default function StudentGrades() {
                                     <span>{(subject.hk2Avg || 0).toFixed(2)}</span>
                                     <span className="total">
                                         {(activeTab === "hk1" ? subject.hk1Avg : activeTab === "hk2" ? subject.hk2Avg : subject.yearAvg).toFixed(2)}
+                                        {activeTab === "year" && subject.yearIsComplete === false && (
+                                            <small style={{ marginLeft: 8, color: '#888' }}>(Tạm tính)</small>
+                                        )}
                                     </span>
                                     <span className={`trend-cell ${subject.trend}`}>
                                         {subject.trend === "up" ? <BiTrendingUp /> : subject.trend === "down" ? <BiTrendingDown /> : <BiMinus />}
@@ -312,26 +343,7 @@ export default function StudentGrades() {
                                 
                                 {openRowId === subject.id && (
                                     <div className="detail-collapse expanded">
-                                        <div className="table-detail-row">
-                                            <div className="detail-panels">
-                                                {["hk1", "hk2"].map(hk => (
-                                                    <div key={hk} className="detail-card">
-                                                        <h3>{hk === "hk1" ? "Học kỳ 1" : "Học kỳ 2"}</h3>
-                                                        {Object.entries(subject[hk] || {}).map(([key, val]) => (
-                                                            <div key={key} className="detail-item">
-                                                                <span>{key}</span>
-                                                                <strong>{val}</strong>
-                                                            </div>
-                                                        ))}
-                                                        <div className="detail-divider" />
-                                                        <div className="detail-item detail-average">
-                                                            <span>Điểm trung bình {hk}</span>
-                                                            <strong>{(hk === "hk1" ? subject.hk1Avg : subject.hk2Avg).toFixed(2)}</strong>
-                                                        </div>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        </div>
+                                        <GradeDetail subject={subject} />
                                     </div>
                                 )}
                             </React.Fragment>
@@ -342,7 +354,7 @@ export default function StudentGrades() {
                                 </div>
                                 <div className="empty-state-content">
                                     <h3>Không có dữ liệu điểm</h3>
-                                    <p>Chưa có dữ liệu điểm cho năm học {selectedSchoolYear}.</p>
+                                    <p>Bạn chưa có dữ liệu điểm trong {selectedSchoolYearLabel}.</p>
                                 </div>
                             </div>
                         )}

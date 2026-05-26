@@ -221,6 +221,10 @@ const teacherEndpointRegistry = [
   { key: "get_classes_by_id_students", method: "GET", path: "/classes/:id/students", module: "classes", mock: () => ([{ id: 1, name: "Nguyễn Văn A", status: "Đang học" }, { id: 2, name: "Trần Thị B", status: "Đang học" }]) },
   { key: "get_classes_by_id_subjects", method: "GET", path: "/classes/:id/subjects", module: "classes", mock: () => ([{ id: 1, name: "Toán" }, { id: 2, name: "Văn" }]) },
   { key: "get_classes_by_id_schedule", method: "GET", path: "/classes/:id/schedule", module: "classes", mock: () => ([{ id: 1, title: "Tiết 1 - Toán" }, { id: 2, title: "Tiết 2 - Văn" }]) },
+  { key: "get_school_years", method: "GET", path: "/school-years", module: "schoolYears", mock: () => ([{ id: 1, name: "2025-2026" }]) },
+  { key: "get_school_years_current", method: "GET", path: "/school-years/current", module: "schoolYears", mock: () => ({ id: 1, name: "2025-2026" }) },
+  { key: "get_semesters", method: "GET", path: "/semesters", module: "schoolYears", mock: () => ([{ id: 1, name: "Học kỳ 1" }, { id: 2, name: "Học kỳ 2" }]) },
+  { key: "get_semesters_current", method: "GET", path: "/semesters/current", module: "schoolYears", mock: () => ({ id: 1, name: "Học kỳ 1" }) },
   { key: "get_lessons", method: "GET", path: "/lessons", module: "lessons" },
   { key: "get_lessons_by_id", method: "GET", path: "/lessons/:id", module: "lessons" },
   { key: "post_lessons", method: "POST", path: "/lessons", module: "lessons" },
@@ -315,11 +319,11 @@ const teacherEndpointRegistry = [
     } 
   },
   { key: "put_grades_by_id", method: "PUT", path: "/grades/:id", module: "grades", mock: (input) => ({ id: input.pathParams?.id, ...input.body }) },
-  { 
-    key: "post_grades_finalize_class", 
-    method: "POST", 
-    path: "/grades/finalize-class", 
-    module: "grades", 
+  {
+    key: "post_grades_finalize_class",
+    method: "POST",
+    path: "/grades/finalize-class",
+    module: "grades",
     mock: (input) => {
       const { classId, subjectId, schoolYear, term, status } = input.body || {};
       if (classId && subjectId && schoolYear && term && status) {
@@ -327,21 +331,22 @@ const teacherEndpointRegistry = [
         localStorage.setItem(key, status);
       }
       return { success: true, status };
-    } 
+    }
   },
-  { 
-    key: "get_grades_lock_status", 
-    method: "GET", 
-    path: "/grades/lock-status", 
-    module: "grades", 
+  {
+    key: "get_grades_lock_status",
+    method: "GET",
+    path: "/grades/lock-status",
+    module: "grades",
     mock: (input) => {
       const { classId, subjectId, schoolYear, term } = input.params || {};
       if (!classId || !subjectId || !schoolYear || !term) return { status: "draft" };
       const key = `grades_lock_${classId}_${subjectId}_${schoolYear}_${term}`;
       const status = localStorage.getItem(key) || "draft";
       return { status };
-    } 
+    }
   },
+  { key: "teacher_upsert_grades", method: "POST", path: "/grades/teacher-upsert", module: "grades", mock: (input) => input.body },
   { key: "get_grade_items", method: "GET", path: "/grade-items", module: "grades", mock: () => ([]) },
   { 
     key: "get_chat_contacts", 
@@ -476,6 +481,10 @@ export const teacherService = {
   getClassStudents: (input) => endpointCallers.get_classes_by_id_students(input),
   getClassSubjects: (input) => endpointCallers.get_classes_by_id_subjects(input),
   getClassSchedule: (input) => endpointCallers.get_classes_by_id_schedule(input),
+  listSchoolYears: (input) => endpointCallers.get_school_years(input),
+  getCurrentSchoolYear: (input) => endpointCallers.get_school_years_current(input),
+  listSemesters: (input) => endpointCallers.get_semesters(input),
+  getCurrentSemester: (input) => endpointCallers.get_semesters_current(input),
   listLessons: (input) => endpointCallers.get_lessons(input),
   getLessonById: (input) => endpointCallers.get_lessons_by_id(input),
   createLesson: (input) => endpointCallers.post_lessons(input),
@@ -491,6 +500,7 @@ export const teacherService = {
   getGradesByClass: (input) => endpointCallers.get_grades_class(input),
   bulkUpdateGrades: (input) => endpointCallers.post_grades_bulk(input),
   updateGrade: (input) => endpointCallers.put_grades_by_id(input),
+  teacherUpsertGrades: (input) => endpointCallers.teacher_upsert_grades(input),
   listGradeItems: (input) => endpointCallers.get_grade_items(input),
   finalizeClassGrades: (input) => endpointCallers.post_grades_finalize_class(input),
   getGradesLockStatus: (input) => endpointCallers.get_grades_lock_status(input),
