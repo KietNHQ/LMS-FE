@@ -126,17 +126,6 @@ export default function PointConfigModal({ isOpen, onClose }) {
         );
     }
 
-    // Use default if not loaded
-    const currentConfig = config || getDefaultConfig();
-
-    // Helper to get points value from entry
-    const getPoints = (entry) => {
-        if (!entry) return 0;
-        if (typeof entry === 'number') return entry;
-        if (typeof entry === 'object' && entry !== null) return entry.points ?? 0;
-        return 0;
-    };
-
     const getDefaultConfig = () => ({
         standardPoint: 100,
         attendance_violation: { unexcused: { points: -15 }, late: { points: -5 }, skip_class: { points: -50 }, skip_period: { points: -10 } },
@@ -148,6 +137,16 @@ export default function PointConfigModal({ isOpen, onClose }) {
         activity_reward: { first_school: { points: 20 }, second_school: { points: 15 }, first_province: { points: 50 }, national: { points: 100 }, volunteer: { points: 15 }, club: { points: 10 } },
         positive_reward: { found_lost: { points: 20 }, report_risk: { points: 5 }, role_model: { points: 20 }, help_peers: { points: 10 }, report_violation: { points: 15 } }
     });
+
+    // Use default if not loaded
+    const currentConfig = config || getDefaultConfig();
+
+    const getPoints = (entry) => {
+        if (!entry) return 0;
+        if (typeof entry === 'number') return entry;
+        if (typeof entry === 'object' && entry !== null) return entry.points ?? 0;
+        return 0;
+    };
 
     const updateNested = (category, field, value) => {
         if (isPendingApproval) return;

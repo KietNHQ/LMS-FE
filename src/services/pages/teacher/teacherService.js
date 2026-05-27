@@ -209,22 +209,20 @@ const TEACHER_LESSONS_MOCK = [
 ];
 
 const teacherEndpointRegistry = [
-  { key: "get_dashboard_teacher", method: "GET", path: "/dashboard/teacher", module: "dashboard", mock: () => TEACHER_DASHBOARD_MOCK },
-  { key: "get_teachers_by_id", method: "GET", path: "/teachers/:id", module: "teacher", mock: () => TEACHER_PROFILE_MOCK },
-  { key: "get_teachers_by_id_classes", method: "GET", path: "/teachers/:id/classes", module: "teacher", mock: () => TEACHER_CLASSES_MOCK },
-  { key: "get_teachers_by_id_subjects", method: "GET", path: "/teachers/:id/subjects", module: "teacher", mock: () => TEACHER_SUBJECTS_MOCK },
-  { key: "get_classes", method: "GET", path: "/classes", module: "classes", mock: () => TEACHER_CLASSES_MOCK },
-  { key: "get_classes_by_id", method: "GET", path: "/classes/:id", module: "classes", mock: (input) => {
-      const matched = TEACHER_CLASSES_MOCK.find((item) => `${item.id}` === `${input.pathParams?.id}`);
-      return matched ? { ...matched } : null;
-    } },
-  { key: "get_classes_by_id_students", method: "GET", path: "/classes/:id/students", module: "classes", mock: () => ([{ id: 1, name: "Nguyễn Văn A", status: "Đang học" }, { id: 2, name: "Trần Thị B", status: "Đang học" }]) },
-  { key: "get_classes_by_id_subjects", method: "GET", path: "/classes/:id/subjects", module: "classes", mock: () => ([{ id: 1, name: "Toán" }, { id: 2, name: "Văn" }]) },
-  { key: "get_classes_by_id_schedule", method: "GET", path: "/classes/:id/schedule", module: "classes", mock: () => ([{ id: 1, title: "Tiết 1 - Toán" }, { id: 2, title: "Tiết 2 - Văn" }]) },
-  { key: "get_school_years", method: "GET", path: "/school-years", module: "schoolYears", mock: () => ([{ id: 1, name: "2025-2026" }]) },
-  { key: "get_school_years_current", method: "GET", path: "/school-years/current", module: "schoolYears", mock: () => ({ id: 1, name: "2025-2026" }) },
-  { key: "get_semesters", method: "GET", path: "/semesters", module: "schoolYears", mock: () => ([{ id: 1, name: "Học kỳ 1" }, { id: 2, name: "Học kỳ 2" }]) },
-  { key: "get_semesters_current", method: "GET", path: "/semesters/current", module: "schoolYears", mock: () => ({ id: 1, name: "Học kỳ 1" }) },
+  { key: "get_dashboard_teacher", method: "GET", path: "/dashboard/teacher", module: "dashboard", mock: false },
+  { key: "get_teachers_by_id", method: "GET", path: "/teachers/:id", module: "teacher", mock: false },
+  { key: "get_teachers_by_id_classes", method: "GET", path: "/teachers/:id/classes", module: "teacher", mock: false },
+  { key: "get_teachers_by_id_subjects", method: "GET", path: "/teachers/:id/subjects", module: "teacher", mock: false },
+  { key: "get_classes", method: "GET", path: "/classes", module: "classes", mock: false },
+  { key: "get_grade_levels", method: "GET", path: "/grade-levels", module: "gradeLevels", mock: false },
+  { key: "get_classes_by_id", method: "GET", path: "/classes/:id", module: "classes", mock: false },
+  { key: "get_classes_by_id_students", method: "GET", path: "/classes/:id/students", module: "classes", mock: false },
+  { key: "get_classes_by_id_subjects", method: "GET", path: "/classes/:id/subjects", module: "classes", mock: false },
+  { key: "get_classes_by_id_schedule", method: "GET", path: "/classes/:id/schedule", module: "classes", mock: false },
+  { key: "get_school_years", method: "GET", path: "/school-years", module: "schoolYears", mock: false },
+  { key: "get_school_years_current", method: "GET", path: "/school-years/current", module: "schoolYears", mock: false },
+  { key: "get_semesters", method: "GET", path: "/semesters", module: "schoolYears", mock: false },
+  { key: "get_semesters_current", method: "GET", path: "/semesters/current", module: "schoolYears", mock: false },
   { key: "get_lessons", method: "GET", path: "/lessons", module: "lessons" },
   { key: "get_lessons_by_id", method: "GET", path: "/lessons/:id", module: "lessons" },
   { key: "post_lessons", method: "POST", path: "/lessons", module: "lessons" },
@@ -232,17 +230,14 @@ const teacherEndpointRegistry = [
   { key: "delete_lessons_by_id", method: "DELETE", path: "/lessons/:id", module: "lessons" },
   { key: "post_lessons_by_id_publish", method: "POST", path: "/lessons/:id/publish", module: "lessons" },
   { key: "post_lessons_upload", method: "POST", path: "/lessons/upload", module: "lessons" },
-  { 
+  {
     key: "get_quizzes", 
     method: "GET", 
     path: "/quizzes", 
     module: "quiz", 
-    mock: () => ({
-      items: TEACHER_QUIZZES_MOCK,
-      total: TEACHER_QUIZZES_MOCK.length
-    }) 
+    mock: false
   },
-  { key: "get_notifications", method: "GET", path: "/notifications/my", module: "notifications", mock: () => ([]) },
+  { key: "get_notifications", method: "GET", path: "/notifications/my", module: "notifications", mock: false },
   // Leave Requests - Real API endpoints (no mock)
   { key: "get_class_leave_requests", method: "GET", path: "/leave-requests/classes/:classId/leave-requests", module: "leave" },
   { key: "patch_leave_request_status", method: "PATCH", path: "/leave-requests/:id/approve", module: "leave" },
@@ -251,131 +246,48 @@ const teacherEndpointRegistry = [
     method: "GET", 
     path: "/teachers/me/timetable", 
     module: "timetable", 
-    mock: () => ([
-      {
-        id: 1,
-        day_of_week: "Monday",
-        period_number: 1,
-        subject_name: "Toán",
-        subject_code: "Toan",
-        class_name: "10A1",
-        room_name: "P201",
-        notes: "Kiểm tra 15 phút Chương 1",
-        status: "normal",
-        color: "teal"
-      },
-      {
-        id: 2,
-        day_of_week: "Monday",
-        period_number: 2,
-        subject_name: "Toán",
-        subject_code: "Toan",
-        class_name: "10A1",
-        room_name: "P201",
-        notes: "Luyện tập hàm số bậc nhất",
-        status: "normal",
-        color: "teal"
-      },
-      {
-        id: 3,
-        day_of_week: "Tuesday",
-        period_number: 3,
-        subject_name: "Vật Lý",
-        subject_code: "VatLy",
-        class_name: "10A2",
-        room_name: "P204",
-        notes: "Định luật bảo toàn cơ năng",
-        status: "normal",
-        color: "orange"
-      }
-    ]) 
+    mock: false
   },
   { 
     key: "get_grades_class", 
     method: "GET", 
     path: "/grades/class/:classId", 
     module: "grades", 
-    mock: (input) => {
-      const classId = input.pathParams?.classId;
-      const { subjectId, schoolYear, term } = input.params || {};
-      if (!classId || !subjectId || !schoolYear || !term) return [];
-      const key = `grades_${classId}_${subjectId}_${schoolYear}_${term}`;
-      const stored = localStorage.getItem(key);
-      return stored ? JSON.parse(stored) : [];
-    } 
+    mock: false
   },
   { 
     key: "post_grades_bulk", 
     method: "POST", 
     path: "/grades/bulk", 
     module: "grades", 
-    mock: (input) => {
-      const { classId, subjectId, schoolYear, term, records } = input.body || {};
-      if (classId && subjectId && schoolYear && term && Array.isArray(records)) {
-        const key = `grades_${classId}_${subjectId}_${schoolYear}_${term}`;
-        localStorage.setItem(key, JSON.stringify(records));
-      }
-      return input.body;
-    } 
+    mock: false
   },
-  { key: "put_grades_by_id", method: "PUT", path: "/grades/:id", module: "grades", mock: (input) => ({ id: input.pathParams?.id, ...input.body }) },
+  { key: "put_grades_by_id", method: "PUT", path: "/grades/:id", module: "grades", mock: false },
   {
     key: "post_grades_finalize_class",
     method: "POST",
     path: "/grades/finalize-class",
     module: "grades",
-    mock: (input) => {
-      const { classId, subjectId, schoolYear, term, status } = input.body || {};
-      if (classId && subjectId && schoolYear && term && status) {
-        const key = `grades_lock_${classId}_${subjectId}_${schoolYear}_${term}`;
-        localStorage.setItem(key, status);
-      }
-      return { success: true, status };
-    }
+    mock: false
   },
   {
     key: "get_grades_lock_status",
     method: "GET",
     path: "/grades/lock-status",
     module: "grades",
-    mock: (input) => {
-      const { classId, subjectId, schoolYear, term } = input.params || {};
-      if (!classId || !subjectId || !schoolYear || !term) return { status: "draft" };
-      const key = `grades_lock_${classId}_${subjectId}_${schoolYear}_${term}`;
-      const status = localStorage.getItem(key) || "draft";
-      return { status };
-    }
+    mock: false
   },
-  { key: "teacher_upsert_grades", method: "POST", path: "/grades/teacher-upsert", module: "grades", mock: (input) => input.body },
-  { key: "get_grade_items", method: "GET", path: "/grade-items", module: "grades", mock: () => ([]) },
+  { key: "teacher_upsert_grades", method: "POST", path: "/grades/teacher-upsert", module: "grades", mock: false },
+  { key: "get_grade_items", method: "GET", path: "/grade-items", module: "grades", mock: false },
   { 
     key: "get_chat_contacts", 
     method: "GET", 
     path: "/chat/contacts", 
     module: "chat", 
-    mock: () => ([
-      { 
-        id: "api-mock-1", 
-        name: "Lớp 10A1 - Group Chat", 
-        subLabel: "Phụ huynh & Giáo viên", 
-        avatar: "10", 
-        type: "homeroom", 
-        roomId: "homeroom",
-        isMockData: true 
-      },
-      { 
-        id: "api-mock-2", 
-        name: "Hỗ trợ Kỹ thuật", 
-        subLabel: "LMS Support Team", 
-        avatar: "IT", 
-        type: "technical", 
-        roomId: "technical",
-        isMockData: true 
-      }
-    ]) 
+    mock: false
   },
-  { key: "get_chat_messages", method: "GET", path: "/chat/messages/:targetId", module: "chat", mock: () => ([]) },
-  { key: "post_chat_message", method: "POST", path: "/chat/messages", module: "chat", mock: (input) => ({ id: Date.now(), ...input.body }) },
+  { key: "get_chat_messages", method: "GET", path: "/chat/messages/:targetId", module: "chat", mock: false },
+  { key: "post_chat_message", method: "POST", path: "/chat/messages", module: "chat", mock: false },
   { key: "start_human_chat", method: "POST", path: "/chat/human/start", module: "chat" },
   { key: "get_human_messages", method: "GET", path: "/chat/human/messages/:conversationId", module: "chat" },
   { key: "get_human_conversations", method: "GET", path: "/chat/human/conversations", module: "chat" },
@@ -390,21 +302,21 @@ const teacherEndpointRegistry = [
   { key: "post_attendance", method: "POST", path: "/teachers/attendance", module: "teacher", mock: (input) => input.body },
   { key: "post_lesson_evaluation", method: "POST", path: "/teachers/lesson-evaluations", module: "teacher" },
   { key: "put_lesson_evaluation", method: "PUT", path: "/teachers/lesson-evaluations/:id", module: "teacher" },
-  { key: "delete_lesson_evaluation", method: "DELETE", path: "/teachers/lesson-evaluations/:id", module: "teacher", mock: () => ({ success: true }) },
+  { key: "delete_lesson_evaluation", method: "DELETE", path: "/teachers/lesson-evaluations/:id", module: "teacher" },
   { key: "get_lesson_evaluations", method: "GET", path: "/teachers/classes/:classId/lesson-evaluations", module: "teacher", mock: () => ([]) },
   { key: "get_current_schedule", method: "GET", path: "/teachers/classes/:classId/current-schedule", module: "teacher", mock: () => (null) },
-  { key: "get_teaching_days", method: "GET", path: "/teachers/classes/:classId/teaching-days", module: "teacher", mock: () => ([]) },
-  { key: "get_homeroom_classes", method: "GET", path: "/teachers/:id/homeroom-classes", module: "teacher", mock: () => ([]) },
-  { key: "get_academic_summary", method: "GET", path: "/classes/:id/academic-summary", module: "classes", mock: () => ({ academicStats: { excellent: 0, good: 0, average: 0, weak: 0 }, studentPerformance: [] }) },
+  { key: "get_teaching_days", method: "GET", path: "/teachers/classes/:classId/teaching-days", module: "teacher", mock: false },
+  { key: "get_homeroom_classes", method: "GET", path: "/teachers/:id/homeroom-classes", module: "teacher", mock: false },
+  { key: "get_academic_summary", method: "GET", path: "/classes/:id/academic-summary", module: "classes", mock: false },
   { key: "patch_class_officers", method: "PATCH", path: "/classes/:id/officers", module: "classes" },
-  { key: "post_class_broadcast", method: "POST", path: "/notifications/class/:id/broadcast", module: "notifications", mock: () => ({ message: "Gửi thông báo thành công" }) },
+  { key: "post_class_broadcast", method: "POST", path: "/notifications/class/:id/broadcast", module: "notifications", mock: false },
   { key: "get_consolidated_homeroom", method: "GET", path: "/teachers/:id/homeroom-dashboard", module: "teacher" },
   { key: "get_consolidated_teaching_classes", method: "GET", path: "/teachers/me/teaching-classes", module: "teacher" },
   { key: "post_class_activity", method: "POST", path: "/classes/:id/activities", module: "classes" },
   { key: "put_class_activity", method: "PUT", path: "/classes/:id/activities/:activityId", module: "classes" },
   { key: "delete_class_activity", method: "DELETE", path: "/classes/:id/activities/:activityId", module: "classes" },
   // Class Committee endpoints (for AcademicVicePresidentTab)
-  { key: "get_committee_lesson_evaluations", method: "GET", path: "/class-committee/:classId/lesson-evaluations", module: "classes", mock: () => ([]) },
+  { key: "get_committee_lesson_evaluations", method: "GET", path: "/class-committee/:classId/lesson-evaluations", module: "classes", mock: false },
 ];
 
 const createEndpointCaller = (endpoint) => {
@@ -477,6 +389,7 @@ export const teacherService = {
   getTeacherClasses: (input) => endpointCallers.get_teachers_by_id_classes(input),
   getTeacherSubjects: (input) => endpointCallers.get_teachers_by_id_subjects(input),
   listClasses: (input) => endpointCallers.get_classes(input),
+  getGradeLevels: (input) => endpointCallers.get_grade_levels(input),
   getClassById: (input) => endpointCallers.get_classes_by_id(input),
   getClassStudents: (input) => endpointCallers.get_classes_by_id_students(input),
   getClassSubjects: (input) => endpointCallers.get_classes_by_id_subjects(input),

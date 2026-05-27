@@ -3,6 +3,8 @@ import { FiSearch } from "react-icons/fi";
 import { toast } from "react-toastify";
 import teacherService from "../../../../../services/pages/teacher/teacherService";
 import studentService from "../../../../../services/pages/student/studentService";
+import { useSchoolYearContext } from "../../../../../context/SchoolYearContext";
+import { resolveSemesterId } from "../../../../../services/shared/schoolYearLookup";
 import "./ClassStudentsSection.css";
 
 // Utilities
@@ -21,6 +23,7 @@ import StudentReviewModal from "./subcomponents/StudentReviewModal";
 import LessonReviewModal from "./subcomponents/LessonReviewModal";
 import StudentsTable from "./subcomponents/StudentsTable";
 import Pagination from "./subcomponents/Pagination";
+import ConfirmationModal from "../../../../../components/common/Dialog/ConfirmationModal/ConfirmationModal";
 
 const ITEMS_PER_PAGE = 8;
 
@@ -53,6 +56,22 @@ const ClassStudentsSection = ({ classId, students, readOnly = false, isStudentVi
   const [lessonPeriodOptions, setLessonPeriodOptions] = useState([]);
   const [selectedLessonPeriod, setSelectedLessonPeriod] = useState("");
   const [todayPeriods, setTodayPeriods] = useState([]); // Danh sách các tiết dạy hôm nay
+  const [deleteReviewId, setDeleteReviewId] = useState(null);
+
+  // --- Context ---
+  const { selectedSchoolYear, selectedTerm } = useSchoolYearContext();
+
+  const [resolvedSemester, setResolvedSemester] = useState(null);
+
+  // Resolve semesterId from context (year/term)
+  useEffect(() => {
+    if (!selectedSchoolYear || !selectedTerm) return;
+    let cancelled = false;
+    resolveSemesterId(selectedSchoolYear, selectedTerm).then((id) => {
+      if (!cancelled) setResolvedSemester(id ? { id } : null);
+    });
+    return () => { cancelled = true; };
+  }, [selectedSchoolYear, selectedTerm]);
 
   // Timeline & Calendar State
   const [todayLessonInfo, setTodayLessonInfo] = useState(() => getCurrentLessonInfo(new Date()));
@@ -85,15 +104,15 @@ const ClassStudentsSection = ({ classId, students, readOnly = false, isStudentVi
   const selectedDateObj = parseDateKey(selectedHistoryDate);
   const selectedDateLabel = selectedDateObj.toLocaleDateString("vi-VN");
 
-  const currentLessonLabel = currentSchedule 
-    ? `Tiết học thực tế (Tiết ${currentSchedule.id || "?"})` 
+  const currentLessonLabel = currentSchedule
+    ? `Tiết học thực tế (Tiết ${currentSchedule.periodId || currentSchedule.id || "?"})`
     : (todayLessonInfo?.periodLabel || `Tiết học dự kiến (${lessonReviews.length + 1})`);
 
   const currentLessonTime = currentSchedule 
     ? `${currentSchedule.start_time?.substring(0, 5)} - ${currentSchedule.end_time?.substring(0, 5)} - ${selectedDateLabel}`
     : todayLessonInfo?.timeRange 
       ? `${todayLessonInfo.timeRange} - ${selectedDateLabel}`
-      : `07:15 - 08:00 - ${selectedDateLabel}`;
+      : `07:15 - 08:00 - ${selectedDateLabel || ""}`;
 
   const availableReviewDates = useMemo(
     () => [...new Set(lessonReviews.map((review) => review.reviewDate))].sort((a, b) => b.localeCompare(a)),
@@ -205,10 +224,13 @@ const ClassStudentsSection = ({ classId, students, readOnly = false, isStudentVi
           }, {}) 
         : {};
 
+      const periodNum = item.periodId || item.period_id || item.period_number;
+      const periodDisplay = periodNum ? `Tiết ${periodNum}` : "Tiết chưa xác định";
+
       return {
         id: item.id,
-        lessonLabel: `Tiết ${item.period_number || item.period_id || ""}`,
-        lessonTime: `${item.start_time ? item.start_time.substring(0, 5) : ""} - ${new Date(item.evaluation_date).toLocaleDateString("vi-VN")}`,
+        lessonLabel: periodDisplay,
+        lessonTime: item.start_time ? `${item.start_time.substring(0, 5)} - ${new Date(item.evaluation_date).toLocaleDateString("vi-VN")}` : new Date(item.evaluation_date).toLocaleDateString("vi-VN"),
         attended: item.present_count || 0,
         absent: item.absent_count || 0,
         score: item.score,
@@ -218,7 +240,10 @@ const ClassStudentsSection = ({ classId, students, readOnly = false, isStudentVi
         createdAt: new Date(item.created_at).toLocaleString("vi-VN"),
         isDoublePeriod: item.is_double_period,
         attendanceSnapshot,
-        studentReviewSnapshot: restoredReviews
+        studentReviewSnapshot: restoredReviews,
+        lessonInstanceId: item.lesson_instance_id || null,
+        periodId: item.periodId || item.period_id || null,
+        schoolDayId: item.school_day_id || null
       };
     });
   };
@@ -279,12 +304,12 @@ const ClassStudentsSection = ({ classId, students, readOnly = false, isStudentVi
   // Lấy TKB hiện tại dựa trên ngày đang chọn
   useEffect(() => {
     const fetchCurrentSchedule = async () => {
-      if (!classId || isStudentView) return;
+      if (!classId || isStudentView || !resolvedSemester?.id) return;
       try {
         const res = await teacherService.getCurrentSchedule({
           mock: false,
           pathParams: { classId },
-          params: { date: selectedHistoryDate } // Gửi ngày đang chọn lên BE
+          params: { date: selectedHistoryDate, semesterId: resolvedSemester.id }
         });
         if (res.success) {
           setCurrentSchedule(res.data || null);
@@ -294,16 +319,17 @@ const ClassStudentsSection = ({ classId, students, readOnly = false, isStudentVi
       }
     };
     fetchCurrentSchedule();
-  }, [classId, selectedHistoryDate, isStudentView]);
+  }, [classId, selectedHistoryDate, isStudentView, resolvedSemester?.id]);
 
   // Lấy các thứ có lịch dạy trong tuần
   useEffect(() => {
     const fetchTeachingDays = async () => {
-      if (!classId || isStudentView) return;
+      if (!classId || isStudentView || !resolvedSemester?.id) return;
       try {
         const res = await teacherService.getTeachingDays({
           mock: false,
-          pathParams: { classId }
+          pathParams: { classId },
+          params: { semesterId: resolvedSemester.id }
         });
         if (res.success && res.data) {
           setTeachingDays(res.data);
@@ -313,20 +339,21 @@ const ClassStudentsSection = ({ classId, students, readOnly = false, isStudentVi
       }
     };
     fetchTeachingDays();
-  }, [classId, isStudentView]);
+  }, [classId, isStudentView, resolvedSemester?.id]);
 
   // Lấy toàn bộ TKB của lớp để biết chính xác các tiết của giáo viên hôm nay
   useEffect(() => {
     const fetchFullSchedule = async () => {
-      if (!classId || isStudentView) return;
+      if (!classId || isStudentView || !resolvedSemester?.id) return;
       try {
         const res = await teacherService.getClassSchedule({
-          pathParams: { id: classId }
+          pathParams: { id: classId },
+          params: { semesterId: resolvedSemester.id }
         });
         if (res.success && res.data) {
           const selectedDate = parseDateKey(selectedHistoryDate);
           const selectedDayOfWeek = selectedDate.getDay() + 1; // 1 (CN) - 7 (T7)
-          const periodsToday = res.data.filter(s => s.day_of_week === selectedDayOfWeek);
+          const periodsToday = res.data.filter(s => s.dayOfWeek === selectedDayOfWeek || s.day_of_week === selectedDayOfWeek);
           setTodayPeriods(periodsToday);
         }
       } catch (err) {
@@ -334,7 +361,7 @@ const ClassStudentsSection = ({ classId, students, readOnly = false, isStudentVi
       }
     };
     fetchFullSchedule();
-  }, [classId, selectedHistoryDate, isStudentView]);
+  }, [classId, selectedHistoryDate, isStudentView, resolvedSemester?.id]);
 
   // --- Handlers ---
   const handleBackToToday = () => setSelectedHistoryDate(toDateKey(new Date()));
@@ -517,9 +544,9 @@ const ClassStudentsSection = ({ classId, students, readOnly = false, isStudentVi
   const handleOpenLessonReview = () => {
     // 1. Xác định các tiết dạy thực tế trong hôm nay từ TKB
     // Nếu không có dữ liệu TKB thì dùng currentSchedule làm fallback
-    const scheduledPeriods = todayPeriods.length > 0 
-      ? todayPeriods.map(p => p.period_number)
-      : (currentSchedule ? [currentSchedule.period_number] : []);
+    const scheduledPeriods = todayPeriods.length > 0
+      ? todayPeriods.map(p => p.periodId || p.period_number)
+      : (currentSchedule ? [currentSchedule.periodId || currentSchedule.period_number] : []);
 
     const targetDate = selectedHistoryDate;
     
@@ -636,20 +663,8 @@ const ClassStudentsSection = ({ classId, students, readOnly = false, isStudentVi
     if (shouldOpenModal) setIsLessonReviewDialogOpen(true);
   };
 
-  const handleDeleteLessonReview = async (evaluationId) => {
-    if (!window.confirm("Bạn có chắc chắn muốn xóa đánh giá tiết học này?")) return;
-    try {
-      const res = await teacherService.deleteLessonEvaluation({
-        pathParams: { id: evaluationId }
-      });
-      if (res.success) {
-        toast.success("Đã xóa đánh giá tiết học");
-        setLessonReviews(prev => prev.filter(r => r.id !== evaluationId));
-      }
-    } catch (err) {
-      console.error("Failed to delete evaluation:", err);
-      toast.error("Không thể xóa đánh giá");
-    }
+  const handleDeleteLessonReview = (evaluationId) => {
+    setDeleteReviewId(evaluationId);
   };
 
   const handleBulkAttendance = (status) => {
@@ -662,6 +677,27 @@ const ClassStudentsSection = ({ classId, students, readOnly = false, isStudentVi
       return next;
     });
     toast.info(`Đã điểm danh cho ${selectedStudentIds.size} học sinh`);
+  };
+
+  const handleConfirmDeleteLessonReview = async () => {
+    console.log("[DELETE] deleteReviewId:", deleteReviewId);
+    if (!deleteReviewId) return;
+    try {
+      console.log("[DELETE] Calling API with id:", deleteReviewId);
+      const res = await teacherService.deleteLessonEvaluation({
+        pathParams: { id: deleteReviewId }
+      });
+      console.log("[DELETE] Response:", res);
+      if (res.success) {
+        toast.success("Đã xóa đánh giá tiết học");
+        setLessonReviews(prev => prev.filter(r => r.id !== deleteReviewId));
+      }
+    } catch (err) {
+      console.error("Failed to delete evaluation:", err);
+      toast.error("Không thể xóa đánh giá");
+    } finally {
+      setDeleteReviewId(null);
+    }
   };
 
   const handleAddLessonReview = async (e) => {
@@ -692,13 +728,16 @@ const ClassStudentsSection = ({ classId, students, readOnly = false, isStudentVi
     });
 
     console.log("=== COMPILING LESSON EVALUATION ===");
-    console.log("Drafted studentReviews:", studentReviews);
-    console.log("Compiled studentReports to send:", studentReports);
+    console.log("Drafted studentReviews:", JSON.parse(JSON.stringify(studentReviews)));
+    console.log("Compiled studentReports to send:", JSON.parse(JSON.stringify(studentReports)));
 
     const evaluationData = {
       classId: parseInt(classId),
       subjectAssignmentId: currentSchedule?.subject_assignment_id || null,
-      periodId: currentSchedule?.id || null, // Sử dụng ID thực của tiết học từ TKB
+      periodId: currentSchedule?.periodId || currentSchedule?.id || null,
+      lessonInstanceId: currentSchedule?.lessonInstanceId || null,
+      schoolDayId: currentSchedule?.schoolDayId || null,
+      dayOfWeek: currentSchedule?.dayOfWeek || null,
       evaluationDate: selectedHistoryDate,
       score: lessonScore.trim().toUpperCase(),
       note: lessonNote.trim(),
@@ -710,11 +749,12 @@ const ClassStudentsSection = ({ classId, students, readOnly = false, isStudentVi
 
     try {
       // Điểm danh: Lưu danh sách điểm danh cho tiết học thực tế này
-      if (currentSchedule?.id) {
+      if (currentSchedule?.periodId || currentSchedule?.id) {
         await teacherService.saveAttendance({
           mock: false,
           body: {
-            periodId: currentSchedule.id,
+            periodId: currentSchedule.periodId || currentSchedule.id,
+            lessonInstanceId: currentSchedule.lessonInstanceId || null,
             date: selectedHistoryDate,
             attendances: students.map(s => ({
               studentEnrollmentId: s.enrollmentId || s.enrollment_id,
@@ -738,21 +778,25 @@ const ClassStudentsSection = ({ classId, students, readOnly = false, isStudentVi
 
       if (res.success) {
         toast.success(editingEvaluationId ? "Đã cập nhật đánh giá" : "Đã lưu đánh giá tiết học");
-        
+
         // Refresh history
-        const dRes = await teacherService.getTeachingDays({ 
+        const dRes = await teacherService.getTeachingDays({
           mock: false,
-          pathParams: { classId } 
+          pathParams: { classId },
+          params: { semesterId: resolvedSemester?.id }
         });
         if (dRes.success && Array.isArray(dRes.data)) {
           setTeachingDays(dRes.data);
         }
 
         // Lấy thời khóa biểu hôm nay để biết chính xác các tiết dạy
-        const schRes = await teacherService.getClassSchedule({ pathParams: { id: classId } });
+        const schRes = await teacherService.getClassSchedule({ 
+          pathParams: { id: classId },
+          params: { semesterId: resolvedSemester?.id }
+        });
         if (schRes.success && schRes.data) {
-          const todayDayOfWeek = new Date().getDay() + 1; // 1 (CN) - 7 (T7)
-          const periodsToday = schRes.data.filter(s => s.day_of_week === todayDayOfWeek);
+          const todayDayOfWeek = new Date().getDay() + 1;
+          const periodsToday = schRes.data.filter(s => s.dayOfWeek === todayDayOfWeek || s.day_of_week === todayDayOfWeek);
           setTodayPeriods(periodsToday);
         }
 
@@ -763,6 +807,8 @@ const ClassStudentsSection = ({ classId, students, readOnly = false, isStudentVi
         if (hRes.success && Array.isArray(hRes.data)) {
           const history = mapBackendHistory(hRes.data);
           setLessonReviews(history);
+          // Force selectedHistoryDate to re-trigger the useEffect that loads studentReviews from the latest review
+          setSelectedHistoryDate(selectedHistoryDate);
         }
         resetLessonForm();
       }
@@ -909,6 +955,17 @@ const ClassStudentsSection = ({ classId, students, readOnly = false, isStudentVi
         totalPages={totalPages}
         onPrevPage={() => setCurrentPage(p => Math.max(1, p - 1))}
         onNextPage={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+      />
+
+      <ConfirmationModal
+        isOpen={deleteReviewId !== null}
+        title="Xóa đánh giá"
+        message="Bạn có chắc chắn muốn xóa đánh giá tiết học này?"
+        confirmLabel="Xóa"
+        cancelLabel="Hủy"
+        variant="danger"
+        onConfirm={handleConfirmDeleteLessonReview}
+        onCancel={() => setDeleteReviewId(null)}
       />
     </div>
   );

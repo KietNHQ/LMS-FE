@@ -46,6 +46,7 @@ export async function loadTimetableStaticCatalog() {
           rows: getRows(res).map((r) => ({
             value: r.name,
             label: `${r.name} (Tòa ${r.building || "?"})`,
+            id: r.id,
           })),
         };
       }),

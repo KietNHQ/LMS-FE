@@ -1,4 +1,5 @@
 import React, { useMemo, useState, useCallback, useRef, useEffect } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import "./ManagementTimetable.css";
 import TimetableFiltersSection from "./components/timetableFiltersSection/timetableFiltersSection";
 import ScheduleSlotSection from "./components/scheduleSlotSection/scheduleSlotSection";
@@ -17,6 +18,7 @@ import {
     dayLabelToApiDayOfWeek,
 } from "../../../services/shared/schoolYearLookup";
 import { loadTimetableStaticCatalog } from "../../../services/pages/management/timetable/timetableCatalogCache";
+import { toast } from "react-toastify";
 
 const getErrorMessage = (error, fallback) => {
     const apiError = error?.response?.data?.error;
@@ -75,7 +77,7 @@ function normalizeText(value) {
     return String(value || "").trim().toLowerCase();
 }
 
-function LessonModal({ mode, formData, onChange, onClose, onSubmit, allSessions, activeSessionId, realTeachers, realRooms, realSubjects, realClasses, subjectDisplayToCode }) {
+function LessonModal({ mode, formData, onChange, onClose, onSubmit, allSessions, activeSessionId, realTeachers, realRooms, realSubjects, realClasses, subjectDisplayToCode, periodIds, selectedClassRecord }) {
     const allTeacherNames = (realTeachers || []).map(t => t.label || t.value).filter(Boolean);
     const classOptions = (realClasses || []).map(c => c.value || c).filter(Boolean);
     const subjectOptions = (realSubjects || []).map(s => s.value || s).filter(Boolean);
@@ -85,6 +87,50 @@ function LessonModal({ mode, formData, onChange, onClose, onSubmit, allSessions,
         const code = (subjectDisplayToCode || {})[displayName] || displayName;
         return GDPT_2018_CONFIG.CONSECUTIVE_SUBJECTS.includes(code);
     };
+
+    const [filteredTeachers, setFilteredTeachers] = useState([]);
+    const [isLoadingTeachers, setIsLoadingTeachers] = useState(false);
+
+    // Teacher list to display: use filtered by subject, fallback to all
+    const displayedTeacherNames = useMemo(() => {
+        if (isLoadingTeachers) return [];
+        if (filteredTeachers.length > 0) return filteredTeachers.map((t) => t.label || t.value);
+        return allTeacherNames;
+    }, [filteredTeachers, isLoadingTeachers, allTeacherNames]);
+
+    // Fetch teachers filtered by selected subject
+    useEffect(() => {
+        if (!formData.subject) {
+            setFilteredTeachers([]);
+            return;
+        }
+
+        let cancelled = false;
+        setIsLoadingTeachers(true);
+
+        const subjectCode = subjectDisplayToCode[formData.subject] || formData.subject;
+
+        timetableService.getTeachersBySubject({
+            subjectCode,
+            classId: selectedClassRecord?.id || undefined,
+            semesterId: periodIds?.semesterId || undefined,
+            schoolYearId: periodIds?.schoolYearId || undefined,
+        }).then((teachers) => {
+            if (cancelled) return;
+            const mapped = (teachers || []).map((t) => ({
+                value: t.teacher_name,
+                label: t.teacher_name,
+                id: t.teacher_id,
+            }));
+            setFilteredTeachers(mapped);
+        }).catch(() => {
+            if (!cancelled) setFilteredTeachers([]);
+        }).finally(() => {
+            if (!cancelled) setIsLoadingTeachers(false);
+        });
+
+        return () => { cancelled = true; };
+    }, [formData.subject, selectedClassRecord?.id, periodIds?.semesterId, periodIds?.schoolYearId, subjectDisplayToCode]);
 
     // [NEW] Kiểm tra xem giáo viên có bận ở lớp khác không
     const getTeacherStatus = (teacherName) => {
@@ -232,17 +278,19 @@ function LessonModal({ mode, formData, onChange, onClose, onSubmit, allSessions,
                                 className={currentTeacherStatus?.busy ? 'select-error' : ''}
                                 value={formData.teacher}
                                 options={
-                                    allTeacherNames.length === 0
-                                        ? [{ value: "", label: "Không có giáo viên" }]
-                                        : allTeacherNames.map((name) => {
-                                            const status = getTeacherStatus(name);
-                                            return {
-                                                value: name,
-                                                label: status?.busy ? `${name} (Đang bận - Lớp ${status.class})` : `${name}`
-                                            };
-                                        })
+                                    isLoadingTeachers
+                                        ? [{ value: "", label: "Đang tải giáo viên..." }]
+                                        : displayedTeacherNames.length === 0
+                                            ? [{ value: "", label: "Không có giáo viên" }]
+                                            : displayedTeacherNames.map((name) => {
+                                                  const status = getTeacherStatus(name);
+                                                  return {
+                                                      value: name,
+                                                      label: status?.busy ? `${name} (Đang bận - Lớp ${status.class})` : `${name}`,
+                                                  };
+                                              })
                                 }
-                                disabled={allTeacherNames.length === 0}
+                                disabled={displayedTeacherNames.length === 0 && !isLoadingTeachers}
                                 onChange={(e) => emit("teacher", e.target.value)}
                             />
                             {currentTeacherStatus?.busy && (
@@ -305,6 +353,7 @@ function LessonModal({ mode, formData, onChange, onClose, onSubmit, allSessions,
 }
 
 export default function ManagementTimetable() {
+    const queryClient = useQueryClient();
     const {
         selectedSchoolYear,
         selectedTerm,
@@ -398,6 +447,63 @@ export default function ManagementTimetable() {
             cancelled = true;
         };
     }, [selectedSchoolYear, selectedTerm]);
+
+    // Helper: get teacher ID from name
+    const getTeacherIdByName = (teacherName) => {
+        const teacher = realTeachers.find(t => t.label === teacherName || t.value === teacherName || t.name === teacherName);
+        return teacher?.id || null;
+    };
+
+    // Helper: get room ID from name
+    const getRoomIdByName = (roomName) => {
+        const room = realRooms.find(r => r.value === roomName || r.name === roomName);
+        return room?.id || null;
+    };
+
+    // Helper: get class ID from name
+    const getClassIdByName = (className) => {
+        const cls = realClasses.find(c => c.value === className || c.label === className || c.name === className);
+        return cls?.id || null;
+    };
+
+    // Create mutation
+    const createMutation = useMutation({
+        mutationFn: (lessonData) => timetableService.createLesson(lessonData),
+        onSuccess: () => {
+            toast.success("Thêm tiết học thành công!");
+            queryClient.invalidateQueries({ queryKey: ["timetable"] });
+        },
+        onError: (error) => {
+            const msg = error?.response?.data?.message || error?.response?.data?.error || "Không thể thêm tiết học.";
+            toast.error(msg);
+        },
+    });
+
+    // Update mutation
+    const updateMutation = useMutation({
+        mutationFn: ({ id, data }) => timetableService.updateLesson(id, data),
+        onSuccess: () => {
+            toast.success("Cập nhật tiết học thành công!");
+            queryClient.invalidateQueries({ queryKey: ["timetable"] });
+        },
+        onError: (error) => {
+            const msg = error?.response?.data?.message || error?.response?.data?.error || "Không thể cập nhật tiết học.";
+            toast.error(msg);
+        },
+    });
+
+    // Delete mutation
+    const deleteMutation = useMutation({
+        mutationFn: (id) => timetableService.deleteLesson(id),
+        onSuccess: () => {
+            toast.success("Xóa tiết học thành công!");
+            queryClient.invalidateQueries({ queryKey: ["timetable"] });
+        },
+        onError: (error) => {
+            const msg = error?.response?.data?.message || error?.response?.data?.error || "Không thể xóa tiết học.";
+            toast.error(msg);
+        },
+    });
 
     const classOptions = realClasses.map((c) => c.value);
     const blockOptions = gradeBlockOptions;
@@ -701,6 +807,9 @@ export default function ManagementTimetable() {
                 } else {
                     nextData.periodEnd = prev.period;
                 }
+
+                // Reset teacher when subject changes, it will be re-filtered by the useEffect
+                nextData.teacher = "";
             } else if (name === "period") {
                 const p = Number(value);
                 nextData.period = p;
@@ -738,6 +847,7 @@ export default function ManagementTimetable() {
     const handleDeleteSession = (id) => {
         const confirmed = window.confirm("Bạn có chắc muốn xóa tiết học này không?");
         if (!confirmed) return;
+        deleteMutation.mutate(id);
         setSessions((prev) => prev.filter((item) => item.id !== id));
     };
 
@@ -752,19 +862,17 @@ export default function ManagementTimetable() {
             return;
         }
 
-        // [NEW] Final check for Quota and Teacher/Room availability
         const classSessions = sessions.filter(s => s.className === formData.className && s.year === selectedSchoolYear && s.term === selectedTerm);
-        
-        // Tính tổng số tiết của môn học hiện tại (bao gồm cả tiết đôi/ba...)
+
         const currentSubjectPeriods = classSessions
             .filter(s => s.subjectKey === formData.subject && s.id !== activeSessionId)
             .reduce((sum, s) => sum + ((s.periodEnd || s.period) - s.period + 1), 0);
-        
+
         const newPeriodsToAdd = (formData.periodEnd || formData.period) - formData.period + 1;
         const totalSubjectPeriods = currentSubjectPeriods + newPeriodsToAdd;
-        
+
         const quota = GDPT_2018_CONFIG.QUOTAS[formData.subject] || 3;
-        
+
         if (totalSubjectPeriods > quota) {
             window.alert(`Môn ${formData.subject} đã vượt quá định mức ${quota} tiết/tuần (Hiện tại: ${totalSubjectPeriods} tiết).`);
             return;
@@ -791,40 +899,67 @@ export default function ManagementTimetable() {
             return;
         }
 
-        if (activeModalMode === "edit" && activeSessionId) {
-            setSessions((prev) => prev.map((item) => (
-                item.id === activeSessionId
-                    ? {
-                        ...item,
-                        ...formData,
-                        subject: formData.subject,
-                        subjectKey: subjectDisplayToCode[formData.subject] || formData.subject,
-                        year: selectedSchoolYear,
-                        term: selectedTerm,
-                        start: getPeriodRangeLabel(formData.period, formData.period).split(" - ")[0],
-                        end: getPeriodRangeLabel(formData.period, formData.periodEnd).split(" - ")[1],
-                        color: SUBJECT_COLOR_MAP[subjectDisplayToCode[formData.subject] || formData.subject] || "teal",
-                    }
-                    : item
-            )));
-        } else {
-            setSessions((prev) => [
-                {
-                    id: Date.now(),
-                    year: selectedSchoolYear,
-                    term: selectedTerm,
-                    ...formData,
-                    subject: formData.subject,
-                    subjectKey: subjectDisplayToCode[formData.subject] || formData.subject,
-                    start: getPeriodRangeLabel(formData.period, formData.period).split(" - ")[0],
-                    end: getPeriodRangeLabel(formData.period, formData.periodEnd).split(" - ")[1],
-                    color: SUBJECT_COLOR_MAP[subjectDisplayToCode[formData.subject] || formData.subject] || "teal",
-                },
-                ...prev,
-            ]);
-        }
+        // Prepare API payload
+        const subjectCode = subjectDisplayToCode[formData.subject] || formData.subject;
+        const apiPayload = {
+            classId: getClassIdByName(formData.className),
+            subjectCode: subjectCode,
+            teacherId: getTeacherIdByName(formData.teacher),
+            roomId: getRoomIdByName(formData.room),
+            dayOfWeek: dayLabelToApiDayOfWeek(formData.day),
+            periodNumber: formData.period,
+            periodEnd: formData.periodEnd,
+            semesterId: periodIds.semesterId,
+            schoolYearId: periodIds.schoolYearId,
+            note: formData.note || "",
+            mode: formData.mode || MODE_META.offline,
+        };
 
-        closeModal();
+        if (activeModalMode === "edit" && activeSessionId) {
+            updateMutation.mutate(
+                { id: activeSessionId, data: apiPayload },
+                {
+                    onSuccess: () => {
+                        setSessions((prev) => prev.map((item) => (
+                            item.id === activeSessionId
+                                ? {
+                                    ...item,
+                                    ...formData,
+                                    subject: formData.subject,
+                                    subjectKey: subjectCode,
+                                    year: selectedSchoolYear,
+                                    term: selectedTerm,
+                                    start: getPeriodRangeLabel(formData.period, formData.period).split(" - ")[0],
+                                    end: getPeriodRangeLabel(formData.period, formData.periodEnd).split(" - ")[1],
+                                    color: SUBJECT_COLOR_MAP[subjectCode] || "teal",
+                                }
+                                : item
+                        )));
+                        closeModal();
+                    },
+                }
+            );
+        } else {
+            createMutation.mutate(apiPayload, {
+                onSuccess: () => {
+                    setSessions((prev) => [
+                        {
+                            id: Date.now(),
+                            year: selectedSchoolYear,
+                            term: selectedTerm,
+                            ...formData,
+                            subject: formData.subject,
+                            subjectKey: subjectCode,
+                            start: getPeriodRangeLabel(formData.period, formData.period).split(" - ")[0],
+                            end: getPeriodRangeLabel(formData.period, formData.periodEnd).split(" - ")[1],
+                            color: SUBJECT_COLOR_MAP[subjectCode] || "teal",
+                        },
+                        ...prev,
+                    ]);
+                    closeModal();
+                },
+            });
+        }
     };
 
     return (
@@ -899,6 +1034,8 @@ export default function ManagementTimetable() {
                     realSubjects={realSubjects}
                     realClasses={realClasses}
                     subjectDisplayToCode={subjectDisplayToCode}
+                    periodIds={periodIds}
+                    selectedClassRecord={selectedClassRecord}
                 />
             )}
 

@@ -46,6 +46,36 @@ export default function VpDisciplineCompetition({ isEmbedded = false, onClassCli
         [selectedSchoolYear, selectedTerm, selectedWeek],
     );
 
+    // Fetch grade levels from API
+    const { data: gradeLevelsData = [] } = useQuery({
+        queryKey: ["grade-levels-competition"],
+        queryFn: async () => {
+            const res = await vpDisciplineService.getGradeLevels();
+            return res?.data || [];
+        },
+        staleTime: 10 * 60_000,
+    });
+
+    // Build grade options from API
+    const gradeOptions = useMemo(() => {
+        const defaultOption = [{ value: "all", label: "Tất cả" }];
+        if (!gradeLevelsData.length) {
+            return [
+                { value: "all", label: "Tất cả" },
+                { value: "10", label: "Khối 10" },
+                { value: "11", label: "Khối 11" },
+                { value: "12", label: "Khối 12" },
+            ];
+        }
+        const apiOptions = gradeLevelsData
+            .map(gl => ({
+                value: String(gl.level_number || gl.levelNumber || gl.id),
+                label: gl.name || `Khối ${gl.level_number || gl.levelNumber}`,
+            }))
+            .sort((a, b) => parseInt(a.value) - parseInt(b.value));
+        return [...defaultOption, ...apiOptions];
+    }, [gradeLevelsData]);
+
     const { data: rankingResult, isLoading, isError } = useQuery({
         queryKey: ["discipline-rankings", startDate, endDate, selectedTerm?.id],
         queryFn: async () => {
@@ -177,12 +207,7 @@ export default function VpDisciplineCompetition({ isEmbedded = false, onClassCli
                             variant="custom"
                             value={selectedGrade}
                             onChange={(e) => setSelectedGrade(e.target.value)}
-                            options={[
-                                { value: "all", label: "Tất cả" },
-                                { value: "10", label: "Khối 10" },
-                                { value: "11", label: "Khối 11" },
-                                { value: "12", label: "Khối 12" },
-                            ]}
+                            options={gradeOptions}
                         />
                     </div>
                     <div className="filter-group" style={{ minWidth: "220px" }}>

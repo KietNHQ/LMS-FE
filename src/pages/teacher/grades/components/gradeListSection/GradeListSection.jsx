@@ -101,12 +101,9 @@ export default function GradeListSection({
                     <article key={record.id} className="grade-list-item">
                         <button
                             type="button"
-                        <button
-                            type="button"
                             className={`grade-list-item__info ${isLocked ? 'is-locked-row' : ''}`}
                             onClick={() => !isLocked && onOpenEditDialog?.(record)}
                             disabled={!canEdit}
-                        >
                         >
                             <strong>{pageStartIndex + index + 1}. {record.name}</strong>
                             <span>{record.code}</span>

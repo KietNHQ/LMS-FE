@@ -54,6 +54,33 @@ export default function BonusPointModal({ isOpen, onClose, onSuccess, initialCla
         },
     });
 
+    // Fetch grade levels from API
+    const { data: gradeLevelsData = [] } = useQuery({
+        queryKey: ["grade-levels-bonus"],
+        queryFn: async () => {
+            const res = await vpDisciplineService.getGradeLevels();
+            return res?.data || [];
+        },
+        staleTime: 10 * 60_000,
+    });
+
+    // Build grade options from API
+    const gradeOptions = useMemo(() => {
+        if (!gradeLevelsData.length) {
+            return [
+                { value: "10", label: "Khối 10" },
+                { value: "11", label: "Khối 11" },
+                { value: "12", label: "Khối 12" },
+            ];
+        }
+        return gradeLevelsData
+            .map(gl => ({
+                value: String(gl.level_number || gl.levelNumber || gl.id),
+                label: gl.name || `Khối ${gl.level_number || gl.levelNumber}`,
+            }))
+            .sort((a, b) => parseInt(a.value) - parseInt(b.value));
+    }, [gradeLevelsData]);
+
     // Transform API students to component format
     const students = useMemo(() => {
         return apiStudents.map(s => ({
@@ -116,7 +143,7 @@ export default function BonusPointModal({ isOpen, onClose, onSuccess, initialCla
                 setSelectedClass(initialClass);
                 setSelectedGrade(initialClass.slice(0, 2));
             } else {
-                setSelectedGrade("10");
+                setSelectedGrade(gradeOptions[0]?.value || "10");
                 setSelectedClass("");
             }
             setTargetType("collective");
@@ -125,7 +152,7 @@ export default function BonusPointModal({ isOpen, onClose, onSuccess, initialCla
             setCustomPoints("");
             setComment("");
         }
-    }, [isOpen, initialClass, rewardCategories]);
+    }, [isOpen, initialClass, rewardCategories, gradeOptions]);
 
     // Update category when rewardTypes load
     useEffect(() => {
@@ -142,12 +169,6 @@ export default function BonusPointModal({ isOpen, onClose, onSuccess, initialCla
             setCustomPoints(item.points.toString());
         }
     }, [selectedCategory, selectedReasonKey, rewardCategories]);
-
-    const gradeOptions = [
-        { value: "10", label: "Khối 10" },
-        { value: "11", label: "Khối 11" },
-        { value: "12", label: "Khối 12" }
-    ];
 
     const classOptions = useMemo(() => {
         const classes = [...new Set(students.filter(s => s.grade === selectedGrade).map(s => s.class))];

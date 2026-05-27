@@ -1,9 +1,10 @@
 import React from "react";
-import { FiStar, FiClock, FiMapPin, FiInfo, FiActivity, FiTrendingUp, FiCheckCircle, FiPlus, FiEdit3, FiTrash2 } from "react-icons/fi";
+import { FiStar, FiClock, FiMapPin, FiInfo, FiActivity, FiTrendingUp, FiCheckCircle, FiPlus, FiEdit3, FiTrash2, FiBookOpen } from "react-icons/fi";
 import "./HomeroomOverviewSection.css";
 
 export default function HomeroomOverviewSection({ 
     data, 
+    lessonMarkers,
     onAddOfficersClick, 
     onCreateActivityClick,
     onEditActivityClick,
@@ -126,6 +127,44 @@ export default function HomeroomOverviewSection({
 
             {/* Bottom row: Existing elements properly styled */}
             <div className="overview-container">
+                {/* Mốc tiết học - Teacher's own lesson markers */}
+                {lessonMarkers && lessonMarkers.length > 0 && (
+                    <div className="overview-card lesson-markers-card modern-shadow">
+                        <div className="card-header">
+                            <div className="header-icon gradient-purple">
+                                <FiBookOpen />
+                            </div>
+                            <h2>Mốc tiết học</h2>
+                        </div>
+                        <div className="card-content">
+                            <div className="lesson-markers-list">
+                                {lessonMarkers.map((day) => (
+                                    <div key={day.date} className={`lesson-marker-day ${day.isToday ? "is-today" : ""}`}>
+                                        <div className="marker-day-header">
+                                            <div className="marker-date-block">
+                                                <span className="marker-day-label">{day.dayLabel}</span>
+                                                <span className="marker-date">{day.displayDate}</span>
+                                                {day.isToday && <span className="today-badge">Hôm nay</span>}
+                                            </div>
+                                            <span className="marker-count">{day.count} tiết</span>
+                                        </div>
+                                        <div className="marker-lessons">
+                                            {day.lessons.map((lesson, idx) => (
+                                                <div key={idx} className="marker-lesson-item">
+                                                    <span className="marker-period">T{lesson.period}</span>
+                                                    <span className="marker-subject">{lesson.subjectName}</span>
+                                                    <span className="marker-class">{lesson.className}</span>
+                                                    <span className="marker-room">{lesson.roomName}</span>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                )}
+
                 {/* Information Column */}
                 <div className="overview-card info-card modern-shadow">
                     <div className="card-header">

@@ -52,8 +52,36 @@ export default function VpDisciplineConduct({ isEmbedded = false }) {
     const [searchTerm, setSearchTerm] = useState("");
     const [currentPage, setCurrentPage] = useState(1);
     const [conductGrades, setConductGrades] = useState({});
+
+    // Fetch grade levels from API
+    const { data: gradeLevelsData = [] } = useQuery({
+        queryKey: ["grade-levels-conduct"],
+        queryFn: async () => {
+            const res = await vpDisciplineService.getGradeLevels();
+            return res?.data || [];
+        },
+        staleTime: 10 * 60_000,
+    });
+
+    // Build grade options from API
+    const gradeOptions = useMemo(() => {
+        if (!gradeLevelsData.length) {
+            return [
+                { value: "10", label: "Khối 10" },
+                { value: "11", label: "Khối 11" },
+                { value: "12", label: "Khối 12" },
+            ];
+        }
+        return gradeLevelsData
+            .map(gl => ({
+                value: String(gl.level_number || gl.levelNumber || gl.id),
+                label: gl.name || `Khối ${gl.level_number || gl.levelNumber}`,
+            }))
+            .sort((a, b) => parseInt(a.value) - parseInt(b.value));
+    }, [gradeLevelsData]);
     const [viewMode, setViewMode] = useState("weekly"); // "weekly" | "annual"
-    const [hkSemesterIds, setHkSemesterIds] = useState({ hk1: null, hk2: null });
+    const [hk1Id, setHk1Id] = useState(null);
+    const [hk2Id, setHk2Id] = useState(null);
 
     useEffect(() => {
         if (urlClass) {
@@ -67,11 +95,14 @@ export default function VpDisciplineConduct({ isEmbedded = false }) {
     useEffect(() => {
         let cancelled = false;
         const resolve = async () => {
-            const [hk1Id, hk2Id] = await Promise.all([
+            const [id1, id2] = await Promise.all([
                 resolveSemesterId(selectedSchoolYear, "hk1"),
                 resolveSemesterId(selectedSchoolYear, "hk2"),
             ]);
-            if (!cancelled) setHkSemesterIds({ hk1: hk1Id, hk2: hk2Id });
+            if (!cancelled) {
+                setHk1Id(id1);
+                setHk2Id(id2);
+            }
         };
         resolve();
         return () => { cancelled = true; };
@@ -79,7 +110,7 @@ export default function VpDisciplineConduct({ isEmbedded = false }) {
 
     // Load class list
     const { data: classesData } = useQuery({
-        queryKey: ["classes-for-conduct", selectedSchoolYear],
+        queryKey: ["classes-for-conduct", selectedSchoolYear, selectedGrade],
         queryFn: async () => {
             const res = await vpDisciplineService.callByKey("get_classes", {
                 params: { schoolYearId: selectedSchoolYear, gradeLevelId: selectedGrade === "all" ? undefined : parseInt(selectedGrade) },
@@ -127,17 +158,17 @@ export default function VpDisciplineConduct({ isEmbedded = false }) {
 
     // Load annual conduct summary for the class
     const { data: annualData, isLoading: annualLoading, refetch: refetchAnnual } = useQuery({
-        queryKey: ["conduct-class-summary", selectedClass, hkSemesterIds.hk1, hkSemesterIds.hk2],
+        queryKey: ["conduct-class-summary", selectedClass, hk1Id, hk2Id],
         queryFn: async () => {
-            if (!selectedClass || !hkSemesterIds.hk1 || !hkSemesterIds.hk2) return null;
+            if (!selectedClass || !hk1Id || !hk2Id) return null;
             const res = await vpDisciplineService.getConductClassSummary(
                 selectedClass,
-                hkSemesterIds.hk1,
-                hkSemesterIds.hk2,
+                hk1Id,
+                hk2Id,
             );
             return res?.data || null;
         },
-        enabled: Boolean(selectedClass && hkSemesterIds.hk1 && hkSemesterIds.hk2),
+        enabled: Boolean(selectedClass && hk1Id && hk2Id),
         staleTime: 60_000,
     });
 
@@ -212,7 +243,7 @@ export default function VpDisciplineConduct({ isEmbedded = false }) {
         let saved = 0;
         let errors = 0;
         for (const [enrollmentId, grade] of Object.entries(conductGrades)) {
-            const semesterId = selectedTerm === "hk2" ? hkSemesterIds.hk2 : hkSemesterIds.hk1;
+            const semesterId = selectedTerm === "hk2" ? hk2Id : hk1Id;
             if (!semesterId) continue;
             try {
                 await handleSaveStudentConduct(enrollmentId, semesterId, grade);
@@ -237,7 +268,7 @@ export default function VpDisciplineConduct({ isEmbedded = false }) {
         }
         try {
             if (viewMode === "annual") {
-                const semesterId = selectedTerm === "hk2" ? hkSemesterIds.hk2 : hkSemesterIds.hk1;
+                const semesterId = selectedTerm === "hk2" ? hk2Id : hk1Id;
                 if (semesterId) {
                     await vpDisciplineService.finalizeConductSemester(semesterId);
                 }
@@ -333,11 +364,7 @@ export default function VpDisciplineConduct({ isEmbedded = false }) {
                                 const firstClass = filteredClassOptions.find((c) => !newGrade || newGrade === "all" || c.grade === newGrade);
                                 if (firstClass) setSelectedClass(firstClass.value);
                             }}
-                            options={[
-                                { value: "10", label: "Khối 10" },
-                                { value: "11", label: "Khối 11" },
-                                { value: "12", label: "Khối 12" },
-                            ]}
+                            options={gradeOptions}
                         />
                     </div>
                     <div className="filter-group">
@@ -468,8 +495,8 @@ export default function VpDisciplineConduct({ isEmbedded = false }) {
                                         </thead>
                                         <tbody>
                                             {(annualData.students || []).map((student) => {
-                                                const hk1Key = student.enrollmentId + "__" + hkSemesterIds.hk1;
-                                                const hk2Key = student.enrollmentId + "__" + hkSemesterIds.hk2;
+                                                const hk1Key = student.enrollmentId + "__" + hk1Id;
+                                                const hk2Key = student.enrollmentId + "__" + hk2Id;
                                                 const hk1Val = conductGrades[hk1Key] || student.hk1Level || "";
                                                 const hk2Val = conductGrades[hk2Key] || student.hk2Level || "";
                                                 const annualVal = student.annualLevel || "";

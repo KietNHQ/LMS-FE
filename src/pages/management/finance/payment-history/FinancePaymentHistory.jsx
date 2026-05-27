@@ -181,7 +181,7 @@ export default function FinancePaymentHistory() {
         } finally {
             setIsLoading(false);
         }
-    }, []);
+    }, [selectedSchoolYear?.id, selectedTerm?.id]);
 
     const [paginatedRows, setPaginatedRows] = useState([]);
 

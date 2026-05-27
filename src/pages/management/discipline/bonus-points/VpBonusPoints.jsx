@@ -4,6 +4,7 @@
  */
 
 import { useState, useEffect, useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { 
     FiStar, FiAward, FiUsers, FiFilter, FiDownload, 
     FiPlus, FiEdit2, FiTrash2, FiChevronLeft, FiChevronRight,
@@ -15,6 +16,8 @@ import { LoadingSpinner } from "../../../../components/common";
 import Select from "../../../../components/ui/Select/Select";
 import Pagination from "../../../../components/ui/Pagination/Pagination";
 import vpBonusPointService from "../../../../services/pages/management/vp-discipline/vpBonusPointService";
+import { vpDisciplineService } from "../../../../services/pages/management/vp-discipline";
+import { resolveSemesterId } from "../../../../services/shared/schoolYearLookup";
 import "./VpBonusPoints.css";
 
 const CATEGORY_LABELS = {
@@ -33,6 +36,13 @@ const CATEGORY_COLORS = {
 
 export default function VpBonusPoints() {
     const { selectedSchoolYear, selectedTerm, handleYearArrow, handleTermChange } = useSchoolYearTerm();
+    
+    // Resolve semesterId for API calls
+    const { data: semesterId } = useQuery({
+        queryKey: ["semester-id", selectedSchoolYear, selectedTerm],
+        queryFn: () => resolveSemesterId(selectedSchoolYear, selectedTerm || "hk1"),
+        enabled: Boolean(selectedSchoolYear),
+    });
     
     // State
     const [isLoading, setIsLoading] = useState(true);
@@ -60,36 +70,90 @@ export default function VpBonusPoints() {
         notes: "",
     });
 
-    // Mock classes for demo
-    const classOptions = {
-        "10": [
-            { value: "10A1", label: "10A1" },
-            { value: "10A2", label: "10A2" },
-            { value: "10A3", label: "10A3" },
-        ],
-        "11": [
-            { value: "11A1", label: "11A1" },
-            { value: "11A2", label: "11A2" },
-            { value: "11B1", label: "11B1" },
-        ],
-        "12": [
-            { value: "12A1", label: "12A1" },
-            { value: "12A2", label: "12A2" },
-            { value: "12C3", label: "12C3" },
-        ],
-    };
+    // Fetch classes from API
+    const { data: classesData = [] } = useQuery({
+        queryKey: ["classes-for-bonus", selectedSchoolYear, selectedGrade],
+        queryFn: async () => {
+            const res = await vpDisciplineService.callByKey("get_classes", {
+                params: { schoolYearId: selectedSchoolYear, gradeLevelId: selectedGrade === "all" ? undefined : parseInt(selectedGrade) },
+            });
+            return res?.data || [];
+        },
+        select: (data) => (Array.isArray(data) ? data : data?.data || []),
+        staleTime: 5 * 60_000,
+    });
 
-    // Mock students for demo
-    const mockStudents = useMemo(() => [
-        { id: 1, enrollmentId: 101, studentCode: "HS001", name: "Nguyễn Văn A", className: "10A1", grade: "10", totalBonus: 0.2 },
-        { id: 2, enrollmentId: 102, studentCode: "HS002", name: "Trần Thị B", className: "10A1", grade: "10", totalBonus: 0.3 },
-        { id: 3, enrollmentId: 103, studentCode: "HS003", name: "Lê Văn C", className: "11A1", grade: "11", totalBonus: 0.1 },
-        { id: 4, enrollmentId: 104, studentCode: "HS004", name: "Phạm Minh D", className: "11A1", grade: "11", totalBonus: 0.5 },
-        { id: 5, enrollmentId: 105, studentCode: "HS005", name: "Hoàng Anh E", className: "12A1", grade: "12", totalBonus: 0.4 },
-        { id: 6, enrollmentId: 106, studentCode: "HS006", name: "Vũ Thu F", className: "12A1", grade: "12", totalBonus: 0.2 },
-        { id: 7, enrollmentId: 107, studentCode: "HS007", name: "Đỗ G", className: "10A2", grade: "10", totalBonus: 0.1 },
-        { id: 8, enrollmentId: 108, studentCode: "HS008", name: "Bùi H", className: "11A2", grade: "11", totalBonus: 0.3 },
-    ], []);
+    // Build class options from API
+    const classOptions = useMemo(() => {
+        const grouped = {};
+        classesData.forEach(c => {
+            const grade = String(c.grade_level || c.gradeLevel || (c.name || "").slice(0, 2));
+            if (!grouped[grade]) grouped[grade] = [];
+            grouped[grade].push({ value: c.id || c.name || c.class_name || "", label: c.name || c.class_name || "" });
+        });
+        return grouped;
+    }, [classesData]);
+
+    // Fetch grade levels from API
+    const { data: gradeLevelsData = [] } = useQuery({
+        queryKey: ["grade-levels-bonus-page"],
+        queryFn: async () => {
+            const res = await vpDisciplineService.getGradeLevels();
+            return res?.data || [];
+        },
+        staleTime: 10 * 60_000,
+    });
+
+    // Build grade options from API
+    const gradeOptions = useMemo(() => {
+        const defaultOption = [{ value: "all", label: "Tất cả khối" }];
+        if (!gradeLevelsData.length) {
+            return [
+                { value: "all", label: "Tất cả khối" },
+                { value: "10", label: "Khối 10" },
+                { value: "11", label: "Khối 11" },
+                { value: "12", label: "Khối 12" },
+            ];
+        }
+        const apiOptions = gradeLevelsData
+            .map(gl => ({
+                value: String(gl.level_number || gl.levelNumber || gl.id),
+                label: gl.name || `Khối ${gl.level_number || gl.levelNumber}`,
+            }))
+            .sort((a, b) => parseInt(a.value) - parseInt(b.value));
+        return [...defaultOption, ...apiOptions];
+    }, [gradeLevelsData]);
+
+    // Fetch students for selected class from API
+    const { data: apiStudents = [] } = useQuery({
+        queryKey: ["class-students-bonus", selectedClass, semesterId],
+        queryFn: async () => {
+            if (!selectedClass || selectedClass === "all") return [];
+            try {
+                const res = await vpDisciplineService.callByKey("get_classes_by_id_students", {
+                    pathParams: { id: selectedClass },
+                });
+                return res?.data || res || [];
+            } catch {
+                return [];
+            }
+        },
+        enabled: Boolean(selectedClass && selectedClass !== "all"),
+        staleTime: 30_000,
+    });
+
+    // Transform API students
+    const apiFormattedStudents = useMemo(() => {
+        return apiStudents.map(s => ({
+            id: s.id || s.student_id || s.enrollmentId,
+            enrollmentId: s.enrollmentId || s.studentEnrollmentId || s.id,
+            studentCode: s.student_code || s.code || s.id || "",
+            name: s.name || s.full_name || s.studentName || "",
+            className: s.class_name || s.className || s.class || "",
+            grade: s.grade || s.grade_level || s.gradeLevel || "",
+            totalBonus: 0,
+        }));
+    }, [apiStudents]);
 
     // Load data
     useEffect(() => {
@@ -106,24 +170,22 @@ export default function VpBonusPoints() {
             } else if (Array.isArray(rulesResponse)) {
                 setRules(rulesResponse);
             } else {
-                // Use default rules if API not available
                 setRules(getDefaultRules());
             }
             
-            // For demo, use mock students
-            setStudents(mockStudents);
+            // Use API students if available, otherwise empty
+            setStudents(apiFormattedStudents);
             
-            // Mock class summary
+            // Mock class summary until API available
             setClassSummary({
-                totalStudents: mockStudents.length,
-                totalAwards: mockStudents.filter(s => s.totalBonus > 0).length,
-                totalPoints: mockStudents.reduce((sum, s) => sum + s.totalBonus, 0),
+                totalStudents: apiFormattedStudents.length,
+                totalAwards: 0,
+                totalPoints: 0,
             });
         } catch (error) {
             console.error("Failed to load bonus points data:", error);
-            // Fallback to default rules
             setRules(getDefaultRules());
-            setStudents(mockStudents);
+            setStudents([]);
             toast.error("Không thể tải dữ liệu. Sử dụng dữ liệu mặc định.");
         } finally {
             setIsLoading(false);
@@ -145,7 +207,7 @@ export default function VpBonusPoints() {
     const filteredStudents = useMemo(() => {
         return students.filter(student => {
             const matchGrade = selectedGrade === "all" || student.grade === selectedGrade;
-            const matchClass = selectedClass === "all" || student.className === selectedClass;
+            const matchClass = selectedClass === "all" || selectedClass === "all" || student.className === selectedClass;
             const matchSearch = searchTerm === "" || 
                 student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                 student.studentCode.toLowerCase().includes(searchTerm.toLowerCase());
@@ -204,15 +266,14 @@ export default function VpBonusPoints() {
             const rule = rules.find(r => r.code === awardForm.ruleCode);
             const value = awardForm.value || rule?.per_semester || rule?.per_year || rule?.flat_amount || 0.1;
 
-            // In production, this would call the API
-            // await vpBonusPointService.awardBonusPoint({
-            //     enrollmentId: awardForm.enrollmentId,
-            //     ruleCode: awardForm.ruleCode,
-            //     schoolYearId: selectedSchoolYear,
-            //     semesterId: awardForm.semesterId,
-            //     value,
-            //     notes: awardForm.notes,
-            // });
+            await vpBonusPointService.awardBonusPoint({
+                enrollmentId: awardForm.enrollmentId,
+                ruleCode: awardForm.ruleCode,
+                schoolYearId: selectedSchoolYear,
+                semesterId: awardForm.semesterId,
+                value,
+                notes: awardForm.notes,
+            });
 
             toast.success(`Đã cộng ${value} điểm cho học sinh!`);
             setIsModalOpen(false);
@@ -322,12 +383,7 @@ export default function VpBonusPoints() {
                                         setSelectedGrade(e.target.value);
                                         setSelectedClass("all");
                                     }}
-                                    options={[
-                                        { value: "all", label: "Tất cả khối" },
-                                        { value: "10", label: "Khối 10" },
-                                        { value: "11", label: "Khối 11" },
-                                        { value: "12", label: "Khối 12" },
-                                    ]}
+                                    options={gradeOptions}
                                 />
                             </div>
                             {selectedGrade !== "all" && (

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { PageHeader, WeekPicker, EventCalendar } from "../../../../components/common";
 import DisciplineHeaderActions from "../components/DisciplineHeaderActions";
 import Select from "../../../../components/ui/Select/Select";
@@ -7,6 +7,7 @@ import { resolveSemesterId } from "../../../../services/shared/schoolYearLookup"
 import { vpDisciplineService } from "../../../../services/pages/management/vp-discipline";
 import { FiAlertTriangle, FiUsers, FiClock, FiAward, FiBarChart2, FiArrowRight } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import { INITIAL_CALENDAR_EVENTS, CALENDAR_EVENT_TYPES } from "../../../../components/common/EventCalendar/eventData";
 import "./VpDisciplineDashboard.css";
 
@@ -19,6 +20,44 @@ export default function VpDisciplineDashboard() {
     const [selectedWeek, setSelectedWeek] = useState(10);
     const [leaderboardGrade, setLeaderboardGrade] = useState("all");
     const [conductGrade, setConductGrade] = useState("all");
+
+    // Resolve semesterId from selectedSchoolYear and selectedTerm
+    const { data: resolvedSemesterId } = useQuery({
+        queryKey: ["semester-id", selectedSchoolYear, selectedTerm],
+        queryFn: () => resolveSemesterId(selectedSchoolYear, selectedTerm || "hk1"),
+        enabled: Boolean(selectedSchoolYear),
+        staleTime: 5 * 60 * 1000,
+    });
+
+    // Fetch grade levels from API
+    const { data: gradeLevelsData = [] } = useQuery({
+        queryKey: ["grade-levels-dashboard"],
+        queryFn: async () => {
+            const res = await vpDisciplineService.getGradeLevels();
+            return res?.data || [];
+        },
+        staleTime: 10 * 60_000,
+    });
+
+    // Build grade options from API
+    const gradeOptions = useMemo(() => {
+        const defaultOption = [{ value: "all", label: "Tất cả khối" }];
+        if (!gradeLevelsData.length) {
+            return [
+                { value: "all", label: "Tất cả khối" },
+                { value: "10", label: "Khối 10" },
+                { value: "11", label: "Khối 11" },
+                { value: "12", label: "Khối 12" },
+            ];
+        }
+        const apiOptions = gradeLevelsData
+            .map(gl => ({
+                value: String(gl.level_number || gl.levelNumber || gl.id),
+                label: gl.name || `Khối ${gl.level_number || gl.levelNumber}`,
+            }))
+            .sort((a, b) => parseInt(a.value) - parseInt(b.value));
+        return [...defaultOption, ...apiOptions];
+    }, [gradeLevelsData]);
 
     // ── Dashboard state (populated from real API) ──
     const [stats, setStats] = useState({
@@ -128,14 +167,99 @@ export default function VpDisciplineDashboard() {
         : fullLeaderboard.filter(l => l.grade === parseInt(leaderboardGrade))
     ).slice(0, 3);
 
-    const chartData = [
-        { day: 'T2', value: 12, h: '40%' },
-        { day: 'T3', value: 8, h: '30%' },
-        { day: 'T4', value: 18, h: '60%' },
-        { day: 'T5', value: 25, h: '90%' },
-        { day: 'T6', value: 10, h: '35%' },
-        { day: 'T7', value: 5, h: '15%' },
-    ];
+    // Chart data from real violations trend API
+    const { data: trendRaw = [] } = useQuery({
+        queryKey: ["discipline-dashboard-trend", resolvedSemesterId],
+        queryFn: async () => {
+            if (!resolvedSemesterId) return [];
+            try {
+                const res = await vpDisciplineService.getViolationsTrend({ params: { semesterId: resolvedSemesterId } });
+                return res?.data || res || [];
+            } catch { return []; }
+        },
+        enabled: Boolean(resolvedSemesterId),
+        staleTime: 60_000,
+    });
+
+    const chartData = useMemo(() => {
+        if (!trendRaw || !Array.isArray(trendRaw) || trendRaw.length === 0) {
+            return [
+                { day: 'T2', value: 0, h: '10%' },
+                { day: 'T3', value: 0, h: '10%' },
+                { day: 'T4', value: 0, h: '10%' },
+                { day: 'T5', value: 0, h: '10%' },
+                { day: 'T6', value: 0, h: '10%' },
+                { day: 'T7', value: 0, h: '10%' },
+            ];
+        }
+        // Group by month label
+        const maxVal = Math.max(...trendRaw.map(r => Number(r.total_violations || 0)), 1);
+        return trendRaw.slice(0, 6).map(r => ({
+            day: r.month ? r.month.slice(5) : '?',
+            value: Number(r.total_violations || 0),
+            h: `${Math.max(4, (Number(r.total_violations || 0) / maxVal) * 100)}%`,
+        }));
+    }, [trendRaw]);
+
+    // Total students count from API
+    const { data: totalStudentsRaw } = useQuery({
+        queryKey: ["discipline-dashboard-total-students", resolvedSemesterId],
+        queryFn: async () => {
+            if (!resolvedSemesterId) return 0;
+            try {
+                const res = await vpDisciplineService.getReportSummary(resolvedSemesterId);
+                return res?.data?.totalStudents || res?.totalStudents || 0;
+            } catch { return 0; }
+        },
+        enabled: Boolean(resolvedSemesterId),
+        staleTime: 60_000,
+    });
+
+    const totalStudentsDisplay = totalStudentsRaw > 0
+        ? totalStudentsRaw.toLocaleString('vi-VN')
+        : "—";
+
+    // Fetch conduct distribution from API
+    const { data: conductStatsRaw } = useQuery({
+        queryKey: ["discipline-dashboard-conduct", resolvedSemesterId],
+        queryFn: async () => {
+            if (!resolvedSemesterId) return null;
+            try {
+                const res = await vpDisciplineService.getReportSummary(resolvedSemesterId);
+                // Try to get conduct distribution from summary response
+                return {
+                    tot: res?.totCount || res?.tot_count || 0,
+                    kha: res?.khaCount || res?.kha_count || 0,
+                    tb: res?.tbCount || res?.tb_count || 0,
+                    yeu: res?.yeuCount || res?.yeu_count || 0,
+                    totPct: res?.totPct || 0,
+                    khaPct: res?.khaPct || 0,
+                    tbPct: res?.tbPct || 0,
+                    yeuPct: res?.yeuPct || 0,
+                };
+            } catch { return null; }
+        },
+        enabled: Boolean(resolvedSemesterId),
+        staleTime: 60_000,
+    });
+
+    const conductData = useMemo(() => {
+        if (!conductStatsRaw || !totalStudentsRaw) {
+            return [
+                { label: "Hạnh kiểm Tốt", pct: 0, count: 0, cls: "tot", width: "10%" },
+                { label: "Hạnh kiểm Khá", pct: 0, count: 0, cls: "kha", width: "10%" },
+                { label: "Trung bình", pct: 0, count: 0, cls: "tb", width: "10%" },
+                { label: "Hạnh kiểm Yếu", pct: 0, count: 0, cls: "yeu", width: "10%" },
+            ];
+        }
+        const total = totalStudentsRaw || 1;
+        return [
+            { label: "Hạnh kiểm Tốt", pct: conductStatsRaw.totPct, count: conductStatsRaw.tot, cls: "tot", width: `${Math.max(1, conductStatsRaw.totPct)}%` },
+            { label: "Hạnh kiểm Khá", pct: conductStatsRaw.khaPct, count: conductStatsRaw.kha, cls: "kha", width: `${Math.max(1, conductStatsRaw.khaPct)}%` },
+            { label: "Trung bình", pct: conductStatsRaw.tbPct, count: conductStatsRaw.tb, cls: "tb", width: `${Math.max(1, conductStatsRaw.tbPct)}%` },
+            { label: "Hạnh kiểm Yếu", pct: conductStatsRaw.yeuPct, count: conductStatsRaw.yeu, cls: "yeu", width: `${Math.max(1, conductStatsRaw.yeuPct)}%` },
+        ];
+    }, [conductStatsRaw, totalStudentsRaw]);
 
     return (
         <div className="vp-dashboard discipline-layout">
@@ -278,12 +402,7 @@ export default function VpDisciplineDashboard() {
                             variant="custom"
                             value={leaderboardGrade}
                             onChange={(e) => setLeaderboardGrade(e.target.value)}
-                            options={[
-                                { value: "all", label: "Tất cả khối" },
-                                { value: "10", label: "Khối 10" },
-                                { value: "11", label: "Khối 11" },
-                                { value: "12", label: "Khối 12" }
-                            ]}
+                            options={gradeOptions}
                         />
                     </div>
                     <div className="mini-stat-list">
@@ -311,7 +430,7 @@ export default function VpDisciplineDashboard() {
                         <FiBarChart2 /> 
                         Phân bộ Hạnh kiểm {conductGrade === 'all' ? 'Toàn trường' : `Khối ${conductGrade}`}
                         <span className="header-count-badge">
-                            (Tổng {conductGrade === 'all' ? '1,250' : (conductGrade === '10' ? '420' : (conductGrade === '11' ? '410' : '420'))} HS)
+                            (Tổng {totalStudentsDisplay} HS)
                         </span>
                     </h3>
                     <Select 
@@ -319,51 +438,21 @@ export default function VpDisciplineDashboard() {
                         variant="custom"
                         value={conductGrade}
                         onChange={(e) => setConductGrade(e.target.value)}
-                        options={[
-                            { value: "all", label: "Toàn trường" },
-                            { value: "10", label: "Khối 10" },
-                            { value: "11", label: "Khối 11" },
-                            { value: "12", label: "Khối 12" }
-                        ]}
+                        options={gradeOptions}
                     />
                 </div>
                 <div className="pulse-bar-container">
+                    {conductData.map(row => (
                     <div className="pulse-row">
                         <div className="pulse-label">
-                            <span>Hạnh kiểm Tốt (85.2%)</span>
-                            <strong>1,065 học sinh</strong>
+                            <span>{row.label} ({row.pct > 0 ? row.pct.toFixed(1) + '%' : '—'})</span>
+                            <strong>{row.count > 0 ? row.count.toLocaleString('vi-VN') + ' học sinh' : 'Chưa có dữ liệu'}</strong>
                         </div>
                         <div className="pulse-track">
-                            <div className="pulse-fill tot" style={{width: '85.2%'}}></div>
+                            <div className={`pulse-fill ${row.cls}`} style={{width: row.width}}></div>
                         </div>
                     </div>
-                    <div className="pulse-row">
-                        <div className="pulse-label">
-                            <span>Hạnh kiểm Khá (10.4%)</span>
-                            <strong>130 học sinh</strong>
-                        </div>
-                        <div className="pulse-track">
-                            <div className="pulse-fill kha" style={{width: '10.4%'}}></div>
-                        </div>
-                    </div>
-                    <div className="pulse-row">
-                        <div className="pulse-label">
-                            <span>Trung bình (3.8%)</span>
-                            <strong>48 học sinh</strong>
-                        </div>
-                        <div className="pulse-track">
-                            <div className="pulse-fill tb" style={{width: '3.8%'}}></div>
-                        </div>
-                    </div>
-                    <div className="pulse-row">
-                        <div className="pulse-label">
-                            <span>Hạnh kiểm Yếu (0.6%)</span>
-                            <strong>7 học sinh</strong>
-                        </div>
-                        <div className="pulse-track">
-                            <div className="pulse-fill yeu" style={{width: '0.6%'}}></div>
-                        </div>
-                    </div>
+                    ))}
                 </div>
             </div>
         </div>

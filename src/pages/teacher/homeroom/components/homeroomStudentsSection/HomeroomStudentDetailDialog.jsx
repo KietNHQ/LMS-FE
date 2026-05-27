@@ -49,8 +49,8 @@ export default function HomeroomStudentDetailDialog({
   });
 
   // Use parent-provided attendance/merit data if available, fallback to fetched counts
-  const meritPoints = student.meritPoints ?? studentRewards.length ?? 0;
-  const violationCount = studentViolations.length ?? student.violations ?? 0;
+  const meritPoints = student?.meritPoints ?? studentRewards.length ?? 0;
+  const violationCount = studentViolations.length ?? student?.violations ?? 0;
 
   return (
     <Modal 

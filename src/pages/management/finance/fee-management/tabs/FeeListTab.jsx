@@ -114,7 +114,7 @@ export default function FeeListTab({ schoolYear, term }) {
 
     useEffect(() => {
         loadDebts();
-    }, [schoolYear, term, filterStatus, selectedClass, filterScope]);
+    }, [schoolYear, term]);
 
     // Build Sequential Class Options matching chosen Grade Level
     const classOptions = useMemo(() => {
@@ -265,7 +265,8 @@ export default function FeeListTab({ schoolYear, term }) {
 
         try {
             const res = await financeService.recordDebtPayment(modalData.id, {
-                body: { amount: paidAmount, paymentMethod },
+                amount: paidAmount,
+                paymentMethod,
             });
             if (res?.success) {
                 toast.success(`Đã xác nhận thu học phí thành công cho ${modalData.name}`);

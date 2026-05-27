@@ -101,19 +101,22 @@ export default function DailyScheduleSection({
           return itemDay === dayKey && classMatch;
         })
         .sort((a, b) => a.period_number - b.period_number)
-        .map(item => ({
-          period: item.period_number,
-          subject: item.subject_name,
-          class: item.class_name,
-          room: item.room,
-          students: 35,
-          color: item.color || "teal",
-          note: item.notes || "",
-          periodEnd: item.period_number,
-          status: item.status || "normal",
-          start_time: item.start_time,
-          end_time: item.end_time,
-        }));
+        .map(item => {
+          const subjectKey = item.subject_code || item.subjectCode || "TOAN";
+          return {
+            period: item.period_number || item.period,
+            subject: item.subject_name || item.subjectName || SUBJECT_DISPLAY[subjectKey] || subjectKey,
+            class: item.class_name || item.className || "Lớp",
+            room: item.room || item.roomName,
+            students: 35,
+            color: item.color || SUBJECT_COLOR_MAP[subjectKey] || "teal",
+            note: item.note || item.notes || "",
+            periodEnd: item.period_number || item.period,
+            status: item.status || "normal",
+            start_time: item.start_time,
+            end_time: item.end_time,
+          };
+        });
     }
 
     const allLessons = getTeacherWeekLessons(monday, selectedClass);

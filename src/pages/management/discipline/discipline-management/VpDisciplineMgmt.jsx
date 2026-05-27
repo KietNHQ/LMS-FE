@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { PageHeader, WeekPicker, Pagination, StatusBadge, LoadingSpinner } from "../../../../components/common";
 import { useSchoolYearTerm } from "../../../../hooks/useSchoolYearTerm";
@@ -62,28 +62,28 @@ export default function VpDisciplineMgmt() {
         staleTime: 5 * 60 * 1000,
     });
 
-    // Fetch incidents from real escalation API
+    // Fetch incidents from real violations API
     const { data: incidents = [], isLoading: isIncidentsLoading, isError: isIncidentsError } = useQuery({
-        queryKey: ["discipline-escalations", resolvedSemesterId],
+        queryKey: ["discipline-violations", resolvedSemesterId],
         queryFn: async () => {
             if (!resolvedSemesterId) return [];
             try {
-                const res = await vpDisciplineService.callByKey("get_discipline_escalations_stats_by_semesterid", {
-                    pathParams: { semesterId: resolvedSemesterId },
+                const res = await vpDisciplineService.callByKey("get_discipline_violations", {
+                    params: { semesterId: resolvedSemesterId },
                 });
                 const raw = res?.data || [];
                 return raw.map(e => ({
                     id: e.id,
-                    student: e.student_name || e.studentName || "",
-                    class: e.class_name || e.className || "",
-                    grade: e.grade || "",
-                    type: e.violation_type || e.violationType || e.type || "",
-                    level: e.severity || e.level || "low",
-                    date: e.incident_date || e.date || "",
-                    reporter: e.reporter || e.created_by || "",
-                    status: e.status || "open",
-                    assignedTo: e.assigned_to || e.assignedTo || "",
-                    description: e.description || "",
+                    student: e.student_name || "",
+                    class: e.class_name || "",
+                    grade: e.grade_name || "",
+                    type: e.violation_name || e.violation_type || "",
+                    level: e.violation_severity || e.severity || e.level || "low",
+                    date: e.date || "",
+                    reporter: e.verified_by_name || e.reporter || "",
+                    status: e.status || "pending",
+                    assignedTo: "",
+                    description: e.notes || "",
                 }));
             } catch {
                 return [];
@@ -98,12 +98,54 @@ export default function VpDisciplineMgmt() {
         queryClient.invalidateQueries({ queryKey: ["discipline-escalations"] });
     };
 
-    const categoryStats = [
-        { title: "Chuyên cần", icon: <FiClock />, incidents: 63, detail: "12 học sinh", trend: "+15%", level: "Cần chú ý", status: "warning" },
-        { title: "Nề nếp", icon: <FiUser />, incidents: 45, detail: "8 học sinh", trend: "-5%", level: "Ổn định", status: "success" },
-        { title: "Tài sản", icon: <FiLayers />, incidents: 15, detail: "4 học sinh", trend: "+2%", level: "Bình thường", status: "neutral" },
-        { title: "Học tập", icon: <FiAlertCircle />, incidents: 28, detail: "9 học sinh", trend: "+8%", level: "Nghiêm trọng", status: "critical" },
-    ];
+    // ── Category Stats from Real API ──
+    const { data: categoryStatsRaw } = useQuery({
+        queryKey: ["discipline-category-stats", resolvedSemesterId],
+        queryFn: async () => {
+            if (!resolvedSemesterId) return [];
+            try {
+                const res = await vpDisciplineService.getCategoryStats(resolvedSemesterId);
+                return res?.violations || res?.data?.violations || [];
+            } catch {
+                return [];
+            }
+        },
+        enabled: Boolean(resolvedSemesterId),
+        staleTime: 30_000,
+    });
+
+    const categoryStats = useMemo(() => {
+        if (!categoryStatsRaw || !Array.isArray(categoryStatsRaw) || categoryStatsRaw.length === 0) {
+            return [
+                { title: "Chuyên cần", icon: <FiClock />, incidents: 0, detail: "0 học sinh", trend: "—", level: "—", status: "neutral" },
+                { title: "Nề nếp", icon: <FiUser />, incidents: 0, detail: "0 học sinh", trend: "—", level: "—", status: "neutral" },
+                { title: "Tài sản", icon: <FiLayers />, incidents: 0, detail: "0 học sinh", trend: "—", level: "—", status: "neutral" },
+                { title: "Học tập", icon: <FiAlertCircle />, incidents: 0, detail: "0 học sinh", trend: "—", level: "—", status: "neutral" },
+            ];
+        }
+        const catMap = {
+            attendance: { title: "Chuyên cần", icon: <FiClock />, status: "warning" },
+            discipline: { title: "Nề nếp", icon: <FiUser />, status: "success" },
+            property: { title: "Tài sản", icon: <FiLayers />, status: "neutral" },
+            academic: { title: "Học tập", icon: <FiAlertCircle />, status: "critical" },
+        };
+        const result = [];
+        const keys = ["attendance", "discipline", "property", "academic"];
+        keys.forEach(key => {
+            const item = categoryStatsRaw.find(v => v.category === key);
+            const info = catMap[key] || { title: key, icon: <FiAlertCircle />, status: "neutral" };
+            const count = item?.total_count || 0;
+            const students = item?.unique_students || 0;
+            result.push({
+                ...info,
+                incidents: count,
+                detail: `${students} học sinh`,
+                trend: "—",
+                level: count > 20 ? "Nghiêm trọng" : (count > 10 ? "Cần chú ý" : "Bình thường"),
+            });
+        });
+        return result;
+    }, [categoryStatsRaw]);
 
     const handleAddIncident = (newInc, isEdit = false) => {
         // Mutation is handled by ViolationRecordModal; just refresh the list
@@ -140,12 +182,81 @@ export default function VpDisciplineMgmt() {
         setIsHandleModalOpen(true);
     };
 
-    const classOptions = {
-        "all": [{ value: "all", label: "Tất cả" }],
-        "10": [{ value: "all", label: "Tất cả" }, { value: "10A1", label: "10A1" }, { value: "10A2", label: "10A2" }],
-        "11": [{ value: "all", label: "Tất cả" }, { value: "11A5", label: "11A5" }, { value: "11B1", label: "11B1" }],
-        "12": [{ value: "all", label: "Tất cả" }, { value: "12A2", label: "12A2" }, { value: "12C3", label: "12C3" }],
-    };
+    // Fetch classes from API
+    const { data: classesData } = useQuery({
+        queryKey: ["classes-for-discipline", selectedSchoolYear, selectedGrade],
+        queryFn: async () => {
+            const res = await vpDisciplineService.callByKey("get_classes", {
+                params: { schoolYearId: selectedSchoolYear, gradeLevelId: selectedGrade === "all" ? undefined : parseInt(selectedGrade) },
+            });
+            return res?.data || [];
+        },
+        select: (data) => (Array.isArray(data) ? data : data?.data || []),
+        staleTime: 5 * 60_000,
+    });
+
+    // Fetch grade levels from API
+    const { data: gradeLevelsData } = useQuery({
+        queryKey: ["grade-levels-for-discipline"],
+        queryFn: async () => {
+            const res = await vpDisciplineService.getGradeLevels();
+            return res?.data || [];
+        },
+        staleTime: 10 * 60_000,
+    });
+
+    // Fetch violation types from API
+    const { data: violationTypesData } = useQuery({
+        queryKey: ["violation-types-for-discipline"],
+        queryFn: async () => {
+            const res = await vpDisciplineService.callByKey("get_violation_types");
+            return res?.data || res || [];
+        },
+        staleTime: 10 * 60_000,
+    });
+
+    // Build grade options from API
+    const gradeOptions = useMemo(() => {
+        const defaultOption = [{ value: "all", label: "Tất cả" }];
+        if (!gradeLevelsData?.length) return defaultOption;
+        const apiOptions = gradeLevelsData
+            .map(gl => ({
+                value: String(gl.level_number || gl.levelNumber || gl.id),
+                label: gl.name || `Khối ${gl.level_number || gl.levelNumber}`,
+            }))
+            .sort((a, b) => parseInt(a.value) - parseInt(b.value));
+        return [...defaultOption, ...apiOptions];
+    }, [gradeLevelsData]);
+
+    // Build violation type filter options from API
+    const violationTypeOptions = useMemo(() => {
+        const defaultOption = [{ value: "all", label: "Tất cả" }];
+        if (!violationTypesData?.length) return defaultOption;
+        const apiOptions = violationTypesData.map(vt => ({
+            value: vt.id?.toString() || vt.name,
+            label: vt.name || vt.violation_name || "",
+        }));
+        return [...defaultOption, ...apiOptions];
+    }, [violationTypesData]);
+
+    // Severity options (constant values, could come from config in future)
+    const severityOptions = useMemo(() => [
+        { value: "all", label: "Tất cả" },
+        { value: "low", label: "Nhẹ" },
+        { value: "med", label: "Vừa" },
+        { value: "high", label: "Nghiêm trọng" },
+    ], []);
+
+    // Build class options from API
+    const classOptions = useMemo(() => {
+        const grouped = {};
+        classesData?.forEach(c => {
+            const grade = String(c.grade_level || c.gradeLevel || (c.name || "").slice(0, 2));
+            if (!grouped[grade]) grouped[grade] = [];
+            grouped[grade].push({ value: c.id || c.name || c.class_name || "", label: c.name || c.class_name || "" });
+        });
+        return grouped;
+    }, [classesData]);
 
     const isDataLoading = isIncidentsLoading || isLoading;
 
@@ -170,9 +281,11 @@ export default function VpDisciplineMgmt() {
 
     const filteredIncidents = incidents.filter(inc => {
         if (hiddenIncidents.has(inc.id)) return false;
-        const matchGrade = selectedGrade === "all" || inc.grade === selectedGrade;
-        const matchClass = selectedClass === "all" || inc.class === selectedClass;
-        const matchType = selectedViolationType === "all" || inc.type.toLowerCase().includes(selectedViolationType.toLowerCase()) || (selectedViolationType === "late" && inc.type === "Đi trễ") || (selectedViolationType === "absence" && inc.type.includes("Vắng"));
+        const matchGrade = selectedGrade === "all" || 
+            (inc.grade || "").toLowerCase().includes(selectedGrade.toLowerCase()) ||
+            selectedGrade.toLowerCase() === (inc.grade || "").replace(/khối\s*/i, "").trim();
+        const matchClass = selectedClass === "all" || (inc.class || "").toLowerCase().includes(selectedClass.toLowerCase());
+        const matchType = selectedViolationType === "all" || (inc.type || "").toLowerCase().includes(selectedViolationType.toLowerCase()) || (selectedViolationType === "late" && (inc.type || "") === "Đi trễ") || (selectedViolationType === "absence" && (inc.type || "").includes("Vắng"));
         const matchSeverity = selectedSeverity === "all" || inc.level === selectedSeverity;
         return matchGrade && matchClass && matchType && matchSeverity;
     });
@@ -253,7 +366,7 @@ export default function VpDisciplineMgmt() {
                                         </div>
                                         <div className="filter-group">
                                             <label><FiLayers /> Khối</label>
-                                            <Select variant="custom" value={selectedGrade} onChange={(e) => { setSelectedGrade(e.target.value); setSelectedClass("all"); }} options={[{ value: "all", label: "Tất cả" }, { value: "10", label: "Khối 10" }, { value: "11", label: "Khối 11" }, { value: "12", label: "Khối 12" }]} />
+                                            <Select variant="custom" value={selectedGrade} onChange={(e) => { setSelectedGrade(e.target.value); setSelectedClass("all"); }} options={gradeOptions} />
                                         </div>
                                         {selectedGrade !== "all" && (
                                             <div className="filter-group animate-slide-in">
@@ -263,11 +376,11 @@ export default function VpDisciplineMgmt() {
                                         )}
                                         <div className="filter-group">
                                             <label><FiAlertCircle /> Loại lỗi</label>
-                                            <Select variant="custom" value={selectedViolationType} onChange={(e) => setSelectedViolationType(e.target.value)} options={[{ value: "all", label: "Tất cả" }, { value: "late", label: "Đi trễ" }, { value: "absence", label: "Vắng" }, { value: "uniform", label: "Đồng phục" }, { value: "behavior", label: "Thái độ" }]} />
+                                            <Select variant="custom" value={selectedViolationType} onChange={(e) => setSelectedViolationType(e.target.value)} options={violationTypeOptions} />
                                         </div>
                                         <div className="filter-group">
                                             <label><FiActivity /> Mức độ</label>
-                                            <Select variant="custom" value={selectedSeverity} onChange={(e) => setSelectedSeverity(e.target.value)} options={[{ value: "all", label: "Tất cả" }, { value: "low", label: "Nhẹ" }, { value: "med", label: "Vừa" }, { value: "high", label: "Nghiêm trọng" }]} />
+                                            <Select variant="custom" value={selectedSeverity} onChange={(e) => setSelectedSeverity(e.target.value)} options={severityOptions} />
                                         </div>
                                     </div>
                                     <div className="dm-primary-actions-compact">

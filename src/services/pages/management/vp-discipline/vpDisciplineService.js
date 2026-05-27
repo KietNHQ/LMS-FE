@@ -20,6 +20,7 @@ const VP_DISCIPLINE_MODULES = [
   "imports",
   "school_years",
   "semesters",
+  "grade_levels",
 ];
 
 const scopedApi = createScopedApiService(VP_DISCIPLINE_MODULES);
@@ -86,6 +87,13 @@ export const vpDisciplineService = {
       ...input,
       body,
     }),
+  getCategoryStats: (semesterId, input = {}) =>
+    scopedApi.callByKey("get_discipline_reports_summary_by_semesterid", {
+      ...input,
+      pathParams: { semesterId, ...(input.pathParams || {}) },
+    }),
+  getGradeLevels: (input = {}) =>
+    scopedApi.callByKey("get_grade_levels", input),
 };
 
 export default vpDisciplineService;

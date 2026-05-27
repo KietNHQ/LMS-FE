@@ -171,6 +171,9 @@ export const useLogout = () => {
 export const useGetMe = () => {
     return useQuery({
         queryKey: ['me'],
+        // Only fetch when a token actually exists — prevents spurious /auth/me calls
+        // on login page and avoids 401 -> refresh loop for expired tokens
+        enabled: !!(sessionStorage.getItem("accessToken") || localStorage.getItem("accessToken")),
         queryFn: async () => {
             const response = await authService.getMe();
             // Backend trả về { success: true, data: { user: {...}, profile: {...} } }

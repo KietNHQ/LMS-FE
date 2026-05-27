@@ -83,10 +83,14 @@ export default function FinancePaymentHub() {
     const calculateSummary = (data) => {
         const totalDebt = data.reduce((sum, d) => sum + (d.amount || 0), 0);
         const now = new Date();
-        const overdueCount = data.filter(d => d.dueDate && new Date(d.dueDate) < now && d.status !== "paid").length;
+        const overdueCount = data.filter(d => {
+            const dueRaw = d.due_date || d.dueDate;
+            return dueRaw && new Date(dueRaw) < now && d.status !== "paid";
+        }).length;
         const nearDueCount = data.filter(d => {
-            if (!d.dueDate || d.status === "paid") return false;
-            const due = new Date(d.dueDate);
+            if (!d.due_date && !d.dueDate) return false;
+            if (d.status === "paid") return false;
+            const due = new Date(d.due_date || d.dueDate);
             const diff = (due - now) / (1000 * 60 * 60 * 24);
             return diff >= 0 && diff <= 7;
         }).length;
@@ -96,12 +100,12 @@ export default function FinancePaymentHub() {
 
     useEffect(() => {
         fetchDebts();
-    }, [selectedSchoolYear, selectedTerm]);
+    }, [selectedSchoolYear?.id, selectedTerm?.id]);
 
     const getAgingType = (debt) => {
-        if (!debt.dueDate) return "aging-8-30";
+        if (!debt.due_date && !debt.dueDate) return "aging-8-30";
         const now = new Date();
-        const due = new Date(debt.dueDate);
+        const due = new Date(debt.due_date || debt.dueDate);
         if (due >= now) return "aging-1-7";
         const days = Math.floor((now - due) / (1000 * 60 * 60 * 24));
         if (days <= 7) return "aging-1-7";
@@ -111,18 +115,18 @@ export default function FinancePaymentHub() {
     };
 
     const getDaysOverdue = (debt) => {
-        if (!debt.dueDate) return 0;
+        if (!debt.due_date && !debt.dueDate) return 0;
         const now = new Date();
-        const due = new Date(debt.dueDate);
+        const due = new Date(debt.due_date || debt.dueDate);
         if (due >= now) return 0;
         return Math.floor((now - due) / (1000 * 60 * 60 * 24));
     };
 
     const getStatusFromDebt = (debt) => {
         if (debt.status === "paid") return "paid";
-        if (!debt.dueDate) return "open";
+        if (!debt.due_date && !debt.dueDate) return "open";
         const now = new Date();
-        const due = new Date(debt.dueDate);
+        const due = new Date(debt.due_date || debt.dueDate);
         if (due < now) return "overdue";
         const daysUntilDue = (due - now) / (1000 * 60 * 60 * 24);
         if (daysUntilDue <= 7) return "near-due";
@@ -139,7 +143,7 @@ export default function FinancePaymentHub() {
             amount: debt.amount,
             type: getAgingType(debt),
             days: getDaysOverdue(debt),
-            dueDate: debt.dueDate ? new Date(debt.dueDate).toLocaleDateString("vi-VN") : "-",
+            dueDate: debt.due_date || debt.dueDate ? new Date(debt.due_date || debt.dueDate).toLocaleDateString("vi-VN") : "-",
             status: getStatusFromDebt(debt),
             note: debt.notes || "Chưa xử lý",
         }));

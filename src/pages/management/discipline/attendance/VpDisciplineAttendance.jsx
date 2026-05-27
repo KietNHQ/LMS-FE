@@ -5,6 +5,8 @@ import DisciplineHeaderActions from "../components/DisciplineHeaderActions";
 import { useSchoolYearTerm } from "../../../../hooks/useSchoolYearTerm";
 import axiosClient from "../../../../services/shared/http/axiosClient";
 import Select from "../../../../components/ui/Select/Select";
+import { useQuery } from "@tanstack/react-query";
+import { vpDisciplineService } from "../../../../services/pages/management/vp-discipline";
 import {
   FiClock,
   FiDownload,
@@ -34,7 +36,7 @@ export default function VpDisciplineAttendance({ isEmbedded = false }) {
   const { selectedSchoolYear, selectedTerm, handleYearArrow, handleTermChange } = useSchoolYearTerm();
 
   const [selectedWeek, setSelectedWeek] = useState(12);
-  const [selectedDay, setSelectedDay] = useState(2);
+  const [selectedDay, setSelectedDay] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedGrade, setSelectedGrade] = useState("all");
   const [selectedClass, setSelectedClass] = useState(urlClass || "all");
@@ -43,7 +45,38 @@ export default function VpDisciplineAttendance({ isEmbedded = false }) {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
+  // Fetch grade levels from API
+  const { data: gradeLevelsData = [] } = useQuery({
+      queryKey: ["grade-levels-attendance"],
+      queryFn: async () => {
+          const res = await vpDisciplineService.getGradeLevels();
+          return res?.data || [];
+      },
+      staleTime: 10 * 60_000,
+  });
+
+  // Build grade options from API
+  const gradeOptions = useMemo(() => {
+      const defaultOption = [{ value: "all", label: "Tất cả" }];
+      if (!gradeLevelsData.length) {
+          return [
+              { value: "all", label: "Tất cả" },
+              { value: "10", label: "Khối 10" },
+              { value: "11", label: "Khối 11" },
+              { value: "12", label: "Khối 12" },
+          ];
+      }
+      const apiOptions = gradeLevelsData
+          .map(gl => ({
+              value: String(gl.level_number || gl.levelNumber || gl.id),
+              label: gl.name || `Khối ${gl.level_number || gl.levelNumber}`,
+          }))
+          .sort((a, b) => parseInt(a.value) - parseInt(b.value));
+      return [...defaultOption, ...apiOptions];
+  }, [gradeLevelsData]);
+
   // Fetch attendance records from API
+  const [allRecords, setAllRecords] = useState([]);
   const [records, setRecords] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -59,29 +92,28 @@ export default function VpDisciplineAttendance({ isEmbedded = false }) {
   // Fetch attendance data from API
   useEffect(() => {
     const fetchAttendanceData = async () => {
-      if (!selectedClass || selectedClass === "all") {
-        setRecords([]);
-        return;
-      }
-
       setIsLoading(true);
       setError(null);
 
       try {
-        // Fetch attendance stats for the class
-        const statsRes = await axiosClient.get(`/attendance/class/${selectedClass}/stats`, {
-          params: { semesterId: selectedTerm },
-        });
+        let statsRes;
+        if (selectedClass === "all") {
+          statsRes = await axiosClient.get("/attendance/stats", {
+            params: { semesterId: selectedTerm },
+          });
+        } else {
+          statsRes = await axiosClient.get(`/attendance/class/${selectedClass}/stats`, {
+            params: { semesterId: selectedTerm },
+          });
+        }
 
-        // Fetch daily attendance if week is selected
         const statsData = statsRes?.data?.data || statsRes?.data || statsRes || {};
         const details = statsData.details || [];
 
-        // Transform API data to component format
         const transformedRecords = details.map((student, idx) => ({
           id: student.enrollment_id || idx + 1,
           studentName: student.student_name || student.studentName || "Unknown",
-          className: selectedClass,
+          className: student.class_name || student.className || selectedClass,
           week: selectedWeek,
           dayOfWeek: selectedDay,
           reason: student.whole_day_status || student.status || "",
@@ -90,6 +122,7 @@ export default function VpDisciplineAttendance({ isEmbedded = false }) {
           history: [],
         }));
 
+        setAllRecords(transformedRecords);
         setRecords(transformedRecords);
       } catch (err) {
         console.error("Failed to fetch attendance:", err);
@@ -126,9 +159,9 @@ export default function VpDisciplineAttendance({ isEmbedded = false }) {
   };
 
   const classOptions = useMemo(() => {
-    const classes = Array.from(new Set(records.map((item) => item.className))).sort();
+    const classes = Array.from(new Set(allRecords.map((item) => item.className))).sort();
     return classes.map(c => ({ value: c, label: c }));
-  }, [records]);
+  }, [allRecords]);
 
   // Weekly Context for KPI calculations (Grade & Class still apply)
   const weeklyRecords = useMemo(() => {
@@ -155,7 +188,8 @@ export default function VpDisciplineAttendance({ isEmbedded = false }) {
   // Table Data: Weekly records filtered by the selected DAY + Status + Search
   const filteredRecords = useMemo(() => {
     return weeklyRecords.filter((item) => {
-      const matchesDay = selectedDay === "all" || item.dayOfWeek === selectedDay || item.dayOfWeek === 0; // 0 for weekly bonuses
+      const dayStr = String(item.dayOfWeek);
+      const matchesDay = selectedDay === "all" || dayStr === selectedDay || dayStr === "0"; // 0 for weekly bonuses
       const matchesType = typeFilter === "all" || item.type === typeFilter;
       const matchesSearch = [item.studentName, item.className, item.reason].join(" ").toLowerCase().includes(searchTerm.toLowerCase());
       return matchesDay && matchesType && matchesSearch;
@@ -223,16 +257,16 @@ export default function VpDisciplineAttendance({ isEmbedded = false }) {
                 <Select 
                     variant="custom" 
                     value={selectedDay} 
-                    onChange={e => setSelectedDay(e.target.value === 'all' ? 'all' : parseInt(e.target.value))} 
+                    onChange={e => setSelectedDay(e.target.value)} 
                     options={[
                         { value: 'all', label: 'Cả tuần' },
-                        ...DAYS.map(d => ({ value: d.id, label: d.label }))
+                        ...DAYS.map(d => ({ value: String(d.id), label: d.label }))
                     ]} 
                 />
              </div>
              <div className="filter-group">
                 <label><FiLayers /> Khối</label>
-                <Select variant="custom" value={selectedGrade} onChange={e => setSelectedGrade(e.target.value)} options={[{value:'all', label:'Tất cả'}, {value:'10', label:'Khối 10'}, {value:'11', label:'Khối 11'}, {value:'12', label:'Khối 12'}]} />
+                <Select variant="custom" value={selectedGrade} onChange={e => setSelectedGrade(e.target.value)} options={gradeOptions} />
              </div>
              <div className="filter-group">
                 <label><FiLayers /> Lớp</label>

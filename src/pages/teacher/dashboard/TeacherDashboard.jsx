@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import { useQuery } from "@tanstack/react-query";
 import teacherService from "../../../services/pages/teacher/teacherService";
 import "./TeacherDashboard.css";
@@ -11,10 +11,10 @@ import OverviewCardsSection from "./components/overviewCardsSection/OverviewCard
 import RecentActivitiesSection from "./components/recentActivitiesSection/RecentActivitiesSection";
 import UpcomingScheduleSection from "./components/upcomingScheduleSection/UpcomingScheduleSection";
 import QuizManagementSection from "./components/quizManagementSection/QuizManagementSection";
+import { useSchoolYearTerm } from "../../../hooks/useSchoolYearTerm";
 
 const TeacherDashboard = () => {
-  const [selectedSchoolYear, setSelectedSchoolYear] = useState("2024-2025");
-  const [selectedTerm, setSelectedTerm] = useState("hk2");
+  const { selectedSchoolYear, selectedTerm, handleYearArrow, handleTermChange } = useSchoolYearTerm();
 
   // Sử dụng TanStack Query để quản lý dữ liệu dashboard
   const { data: dashboardResponse, isLoading, error } = useQuery({
@@ -47,12 +47,7 @@ const TeacherDashboard = () => {
   }, [dashboardResponse]);
 
   const handleYearChange = (direction) => {
-    const years = selectedSchoolYear.split("-").map(Number);
-    if (direction === "next") {
-      setSelectedSchoolYear(`${years[0] + 1}-${years[1] + 1}`);
-    } else {
-      setSelectedSchoolYear(`${years[0] - 1}-${years[1] - 1}`);
-    }
+    handleYearArrow(direction);
   };
 
   if (error) {
@@ -75,7 +70,7 @@ const TeacherDashboard = () => {
           selectedSchoolYear={selectedSchoolYear}
           selectedTerm={selectedTerm}
           onYearChange={handleYearChange}
-          onTermChange={setSelectedTerm}
+          onTermChange={handleTermChange}
         />
       </div>
 

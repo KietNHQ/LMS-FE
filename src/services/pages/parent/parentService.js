@@ -171,39 +171,39 @@ const PARENT_FAQS_MOCK = [
 ];
 
 const PARENT_ENDPOINTS = [
-  { key: "get_parent_dashboard", method: "GET", path: "/guardians/me/children", module: "dashboard", mock: () => PARENT_DASHBOARD_MOCK },
-  { key: "get_parent_children", method: "GET", path: "/guardians/me/children", module: "children", mock: () => PARENT_CHILDREN_MOCK },
-  { key: "get_parent_child_by_id", method: "GET", path: "/guardians/me/children/:childId", module: "children", mock: (input) => PARENT_CHILDREN_MOCK.find((item) => `${item.id}` === `${input.pathParams?.childId}`) || null },
-  { key: "get_parent_child_grades", method: "GET", path: "/students/:childId/grades", module: "children", mock: () => ({ semester1: [], semester2: [], year: [] }) },
-  { key: "get_parent_child_attendance", method: "GET", path: "/guardians/me/children/:childId/attendance", module: "children", mock: () => ({ weekly: [], monthly: [] }) },
-  { key: "get_parent_child_schedule", method: "GET", path: "/guardians/me/children/:childId/schedule", module: "children", mock: () => [] },
+  { key: "get_parent_dashboard", method: "GET", path: "/guardians/me/children", module: "dashboard", mock: false },
+  { key: "get_parent_children", method: "GET", path: "/guardians/me/children", module: "children", mock: false },
+  { key: "get_parent_child_by_id", method: "GET", path: "/guardians/me/children/:childId", module: "children", mock: false },
+  { key: "get_parent_child_grades", method: "GET", path: "/students/:childId/grades", module: "children", mock: false },
+  { key: "get_parent_child_attendance", method: "GET", path: "/guardians/me/children/:childId/attendance", module: "children", mock: false },
+  { key: "get_parent_child_schedule", method: "GET", path: "/guardians/me/children/:childId/schedule", module: "children", mock: false },
   // Teachers: list of homeroom teachers for all children
-  { key: "get_parent_teachers", method: "GET", path: "/guardians/me/teachers", module: "messages", mock: () => [] },
+  { key: "get_parent_teachers", method: "GET", path: "/guardians/me/teachers", module: "messages", mock: false },
   // Human chat: conversations list (for existing chats sidebar)
-  { key: "get_parent_conversations", method: "GET", path: "/chat/human/conversations", module: "messages", mock: () => PARENT_MESSAGES_MOCK },
+  { key: "get_parent_conversations", method: "GET", path: "/chat/human/conversations", module: "messages", mock: false },
   // Human chat: messages in a conversation
-  { key: "get_parent_messages_history", method: "GET", path: "/chat/human/messages/:conversationId", module: "messages", mock: () => ({ messages: [] }) },
+  { key: "get_parent_messages_history", method: "GET", path: "/chat/human/messages/:conversationId", module: "messages", mock: false },
   // Human chat: start a new conversation with a teacher
-  { key: "post_parent_start_conversation", method: "POST", path: "/chat/human/start", module: "messages", mock: (input) => ({ conversationId: `conv-${Date.now()}`, isNew: true, createdAt: new Date().toISOString() }) },
+  { key: "post_parent_start_conversation", method: "POST", path: "/chat/human/start", module: "messages", mock: false },
   // Human chat: send a message (in existing conversation)
-  { key: "post_parent_send_message", method: "POST", path: "/chat/human/message", module: "messages", mock: (input) => ({ id: Date.now(), ...(input.body || {}), createdAt: new Date().toISOString() }) },
-  { key: "get_parent_notifications", method: "GET", path: "/guardians/me/notifications", module: "notifications", mock: () => PARENT_NOTIFICATIONS_MOCK },
-  { key: "patch_parent_notifications_mark_all_read", method: "PATCH", path: "/guardians/me/notifications/mark-all-read", module: "notifications", mock: () => ({ updated: true }) },
-  { key: "patch_parent_notifications_by_id_read", method: "PATCH", path: "/guardians/me/notifications/:id/read", module: "notifications", mock: (input) => ({ id: input.pathParams?.id, unread: false }) },
-  { key: "patch_parent_notifications_by_id_toggle", method: "PATCH", path: "/guardians/me/notifications/:id/toggle-important", module: "notifications", mock: (input) => ({ id: input.pathParams?.id, important: true }) },
-  { key: "get_parent_payments", method: "GET", path: "/guardians/me/payments", module: "payments", mock: () => PARENT_PAYMENTS_MOCK },
-  { key: "get_parent_payments_by_id", method: "GET", path: "/guardians/me/payments/:id", module: "payments", mock: (input) => PARENT_PAYMENTS_MOCK.find((item) => `${item.id}` === `${input.pathParams?.id}`) || null },
-  { key: "post_parent_payments_by_id_pay", method: "POST", path: "/guardians/me/payments/:id/pay", module: "payments" },
-  { key: "post_parent_payments_apply_discount", method: "POST", path: "/guardians/me/payments/apply-discount", module: "payments", mock: (input) => ({ applied: true, code: input.body?.code || "" }) },
-  { key: "get_parent_faqs", method: "GET", path: "/guardians/me/support/faqs", module: "support", mock: () => PARENT_FAQS_MOCK },
-  { key: "post_parent_support_tickets", method: "POST", path: "/guardians/me/support/tickets", module: "support", mock: (input) => ({ id: Date.now(), ...(input.body || {}), status: "open" }) },
-  { key: "get_parent_support_tickets", method: "GET", path: "/guardians/me/support/tickets", module: "support", mock: () => [] },
+  { key: "post_parent_send_message", method: "POST", path: "/chat/human/message", module: "messages", mock: false },
+  { key: "get_parent_notifications", method: "GET", path: "/guardians/me/notifications", module: "notifications", mock: false },
+  { key: "patch_parent_notifications_mark_all_read", method: "PATCH", path: "/guardians/me/notifications/mark-all-read", module: "notifications", mock: false },
+  { key: "patch_parent_notifications_by_id_read", method: "PATCH", path: "/guardians/me/notifications/:id/read", module: "notifications", mock: false },
+  { key: "patch_parent_notifications_by_id_toggle", method: "PATCH", path: "/guardians/me/notifications/:id/toggle-important", module: "notifications", mock: false },
+  { key: "get_parent_payments", method: "GET", path: "/guardians/me/payments", module: "payments", mock: false },
+  { key: "get_parent_payments_by_id", method: "GET", path: "/guardians/me/payments/:id", module: "payments", mock: false },
+  { key: "post_parent_payments_by_id_pay", method: "POST", path: "/guardians/me/payments/:id/pay", module: "payments", mock: false },
+  { key: "post_parent_payments_apply_discount", method: "POST", path: "/guardians/me/payments/apply-discount", module: "payments", mock: false },
+  { key: "get_parent_faqs", method: "GET", path: "/guardians/me/support/faqs", module: "support", mock: false },
+  { key: "post_parent_support_tickets", method: "POST", path: "/guardians/me/support/tickets", module: "support", mock: false },
+  { key: "get_parent_support_tickets", method: "GET", path: "/guardians/me/support/tickets", module: "support", mock: false },
   // Leave requests: list for parent's children
-  { key: "get_parent_leave_requests", method: "GET", path: "/guardians/me/leave-requests", module: "children", mock: () => [] },
+  { key: "get_parent_leave_requests", method: "GET", path: "/guardians/me/leave-requests", module: "children", mock: false },
   // Leave requests: create a new request
-  { key: "post_parent_leave_requests", method: "POST", path: "/guardians/me/leave-requests", module: "children", mock: () => ({ success: true }) },
+  { key: "post_parent_leave_requests", method: "POST", path: "/guardians/me/leave-requests", module: "children", mock: false },
   // Leave requests: cancel a request
-  { key: "delete_parent_leave_requests", method: "DELETE", path: "/guardians/me/leave-requests/:id", module: "children", mock: () => ({ success: true }) },
+  { key: "delete_parent_leave_requests", method: "DELETE", path: "/guardians/me/leave-requests/:id", module: "children", mock: false },
 ];
 
 const createEndpointCaller = (endpoint) => async (input = {}) => {

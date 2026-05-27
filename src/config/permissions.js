@@ -34,10 +34,17 @@ export const PERMISSIONS = {
     // 7. Thời khóa biểu
     TIMETABLE_VIEW: 'timetable:read',
     TIMETABLE_MANAGE: 'timetable:manage',
+    TIMETABLE_DELETE: 'timetable:delete',
 
     // 8. Nề nếp
     DISCIPLINE_VIEW: 'discipline:read',
     DISCIPLINE_MANAGE: 'discipline:manage',
+
+    // 8.1. Loại vi phạm
+    VIOLATION_TYPE_VIEW: 'violation_types:read',
+    VIOLATION_TYPE_CREATE: 'violation_types:create',
+    VIOLATION_TYPE_UPDATE: 'violation_types:update',
+    VIOLATION_TYPE_DELETE: 'violation_types:delete',
 
     // 9. Nghỉ phép
     LEAVE_REQUESTS_VIEW: 'leave_requests:read',
@@ -126,6 +133,7 @@ export const MANAGEMENT_TITLES = [
     ] },
     { label: "Phó hiệu trưởng (Nề nếp)", value: "vp_discipline", permissions: [
         PERMISSIONS.USER_VIEW, PERMISSIONS.DISCIPLINE_VIEW, PERMISSIONS.DISCIPLINE_MANAGE,
+        PERMISSIONS.VIOLATION_TYPE_VIEW, PERMISSIONS.VIOLATION_TYPE_CREATE, PERMISSIONS.VIOLATION_TYPE_UPDATE, PERMISSIONS.VIOLATION_TYPE_DELETE,
         PERMISSIONS.REWARD_TYPE_VIEW, PERMISSIONS.NOTIFICATION_VIEW,
         PERMISSIONS.LEAVE_REQUESTS_VIEW, PERMISSIONS.LEAVE_REQUESTS_APPROVE
     ] },
@@ -202,6 +210,10 @@ export const PERMISSION_GROUPS = [
         permissions: [
             { id: PERMISSIONS.DISCIPLINE_VIEW, label: "Xem nề nếp" },
             { id: PERMISSIONS.DISCIPLINE_MANAGE, label: "Quản lý nề nếp" },
+            { id: PERMISSIONS.VIOLATION_TYPE_VIEW, label: "Xem loại vi phạm" },
+            { id: PERMISSIONS.VIOLATION_TYPE_CREATE, label: "Tạo loại vi phạm" },
+            { id: PERMISSIONS.VIOLATION_TYPE_UPDATE, label: "Sửa loại vi phạm" },
+            { id: PERMISSIONS.VIOLATION_TYPE_DELETE, label: "Xóa loại vi phạm" },
             { id: PERMISSIONS.DEPARTMENT_MANAGE, label: "Quản lý tổ bộ môn" },
             { id: PERMISSIONS.REWARD_TYPE_MANAGE, label: "Quản lý thi đua" },
             { id: PERMISSIONS.LEAVE_REQUESTS_VIEW, label: "Xem đơn nghỉ phép" },

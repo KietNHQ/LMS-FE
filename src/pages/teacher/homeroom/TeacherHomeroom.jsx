@@ -126,6 +126,67 @@ export default function TeacherHomeroom() {
         staleTime: 60_000,
     });
 
+    // Load teacher's own timetable for "Mốc tiết học" section
+    const { data: teacherTimetableData } = useQuery({
+        queryKey: ["teacher-timetable", teacherId, selectedSchoolYear, selectedTerm],
+        queryFn: async () => {
+            if (!teacherId) return null;
+            try {
+                const res = await teacherService.getTimetable({
+                    params: { schoolYear: selectedSchoolYear, term: selectedTerm }
+                });
+                return res?.data || res || null;
+            } catch {
+                return null;
+            }
+        },
+        enabled: !!teacherId,
+        staleTime: 5 * 60_000,
+    });
+
+    const lessonMarkers = useMemo(() => {
+        const lessons = teacherTimetableData?.lessons || teacherTimetableData || [];
+        const markers = {};
+        const dayLabels = { 2: "Thứ 2", 3: "Thứ 3", 4: "Thứ 4", 5: "Thứ 5", 6: "Thứ 6", 7: "Thứ 7" };
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        lessons.forEach((lesson) => {
+            const dow = lesson.dayOfWeek;
+            if (!dayLabels[dow]) return;
+
+            // Find next occurrence of this day-of-week from today
+            const nextDate = new Date(today);
+            const diff = (dow - today.getDay() + 7) % 7 || 7;
+            nextDate.setDate(today.getDate() + diff);
+
+            const dateKey = nextDate.toISOString().split("T")[0];
+            if (!markers[dateKey]) {
+                markers[dateKey] = {
+                    date: dateKey,
+                    displayDate: `${String(nextDate.getDate()).padStart(2, "0")}/${String(nextDate.getMonth() + 1).padStart(2, "0")}`,
+                    dayLabel: dayLabels[dow],
+                    isToday: dateKey === today.toISOString().split("T")[0],
+                    lessons: [],
+                    count: 0,
+                };
+            }
+            markers[dateKey].lessons.push({
+                period: lesson.period,
+                subjectName: lesson.subjectName,
+                className: lesson.className,
+                roomName: lesson.roomName,
+                teacherName: lesson.teacherName,
+            });
+            markers[dateKey].count += 1;
+        });
+
+        // Sort by date and take next 14 days
+        return Object.values(markers)
+            .sort((a, b) => a.date.localeCompare(b.date))
+            .slice(0, 14);
+    }, [teacherTimetableData]);
+
     // Hàm mapping dữ liệu từ API sang cấu trúc UI
     const mapApiDataToUI = (apiData, academicData = null) => {
         return {
@@ -428,6 +489,7 @@ export default function TeacherHomeroom() {
                 {activeSection === "overview" && (
                     <HomeroomOverviewSection
                         data={classData}
+                        lessonMarkers={lessonMarkers}
                         onAddOfficersClick={openOfficerDialog}
                         onCreateActivityClick={() => openActivityDialog()}
                         onEditActivityClick={handleEditActivity}

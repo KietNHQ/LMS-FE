@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { FiClock, FiCheck, FiX, FiAlertCircle, FiSearch, FiCalendar } from "react-icons/fi";
 import { toast } from "react-toastify";
 import { classesService } from "../../../services/pages/management/classes";
@@ -65,11 +65,7 @@ export default function ManagementLeaveRequests() {
   }, []);
 
   // Fetch data when filters or page change
-  useEffect(() => {
-    fetchData();
-  }, [filterStatus, filterClass, filterDateFrom, filterDateTo, currentPage, searchTerm]);
-
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     setIsLoading(true);
     try {
       const res = await managementLeaveService.getLeaveRequests({
@@ -100,34 +96,40 @@ export default function ManagementLeaveRequests() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [currentPage, filterStatus, filterClass, filterDateFrom, filterDateTo, searchTerm]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
   // Simple statistics count matching the queried filters (or all requests)
   const [stats, setStats] = useState({ total: 0, pending: 0, approved: 0, rejected: 0 });
-  useEffect(() => {
-    const fetchStats = async () => {
-      try {
-        // Query everything without pagination and filters to show global totals
-        const allRes = await managementLeaveService.getLeaveRequests({
-          page: 1,
-          limit: 1000,
-          mock: false
+  const fetchStatsRef = useRef(null);
+  fetchStatsRef.current = async () => {
+    try {
+      // Query everything without pagination and filters to show global totals
+      const allRes = await managementLeaveService.getLeaveRequests({
+        page: 1,
+        limit: 1000,
+        mock: false
+      });
+      if (allRes && allRes.success) {
+        const list = allRes.data || [];
+        setStats({
+          total: list.length,
+          pending: list.filter((r) => r.status === "pending").length,
+          approved: list.filter((r) => r.status === "approved").length,
+          rejected: list.filter((r) => r.status === "rejected").length
         });
-        if (allRes && allRes.success) {
-          const list = allRes.data || [];
-          setStats({
-            total: list.length,
-            pending: list.filter((r) => r.status === "pending").length,
-            approved: list.filter((r) => r.status === "approved").length,
-            rejected: list.filter((r) => r.status === "rejected").length
-          });
-        }
-      } catch (err) {
-        console.warn("Failed to load global statistics.", err);
       }
-    };
-    fetchStats();
-  }, [requests]); // Refreshes whenever we update a status
+    } catch (err) {
+      console.warn("Failed to load global statistics.", err);
+    }
+  };
+
+  useEffect(() => {
+    fetchStatsRef.current();
+  }, [requests.length]); // Refreshes when requests count changes
 
   // Action handlers
   const handleViewDetail = (req) => {

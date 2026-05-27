@@ -52,6 +52,12 @@ export default function Select({
     return normalizedOptions.find((option) => String(option.value) === String(value));
   }, [normalizedOptions, value]);
 
+  const displayLabel = useMemo(() => {
+    if (selectedOption) return selectedOption.label;
+    if (value !== undefined && value !== null && value !== "") return String(value);
+    return null;
+  }, [selectedOption, value]);
+
   const filteredOptions = useMemo(() => {
     if (!searchable) return normalizedOptions;
 
@@ -133,7 +139,7 @@ export default function Select({
               {selectedOption?.color && (
                 <span className={`event-calendar__legend-color event-calendar__event--${selectedOption.color}`} style={{ width: '12px', height: '12px', borderRadius: '3px', flexShrink: 0 }}></span>
               )}
-              <span>{selectedOption?.label || placeholder || "Chọn"}</span>
+              <span>{displayLabel || placeholder || "Chọn"}</span>
             </div>
             <FiChevronDown className="dropdown-arrow" />
           </button>

@@ -8,6 +8,42 @@ const lookupCache = {
   semesters: { ts: 0, rows: [] },
 };
 
+const CHANNEL_NAME = "lms-lookup-cache-sync";
+
+let _channel = null;
+const getChannel = () => {
+  if (!_channel) {
+    try {
+      _channel = new BroadcastChannel(CHANNEL_NAME);
+    } catch {
+      _channel = { postMessage: () => {}, addEventListener: () => {}, close: () => {} };
+    }
+  }
+  return _channel;
+};
+
+const broadcastCacheUpdate = (cacheKey, rows) => {
+  getChannel().postMessage({ type: "CACHE_UPDATE", cacheKey, rows, ts: Date.now() });
+};
+
+const onBroadcastMessage = (callback) => {
+  const ch = getChannel();
+  const handler = (event) => {
+    if (event.data?.type === "CACHE_UPDATE") {
+      callback(event.data.cacheKey, event.data.rows);
+    }
+  };
+  ch.addEventListener("message", handler);
+  return () => ch.removeEventListener("message", handler);
+};
+
+onBroadcastMessage((cacheKey, rows) => {
+  const cached = lookupCache[cacheKey];
+  if (!cached || cached.rows.length === 0) {
+    lookupCache[cacheKey] = { ts: Date.now(), rows };
+  }
+});
+
 const getRows = (payload) => {
   if (Array.isArray(payload)) return payload;
   if (Array.isArray(payload?.items)) return payload.items;
@@ -32,6 +68,7 @@ const getCachedRows = async (cacheKey, loader) => {
   }
   const rows = await inFlightLoads[cacheKey];
   lookupCache[cacheKey] = { ts: now, rows };
+  broadcastCacheUpdate(cacheKey, rows);
   return rows;
 };
 
@@ -57,6 +94,10 @@ const loadGradeLevels = async () => {
 };
 
 const loadSchoolYears = async () => {
+  const token =
+    sessionStorage.getItem("accessToken") ||
+    (localStorage.getItem("isPersistent") === "true" ? localStorage.getItem("accessToken") : null);
+  if (!token) return [];
   try {
     const payload = await axiosClient.get("/school-years");
     return getRows(payload);

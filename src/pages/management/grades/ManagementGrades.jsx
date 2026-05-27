@@ -45,8 +45,9 @@ export default function ManagementGrades() {
         const semesterValue = selectedTerm === "hk1" ? 1 : 2;
         
         // Fetch class students via dedicated endpoint
-        const classStudents = await studentsService.getClassStudents(Number(selectedClassId)).catch(() => []);
-        
+        const classStudentsRaw = await studentsService.getClassStudents(Number(selectedClassId)).catch(() => []);
+        const classStudents = Array.isArray(classStudentsRaw) ? classStudentsRaw : [];
+
         // Map student academic records
         const resolvedStudents = await Promise.all(
           classStudents.map(async (student) => {

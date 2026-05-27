@@ -49,6 +49,33 @@ export default function ViolationRecordModal({ isOpen, onClose, onSuccess, incid
         },
     });
 
+    // Fetch grade levels from API
+    const { data: gradeLevelsData = [] } = useQuery({
+        queryKey: ["grade-levels"],
+        queryFn: async () => {
+            const res = await vpDisciplineService.getGradeLevels();
+            return res?.data || [];
+        },
+        staleTime: 10 * 60_000,
+    });
+
+    // Build grade options from API
+    const gradeOptions = useMemo(() => {
+        if (!gradeLevelsData.length) {
+            return [
+                { value: "10", label: "Khối 10" },
+                { value: "11", label: "Khối 11" },
+                { value: "12", label: "Khối 12" },
+            ];
+        }
+        return gradeLevelsData
+            .map(gl => ({
+                value: String(gl.level_number || gl.levelNumber || gl.id),
+                label: gl.name || `Khối ${gl.level_number || gl.levelNumber}`,
+            }))
+            .sort((a, b) => parseInt(a.value) - parseInt(b.value));
+    }, [gradeLevelsData]);
+
     // Transform API students to component format
     const students = useMemo(() => {
         return apiStudents.map(s => ({
@@ -63,6 +90,18 @@ export default function ViolationRecordModal({ isOpen, onClose, onSuccess, incid
     }, [apiStudents, selectedGrade]);
 
     // Build violation categories from API data
+    const formatCategoryLabel = (cat) => {
+        const labels = {
+            attendance: "Chuyên cần",
+            discipline: "Nề nếp - Tác phong",
+            property: "Tài sản - Môi trường",
+            academic: "Học tập",
+            uniform: "Đồng phục",
+            other: "Khác",
+        };
+        return labels[cat] || cat;
+    };
+
     const violationCategories = useMemo(() => {
         if (!apiViolationTypes.length) return [];
         // Group by category if available, otherwise create single category
@@ -82,22 +121,10 @@ export default function ViolationRecordModal({ isOpen, onClose, onSuccess, incid
         return Object.values(categoryMap);
     }, [apiViolationTypes]);
 
-    const formatCategoryLabel = (cat) => {
-        const labels = {
-            attendance: "Chuyên cần",
-            discipline: "Nề nếp - Tác phong",
-            property: "Tài sản - Môi trường",
-            academic: "Học tập",
-            uniform: "Đồng phục",
-            other: "Khác",
-        };
-        return labels[cat] || cat;
-    };
-
     // Reset or Populate form
     const resetForm = () => {
         if (editData) {
-            setSelectedGrade(editData.grade || "10");
+            setSelectedGrade(editData.grade || gradeOptions[0]?.value || "10");
             setSelectedClass(editData.class || "");
             // In a real app we'd find the student ID by name/class
             // For mock, we'll try to find student by name
@@ -111,7 +138,7 @@ export default function ViolationRecordModal({ isOpen, onClose, onSuccess, incid
             setSelectedLevel(editData.level || "low");
             setComment(editData.comment || "");
         } else {
-            setSelectedGrade("10");
+            setSelectedGrade(gradeOptions[0]?.value || "10");
             setSelectedClass("");
             setSelectedStudentId("");
             setSelectedCategory(violationCategories[0]?.value || "");
@@ -123,7 +150,7 @@ export default function ViolationRecordModal({ isOpen, onClose, onSuccess, incid
 
     useEffect(() => {
         if (isOpen) resetForm();
-    }, [isOpen, editData]);
+    }, [isOpen, editData, violationCategories]);
 
     // Reset Class when Grade changes
     useEffect(() => {
@@ -264,11 +291,7 @@ export default function ViolationRecordModal({ isOpen, onClose, onSuccess, incid
                                 variant="custom"
                                 value={selectedGrade} 
                                 onChange={e => setSelectedGrade(e.target.value)}
-                                options={[
-                                    { value: "10", label: "Khối 10" },
-                                    { value: "11", label: "Khối 11" },
-                                    { value: "12", label: "Khối 12" }
-                                ]}
+                                options={gradeOptions}
                             />
                         </div>
                         <div className="vrm-field">

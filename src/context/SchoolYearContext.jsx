@@ -9,6 +9,11 @@ export const SchoolYearProvider = ({ children }) => {
   const [selectedTerm, setSelectedTerm] = useState(getCurrentTerm());
 
   useEffect(() => {
+    const hasToken =
+      sessionStorage.getItem("accessToken") ||
+      (localStorage.getItem("isPersistent") === "true" && localStorage.getItem("accessToken"));
+    if (!hasToken) return;
+
     let cancelled = false;
     resolveCurrentTermKey(selectedSchoolYear).then((term) => {
       if (!cancelled && term) setSelectedTerm(term);
