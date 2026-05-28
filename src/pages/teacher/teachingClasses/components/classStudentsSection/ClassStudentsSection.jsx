@@ -105,7 +105,7 @@ const ClassStudentsSection = ({ classId, students, readOnly = false, isStudentVi
   const selectedDateLabel = selectedDateObj.toLocaleDateString("vi-VN");
 
   const currentLessonLabel = currentSchedule
-    ? `Tiết học thực tế (Tiết ${currentSchedule.periodId || currentSchedule.id || "?"})`
+    ? `Tiết học thực tế (Tiết ${currentSchedule.periodId || currentSchedule.period_number || currentSchedule.period || currentSchedule.id || "?"})`
     : (todayLessonInfo?.periodLabel || `Tiết học dự kiến (${lessonReviews.length + 1})`);
 
   const currentLessonTime = currentSchedule 
@@ -341,26 +341,43 @@ const ClassStudentsSection = ({ classId, students, readOnly = false, isStudentVi
     fetchTeachingDays();
   }, [classId, isStudentView, resolvedSemester?.id]);
 
-  // Lấy toàn bộ TKB của lớp để biết chính xác các tiết của giáo viên hôm nay
+  // Lấy TKB của chính giáo viên để chỉ hiện các tiết mà giáo viên này dạy trong lớp
   useEffect(() => {
-    const fetchFullSchedule = async () => {
+    const fetchTeacherTimetable = async () => {
       if (!classId || isStudentView || !resolvedSemester?.id) return;
       try {
-        const res = await teacherService.getClassSchedule({
-          pathParams: { id: classId },
+        const res = await teacherService.getTimetable({
           params: { semesterId: resolvedSemester.id }
         });
-        if (res.success && res.data) {
+        const lessons = Array.isArray(res?.data?.lessons)
+          ? res.data.lessons
+          : Array.isArray(res?.data?.data?.lessons)
+            ? res.data.data.lessons
+            : Array.isArray(res?.data)
+              ? res.data
+              : [];
+
+        if (Array.isArray(lessons)) {
           const selectedDate = parseDateKey(selectedHistoryDate);
           const selectedDayOfWeek = selectedDate.getDay() + 1; // 1 (CN) - 7 (T7)
-          const periodsToday = res.data.filter(s => s.dayOfWeek === selectedDayOfWeek || s.day_of_week === selectedDayOfWeek);
+          const periodsToday = lessons
+            .filter((lesson) => {
+              const lessonClassId = lesson.classId ?? lesson.class_id;
+              const lessonDayOfWeek = lesson.dayOfWeek ?? lesson.day_of_week;
+              return String(lessonClassId) === String(classId) && Number(lessonDayOfWeek) === selectedDayOfWeek;
+            })
+            .sort((a, b) => {
+              const aPeriod = Number(a.period ?? a.period_number ?? 0);
+              const bPeriod = Number(b.period ?? b.period_number ?? 0);
+              return aPeriod - bPeriod;
+            });
           setTodayPeriods(periodsToday);
         }
       } catch (err) {
-        console.error("Failed to fetch full schedule:", err);
+        console.error("Failed to fetch teacher timetable:", err);
       }
     };
-    fetchFullSchedule();
+    fetchTeacherTimetable();
   }, [classId, selectedHistoryDate, isStudentView, resolvedSemester?.id]);
 
   // --- Handlers ---
@@ -541,12 +558,16 @@ const ClassStudentsSection = ({ classId, students, readOnly = false, isStudentVi
     setIsLessonReviewDialogOpen(false);
   };
 
+  const getLessonPeriodNumber = (lesson) => {
+    return lesson?.periodId ?? lesson?.period_number ?? lesson?.periodNumber ?? lesson?.period ?? null;
+  };
+
   const handleOpenLessonReview = () => {
     // 1. Xác định các tiết dạy thực tế trong hôm nay từ TKB
     // Nếu không có dữ liệu TKB thì dùng currentSchedule làm fallback
     const scheduledPeriods = todayPeriods.length > 0
-      ? todayPeriods.map(p => p.periodId || p.period_number)
-      : (currentSchedule ? [currentSchedule.periodId || currentSchedule.period_number] : []);
+      ? todayPeriods.map(getLessonPeriodNumber).filter(Boolean)
+      : (currentSchedule ? [getLessonPeriodNumber(currentSchedule)].filter(Boolean) : []);
 
     const targetDate = selectedHistoryDate;
     

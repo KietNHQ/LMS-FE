@@ -35,11 +35,11 @@ export default function CreateEditLessonSection({
         const dateObj = new Date(formValues.date);
         if (isNaN(dateObj.getTime())) return null;
         const dayOfWeek = dateObj.getDay() + 1; // 1 = Sunday, 2 = Monday, ...
-        return timetable.find(
-            (slot) =>
-                slot.class_name === formValues.className &&
-                slot.day_of_week === dayOfWeek
-        );
+        return timetable.find((slot) => {
+            const slotClassName = slot.class_name ?? slot.className;
+            const slotDayOfWeek = slot.day_of_week ?? slot.dayOfWeek;
+            return slotClassName === formValues.className && slotDayOfWeek === dayOfWeek;
+        });
     }, [formValues.date, formValues.className, timetable]);
 
     const handleAttachmentInput = (event) => {
@@ -160,7 +160,7 @@ export default function CreateEditLessonSection({
 
                     {matchedSlot ? (
                         <div className="timetable-match-success">
-                            ✓ Đã khớp lịch dạy (Thời khóa biểu): Tiết {matchedSlot.period_number} - Phòng {matchedSlot.room || "Chưa xác định"} (Tự động điền)
+                            ✓ Đã khớp lịch dạy (Thời khóa biểu): Tiết {(matchedSlot.period_number ?? matchedSlot.period) || ""} - Phòng {(matchedSlot.room ?? matchedSlot.roomName) || "Chưa xác định"} (Tự động điền)
                         </div>
                     ) : formValues.date ? (
                         <div className="timetable-match-warning">
