@@ -220,7 +220,7 @@ export default function DailyScheduleSection({
 
                   return (
                     <div
-                      key={idx}
+                      key={`${lesson.period}-${lesson.class}-${idx}`}
                       className={`daily-item color-${lesson.color}`}
                       onClick={() => onLessonSelect?.(buildLessonDetail(lesson))}
                     >

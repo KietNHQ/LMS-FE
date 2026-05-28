@@ -313,7 +313,7 @@ export default function VpTranscriptExport() {
                     </thead>
                     <tbody>
                       {previewRows.map((row, idx) => (
-                        <tr key={idx}>
+                        <tr key={`preview-${row.studentId || row.enrollmentId || idx}`}>
                           <td>{idx + 1}</td>
                           <td>{row.name}</td>
                           <td>{row.hk1Score !== null ? Number(row.hk1Score).toFixed(1) : "—"}</td>

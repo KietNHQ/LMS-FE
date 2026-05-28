@@ -298,10 +298,10 @@ export default function VpDisciplineConduct({ isEmbedded = false }) {
 
     const conductStats = useMemo(() => {
         if (!studentList.length) return [
-            { title: "Hạnh kiểm Tốt", val: "—", sub: "", icon: <FiCheckCircle />, color: "success" },
-            { title: "Biến động tích cực", val: "—", sub: "", icon: <FiTrendingUp />, color: "primary" },
-            { title: "Cần Can Thiệp", val: "—", sub: "", icon: <FiAlertCircle />, color: "danger" },
-            { title: "Chưa Phê Duyệt", val: "—", sub: "", icon: <FiCheckCircle />, color: "warning" },
+            { key: "good", title: "Hạnh kiểm Tốt", val: "—", sub: "", icon: <FiCheckCircle />, color: "success" },
+            { key: "improved", title: "Biến động tích cực", val: "—", sub: "", icon: <FiTrendingUp />, color: "primary" },
+            { key: "needs-help", title: "Cần Can Thiệp", val: "—", sub: "", icon: <FiAlertCircle />, color: "danger" },
+            { key: "ungraded", title: "Chưa Phê Duyệt", val: "—", sub: "", icon: <FiCheckCircle />, color: "warning" },
         ];
 
         const good = studentList.filter((s) => {
@@ -313,10 +313,10 @@ export default function VpDisciplineConduct({ isEmbedded = false }) {
         const ungraded = studentList.filter((s) => !conductGrades[s.enrollmentId] && !s.grade).length;
 
         return [
-            { title: "Hạnh kiểm Tốt", val: good, sub: "học sinh", icon: <FiCheckCircle />, color: "success" },
-            { title: "Tiến bộ", val: improved, sub: "học sinh", icon: <FiTrendingUp />, color: "primary" },
-            { title: "Cần Can Thiệp", val: needsHelp, sub: "học sinh", icon: <FiAlertCircle />, color: "danger" },
-            { title: "Chưa Đánh giá", val: ungraded, sub: "học sinh", icon: <FiCheckCircle />, color: "warning" },
+            { key: "good", title: "Hạnh kiểm Tốt", val: good, sub: "học sinh", icon: <FiCheckCircle />, color: "success" },
+            { key: "improved", title: "Tiến bộ", val: improved, sub: "học sinh", icon: <FiTrendingUp />, color: "primary" },
+            { key: "needs-help", title: "Cần Can Thiệp", val: needsHelp, sub: "học sinh", icon: <FiAlertCircle />, color: "danger" },
+            { key: "ungraded", title: "Chưa Đánh giá", val: ungraded, sub: "học sinh", icon: <FiCheckCircle />, color: "warning" },
         ];
     }, [studentList, conductGrades]);
 
@@ -338,8 +338,8 @@ export default function VpDisciplineConduct({ isEmbedded = false }) {
 
             {/* Top Metrics */}
             <div className="cd-stats-grid">
-                {conductStats.map((card, idx) => (
-                    <div key={idx} className={`cd-stat-card ${card.color}`}>
+                {conductStats.map((card) => (
+                    <div key={card.key} className={`cd-stat-card ${card.color}`}>
                         <div className="stat-card-icon">{card.icon}</div>
                         <div className="stat-card-content">
                             <span className="stat-label">{card.title}</span>

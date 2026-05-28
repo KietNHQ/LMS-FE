@@ -37,6 +37,7 @@ const TeacherTeachingClassDetail = () => {
               className: prevClassData?.name || "Lớp",
               status: "Đang học",
               enrollmentId: s.enrollment_id,
+              officerRole: s.officer_role || null,
               parentName: s.parent_name || "Chưa cập nhật",
               parentPhone: s.parent_phone || "N/A"
             }));

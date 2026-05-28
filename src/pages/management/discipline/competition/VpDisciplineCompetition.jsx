@@ -145,10 +145,10 @@ export default function VpDisciplineCompetition({ isEmbedded = false, onClassCli
     }, [filteredRanking, safePage]);
 
     const statsCards = [
-        { title: "Điểm Thi Đua TB", val: avgScore, sub: "Điểm toàn trường", icon: <FiStar />, color: "success" },
-        { title: "Lớp Dẫn Đầu", val: topClass?.class || "—", sub: topClass ? `${topClass.points}đ - Hạng ${topClass.rank}` : "Chưa có dữ liệu", icon: <FiAward />, color: "primary" },
-        { title: "Tổng Lớp", val: filteredRanking.length, sub: "Lớp trong bảng xếp hạng", icon: <FiLayers />, color: "info" },
-        { title: "Top 3 Khối", val: commendationClasses.length, sub: "Lớp xuất sắc nhất", icon: <FiUserCheck />, color: "success" },
+        { key: "avg-score", title: "Điểm Thi Đua TB", val: avgScore, sub: "Điểm toàn trường", icon: <FiStar />, color: "success" },
+        { key: "top-class", title: "Lớp Dẫn Đầu", val: topClass?.class || "—", sub: topClass ? `${topClass.points}đ - Hạng ${topClass.rank}` : "Chưa có dữ liệu", icon: <FiAward />, color: "primary" },
+        { key: "total-classes", title: "Tổng Lớp", val: filteredRanking.length, sub: "Lớp trong bảng xếp hạng", icon: <FiLayers />, color: "info" },
+        { key: "top-3-grade", title: "Top 3 Khối", val: commendationClasses.length, sub: "Lớp xuất sắc nhất", icon: <FiUserCheck />, color: "success" },
     ];
 
     const handleClassClick = (classItem) => {
@@ -177,8 +177,8 @@ export default function VpDisciplineCompetition({ isEmbedded = false, onClassCli
 
             {/* KPI Metrics Bar */}
             <div className="comp-stats-grid">
-                {statsCards.map((card, idx) => (
-                    <div key={idx} className={`comp-stat-card ${card.color}`}>
+                {statsCards.map((card) => (
+                    <div key={card.key} className={`comp-stat-card ${card.color}`}>
                         <div className="stat-card-icon">{card.icon}</div>
                         <div className="stat-card-content">
                             <span className="stat-label">{card.title}</span>

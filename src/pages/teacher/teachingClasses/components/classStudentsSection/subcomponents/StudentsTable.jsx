@@ -42,7 +42,7 @@ const StudentsTable = ({
         </thead>
         <tbody>
           {students.map((student, index) => (
-            <tr key={student.id} className={!readOnly && selectedStudentIds.has(student.id) ? "row-selected" : ""}>
+            <tr key={student.enrollment_id || student.id || `student-${index}`} className={!readOnly && selectedStudentIds.has(student.id) ? "row-selected" : ""}>
               {!readOnly && (
                 <td className="select-cell">
                   <input 

@@ -251,7 +251,7 @@ export default function HomeroomOverviewSection({
                         {data.activities && data.activities.length > 0 ? (
                             <ul className="activities-list">
                                 {data.activities.map((activity, index) => (
-                                    <li key={index} className="activity-item">
+                                    <li key={activity.id || `activity-${index}`} className="activity-item">
                                         <div className="activity-icon">
                                             <div className={`timeline-dot type-${activity.type}`}></div>
                                         </div>

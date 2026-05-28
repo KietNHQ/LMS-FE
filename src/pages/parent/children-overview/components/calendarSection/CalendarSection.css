@@ -194,6 +194,22 @@
     line-height: 1.5;
 }
 
+.not-enrolled-message {
+    padding: 1.5rem 1rem;
+    text-align: center;
+    background: #fff8f0;
+    border: 0.0625rem solid #f0e0c0;
+    border-radius: 0.75rem;
+    margin-top: 0.5rem;
+}
+
+.not-enrolled-message p {
+    margin: 0;
+    color: #8a5a00;
+    font-size: 0.95rem;
+    font-weight: 600;
+}
+
 @media (max-width: 48rem) {
     .calendar-heading {
         align-items: flex-start;

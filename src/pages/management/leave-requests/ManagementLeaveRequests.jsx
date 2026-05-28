@@ -6,6 +6,7 @@ import { managementLeaveService } from "../../../services/pages/management/leave
 import { Pagination, StatusBadge, LoadingSpinner, PageHeader } from "../../../components/common";
 import LeaveRequestDetailModal from "./components/LeaveRequestDetailModal";
 import LeaveRequestActionModal from "./components/LeaveRequestActionModal";
+import { normalizePermissions } from "../../../hooks/useAuth";
 import "./ManagementLeaveRequests.css";
 
 export default function ManagementLeaveRequests() {
@@ -36,16 +37,18 @@ export default function ManagementLeaveRequests() {
 
   // Retrieve user permissions for conditional action display
   const [userPermissions, setUserPermissions] = useState([]);
+
   useEffect(() => {
     try {
       const isPersistent = localStorage.getItem("isPersistent") === "true";
       const userStr = sessionStorage.getItem("user") || (isPersistent ? localStorage.getItem("user") : null);
       if (userStr) {
         const user = JSON.parse(userStr);
-        setUserPermissions(user.permissions || []);
+        const perms = normalizePermissions(user.permissions || []);
+        setUserPermissions(perms);
       }
     } catch (e) {
-      console.warn("Failed to parse user permissions in ManagementLeaveRequests.", e);
+      console.warn("Failed to load user permissions", e);
     }
   }, []);
 
@@ -82,7 +85,7 @@ export default function ManagementLeaveRequests() {
       if (res && res.success) {
         setRequests(res.data || []);
         if (res.pagination) {
-          setTotalItems(res.pagination.total || 0);
+          setTotalItems(res.pagination.total_items || res.pagination.total || 0);
           setTotalPages(res.pagination.total_pages || 1);
         } else {
           // fallback if mock returned direct list without wrapper (should be wrapped in service already)

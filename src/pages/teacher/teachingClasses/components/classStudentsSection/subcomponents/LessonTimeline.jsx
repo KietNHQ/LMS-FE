@@ -114,7 +114,7 @@ const LessonTimeline = ({
               const isLate = checkIsLate(review.lessonTime, review.createdAt);
               
               return (
-                <li key={review.id} className={`lesson-history-item ${isLate ? 'is-late' : ''}`}>
+                <li key={review.id || `review-${index}`} className={`lesson-history-item ${isLate ? 'is-late' : ''}`}>
                   <div className="lesson-history-content">
                     <div className="lesson-history-item-top">
                       <span className="lesson-history-tag">
@@ -139,7 +139,7 @@ const LessonTimeline = ({
                           {review.studentReports.map((report, idx) => {
                             const studentName = report.student_name || `${report.surname || ""} ${report.given_name || ""}`.trim() || "Học sinh";
                             return (
-                              <li key={idx} className="lesson-history-report-item">
+                              <li key={`report-${review.id}-${idx}`} className="lesson-history-report-item">
                                 • <strong>{studentName}</strong>: {report.category} - {typeof report.content === 'object' ? (report.content.label || "N/A") : report.content} ({report.points > 0 ? "+" : ""}{report.points}đ)
                                 {report.note && <span className="lesson-report-note-text"> - Ghi chú: <em>{report.note}</em></span>}
                               </li>

@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { PageHeader, WeekPicker, Pagination, StatusBadge, LoadingSpinner } from "../../../../components/common";
 import { useSchoolYearTerm } from "../../../../hooks/useSchoolYearTerm";
+import { normalizePermissions } from "../../../../hooks/useAuth";
 import Select from "../../../../components/ui/Select/Select";
 import { FiSearch, FiFilter, FiAward, FiAlertCircle, FiClock, FiCheckCircle, FiChevronLeft, FiChevronRight, FiPlus, FiDownload, FiCalendar, FiActivity, FiArrowRight, FiEdit2, FiTrash2, FiEyeOff, FiEye, FiUser, FiBarChart2, FiLayers, FiShield, FiCheck, FiAlertTriangle } from "react-icons/fi";
 import { toast } from "react-toastify";
@@ -35,7 +36,7 @@ export default function VpDisciplineMgmt() {
             const userStr = sessionStorage.getItem("user") || (isPersistent ? localStorage.getItem("user") : null);
             if (userStr) {
                 const user = JSON.parse(userStr);
-                const perms = user.permissions || [];
+                const perms = normalizePermissions(user.permissions || []);
                 const role = user.role?.toLowerCase() || "";
                 const hasPerm = perms.includes("leave_requests:read") || perms.includes("leave_requests:manage") || role === "admin" || role === "principal";
                 setCanViewLeaveRequests(hasPerm);
@@ -138,6 +139,7 @@ export default function VpDisciplineMgmt() {
             const students = item?.unique_students || 0;
             result.push({
                 ...info,
+                key, // unique key
                 incidents: count,
                 detail: `${students} học sinh`,
                 trend: "—",
@@ -331,8 +333,8 @@ export default function VpDisciplineMgmt() {
             {activeTab === "discipline" ? (
                 <>
                     <div className="dm-summary-grid">
-                        {categoryStats.map((cat, idx) => (
-                            <div key={idx} className={`dm-status-card ${cat.status}`}>
+                        {categoryStats.map((cat) => (
+                            <div key={cat.key} className={`dm-status-card ${cat.status}`}>
                                 <div className="card-inner">
                                     <div className="card-top">
                                         <span className="card-label">{cat.title}</span>

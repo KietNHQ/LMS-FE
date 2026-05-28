@@ -143,11 +143,11 @@ const StudentReviewModal = ({
               </p>
             ) : (
               <div className="tc-review-dialog-entry-list">
-                {reviewEntries.map((entry) => {
+                {reviewEntries.map((entry, idx) => {
                   const pointLabel = entry.pts > 0 ? `+${entry.pts}` : entry.pts;
 
                   return (
-                    <div key={entry.id} className="tc-review-dialog-entry-card">
+                    <div key={`${entry.id || 'new'}-${idx}`} className="tc-review-dialog-entry-card">
                       <div className="tc-review-dialog-entry-card-main">
                         <strong>{entry.category}</strong>
                         <span>{entry.content.label}</span>

@@ -2,7 +2,7 @@ import "./OverviewCards.css";
 import { FiAward, FiTrendingUp, FiBell, FiCreditCard } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
 
-export default function OverviewCards({ yearAvg, hk1Avg, unreadCount }) {
+export default function OverviewCards({ yearAvg, hk1Avg, unreadCount, unpaidAmount }) {
   const navigate = useNavigate();
 
   return (
@@ -49,7 +49,7 @@ export default function OverviewCards({ yearAvg, hk1Avg, unreadCount }) {
       <div className="card clickable" onClick={() => navigate("/parent/payments")}>
         <div>
           <p>Học phí chưa đóng</p>
-          <h3>---</h3>
+          <h3>{unpaidAmount || "0đ"}</h3>
         </div>
 
         <div className="icon red">

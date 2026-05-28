@@ -17,8 +17,9 @@ const PERMISSION_ID_MAP = {
     "33": "guardians:update", "34": "guardians:delete", "35": "students:create", "36": "students:update",
     "37": "students:delete", "38": "teachers:create", "39": "teachers:update", "40": "teachers:delete",
     "41": "dashboard:read", "42": "reports:read", "43": "lessons:read", "44": "lessons:create",
-    "45": "lessons:update", "46": "lessons:delete", "47": "classes:assign_officers", "48": "classes:read_summary",
-    "49": "notifications:broadcast"
+    "45": "lessons:update", "46": "lessons:delete",     "47": "classes:assign_officers", "48": "classes:read_summary",
+    "49": "notifications:broadcast",
+    "54": "leave_requests:read", "55": "leave_requests:approve", "56": "leave_requests:manage"
 };
 
 // Helper: Chuyển đổi danh sách quyền từ BE (object/id) sang FE (string key)

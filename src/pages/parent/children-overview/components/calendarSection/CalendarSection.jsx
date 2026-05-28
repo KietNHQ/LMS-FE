@@ -5,9 +5,35 @@ import {
     getClassWeekLessons,
     getStartOfIsoWeek,
     shiftWeek,
+    PERIOD_SLOTS,
 } from "../../../../../utils/timetableShared";
 
-export default function CalendarSection({ events, compact = false, classNameValue, selectedChildId }) {
+const DAY_NUM_TO_NAME = {
+    1: "Monday",
+    2: "Tuesday",
+    3: "Wednesday",
+    4: "Thursday",
+    5: "Friday",
+    6: "Saturday",
+    7: "Sunday",
+};
+
+function enrichApiSchedule(rawSchedule) {
+    return rawSchedule.map((item) => {
+        const periodSlot = PERIOD_SLOTS.find(p => p.period === item.periodStart) || {};
+        return {
+            ...item,
+            day: item.day || DAY_NUM_TO_NAME[item.day_of_week] || "",
+            start: item.start || periodSlot.start || "",
+            end: item.end || periodSlot.end || "",
+            timeRange: (item.start || periodSlot.start) && (item.end || periodSlot.end)
+                ? `${item.start || periodSlot.start} - ${item.end || periodSlot.end}`
+                : "",
+        };
+    });
+}
+
+export default function CalendarSection({ schedule, events, compact = false, classNameValue, selectedChildId, scheduleError }) {
     const [activeView, setActiveView] = useState("schedule");
     const [activeScheduleIndex, setActiveScheduleIndex] = useState(0);
     const [activeEventIndex, setActiveEventIndex] = useState(0);
@@ -19,11 +45,21 @@ export default function CalendarSection({ events, compact = false, classNameValu
         setWeekStart(getStartOfIsoWeek(new Date()));
     }, [selectedChildId]);
 
-    const lessons = useMemo(
+    const apiScheduleLessons = useMemo(
+        () => enrichApiSchedule(Array.isArray(schedule) ? schedule : []),
+        [schedule]
+    );
+
+    const mockLessons = useMemo(
         () => (classNameValue ? getClassWeekLessons(classNameValue, weekStart) : []),
         [classNameValue, weekStart]
     );
 
+    const lessons = useMemo(() => {
+        return apiScheduleLessons.length > 0 ? apiScheduleLessons : mockLessons;
+    }, [apiScheduleLessons, mockLessons]);
+
+    const showNotEnrolled = scheduleError && !apiScheduleLessons.length;
     const compactLessons = useMemo(() => lessons.slice(0, 4), [lessons]);
 
     return (
@@ -51,6 +87,14 @@ export default function CalendarSection({ events, compact = false, classNameValu
                 </button>
             </div>
 
+            {activeView === "schedule" && showNotEnrolled && (
+                <div className="calendar-sub-block">
+                    <div className="not-enrolled-message">
+                        <p>{scheduleError || "Học sinh chưa được xếp lớp"}</p>
+                    </div>
+                </div>
+            )}
+
             {activeView === "schedule" && compact && (
                 <div className="calendar-sub-block">
                     <h4>Lịch học hàng tuần</h4>
@@ -59,7 +103,7 @@ export default function CalendarSection({ events, compact = false, classNameValu
                         {compactLessons.map((item, index) => (
                             <button
                                 type="button"
-                                key={`${item.id}-${index}`}
+                                key={item.id || `schedule-${index}`}
                                 className={`calendar-list-item ${activeScheduleIndex === index ? "active" : ""}`}
                                 onClick={() => setActiveScheduleIndex(index)}
                             >
@@ -100,7 +144,7 @@ export default function CalendarSection({ events, compact = false, classNameValu
                         {events.map((item, index) => (
                             <button
                                 type="button"
-                                key={`${item.title}-${index}`}
+                                key={item.id || item.date || `event-${index}`}
                                 className={`event-item ${activeEventIndex === index ? "active" : ""}`}
                                 onClick={() => setActiveEventIndex(index)}
                             >
