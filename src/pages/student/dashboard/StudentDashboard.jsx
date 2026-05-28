@@ -111,10 +111,10 @@ export default function StudentDashboard() {
         <div className="student-dashboard-content">
             <div className="student-dashboard-top-panel">
                 <WelcomeHeader
-                    studentName={localProfile?.fullName?.split(" ").pop() || "User"}
-                    classNameLabel={localProfile?.className || "—"}
-                    studentCode={localProfile?.studentCode || "—"}
-                    homeroomTeacher={localProfile?.homeroomTeacher || "—"}
+                    studentName={dashboardData?.profile?.fullName?.split(" ").pop() || localProfile?.fullName?.split(" ").pop() || "User"}
+                    classNameLabel={dashboardData?.profile?.className || localProfile?.className || "—"}
+                    studentCode={dashboardData?.profile?.studentCode || localProfile?.studentCode || "—"}
+                    homeroomTeacher={dashboardData?.profile?.homeroomTeacher || localProfile?.homeroomTeacher || "—"}
                 />
 
                 <div className="student-dashboard-toolbar">
