@@ -126,6 +126,7 @@ export const PERMISSIONS = {
 
 export const MANAGEMENT_TITLES = [
     { label: "Tùy chỉnh", value: "custom", permissions: [] },
+    { label: "Quản trị viên", value: "admin", permissions: Object.values(PERMISSIONS) },
     { label: "Hiệu trưởng", value: "principal", permissions: Object.values(PERMISSIONS) },
     { label: "Phó hiệu trưởng (Học vụ)", value: "vp_academic", permissions: [
         PERMISSIONS.USER_VIEW, PERMISSIONS.CLASS_VIEW, PERMISSIONS.GRADE_VIEW,

@@ -309,8 +309,7 @@ export default function VpDisciplineMgmt() {
             />
 
             {/* Elegant Premium Tabs for Tabbed Navigation */}
-            {/* Always show Leave Requests tab for discipline management */}
-            {true && (
+            {canViewLeaveRequests && (
                 <div className="dm-portal-tabs-wrapper">
                     <button
                         className={`dm-portal-tab-btn ${activeTab === "discipline" ? "active" : ""}`}
