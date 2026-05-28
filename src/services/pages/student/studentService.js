@@ -178,7 +178,7 @@ const STUDENT_ENDPOINTS = [
   { key: "get_classes", method: "GET", path: "/students/:id/classes", module: "classes", mock: false },
   { key: "get_classes_by_id", method: "GET", path: "/students/:id/classes/:classId", module: "classes", mock: false },
   { key: "get_classes_by_id_schedule", method: "GET", path: "/classes/:id/schedule", module: "schedule", mock: false },
-  { key: "get_student_schedule", method: "GET", path: "/timetable", module: "schedule", mock: false },
+  { key: "get_student_schedule", method: "GET", path: "/timetable/student", module: "schedule", mock: false },
   { key: "get_student_notifications", method: "GET", path: "/notifications/my", module: "notifications", mock: false },
   { key: "patch_student_notifications_mark_all_read", method: "PUT", path: "/notifications/my/read-all", module: "notifications", mock: false },
   { key: "patch_student_notifications_by_id_read", method: "PUT", path: "/notifications/my/:id/read", module: "notifications", mock: false },
@@ -269,43 +269,14 @@ export const studentService = {
   getStudentScheduleMapped: async (input) => {
     const response = await endpointCallers.get_student_schedule(input);
     if (response && response.success && Array.isArray(response.data)) {
-      const PERIOD_TIME = {
-        1: "07:00", 2: "07:50", 3: "08:45", 4: "09:35", 5: "10:30",
-        6: "13:00", 7: "13:50", 8: "14:45", 9: "15:35", 10: "16:25",
-      };
-
       return response.data.map((p, idx) => {
         const beToFeDayMap = { 2: 0, 3: 1, 4: 2, 5: 3, 6: 4, 7: 5, 1: 6 };
-        const dayIdx = beToFeDayMap[p.day_of_week] ?? 0;
+        const dayIdx = beToFeDayMap[p.dayOfWeek] ?? 0;
         const dayKey = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"][dayIdx];
 
-        let periodNum = p.period_number;
-        if (!periodNum) {
-          let timeStr = "";
-          if (p.start_time) {
-            const s = String(p.start_time);
-            timeStr = s.includes("T") ? s.split("T")[1].slice(0, 5) : s.slice(0, 5);
-          }
-          
-          periodNum = 1;
-          for (const [pNum, pTime] of Object.entries(PERIOD_TIME)) {
-            if (pTime === timeStr) {
-              periodNum = parseInt(pNum);
-              break;
-            }
-          }
-        }
-
-        const subjectName = p.class_teacher_subject?.subject_assignments?.display_name || "Môn học";
-        
-        const teacherObj = p.class_teacher_subject?.teachers;
-        let teacherName = "Chưa phân công";
-        if (teacherObj) {
-          const surname = teacherObj.surname || "";
-          const givenName = teacherObj.given_name || "";
-          const initials = surname.split(" ").filter(Boolean).map(s => s[0].toUpperCase()).join(".");
-          teacherName = `Thầy ${initials ? initials + "." : ""}${givenName}`;
-        }
+        const periodNum = p.period;
+        const subjectName = p.subjectName || "Môn học";
+        const teacherName = p.teacherName || "Chưa phân công";
         
         return {
           id: p.id || `lesson-${idx}`,
@@ -314,7 +285,7 @@ export const studentService = {
           periodEnd: periodNum,
           subject: subjectName,
           teacher: teacherName,
-          room: p.room || "—",
+          room: p.roomName || "—",
           status: p.status || "normal",
           mode: p.mode || "offline",
           color: p.color || (subjectName.includes("Toán") ? "teal" : subjectName.includes("Văn") ? "pink" : "blue"),
