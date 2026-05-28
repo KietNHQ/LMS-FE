@@ -149,8 +149,8 @@ export default function HomeroomOverviewSection({
                                             <span className="marker-count">{day.count} tiết</span>
                                         </div>
                                         <div className="marker-lessons">
-                                            {day.lessons.map((lesson, idx) => (
-                                                <div key={idx} className="marker-lesson-item">
+                                            {day.lessons.map((lesson, lessonIdx) => (
+                                                <div key={`${day.date}-${lesson.period}-${lessonIdx}`} className="marker-lesson-item">
                                                     <span className="marker-period">T{lesson.period}</span>
                                                     <span className="marker-subject">{lesson.subjectName}</span>
                                                     <span className="marker-class">{lesson.className}</span>
