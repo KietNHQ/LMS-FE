@@ -463,7 +463,9 @@ export default function VpDisciplineMgmt() {
                     </div>
                 </>
             ) : (
-                <ManagementLeaveRequests />
+                <div className="leave-requests-wrapper">
+                    <ManagementLeaveRequests />
+                </div>
             )}
             <ViolationRecordModal 
                 isOpen={isViolationModalOpen} 
