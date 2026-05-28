@@ -5,6 +5,8 @@ import Select from "../../../../components/ui/Select/Select";
 import { useSchoolYearTerm } from "../../../../hooks/useSchoolYearTerm";
 import { resolveSemesterId } from "../../../../services/shared/schoolYearLookup";
 import { vpDisciplineService } from "../../../../services/pages/management/vp-discipline";
+import { disciplineService } from "../../../../services/pages/management/discipline/disciplineService";
+import axiosClient from "../../../../services/shared/http/axiosClient";
 import { FiAlertTriangle, FiUsers, FiClock, FiAward, FiBarChart2, FiArrowRight } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
@@ -13,6 +15,41 @@ import "./VpDisciplineDashboard.css";
 
 const STATUS_LABELS = { open: "Mở", in_progress: "Đang xử lý", resolved: "Đã giải quyết", closed: "Đóng" };
 const INCIDENT_STATUS_LABELS = { open: "Khẩn cấp", in_progress: "Giao việc", resolved: "Đã xử lý", closed: "Đã đóng" };
+
+// Tính ngày bắt đầu/kết thúc của 1 tuần trong năm học
+const getWeekDateRange = (weekNumber, schoolYear) => {
+    if (!schoolYear) return null;
+    const [startYear] = schoolYear.split("-").map(Number);
+    // Năm học bắt đầu tháng 9
+    const yearStart = new Date(startYear, 8, 1); // Sept 1
+    // Tính ngày bắt đầu tuần (Thứ 2)
+    const daysOffset = (weekNumber - 1) * 7;
+    const weekStart = new Date(yearStart);
+    weekStart.setDate(weekStart.getDate() + daysOffset);
+    // Ngày kết thúc tuần (CN)
+    const weekEnd = new Date(weekStart);
+    weekEnd.setDate(weekEnd.getDate() + 6);
+    return {
+        startDate: weekStart.toISOString().split("T")[0],
+        endDate: weekEnd.toISOString().split("T")[0],
+    };
+};
+
+// Chuyển đổi violations thành calendar events
+const violationsToCalendarEvents = (violations) => {
+    if (!Array.isArray(violations)) return [];
+    return violations.map((v, idx) => ({
+        startDay: new Date(v.violation_date || v.date || Date.now()).getDate(),
+        endDay: new Date(v.violation_date || v.date || Date.now()).getDate(),
+        title: v.student_name || v.studentName || `VP #${v.id}`,
+        content: v.violation_type_name || v.violationTypeName || v.description || "",
+        color: v.severity === "high" ? "red" : v.severity === "medium" ? "orange" : "yellow",
+        target: "all",
+        type: "violation",
+        violationId: v.id,
+        studentId: v.student_id || v.studentId,
+    }));
+};
 
 export default function VpDisciplineDashboard() {
     const { selectedSchoolYear, selectedTerm, handleYearArrow, handleTermChange } = useSchoolYearTerm();
@@ -28,6 +65,56 @@ export default function VpDisciplineDashboard() {
         enabled: Boolean(selectedSchoolYear),
         staleTime: 5 * 60 * 1000,
     });
+
+    // Tính date range của tuần được chọn
+    const weekDateRange = useMemo(() => {
+        return getWeekDateRange(selectedWeek, selectedSchoolYear);
+    }, [selectedWeek, selectedSchoolYear]);
+
+    // Fetch violations cho tuần được chọn
+    const { data: weekViolations = [] } = useQuery({
+        queryKey: ["discipline-violations-week", resolvedSemesterId, weekDateRange],
+        queryFn: async () => {
+            if (!resolvedSemesterId || !weekDateRange) return [];
+            try {
+                const res = await axiosClient.get("/discipline/violations", {
+                    params: {
+                        semesterId: resolvedSemesterId,
+                        startDate: weekDateRange.startDate,
+                        endDate: weekDateRange.endDate,
+                    },
+                });
+                const data = res?.data?.data || res?.data || [];
+                return Array.isArray(data) ? data : [];
+            } catch { return []; }
+        },
+        enabled: Boolean(resolvedSemesterId && weekDateRange),
+        staleTime: 30_000,
+    });
+
+    // Chuyển violations thành calendar events cho tuần
+    const violationEvents = useMemo(() => {
+        return violationsToCalendarEvents(weekViolations);
+    }, [weekViolations]);
+
+    // Fetch violations trend cho biểu đồ
+    const { data: trendRaw = [] } = useQuery({
+        queryKey: ["discipline-dashboard-trend", resolvedSemesterId],
+        queryFn: async () => {
+            if (!resolvedSemesterId) return [];
+            try {
+                const res = await vpDisciplineService.getViolationsTrend({ params: { semesterId: resolvedSemesterId } });
+                return res?.data || res || [];
+            } catch { return []; }
+        },
+        enabled: Boolean(resolvedSemesterId),
+        staleTime: 60_000,
+    });
+
+    // Gộp violation events vào calendar
+    const calendarEvents = useMemo(() => {
+        return [...INITIAL_CALENDAR_EVENTS, ...violationEvents];
+    }, [violationEvents]);
 
     // Fetch grade levels from API
     const { data: gradeLevelsData = [] } = useQuery({
@@ -76,23 +163,18 @@ export default function VpDisciplineDashboard() {
         const loadDashboardData = async () => {
             try {
                 const semesterId = await resolveSemesterId(selectedSchoolYear, selectedTerm);
+                if (!semesterId || !isMounted) return;
 
                 const [summaryResult, rankingsResult, escalationsResult] = await Promise.allSettled([
-                    semesterId
-                        ? vpDisciplineService.getReportSummary(semesterId, {
-                            params: { schoolYearId: selectedSchoolYear },
-                        })
-                        : Promise.reject(new Error("No semester")),
-                    semesterId
-                        ? vpDisciplineService.getClassRankings({
-                            params: { schoolYearId: selectedSchoolYear, semesterId },
-                        })
-                        : Promise.reject(new Error("No semester")),
-                    semesterId
-                        ? vpDisciplineService.callByKey("get_discipline_escalations_stats_by_semesterid", {
-                            pathParams: { semesterId },
-                        })
-                        : Promise.reject(new Error("No semester")),
+                    vpDisciplineService.getReportSummary(semesterId, {
+                        params: { schoolYearId: selectedSchoolYear },
+                    }),
+                    vpDisciplineService.getClassRankings({
+                        params: { schoolYearId: selectedSchoolYear, semesterId },
+                    }),
+                    vpDisciplineService.callByKey("get_discipline_escalations_stats_by_semesterid", {
+                        pathParams: { semesterId },
+                    }),
                 ]);
 
                 if (!isMounted) return;
@@ -114,7 +196,6 @@ export default function VpDisciplineDashboard() {
                     topRank,
                 }));
 
-                // ── Alerts: top escalations by priority ──
                 const sortedEscalations = [...(Array.isArray(escalations) ? escalations : [])].sort(
                     (a, b) => {
                         const pOrder = { high: 0, medium: 1, low: 2 };
@@ -129,8 +210,6 @@ export default function VpDisciplineDashboard() {
                         path: `/vp-discipline/discipline-management?incident=${e.id}`,
                     }))
                 );
-
-                // ── Incidents: recent escalations ──
                 setIncidents(
                     sortedEscalations.slice(0, 3).map((e) => ({
                         id: e.id,
@@ -140,8 +219,6 @@ export default function VpDisciplineDashboard() {
                         priority: e.priority,
                     }))
                 );
-
-                // ── Leaderboard: class rankings ──
                 setFullLeaderboard(
                     rankings.map((r, idx) => ({
                         id: r.id ?? idx,
@@ -167,19 +244,7 @@ export default function VpDisciplineDashboard() {
         : fullLeaderboard.filter(l => l.grade === parseInt(leaderboardGrade))
     ).slice(0, 3);
 
-    // Chart data from real violations trend API
-    const { data: trendRaw = [] } = useQuery({
-        queryKey: ["discipline-dashboard-trend", resolvedSemesterId],
-        queryFn: async () => {
-            if (!resolvedSemesterId) return [];
-            try {
-                const res = await vpDisciplineService.getViolationsTrend({ params: { semesterId: resolvedSemesterId } });
-                return res?.data || res || [];
-            } catch { return []; }
-        },
-        enabled: Boolean(resolvedSemesterId),
-        staleTime: 60_000,
-    });
+    // chartData uses trendRaw from line 101
 
     const chartData = useMemo(() => {
         if (!trendRaw || !Array.isArray(trendRaw) || trendRaw.length === 0) {
@@ -352,6 +417,15 @@ export default function VpDisciplineDashboard() {
                 </div>
             </div>
             <div style={{marginTop: '2rem'}}>
+                {/* Violations summary for selected week */}
+                <div className="vp-panel" style={{ marginBottom: '1rem' }}>
+                    <div className="vp-panel-header">
+                        <h3><FiAlertTriangle /> Vi Phạm Tuần {selectedWeek}</h3>
+                        <span style={{ color: weekViolations.length > 0 ? '#e53e3e' : '#48bb78', fontWeight: 'bold' }}>
+                            {weekViolations.length} vi phạm
+                        </span>
+                    </div>
+                </div>
                 <EventCalendar 
                     title="Lịch Vận Hành Nghiệp Vụ"
                     selectedSchoolYear={selectedSchoolYear}
@@ -359,8 +433,8 @@ export default function VpDisciplineDashboard() {
                     themeClass="theme-discipline"
                     userRole="admin"
                     isCompact={false}
-                    initialEvents={INITIAL_CALENDAR_EVENTS}
-                    eventTypes={CALENDAR_EVENT_TYPES}
+                    initialEvents={calendarEvents}
+                    eventTypes={[...CALENDAR_EVENT_TYPES, { value: "red", label: "Vi phạm nặng" }, { value: "orange", label: "Vi phạm vừa" }, { value: "yellow", label: "Vi phạm nhẹ" }]}
                     rolePolicy={{
                         canCreate: false,
                         canViewDetails: true,
