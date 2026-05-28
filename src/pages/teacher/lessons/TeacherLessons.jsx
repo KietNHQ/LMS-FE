@@ -74,7 +74,22 @@ export default function TeacherLessons() {
         }),
     });
 
-    const timetable = timetableResponse?.success ? timetableResponse.data : [];
+    const timetable = useMemo(() => {
+        const responseData = timetableResponse?.data ?? timetableResponse;
+        if (Array.isArray(responseData)) {
+            return responseData;
+        }
+
+        if (Array.isArray(responseData?.lessons)) {
+            return responseData.lessons;
+        }
+
+        if (Array.isArray(responseData?.data)) {
+            return responseData.data;
+        }
+
+        return [];
+    }, [timetableResponse]);
 
     // Mutations for CRUD
     const createMutation = useMutation({
@@ -190,14 +205,14 @@ export default function TeacherLessons() {
                     const dateObj = new Date(nextValues.date);
                     if (!isNaN(dateObj.getTime())) {
                         const dayOfWeek = dateObj.getDay() + 1; // 1 = Sunday, 2 = Monday, ...
-                        const matchedSlot = timetable.find(
-                            (slot) =>
-                                slot.class_name === nextValues.className &&
-                                slot.day_of_week === dayOfWeek
-                        );
+                        const matchedSlot = timetable.find((slot) => {
+                            const slotClassName = slot.class_name ?? slot.className;
+                            const slotDayOfWeek = slot.day_of_week ?? slot.dayOfWeek;
+                            return slotClassName === nextValues.className && slotDayOfWeek === dayOfWeek;
+                        });
                         if (matchedSlot) {
-                            nextValues.period = `Tiết ${matchedSlot.period_number}`;
-                            nextValues.room = matchedSlot.room || "";
+                            nextValues.period = `Tiết ${matchedSlot.period_number ?? matchedSlot.period ?? ""}`;
+                            nextValues.room = matchedSlot.room ?? matchedSlot.roomName ?? "";
                         }
                     }
                 }
