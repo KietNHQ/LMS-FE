@@ -40,6 +40,21 @@ const getFirstDayOfMonth = (date) => new Date(date.getFullYear(), date.getMonth(
 
 const DEFAULT_EVENTS = []; // Clear defaults to allow props the full control
 
+const isIsoDateString = (value) => typeof value === "string" && /^\d{4}-\d{2}-\d{2}(T.*)?$/.test(value);
+
+const normalizeDateInput = (value, fallbackYear, fallbackMonth) => {
+  if (isIsoDateString(value)) {
+    return new Date(value.length > 10 ? value : `${value}T00:00:00`);
+  }
+
+  const dayNumber = Number(value);
+  if (!Number.isFinite(dayNumber) || dayNumber <= 0) {
+    return null;
+  }
+
+  return new Date(fallbackYear, fallbackMonth, dayNumber);
+};
+
 const EventCalendar = ({
   title = "Lịch Sự Kiện",
   initialDate,
@@ -54,6 +69,8 @@ const EventCalendar = ({
   selectedTerm = 1,
   creatableTypes = null, // Optional subset of eventTypes allowed for creation
   showTargetSelector = true, // Toggle for the 'Đối tượng' selector
+  targetOptions = [],
+  onAddEvent,
 }) => {
   const today = initialDate || new Date();
   const [currentDate, setCurrentDate] = useState(today);
@@ -135,14 +152,30 @@ const EventCalendar = ({
   }
 
   const getEventRange = (event) => {
-    const startDay = Number(event.startDay ?? event.date ?? 0);
-    const endDayRaw = Number(event.endDay ?? event.date ?? startDay);
-    const safeStartDay = Number.isFinite(startDay) ? startDay : 0;
-    const safeEndDay = Number.isFinite(endDayRaw) ? endDayRaw : safeStartDay;
-    return {
-      startDay: Math.min(safeStartDay, safeEndDay),
-      endDay: Math.max(safeStartDay, safeEndDay),
-    };
+    const startDate = normalizeDateInput(event.date ?? event.startDay, currentDate.getFullYear(), currentDate.getMonth());
+    const endDate = normalizeDateInput(event.endDate ?? event.endDay ?? event.date ?? event.startDay, currentDate.getFullYear(), currentDate.getMonth()) || startDate;
+
+    if (!startDate || !endDate) {
+      return { startDate: null, endDate: null };
+    }
+
+    const start = startDate <= endDate ? startDate : endDate;
+    const end = startDate <= endDate ? endDate : startDate;
+    return { startDate: start, endDate: end };
+  };
+
+  const getEventDisplayDate = (event) => {
+    if (isIsoDateString(event?.date)) {
+      return event.date.slice(0, 10);
+    }
+
+    const range = getEventRange(event || {});
+    if (!range.startDate) return "";
+
+    const year = range.startDate.getFullYear();
+    const month = String(range.startDate.getMonth() + 1).padStart(2, "0");
+    const day = String(range.startDate.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
   };
 
   // Group events by date (supporting multiple events per day)
@@ -150,13 +183,22 @@ const EventCalendar = ({
     const map = {};
     events.forEach((event) => {
       const range = getEventRange(event);
-      for (let d = range.startDay; d <= range.endDay; d++) {
-        if (!map[d]) map[d] = [];
-        map[d].push(event);
+      if (!range.startDate || !range.endDate) {
+        return;
+      }
+
+      const cursor = new Date(range.startDate);
+      while (cursor <= range.endDate) {
+        if (cursor.getFullYear() === currentDate.getFullYear() && cursor.getMonth() === currentDate.getMonth()) {
+          const day = cursor.getDate();
+          if (!map[day]) map[day] = [];
+          map[day].push(event);
+        }
+        cursor.setDate(cursor.getDate() + 1);
       }
     });
     return map;
-  }, [events]);
+  }, [events, currentDate]);
 
   const toCurrentMonthDate = (day) => {
     const year = currentDate.getFullYear();
@@ -235,17 +277,29 @@ const EventCalendar = ({
   };
 
   const handleAddEvent = () => {
-    if (!canCreate || !newEvent.date || !newEvent.title) {
+    if (!canCreate) return;
+    
+    if (!newEvent.title) {
+      alert("Vui lòng nhập tiêu đề sự kiện!");
+      return;
+    }
+    
+    if (!newEvent.date) {
+      alert("Vui lòng chọn ngày hợp lệ (lưu ý ngày phải nằm trong tháng đang chọn).");
       return;
     }
 
-    const startDay = Number(newEvent.date.split("-")[2]);
+    const startDateObj = new Date(newEvent.date);
     const endDateValue = newEvent.isMultiDay ? (newEvent.endDate || newEvent.date) : newEvent.date;
-    const endDay = Number(endDateValue.split("-")[2]);
+    const endDateObj = new Date(endDateValue);
 
-    if (!Number.isFinite(startDay) || !Number.isFinite(endDay)) {
+    if (isNaN(startDateObj.getTime()) || isNaN(endDateObj.getTime())) {
+      alert("Ngày không hợp lệ!");
       return;
     }
+
+    const startDay = startDateObj.getDate();
+    const endDay = endDateObj.getDate();
 
     const normalizedStartDay = Math.min(startDay, endDay);
     const normalizedEndDay = Math.max(startDay, endDay);
@@ -253,19 +307,25 @@ const EventCalendar = ({
     const nextEvent = {
       startDay: normalizedStartDay,
       endDay: normalizedEndDay,
+      date: newEvent.date,
+      endDate: endDateValue,
       title: newEvent.title,
       content: newEvent.content,
       target: newEvent.target,
       color: newEvent.color,
     };
 
-    setEvents((prevEvents) => {
-      const filtered = prevEvents.filter((item) => {
-        const range = getEventRange(item);
-        return !(normalizedStartDay <= range.endDay && normalizedEndDay >= range.startDay);
+    if (onAddEvent) {
+      onAddEvent(nextEvent);
+    } else {
+      setEvents((prevEvents) => {
+        const filtered = prevEvents.filter((item) => {
+          const range = getEventRange(item);
+          return !(normalizedStartDay <= range.endDay && normalizedEndDay >= range.startDay);
+        });
+        return [...filtered, nextEvent];
       });
-      return [...filtered, nextEvent];
-    });
+    }
 
     setNewEvent({
       date: "",
@@ -469,17 +529,16 @@ const EventCalendar = ({
                   {showTargetSelector && (
                     <div className="event-calendar__modal-group">
                       <label>Đối tượng:</label>
+                      {targetOptions.length > 0 ? (
                       <Select
                         value={newEvent.target}
                         onChange={(e) => setNewEvent({ ...newEvent, target: e.target.value })}
-                        options={[
-                          { value: "all", label: "Tất cả lớp giảng dạy" },
-                          { value: "homeroom", label: "Lớp chủ nhiệm" },
-                          { value: "10A1", label: "Lớp 10A1" },
-                          { value: "11B2", label: "Lớp 11B2" },
-                        ]}
+                        options={targetOptions}
                         variant="custom"
                       />
+                      ) : (
+                        <div className="event-calendar__static-value">Không có lớp khả dụng</div>
+                      )}
                     </div>
                   )}
                   <div className="event-calendar__modal-group">
@@ -531,10 +590,16 @@ const EventCalendar = ({
                     <span className="event-calendar__detail-value">
                       {(() => {
                         const range = getEventRange(selectedEvent || {});
-                        if (range.startDay !== range.endDay) {
-                          return `${range.startDay} - ${range.endDay}/${currentDate.getMonth() + 1}/${currentDate.getFullYear()}`;
+                        if (!range.startDate) {
+                          return "Không xác định";
                         }
-                        return `${range.startDay}/${currentDate.getMonth() + 1}/${currentDate.getFullYear()}`;
+
+                        const startLabel = range.startDate.toLocaleDateString("vi-VN");
+                        const endLabel = range.endDate.toLocaleDateString("vi-VN");
+                        if (startLabel !== endLabel) {
+                          return `${startLabel} - ${endLabel}`;
+                        }
+                        return startLabel;
                       })()}
                     </span>
                   </div>
@@ -583,9 +648,9 @@ const EventCalendar = ({
                         onClick={() => {
                           const range = getEventRange(selectedEvent || {});
                           setNewEvent({
-                            date: toCurrentMonthDate(range.startDay || selectedDay || today.getDate()),
-                            endDate: toCurrentMonthDate(range.endDay || selectedDay || today.getDate()),
-                            isMultiDay: range.startDay !== range.endDay,
+                            date: getEventDisplayDate(selectedEvent) || toCurrentMonthDate(selectedDay || today.getDate()),
+                            endDate: getEventDisplayDate(selectedEvent) || toCurrentMonthDate(selectedDay || today.getDate()),
+                            isMultiDay: range.startDate && range.endDate ? range.startDate.getTime() !== range.endDate.getTime() : false,
                             title: selectedEvent?.title || "",
                             content: selectedEvent?.content || "",
                             color: selectedEvent?.color || eventTypes[0]?.value || "blue",

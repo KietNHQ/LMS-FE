@@ -558,6 +558,12 @@ export default function ManagementTimetable() {
             return;
         }
 
+        if (!periodIds.schoolYearId || !periodIds.semesterId) {
+            setSessions([]);
+            setLoadError("Chưa có dữ liệu năm học/học kỳ này trong hệ thống.");
+            return;
+        }
+
         let cancelled = false;
 
         const timer = setTimeout(async () => {
@@ -565,8 +571,8 @@ export default function ManagementTimetable() {
             setLoadError("");
             try {
                 const params = {
-                    ...(periodIds.schoolYearId ? { schoolYearId: periodIds.schoolYearId } : {}),
-                    ...(periodIds.semesterId ? { semesterId: periodIds.semesterId } : {}),
+                    schoolYearId: periodIds.schoolYearId,
+                    semesterId: periodIds.semesterId,
                     classId,
                 };
 

@@ -50,7 +50,7 @@ export default function HomeroomOverviewSection({
                             <FiTrendingUp />
                         </div>
                         <h2>Phân loại Học lực</h2>
-                        <span className="card-badge">Tháng 9</span>
+                        <span className="card-badge">Hiện tại</span>
                     </div>
                     <div className="card-content">
                         <div className="academic-bars">
