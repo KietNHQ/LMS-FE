@@ -71,6 +71,8 @@ export default function TeacherHomeroom() {
         queryFn: async () => {
             if (!teacherId) return null;
 
+            let classResData = null;
+
             try {
                 // Thử gọi API Consolidated trước
                 const consolidatedRes = await teacherService.getConsolidatedHomeroom({
@@ -81,31 +83,124 @@ export default function TeacherHomeroom() {
                     }
                 });
                 if (consolidatedRes.success && consolidatedRes.data) {
-                    return mapApiDataToUI(consolidatedRes.data);
+                    classResData = consolidatedRes.data;
                 }
             } catch (e) {
                 // Silently fallback to multiple calls if consolidated API is not ready
             }
 
             // Fallback: Gọi chuỗi API cũ
-            const homeroomRes = await teacherService.getHomeroomClasses({
-                mock: false,
-                pathParams: { id: teacherId }
-            });
+            if (!classResData) {
+                const homeroomRes = await teacherService.getHomeroomClasses({
+                    mock: false,
+                    pathParams: { id: teacherId }
+                });
 
-            if (homeroomRes.success && homeroomRes.data && homeroomRes.data.length > 0) {
-                const firstClass = homeroomRes.data[0];
-                const [detailRes, academicRes] = await Promise.all([
-                    teacherService.getClassDetails({ pathParams: { id: firstClass.id } }),
-                    teacherService.getAcademicSummary({ pathParams: { id: firstClass.id } })
-                ]);
-
-                if (detailRes.success && detailRes.data) {
-                    return mapApiDataToUI(detailRes.data, academicRes.success ? academicRes.data : null);
+                if (homeroomRes.success && homeroomRes.data && homeroomRes.data.length > 0) {
+                    const firstClass = homeroomRes.data[0];
+                    const detailRes = await teacherService.getClassDetails({ pathParams: { id: firstClass.id } });
+                    if (detailRes.success && detailRes.data) {
+                        classResData = detailRes.data;
+                    }
                 }
             }
 
-            return homeroomData;
+            if (!classResData) return homeroomData;
+
+            // Fetch actual grades for accurate academic stats
+            let academicData = null;
+            try {
+                const semId = selectedTerm === 'hk1' 
+                    ? await resolveSemesterId(selectedSchoolYear, "hk1") 
+                    : await resolveSemesterId(selectedSchoolYear, "hk2");
+
+                const gradesRes = await teacherService.getGradesByClass({ 
+                    pathParams: { classId: classResData.id }, 
+                    params: semId ? { semesterId: semId } : undefined 
+                });
+
+                if (gradesRes.success && gradesRes.data && classResData.students) {
+                    const grades = gradesRes.data;
+                    const students = classResData.students;
+                    
+                    const studentSubjectScores = {}; 
+                    
+                    grades.forEach(g => {
+                        const eid = g.student_enrollment_id || g.enrollment_id;
+                        const sid = g.subject_assignment_id || g.subject_name || "unknown";
+                        if (!eid) return;
+                        
+                        if (!studentSubjectScores[eid]) studentSubjectScores[eid] = {};
+                        if (!studentSubjectScores[eid][sid]) {
+                            studentSubjectScores[eid][sid] = { regular: [], midterm: null, final: null };
+                        }
+                        
+                        const normalizeText = (val) => String(val || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+                        
+                        const catRaw = g.category_name || "";
+                        const itemRaw = g.grade_item_name || g.name || "";
+                        const cat = normalizeText(`${catRaw} ${itemRaw}`);
+                        const score = g.score !== null && g.score !== "" ? Number(g.score) : null;
+                        
+                        if (score !== null && !isNaN(score)) {
+                            if (cat.includes("giua ky") || cat.includes("midterm")) studentSubjectScores[eid][sid].midterm = score;
+                            else if (cat.includes("cuoi ky") || cat.includes("final")) studentSubjectScores[eid][sid].final = score;
+                            else studentSubjectScores[eid][sid].regular.push(score);
+                        }
+                    });
+
+                    let excellent = 0, good = 0, average = 0, weak = 0;
+
+                    students.forEach(s => {
+                        const eid = s.enrollment_id || s.id;
+                        const subjects = studentSubjectScores[eid] || {};
+                        const subjectAverages = [];
+
+                        Object.values(subjects).forEach(subj => {
+                            const { regular, midterm, final } = subj;
+                            const weightedSum = regular.reduce((a, b) => a + b, 0) + 
+                                (midterm !== null ? midterm * 2 : 0) + 
+                                (final !== null ? final * 3 : 0);
+                            const denominator = regular.length + 
+                                (midterm !== null ? 2 : 0) + 
+                                (final !== null ? 3 : 0);
+                            
+                            if (denominator > 0) {
+                                subjectAverages.push(weightedSum / denominator);
+                            }
+                        });
+
+                        if (subjectAverages.length > 0) {
+                            const gpa = subjectAverages.reduce((a, b) => a + b, 0) / subjectAverages.length;
+                            if (gpa >= 8.0) excellent++;
+                            else if (gpa >= 6.5) good++;
+                            else if (gpa >= 5.0) average++;
+                            else weak++;
+                        }
+                    });
+
+                    academicData = { academicStats: { excellent, good, average, weak } };
+                }
+            } catch (err) {
+                console.error("Failed to compute grades for academic stats:", err);
+            }
+
+            let teacherSubjectName = null;
+            try {
+                const subjectsRes = await teacherService.getTeacherSubjects({ pathParams: { id: teacherId } });
+                if (subjectsRes.success && subjectsRes.data && subjectsRes.data.length > 0) {
+                    const subj = subjectsRes.data.find(s => s.class_id === classResData.id);
+                    if (subj && subj.subject_name) {
+                        teacherSubjectName = subj.subject_name;
+                    } else {
+                        teacherSubjectName = subjectsRes.data[0].subject_name;
+                    }
+                }
+            } catch (err) {
+                console.error("Failed to fetch teacher subject:", err);
+            }
+
+            return mapApiDataToUI({ ...classResData, subject: teacherSubjectName }, academicData);
         },
         enabled: !!teacherId,
     });
@@ -196,6 +291,7 @@ export default function TeacherHomeroom() {
             room: apiData.room,
             grade: apiData.grade_level_name,
             year: apiData.school_year_name,
+            subject: apiData.subject || null, // Ensure mock "Toán học" doesn't leak
             monitor: apiData.monitor,
             viceMonitor: apiData.viceMonitor,
             secretary: apiData.secretary,
@@ -488,7 +584,10 @@ export default function TeacherHomeroom() {
             <div className="homeroom-section-content">
                 {activeSection === "overview" && (
                     <HomeroomOverviewSection
-                        data={classData}
+                        data={{
+                            ...classData,
+                            subject: classData.subject || teacherTimetableData?.lessons?.[0]?.subjectName || "Chưa cập nhật"
+                        }}
                         lessonMarkers={lessonMarkers}
                         onAddOfficersClick={openOfficerDialog}
                         onCreateActivityClick={() => openActivityDialog()}

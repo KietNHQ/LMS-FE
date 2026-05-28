@@ -58,7 +58,7 @@ const mapQuestionFromApiToView = (apiQuestion) => {
             ? apiQuestion.answers
             : [];
 
-    if (type === "multiple-choice" && apiAnswers.length > 0) {
+    if ((type === "multiple-choice" || type === "true-false") && apiAnswers.length > 0) {
         const labels = ["A", "B", "C", "D"];
         apiAnswers.forEach((ans, idx) => {
             if (idx < 4) {
@@ -73,7 +73,7 @@ const mapQuestionFromApiToView = (apiQuestion) => {
 
     return {
         id: apiQuestion.id,
-        type,
+        type: type === "essay" ? "essay" : "multiple-choice", // Map true-false to multiple-choice for UI
         question: apiQuestion.questionText || apiQuestion.question_text || "",
         questionImage: apiQuestion.questionImage || apiQuestion.payload?.questionImage || "",
         answers,
@@ -369,13 +369,14 @@ export default function TeacherCreateQuizPage() {
         }
 
         if (questionType === "multiple-choice") {
-            if (trimmedAnswers.some((item) => !item)) {
-                alert("Vui lòng nhập đầy đủ 4 đáp án.");
+            const validAnswers = trimmedAnswers.filter((item) => item);
+            if (validAnswers.length < 2) {
+                alert("Vui lòng nhập ít nhất 2 đáp án.");
                 return false;
             }
 
-            if (!formData.correctAnswer) {
-                alert("Vui lòng chọn đáp án đúng.");
+            if (!formData.answers[formData.correctAnswer]?.trim()) {
+                alert(`Đáp án đúng (hiện tại là ${formData.correctAnswer}) không được để trống.`);
                 return false;
             }
         }
@@ -411,12 +412,12 @@ export default function TeacherCreateQuizPage() {
     const handleAddOrUpdateQuestion = async () => {
         if (!validateForm()) return;
 
-        const apiOptions = questionType === "multiple-choice" ? [
-            { text: formData.answers.A.trim(), isCorrect: formData.correctAnswer === "A" },
-            { text: formData.answers.B.trim(), isCorrect: formData.correctAnswer === "B" },
-            { text: formData.answers.C.trim(), isCorrect: formData.correctAnswer === "C" },
-            { text: formData.answers.D.trim(), isCorrect: formData.correctAnswer === "D" }
-        ] : [];
+        const apiOptions = questionType === "multiple-choice" ? ["A", "B", "C", "D"]
+            .filter(key => formData.answers[key].trim())
+            .map(key => ({
+                text: formData.answers[key].trim(),
+                isCorrect: formData.correctAnswer === key
+            })) : [];
 
         try {
             let savedQuestion;
@@ -445,7 +446,16 @@ export default function TeacherCreateQuizPage() {
                 savedQuestion = response.data?.data || response.data || response;
             }
 
-            const mappedSaved = mapQuestionFromApiToView(savedQuestion);
+            const mappedSaved = {
+                id: savedQuestion.id,
+                type: questionType,
+                question: formData.question.trim(),
+                questionImage: formData.questionImage || "",
+                answers: { ...formData.answers },
+                correctAnswer: formData.correctAnswer,
+                score: Number(formData.score) || 0.25,
+                order: savedQuestion.order_num ?? savedQuestion.order ?? nextOrder,
+            };
 
             setQuiz((prev) => {
                 const nextQuestions = editingQuestionId
@@ -576,52 +586,79 @@ export default function TeacherCreateQuizPage() {
         });
     };
 
-    const handleDownloadExcelTemplate = () => {
-        const header = [
-            "question", "type", "optionA", "optionB", "optionC", "optionD",
-            "correctAnswer", "score", "questionImage",
-        ];
-
-        const sampleRows = [
-            ["Thủ đô của Việt Nam là gì?", "multiple-choice", "Hà Nội", "Đà Nẵng", "TP.HCM", "Cần Thơ", "A", "0.5", ""],
-            ["Nêu định nghĩa phản ứng oxi hóa khử", "essay", "", "", "", "", "", "1", ""],
-        ];
-
-        const csvRows = [header, ...sampleRows]
-            .map((row) => row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(","))
-            .join("\n");
-
-        const blob = new Blob([csvRows], { type: "text/csv;charset=utf-8;" });
-        const url = URL.createObjectURL(blob);
-        const anchor = document.createElement("a");
-        anchor.href = url;
-        anchor.download = "mau-import-bai-kiem-tra.csv";
-        document.body.appendChild(anchor);
-        anchor.click();
-        document.body.removeChild(anchor);
-        URL.revokeObjectURL(url);
+    const handleDownloadExcelTemplate = async () => {
+        try {
+            const response = await quizService.downloadImportTemplate("questions");
+            const url = window.URL.createObjectURL(new Blob([response]));
+            const link = document.createElement("a");
+            link.href = url;
+            link.setAttribute("download", "quiz_template.xlsx");
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            toast.success("Tải file Excel mẫu thành công.");
+        } catch (error) {
+            console.error("Lỗi khi tải file template:", error);
+            toast.error("Không thể tải file mẫu. Vui lòng thử lại sau.");
+        }
     };
 
     const handleOpenExcelUpload = () => {
         excelInputRef.current?.click();
     };
 
-    const handleUploadExcelFile = (event) => {
+    const handleUploadExcelFile = async (event) => {
         const file = event.target.files?.[0];
         if (!file) return;
 
-        const allowedExtensions = [".xlsx", ".xls", ".csv"];
+        const allowedExtensions = [".xlsx", ".xls"];
         const loweredName = file.name.toLowerCase();
         const isAllowed = allowedExtensions.some((ext) => loweredName.endsWith(ext));
 
         if (!isAllowed) {
-            alert("Vui lòng chọn file Excel (.xlsx, .xls) hoặc CSV (.csv).");
+            toast.error("Vui lòng chọn file Excel (.xlsx, .xls).");
             event.target.value = "";
             return;
         }
 
-        alert(`Đã tải lên file: ${file.name}. Hệ thống sẽ hỗ trợ đọc file ở bước tiếp theo.`);
-        event.target.value = "";
+        if (!quiz?.id) {
+            toast.error("Vui lòng khởi tạo bài kiểm tra trước khi import câu hỏi.");
+            event.target.value = "";
+            return;
+        }
+
+        try {
+            toast.info("Đang xử lý file Excel...");
+            const response = await quizService.importQuestionsFromExcel(quiz.id, file, "replace");
+            
+            // Reload questions
+            const apiQuestions = await quizService.listQuestions(quiz.id);
+            const mappedQuestions = (apiQuestions || []).map((q, idx) => mapQuestionFromApiToView({
+                ...q,
+                order_num: q.order_num ?? q.order ?? idx + 1
+            }));
+            
+            setQuiz(prev => ({
+                ...prev,
+                questions: mappedQuestions
+            }));
+            
+            const responseData = response?.data || response;
+            const importedCount = responseData?.data?.imported ?? responseData?.imported ?? 0;
+            const parseErrors = responseData?.data?.parseErrors ?? responseData?.parseErrors ?? [];
+            
+            toast.success(`Import thành công ${importedCount} câu hỏi!`);
+            
+            if (parseErrors && parseErrors.length > 0) {
+                toast.warning(`Có ${parseErrors.length} dòng bị lỗi định dạng, các dòng hợp lệ đã được import.`);
+            }
+        } catch (error) {
+            console.error("Lỗi khi import file Excel:", error);
+            const errorMsg = error.response?.data?.error || error.response?.data?.message || "Đã xảy ra lỗi khi import file Excel.";
+            toast.error(errorMsg);
+        } finally {
+            event.target.value = "";
+        }
     };
 
     const handleOpenAddForm = () => {
@@ -911,7 +948,3 @@ export default function TeacherCreateQuizPage() {
         </div>
     );
 }
-
-
-
-

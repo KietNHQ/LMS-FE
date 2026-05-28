@@ -230,6 +230,7 @@ const teacherEndpointRegistry = [
   { key: "delete_lessons_by_id", method: "DELETE", path: "/lessons/:id", module: "lessons" },
   { key: "post_lessons_by_id_publish", method: "POST", path: "/lessons/:id/publish", module: "lessons" },
   { key: "post_lessons_upload", method: "POST", path: "/lessons/upload", module: "lessons" },
+  { key: "post_school_events", method: "POST", path: "/school-events", module: "events", mock: false },
   {
     key: "get_quizzes", 
     method: "GET", 
@@ -405,6 +406,7 @@ export const teacherService = {
   deleteLesson: (input) => endpointCallers.delete_lessons_by_id(input),
   publishLesson: (input) => endpointCallers.post_lessons_by_id_publish(input),
   uploadLessonAttachment: (input) => endpointCallers.post_lessons_upload(input),
+  createSchoolEvent: (input) => endpointCallers.post_school_events(input),
   listQuizzes: (input) => endpointCallers.get_quizzes(input),
   getNotifications: (input) => endpointCallers.get_notifications(input),
   getClassLeaveRequests: (input) => endpointCallers.get_class_leave_requests(input),
