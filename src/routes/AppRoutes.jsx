@@ -29,6 +29,8 @@ const ManagementDiscipline = lazy(() => import("../pages/management/discipline/i
 const ManagementDisciplineReports = lazy(() => import("../pages/management/discipline/ManagementDisciplineReports"));
 const ManagementTranscriptExport = lazy(() => import("../pages/management/discipline/export/VpTranscriptExport"));
 const ManagementBonusPoints = lazy(() => import("../pages/management/discipline/bonus-points"));
+const ManagementPeriodClosing = lazy(() => import("../pages/management/discipline/period-closing/VpDisciplinePeriodClosing"));
+const ManagementClassDeductionLogs = lazy(() => import("../pages/management/discipline/class-deduction-logs/VpClassDeductionLogs"));
 const ManagementCompetition = lazy(() => import("../pages/management/competition/index.js"));
 const ManagementGrades = lazy(() => import("../pages/management/grades/index.js"));
 const ManagementQuiz = lazy(() => import("../pages/management/quiz/ManagementQuiz"));
@@ -238,6 +240,8 @@ export default function AppRoutes() {
         <Route path="discipline-reports" element={<ManagementDisciplineReports />} />
         <Route path="discipline/export" element={<ManagementTranscriptExport />} />
         <Route path="discipline/bonus-points" element={<ManagementBonusPoints />} />
+        <Route path="discipline/period-closing" element={<ManagementPeriodClosing />} />
+        <Route path="discipline/class-deduction-logs/:classId" element={<ManagementClassDeductionLogs />} />
         <Route path="competition"  element={<ManagementCompetition />} />
         <Route path="grades"       element={<ManagementGrades />} />
         <Route path="quiz"         element={<ManagementQuiz />} />

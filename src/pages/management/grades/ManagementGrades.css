@@ -392,3 +392,104 @@
   font-weight: 500;
   font-size: 0.95rem;
 }
+
+/* Period Classification & Conduct Cards */
+.mg-period-details {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+
+.mg-period-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  padding: 0.85rem 1rem;
+  border-radius: 10px;
+  border: 1.5px solid;
+}
+
+.mg-period-card--hk1 {
+  border-color: #bfdbfe;
+  background: #eff6ff;
+}
+
+.mg-period-card--hk2 {
+  border-color: #a7f3d0;
+  background: #ecfdf5;
+}
+
+.mg-period-card--year {
+  border-color: #ddd6fe;
+  background: #f5f3ff;
+}
+
+.mg-period-card-title {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.15rem;
+}
+
+.mg-period-card--hk1 .mg-period-card-title { color: #1d4ed8; }
+.mg-period-card--hk2 .mg-period-card-title { color: #065f46; }
+.mg-period-card--year .mg-period-card-title { color: #5b21b6; }
+
+.mg-period-card-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.82rem;
+  color: #475569;
+}
+
+.mg-period-card-row .bold {
+  font-size: 0.85rem;
+  color: #1e293b;
+}
+
+/* GPA Summary Cards */
+.mg-gpa-summary-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.gpa-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 1.25rem 1rem;
+  border-radius: 12px;
+  border: 2px solid;
+  gap: 0.35rem;
+}
+
+.gpa-card-label {
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.gpa-card-value {
+  font-size: 2rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.gpa-card-classif {
+  font-size: 0.8rem;
+  color: #475569;
+  font-weight: 600;
+}
+
+.gpa-card-formula {
+  font-size: 0.72rem;
+  color: #94a3b8;
+  font-style: italic;
+  margin-top: 0.2rem;
+}

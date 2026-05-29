@@ -102,7 +102,7 @@ export default function GradeListSection({
                         <button
                             type="button"
                             className={`grade-list-item__info ${isLocked ? 'is-locked-row' : ''}`}
-                            onClick={() => !isLocked && onOpenEditDialog?.(record)}
+                            onClick={() => !isLocked && canEdit && onOpenEditDialog?.(record)}
                             disabled={!canEdit}
                         >
                             <strong>{pageStartIndex + index + 1}. {record.name}</strong>
@@ -160,7 +160,7 @@ export default function GradeListSection({
                                 onClick={() => onOpenEditDialog?.(record)}
                                 disabled={!canEdit}
                             >
-                                {canEdit ? "Sửa" : "Chỉ xem"}
+                                {canEdit && !isLocked ? "Sửa" : "Chỉ xem"}
                             </button>
                         )}
                     </article>

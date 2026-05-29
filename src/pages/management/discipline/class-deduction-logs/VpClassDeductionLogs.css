@@ -1,0 +1,528 @@
+/* ================================================
+   VpClassDeductionLogs - Class Discipline Deduction Logs
+   ================================================ */
+
+.vp-class-deduction-logs {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    padding-bottom: 3rem;
+}
+
+/* Score Summary Cards */
+.cdl-score-summary {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1.25rem;
+    margin-bottom: 0.5rem;
+}
+
+.cdl-score-card {
+    background: #ffffff;
+    padding: 1.25rem 1.5rem;
+    border-radius: 1.25rem;
+    border: 1px solid var(--admin-border);
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    box-shadow: var(--admin-shadow-sm);
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.cdl-score-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--admin-shadow-md);
+}
+
+.cdl-score-card.base {
+    border-left: 4px solid #64748b;
+}
+
+.cdl-score-card.bonus {
+    border-left: 4px solid #16a34a;
+}
+
+.cdl-score-card.deduction {
+    border-left: 4px solid #dc2626;
+}
+
+.cdl-score-card.net {
+    border-left: 4px solid #0284c7;
+}
+
+.cdl-score-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.4rem;
+}
+
+.cdl-score-card.base .cdl-score-icon {
+    background: #f1f5f9;
+    color: #475569;
+}
+
+.cdl-score-card.bonus .cdl-score-icon {
+    background: #dcfce7;
+    color: #16a34a;
+}
+
+.cdl-score-card.deduction .cdl-score-icon {
+    background: #fee2e2;
+    color: #dc2626;
+}
+
+.cdl-score-card.net .cdl-score-icon {
+    background: #e0f2fe;
+    color: #0284c7;
+}
+
+.cdl-score-content {
+    display: flex;
+    flex-direction: column;
+}
+
+.cdl-score-label {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--admin-text-muted);
+    text-transform: uppercase;
+}
+
+.cdl-score-value {
+    font-size: 1.75rem;
+    font-weight: 800;
+    color: var(--admin-text-primary);
+    line-height: 1.2;
+}
+
+.cdl-score-sub {
+    font-size: 0.75rem;
+    color: var(--admin-text-secondary);
+}
+
+/* Tabs */
+.cdl-tabs {
+    display: flex;
+    gap: 0.5rem;
+    background: #f8fafc;
+    padding: 0.5rem;
+    border-radius: 1rem;
+    border: 1px solid var(--admin-border);
+}
+
+.cdl-tab-btn {
+    flex: 1;
+    padding: 0.75rem 1.25rem;
+    border: none;
+    background: transparent;
+    border-radius: 0.75rem;
+    font-weight: 700;
+    font-size: 0.9rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    transition: all 0.2s ease;
+    color: var(--admin-text-secondary);
+}
+
+.cdl-tab-btn:hover {
+    background: #ffffff;
+    color: var(--admin-text-primary);
+}
+
+.cdl-tab-btn.active {
+    background: #ffffff;
+    color: var(--admin-primary);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.cdl-tab-btn.danger {
+    color: #dc2626;
+}
+
+.cdl-tab-btn.danger.active {
+    background: #fef2f2;
+    color: #dc2626;
+}
+
+.cdl-tab-btn.success {
+    color: #16a34a;
+}
+
+.cdl-tab-btn.success.active {
+    background: #f0fdf4;
+    color: #16a34a;
+}
+
+/* Filter Bar */
+.cdl-filter-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    background: #f8fafc;
+    padding: 1.25rem;
+    border-radius: 1.25rem;
+    border: 1px solid var(--admin-border);
+    align-items: flex-end;
+}
+
+.cdl-filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    min-width: 160px;
+}
+
+.cdl-filter-group label {
+    font-size: 0.75rem;
+    font-weight: 800;
+    color: var(--admin-text-secondary);
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.cdl-filter-group input,
+.cdl-filter-group select {
+    border: 1.5px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 0.6rem 0.75rem;
+    font-size: 0.88rem;
+    background: #ffffff;
+    transition: border-color 0.2s;
+}
+
+.cdl-filter-group input:focus,
+.cdl-filter-group select:focus {
+    outline: none;
+    border-color: var(--admin-primary);
+}
+
+.cdl-search-box {
+    background: white;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 0 1rem;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    min-width: 220px;
+    flex: 1;
+}
+
+.cdl-search-box input {
+    border: none;
+    outline: none;
+    width: 100%;
+    font-size: 0.9rem;
+    background: transparent;
+    padding: 0;
+    height: 100%;
+}
+
+.cdl-search-box svg {
+    color: #94a3b8;
+    flex-shrink: 0;
+}
+
+.cdl-filter-actions {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.cdl-btn-reset {
+    background: white;
+    color: var(--admin-text-primary);
+    border: 1.5px solid #e2e8f0;
+    padding: 0.6rem 1rem;
+    border-radius: 10px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    transition: all 0.2s;
+}
+
+.cdl-btn-reset:hover {
+    background: #f8fafc;
+    border-color: #cbd5e1;
+}
+
+/* Main Table Panel */
+.cdl-main-panel {
+    background: #ffffff;
+    border-radius: 1.5rem;
+    border: 1px solid var(--admin-border);
+    box-shadow: var(--admin-shadow-sm);
+    overflow: hidden;
+}
+
+.cdl-panel-header {
+    padding: 1.5rem 2rem;
+    border-bottom: 1px solid var(--admin-border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.cdl-panel-header h3 {
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: var(--admin-text-primary);
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+}
+
+.cdl-panel-header p {
+    margin: 4px 0 0;
+    font-size: 0.85rem;
+    color: var(--admin-text-secondary);
+}
+
+/* Table Styles */
+.cdl-table-wrap {
+    padding: 0 1rem 1rem;
+}
+
+.cdl-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.cdl-table th {
+    background: #f8fafc;
+    padding: 1rem 1.25rem;
+    text-align: left;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    font-weight: 800;
+    color: var(--admin-text-muted);
+    border-bottom: 1px solid var(--admin-border);
+    white-space: nowrap;
+}
+
+.cdl-table th.th-center {
+    text-align: center;
+}
+
+.cdl-table td {
+    padding: 1.1rem 1.25rem;
+    border-bottom: 1px solid #f1f5f9;
+    font-size: 0.88rem;
+    color: var(--admin-text-secondary);
+    vertical-align: middle;
+}
+
+.cdl-table td.td-center {
+    text-align: center;
+}
+
+.cdl-table tr:hover td {
+    background: var(--admin-primary-soft);
+}
+
+.cdl-table tr:last-child td {
+    border-bottom: none;
+}
+
+/* Student Profile Mini */
+.cdl-student-profile {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.cdl-student-avatar {
+    width: 36px;
+    height: 36px;
+    background: #f1f5f9;
+    color: var(--admin-primary);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: 0.85rem;
+    flex-shrink: 0;
+}
+
+.cdl-student-info strong {
+    display: block;
+    color: var(--admin-text-primary);
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.cdl-student-info small {
+    color: #94a3b8;
+    font-size: 0.78rem;
+}
+
+/* Points Badge */
+.cdl-points-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-weight: 700;
+    font-size: 0.85rem;
+}
+
+.cdl-points-badge.deduct {
+    background: #fef2f2;
+    color: #dc2626;
+}
+
+.cdl-points-badge.bonus {
+    background: #f0fdf4;
+    color: #16a34a;
+}
+
+/* Status Badge */
+.cdl-status-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 0.78rem;
+    font-weight: 600;
+}
+
+.cdl-status-badge.pending {
+    background: #fef9c3;
+    color: #d97706;
+}
+
+.cdl-status-badge.approved {
+    background: #dcfce7;
+    color: #16a34a;
+}
+
+.cdl-status-badge.rejected {
+    background: #fee2e2;
+    color: #dc2626;
+}
+
+/* Severity Badge */
+.cdl-severity-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 0.78rem;
+    font-weight: 600;
+}
+
+.cdl-severity-badge.low {
+    background: #f0fdf4;
+    color: #15803d;
+}
+
+.cdl-severity-badge.med {
+    background: #fef9c3;
+    color: #d97706;
+}
+
+.cdl-severity-badge.high {
+    background: #fee2e2;
+    color: #dc2626;
+}
+
+/* Empty State */
+.cdl-empty {
+    padding: 3rem;
+    text-align: center;
+    color: #94a3b8;
+}
+
+.cdl-empty-icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    opacity: 0.5;
+}
+
+.cdl-empty h4 {
+    margin: 0 0 0.5rem;
+    font-size: 1.1rem;
+    color: #475569;
+}
+
+.cdl-empty p {
+    margin: 0;
+    font-size: 0.9rem;
+}
+
+/* Loading */
+.cdl-loading {
+    padding: 2rem;
+    text-align: center;
+    color: #64748b;
+    font-size: 0.9rem;
+}
+
+/* Pagination */
+.cdl-pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 1.4rem 1.5rem 1.8rem;
+    border-top: 1px solid #e2e8f0;
+    background: #f8fafc;
+}
+
+/* Back Button */
+.cdl-back-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: white;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 0.85rem;
+    color: var(--admin-text-secondary);
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.cdl-back-btn:hover {
+    background: #f8fafc;
+    border-color: #cbd5e1;
+    color: var(--admin-text-primary);
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+    .cdl-score-summary {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .cdl-score-summary {
+        grid-template-columns: 1fr;
+    }
+
+    .cdl-filter-bar {
+        flex-direction: column;
+    }
+
+    .cdl-filter-group {
+        width: 100%;
+    }
+
+    .cdl-tabs {
+        flex-direction: column;
+    }
+}

@@ -1,10 +1,12 @@
 import { useState, useEffect } from "react";
 import { useSchoolYearTerm } from "../../../hooks/useSchoolYearTerm";
 import { SchoolYearTermSelector, PageHeader } from "../../../components/common";
-import { 
-  FiAward, FiActivity, FiBookOpen, FiPlay, FiCpu, 
-  FiUserCheck, FiEye, FiClock, FiFileText 
+import { resolveSchoolYearId } from "../../../services/shared/schoolYearLookup";
+import {
+  FiAward, FiActivity, FiBookOpen, FiPlay, FiCpu,
+  FiUserCheck, FiEye, FiClock, FiFileText
 } from "react-icons/fi";
+import { toast } from "react-toastify";
 import { gradeService } from "../../../services/pages/management/grades/gradeService";
 import { classesService } from "../../../services/pages/management/classes/classesService";
 import { studentsService } from "../../../services/pages/management/students/studentsService";
@@ -56,7 +58,8 @@ export default function ManagementGrades() {
               const enrollmentId = student.enrollmentId || student.id;
               const gpaRes = await gradeService.calculateSemesterGPA({ enrollmentId, semesterId: semesterValue }).catch(() => null);
               const classifyRes = await gradeService.classifySemester({ enrollmentId, semesterId: semesterValue }).catch(() => null);
-              const honorsRes = await gradeService.checkHonors({ enrollmentId, schoolYearId: 1 }).catch(() => null);
+              const schoolYearIdValue = await resolveSchoolYearId(selectedSchoolYear);
+              const honorsRes = await gradeService.checkHonors({ enrollmentId, schoolYearId: schoolYearIdValue }).catch(() => null);
 
               const gpaValue = gpaRes?.gpa
                 ? parseFloat(gpaRes.gpa.toFixed(2))
@@ -96,34 +99,75 @@ export default function ManagementGrades() {
     return () => { isMounted = false; };
   }, [selectedClassId, selectedSchoolYear, selectedTerm]);
 
-  // Load specific Report Card
+  // Load specific Report Card — fetches HK1, HK2, and Year data in one call
   const handleOpenReportCard = async (student) => {
     setActiveReportCard(student);
     setIsLoadingReport(true);
     try {
-      const semesterValue = selectedTerm === "hk1" ? 1 : 2;
+      const schoolYearId = await resolveSchoolYearId(selectedSchoolYear);
       const enrollmentId = student.enrollmentId || student.id;
 
-      const card = await gradeService.getReportCard(enrollmentId, { semesterId: semesterValue });
+      const card = await gradeService.getReportCard(enrollmentId, { schoolYearId });
+      const { semester1, semester2, gpa: yearGpa } = card?.grades || {};
 
-      // Map BE response structure to UI expected format
-      const reportCard = {
-        studentName: card?.student?.name || activeReportCard?.name || "—",
-        className: card?.student?.class || activeReportCard?.className || "—",
-        gpa: card?.grades?.gpa != null ? parseFloat(card.grades.gpa.toFixed(2)) : "—",
-        classification: card?.academicClassification?.classification || "Chưa xếp loại",
-        conduct: card?.conductClassification?.conduct || "Tốt",
-        subjects: (card?.grades?.results || []).map(r => ({
+      const hk1Results = semester1?.results || [];
+      const hk2Results = semester2?.results || [];
+
+      // Thông tư 22: Year GPA = (HK1 + 2×HK2) / 3
+      const hk1Gpa = semester1?.gpa;
+      const hk2Gpa = semester2?.gpa;
+      const yearGpaCalc =
+        hk1Gpa != null && hk2Gpa != null
+          ? (hk1Gpa + 2 * hk2Gpa) / 3
+          : hk2Gpa ?? hk1Gpa;
+
+      // Merge per-subject: HK1 average, HK2 average, Year average
+      const subjectMap = {};
+      hk1Results.forEach((r) => {
+        subjectMap[r.subjectName] = {
           name: r.subjectName,
-          regular: "—",
-          midterm: "—",
-          final: "—",
-          average: r.averageScore != null ? parseFloat(r.averageScore.toFixed(1)) : "—",
-        })),
-      };
-      setReportCardData(reportCard);
+          hk1Average: r.averageScore,
+        };
+      });
+      hk2Results.forEach((r) => {
+        if (!subjectMap[r.subjectName]) subjectMap[r.subjectName] = { name: r.subjectName };
+        subjectMap[r.subjectName].hk2Average = r.averageScore;
+      });
+
+      // Per-subject year average = (hk1 + 2*hk2) / 3 for that subject
+      Object.values(subjectMap).forEach((sub) => {
+        if (sub.hk1Average != null && sub.hk2Average != null) {
+          sub.yearAverage = (sub.hk1Average + 2 * sub.hk2Average) / 3;
+        } else {
+          sub.yearAverage = sub.hk2Average ?? sub.hk1Average;
+        }
+      });
+
+      const subjects = Object.values(subjectMap);
+
+      setReportCardData({
+        studentName: card?.student?.name || student.name || "—",
+        className: card?.student?.class || student.className || "—",
+        semester1: {
+          gpa: hk1Gpa != null ? parseFloat(hk1Gpa.toFixed(2)) : null,
+          classification: card?.academicClassification?.classification || "Chưa xếp loại",
+          conduct: card?.conductClassification?.level || "Tốt",
+        },
+        semester2: {
+          gpa: hk2Gpa != null ? parseFloat(hk2Gpa.toFixed(2)) : null,
+          classification: card?.academicClassification?.classification || "Chưa xếp loại",
+          conduct: card?.conductClassification?.level || "Tốt",
+        },
+        year: {
+          gpa: yearGpaCalc != null ? parseFloat(yearGpaCalc.toFixed(2)) : null,
+          classification: card?.academicClassification?.classification || "Chưa xếp loại",
+          conduct: card?.conductClassification?.level || "Tốt",
+        },
+        subjects,
+      });
     } catch (err) {
       console.error(err);
+      toast.error("Không thể tải học bạ. Vui lòng thử lại.");
       setReportCardData(null);
     } finally {
       setIsLoadingReport(false);
@@ -134,14 +178,17 @@ export default function ManagementGrades() {
   const handleRecalculateGPA = async () => {
     setIsCalculating(true);
     try {
-      const semesterValue = selectedTerm === "hk1" ? 1 : 2;
-      await new Promise(resolve => setTimeout(resolve, 1500)); // Simulate robust backend job processing
-      
+      const [semesterId, schoolYearId] = await Promise.all([
+        resolveSemesterId(selectedSchoolYear, selectedTerm),
+        resolveSchoolYearId(selectedSchoolYear),
+      ]);
+      const semValue = semesterId || (selectedTerm === "hk1" ? 1 : 2);
+
       // Reload grades
       const resolvedStudents = await Promise.all(
         students.map(async (student) => {
           const enrollmentId = student.enrollmentId || student.id;
-          const gpaRes = await gradeService.calculateSemesterGPA({ enrollmentId, semesterId: semesterValue }).catch(() => null);
+          const gpaRes = await gradeService.calculateSemesterGPA({ enrollmentId, semesterId: semValue }).catch(() => null);
           const gpaValue = gpaRes?.gpa ? parseFloat(gpaRes.gpa.toFixed(2)) : (gpaRes?.gpa === 0 ? 0 : student.gpa);
           return {
             ...student,
@@ -150,10 +197,10 @@ export default function ManagementGrades() {
         })
       );
       setStudents(resolvedStudents);
-      alert("Đã hoàn tất tính toán và đồng bộ lại điểm trung bình (GPA) toàn lớp!");
+      toast.success("Đã hoàn tất tính toán và đồng bộ lại điểm trung bình (GPA) toàn lớp!");
     } catch (err) {
       console.error(err);
-      alert("Không thể kết nối máy chủ tính toán.");
+      toast.error("Không thể kết nối máy chủ tính toán.");
     } finally {
       setIsCalculating(false);
     }
@@ -255,7 +302,7 @@ export default function ManagementGrades() {
             <div className="mg-modal-header">
               <div className="mgmh-left">
                 <h3>Phiếu Học Bạ Điện Tử</h3>
-                <span>Học kỳ {selectedTerm === "hk1" ? "1" : "2"} - Năm học {selectedSchoolYear}</span>
+                <span>Năm học {selectedSchoolYear}</span>
               </div>
               <button className="mg-modal-close" onClick={() => setActiveReportCard(null)}>&times;</button>
             </div>
@@ -267,7 +314,7 @@ export default function ManagementGrades() {
                 </div>
               ) : reportCardData ? (
                 <div className="mg-report-card-sheet">
-                  {/* Student Specs Info */}
+                  {/* Student Specs + Period Breakdown */}
                   <div className="mg-report-specs">
                     <div className="spec-item">
                       <span className="spec-label">Họ và tên:</span>
@@ -277,46 +324,89 @@ export default function ManagementGrades() {
                       <span className="spec-label">Lớp học:</span>
                       <span className="spec-val">{reportCardData.className}</span>
                     </div>
-                    <div className="spec-item">
-                      <span className="spec-label">Rèn luyện (Hạnh kiểm):</span>
-                      <span className="spec-val bold success">{reportCardData.conduct || "Tốt"}</span>
+                  </div>
+
+                  {/* Period Classification & Conduct */}
+                  <div className="mg-period-details">
+                    <div className="mg-period-card mg-period-card--hk1">
+                      <div className="mg-period-card-title">Học kỳ 1</div>
+                      <div className="mg-period-card-row">
+                        <span>Xếp loại:</span>
+                        <span className="bold">{reportCardData.semester1.classification}</span>
+                      </div>
+                      <div className="mg-period-card-row">
+                        <span>Hạnh kiểm:</span>
+                        <span className="bold">{reportCardData.semester1.conduct}</span>
+                      </div>
                     </div>
-                    <div className="spec-item">
-                      <span className="spec-label">Học lực:</span>
-                      <span className="spec-val bold warning">{reportCardData.classification}</span>
+                    <div className="mg-period-card mg-period-card--hk2">
+                      <div className="mg-period-card-title">Học kỳ 2</div>
+                      <div className="mg-period-card-row">
+                        <span>Xếp loại:</span>
+                        <span className="bold">{reportCardData.semester2.classification}</span>
+                      </div>
+                      <div className="mg-period-card-row">
+                        <span>Hạnh kiểm:</span>
+                        <span className="bold">{reportCardData.semester2.conduct}</span>
+                      </div>
                     </div>
-                    <div className="spec-item">
-                      <span className="spec-label">Điểm trung bình (GPA):</span>
-                      <span className="spec-val bold text-indigo">{reportCardData.gpa}</span>
+                    <div className="mg-period-card mg-period-card--year">
+                      <div className="mg-period-card-title">Cả năm</div>
+                      <div className="mg-period-card-row">
+                        <span>Xếp loại:</span>
+                        <span className="bold">{reportCardData.year.classification}</span>
+                      </div>
+                      <div className="mg-period-card-row">
+                        <span>Hạnh kiểm:</span>
+                        <span className="bold">{reportCardData.year.conduct}</span>
+                      </div>
                     </div>
                   </div>
 
-                  {/* Detailed Subjects Standings */}
+                  {/* GPA Summary Cards: HK1 → HK2 → Cả năm */}
+                  <div className="mg-gpa-summary-row">
+                    <GpaSummaryCard
+                      label="Học kỳ 1"
+                      gpa={reportCardData.semester1.gpa}
+                      variant="hk1"
+                    />
+                    <GpaSummaryCard
+                      label="Học kỳ 2"
+                      gpa={reportCardData.semester2.gpa}
+                      variant="hk2"
+                    />
+                    <GpaSummaryCard
+                      label="Cả năm"
+                      gpa={reportCardData.year.gpa}
+                      formula="(HK1 + 2×HK2) / 3"
+                      variant="year"
+                    />
+                  </div>
+
+                  {/* Detailed Subjects Table */}
                   <h4 className="section-title"><FiBookOpen /> Bảng điểm chi tiết các môn học</h4>
                   <div className="mg-detail-table-wrapper">
                     <table className="mg-detail-table">
                       <thead>
                         <tr>
                           <th>Môn học</th>
-                          <th>Đánh giá thường xuyên (ĐĐGtx)</th>
-                          <th className="text-center">Đánh giá giữa kỳ (ĐĐGgk)</th>
-                          <th className="text-center">Đánh giá cuối kỳ (ĐĐGck)</th>
-                          <th className="text-center">ĐTB môn học</th>
+                          <th className="text-center">ĐTB HKI</th>
+                          <th className="text-center">ĐTB HKII</th>
+                          <th className="text-center">ĐTB cả năm</th>
                         </tr>
                       </thead>
                       <tbody>
                         {(!reportCardData.subjects || reportCardData.subjects.length === 0) ? (
                           <tr>
-                            <td colSpan={5} className="mg-empty-state">Không ghi nhận điểm môn học nào trong học kỳ này.</td>
+                            <td colSpan={4} className="mg-empty-state">Không ghi nhận điểm môn học nào.</td>
                           </tr>
                         ) : (
                           reportCardData.subjects.map((sub, i) => (
                             <tr key={i}>
-                              <td className="bold">{sub.name || sub.subjectName}</td>
-                              <td>{sub.regular || "N/A"}</td>
-                              <td className="text-center">{sub.midterm || "N/A"}</td>
-                              <td className="text-center">{sub.final || "N/A"}</td>
-                              <td className="text-center bold success">{sub.average || "N/A"}</td>
+                              <td className="bold">{sub.name}</td>
+                              <td className="text-center">{fmtScore(sub.hk1Average)}</td>
+                              <td className="text-center">{fmtScore(sub.hk2Average)}</td>
+                              <td className="text-center bold success">{fmtScore(sub.yearAverage)}</td>
                             </tr>
                           ))
                         )}
@@ -326,7 +416,7 @@ export default function ManagementGrades() {
 
                   <div className="mg-report-footer-note">
                     <FiFileText />
-                    <span>Hệ thống tự động biên dịch & tính toán học bạ theo Thông tư 22/2021/TT-BGDĐT.</span>
+                    <span>Hệ thống tự động biên dịch &amp; tính toán học bạ theo Thông tư 22/2021/TT-BGDĐT.</span>
                   </div>
                 </div>
               ) : (
@@ -339,6 +429,31 @@ export default function ManagementGrades() {
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+function fmtScore(val) {
+  if (val == null) return "—";
+  return parseFloat(val.toFixed(1));
+}
+
+function GpaSummaryCard({ label, gpa, classification, formula, variant }) {
+  const variantColors = {
+    hk1: { border: "#3b82f6", bg: "#eff6ff", labelColor: "#1d4ed8" },
+    hk2: { border: "#10b981", bg: "#ecfdf5", labelColor: "#065f46" },
+    year: { border: "#8b5cf6", bg: "#f5f3ff", labelColor: "#5b21b6" },
+  };
+  const colors = variantColors[variant] || variantColors.year;
+
+  return (
+    <div className="gpa-card" style={{ borderColor: colors.border, background: colors.bg }}>
+      <span className="gpa-card-label" style={{ color: colors.labelColor }}>{label}</span>
+      <span className="gpa-card-value" style={{ color: colors.border }}>
+        {gpa != null ? gpa : "Chưa có điểm"}
+      </span>
+      <span className="gpa-card-classif">{classification}</span>
+      {formula && <span className="gpa-card-formula">{formula}</span>}
     </div>
   );
 }

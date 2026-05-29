@@ -34,7 +34,8 @@ import {
     FiClipboard as FiTask,
     FiMap,
     FiHash,
-    FiSun
+    FiSun,
+    FiLock
 } from "react-icons/fi";
 import { LuUserCog } from "react-icons/lu";
 import { FaChalkboardTeacher } from "react-icons/fa";
@@ -98,6 +99,7 @@ export const sidebarConfig = {
         { label: "Lớp Học",           icon: FiBookOpen,      path: "/management/classes",      requiredPermissions: [PERMISSIONS.CLASS_VIEW] },
         { label: "Quản Lý Điểm Số",    icon: FiAward,         path: "/management/grades",      requiredPermissions: [PERMISSIONS.GRADE_VIEW] },
         { label: "NỀ Nếp & Kỷ Luật", icon: FiAlertTriangle, path: "/management/discipline",   requiredPermissions: [PERMISSIONS.DISCIPLINE_VIEW] },
+        { label: "  Khóa sổ thi đua", icon: FiLock, path: "/management/discipline/period-closing", requiredPermissions: [PERMISSIONS.DISCIPLINE_VIEW] },
         { label: "Xếp Lớp & Lên Lớp", icon: FiTrendingUp,   path: "/management/promotion" },
         { label: "Rèn Luyện Hè",      icon: FiSun,           path: "/management/summer-training" },
         { label: "Thi Đua",            icon: FiStar,          path: "/management/competition",  requiredPermissions: [PERMISSIONS.COMPETITION_MANAGE] },
