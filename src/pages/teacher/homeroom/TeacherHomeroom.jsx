@@ -481,7 +481,7 @@ export default function TeacherHomeroom() {
                     .filter(a => a.studentId)
                     .map(a => ({
                         studentId: a.studentId,
-                        officerRole: a.key === 'monitor' ? 'monitor' : (a.key === 'viceMonitor' ? 'vice_monitor_academic' : 'secretary')
+                        officerRole: a.role
                     }));
 
                 const res = await teacherService.assignOfficers({
