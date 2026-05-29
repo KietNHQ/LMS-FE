@@ -52,6 +52,7 @@ export default function VpDisciplineConduct({ isEmbedded = false }) {
     const [searchTerm, setSearchTerm] = useState("");
     const [currentPage, setCurrentPage] = useState(1);
     const [conductGrades, setConductGrades] = useState({});
+    const [disciplineScoreSnapshot, setDisciplineScoreSnapshot] = useState({});
 
     // Fetch grade levels from API
     const { data: gradeLevelsData = [] } = useQuery({
@@ -156,7 +157,26 @@ export default function VpDisciplineConduct({ isEmbedded = false }) {
         staleTime: 30_000,
     });
 
-    // Load annual conduct summary for the class
+    // Lưu snapshot discipline score khi dữ liệu mới được load
+    useEffect(() => {
+        if (scoresData && scoresData.length > 0) {
+            const snapshot = {};
+            scoresData.forEach((s) => {
+                snapshot[s.enrollmentId] = s.disciplineScore;
+            });
+            setDisciplineScoreSnapshot(snapshot);
+        }
+    }, [scoresData]);
+
+    // Kiểm tra xem discipline score có thay đổi không so với lúc load
+    const disciplineScoreChanged = useMemo(() => {
+        if (!scoresData || scoresData.length === 0) return false;
+        return scoresData.some((s) => {
+            const original = disciplineScoreSnapshot[s.enrollmentId];
+            if (original === undefined) return false;
+            return original !== s.disciplineScore;
+        });
+    }, [scoresData, disciplineScoreSnapshot]);
     const { data: annualData, isLoading: annualLoading, refetch: refetchAnnual } = useQuery({
         queryKey: ["conduct-class-summary", selectedClass, hk1Id, hk2Id],
         queryFn: async () => {
@@ -437,6 +457,17 @@ export default function VpDisciplineConduct({ isEmbedded = false }) {
                 </div>
             </div>
 
+            {/* Warning banner khi discipline score thay đổi */}
+            {disciplineScoreChanged && (
+                <div className="cd-warning-banner">
+                    <FiAlertCircle size={18} />
+                    <span>
+                        <strong>Cảnh báo:</strong> Điểm kỷ luật đã thay đổi sau lần lưu gần nhất.
+                        Đề nghị xem lại xếp loại hạnh kiểm trước khi phê duyệt.
+                    </span>
+                </div>
+            )}
+
             <div className="cd-main-panel animate-fade-in">
                 <div className="panel-header">
                     <h3>Dự Kiến Hạnh Kiểm: {classOptions.find((c) => c.value === selectedClass)?.label || selectedClass || "—"}</h3>
@@ -561,8 +592,14 @@ export default function VpDisciplineConduct({ isEmbedded = false }) {
                                             <th>Học sinh</th>
                                             <th className="th-center">Lớp</th>
                                             <th className="th-center">Vi phạm</th>
-                                            <th>Điểm RL</th>
-                                            <th className="th-center">Hạnh kiểm Dự kiến</th>
+                                            <th className="th-center">
+                                                Điểm KL
+                                                <span className="th-sub-label">(tự động)</span>
+                                            </th>
+                                            <th className="th-center">
+                                                Xếp loại HK
+                                                <span className="th-sub-label">(do GVCN chọn)</span>
+                                            </th>
                                             <th>Gợi ý</th>
                                         </tr>
                                     </thead>

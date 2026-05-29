@@ -12,7 +12,7 @@ function formatDateDDMMYYYY(dateString) {
     return `${day}/${month}/${year}`;
 }
 
-const ITEMS_PER_PAGE = 6;
+const ITEMS_PER_PAGE = 10;
 const ATTENDANCE_ALERT_THRESHOLD = 95;
 
 const timeFilterOptions = [

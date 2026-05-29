@@ -110,11 +110,11 @@ const LessonTimeline = ({
           <p className="lesson-history-empty">Ngày này chưa có đánh giá tiết học.</p>
         ) : (
           <ul className="lesson-history-list">
-            {reviewsForSelectedDate.map((review) => {
+            {reviewsForSelectedDate.map((review, _idx) => {
               const isLate = checkIsLate(review.lessonTime, review.createdAt);
               
               return (
-                <li key={review.id || `review-${index}`} className={`lesson-history-item ${isLate ? 'is-late' : ''}`}>
+                <li key={review.id || `review-${_idx}`} className={`lesson-history-item ${isLate ? 'is-late' : ''}`}>
                   <div className="lesson-history-content">
                     <div className="lesson-history-item-top">
                       <span className="lesson-history-tag">

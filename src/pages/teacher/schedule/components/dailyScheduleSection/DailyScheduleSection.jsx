@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import "./DailyScheduleSection.css";
 import { MapPin, Users, Clock, BookOpen, ChevronRight, FileText, BookMarked, Pencil, BarChart3 } from "lucide-react";
-import { getStartOfIsoWeek, getTeacherWeekLessons } from "../../../../../utils/timetableShared";
+import { getStartOfIsoWeek, getTeacherWeekLessons, SUBJECT_DISPLAY, SUBJECT_COLOR_MAP } from "../../../../../utils/timetableShared";
 
 const PERIOD_TIME = {
   1: "07:00 - 07:45",

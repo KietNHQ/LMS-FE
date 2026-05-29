@@ -9,6 +9,12 @@ const activityTypeOptions = [
   { value: "event", label: "Sự kiện / Thi đua" },
 ];
 
+const officerRoleOptions = [
+  { value: "monitor", label: "Lớp trưởng" },
+  { value: "vice_monitor_academic", label: "Lớp phó học tập" },
+  { value: "secretary", label: "Thư ký" },
+];
+
 // Maps FE role keys to DB role values
 const OFFICER_ROLE_DB_MAP = {
   monitor: "monitor",

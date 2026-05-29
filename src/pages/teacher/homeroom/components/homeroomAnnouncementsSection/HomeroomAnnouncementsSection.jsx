@@ -124,8 +124,8 @@ export default function HomeroomAnnouncementsSection({ classId, data }) {
                     </div>
                     <div className="history-list">
                         {data.announcements && data.announcements.length > 0 ? (
-                            data.announcements.map((ann, idx) => (
-                                <div key={idx} className={`history-item ${ann.isUrgent ? 'urgent' : ''}`}>
+                            data.announcements.map((ann) => (
+                                <div key={ann.id || ann.title} className={`history-item ${ann.isUrgent ? 'urgent' : ''}`}>
                                     <div className="item-header">
                                         <h4>{ann.title}</h4>
                                         {ann.isUrgent && <span className="urgent-badge">Quan trọng</span>}

@@ -8,6 +8,20 @@ import "./CreateUserDialog.css";
 
 const allRoleOptions = ["Quản lý", "Phụ huynh", "Học sinh", "Giáo viên"];
 
+const SUBJECT_OPTIONS = [
+  { value: "TOAN", label: "Toán" },
+  { value: "VAN", label: "Ngữ văn" },
+  { value: "ANH", label: "Tiếng Anh" },
+  { value: "VL", label: "Vật lý" },
+  { value: "HOA", label: "Hóa học" },
+  { value: "SH", label: "Sinh học" },
+  { value: "TH", label: "Tin học" },
+  { value: "LS", label: "Lịch sử" },
+  { value: "DL", label: "Địa lý" },
+  { value: "GDTC", label: "Giáo dục thể chất" },
+  { value: "CN", label: "Công nghệ" },
+];
+
 
 const roleEmailDomainMap = {
     "Quản trị viên": "thptlocal.edu.vn",

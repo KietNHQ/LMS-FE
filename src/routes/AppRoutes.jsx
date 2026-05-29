@@ -48,6 +48,8 @@ const ManagementApprovals = lazy(() => import("../pages/management/approvals/ind
 const ManagementNotifications = lazy(() => import("../pages/management/notifications/ManagementNotifications"));
 const ManagementReports = lazy(() => import("../pages/management/reports/ManagementReports"));
 const ManagementChat = lazy(() => import("../pages/management/chat/ManagementChat"));
+const ManagementPromotion = lazy(() => import("../pages/management/promotion/PromotionPage"));
+const ManagementSummerTraining = lazy(() => import("../pages/management/summer-training/SummerTrainingPage"));
 
 
 /* ADMIN SUB-ROLE LAYOUTS (đã xóa — chuyển sang /management) */
@@ -255,6 +257,8 @@ export default function AppRoutes() {
         <Route path="notifications" element={<ManagementNotifications />} />
         <Route path="reports"      element={<ManagementReports />} />
         <Route path="chat"         element={<ManagementChat />} />
+        <Route path="promotion"   element={<ManagementPromotion />} />
+        <Route path="summer-training" element={<ManagementSummerTraining />} />
       </Route>
 
       {/* ── Redirect tương thích ngược ── */}
