@@ -1,6 +1,8 @@
 import React, { useMemo, useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { FiChevronDown } from "react-icons/fi";
+import { useSchoolYearTerm } from "../../../hooks/useSchoolYearTerm";
+import { resolveSemesterId } from "../../../services/shared/schoolYearLookup";
 import {
     BiTrendingUp,
     BiTrendingDown,
@@ -30,6 +32,7 @@ import {
 import "./StudentGrades.css";
 import GradesHeader from "./components/GradesHeader/GradesHeader";
 import GradeDetail from "./components/GradeDetail/GradeDetail";
+import ConductSection from "./components/ConductSection/ConductSection";
 import { Button, Select } from "../../../components/ui";
 import { LoadingSpinner } from "../../../components/common";
 import { studentService } from "../../../services/pages/student/studentService";
@@ -110,9 +113,13 @@ export default function StudentGrades() {
     const [openRowId, setOpenRowId] = useState(null);
     const [activeTab, setActiveTab] = useState("hk1");
     const [selectedSchoolYear, setSelectedSchoolYear] = useState(null);
+    const { selectedSchoolYear: syFromCtx } = useSchoolYearTerm();
 
     const storedUser = JSON.parse(localStorage.getItem("user") || sessionStorage.getItem("user") || "{}");
     const studentId = storedUser?.profile?.id;
+
+    // Fall back to context values if no local state yet
+    const effectiveSchoolYear = selectedSchoolYear ?? syFromCtx;
 
     // Fetch school years
     const { data: schoolYears = [] } = useQuery({
@@ -132,10 +139,10 @@ export default function StudentGrades() {
     });
 
     useEffect(() => {
-        if (schoolYears.length > 0 && !selectedSchoolYear) {
-            setSelectedSchoolYear(schoolYears[0].id);
+        if (!selectedSchoolYear) {
+            setSelectedSchoolYear(syFromCtx || (schoolYears.length > 0 ? schoolYears[0].id : null));
         }
-    }, [schoolYears, selectedSchoolYear]);
+    }, [schoolYears, selectedSchoolYear, syFromCtx]);
 
     const selectedSchoolYearLabel = useMemo(() => {
         const matched = schoolYears.find((sy) => sy.id === selectedSchoolYear);
@@ -144,26 +151,81 @@ export default function StudentGrades() {
 
     // Use TanStack Query for grades
     const { data: gradesData = [], isLoading } = useQuery({
-        queryKey: ["student-grades", studentId, selectedSchoolYear],
+        queryKey: ["student-grades", studentId, effectiveSchoolYear],
         queryFn: async () => {
             if (!studentId) return [];
             try {
                 const response = await studentService.getStudentGradeSummary({ 
                     pathParams: { id: studentId },
                     mock: false,
-                    params: { schoolYear: selectedSchoolYear },
+                    params: { schoolYear: effectiveSchoolYear },
                 });
                 
                 if (response.success && response.data) {
                     return processGradesData(response.data);
                 }
-            } catch (error) {
+            } catch {
                 console.warn("Failed to fetch grades, using empty state.");
             }
             return [];
         },
-        enabled: !!studentId && !!selectedSchoolYear,
+        enabled: !!studentId && !!effectiveSchoolYear,
         staleTime: 10 * 60 * 1000,
+    });
+
+    // Resolve semester IDs for conduct API
+    const { data: hk1SemesterId } = useQuery({
+        queryKey: ["semester-id", effectiveSchoolYear, "hk1"],
+        queryFn: () => resolveSemesterId(effectiveSchoolYear, "hk1"),
+        enabled: !!effectiveSchoolYear,
+        staleTime: 5 * 60 * 1000,
+    });
+
+    const { data: hk2SemesterId } = useQuery({
+        queryKey: ["semester-id", effectiveSchoolYear, "hk2"],
+        queryFn: () => resolveSemesterId(effectiveSchoolYear, "hk2"),
+        enabled: !!effectiveSchoolYear,
+        staleTime: 5 * 60 * 1000,
+    });
+
+    // Fetch conduct summary
+    const { data: conductSummary } = useQuery({
+        queryKey: ["student-conduct-summary", studentId, hk1SemesterId, hk2SemesterId],
+        queryFn: async () => {
+            if (!studentId || !hk1SemesterId || !hk2SemesterId) return null;
+            try {
+                const response = await studentService.getConductSummary({
+                    pathParams: { id: studentId },
+                    params: { hk1SemesterId, hk2SemesterId },
+                    mock: false,
+                });
+                return response?.success ? response.data : null;
+            } catch {
+                return null;
+            }
+        },
+        enabled: !!studentId && !!hk1SemesterId && !!hk2SemesterId,
+        staleTime: 5 * 60 * 1000,
+    });
+
+    // Fetch discipline scores
+    const { data: disciplineScores } = useQuery({
+        queryKey: ["student-discipline-scores", studentId, hk1SemesterId],
+        queryFn: async () => {
+            if (!studentId || !hk1SemesterId) return null;
+            try {
+                const response = await studentService.getDisciplineScores({
+                    pathParams: { id: studentId },
+                    params: { semesterId: hk1SemesterId },
+                    mock: false,
+                });
+                return response?.success ? response.data : null;
+            } catch {
+                return null;
+            }
+        },
+        enabled: !!studentId && !!hk1SemesterId,
+        staleTime: 5 * 60 * 1000,
     });
 
     function processGradesData(data) {
@@ -210,7 +272,7 @@ export default function StudentGrades() {
     }
 
     const summaryStats = useMemo(() => {
-        if (gradesData.length === 0) return { avg: 0, rank: "—", count: 0 };
+        if (gradesData.length === 0 || activeTab === "conduct") return { avg: 0, rank: "—", count: 0 };
 
         const total = gradesData.reduce((sum, s) => {
             if (activeTab === "hk1") return sum + (s.hk1Avg || 0);
@@ -249,19 +311,20 @@ export default function StudentGrades() {
                         </div>
 
                         <div className="grades-tabs">
-                            {["hk1", "hk2", "year"].map((tab) => (
+                            {["hk1", "hk2", "year", "conduct"].map((tab) => (
                                 <Button
                                     key={tab}
                                     variant={activeTab === tab ? "primary" : "secondary"}
                                     className={`grades-tab-btn ${activeTab === tab ? "active" : ""}`}
                                     onClick={() => setActiveTab(tab)}
                                 >
-                                    {tab === "hk1" ? "Học kỳ 1" : tab === "hk2" ? "Học kỳ 2" : "Cả năm"}
+                                    {tab === "hk1" ? "Học kỳ 1" : tab === "hk2" ? "Học kỳ 2" : tab === "year" ? "Cả năm" : "Hạnh kiểm"}
                                 </Button>
                             ))}
                         </div>
                     </div>
 
+                    {activeTab !== "conduct" && (
                     <div className="grades-stats">
                         <div className="grades-card">
                             <div className="grades-card-icon icon-blue">
@@ -295,17 +358,16 @@ export default function StudentGrades() {
                             </div>
                         </div>
                     </div>
+                    )}
 
-                    <div className="grades-table">
-                        <div className="table-header">
-                            <span>Môn học</span>
-                            <span>TB HK1</span>
-                            <span>TB HK2</span>
-                            <span>TB Tổng</span>
-                            <span className="progress-header">Xu hướng</span>
-                            <span>Xếp loại</span>
-                            <span>Chi tiết</span>
-                        </div>
+                    {activeTab === "conduct" ? (
+                                <ConductSection
+                                    conductSummary={conductSummary}
+                                    disciplineScores={disciplineScores}
+                                    loading={!conductSummary && !hk1SemesterId}
+                                />
+                            ) : (
+                            <div className="grades-table">
 
                         {gradesData.length > 0 ? gradesData.map((subject) => (
                             <React.Fragment key={subject.id}>
@@ -359,9 +421,9 @@ export default function StudentGrades() {
                             </div>
                         )}
                     </div>
+                            )}
                 </>
             )}
         </div>
     );
 }
-

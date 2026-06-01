@@ -59,7 +59,7 @@ export const singlePromote = async (enrollmentId) => {
  * @param {number} hk2SemesterId - ID học kỳ 2
  */
 export const getLockStatus = async (classId, hk1SemesterId, hk2SemesterId) => {
-  const response = await axiosClient.get(`/grade/class/${classId}/lock-status`, {
+  const response = await axiosClient.get(`/grades/class/${classId}/lock-status`, {
     params: { hk1SemesterId, hk2SemesterId },
   });
   return response;

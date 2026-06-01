@@ -2,12 +2,14 @@ import React, { useEffect, useState } from "react"
 import "./ParentChildrenOverview.css"
 import { PageHeader, SchoolYearTermSelector, LoadingSpinner } from "../../../components/common"
 import { useSchoolYearTerm } from "../../../hooks/useSchoolYearTerm"
+import { resolveSemesterId } from "../../../services/shared/schoolYearLookup"
 import ChildHeader from "./components/childHeader/ChildHeader"
 import ChildTabs from "./components/ChildTabs/ChildTabs"
 import AttendanceSection from "./components/attendanceSection/AttendanceSection"
 import CalendarSection from "./components/calendarSection/CalendarSection"
 import GradesSection from "./components/GradesSection/GradesSection"
 import LeaveRequestSection from "./components/LeaveRequestSection/LeaveRequestSection"
+import ConductSection from "./components/ConductSection/ConductSection"
 import ChildSwitcher from "./components/ChildSwitcher/ChildSwitcher"
 import { parentService } from "../../../services/pages/parent/parentService"
 
@@ -102,6 +104,8 @@ export default function ParentChildrenOverview() {
     const [scheduleError, setScheduleError] = useState(null)
     const [upcomingEvents, setUpcomingEvents] = useState([])
     const [leaveRequests, setLeaveRequests] = useState([])
+    const [conductSummary, setConductSummary] = useState(null)
+    const [disciplineScores, setDisciplineScores] = useState(null)
 
     // 1. Fetch children list tu API
     useEffect(() => {
@@ -230,6 +234,44 @@ export default function ParentChildrenOverview() {
         fetchLeaveRequests()
     }, [selectedChildId])
 
+    // 4. Fetch conduct data when child changes
+    useEffect(() => {
+        if (!selectedChildId || !selectedSchoolYear) return
+
+        const fetchConductData = async () => {
+            try {
+                const hk1SemId = await resolveSemesterId(selectedSchoolYear, "hk1")
+                const hk2SemId = await resolveSemesterId(selectedSchoolYear, "hk2")
+
+                if (!hk1SemId || !hk2SemId) return
+
+                const [conductRes, disciplineRes] = await Promise.allSettled([
+                    parentService.getChildConductSummary({
+                        pathParams: { childId: selectedChildId },
+                        params: { hk1SemesterId: hk1SemId, hk2SemesterId: hk2SemId },
+                        mock: false,
+                    }),
+                    parentService.getChildDisciplineScores({
+                        pathParams: { childId: selectedChildId },
+                        params: { semesterId: hk1SemId },
+                        mock: false,
+                    }),
+                ])
+
+                if (conductRes.status === "fulfilled" && conductRes.value?.success) {
+                    setConductSummary(conductRes.value.data)
+                }
+                if (disciplineRes.status === "fulfilled" && disciplineRes.value?.success) {
+                    setDisciplineScores(disciplineRes.value.data)
+                }
+            } catch (err) {
+                console.error("Error fetching conduct data:", err)
+            }
+        }
+
+        fetchConductData()
+    }, [selectedChildId, selectedSchoolYear])
+
     useEffect(() => {
         setSelectedSemester(selectedTerm)
     }, [selectedTerm])
@@ -294,6 +336,8 @@ export default function ParentChildrenOverview() {
         setScheduleError(null)
         setUpcomingEvents([])
         setLeaveRequests([])
+        setConductSummary(null)
+        setDisciplineScores(null)
     }
 
     const overviewCurrentSemesterGrades = gradesBySemester?.[selectedTerm] || []
@@ -414,6 +458,14 @@ export default function ParentChildrenOverview() {
                                     requests={leaveRequests}
                                     childId={selectedChildId}
                                     onSuccess={refreshLeaveRequests}
+                                />
+                            )}
+
+                            {activeTab === "conduct" && (
+                                <ConductSection
+                                    conductSummary={conductSummary}
+                                    disciplineScores={disciplineScores}
+                                    loading={!conductSummary && !selectedChildId}
                                 />
                             )}
                         </>

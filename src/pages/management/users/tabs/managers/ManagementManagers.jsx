@@ -135,7 +135,7 @@ export default function ManagementManagers({ onCountChange, schoolYear, term, ha
     useEffect(() => {
         const fetchAllPermissions = async () => {
             try {
-                const perms = await permissionService.getAllPermissions();
+                const perms = await permissionService.getAllPermissions({ limit: 1000 });
                 setAllSystemPermissions(perms);
                 
                 // Create map: "resource:action" -> id AND id -> "resource:action"
@@ -527,15 +527,10 @@ export default function ManagementManagers({ onCountChange, schoolYear, term, ha
                             })
                             .filter(id => id !== null);
 
-                        if (permissionIds.length > 0) {
-                            console.log("Saving Permissions:", { mode: "replace", permissionIds });
-                            await permissionService.updateUserPermissions(id, {
-                                mode: "replace",
-                                permissionIds,
-                            });
-                        } else {
-                            console.warn("No permissions mapped. Payload keys:", payload.permissions);
-                        }
+                        await permissionService.updateUserPermissions(id, {
+                            mode: "replace",
+                            permissionIds,
+                        });
                     }
 
                     handleCloseDetail();

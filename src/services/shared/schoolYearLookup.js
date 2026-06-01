@@ -100,6 +100,7 @@ const loadSchoolYears = async () => {
   if (!token) return [];
   try {
     const payload = await axiosClient.get("/school-years");
+    console.log("[loadSchoolYears] payload:", payload, "rows:", getRows(payload));
     return getRows(payload);
   } catch {
     return [];
@@ -112,6 +113,7 @@ const loadSemesters = async (schoolYearId) => {
     const payload = await axiosClient.get("/semesters", {
       params: { schoolYearId },
     });
+    console.log("[loadSemesters] payload:", payload, "rows:", getRows(payload));
     return getRows(payload);
   } catch {
     return [];
@@ -123,6 +125,7 @@ export async function resolveSchoolYearId(schoolYearName) {
   if (typeof schoolYearName === "number") return schoolYearName;
   const rows = await getCachedRows("schoolYears", loadSchoolYears);
   const target = normalizeText(schoolYearName);
+  console.log("[resolveSchoolYearId] schoolYearName:", schoolYearName, "target:", target, "rows count:", rows.length, "rows:", rows);
   const matched = rows.find((row) => normalizeText(getSchoolYearName(row)) === target);
   return matched?.id;
 }
@@ -148,6 +151,7 @@ export async function resolveCurrentTermKey(schoolYearName) {
 
 export async function resolveSemesterId(schoolYearName, termKey) {
   const schoolYearId = await resolveSchoolYearId(schoolYearName);
+  console.log("[resolveSemesterId]", { schoolYearName, termKey, schoolYearId });
   if (!schoolYearId || !termKey) return undefined;
 
   const cacheKey = `semesters:${schoolYearId}`;
@@ -160,6 +164,7 @@ export async function resolveSemesterId(schoolYearName, termKey) {
     semesters = await loadSemesters(schoolYearId);
     lookupCache.semesters = { ts: Date.now(), rows: semesters, key: schoolYearId };
   }
+  console.log("[resolveSemesterId] semesters:", semesters);
 
   const termLabel = termKey === "hk1" ? "học kỳ 1" : "học kỳ 2";
   const matched = semesters.find((row) => normalizeText(row.name || "").includes(termLabel));

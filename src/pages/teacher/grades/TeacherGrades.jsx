@@ -1,10 +1,13 @@
-import { useMemo, useState, useEffect, useCallback } from "react";
+import { useMemo, useState, useEffect, useCallback, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import Modal from "../../../components/ui/Modal/Modal";
 import { Select } from "../../../components/ui";
 import { PageHeader, SchoolYearTermSelector } from "../../../components/common";
 import { useSchoolYearTerm } from "../../../hooks/useSchoolYearTerm";
 import { teacherGradeService } from "../../../services/pages/teacher/teacherGradeService";
+import { gradeService } from "../../../services/pages/management/grades/gradeService";
 import { dataLockingService } from "../../../services/pages/admin/locking/dataLockingService";
+import { resolveSemesterId, resolveSchoolYearId } from "../../../services/shared/schoolYearLookup";
 import GradeListSection from "./components/gradeListSection/GradeListSection";
 import { FiPlus, FiSave, FiX, FiTrash2, FiLock, FiUnlock, FiSend, FiUser } from "react-icons/fi";
 import GradeSummarySection, { GradeSummaryHeader } from "./components/gradeSummarySection/GradeSummarySection";
@@ -14,7 +17,6 @@ import "./TeacherGrades.css";
 const SEMESTERS = { hk1: { label: "Học kỳ 1" }, hk2: { label: "Học kỳ 2" } };
 const TABS = [
   { key: "gradebook", label: "Sổ điểm" },
-  { key: "overview", label: "Tổng quan lớp" },
   { key: "students", label: "Học sinh" },
 ];
 
@@ -124,6 +126,12 @@ function fmtScore(val) {
 
 export default function TeacherGrades() {
   const { selectedSchoolYear, selectedTerm, handleYearArrow, handleTermChange } = useSchoolYearTerm();
+  const navigate = useNavigate();
+
+  const currentUserId = useMemo(() => {
+    const storedUser = JSON.parse(localStorage.getItem("user") || sessionStorage.getItem("user") || "{}");
+    return storedUser.profile?.id || storedUser.teacherId || storedUser.id || null;
+  }, []);
 
   const [assignments, setAssignments] = useState([]);
   const [selectedClassId, setSelectedClassId] = useState("");
@@ -141,10 +149,13 @@ export default function TeacherGrades() {
   const [atRiskDialogOpen, setAtRiskDialogOpen] = useState(false);
   const [unlockRequestOpen, setUnlockRequestOpen] = useState(false);
   const [unlockReason, setUnlockReason] = useState("");
+  const [retractedGradeId, setRetractedGradeId] = useState(null);
+  const [isRetracting, setIsRetracting] = useState(false);
   const [lockStatus, setLockStatus] = useState("draft");
 
-  const [studentDetail, setStudentDetail] = useState(null);
-  const [isLoadingDetail, setIsLoadingDetail] = useState(false);
+  const [studentSemesterAverages, setStudentSemesterAverages] = useState({});
+  const [studentConducts, setStudentConducts] = useState({});
+  const fetchStudentExtrasInFlight = useRef(false);
 
   // ---- Derived from assignments ----
   const teacherClasses = useMemo(() => {
@@ -156,25 +167,34 @@ export default function TeacherGrades() {
         map[a.classId].role = "homeroom";
       }
     }
-    return Object.values(map);
+    const result = Object.values(map);
+    return result;
   }, [assignments]);
+
+  // Class where current user is homeroom teacher (can view all subjects)
+  const homeroomClassId = useMemo(() => {
+    const hrClass = teacherClasses.find((c) => c.role === "homeroom");
+    return hrClass?.id ? String(hrClass.id) : null;
+  }, [teacherClasses]);
 
   const classSubjects = useMemo(() => {
     if (!selectedClassId) return [];
-    return assignments.filter((a) => String(a.classId) === String(selectedClassId));
+    const filtered = assignments.filter((a) => String(a.classId) === String(selectedClassId));
+    // Deduplicate by subjectId: keep the entry WITH classTeacherSubjectId (teaching)
+    // over the homeroom-only entry (which has no classTeacherSubjectId)
+    const seen = {};
+    for (const a of filtered) {
+      const prev = seen[a.subjectId];
+      if (!prev || (a.classTeacherSubjectId && !prev.classTeacherSubjectId)) {
+        seen[a.subjectId] = a;
+      }
+    }
+    return Object.values(seen);
   }, [assignments, selectedClassId]);
 
   const selectedAssignment = useMemo(() => {
     return classSubjects.find((a) => String(a.subjectId) === String(selectedSubjectId));
   }, [classSubjects, selectedSubjectId]);
-
-  const isHomeroom = useMemo(() => {
-    return teacherClasses.find((c) => String(c.id) === String(selectedClassId))?.role === "homeroom";
-  }, [teacherClasses, selectedClassId]);
-
-  const canEdit = useMemo(() => {
-    return !isHomeroom && lockStatus !== "locked";
-  }, [isHomeroom, lockStatus]);
 
   // ---- Reset selections on year/term change ----
   useEffect(() => {
@@ -182,11 +202,17 @@ export default function TeacherGrades() {
     setSelectedSubjectId("");
   }, [selectedSchoolYear, selectedTerm]);
 
+  const canEdit = useMemo(() => {
+    if (lockStatus === "locked") return false;
+    if (!selectedAssignment) return false;
+    return !!selectedAssignment.classTeacherSubjectId;
+  }, [lockStatus, selectedAssignment]);
+
   // ---- Load assignments when schoolYear/term changes ----
   useEffect(() => {
     teacherGradeService.getMyAssignments({ schoolYear: selectedSchoolYear, term: selectedTerm }).then((res) => {
       const assignmentsArray = Array.isArray(res) ? res : (res?.data || []);
-      setAssignments(assignmentsArray.map((a) => ({
+      const mapped = assignmentsArray.map((a) => ({
         ...a,
         classId: a.class_id,
         className: a.class_name,
@@ -195,7 +221,9 @@ export default function TeacherGrades() {
         semesterId: a.semester_id,
         semesterName: a.semester_name,
         classTeacherSubjectId: a.class_teacher_subject_id,
-      })));
+        role: a.role,
+      }));
+      setAssignments(mapped);
     }).catch(console.error);
   }, [selectedSchoolYear, selectedTerm]);
 
@@ -207,17 +235,52 @@ export default function TeacherGrades() {
   // ---- Load grade data when class+subject+semester selected ----
   useEffect(() => {
     const fetchGrades = async () => {
-      if (!selectedClassId || !selectedSubjectId || !selectedAssignment?.classTeacherSubjectId) {
-        setRecords([]); setStudents([]); setGradeRows([]); setGradeItems([]);
+      if (!selectedClassId || !selectedSubjectId) {
+        setRecords([]); setGradeRows([]); setGradeItems([]);
         return;
       }
+      const semesterDbId = await resolveSemesterId(selectedSchoolYear, selectedTerm);
+      if (!semesterDbId) {
+        setRecords([]); setGradeRows([]); setGradeItems([]);
+        setIsLoading(false);
+        return;
+      }
+
+      if (!selectedAssignment?.classTeacherSubjectId) {
+        // GVCN viewing a subject they don't teach in their homeroom class — read-only
+        setIsLoading(true);
+        try {
+          const [studentsRes, homeroomRes] = await Promise.all([
+            teacherGradeService.getClassStudents(Number(selectedClassId)),
+            teacherGradeService.getHomeroomClassGrades({
+              classId: selectedClassId,
+              subjectId: selectedSubjectId,
+              semesterId: semesterDbId,
+            }),
+          ]);
+          const fetchedStudents = Array.isArray(studentsRes) ? studentsRes : [];
+          const { gradeItems: fetchedItems = [], grades: fetchedRows = [] } = homeroomRes || {};
+          const itemIds = new Set(fetchedItems.map((i) => String(i.id)));
+          const filteredRows = fetchedRows.filter((r) => itemIds.has(String(r.grade_item_id)));
+          setStudents(fetchedStudents);
+          setGradeItems(fetchedItems);
+          setGradeRows(filteredRows);
+          setRecords(buildStudentGradeRecords(fetchedStudents, filteredRows, fetchedItems));
+        } catch (e) {
+          console.error("Fetch homeroom grades error:", e);
+        } finally {
+          setIsLoading(false);
+        }
+        return;
+      }
+
+      // Normal path: teacher with classTeacherSubjectId
       setIsLoading(true);
       try {
-        const semesterValue = selectedTerm === "hk2" ? 2 : 1;
         const [studentsRes, gradeItemsRes, gradesRes] = await Promise.all([
           teacherGradeService.getClassStudents(Number(selectedClassId)),
-          teacherGradeService.getGradeItems({ classTeacherSubjectId: selectedAssignment.classTeacherSubjectId, semesterId: semesterValue }),
-          teacherGradeService.getStudentSubjectGrades({ classTeacherSubjectId: selectedAssignment.classTeacherSubjectId, semesterId: semesterValue }),
+          teacherGradeService.getGradeItems({ classTeacherSubjectId: selectedAssignment.classTeacherSubjectId, semesterId: semesterDbId }),
+          teacherGradeService.getStudentSubjectGrades({ classTeacherSubjectId: selectedAssignment.classTeacherSubjectId, semesterId: semesterDbId }),
         ]);
         const fetchedStudents = Array.isArray(studentsRes) ? studentsRes : [];
         const fetchedItems = Array.isArray(gradeItemsRes) ? gradeItemsRes : [];
@@ -237,6 +300,126 @@ export default function TeacherGrades() {
     };
     fetchGrades();
   }, [selectedClassId, selectedSubjectId, selectedTerm]);
+
+  // ---- Load class students when students tab is active (for homeroom subjects or any class) ----
+  useEffect(() => {
+    if (activeTab !== "students") return;
+    if (!selectedClassId) return;
+    // Already have students from fetchGrades or from class switch
+    if (students.length > 0) return;
+    // Load students for this class
+    teacherGradeService.getClassStudents(Number(selectedClassId))
+      .then((res) => setStudents(Array.isArray(res) ? res : []))
+      .catch(() => setStudents([]));
+  }, [activeTab, selectedClassId, students.length]);
+
+  // ---- Fetch HK1/HK2 averages + conduct for all students when class changes ----
+  useEffect(() => {
+    if (!selectedClassId) return;
+    if (fetchStudentExtrasInFlight.current) return;
+    const fetchStudentExtras = async () => {
+      // Fetch students fresh to avoid stale closure
+      const fetchedStudents = await teacherGradeService.getClassStudents(Number(selectedClassId));
+      const freshStudents = Array.isArray(fetchedStudents) ? fetchedStudents : [];
+      if (!freshStudents.length) {
+        fetchStudentExtrasInFlight.current = false;
+        return;
+      }
+      setStudents(freshStudents);
+
+      const schoolYearId = await resolveSchoolYearId(selectedSchoolYear);
+
+      const hk1SemesterId = await resolveSemesterId(selectedSchoolYear, "hk1");
+      const hk2SemesterId = await resolveSemesterId(selectedSchoolYear, "hk2");
+      const hk1SemesterIdStr = String(hk1SemesterId || "");
+      const hk2SemesterIdStr = String(hk2SemesterId || "");
+
+      const newAverages = {};
+      const newConducts = {};
+
+      const studentGPAPromises = freshStudents.map(async (student) => {
+        const enrollmentId = student.enrollment_id || student.id;
+        const [hk1Res, hk2Res] = await Promise.all([
+          gradeService.calculateSemesterGPA({ enrollmentId, semesterId: 1, schoolYearId }).catch(() => null),
+          gradeService.calculateSemesterGPA({ enrollmentId, semesterId: 2, schoolYearId }).catch(() => null),
+        ]);
+        const hk1GPA = hk1Res?.gpa != null ? round1(hk1Res.gpa) : null;
+        const hk2GPA = hk2Res?.gpa != null ? round1(hk2Res.gpa) : null;
+        const yearAvg = hk1GPA !== null && hk2GPA !== null
+          ? round1((hk1GPA + 2 * hk2GPA) / 3)
+          : hk2GPA ?? hk1GPA;
+        return { enrollmentId, hk1GPA, hk2GPA, yearAvg };
+      });
+
+      // Gather GPA results
+      const gpaResults = await Promise.all(studentGPAPromises);
+      for (const r of gpaResults) {
+        newAverages[r.enrollmentId] = { hk1: r.hk1GPA, hk2: r.hk2GPA, year: r.yearAvg };
+      }
+
+      // Conduct: try class-level summary endpoint first (only for specific semester),
+      // fall back to per-student classifySemester.
+      // In "all" term, skip class-level (requires both HK1+HK2 IDs) and go per-student.
+      let conductMap = {};
+      if (hk1SemesterId || hk2SemesterId) {
+        const isAllTerm = selectedTerm === "all";
+        try {
+          const axiosClient = (await import("../../../services/shared/http/axiosClient")).default;
+          const params = {};
+          if (hk1SemesterIdStr) params.hk1SemesterId = hk1SemesterIdStr;
+          if (hk2SemesterIdStr) params.hk2SemesterId = hk2SemesterIdStr;
+          const resp = await axiosClient.get("/conduct-summary/class/" + selectedClassId + "/summary", { params });
+          const conductRows = resp?.data?.students || [];
+          for (const row of conductRows) {
+            const eid = String(row.enrollmentId || row.enrollment_id);
+            if (eid) {
+              conductMap[eid] = {
+                hk1: row.hk1Level || null,
+                hk2: row.hk2Level || null,
+                year: row.annualLevel || null,
+              };
+            }
+          }
+        } catch {
+          // class-level endpoint failed (403 / not found) — fall through to per-student
+          conductMap = {};
+        }
+      }
+
+      // Per-student classifySemester fallback
+      if (Object.keys(conductMap).length === 0) {
+        const conductPromises = freshStudents.map(async (student) => {
+          const enrollmentId = String(student.enrollment_id || student.id);
+          try {
+            const [hk1Res, hk2Res] = await Promise.all([
+              gradeService.classifySemester({ enrollmentId, semesterId: 1 }).catch(() => null),
+              gradeService.classifySemester({ enrollmentId, semesterId: 2 }).catch(() => null),
+            ]);
+            conductMap[enrollmentId] = {
+              hk1: hk1Res?.data?.conduct?.level || hk1Res?.description || null,
+              hk2: hk2Res?.data?.conduct?.level || hk2Res?.description || null,
+            };
+          } catch {
+            conductMap[enrollmentId] = { hk1: null, hk2: null };
+          }
+        });
+        await Promise.all(conductPromises);
+      }
+
+      for (const student of freshStudents) {
+        const eid = String(student.enrollment_id || student.id);
+        if (!newConducts[eid]) {
+          newConducts[eid] = conductMap[eid] || { hk1: null, hk2: null };
+        }
+      }
+
+      setStudentSemesterAverages(newAverages);
+      setStudentConducts(newConducts);
+      fetchStudentExtrasInFlight.current = false;
+    };
+    fetchStudentExtrasInFlight.current = true;
+    fetchStudentExtras().catch(() => { fetchStudentExtrasInFlight.current = false; });
+  }, [selectedClassId, selectedSchoolYear]);
 
   // ---- Lock status ----
   useEffect(() => {
@@ -279,17 +462,6 @@ export default function TeacherGrades() {
     };
   }, [records]);
 
-  // ---- Class overview data (for tab 2) ----
-  const classOverview = useMemo(() => {
-    if (!selectedClassId || !isHomeroom) return [];
-    return classSubjects.map((a) => ({
-      subjectId: a.subjectId,
-      subjectName: a.subjectName,
-      semesterId: a.semesterId,
-      semesterName: a.semesterName,
-    }));
-  }, [selectedClassId, classSubjects, isHomeroom]);
-
   // ---- Handlers ----
   const openEditDialog = (record) => {
     setEditStudentId(record.id);
@@ -306,10 +478,11 @@ export default function TeacherGrades() {
 
   const handleSaveGrade = async () => {
     try {
-      const semesterValue = selectedTerm === "hk2" ? 2 : 1;
+      const semesterDbId = await resolveSemesterId(selectedSchoolYear, selectedTerm);
+      if (!semesterDbId) { toast.error("Không tìm thấy học kỳ."); return; }
       const payload = {
         classTeacherSubjectId: selectedAssignment?.classTeacherSubjectId,
-        semesterId: semesterValue,
+        semesterId: semesterDbId,
         studentEnrollmentId: editStudentId,
         regularScores: editDraft.regularScores.map((v) => ({ score: v.score, gradeItemId: v.gradeItemId })),
         midterm: { score: editDraft.midterm.score, gradeItemId: editDraft.midterm.gradeItemId },
@@ -323,8 +496,8 @@ export default function TeacherGrades() {
         setEditDialogOpen(false);
         const [studentsRes, gradeItemsRes, gradesRes] = await Promise.all([
           teacherGradeService.getClassStudents(Number(selectedClassId)),
-          teacherGradeService.getGradeItems({ classTeacherSubjectId: selectedAssignment.classTeacherSubjectId, semesterId: semesterValue }),
-          teacherGradeService.getStudentSubjectGrades({ classTeacherSubjectId: selectedAssignment.classTeacherSubjectId, semesterId: semesterValue }),
+          teacherGradeService.getGradeItems({ classTeacherSubjectId: selectedAssignment.classTeacherSubjectId, semesterId: semesterDbId }),
+          teacherGradeService.getStudentSubjectGrades({ classTeacherSubjectId: selectedAssignment.classTeacherSubjectId, semesterId: semesterDbId }),
         ]);
         const fetchedStudents = Array.isArray(studentsRes) ? studentsRes : [];
         const fetchedItems = Array.isArray(gradeItemsRes) ? gradeItemsRes : [];
@@ -345,10 +518,9 @@ export default function TeacherGrades() {
   };
 
   const handleLockGrades = async () => {
-    const confirmed = window.confirm("Bạn có chắc chắn muốn khóa điểm môn học này?");
+      const confirmed = window.confirm("Bạn có chắc chắn muốn khóa điểm môn học này?");
     if (!confirmed) return;
     try {
-      const semesterValue = selectedTerm === "hk2" ? 2 : 1;
       const { teacherService } = await import("../../../services/pages/teacher/teacherService");
       const res = await teacherService.finalizeClassGrades({
         body: { classId: selectedClassId, classTeacherSubjectId: selectedAssignment?.classTeacherSubjectId, schoolYear: selectedSchoolYear, term: selectedTerm, status: "locked" },
@@ -359,53 +531,35 @@ export default function TeacherGrades() {
     } catch { toast.error("Lỗi khi khóa điểm."); }
   };
 
-  const handleSendUnlockRequest = () => {
+  const handleSendUnlockRequest = async () => {
     if (!unlockReason.trim()) { toast.warning("Nhập lý do yêu cầu mở khóa."); return; }
-    toast.success("Yêu cầu đã được gửi!");
-    setUnlockRequestOpen(false);
-  };
+    if (!retractedGradeId) { toast.error("Không tìm thấy thông tin điểm để mở khóa."); return; }
 
-  // ---- Student detail ----
-  const handleOpenStudentDetail = async (student) => {
-    setStudentDetail({ student, loading: true });
-    setIsLoadingDetail(true);
+    setIsRetracting(true);
     try {
-      const enrollmentId = student.enrollmentId || student.id;
-      const results = [];
-      const taughtAssignments = classSubjects.filter((a) => String(a.classId) === String(selectedClassId));
-
-      for (const assignment of taughtAssignments) {
-        const semesterValue = assignment.semesterId || (assignment.semesterName?.toLowerCase().includes("2") ? 2 : 1);
-        try {
-          const grades = await teacherGradeService.getStudentSubjectGrades({
-            enrollmentId,
-            classTeacherSubjectId: assignment.classTeacherSubjectId,
-            semesterId: semesterValue,
-          });
-          const rows = Array.isArray(grades) ? grades : [];
-          const regularNums = rows.filter((r) => normalizeGradeCategory(r.category_name || "", r.grade_item_name || "") === "regular").map((r) => toScoreNumber(r.score)).filter((v) => v !== null);
-          const midtermRow = rows.find((r) => normalizeGradeCategory(r.category_name || "", r.grade_item_name || "") === "midterm");
-          const finalRow = rows.find((r) => normalizeGradeCategory(r.category_name || "", r.grade_item_name || "") === "final");
-          const denom = regularNums.length + (midtermRow ? 2 : 0) + (finalRow ? 3 : 0);
-          const avg = denom ? round1((regularNums.reduce((a, b) => a + b, 0) + (midtermRow ? toScoreNumber(midtermRow.score) * 2 : 0) + (finalRow ? toScoreNumber(finalRow.score) * 3 : 0)) / denom) : null;
-          results.push({ subjectName: assignment.subjectName, semesterName: assignment.semesterName, average: avg });
-        } catch { results.push({ subjectName: assignment.subjectName, semesterName: assignment.semesterName, average: null }); }
-      }
-
-      setStudentDetail({
-        student,
-        subjects: results,
-        loading: false,
+      const semesterDbId = await resolveSemesterId(selectedSchoolYear, selectedTerm);
+      const { teacherService } = await import("../../../services/pages/teacher/teacherService");
+      const res = await teacherService.retractGrade({
+        pathParams: { id: retractedGradeId },
+        body: { notes: unlockReason },
+        mock: false,
       });
+      if (res?.success) {
+        toast.success("Yêu cầu mở khóa đã được gửi!");
+        setUnlockRequestOpen(false);
+        setLockStatus("draft");
+      } else {
+        toast.error("Không thể gửi yêu cầu: " + (res?.message || "Lỗi không xác định"));
+      }
     } catch (e) {
-      console.error(e);
-      toast.error("Lỗi khi tải chi tiết học sinh.");
-      setStudentDetail(null);
+      console.error("Retract grade error:", e);
+      toast.error("Lỗi khi gửi yêu cầu mở khóa.");
     } finally {
-      setIsLoadingDetail(false);
+      setIsRetracting(false);
     }
   };
 
+  // ---- Student detail ----
   const currentClass = teacherClasses.find((c) => String(c.id) === String(selectedClassId)) || {};
   const currentSubject = classSubjects.find((a) => String(a.subjectId) === String(selectedSubjectId)) || {};
   const semesterLabel = SEMESTERS[selectedTerm]?.label || selectedTerm;
@@ -443,11 +597,11 @@ export default function TeacherGrades() {
             {lockStatus === "locked" ? <><FiLock style={{ marginRight: 6 }} /> Đã khóa</> : <><FiUnlock style={{ marginRight: 6 }} /> Bản nháp</>}
           </span>
           {lockStatus === "locked" ? (
-            <button className="teacher-grades-action-btn is-unlock-request" onClick={() => { setUnlockReason(""); setUnlockRequestOpen(true); }}>
+            <button className="teacher-grades-action-btn is-unlock-request" onClick={() => { setUnlockReason(""); setRetractedGradeId(selectedAssignment?.classTeacherSubjectId); setUnlockRequestOpen(true); }}>
               <FiSend style={{ marginRight: 6 }} /> Yêu cầu mở khóa
             </button>
           ) : (
-            <button className="teacher-grades-action-btn is-lock" onClick={handleLockGrades} disabled={!selectedClassId || !selectedSubjectId || isHomeroom}>
+            <button className="teacher-grades-action-btn is-lock" onClick={handleLockGrades} disabled={!canEdit}>
               <FiLock style={{ marginRight: 6 }} /> Khóa điểm
             </button>
           )}
@@ -492,7 +646,7 @@ export default function TeacherGrades() {
                     subjectLabel={currentSubject.subjectName}
                     semesterLabel={semesterLabel}
                     isLocked={lockStatus === "locked"}
-                    canEdit={lockStatus !== "locked"}
+                    canEdit={canEdit}
                   />
                 </div>
               )}
@@ -503,54 +657,12 @@ export default function TeacherGrades() {
         </div>
       )}
 
-      {activeTab === "overview" && (
-        <div className="tg-tab-content">
-          {!isHomeroom ? (
-            <div className="tg-empty-hint">Bạn không phải là GVCN. Tổng quan lớp chỉ dành cho giáo viên chủ nhiệm.</div>
-          ) : !selectedClassId ? (
-            <div className="tg-empty-hint">Vui lòng chọn lớp để xem tổng quan.</div>
-          ) : (
-            <div className="tg-overview-grid">
-              <table className="tg-overview-table">
-                <thead>
-                  <tr>
-                    <th>Môn học</th>
-                    <th className="text-center">HKI</th>
-                    <th className="text-center">HKII</th>
-                    <th className="text-center">Cả năm</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {classSubjects.length === 0 ? (
-                    <tr><td colSpan={4} className="tg-empty-state">Chưa có dữ liệu môn học.</td></tr>
-                  ) : (
-                    classSubjects.map((a) => (
-                      <tr
-                        key={`${a.subjectId}-${a.semesterId}`}
-                        className="tg-overview-row"
-                        onClick={() => {
-                          setSelectedSubjectId(a.subjectId);
-                          setActiveTab("gradebook");
-                        }}
-                      >
-                        <td>{a.subjectName}</td>
-                        <td className="text-center">{a.semesterName?.toLowerCase().includes("1") ? "—" : ""}</td>
-                        <td className="text-center">{a.semesterName?.toLowerCase().includes("2") ? "—" : ""}</td>
-                        <td className="text-center">—</td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
-      )}
-
       {activeTab === "students" && (
         <div className="tg-tab-content">
           {!selectedClassId ? (
             <div className="tg-empty-hint">Vui lòng chọn lớp để xem danh sách học sinh.</div>
+          ) : String(selectedClassId) !== homeroomClassId ? (
+            <div className="tg-empty-hint">Bạn không phải GVCN lớp này.</div>
           ) : isLoading ? (
             <div className="teacher-grades-loading"><div className="spinner"></div><p>Đang tải danh sách...</p></div>
           ) : students.length === 0 ? (
@@ -563,28 +675,40 @@ export default function TeacherGrades() {
                     <th>#</th>
                     <th>Mã HS</th>
                     <th>Họ và tên</th>
-                    <th className="text-center">Điểm TB</th>
+                    <th className="text-center">HK1</th>
+                    <th className="text-center">HK2</th>
+                    <th className="text-center">Cả năm</th>
+                    <th className="text-center">Hạnh kiểm</th>
                     <th className="text-center">Xếp loại</th>
-                    <th className="text-center">Thao tác</th>
                   </tr>
                 </thead>
                 <tbody>
                   {students.map((s, i) => {
-                    const rec = records.find((r) => String(r.enrollmentId) === String(s.enrollment_id || s.id));
+                    const enrollmentId = String(s.enrollment_id || s.id);
+                    const rec = records.find((r) => String(r.enrollmentId) === enrollmentId);
                     const avg = rec?.average ?? 0;
+                    const extras = studentSemesterAverages[enrollmentId] || {};
+                    const conducts = studentConducts[enrollmentId] || {};
+                    const yearAvg = extras.year ?? avg;
+                    const semesterRank = yearAvg >= 8.5 ? "Xuất sắc" : yearAvg >= 7.0 ? "Tốt" : yearAvg >= 5.5 ? "Khá" : yearAvg >= 4.0 ? "Trung bình" : yearAvg > 0 ? "Yếu" : null;
+                    const rankKey = yearAvg >= 8.5 ? "excellent" : yearAvg >= 7.0 ? "good" : yearAvg >= 5.5 ? "fair" : yearAvg >= 4.0 ? "average" : "weak";
+                    const conductLabel = (conducts.hk2 || conducts.hk1) || null;
                     return (
-                      <tr key={s.enrollment_id || s.id}>
+                      <tr key={enrollmentId}>
                         <td>{i + 1}</td>
-                        <td>{s.student_code || s.code || `HS${s.enrollment_id || s.id}`}</td>
+                        <td>{s.student_code || s.code || `HS${enrollmentId}`}</td>
                         <td className="bold">{s.full_name || s.name || "—"}</td>
-                        <td className="text-center bold">{avg > 0 ? fmtScore(avg) : "—"}</td>
+                        <td className="text-center">{extras.hk1 != null ? fmtScore(extras.hk1) : "—"}</td>
+                        <td className="text-center">{extras.hk2 != null ? fmtScore(extras.hk2) : "—"}</td>
+                        <td className="text-center bold">{yearAvg > 0 ? fmtScore(yearAvg) : "—"}</td>
+                        <td className="text-center">{conductLabel || "—"}</td>
                         <td className="text-center">
-                          <span className={`grade-list-rank rank-${rec?.rank || "average"}`}>
-                            {rec ? { excellent: "Xuất sắc", good: "Tốt", fair: "Khá", average: "Trung bình", weak: "Yếu" }[rec.rank] || rec.rank : "—"}
+                          <span className={`grade-list-rank rank-${rec?.rank || rankKey}`}>
+                            {semesterRank || "—"}
                           </span>
                         </td>
                         <td className="text-center">
-                          <button className="tg-detail-btn" onClick={() => handleOpenStudentDetail(s)}>
+                          <button className="tg-detail-btn" onClick={() => navigate(`/teacher/grades/student/${enrollmentId}`)}>
                             <FiUser style={{ marginRight: 4 }} /> Chi tiết
                           </button>
                         </td>
@@ -664,62 +788,12 @@ export default function TeacherGrades() {
           </div>
           <div className="teacher-grade-edit-actions">
             <button className="teacher-grade-edit-btn is-ghost" onClick={() => setUnlockRequestOpen(false)}><FiX /> Hủy</button>
-            <button className="teacher-grade-edit-btn is-primary" onClick={handleSendUnlockRequest}><FiSend /> Gửi yêu cầu</button>
+            <button className="teacher-grade-edit-btn is-primary" disabled={isRetracting} onClick={handleSendUnlockRequest}><FiSend /> {isRetracting ? "Đang gửi..." : "Gửi yêu cầu"}</button>
           </div>
         </div>
       </Modal>
 
-      {/* Student Detail Modal */}
-      <Modal
-        open={!!studentDetail}
-        title={studentDetail ? `Học bạ — ${studentDetail.student?.full_name || studentDetail.student?.name || "—"}` : ""}
-        onClose={() => setStudentDetail(null)}
-        className="tg-student-detail-modal"
-      >
-        <div className="tg-student-detail-body">
-          {isLoadingDetail ? (
-            <div className="teacher-grades-loading"><div className="spinner"></div><p>Đang tải học bạ...</p></div>
-          ) : studentDetail?.subjects?.length > 0 ? (
-            <>
-              <div className="tg-student-specs">
-                <span><strong>Học sinh:</strong> {studentDetail.student?.full_name || studentDetail.student?.name || "—"}</span>
-                <span><strong>Lớp:</strong> {currentClass.name}</span>
-              </div>
-              <table className="tg-detail-table">
-                <thead>
-                  <tr>
-                    <th>Môn học</th>
-                    <th className="text-center">HKI</th>
-                    <th className="text-center">HKII</th>
-                    <th className="text-center">Cả năm</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {studentDetail.subjects.map((sub, i) => {
-                    const isHK1 = sub.semesterName?.toLowerCase().includes("1");
-                    const existing = studentDetail.subjects.find((s2, j) => j > i && s2.subjectName === sub.subjectName && s2.semesterName?.toLowerCase().includes("2"));
-                    const hk1 = isHK1 ? sub.average : existing?.average;
-                    const hk2 = isHK1 ? existing?.average : sub.average;
-                    const yearAvg = hk1 != null && hk2 != null ? round1((hk1 + 2 * hk2) / 3) : hk2 ?? hk1;
-                    if (isHK1) return null;
-                    return (
-                      <tr key={`${sub.subjectName}-${i}`}>
-                        <td className="bold">{sub.subjectName}</td>
-                        <td className="text-center">{fmtScore(hk1)}</td>
-                        <td className="text-center">{fmtScore(hk2)}</td>
-                        <td className="text-center bold success">{fmtScore(yearAvg)}</td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-              <p className="tg-detail-formula">Công thức cả năm: <strong>(ĐTB HKI + 2 × ĐTB HKII) / 3</strong></p>
-            </>
-          ) : (
-            <p className="tg-empty-state">Chưa có dữ liệu học tập.</p>
-          )}
-        </div>
-      </Modal>
+      {/* Student Detail — moved to /teacher/grades/student/:enrollmentId */}
     </div>
   );
 }

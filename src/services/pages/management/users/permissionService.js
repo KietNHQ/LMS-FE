@@ -21,10 +21,9 @@ export const permissionService = {
    * Get all available permissions in the system.
    * @returns {Promise<Array>} List of permission objects: [{ id, resource, action, description }]
    */
-  getAllPermissions: async () => {
+  getAllPermissions: async ({ limit = 1000 } = {}) => {
     try {
-      const response = await axiosClient.get("/permissions");
-      // axiosClient unwraps response.data -> { success, data: { permissions, pagination } }
+      const response = await axiosClient.get("/permissions", { params: { limit } });
       const inner = response?.data ?? response ?? {};
       return Array.isArray(inner) ? inner : (inner.permissions || inner.items || []);
     } catch (error) {

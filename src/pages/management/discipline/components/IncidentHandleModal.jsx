@@ -37,13 +37,13 @@ export default function IncidentHandleModal({ isOpen, onClose, incident, onUpdat
         queryKey: ["discipline-staff"],
         queryFn: async () => {
             try {
-                const res = await vpDisciplineService.callByKey("get_teachers");
-                const teachers = res?.data || res || [];
+                const res = await vpDisciplineService.getDisciplineStaff();
+                const staff = res?.data || [];
                 return [
                     { value: "", label: "Chọn nhân sự..." },
-                    ...teachers.map(t => ({
-                        value: t.id,
-                        label: t.name || t.full_name || t.teacher_name || "N/A",
+                    ...staff.map(t => ({
+                        value: String(t.id),
+                        label: t.name || t.teacher_name || t.teacher_code || "N/A",
                     })),
                 ];
             } catch {

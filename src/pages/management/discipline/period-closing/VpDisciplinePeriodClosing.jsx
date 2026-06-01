@@ -134,7 +134,7 @@ export default function VpDisciplinePeriodClosing() {
     staleTime: 30_000,
   });
 
-  const isAlreadyLocked = lockCheck?.locked === true || lockCheck?.data?.locked === true;
+  const isAlreadyLocked = lockCheck?.locked === true || lockCheck?.data?.locked === true || lockCheck?.data?.isLocked === true;
 
   const closeMutation = useMutation({
     mutationFn: (data) => disciplinePeriodClosingService.closeDisciplinePeriod(data),
@@ -179,7 +179,7 @@ export default function VpDisciplinePeriodClosing() {
     closeMutation.mutate({
       periodType,
       periodKey,
-      schoolYear: selectedSchoolYear || currentYear,
+      schoolYearId: selectedSchoolYear ? parseInt(selectedSchoolYear, 10) : undefined,
       notes: notes.trim(),
     });
   };

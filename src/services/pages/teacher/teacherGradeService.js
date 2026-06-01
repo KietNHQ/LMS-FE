@@ -45,6 +45,18 @@ export const teacherGradeService = {
     return getPayload(response);
   },
 
+  getHomeroomClassGrades: async ({ classId, subjectId, semesterId } = {}) => {
+    const params = { semesterId };
+    const response = await axiosClient.get(`/grades/class/${classId}/subject/${subjectId}`, { params });
+    return getPayload(response);
+  },
+
+  getStudentGradeSummary: async ({ studentId, schoolYear } = {}) => {
+    const params = { schoolYear };
+    const response = await axiosClient.get(`/students/${studentId}/grade-summary`, { params });
+    return getPayload(response);
+  },
+
   upsertGrades: async (body) => {
     const response = await axiosClient.post("/grades/teacher-upsert", body);
     return getPayload(response);

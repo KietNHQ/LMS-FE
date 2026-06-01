@@ -146,7 +146,7 @@ export default function FinancePaymentHistory() {
                             : "-",
                         studentCode: inv.student_code || `HS${inv.student_id}`,
                         amount: parseFloat(inv.paid_amount || inv.amount_paid || 0),
-                        method: inv.payment_method || "unknown",
+                        method: inv.payment_method || "other",
                         date: inv.paid_date || inv.paid_at || inv.last_payment_date || inv.updated_at,
                         ref: inv.transaction_ref || "",
                         note: inv.payment_note || "",

@@ -205,6 +205,9 @@ const PARENT_ENDPOINTS = [
   { key: "post_parent_leave_requests", method: "POST", path: "/guardians/me/leave-requests", module: "children", mock: false },
   // Leave requests: cancel a request
   { key: "delete_parent_leave_requests", method: "DELETE", path: "/guardians/me/leave-requests/:id", module: "children", mock: false },
+  // Conduct / Discipline
+  { key: "get_parent_child_conduct_summary", method: "GET", path: "/guardians/me/children/:childId/conduct-summary", module: "conduct", mock: false },
+  { key: "get_parent_child_discipline_scores", method: "GET", path: "/guardians/me/children/:childId/discipline-scores", module: "conduct", mock: false },
 ];
 
 const createEndpointCaller = (endpoint) => async (input = {}) => {
@@ -285,6 +288,8 @@ export const parentService = {
   listLeaveRequests: (input) => endpointCallers.get_parent_leave_requests(input),
   createLeaveRequest: (input) => endpointCallers.post_parent_leave_requests(input),
   cancelLeaveRequest: (input) => endpointCallers.delete_parent_leave_requests(input),
+  getChildConductSummary: (input) => endpointCallers.get_parent_child_conduct_summary(input),
+  getChildDisciplineScores: (input) => endpointCallers.get_parent_child_discipline_scores(input),
 };
 
 export default parentService;

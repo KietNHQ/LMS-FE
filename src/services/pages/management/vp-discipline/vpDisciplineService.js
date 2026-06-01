@@ -94,6 +94,8 @@ export const vpDisciplineService = {
     }),
   getGradeLevels: (input = {}) =>
     scopedApi.callByKey("get_grade_levels", input),
+  getDisciplineStaff: (input = {}) =>
+    scopedApi.callByKey("get_discipline_escalations_staff", input),
 };
 
 export default vpDisciplineService;

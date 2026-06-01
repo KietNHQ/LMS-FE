@@ -2,13 +2,14 @@ import React, { useMemo, useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import teacherService from "../../../services/pages/teacher/teacherService";
-import { vpDisciplineService } from "../../../services/pages/management/vp-discipline/vpDisciplineService";
+import { gradeService } from "../../../services/pages/management/grades/gradeService";
 import { resolveSemesterId } from "../../../services/shared/schoolYearLookup";
 import { PageHeader, SchoolYearTermSelector } from "../../../components/common";
 import HomeroomOverviewSection from "./components/homeroomOverviewSection/HomeroomOverviewSection";
 import HomeroomStudentsSection from "./components/homeroomStudentsSection/HomeroomStudentsSection";
 import HomeroomActionDialog from "./components/homeroomActionDialog/HomeroomActionDialog";
 import HomeroomLeaveRequestsSection from "./components/homeroomLeaveRequestsSection/HomeroomLeaveRequestsSection";
+import HomeroomConductSection from "./components/homeroomConductSection/HomeroomConductSection";
 import { homeroomData } from "./data/homeroomData";
 import { useSchoolYearTerm } from "../../../hooks/useSchoolYearTerm";
 import { FiUsers, FiAward, FiCalendar, FiInfo } from "react-icons/fi";
@@ -207,17 +208,91 @@ export default function TeacherHomeroom() {
 
     // Load conduct summary for homeroom class
     const { data: conductData, refetch: refetchConduct } = useQuery({
-        queryKey: ["teacher-homeroom-conduct", classData?.id, hkSemesterIds.hk1, hkSemesterIds.hk2],
+        queryKey: ["teacher-homeroom-conduct", classData?.id, selectedTerm],
         queryFn: async () => {
-            if (!classData?.id || !hkSemesterIds.hk1 || !hkSemesterIds.hk2) return null;
-            const res = await vpDisciplineService.getConductClassSummary(
-                classData.id,
-                hkSemesterIds.hk1,
-                hkSemesterIds.hk2,
+            if (!classData?.id) return null;
+
+            const students = classData.students || [];
+
+            // Per-student classifySemester for the selected term
+            const hk1Id = selectedTerm === "hk1" ? hkSemesterIds.hk1 : hkSemesterIds.hk1;
+            const hk2Id = selectedTerm === "hk2" ? hkSemesterIds.hk2 : hkSemesterIds.hk2;
+
+            // Determine which semester IDs to fetch based on term
+            const semesterIdsToFetch = [];
+            if (selectedTerm === "hk1" || selectedTerm === "all") {
+                if (hk1Id) semesterIdsToFetch.push({ key: "hk1", id: hk1Id });
+            }
+            if (selectedTerm === "hk2" || selectedTerm === "all") {
+                if (hk2Id) semesterIdsToFetch.push({ key: "hk2", id: hk2Id });
+            }
+
+            if (semesterIdsToFetch.length === 0) return null;
+
+            const conductRows = await Promise.all(
+                students.map(async (student) => {
+                    const enrollmentId = String(student.id || student.enrollment_id || "");
+                    if (!enrollmentId) return null;
+
+                    const results = await Promise.all(
+                        semesterIdsToFetch.map(async ({ key, id }) => {
+                            try {
+                                const res = await gradeService.classifySemester({ enrollmentId, semesterId: id });
+                                return {
+                                    key,
+                                    level: res?.data?.conduct?.level || res?.description || null,
+                                };
+                            } catch {
+                                return { key, level: null };
+                            }
+                        })
+                    );
+
+                    const row = {
+                        enrollmentId,
+                        studentName: student.full_name || student.name || "—",
+                        studentCode: student.student_code || student.code || student.studentCode || "—",
+                    };
+                    for (const r of results) {
+                        row[r.key + "Level"] = r.level;
+                    }
+                    // annualLevel = hk2Level when both are available
+                    if (hk1Id && hk2Id) {
+                        const hk1Res = results.find((r) => r.key === "hk1");
+                        const hk2Res = results.find((r) => r.key === "hk2");
+                        row.annualLevel = hk2Res?.level || hk1Res?.level || null;
+                    } else if (hk2Id) {
+                        const hk2Res = results.find((r) => r.key === "hk2");
+                        row.annualLevel = hk2Res?.level || null;
+                    } else {
+                        const hk1Res = results.find((r) => r.key === "hk1");
+                        row.annualLevel = hk1Res?.level || null;
+                    }
+                    return row;
+                })
             );
-            return res?.data || null;
+
+            const validRows = conductRows.filter(Boolean);
+
+            // Build stats
+            const stats = { total: validRows.length };
+            for (const key of ["hk1Levels", "hk2Levels", "annualLevels"]) {
+                stats[key] = { "Tốt": 0, "Khá": 0, "Đạt": 0, "Chưa đạt": 0, null: 0 };
+            }
+            const levelKey = { Tốt: "Tốt", Khá: "Khá", Đạt: "Đạt", "Chưa đạt": "Chưa đạt" };
+            for (const row of validRows) {
+                const countStat = (map, level) => {
+                    if (map[level] !== undefined) map[level]++;
+                    else map.null++;
+                };
+                if (row.hk1Level) countStat(stats.hk1Levels, levelKey[row.hk1Level] || row.hk1Level);
+                if (row.hk2Level) countStat(stats.hk2Levels, levelKey[row.hk2Level] || row.hk2Level);
+                if (row.annualLevel) countStat(stats.annualLevels, levelKey[row.annualLevel] || row.annualLevel);
+            }
+
+            return { students: validRows, stats };
         },
-        enabled: Boolean(classData?.id && hkSemesterIds.hk1 && hkSemesterIds.hk2),
+        enabled: Boolean(classData?.id),
         staleTime: 60_000,
     });
 
@@ -607,86 +682,13 @@ export default function TeacherHomeroom() {
                     <HomeroomLeaveRequestsSection classId={classData.id} />
                 )}
                 {activeSection === "conduct" && (
-                    <div className="homeroom-conduct-section">
-                        <h3>Tổng kết Hạnh kiểm — {selectedSchoolYear}</h3>
-                        {!hkSemesterIds.hk1 || !hkSemesterIds.hk2 ? (
-                            <p>Đang tải dữ liệu...</p>
-                        ) : !conductData ? (
-                            <p>Không có dữ liệu hạnh kiểm cho lớp này.</p>
-                        ) : (
-                            <>
-                                {conductData.stats && (
-                                    <div className="homeroom-stats-grid">
-                                        <div className="homeroom-stat-card">
-                                            <div className="stat-icon"><FiUsers /></div>
-                                            <div className="stat-info">
-                                                <h3>Tổng số</h3>
-                                                <p>{conductData.stats.total ?? "—"} học sinh</p>
-                                            </div>
-                                        </div>
-                                        <div className="homeroom-stat-card">
-                                            <div className="stat-icon"><FiAward /></div>
-                                            <div className="stat-info">
-                                                <h3>Tốt (HK I)</h3>
-                                                <p>{conductData.stats.hk1Levels?.Tốt ?? 0} học sinh</p>
-                                            </div>
-                                        </div>
-                                        <div className="homeroom-stat-card">
-                                            <div className="stat-icon"><FiAward /></div>
-                                            <div className="stat-info">
-                                                <h3>Tốt (HK II)</h3>
-                                                <p>{conductData.stats.hk2Levels?.Tốt ?? 0} học sinh</p>
-                                            </div>
-                                        </div>
-                                        <div className="homeroom-stat-card">
-                                            <div className="stat-icon"><FiAward /></div>
-                                            <div className="stat-info">
-                                                <h3>Tốt (Cả năm)</h3>
-                                                <p>{conductData.stats.annualLevels?.Tốt ?? 0} học sinh</p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                )}
-                                <div style={{ overflowX: "auto", marginTop: "1rem" }}>
-                                    <table className="dm-table-premium">
-                                        <thead>
-                                            <tr>
-                                                <th>Học sinh</th>
-                                                <th className="th-center">HK I</th>
-                                                <th className="th-center">HK II</th>
-                                                <th className="th-center">Cả năm</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {(conductData.students || []).map((s) => (
-                                                <tr key={s.enrollmentId}>
-                                                    <td>
-                                                        <strong>{s.studentName || "—"}</strong>
-                                                        <br /><small>{s.studentCode}</small>
-                                                    </td>
-                                                    <td className="th-center">
-                                                        <span className={`suggestion-pill ${s.hk1Level === "Tốt" ? "success" : s.hk1Level ? "warning" : ""}`}>
-                                                            {s.hk1Level || "Chưa có"}
-                                                        </span>
-                                                    </td>
-                                                    <td className="th-center">
-                                                        <span className={`suggestion-pill ${s.hk2Level === "Tốt" ? "success" : s.hk2Level ? "warning" : ""}`}>
-                                                            {s.hk2Level || "Chưa có"}
-                                                        </span>
-                                                    </td>
-                                                    <td className="th-center">
-                                                        <span className={`suggestion-pill ${s.annualLevel === "Tốt" ? "success" : s.annualLevel ? "warning" : ""}`}>
-                                                            {s.annualLevel || "Chưa có"}
-                                                        </span>
-                                                    </td>
-                                                </tr>
-                                            ))}
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </>
-                        )}
-                    </div>
+                    <HomeroomConductSection
+                        classId={classData.id}
+                        selectedSchoolYear={selectedSchoolYear}
+                        selectedTerm={selectedTerm}
+                        conductData={conductData}
+                        isLoading={false}
+                    />
                 )}
             </div>
 

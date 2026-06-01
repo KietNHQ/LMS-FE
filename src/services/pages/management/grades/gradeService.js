@@ -29,8 +29,9 @@ export const gradeService = {
   },
 
   // Tính điểm trung bình tất cả các môn trong học kỳ (Semester GPA)
-  calculateSemesterGPA: async ({ enrollmentId, semesterId }) => {
+  calculateSemesterGPA: async ({ enrollmentId, semesterId, schoolYearId } = {}) => {
     const params = { enrollmentId, semesterId };
+    if (schoolYearId) params.schoolYearId = schoolYearId;
     const response = await axiosClient.get(`/grades/calculate/semester-gpa`, { params });
     return getPayload(response);
   },
@@ -93,6 +94,42 @@ export const gradeService = {
       ...(schoolYearId ? { schoolYearId } : {}),
     };
     const response = await axiosClient.get(`/grades/overview-summary`, { params });
+    return getPayload(response);
+  },
+
+  // Lấy trạng thái khóa điểm theo lớp và học kỳ
+  getLockStatus: async ({ classId, semesterId } = {}) => {
+    const params = {
+      ...(classId ? { classId } : {}),
+      ...(semesterId ? { semesterId } : {}),
+    };
+    const response = await axiosClient.get(`/grades/lock-status`, { params });
+    return getPayload(response);
+  },
+
+  // Rút lại điểm đã chốt (mở khóa) — gọi từng grade một
+  retractGrade: async (gradeId, { notes } = {}) => {
+    const response = await axiosClient.post(`/grades/retract/${gradeId}`, { notes });
+    return getPayload(response);
+  },
+
+  // Chốt tất cả điểm lớp (VP/Principal gọi)
+  finalizeClass: async (classId, { semesterId, notes } = {}) => {
+    const response = await axiosClient.post("/grades/finalize-class", {
+      classId,
+      semesterId,
+      notes,
+    });
+    return getPayload(response);
+  },
+
+  // Mở khóa tất cả điểm lớp (VP/Principal gọi) — FINALIZED → DRAFT
+  unlockClassGrades: async (classId, { semesterId, notes } = {}) => {
+    const response = await axiosClient.post("/grades/unlock-class", {
+      classId,
+      semesterId,
+      notes,
+    });
     return getPayload(response);
   },
 };

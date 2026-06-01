@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { PageHeader, SchoolYearTermSelector, Pagination, LoadingSpinner } from "../../../../components/common";
 import { useSchoolYearTerm } from "../../../../hooks/useSchoolYearTerm";
 import { resolveSchoolYearId, resolveSemesterId } from "../../../../services/shared/schoolYearLookup";
@@ -10,7 +11,7 @@ import {
     FiCheckCircle, FiClock, FiAlertCircle, FiLock,
     FiDownload, FiEye, FiAlertTriangle, FiSearch,
     FiFilter, FiMail, FiBarChart2, FiTrendingUp, FiUsers, FiActivity, FiArrowUpRight, FiX, FiUserCheck, FiExternalLink,
-    FiChevronLeft, FiChevronRight, FiMenu
+    FiChevronLeft, FiChevronRight, FiMenu, FiUnlock, FiRefreshCw
 } from "react-icons/fi";
 import { toast } from "react-toastify";
 import { Modal, Button, Select, Input } from "../../../../components/ui";
@@ -61,8 +62,107 @@ export default function VpAcademicGrades() {
     const [classDetailLoading, setClassDetailLoading] = useState(false);
     const [classDetail, setClassDetail] = useState(null); // { students, gpa, trend, subjectPerf, auditLogs, semester1Gpa }
     const [isSendingRemind, setIsSendingRemind] = useState(false);
+    const [isRefreshing, setIsRefreshing] = useState(false);
+    const [classLockStatus, setClassLockStatus] = useState("draft"); // draft | pending | finalized
+    const [classLockStatusMap, setClassLockStatusMap] = useState({}); // classId -> status
+    const [isUnlockModalOpen, setIsUnlockModalOpen] = useState(false);
+    const [isUnlocking, setIsUnlocking] = useState(false);
+    const [isLocking, setIsLocking] = useState(false);
+    const [finalizedGradeIds, setFinalizedGradeIds] = useState([]);
 
     const itemsPerPage = 5;
+    const queryClient = useQueryClient();
+
+    const { data: lockStatusData } = useQuery({
+        queryKey: ["grade-lock-status", selectedClass?.id, selectedSchoolYear, selectedTerm],
+        queryFn: async () => {
+            if (!selectedClass?.id) return null;
+            const semId = await resolveSemesterId(selectedSchoolYear, selectedTerm);
+            if (!semId) return null;
+            const res = await gradeService.getLockStatus({ classId: selectedClass.id, semesterId: semId });
+            return res;
+        },
+        enabled: !!selectedClass?.id,
+    });
+
+    useEffect(() => {
+        if (lockStatusData?.data) {
+            const d = lockStatusData.data;
+            setClassLockStatus(d.status || "draft");
+            setFinalizedGradeIds(Array.isArray(d.finalizedGradeIds) ? d.finalizedGradeIds : []);
+            if (selectedClass?.id) {
+                setClassLockStatusMap(prev => ({ ...prev, [selectedClass.id]: d.status || "draft" }));
+            }
+        } else {
+            setClassLockStatus("draft");
+            setFinalizedGradeIds([]);
+        }
+    }, [lockStatusData, selectedClass?.id]);
+
+    // ── Debug logging ──────────────────────────────────────────────────────────
+    useEffect(() => {
+        console.log("[VP Grades DEBUG]", {
+            classLockStatus,
+            finalizedGradeIds,
+            finalizedCount: lockStatusData?.data?.finalizedCount,
+            totalGrades: lockStatusData?.data?.totalGrades,
+            rawLockStatusData: lockStatusData,
+        });
+    }, [classLockStatus, finalizedGradeIds, lockStatusData]);
+
+    // Batch unlock (VP uses unlockClassGrades API)
+    const handleUnlockClassGrades = async () => {
+        if (finalizedGradeIds.length === 0) { toast.info("Không có điểm nào đã chốt để mở khóa."); return; }
+        const confirmed = window.confirm(`Mở khóa chỉnh sửa cho ${finalizedGradeIds.length} điểm đã chốt của lớp ${selectedClass?.name}?`);
+        if (!confirmed) return;
+        setIsUnlocking(true);
+        try {
+            const semId = await resolveSemesterId(selectedSchoolYear, selectedTerm);
+            const res = await gradeService.unlockClassGrades(selectedClass.id, {
+                semesterId: semId,
+                notes: "VP mở khóa chỉnh sửa điểm",
+            });
+            if (res?.success) {
+                toast.success(`Đã mở khóa ${res.data?.unlockedCount || finalizedGradeIds.length} điểm!`);
+            } else {
+                toast.error(res?.error || "Không thể mở khóa điểm.");
+            }
+            queryClient.invalidateQueries({ queryKey: ["grade-lock-status", selectedClass?.id] });
+            setIsUnlockModalOpen(false);
+        } catch (err) {
+            console.error("Unlock error:", err);
+            toast.error("Lỗi khi mở khóa điểm.");
+        } finally {
+            setIsUnlocking(false);
+        }
+    };
+
+    // Khóa tất cả điểm PENDING trong lớp (VP gọi batch finalize)
+    const handleLockAllClassGrades = async () => {
+        const confirmed = window.confirm(
+            `Chốt tất cả điểm đang chờ duyệt của lớp ${selectedClass?.name}?\nHành động này không thể hoàn tác.`
+        );
+        if (!confirmed) return;
+        setIsLocking(true);
+        try {
+            const semId = await resolveSemesterId(selectedSchoolYear, selectedTerm);
+            const res = await gradeService.finalizeClass(selectedClass.id, {
+                semesterId: semId,
+                notes: "VP chốt điểm lớp",
+            });
+            if (res?.success) {
+                toast.success(`Đã chốt ${res.data?.finalizedCount || 0} điểm!`);
+            } else {
+                toast.error(res?.error || "Không thể chốt điểm.");
+            }
+            queryClient.invalidateQueries({ queryKey: ["grade-lock-status", selectedClass?.id] });
+        } catch (err) {
+            console.error("Lock error:", err);
+            toast.error("Lỗi khi chốt điểm.");
+        } finally {
+            setIsLocking(false);
+        }
+    };
 
     // ── Load class list (sidebar) ─────────────────────────────────
     useEffect(() => {
@@ -101,13 +201,20 @@ export default function VpAcademicGrades() {
                     const classifyRes = await gradeService.classifySemester({ enrollmentId, semesterId: semValue }).catch(() => null);
                     const conductRes = classifyRes?.data?.conduct;
 
+                    const [hk1Res, hk2Res] = await Promise.all([
+                        gradeService.calculateSemesterGPA({ enrollmentId, semesterId: 1 }).catch(() => null),
+                        gradeService.calculateSemesterGPA({ enrollmentId, semesterId: 2 }).catch(() => null),
+                    ]);
+
                     return {
                         id: st.studentCode || st.id,
                         name: st.name || `${st.surname || ""} ${st.givenName || ""}`.trim(),
                         enrollmentId,
                         avg: gpaRes?.gpa != null ? toScore(gpaRes.gpa) : null,
                         conduct: conductRes?.level || conductRes?.description || null,
-                        math: null, lit: null, eng: null, phy: null, // individual subject scores from report card
+                        hk1Gpa: hk1Res?.gpa != null ? toScore(hk1Res.gpa) : null,
+                        hk2Gpa: hk2Res?.gpa != null ? toScore(hk2Res.gpa) : null,
+                        math: null, lit: null, eng: null, phy: null,
                     };
                 })
             );
@@ -286,6 +393,22 @@ export default function VpAcademicGrades() {
         setClassDetail(null);
     };
 
+    const handleRefresh = async () => {
+        if (!selectedClass) return;
+        setIsRefreshing(true);
+        try {
+            await Promise.all([
+                queryClient.invalidateQueries({ queryKey: ["grade-lock-status", selectedClass.id] }),
+            ]);
+            await loadClassDetail(selectedClass);
+            toast.success("Đã làm mới dữ liệu");
+        } catch (err) {
+            toast.error("Không thể làm mới dữ liệu");
+        } finally {
+            setIsRefreshing(false);
+        }
+    };
+
     // ── Render ──────────────────────────────────────────────────────
     return (
         <div className="vpa-grades-cockpit">
@@ -355,15 +478,14 @@ export default function VpAcademicGrades() {
                             </div>
                         ) : (
                             filteredClasses.map(cls => {
-                                const status = cls.gpa == null ? "missing" : cls.gpa >= 8.0 ? "locked" : cls.gpa >= 5.0 ? "progress" : "missing";
-                                const statusLabel = cls.gpa == null ? "Chưa có điểm"
-                                    : cls.gpa >= 8.0 ? "Tốt"
-                                    : cls.gpa >= 5.0 ? "Đang nhập"
-                                    : "Cần cải thiện";
+                                const lockStatus = classLockStatusMap[cls.id] || "draft";
+                                const lockLabel = lockStatus === "finalized" ? "Đã chốt"
+                                    : lockStatus === "pending" ? "Chờ duyệt"
+                                    : "Bản nháp";
                                 return (
                                     <div
                                         key={cls.id}
-                                        className={`vpa-class-card ${selectedClass?.id === cls.id ? 'active' : ''} ${status}`}
+                                        className={`vpa-class-card ${selectedClass?.id === cls.id ? 'active' : ''} ${lockStatus}`}
                                         onClick={() => handleClassSelect(cls)}
                                     >
                                         <div className="card-main">
@@ -376,14 +498,19 @@ export default function VpAcademicGrades() {
                                                     <span className="student-tag">{cls.students || 0} HS</span>
                                                 </div>
                                                 <div className="info-status">
-                                                    {status === "locked" && <FiLock />}
-                                                    {status === "pending" && <FiClock />}
-                                                    {status === "progress" && <FiActivity />}
-                                                    {status === "missing" && <FiAlertCircle />}
-                                                    <span>{statusLabel}</span>
+                                                    {lockStatus === "finalized" && <FiLock />}
+                                                    {lockStatus === "pending" && <FiClock />}
+                                                    {lockStatus === "draft" && <FiActivity />}
+                                                    <span>{lockLabel}</span>
                                                 </div>
                                             </div>
                                         </div>
+                                        {lockStatus === "finalized" && (
+                                            <div className="card-alert-strip card-alert-strip--finalized">
+                                                <div className="pulse-dot pulse-dot--locked"></div>
+                                                <span>Đã chốt điểm</span>
+                                            </div>
+                                        )}
                                         {cls.warnings > 0 && (
                                             <div className="card-alert-strip">
                                                 <div className="pulse-dot"></div>
@@ -418,11 +545,11 @@ export default function VpAcademicGrades() {
                                 <div className="ah-left">
                                     <div className="class-title-large">
                                         <h2>Chi tiết Học vụ: Lớp {selectedClassWithDetail.name}</h2>
-                                        <span className={`status-badge ${selectedClassWithDetail.gpa == null ? "missing" : selectedClassWithDetail.gpa >= 8.0 ? "locked" : selectedClassWithDetail.gpa >= 5.0 ? "pending" : "missing"}`}>
-                                            {selectedClassWithDetail.gpa == null ? "Chưa có điểm"
-                                                : selectedClassWithDetail.gpa >= 8.0 ? "Tốt"
-                                                : selectedClassWithDetail.gpa >= 5.0 ? "Đang nhập"
-                                                : "Cần cải thiện"}
+                                        <span className={`status-badge ${classLockStatus === "finalized" ? "locked" : classLockStatus === "pending" ? "pending" : classLockStatus === "draft" ? "progress" : "missing"}`}>
+                                            {classLockStatus === "finalized" ? "Đã chốt"
+                                                : classLockStatus === "pending" ? "Chờ duyệt"
+                                                : classLockStatus === "draft" ? "Bản nháp"
+                                                : "Chưa rõ"}
                                         </span>
                                     </div>
                                 </div>
@@ -440,6 +567,25 @@ export default function VpAcademicGrades() {
                                 </div>
 
                                 <div className="ah-right">
+                                    <button
+                                        className="vpa-btn-icon"
+                                        onClick={handleRefresh}
+                                        disabled={isRefreshing || !selectedClass}
+                                        title="Làm mới dữ liệu"
+                                    >
+                                        <FiRefreshCw className={isRefreshing ? "spin" : ""} />
+                                        {isRefreshing ? "Đang tải..." : "Làm mới"}
+                                    </button>
+                                    {classLockStatus === "finalized" && finalizedGradeIds.length > 0 && (
+                                        <button className="vpa-btn-unlock" onClick={() => setIsUnlockModalOpen(true)}>
+                                            <FiUnlock /> Mở khóa điểm
+                                        </button>
+                                    )}
+                                    {classLockStatus === "pending" && (
+                                        <button className="vpa-btn-lock" onClick={handleLockAllClassGrades} disabled={isLocking}>
+                                            <FiLock /> {isLocking ? "Đang chốt..." : "Khóa điểm"}
+                                        </button>
+                                    )}
                                     <Button variant="outline" className="vpa-btn-icon" onClick={handleOpenRemindModal}><FiMail /> Nhắc GV</Button>
                                 </div>
                             </div>
@@ -585,7 +731,9 @@ export default function VpAcademicGrades() {
                                         <thead>
                                             <tr>
                                                 <th>Học sinh</th>
-                                                <th>Trung Bình</th>
+                                                <th>HK1</th>
+                                                <th>HK2</th>
+                                                <th>TB Cả năm</th>
                                                 <th>Hạnh kiểm</th>
                                                 <th>Audit</th>
                                             </tr>
@@ -593,7 +741,7 @@ export default function VpAcademicGrades() {
                                         <tbody>
                                             {paginatedData.length === 0 ? (
                                                 <tr>
-                                                    <td colSpan={4} style={{ textAlign: "center", color: "var(--admin-text-muted)", padding: "2rem" }}>
+                                                    <td colSpan={6} style={{ textAlign: "center", color: "var(--admin-text-muted)", padding: "2rem" }}>
                                                         Không có học sinh nào phù hợp
                                                     </td>
                                                 </tr>
@@ -605,6 +753,12 @@ export default function VpAcademicGrades() {
                                                                 <strong>{s.name}</strong>
                                                                 <span>{s.id}</span>
                                                             </div>
+                                                        </td>
+                                                        <td className={`sc-cell ${s.hk1Gpa != null && s.hk1Gpa < 5 ? 'danger' : ''}`}>
+                                                            {s.hk1Gpa != null ? s.hk1Gpa : "—"}
+                                                        </td>
+                                                        <td className={`sc-cell ${s.hk2Gpa != null && s.hk2Gpa < 5 ? 'danger' : ''}`}>
+                                                            {s.hk2Gpa != null ? s.hk2Gpa : "—"}
                                                         </td>
                                                         <td className={`sc-cell ${s.avg != null && s.avg < 5 ? 'danger' : ''}`}>
                                                             {s.avg != null ? s.avg : "—"}
@@ -760,6 +914,39 @@ export default function VpAcademicGrades() {
                         >
                             <FiMail />
                             {isSendingRemind ? "Đang gửi..." : "Gửi thông báo"}
+                        </Button>
+                    </div>
+                </div>
+            </Modal>
+
+            {/* ── Unlock Modal ── */}
+            <Modal
+                open={isUnlockModalOpen}
+                onClose={() => !isUnlocking && setIsUnlockModalOpen(false)}
+                title="Mở khóa chỉnh sửa điểm"
+                className="vpa-unlock-modal"
+            >
+                <div className="vpa-unlock-form">
+                    <div className="unlock-warning-box">
+                        <FiAlertCircle style={{ fontSize: "1.5rem", color: "#dc2626" }} />
+                        <div>
+                            <strong>Xác nhận mở khóa</strong>
+                            <p>
+                                Bạn có chắc muốn mở khóa <strong>{finalizedGradeIds.length} điểm đã chốt</strong> của lớp <strong>{selectedClassWithDetail?.name}</strong>?
+                                Việc mở khóa cho phép giáo viên chỉnh sửa điểm sau khi đã được phê duyệt.
+                            </p>
+                        </div>
+                    </div>
+                    <div className="modal-actions">
+                        <Button variant="outline" onClick={() => setIsUnlockModalOpen(false)} disabled={isUnlocking}>Hủy</Button>
+                        <Button
+                            primary
+                            className="vpa-btn-unlock-confirm"
+                            onClick={handleUnlockClassGrades}
+                            disabled={isUnlocking}
+                        >
+                            <FiUnlock />
+                            {isUnlocking ? "Đang mở khóa..." : `Mở khóa ${finalizedGradeIds.length} điểm`}
                         </Button>
                     </div>
                 </div>

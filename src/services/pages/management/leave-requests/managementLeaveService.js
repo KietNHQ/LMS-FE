@@ -282,8 +282,7 @@ export const managementLeaveService = {
           search: search || undefined
         }
       });
-      const data = response?.data ?? response;
-      // Map API response to component's expected format
+      const data = response ?? {};
       if (data.data) {
         data.data = data.data.map(req => ({
           ...req,
@@ -345,7 +344,7 @@ export const managementLeaveService = {
         action: "approved",
         admin_notes: adminNotes
       });
-      return response?.data ?? response;
+      return response ?? {};
     } catch (error) {
       console.warn(`PATCH /management/leave-requests/${id}/approve failed. Trying mock fallback.`);
       // Fallback to local
@@ -427,7 +426,7 @@ export const managementLeaveService = {
         action: "rejected",
         admin_notes: adminNotes
       });
-      return response?.data ?? response;
+      return response ?? {};
     } catch (error) {
       console.warn(`PATCH /management/leave-requests/${id}/reject failed. Trying mock fallback.`);
       let list = getMockRequests();

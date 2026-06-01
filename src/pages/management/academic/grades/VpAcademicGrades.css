@@ -21,12 +21,20 @@
     }
 }
 
+@keyframes vpa-spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+.spin {
+    animation: vpa-spin 1s linear infinite;
+}
+
 .vpa-grades-grid {
     display: grid;
     grid-template-columns: 320px 1fr;
     gap: 1.5rem;
     margin-top: 1rem;
-    height: calc(100vh - 100px);
     transition: grid-template-columns 0.3s cubic-bezier(0.4, 0, 0.2, 1), padding-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     position: relative;
 }
@@ -52,9 +60,12 @@
     border: 1px solid var(--admin-border);
     display: flex;
     flex-direction: column;
-    overflow: hidden;
     box-shadow: var(--card-shadow);
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: sticky;
+    top: 1rem;
+    max-height: calc(100vh - 2rem);
+    overflow: hidden;
 }
 
 .sidebar-toolbar {
@@ -178,6 +189,7 @@
 .sidebar-list {
     flex: 1;
     overflow-y: auto;
+    overflow-x: hidden;
     padding: 1rem;
     display: flex;
     flex-direction: column;
@@ -321,7 +333,6 @@
 /* ── MAIN CONTENT: ANALYTICS ── */
 .vpa-grades-main {
     position: relative;
-    overflow-y: auto;
     overflow-x: hidden;
     padding-bottom: 0.5rem;
 }
@@ -1242,4 +1253,129 @@
 
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
     background: #cbd5e1;
+}
+
+/* ── CLASS CARD: FINALIZED STATE ── */
+.vpa-class-card.finalized .info-status {
+    color: #10b981;
+}
+
+.card-alert-strip--finalized {
+    border-top-color: rgba(16, 185, 129, 0.3) !important;
+}
+
+.card-alert-strip--finalized span {
+    color: #059669 !important;
+}
+
+.pulse-dot--locked {
+    background: #10b981 !important;
+    box-shadow: 0 0 0 rgba(16, 185, 129, 0.4) !important;
+    animation: p-pulse-green 1.5s infinite !important;
+}
+
+@keyframes p-pulse-green {
+    0% {
+        box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.8);
+    }
+    70% {
+        box-shadow: 0 0 0 8px rgba(16, 185, 129, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+    }
+}
+
+/* ── UNLOCK BUTTON IN HEADER ── */
+.vpa-btn-unlock {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: rgba(239, 68, 68, 0.08);
+    border: 1px solid rgba(239, 68, 68, 0.2);
+    border-radius: var(--radius-md);
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: #dc2626;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.vpa-btn-unlock:hover {
+    background: rgba(239, 68, 68, 0.15);
+    border-color: rgba(239, 68, 68, 0.3);
+    transform: translateY(-1px);
+}
+
+.vpa-btn-unlock:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.vpa-btn-lock {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: rgba(16, 185, 129, 0.08);
+    border: 1px solid rgba(16, 185, 129, 0.2);
+    border-radius: var(--radius-md);
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: #059669;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.vpa-btn-lock:hover:not(:disabled) {
+    background: rgba(16, 185, 129, 0.15);
+    border-color: rgba(16, 185, 129, 0.3);
+    transform: translateY(-1px);
+}
+
+.vpa-btn-lock:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* ── UNLOCK MODAL ── */
+.vpa-unlock-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    padding: 8px;
+}
+
+.unlock-warning-box {
+    display: flex;
+    gap: 1rem;
+    padding: 1rem;
+    background: #fff5f5;
+    border: 1px solid #fecaca;
+    border-radius: var(--radius-md);
+    align-items: flex-start;
+}
+
+.unlock-warning-box strong {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: #991b1b;
+    font-size: 0.95rem;
+}
+
+.unlock-warning-box p {
+    margin: 0;
+    font-size: 0.85rem;
+    color: #7f1d1d;
+    line-height: 1.5;
+}
+
+.vpa-btn-unlock-confirm {
+    background: #dc2626 !important;
+}
+
+.vpa-btn-unlock-confirm:hover {
+    background: #b91c1c !important;
+    box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3) !important;
 }

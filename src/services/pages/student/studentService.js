@@ -199,6 +199,9 @@ const STUDENT_ENDPOINTS = [
   { key: "get_class_committee_context", method: "GET", path: "/students/me/class-committee-context", module: "class_committee", mock: false },
   { key: "get_class_committee_violations", method: "GET", path: "/class-committee/:classId/violations", module: "class_committee", mock: false },
   { key: "get_class_committee_lesson_evaluations", method: "GET", path: "/class-committee/:classId/lesson-evaluations", module: "class_committee", mock: false },
+  // Conduct / Discipline
+  { key: "get_student_conduct_summary", method: "GET", path: "/students/:id/conduct-summary", module: "conduct", mock: false },
+  { key: "get_student_discipline_scores", method: "GET", path: "/students/:id/discipline-scores", module: "conduct", mock: false },
 ];
 
 const createEndpointCaller = (endpoint) => async (input = {}) => {
@@ -310,10 +313,12 @@ export const studentService = {
   heartbeatQuizAttempt: (input) => endpointCallers.put_quizzes_attempts_by_id_heartbeat(input),
   validateQuizAttempt: (input) => endpointCallers.post_quizzes_attempts_by_id_validate(input),
   getLessonById: (input) => endpointCallers.get_lesson_by_id(input),
-  // Class Committee
+  // Conduct / Discipline
   getClassCommitteeContext: (input) => endpointCallers.get_class_committee_context(input),
   getClassViolations: (input) => endpointCallers.get_class_committee_violations(input),
   getClassLessonEvaluations: (input) => endpointCallers.get_class_committee_lesson_evaluations(input),
+  getConductSummary: (input) => endpointCallers.get_student_conduct_summary(input),
+  getDisciplineScores: (input) => endpointCallers.get_student_discipline_scores(input),
 };
 
 export default studentService;

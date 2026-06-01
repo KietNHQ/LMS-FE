@@ -11,7 +11,7 @@ export const disciplinePeriodClosingService = {
   getClosedPeriods: async (periodType) => {
     const params = periodType ? { periodType } : {};
     const response = await axiosClient.get("/discipline/period-closings", { params });
-    return getPayload(response);
+    return getPayload(response)?.data ?? [];
   },
 
   checkPeriodLocked: async (periodType, periodKey) => {

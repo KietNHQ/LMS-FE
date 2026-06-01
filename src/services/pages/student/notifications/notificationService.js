@@ -30,8 +30,7 @@ const mapNotification = (item = {}) => ({
   raw: item,
 });
 
-const extractNotificationList = (response) => {
-  const payload = response?.data ?? response;
+const extractNotificationList = (payload) => {
   if (Array.isArray(payload)) return payload;
   if (Array.isArray(payload?.data)) return payload.data;
   if (Array.isArray(payload?.items)) return payload.items;
@@ -39,27 +38,24 @@ const extractNotificationList = (response) => {
   return [];
 };
 
-const normalizeListResponse = (response) => {
-  const notifications = extractNotificationList(response).map(mapNotification);
-  const payload = response?.data ?? response;
+const normalizeListResponse = (payload) => {
+  const notifications = extractNotificationList(payload).map(mapNotification);
   return {
-    success: response?.success ?? payload?.success ?? true,
+    success: payload?.success ?? true,
     data: notifications,
     unreadCount:
-      response?.unreadCount ??
       payload?.unreadCount ??
       notifications.filter((item) => item.unread).length,
-    pagination: response?.pagination ?? payload?.pagination ?? null,
-    message: response?.message ?? payload?.message ?? "",
+    pagination: payload?.pagination ?? null,
+    message: payload?.message ?? "",
   };
 };
 
-const unwrapMutationResponse = (response) => {
-  const payload = response?.data ?? response;
+const unwrapMutationResponse = (payload) => {
   return {
-    success: response?.success ?? payload?.success ?? true,
+    success: payload?.success ?? true,
     data: payload?.data ?? payload,
-    message: response?.message ?? payload?.message ?? "",
+    message: payload?.message ?? "",
   };
 };
 
@@ -79,12 +75,11 @@ export const notificationService = {
       return { success: true, unreadCount: 0 };
     }
     const response = await axiosClient.get("/notifications/my/unread-count");
-    const payload = response?.data ?? response;
     return {
-      success: response?.success ?? payload?.success ?? true,
-      unreadCount: payload?.unreadCount ?? payload?.data?.unreadCount ?? 0,
-      message: response?.message ?? payload?.message ?? "",
-      data: payload,
+      success: response?.success ?? true,
+      unreadCount: response?.unreadCount ?? response?.data?.unreadCount ?? 0,
+      message: response?.message ?? "",
+      data: response,
     };
   },
 

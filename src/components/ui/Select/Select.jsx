@@ -40,13 +40,15 @@ export default function Select({
   const customDropdownRef = useRef(null);
 
   const normalizedOptions = useMemo(() => {
-    return options.map((option) => ({
+    const result = options.map((option) => ({
       value: getOptionValue(option),
       label: getOptionLabel(option),
       disabled: option.disabled || false,
       color: option.color || null,
     }));
-  }, [options]);
+    console.log(`[Select:${label}] options:`, result.length, result.slice(0, 3));
+    return result;
+  }, [options, label]);
 
   const selectedOption = useMemo(() => {
     return normalizedOptions.find((option) => String(option.value) === String(value));

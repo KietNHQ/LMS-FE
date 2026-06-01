@@ -118,10 +118,10 @@ export default function VpDisciplineMgmt() {
     const categoryStats = useMemo(() => {
         if (!categoryStatsRaw || !Array.isArray(categoryStatsRaw) || categoryStatsRaw.length === 0) {
             return [
-                { title: "Chuyên cần", icon: <FiClock />, incidents: 0, detail: "0 học sinh", trend: "—", level: "—", status: "neutral" },
-                { title: "Nề nếp", icon: <FiUser />, incidents: 0, detail: "0 học sinh", trend: "—", level: "—", status: "neutral" },
-                { title: "Tài sản", icon: <FiLayers />, incidents: 0, detail: "0 học sinh", trend: "—", level: "—", status: "neutral" },
-                { title: "Học tập", icon: <FiAlertCircle />, incidents: 0, detail: "0 học sinh", trend: "—", level: "—", status: "neutral" },
+                { key: "attendance", title: "Chuyên cần", icon: <FiClock />, incidents: 0, detail: "0 học sinh", trend: "—", level: "—", status: "neutral" },
+                { key: "discipline", title: "Nề nếp", icon: <FiUser />, incidents: 0, detail: "0 học sinh", trend: "—", level: "—", status: "neutral" },
+                { key: "property", title: "Tài sản", icon: <FiLayers />, incidents: 0, detail: "0 học sinh", trend: "—", level: "—", status: "neutral" },
+                { key: "academic", title: "Học tập", icon: <FiAlertCircle />, incidents: 0, detail: "0 học sinh", trend: "—", level: "—", status: "neutral" },
             ];
         }
         const catMap = {

@@ -32,7 +32,7 @@ const ManagementBonusPoints = lazy(() => import("../pages/management/discipline/
 const ManagementPeriodClosing = lazy(() => import("../pages/management/discipline/period-closing/VpDisciplinePeriodClosing"));
 const ManagementClassDeductionLogs = lazy(() => import("../pages/management/discipline/class-deduction-logs/VpClassDeductionLogs"));
 const ManagementCompetition = lazy(() => import("../pages/management/competition/index.js"));
-const ManagementGrades = lazy(() => import("../pages/management/grades/index.js"));
+const ManagementGrades = lazy(() => import("../pages/management/academic/grades/VpAcademicGrades"));
 const ManagementQuiz = lazy(() => import("../pages/management/quiz/ManagementQuiz"));
 const ManagementCreateQuiz = lazy(() => import("../pages/management/quiz/create/ManagementCreateQuiz"));
 const ManagementQuizSubmissions = lazy(() => import("../pages/management/quiz/submissions/ManagementQuizSubmissions"));
@@ -90,6 +90,7 @@ const TeacherDashboard = lazy(
   () => import("../pages/teacher/dashboard/TeacherDashboard")
 );
 const TeacherGrades = lazy(() => import("../pages/teacher/grades/TeacherGrades"));
+const TeacherStudentGradeDetail = lazy(() => import("../pages/teacher/grades/StudentGradeDetail"));
 const TeacherHomeroom = lazy(
   () => import("../pages/teacher/homeroom/TeacherHomeroom")
 );
@@ -307,6 +308,7 @@ export default function AppRoutes() {
         <Route path="homeroom"         element={<TeacherHomeroom />} />
         <Route path="lessons"          element={<TeacherLessons />} />
         <Route path="grades"           element={<TeacherGrades />} />
+        <Route path="grades/student/:enrollmentId" element={<TeacherStudentGradeDetail />} />
         <Route path="quiz"             element={<TeacherQuiz />} />
         <Route path="quiz/create"      element={<TeacherCreateQuiz />} />
         <Route path="quiz/:quizId/submissions" element={<TeacherQuizSubmissions />} />

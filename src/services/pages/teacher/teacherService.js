@@ -272,6 +272,13 @@ const teacherEndpointRegistry = [
     mock: false
   },
   {
+    key: "post_grades_retract",
+    method: "POST",
+    path: "/grades/retract/:id",
+    module: "grades",
+    mock: false
+  },
+  {
     key: "get_grades_lock_status",
     method: "GET",
     path: "/grades/lock-status",
@@ -418,6 +425,7 @@ export const teacherService = {
   teacherUpsertGrades: (input) => endpointCallers.teacher_upsert_grades(input),
   listGradeItems: (input) => endpointCallers.get_grade_items(input),
   finalizeClassGrades: (input) => endpointCallers.post_grades_finalize_class(input),
+  retractGrade: (input) => endpointCallers.post_grades_retract(input),
   getGradesLockStatus: (input) => endpointCallers.get_grades_lock_status(input),
   getChatContacts: (input) => endpointCallers.get_chat_contacts(input),
   getChatMessages: (input) => endpointCallers.get_chat_messages(input),
