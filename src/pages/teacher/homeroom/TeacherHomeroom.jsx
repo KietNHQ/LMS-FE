@@ -366,7 +366,8 @@ export default function TeacherHomeroom() {
             room: apiData.room,
             grade: apiData.grade_level_name,
             year: apiData.school_year_name,
-            subject: apiData.subject || null, // Ensure mock "Toán học" doesn't leak
+            subject: apiData.subject || null,
+            disciplineScore: apiData.disciplineScore,
             monitor: apiData.monitor,
             viceMonitor: apiData.viceMonitor,
             secretary: apiData.secretary,
@@ -608,7 +609,7 @@ export default function TeacherHomeroom() {
                     </div>
                     <div className="stat-info">
                         <h3>Điểm thi đua</h3>
-                        <p>{classData.classRank ? `Hạng ${classData.classRank} / ${classData.totalClasses || "?"}` : "Chưa cập nhật"}</p>
+                        <p>{classData.disciplineScore !== undefined && classData.disciplineScore !== null ? `${classData.disciplineScore} điểm` : "Chưa cập nhật"}</p>
                     </div>
                 </div>
                 <div className="homeroom-stat-card">

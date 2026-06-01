@@ -741,6 +741,7 @@ const ClassStudentsSection = ({ classId, students, readOnly = false, isStudentVi
             studentEnrollmentId: student.enrollmentId || student.enrollment_id,
             category: entry.category,
             content: typeof entry.content === 'object' ? entry.content.label : entry.content,
+            code: typeof entry.content === 'object' ? entry.content.code : undefined,
             points: entry.pts,
             note: entry.note || ""
           });
