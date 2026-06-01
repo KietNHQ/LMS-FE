@@ -26,10 +26,9 @@ function round1(value) {
 }
 
 function getRank(average) {
-  if (average >= 8.5) return "excellent";
-  if (average >= 7.0) return "good";
-  if (average >= 5.5) return "fair";
-  if (average >= 4.0) return "average";
+  if (average >= 8.0) return "excellent";
+  if (average >= 6.5) return "good";
+  if (average >= 5.0) return "fair";
   return "weak";
 }
 
@@ -203,7 +202,7 @@ export default function TeacherGrades() {
   }, [selectedSchoolYear, selectedTerm]);
 
   const canEdit = useMemo(() => {
-    if (lockStatus === "locked") return false;
+    if (lockStatus === "locked" || lockStatus === "pending") return false;
     if (!selectedAssignment) return false;
     return !!selectedAssignment.classTeacherSubjectId;
   }, [lockStatus, selectedAssignment]);
@@ -451,7 +450,7 @@ export default function TeacherGrades() {
     const averages = records.map((r) => r.average).filter((v) => v !== null);
     const totalAvg = averages.length ? averages.reduce((a, b) => a + b, 0) / averages.length : 0;
     const passCount = records.filter((r) => r.average >= 5).length;
-    const excellentCount = records.filter((r) => r.average >= 8.5).length;
+    const excellentCount = records.filter((r) => r.average >= 8.0).length;
     const atRiskStudents = records.filter((r) => r.average < 5);
     return {
       average: round1(totalAvg),
@@ -518,17 +517,22 @@ export default function TeacherGrades() {
   };
 
   const handleLockGrades = async () => {
-      const confirmed = window.confirm("Bạn có chắc chắn muốn khóa điểm môn học này?");
+      const confirmed = window.confirm("Bạn có chắc chắn muốn nộp điểm để phê duyệt?");
     if (!confirmed) return;
     try {
+      const semesterDbId = await resolveSemesterId(selectedSchoolYear, selectedTerm);
+      if (!semesterDbId) { toast.error("Không tìm thấy học kỳ."); return; }
       const { teacherService } = await import("../../../services/pages/teacher/teacherService");
-      const res = await teacherService.finalizeClassGrades({
-        body: { classId: selectedClassId, classTeacherSubjectId: selectedAssignment?.classTeacherSubjectId, schoolYear: selectedSchoolYear, term: selectedTerm, status: "locked" },
+      const res = await teacherService.submitBatchGrades({
+        body: { classId: selectedClassId, classTeacherSubjectId: selectedAssignment?.classTeacherSubjectId, semesterId: semesterDbId },
         mock: false,
       });
-      if (res?.success) { setLockStatus("locked"); toast.success("Đã khóa điểm!"); }
-      else toast.error("Không thể khóa điểm.");
-    } catch { toast.error("Lỗi khi khóa điểm."); }
+      if (res?.success) {
+        setLockStatus("pending");
+        toast.success(`Đã nộp ${res.data?.submittedCount || 0} điểm để phê duyệt!`);
+      }
+      else toast.error(res?.error || "Không thể nộp điểm.");
+    } catch { toast.error("Lỗi khi nộp điểm."); }
   };
 
   const handleSendUnlockRequest = async () => {
@@ -593,16 +597,16 @@ export default function TeacherGrades() {
           searchable
         />
         <div className="tg-lock-controls">
-          <span className={`grade-lock-status-badge ${lockStatus === "locked" ? "is-locked" : "is-draft"}`}>
-            {lockStatus === "locked" ? <><FiLock style={{ marginRight: 6 }} /> Đã khóa</> : <><FiUnlock style={{ marginRight: 6 }} /> Bản nháp</>}
+          <span className={`grade-lock-status-badge ${lockStatus === "pending" || lockStatus === "locked" ? "is-locked" : "is-draft"}`}>
+            {lockStatus === "pending" ? <><FiLock style={{ marginRight: 6 }} /> Đã nộp (chờ duyệt)</> : lockStatus === "locked" ? <><FiLock style={{ marginRight: 6 }} /> Đã khóa</> : <><FiUnlock style={{ marginRight: 6 }} /> Bản nháp</>}
           </span>
-          {lockStatus === "locked" ? (
+          {(lockStatus === "pending" || lockStatus === "locked") ? (
             <button className="teacher-grades-action-btn is-unlock-request" onClick={() => { setUnlockReason(""); setRetractedGradeId(selectedAssignment?.classTeacherSubjectId); setUnlockRequestOpen(true); }}>
               <FiSend style={{ marginRight: 6 }} /> Yêu cầu mở khóa
             </button>
           ) : (
             <button className="teacher-grades-action-btn is-lock" onClick={handleLockGrades} disabled={!canEdit}>
-              <FiLock style={{ marginRight: 6 }} /> Khóa điểm
+              <FiSend style={{ marginRight: 6 }} /> Nộp điểm
             </button>
           )}
         </div>
@@ -645,7 +649,7 @@ export default function TeacherGrades() {
                     onOpenEditDialog={openEditDialog}
                     subjectLabel={currentSubject.subjectName}
                     semesterLabel={semesterLabel}
-                    isLocked={lockStatus === "locked"}
+                    isLocked={lockStatus === "locked" || lockStatus === "pending"}
                     canEdit={canEdit}
                   />
                 </div>
@@ -690,8 +694,8 @@ export default function TeacherGrades() {
                     const extras = studentSemesterAverages[enrollmentId] || {};
                     const conducts = studentConducts[enrollmentId] || {};
                     const yearAvg = extras.year ?? avg;
-                    const semesterRank = yearAvg >= 8.5 ? "Xuất sắc" : yearAvg >= 7.0 ? "Tốt" : yearAvg >= 5.5 ? "Khá" : yearAvg >= 4.0 ? "Trung bình" : yearAvg > 0 ? "Yếu" : null;
-                    const rankKey = yearAvg >= 8.5 ? "excellent" : yearAvg >= 7.0 ? "good" : yearAvg >= 5.5 ? "fair" : yearAvg >= 4.0 ? "average" : "weak";
+                    const semesterRank = yearAvg >= 8.0 ? "Giỏi" : yearAvg >= 6.5 ? "Khá" : yearAvg >= 5.0 ? "Trung bình" : yearAvg > 0 ? "Yếu" : null;
+                    const rankKey = yearAvg >= 8.0 ? "excellent" : yearAvg >= 6.5 ? "good" : yearAvg >= 5.0 ? "fair" : "weak";
                     const conductLabel = (conducts.hk2 || conducts.hk1) || null;
                     return (
                       <tr key={enrollmentId}>
@@ -767,7 +771,7 @@ export default function TeacherGrades() {
       <Modal open={atRiskDialogOpen} title={`Học sinh cảnh báo (${summaryStats.atRiskCount})`} onClose={() => setAtRiskDialogOpen(false)} className="teacher-grade-risk-modal">
         <div className="teacher-grade-risk-list">
           {summaryStats.atRiskStudents.map((s) => (
-            <div key={s.id} className={`teacher-grade-risk-item ${lockStatus === "locked" ? "is-locked-cursor" : ""}`} onClick={() => { if (lockStatus !== "locked" && canEdit) { setAtRiskDialogOpen(false); openEditDialog(s); } }}>
+            <div key={s.id} className={`teacher-grade-risk-item ${lockStatus === "locked" || lockStatus === "pending" ? "is-locked-cursor" : ""}`} onClick={() => { if (lockStatus !== "locked" && lockStatus !== "pending" && canEdit) { setAtRiskDialogOpen(false); openEditDialog(s); } }}>
               <div><strong>{s.name}</strong><span>{s.code}</span></div>
               <small>TB: {s.average}</small>
             </div>

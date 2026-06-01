@@ -81,26 +81,32 @@ export default function StudentGradeDetail() {
                 const assignments = Array.isArray(assignmentsRes) ? assignmentsRes : [];
                 const teachingClasses = Array.isArray(teachingClassesRes) ? teachingClassesRes : [];
 
-                // Collect all class IDs the teacher is involved in
-                const allClassIds = new Set([
+                const allClassIds = [...new Set([
                     ...assignments.map(a => a.class_id).filter(Boolean),
                     ...teachingClasses.map(c => c.class_id || c.id).filter(Boolean),
-                ]);
+                ])];
+
+                // Fetch all class student lists in parallel
+                const studentLists = await Promise.all(
+                    allClassIds.map(classId =>
+                        teacherGradeService.getClassStudents(Number(classId)).then(res => ({
+                            classId,
+                            list: Array.isArray(res) ? res : [],
+                        }))
+                    )
+                );
 
                 let foundStudent = null;
                 let foundClassName = "";
                 let foundEnrollmentId = null;
 
-                for (const classId of allClassIds) {
-                    const studentsRes = await teacherGradeService.getClassStudents(Number(classId));
-                    const studentList = Array.isArray(studentsRes) ? studentsRes : [];
-                    const match = studentList.find(
+                for (const { classId, list } of studentLists) {
+                    const match = list.find(
                         (s) => String(s.enrollment_id || s.id) === String(enrollmentId)
                     );
                     if (match) {
                         foundStudent = match;
                         foundEnrollmentId = match.enrollment_id || match.id;
-                        // Prefer class name from teachingClasses, fallback from assignments
                         const tc = teachingClasses.find(c => String(c.class_id || c.id) === String(classId));
                         const as = assignments.find(a => String(a.class_id) === String(classId));
                         foundClassName = tc?.class_name || as?.class_name || "";

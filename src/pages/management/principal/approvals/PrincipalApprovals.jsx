@@ -4,8 +4,9 @@ import { PageHeader, SchoolYearTermSelector } from "../../../../components/commo
 import Select from "../../../../components/ui/Select/Select";
 import { useSchoolYearTerm } from "../../../../hooks/useSchoolYearTerm";
 import { managementLeaveService } from "../../../../services/pages/management/leave-requests/managementLeaveService";
+import { unlockRequestService } from "../../../../services/pages/management/approvals/unlockRequestService";
 import {
-  FiActivity, FiCheckSquare, FiClock, FiSearch, FiFilter,
+  FiCheckSquare, FiClock, FiSearch,
   FiInbox, FiAlertTriangle, FiX, FiCheck, FiChevronLeft, FiChevronRight
 } from "react-icons/fi";
 import { toast } from "react-toastify";
@@ -25,6 +26,7 @@ const SECTION_OPTIONS = [
   { value: "grades", label: "Chuyên môn" },
   { value: "activities", label: "Kế hoạch & ngân sách" },
   { value: "leave", label: "Đơn xin phép" },
+  { value: "unlock", label: "Mở khóa điểm" },
 ];
 
 function StatusBadge({ status }) {
@@ -120,11 +122,11 @@ export default function PrincipalApprovals() {
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedItem, setSelectedItem] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [rejectNotes, setRejectNotes] = useState("");
+  const [unlockRejectModal, setUnlockRejectModal] = useState({ open: false, request: null });
 
   const itemsPerPage = 6;
   const sectionLabel = selectedTerm === "hk1" ? "Học kỳ 1" : "Học kỳ 2";
-
-  const queryClient = useQueryClient();
 
   // Fetch leave requests from backend via managementLeaveService
   const { data: leaveResponse, isLoading } = useQuery({
@@ -216,6 +218,62 @@ export default function PrincipalApprovals() {
 
   const updateItemStatus = (id, status, adminNotes = "") => {
     processMutation.mutate({ id, status, adminNotes });
+  };
+
+  // ─── Unlock Requests ────────────────────────────────────────────────────────
+  const queryClient = useQueryClient();
+
+  const unlockStatusParam = activeSection === "unlock"
+    ? (activeStatus === "all" ? undefined : activeStatus)
+    : undefined;
+
+  const { data: unlockResponse, isLoading: unlockLoading } = useQuery({
+    queryKey: ["unlock-requests", unlockStatusParam],
+    queryFn: () => unlockRequestService.listRequests({
+      status: unlockStatusParam,
+      limit: 100,
+    }),
+    enabled: activeSection === "unlock" || activeSection === "all",
+  });
+
+  const unlockApproveMutation = useMutation({
+    mutationFn: ({ id, hours, notes }) => unlockRequestService.approveRequest(id, { hours, notes }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["unlock-requests"] });
+      toast.success("Đã duyệt yêu cầu mở khóa");
+    },
+    onError: () => {
+      toast.error("Duyệt thất bại. Vui lòng thử lại.");
+    },
+  });
+
+  const unlockRejectMutation = useMutation({
+    mutationFn: ({ id, notes }) => unlockRequestService.rejectRequest(id, { notes }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["unlock-requests"] });
+      setUnlockRejectModal({ open: false, request: null });
+      setRejectNotes("");
+      toast.success("Đã từ chối yêu cầu mở khóa");
+    },
+    onError: () => {
+      toast.error("Từ chối thất bại. Vui lòng thử lại.");
+    },
+  });
+
+  const handleApproveUnlock = (request) => {
+    unlockApproveMutation.mutate({ id: request.id, hours: 24, notes: "Duyệt mở khóa điểm" });
+  };
+
+  const handleRejectUnlock = (request) => {
+    setUnlockRejectModal({ open: true, request });
+  };
+
+  const confirmReject = () => {
+    if (!rejectNotes.trim() || rejectNotes.trim().length < 5) {
+      toast.warn("Ghi chú từ chối phải có ít nhất 5 ký tự.");
+      return;
+    }
+    unlockRejectMutation.mutate({ id: unlockRejectModal.request.id, notes: rejectNotes.trim() });
   };
 
   const bulkApprove = () => {
@@ -431,6 +489,145 @@ export default function PrincipalApprovals() {
           </div>
         )}
       </div>
+
+      {/* ─── Mở khóa điểm ───────────────────────────────────────────────────── */}
+      {(activeSection === "unlock" || activeSection === "all") && (
+        <div className="approvals-table-container unlock-section">
+          <div className="table-header-context">
+            <h3>Yêu cầu mở khóa điểm</h3>
+          </div>
+
+          {unlockLoading ? (
+            <div className="empty-state">
+              <div className="loading-spinner" />
+              <p>Đang tải yêu cầu...</p>
+            </div>
+          ) : !unlockResponse?.data?.requests?.length ? (
+            <div className="empty-state">
+              <FiAlertTriangle />
+              <p>Không có yêu cầu mở khóa nào.</p>
+            </div>
+          ) : (
+            <table className="modern-table">
+              <thead>
+                <tr>
+                  <th>Học sinh</th>
+                  <th>Lớp</th>
+                  <th>Loại</th>
+                  <th>Lý do</th>
+                  <th>Người yêu cầu</th>
+                  <th>Thời gian</th>
+                  <th>Trạng thái</th>
+                  <th className="text-right">Hành động</th>
+                </tr>
+              </thead>
+              <tbody>
+                {unlockResponse.data.requests.map((req) => (
+                  <tr key={req.id}>
+                    <td><strong>{req.student_id}</strong></td>
+                    <td>{req.class_name || req.class_id}</td>
+                    <td>
+                      <span className="status-badge">
+                        {req.target_type === "grade" ? "📝 Điểm" : "🏆 Hạnh kiểm"}
+                      </span>
+                    </td>
+                    <td>
+                      <span title={req.reason} style={{ maxWidth: 200, display: "block", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                        {req.reason}
+                      </span>
+                    </td>
+                    <td>{req.requested_by_name || req.requested_by}</td>
+                    <td>
+                      {req.requested_at
+                        ? new Date(req.requested_at).toLocaleDateString("vi-VN", {
+                            day: "2-digit",
+                            month: "2-digit",
+                            year: "numeric",
+                          })
+                        : "-"}
+                    </td>
+                    <td>
+                      <span className={`status-badge ${req.status}`}>
+                        {req.status === "pending" ? "⏳ Chờ duyệt"
+                          : req.status === "approved" ? "✅ Đã duyệt"
+                          : req.status === "rejected" ? "❌ Từ chối"
+                          : req.status}
+                      </span>
+                    </td>
+                    <td className="text-right">
+                      {req.status === "pending" ? (
+                        <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
+                          <button
+                            className="btn-table-action"
+                            style={{ backgroundColor: "#dc3545", minWidth: 80 }}
+                            onClick={() => handleRejectUnlock(req)}
+                            disabled={unlockRejectMutation.isPending || unlockApproveMutation.isPending}
+                          >
+                            Từ chối
+                          </button>
+                          <button
+                            className="btn-table-action"
+                            onClick={() => handleApproveUnlock(req)}
+                            disabled={unlockApproveMutation.isPending || unlockRejectMutation.isPending}
+                          >
+                            Duyệt
+                          </button>
+                        </div>
+                      ) : (
+                        <button className="btn-table-secondary" onClick={() => {}}>
+                          Xem
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+      )}
+
+      {/* ─── Reject Notes Modal ─────────────────────────────────────────────── */}
+      {unlockRejectModal.open && (
+        <div className="modal-overlay" onClick={() => setUnlockRejectModal({ open: false, request: null })}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>Từ chối yêu cầu mở khóa</h2>
+              <button className="modal-close" onClick={() => setUnlockRejectModal({ open: false, request: null })}>
+                <FiX />
+              </button>
+            </div>
+            <div className="modal-body">
+              <div className="modal-section">
+                <label>Ghi chú từ chối <span style={{ color: "red" }}>*</span></label>
+                <textarea
+                  rows={3}
+                  value={rejectNotes}
+                  onChange={(e) => setRejectNotes(e.target.value)}
+                  placeholder="Nhập lý do từ chối (ít nhất 5 ký tự)..."
+                  style={{ width: "100%", padding: 8, borderRadius: 6, border: "1px solid #ddd", resize: "vertical" }}
+                />
+              </div>
+            </div>
+            <div className="modal-footer">
+              <button
+                className="btn-modal-reject"
+                onClick={() => setUnlockRejectModal({ open: false, request: null })}
+                disabled={unlockRejectMutation.isPending}
+              >
+                Hủy
+              </button>
+              <button
+                className="btn-modal-approve"
+                onClick={confirmReject}
+                disabled={unlockRejectMutation.isPending}
+              >
+                {unlockRejectMutation.isPending ? "Đang xử lý..." : "Xác nhận từ chối"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <ItemModal 
         item={selectedItem} 

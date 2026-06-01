@@ -42,7 +42,7 @@ export default function ManagementGrades() {
 
   // Load all classes
   useEffect(() => {
-    classesService.listClasses()
+    classesService.listClasses({ schoolYearName: selectedSchoolYear })
       .then(res => {
         setClasses(res);
         if (res.length > 0) {
@@ -50,7 +50,7 @@ export default function ManagementGrades() {
         }
       })
       .catch(console.error);
-  }, []);
+  }, [selectedSchoolYear]);
 
   // Fetch lock status for current class + semester
   useEffect(() => {
@@ -94,7 +94,7 @@ export default function ManagementGrades() {
         const semester1Id = await resolveSemesterId(selectedSchoolYear, "hk1");
         const semester2Id = await resolveSemesterId(selectedSchoolYear, "hk2");
 
-        const classStudentsRaw = await studentsService.getClassStudents(Number(selectedClassId)).catch(() => []);
+        const classStudentsRaw = await studentsService.getClassStudents(Number(selectedClassId), { schoolYearId }).catch(() => []);
         const classStudents = Array.isArray(classStudentsRaw) ? classStudentsRaw : [];
 
         const resolvedStudents = await Promise.all(

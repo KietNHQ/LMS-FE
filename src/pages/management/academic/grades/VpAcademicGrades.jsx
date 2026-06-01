@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import axiosClient from "../../../../services/shared/http/axiosClient";
 import { PageHeader, SchoolYearTermSelector, Pagination, LoadingSpinner } from "../../../../components/common";
 import { useSchoolYearTerm } from "../../../../hooks/useSchoolYearTerm";
 import { resolveSchoolYearId, resolveSemesterId } from "../../../../services/shared/schoolYearLookup";
@@ -42,7 +43,7 @@ const toScore = (v) => (v != null ? parseFloat(parseFloat(v).toFixed(2)) : null)
 // ── CUSTOM COMPONENT ──────────────────────────────────────────────
 
 export default function VpAcademicGrades() {
-    const { selectedSchoolYear, selectedTerm, handleYearArrow, handleTermChange } = useSchoolYearTerm();
+    const { selectedSchoolYear, selectedTerm, handleYearArrow, handleTermChange, setSelectedSchoolYear } = useSchoolYearTerm();
     const [classes, setClasses] = useState([]);
     const [selectedClass, setSelectedClass] = useState(null);
     const [filterGrade, setFilterGrade] = useState("all");
@@ -83,6 +84,16 @@ export default function VpAcademicGrades() {
             return res;
         },
         enabled: !!selectedClass?.id,
+    });
+
+    const { data: schoolYearsData = [] } = useQuery({
+        queryKey: ["school-years-dropdown"],
+        queryFn: async () => {
+            const res = await axiosClient.get("/school-years");
+            const rows = res?.data ?? res?.items ?? [];
+            return Array.isArray(rows) ? rows : [];
+        },
+        staleTime: 10 * 60 * 1000,
     });
 
     useEffect(() => {
@@ -168,7 +179,7 @@ export default function VpAcademicGrades() {
     useEffect(() => {
         let cancelled = false;
         setClassesLoading(true);
-        classesService.listClasses({})
+        classesService.listClasses({ schoolYearName: selectedSchoolYear })
             .then(rows => {
                 if (!cancelled) setClasses(rows);
             })
@@ -191,7 +202,7 @@ export default function VpAcademicGrades() {
             const semValue = semesterId || (selectedTerm === "hk1" ? 1 : 2);
 
             // Load students + GPA in parallel
-            const studentsRaw = await studentsService.getClassStudents(cls.id).catch(() => []);
+            const studentsRaw = await studentsService.getClassStudents(cls.id, { schoolYearId }).catch(() => []);
             const studentsArr = Array.isArray(studentsRaw) ? studentsRaw : [];
 
             const studentGpas = await Promise.all(
@@ -214,6 +225,7 @@ export default function VpAcademicGrades() {
                         conduct: conductRes?.level || conductRes?.description || null,
                         hk1Gpa: hk1Res?.gpa != null ? toScore(hk1Res.gpa) : null,
                         hk2Gpa: hk2Res?.gpa != null ? toScore(hk2Res.gpa) : null,
+                        yearIsComplete: gpaRes?.yearIsComplete ?? null,
                         math: null, lit: null, eng: null, phy: null,
                     };
                 })
@@ -417,12 +429,31 @@ export default function VpAcademicGrades() {
                 title="Giám sát Điểm số & Chất lượng"
                 eyebrow="Hệ thống phân tích học vụ và kiểm soát chất lượng đào tạo"
                 actions={
-                    <SchoolYearTermSelector
-                        selectedSchoolYear={selectedSchoolYear}
-                        selectedTerm={selectedTerm}
-                        onYearChange={handleYearArrow}
-                        onTermChange={handleTermChange}
-                    />
+                    <div className="vpa-school-year-header">
+                        <select
+                            className="vpa-school-year-dropdown"
+                            value={selectedSchoolYear}
+                            onChange={(e) => {
+                                const sy = e.target.value;
+                                setSelectedSchoolYear(sy);
+                            }}
+                        >
+                            {schoolYearsData.map((sy) => {
+                                const label = sy.name || sy.school_year_name || sy.schoolYearName || String(sy);
+                                return (
+                                    <option key={sy.id || label} value={label}>
+                                        {label}
+                                    </option>
+                                );
+                            })}
+                        </select>
+                        <SchoolYearTermSelector
+                            selectedSchoolYear={selectedSchoolYear}
+                            selectedTerm={selectedTerm}
+                            onYearChange={handleYearArrow}
+                            onTermChange={handleTermChange}
+                        />
+                    </div>
                 }
             />
 
@@ -576,6 +607,11 @@ export default function VpAcademicGrades() {
                                         <FiRefreshCw className={isRefreshing ? "spin" : ""} />
                                         {isRefreshing ? "Đang tải..." : "Làm mới"}
                                     </button>
+                                    <span className={`vpa-lock-status-badge ${classLockStatus === "finalized" ? "badge-finalized" : classLockStatus === "pending" ? "badge-pending" : "badge-draft"}`}>
+                                        {classLockStatus === "finalized" ? "Điểm đã khóa"
+                                            : classLockStatus === "pending" ? "Đang chờ khóa"
+                                            : "Điểm đang ở chế độ nháp"}
+                                    </span>
                                     {classLockStatus === "finalized" && finalizedGradeIds.length > 0 && (
                                         <button className="vpa-btn-unlock" onClick={() => setIsUnlockModalOpen(true)}>
                                             <FiUnlock /> Mở khóa điểm
@@ -755,13 +791,28 @@ export default function VpAcademicGrades() {
                                                             </div>
                                                         </td>
                                                         <td className={`sc-cell ${s.hk1Gpa != null && s.hk1Gpa < 5 ? 'danger' : ''}`}>
-                                                            {s.hk1Gpa != null ? s.hk1Gpa : "—"}
+                                                            {s.hk1Gpa != null ? (
+                                                                <>
+                                                                    {s.hk1Gpa}
+                                                                    {!s.yearIsComplete && <small className="gpa-provisional">(Tạm tính)</small>}
+                                                                </>
+                                                            ) : "—"}
                                                         </td>
                                                         <td className={`sc-cell ${s.hk2Gpa != null && s.hk2Gpa < 5 ? 'danger' : ''}`}>
-                                                            {s.hk2Gpa != null ? s.hk2Gpa : "—"}
+                                                            {s.hk2Gpa != null ? (
+                                                                <>
+                                                                    {s.hk2Gpa}
+                                                                    {!s.yearIsComplete && <small className="gpa-provisional">(Tạm tính)</small>}
+                                                                </>
+                                                            ) : "—"}
                                                         </td>
                                                         <td className={`sc-cell ${s.avg != null && s.avg < 5 ? 'danger' : ''}`}>
-                                                            {s.avg != null ? s.avg : "—"}
+                                                            {s.avg != null ? (
+                                                                <>
+                                                                    {s.avg}
+                                                                    {!s.yearIsComplete && <small className="gpa-provisional">(Tạm tính)</small>}
+                                                                </>
+                                                            ) : "—"}
                                                         </td>
                                                         <td className="td-conduct">
                                                             {s.conduct

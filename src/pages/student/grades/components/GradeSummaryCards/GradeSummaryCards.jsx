@@ -14,12 +14,12 @@ export default function GradeSummaryCards({
 
             <div className="grades-card">
                 <h2 className={getSummaryColorClass(conduct)}>{conduct}</h2>
-                <p>Academic Rank</p>
+                <p>Xếp loại</p>
             </div>
 
             <div className="grades-card">
                 <h2 className="green">{subjectCount}</h2>
-                <p>Subjects</p>
+                <p>Số môn</p>
             </div>
         </div>
     );

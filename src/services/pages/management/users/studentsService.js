@@ -92,8 +92,10 @@ export const studentsService = {
   },
 
   // Lấy danh sách học sinh theo lớp
-  getClassStudents: async (classId) => {
-    const response = await axiosClient.get(`/classes/${classId}/students`);
+  getClassStudents: async (classId, { schoolYearId } = {}) => {
+    const params = {};
+    if (schoolYearId) params.schoolYearId = schoolYearId;
+    const response = await axiosClient.get(`/classes/${classId}/students`, { params });
     const payload = getPayload(response);
     const rows = Array.isArray(payload) ? payload : (payload.data || payload.students || []);
     return rows.map(parseStudent);
