@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { PageHeader, WeekPicker, Pagination, StatusBadge, LoadingSpinner } from "../../../../components/common";
+import { getWeekDateObjects } from "../../../../components/common/WeekPicker/WeekPicker";
 import { useSchoolYearTerm } from "../../../../hooks/useSchoolYearTerm";
 import { normalizePermissions } from "../../../../hooks/useAuth";
 import Select from "../../../../components/ui/Select/Select";
@@ -11,7 +12,7 @@ import ViolationRecordModal from "../components/ViolationRecordModal";
 import IncidentHandleModal from "../components/IncidentHandleModal";
 import ManagementLeaveRequests from "../../leave-requests/ManagementLeaveRequests";
 import { vpDisciplineService } from "../../../../services/pages/management/vp-discipline";
-import { resolveSemesterId } from "../../../../services/shared/schoolYearLookup";
+import { resolveSemesterId, resolveSchoolYearId } from "../../../../services/shared/schoolYearLookup";
 import "./VpDisciplineMgmt.css";
 
 export default function VpDisciplineMgmt() {
@@ -106,8 +107,10 @@ export default function VpDisciplineMgmt() {
             if (!resolvedSemesterId) return [];
             try {
                 const res = await vpDisciplineService.getCategoryStats(resolvedSemesterId);
+                console.log("[DEBUG] getCategoryStats response:", res);
                 return res?.violations || res?.data?.violations || [];
-            } catch {
+            } catch (err) {
+                console.error("[DEBUG] getCategoryStats error:", err);
                 return [];
             }
         },
@@ -149,6 +152,28 @@ export default function VpDisciplineMgmt() {
         return result;
     }, [categoryStatsRaw]);
 
+    const approveMutation = useMutation({
+        mutationFn: async (id) => {
+            return vpDisciplineService.callByKey("put_discipline_violations_by_id_approve", {
+                pathParams: { id },
+            });
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["discipline-violations"] });
+            queryClient.invalidateQueries({ queryKey: ["discipline-category-stats"] });
+            toast.success("Duyệt vi phạm thành công. Đã cập nhật điểm thi đua và hạnh kiểm!");
+        },
+        onError: (err) => {
+            toast.error(err?.message || "Lỗi khi duyệt vi phạm.");
+        }
+    });
+
+    const handleApproveIncident = (id) => {
+        if (window.confirm("Bạn có chắc chắn muốn duyệt vi phạm này? Hệ thống sẽ trừ điểm thi đua của lớp và hạnh kiểm của học sinh.")) {
+            approveMutation.mutate(id);
+        }
+    };
+
     const handleAddIncident = (newInc, isEdit = false) => {
         // Mutation is handled by ViolationRecordModal; just refresh the list
         invalidateIncidents();
@@ -188,8 +213,9 @@ export default function VpDisciplineMgmt() {
     const { data: classesData } = useQuery({
         queryKey: ["classes-for-discipline", selectedSchoolYear, selectedGrade],
         queryFn: async () => {
+            const resolvedSchoolYearId = await resolveSchoolYearId(selectedSchoolYear);
             const res = await vpDisciplineService.callByKey("get_classes", {
-                params: { schoolYearId: selectedSchoolYear, gradeLevelId: selectedGrade === "all" ? undefined : parseInt(selectedGrade) },
+                params: { schoolYearId: resolvedSchoolYearId, gradeLevelId: selectedGrade === "all" ? undefined : parseInt(selectedGrade) },
             });
             return res?.data || [];
         },
@@ -249,16 +275,20 @@ export default function VpDisciplineMgmt() {
         { value: "high", label: "Nghiêm trọng" },
     ], []);
 
-    // Build class options from API
     const classOptions = useMemo(() => {
-        const grouped = {};
-        classesData?.forEach(c => {
-            const grade = String(c.grade_level || c.gradeLevel || (c.name || "").slice(0, 2));
-            if (!grouped[grade]) grouped[grade] = [];
-            grouped[grade].push({ value: c.id || c.name || c.class_name || "", label: c.name || c.class_name || "" });
-        });
-        return grouped;
-    }, [classesData]);
+        const defaultOption = { value: "all", label: "Tất cả" };
+        if (!classesData || !classesData.length) return { "all": [defaultOption], [selectedGrade]: [defaultOption] };
+        
+        const mapped = classesData.map(c => ({
+            value: c.class_name || c.name || c.id || "",
+            label: c.class_name || c.name || ""
+        }));
+        
+        return {
+            "all": [defaultOption, ...mapped],
+            [selectedGrade]: [defaultOption, ...mapped]
+        };
+    }, [classesData, selectedGrade]);
 
     const isDataLoading = isIncidentsLoading || isLoading;
 
@@ -283,13 +313,18 @@ export default function VpDisciplineMgmt() {
 
     const filteredIncidents = incidents.filter(inc => {
         if (hiddenIncidents.has(inc.id)) return false;
+
+        const { start: weekStart, end: weekEnd } = getWeekDateObjects(selectedWeek);
+        const incDate = new Date(inc.date);
+        const matchWeek = incDate >= weekStart && incDate <= weekEnd;
+
         const matchGrade = selectedGrade === "all" || 
             (inc.grade || "").toLowerCase().includes(selectedGrade.toLowerCase()) ||
             selectedGrade.toLowerCase() === (inc.grade || "").replace(/khối\s*/i, "").trim();
         const matchClass = selectedClass === "all" || (inc.class || "").toLowerCase().includes(selectedClass.toLowerCase());
         const matchType = selectedViolationType === "all" || (inc.type || "").toLowerCase().includes(selectedViolationType.toLowerCase()) || (selectedViolationType === "late" && (inc.type || "") === "Đi trễ") || (selectedViolationType === "absence" && (inc.type || "").includes("Vắng"));
         const matchSeverity = selectedSeverity === "all" || inc.level === selectedSeverity;
-        return matchGrade && matchClass && matchType && matchSeverity;
+        return matchWeek && matchGrade && matchClass && matchType && matchSeverity;
     });
 
     const totalPages = Math.ceil(filteredIncidents.length / itemsPerPage) || 1;
@@ -373,7 +408,7 @@ export default function VpDisciplineMgmt() {
                                         {selectedGrade !== "all" && (
                                             <div className="filter-group animate-slide-in">
                                                 <label><FiLayers /> Lớp</label>
-                                                <Select variant="custom" value={selectedClass} onChange={(e) => setSelectedClass(e.target.value)} options={classOptions[selectedGrade]} />
+                                                <Select variant="custom" value={selectedClass} onChange={(e) => setSelectedClass(e.target.value)} options={classOptions[selectedGrade] || [{ value: "all", label: "Tất cả" }]} />
                                             </div>
                                         )}
                                         <div className="filter-group">
@@ -418,8 +453,8 @@ export default function VpDisciplineMgmt() {
                                                 </tr>
                                             </thead>
                                             <tbody>
-                                                {paginatedIncidents.map(incident => (
-                                                    <tr key={incident.id} className="row-hover-effect">
+                                                {paginatedIncidents.map((incident, index) => (
+                                                    <tr key={incident.id || `incident-${index}`} className="row-hover-effect">
                                                         <td className="td-student">
                                                             <div className="student-profile-mini">
                                                                 <div className="s-avatar">{incident.student.charAt(0)}</div>
@@ -438,14 +473,23 @@ export default function VpDisciplineMgmt() {
                                                         </td>
                                                         <td>
                                                             <StatusBadge status={incident.status || 'new'}>
-                                                                {incident.status === 'processing' ? 'Đang xử lý' : (incident.status === 'resolved' ? 'Đã giải quyết' : (incident.status === 'closed' ? 'Đã đóng' : 'Mới'))}
+                                                                {incident.status === 'processing' ? 'Đang xử lý' : 
+                                                                 incident.status === 'resolved' ? 'Đã giải quyết' : 
+                                                                 incident.status === 'closed' ? 'Đã đóng' : 
+                                                                 incident.status === 'approved' ? 'Đã duyệt' : 
+                                                                 incident.status === 'rejected' ? 'Từ chối' : 'Mới'}
                                                             </StatusBadge>
                                                         </td>
-                                                        <td><span className="td-time">{incident.date}</span></td>
+                                                        <td><span className="td-time">{new Date(incident.date).toLocaleDateString('vi-VN')}</span></td>
                                                         <td className="dm-td-actions">
                                                             <div className="dm-action-group">
                                                                 <button className="dm-btn-action edit" title="Sửa" onClick={() => handleEditIncident(incident)}><FiEdit2 /></button>
-                                                                <button className="dm-btn-action process" title="Xử lý" onClick={() => handleOpenIncident(incident)}><FiActivity /></button>
+                                                                {incident.status === 'pending' && (
+                                                                    <button className="dm-btn-action process" title="Duyệt vi phạm" onClick={() => handleApproveIncident(incident.id)} style={{ color: 'var(--color-success)', borderColor: 'var(--color-success)' }}>
+                                                                        <FiCheck />
+                                                                    </button>
+                                                                )}
+                                                                <button className="dm-btn-action process" title="Xử lý / Leo thang" onClick={() => handleOpenIncident(incident)}><FiActivity /></button>
                                                                 <button className="dm-btn-action hide" title="Ẩn" onClick={() => handleToggleHide(incident.id)}><FiEyeOff /></button>
                                                                 <button className="dm-btn-action delete" title="Xóa" onClick={() => handleDeleteIncident(incident.id)}><FiTrash2 /></button>
                                                             </div>

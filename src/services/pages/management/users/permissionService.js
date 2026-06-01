@@ -23,7 +23,8 @@ export const permissionService = {
    */
   getAllPermissions: async ({ limit = 1000 } = {}) => {
     try {
-      const response = await axiosClient.get("/permissions", { params: { limit } });
+      const response = await axiosClient.get("/permissions?limit=200");
+      // axiosClient unwraps response.data -> { success, data: { permissions, pagination } }
       const inner = response?.data ?? response ?? {};
       return Array.isArray(inner) ? inner : (inner.permissions || inner.items || []);
     } catch (error) {

@@ -93,16 +93,24 @@ export default function HomeroomStudentsSection({
         return baseStudents.map((student) => {
             const violations = student.violationCount ?? 0;
             const meritPoints = student.meritCount ?? 0;
+            const totalPointsDeducted = student.totalPointsDeducted ?? 0;
+            const totalPointsEarned = student.totalPointsEarned ?? 0;
             const attendanceRate = Math.round(parseFloat(student.attendanceScore || 10.0) * 10);
+            const emulationPoints = 100 - totalPointsDeducted + totalPointsEarned;
 
+            // Updated conduct calculation based on real emulation points and violations
             let conduct = "Tốt";
-            if (attendanceRate < 95 || violations > 2) conduct = "Khá";
-            if (attendanceRate < 90 || violations > 4) conduct = "Trung bình";
+            if (attendanceRate < 95 || violations > 2 || emulationPoints < 80) conduct = "Khá";
+            if (attendanceRate < 90 || violations > 4 || emulationPoints < 60) conduct = "Trung bình";
+            if (attendanceRate < 80 || emulationPoints < 40) conduct = "Yếu";
 
             return {
                 ...student,
                 violations,
                 meritPoints,
+                totalPointsDeducted,
+                totalPointsEarned,
+                emulationPoints,
                 attendanceRate,
                 conduct,
                 attendanceStatus: "present",
@@ -143,7 +151,9 @@ export default function HomeroomStudentsSection({
         if (viewMode !== "activity") return null;
         return {
             totalViolations: filteredStudents.reduce((acc, s) => acc + (s.violations || 0), 0),
+            totalPointsDeducted: filteredStudents.reduce((acc, s) => acc + (s.totalPointsDeducted || 0), 0),
             totalMerit: filteredStudents.reduce((acc, s) => acc + (s.meritPoints || 0), 0),
+            totalPointsEarned: filteredStudents.reduce((acc, s) => acc + (s.totalPointsEarned || 0), 0),
             avgAttendance: (filteredStudents.reduce((acc, s) => acc + (s.attendanceRate || 0), 0) / (filteredStudents.length || 1)).toFixed(1),
         };
     }, [filteredStudents, viewMode]);
@@ -269,14 +279,14 @@ export default function HomeroomStudentsSection({
                         <div className="stat-icon"><FiAlertCircle /></div>
                         <div className="stat-info">
                             <span className="stat-label">Tổng vi phạm</span>
-                            <span className="stat-value">{activityStats.totalViolations}</span>
+                            <span className="stat-value">{activityStats.totalViolations} <small style={{fontSize: "0.5em", opacity: 0.8}}>(-{activityStats.totalPointsDeducted}đ)</small></span>
                         </div>
                     </div>
                     <div className="attendance-stat-card merit">
                         <div className="stat-icon"><FiAward /></div>
                         <div className="stat-info">
                             <span className="stat-label">Khen thưởng</span>
-                            <span className="stat-value">{activityStats.totalMerit}</span>
+                            <span className="stat-value">{activityStats.totalMerit} <small style={{fontSize: "0.5em", opacity: 0.8}}>(+{activityStats.totalPointsEarned}đ)</small></span>
                         </div>
                     </div>
                     <div className="attendance-stat-card attendance">
@@ -307,6 +317,7 @@ export default function HomeroomStudentsSection({
                                 <>
                                     <th style={{ textAlign: "center" }}>VI PHẠM</th>
                                     <th style={{ textAlign: "center" }}>KHEN THƯỞNG</th>
+                                    <th style={{ textAlign: "center" }}>THI ĐUA</th>
                                     <th style={{ textAlign: "center" }}>CHUYÊN CẦN</th>
                                     <th style={{ textAlign: "center" }}>HẠNH KIỂM</th>
                                 </>
@@ -384,8 +395,13 @@ export default function HomeroomStudentsSection({
                                                     </span>
                                                 </td>
                                                 <td style={{ textAlign: "center" }}>
-                                                    <span className={`activity-count-badge merit ${student.meritPoints > 0 ? "active" : ""}`}>
+                                                    <span className={`activity-count-badge merit ${student.meritPoints > 0 ? "active" : ""}`} title={`Cộng ${student.totalPointsEarned} điểm`}>
                                                         +{student.meritPoints}
+                                                    </span>
+                                                </td>
+                                                <td style={{ textAlign: "center" }}>
+                                                    <span className={`activity-count-badge ${student.emulationPoints < 100 ? "violation active" : "merit active"}`}>
+                                                        {student.emulationPoints}đ
                                                     </span>
                                                 </td>
                                                 <td style={{ textAlign: "center" }}>
