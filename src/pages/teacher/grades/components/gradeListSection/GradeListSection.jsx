@@ -72,13 +72,13 @@ export default function GradeListSection({
     const pageStartIndex = (currentPage - 1) * ITEMS_PER_PAGE;
 
     const getDisplayScore = (scores) => {
-            if (!scores || !scores.length) return "-";
-            const nums = scores
-                .map((item) => Number(item?.score ?? item))
-                .filter((value) => Number.isFinite(value));
-      if (!nums.length) return "-";
-      const avg = nums.reduce((a, b) => a + b, 0) / nums.length;
-      return avg.toFixed(1);
+        if (!scores || !scores.length) return "-";
+        const nums = scores
+            .map((item) => Number(item?.score ?? item))
+            .filter((value) => Number.isFinite(value));
+        if (!nums.length) return "-";
+        const avg = nums.reduce((a, b) => a + b, 0) / nums.length;
+        return avg.toFixed(1);
     };
 
     return (

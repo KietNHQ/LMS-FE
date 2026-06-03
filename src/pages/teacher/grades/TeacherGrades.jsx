@@ -16,13 +16,13 @@ import { io } from "socket.io-client";
 import "./TeacherGrades.css";
 
 const getSocketUrl = () => {
-    const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:3000/api/v1";
-    return apiUrl.replace("/api/v1", "");
+  const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:3000/api/v1";
+  return apiUrl.replace("/api/v1", "");
 };
 
 const getToken = () => {
-    const storedUser = JSON.parse(localStorage.getItem("user") || sessionStorage.getItem("user") || "{}");
-    return storedUser?.accessToken || localStorage.getItem("accessToken") || "";
+  const storedUser = JSON.parse(localStorage.getItem("user") || sessionStorage.getItem("user") || "{}");
+  return storedUser?.accessToken || localStorage.getItem("accessToken") || "";
 };
 
 let socket = null;
@@ -264,16 +264,16 @@ export default function TeacherGrades() {
   const canEdit = useMemo(() => {
     // Must be GVBM to edit
     if (!selectedAssignment?.classTeacherSubjectId) return false;
-    
+
     // Draft: always editable
     if (lockStatus === "draft") return true;
-    
+
     // Pending: never editable (must retract first)
     if (lockStatus === "pending") return false;
-    
+
     // Finalized: editable only if has active unlock window
     if (lockStatus === "finalized") return hasActiveUnlock;
-    
+
     // Any other status: check unlock anyway
     return hasActiveUnlock;
   }, [lockStatus, selectedAssignment, hasActiveUnlock]);
@@ -493,27 +493,28 @@ export default function TeacherGrades() {
 
   // ---- Lock status ----
   useEffect(() => {
-    if (!selectedClassId || !selectedAssignment?.classTeacherSubjectId) return;
+    if (!selectedClassId) return;
     const checkLock = async () => {
       try {
-        const res = await dataLockingService.listByModule ? {} : {};
-        // Use existing grade lock status from teacherService
         const { teacherService } = await import("../../../services/pages/teacher/teacherService");
+        // Use selectedSubjectId directly for API filter (safe for all subjects)
+        const subjectId = selectedSubjectId || undefined;
         const response = await teacherService.getGradesLockStatus({
-          params: { classId: selectedClassId, classTeacherSubjectId: selectedAssignment?.classTeacherSubjectId, schoolYear: selectedSchoolYear, term: selectedTerm },
+          params: {
+            classId: selectedClassId,
+            subjectId,
+            schoolYear: selectedSchoolYear,
+            term: selectedTerm,
+          },
           mock: false,
         });
-        if (response?.success && response?.data) {
-          setLockStatus(response.data.status || "draft");
-        } else {
-          setLockStatus("draft");
-        }
+        setLockStatus(response.data.status || "draft");
       } catch {
         setLockStatus("draft");
       }
     };
     checkLock();
-  }, [selectedClassId, selectedSubjectId, selectedSchoolYear, selectedTerm]);
+  }, [selectedClassId, selectedSubjectId, selectedAssignment, selectedSchoolYear, selectedTerm]);
 
   // ---- Summary stats ----
   const summaryStats = useMemo(() => {
@@ -588,7 +589,7 @@ export default function TeacherGrades() {
   };
 
   const handleLockGrades = async () => {
-      const confirmed = window.confirm("Bạn có chắc chắn muốn nộp điểm để phê duyệt?");
+    const confirmed = window.confirm("Bạn có chắc chắn muốn nộp điểm để phê duyệt?");
     if (!confirmed) return;
     try {
       const semesterDbId = await resolveSemesterId(selectedSchoolYear, selectedTerm);
@@ -599,8 +600,12 @@ export default function TeacherGrades() {
         mock: false,
       });
       if (res?.success) {
-        setLockStatus("pending");
-        toast.success(`Đã nộp ${res.data?.submittedCount || 0} điểm để phê duyệt!`);
+        if (res.data?.submittedCount > 0) {
+          setLockStatus("pending");
+          toast.success(`Đã nộp ${res.data?.submittedCount || 0} điểm để phê duyệt!`);
+        } else {
+          toast.info("Không có điểm nào ở trạng thái bản nháp để nộp.");
+        }
       }
       else toast.error(res?.error || "Không thể nộp điểm.");
     } catch { toast.error("Lỗi khi nộp điểm."); }
@@ -621,8 +626,12 @@ export default function TeacherGrades() {
         mock: false,
       });
       if (res?.success) {
-        setLockStatus("draft");
-        toast.success("Đã thu hồi điểm về bản nháp!");
+        if (res.data?.retractedCount > 0) {
+          setLockStatus("draft");
+          toast.success("Đã thu hồi điểm về bản nháp!");
+        } else {
+          toast.warning("Không có điểm nào của bạn để thu hồi.");
+        }
       } else {
         toast.error(res?.error || "Không thể thu hồi điểm.");
       }
@@ -717,16 +726,20 @@ export default function TeacherGrades() {
           searchable
         />
         <div className="tg-lock-controls">
-          <span className={`grade-lock-status-badge ${lockStatus === "pending" || lockStatus === "locked" ? "is-locked" : "is-draft"}`}>
-            {lockStatus === "pending" ? <><FiLock style={{ marginRight: 6 }} /> Đã nộp (chờ duyệt)</> : lockStatus === "locked" ? <><FiLock style={{ marginRight: 6 }} /> Đã khóa</> : <><FiUnlock style={{ marginRight: 6 }} /> Bản nháp</>}
+          <span className={`grade-lock-status-badge ${lockStatus === "pending" || (lockStatus === "finalized" && !hasActiveUnlock) ? "is-locked" : "is-draft"}`}>
+            {lockStatus === "pending" ? <><FiLock style={{ marginRight: 6 }} /> Đã nộp (chờ duyệt)</> : lockStatus === "finalized" && !hasActiveUnlock ? <><FiLock style={{ marginRight: 6 }} /> Đã khóa</> : lockStatus === "finalized" && hasActiveUnlock ? <><FiUnlock style={{ marginRight: 6 }} /> Đã mở khóa</> : <><FiUnlock style={{ marginRight: 6 }} /> Bản nháp</>}
           </span>
           {lockStatus === "pending" ? (
             <button className="teacher-grades-action-btn is-draft" onClick={handleRetract} disabled={retractLoading}>
               <FiCornerDownLeft style={{ marginRight: 6 }} /> Thu hồi
             </button>
-          ) : (lockStatus === "locked") ? (
+          ) : (lockStatus === "finalized" && !hasActiveUnlock) ? (
             <button className="teacher-grades-action-btn is-unlock-request" onClick={() => { setUnlockReason(""); setUnlockRequestOpen(true); }}>
               <FiSend style={{ marginRight: 6 }} /> Yêu cầu mở khóa
+            </button>
+          ) : (lockStatus === "finalized" && hasActiveUnlock) ? (
+            <button className="teacher-grades-action-btn is-lock" onClick={handleLockGrades} disabled={!canEdit}>
+              <FiSend style={{ marginRight: 6 }} /> Nộp điểm
             </button>
           ) : (
             <button className="teacher-grades-action-btn is-lock" onClick={handleLockGrades} disabled={!canEdit}>
@@ -773,7 +786,7 @@ export default function TeacherGrades() {
                     onOpenEditDialog={openEditDialog}
                     subjectLabel={currentSubject.subjectName}
                     semesterLabel={semesterLabel}
-                    isLocked={lockStatus === "locked" || lockStatus === "pending"}
+                    isLocked={lockStatus === "pending" || (lockStatus === "finalized" && !hasActiveUnlock)}
                     canEdit={canEdit}
                   />
                 </div>
@@ -895,7 +908,7 @@ export default function TeacherGrades() {
       <Modal open={atRiskDialogOpen} title={`Học sinh cảnh báo (${summaryStats.atRiskCount})`} onClose={() => setAtRiskDialogOpen(false)} className="teacher-grade-risk-modal">
         <div className="teacher-grade-risk-list">
           {summaryStats.atRiskStudents.map((s) => (
-            <div key={s.id} className={`teacher-grade-risk-item ${lockStatus === "locked" || lockStatus === "pending" ? "is-locked-cursor" : ""}`} onClick={() => { if (lockStatus !== "locked" && lockStatus !== "pending" && canEdit) { setAtRiskDialogOpen(false); openEditDialog(s); } }}>
+            <div key={s.id} className={`teacher-grade-risk-item ${lockStatus === "pending" || (lockStatus === "finalized" && !hasActiveUnlock) ? "is-locked-cursor" : ""}`} onClick={() => { if (lockStatus === "draft" || (lockStatus === "finalized" && hasActiveUnlock)) { setAtRiskDialogOpen(false); openEditDialog(s); } }}>
               <div><strong>{s.name}</strong><span>{s.code}</span></div>
               <small>TB: {s.average}</small>
             </div>

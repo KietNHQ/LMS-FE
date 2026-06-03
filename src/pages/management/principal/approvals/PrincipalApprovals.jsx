@@ -43,7 +43,7 @@ const SECTION_OPTIONS = [
 
 function StatusBadge({ status }) {
   if (status === "pending") return <span className="status-badge pending">⏳ Chờ duyệt</span>;
-  if (status === "approved") return <span className="status-badge approved">✅ Đã duyệt</span>;
+  if (status === "approved" || status === "finalized") return <span className="status-badge approved">✅ Đã duyệt</span>;
   if (status === "rejected") return <span className="status-badge rejected">❌ Từ chối</span>;
   return <span className="status-badge">Không xác định</span>;
 }
@@ -54,7 +54,7 @@ function PriorityBadge({ priority }) {
   return <span className={`priority-badge priority-badge--${priorityClass}`}>{priority}</span>;
 }
 
-function ItemModal({ item, isOpen, onClose, onAction }) {
+function ItemModal({ item, isOpen, onClose, onAction, isProcessing = false }) {
   if (!isOpen || !item) return null;
 
   return (
@@ -109,10 +109,10 @@ function ItemModal({ item, isOpen, onClose, onAction }) {
         <div className="modal-footer">
           {item.status === "pending" ? (
             <div className="modal-actions">
-              <button className="btn-modal-reject" onClick={() => onAction(item.id, "rejected")} disabled={processMutation.isPending}>
+              <button className="btn-modal-reject" onClick={() => onAction(item.id, "rejected")} disabled={isProcessing}>
                 <FiX /> Từ chối yêu cầu
               </button>
-              <button className="btn-modal-approve" onClick={() => onAction(item.id, "approved")} disabled={processMutation.isPending}>
+              <button className="btn-modal-approve" onClick={() => onAction(item.id, "approved")} disabled={isProcessing}>
                 <FiCheck /> Phê duyệt ngay
               </button>
             </div>
@@ -169,9 +169,29 @@ export default function PrincipalApprovals() {
       priority: req.status === "pending" ? "Cao" : "Trung bình",
       status: req.status || "pending",
     }));
-    setItems(mappedLeaves);
+    
+    // Map grade approvals to items
+    const mappedGrades = gradeApprovals.flatMap(group => 
+      group.grades.map(g => ({
+        id: `GR-${g.gradeId}`,
+        section: "grades",
+        sectionLabel: "Chuyên môn",
+        title: `${g.gradeItemName}`,
+        reference: `#GR-${String(g.gradeId).slice(0, 6).toUpperCase()}`,
+        requester: `GV. ${group.teacherName}`,
+        summary: `${group.className} - ${group.subjectName}`,
+        description: `Lớp: ${group.className}\nMôn: ${group.subjectName}\nCột điểm: ${g.gradeItemName}\nTrọng số: ${g.weight}%\nTrạng thái: ${g.status === "pending" ? "Chờ duyệt" : "Đã duyệt"}\n${g.finalizedAt ? `Đã duyệt lúc: ${new Date(g.finalizedAt).toLocaleString("vi-VN")}\nNgười duyệt: ${g.finalizedByName || "BGH"}` : ""}`,
+        time: g.submittedAt ? new Date(g.submittedAt).toLocaleDateString("vi-VN") : "Hôm nay",
+        dueAt: "Sớm nhất",
+        priority: g.status === "pending" ? "Cao" : "Trung bình",
+        status: g.status === "finalized" ? "approved" : g.status,
+        gradeId: g.gradeId,
+      }))
+    );
+    
+    setItems([...mappedLeaves, ...mappedGrades]);
     setCurrentPage(1);
-  }, [leaveResponse]);
+  }, [leaveResponse, gradeApprovals]);
 
   const queryClient = useQueryClient();
 
@@ -286,12 +306,13 @@ export default function PrincipalApprovals() {
   const [gradeApprovalGradeLevel, setGradeApprovalGradeLevel] = useState(null);
 
   useEffect(() => {
-    if (activeSection !== "grades") return;
+    if (activeSection !== "grades" && activeSection !== "all") return;
     setGradeApprovalsLoading(true);
     teacherService.getPendingGradeApprovals({
       params: {
         semesterId: selectedTerm === "hk1" ? 1 : 2,
         gradeLevelId: gradeApprovalGradeLevel || undefined,
+        status: activeStatus === "all" ? undefined : activeStatus,
       },
       mock: false,
     }).then(res => {
@@ -301,7 +322,7 @@ export default function PrincipalApprovals() {
         setGradeApprovals([]);
       }
     }).catch(() => setGradeApprovals([])).finally(() => setGradeApprovalsLoading(false));
-  }, [activeSection, selectedTerm, gradeApprovalGradeLevel]);
+  }, [activeSection, selectedTerm, gradeApprovalGradeLevel, activeStatus]);
 
   const handleApproveGradeBatch = async () => {
     if (selectedGradeApprovals.length === 0) {
@@ -318,6 +339,20 @@ export default function PrincipalApprovals() {
         setSelectedGradeApprovals([]);
         // Refresh
         setGradeApprovalGradeLevel(null);
+        setGradeApprovalsLoading(true);
+        teacherService.getPendingGradeApprovals({
+          params: {
+            semesterId: selectedTerm === "hk1" ? 1 : 2,
+            gradeLevelId: gradeApprovalGradeLevel || undefined,
+          },
+          mock: false,
+        }).then(res => {
+          if (res?.success && res?.data?.items) {
+            setGradeApprovals(res.data.items);
+          } else {
+            setGradeApprovals([]);
+          }
+        }).catch(() => setGradeApprovals([])).finally(() => setGradeApprovalsLoading(false));
       } else {
         toast.error(res?.error || "Lỗi khi duyệt điểm");
       }
@@ -673,20 +708,31 @@ export default function PrincipalApprovals() {
                         type="checkbox"
                         checked={item.grades.every(g => selectedGradeApprovals.includes(g.gradeId))}
                         onChange={() => item.grades.forEach(g => toggleGradeApproval(g.gradeId))}
+                        disabled={item.grades.every(g => g.status === "finalized")}
                       />
                     </td>
                     <td>{item.className}</td>
                     <td>{item.subjectName}</td>
                     <td>{item.teacherName}</td>
                     <td>{item.grades.length}</td>
-                    <td><span className="status-badge pending">Chờ duyệt</span></td>
+                    <td>
+                      {item.grades.every(g => g.status === "finalized") ? (
+                        <span className="status-badge approved">✅ Đã duyệt</span>
+                      ) : (
+                        <span className="status-badge pending">⏳ Chờ duyệt</span>
+                      )}
+                    </td>
                     <td className="text-right">
-                      <button
-                        className="btn-table-action"
-                        onClick={() => item.grades.forEach(g => toggleGradeApproval(g.gradeId))}
-                      >
-                        {item.grades.every(g => selectedGradeApprovals.includes(g.gradeId)) ? "Bỏ chọn" : "Chọn tất cả"}
-                      </button>
+                      {item.grades.every(g => g.status === "finalized") ? (
+                        <span style={{ color: "#64748b", fontSize: "0.9rem" }}>—</span>
+                      ) : (
+                        <button
+                          className="btn-table-action"
+                          onClick={() => item.grades.forEach(g => toggleGradeApproval(g.gradeId))}
+                        >
+                          {item.grades.every(g => selectedGradeApprovals.includes(g.gradeId)) ? "Bỏ chọn" : "Chọn tất cả"}
+                        </button>
+                      )}
                     </td>
                   </tr>
                 ))}
@@ -994,6 +1040,7 @@ export default function PrincipalApprovals() {
         isOpen={isModalOpen} 
         onClose={() => setIsModalOpen(false)}
         onAction={updateItemStatus}
+        isProcessing={processMutation.isPending}
       />
     </div>
   );
