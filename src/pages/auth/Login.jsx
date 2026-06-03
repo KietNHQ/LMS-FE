@@ -1,9 +1,10 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { FiEye, FiEyeOff } from "react-icons/fi";
 import AuthLayout from "../../layouts/auth/AuthLayout.jsx";
 import { useLogin } from "../../hooks/useAuth";
 import { LoadingAnimationBook, LoadingSpinner } from "../../components/common";
+import { toast } from "react-toastify";
 import "./Login.css";
 
 const LOGIN_ENTRY_LOADER_KEY = "login-entry-loader-seen";
@@ -27,8 +28,18 @@ function Login() {
     const [passwordError, setPasswordError] = useState("");
 
     const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
     const loginMutation = useLogin();
     const isSubmitting = loginMutation.isPending;
+
+    // Show toast when redirected due to expired token
+    useEffect(() => {
+        if (searchParams.get("expired") === "true") {
+            toast.warning("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.");
+            // Clean up the URL param without reloading
+            window.history.replaceState({}, "", "/login");
+        }
+    }, [searchParams]);
 
     useEffect(() => {
         if (!isCardLoading) {
@@ -44,6 +55,9 @@ function Login() {
     }, [isCardLoading]);
 
     useEffect(() => {
+        // Don't redirect if this page was reached due to expired token
+        if (searchParams.get("expired") === "true") return;
+
         // AUTO-REDIRECT NẾU ĐÃ ĐĂNG NHẬP
         const sessionToken = sessionStorage.getItem("accessToken");
         const localToken = localStorage.getItem("accessToken");

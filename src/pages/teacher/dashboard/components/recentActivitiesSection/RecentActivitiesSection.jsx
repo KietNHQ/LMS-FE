@@ -7,11 +7,10 @@ import teacherService from "../../../../../services/pages/teacher/teacherService
 const RecentActivitiesSection = ({ activities: propActivities }) => {
   const currentWeek = 28;
 
-  // Nếu không có activities truyền từ props, có thể fetch riêng hoặc dùng mock
   const { data: lessonsResponse, isLoading } = useQuery({
     queryKey: ["teacher-recent-lessons"],
     queryFn: () => teacherService.listLessons({ mock: false }),
-    enabled: !propActivities, // Chỉ fetch nếu không có dữ liệu truyền từ dashboard
+    enabled: !propActivities || propActivities.length === 0,
   });
 
   const hardcodedLessons = [
@@ -20,15 +19,17 @@ const RecentActivitiesSection = ({ activities: propActivities }) => {
     { title: "Phương trình quy về bậc hai", info: "Tiết 4 • Toán • 11B2", time: "08/04/2026 10:00", status: "published", statusLabel: "Đã đăng" },
   ];
 
-  const lessonsData = propActivities || (lessonsResponse?.success ? lessonsResponse.data : null);
+  const lessonsData = (propActivities && propActivities.length > 0) 
+    ? propActivities 
+    : (lessonsResponse?.success ? lessonsResponse.data : null);
 
   const lessons = lessonsData && lessonsData.length > 0 
     ? lessonsData.map(l => ({
         title: l.title || l.content || "Hoạt động mới",
         info: l.info || `${l.period || "N/A"} • ${l.subject_name || "Môn học"} • ${l.class_name || "Lớp"}`,
-        time: new Date(l.created_at || l.time || Date.now()).toLocaleString('vi-VN'),
-        status: l.status === 'published' || l.status === 'success' ? 'published' : 'draft',
-        statusLabel: l.status === 'published' ? 'Đã đăng' : (l.status === 'draft' ? 'Nháp' : 'Xong')
+        time: new Date(l.created_at || l.time || l.date || Date.now()).toLocaleString('vi-VN'),
+        status: l.status === 'published' || l.status === 'Đã xuất bản' || l.status === 'success' ? 'published' : 'draft',
+        statusLabel: l.status === 'published' || l.status === 'Đã xuất bản' ? 'Đã đăng' : (l.status === 'draft' || l.status === 'Bản nháp' ? 'Nháp' : 'Xong')
       }))
     : hardcodedLessons;
 

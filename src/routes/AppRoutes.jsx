@@ -27,8 +27,12 @@ const ManagementClassDetail = lazy(() => import("../pages/management/classes/com
 const ManagementAcademicDashboard = lazy(() => import("../pages/management/academic/dashboard/VpAcademicDashboard"));
 const ManagementDiscipline = lazy(() => import("../pages/management/discipline/index.js"));
 const ManagementDisciplineReports = lazy(() => import("../pages/management/discipline/ManagementDisciplineReports"));
+const ManagementTranscriptExport = lazy(() => import("../pages/management/discipline/export/VpTranscriptExport"));
+const ManagementBonusPoints = lazy(() => import("../pages/management/discipline/bonus-points"));
+const ManagementPeriodClosing = lazy(() => import("../pages/management/discipline/period-closing/VpDisciplinePeriodClosing"));
+const ManagementClassDeductionLogs = lazy(() => import("../pages/management/discipline/class-deduction-logs/VpClassDeductionLogs"));
 const ManagementCompetition = lazy(() => import("../pages/management/competition/index.js"));
-const ManagementGrades = lazy(() => import("../pages/management/grades/index.js"));
+const ManagementGrades = lazy(() => import("../pages/management/academic/grades/VpAcademicGrades"));
 const ManagementQuiz = lazy(() => import("../pages/management/quiz/ManagementQuiz"));
 const ManagementCreateQuiz = lazy(() => import("../pages/management/quiz/create/ManagementCreateQuiz"));
 const ManagementQuizSubmissions = lazy(() => import("../pages/management/quiz/submissions/ManagementQuizSubmissions"));
@@ -39,10 +43,15 @@ const ManagementTimetable = lazy(() => import("../pages/management/timetable/Man
 const ManagementFinance = lazy(() => import("../pages/management/finance/index.js"));
 const ManagementFinanceDashboard = lazy(() => import("../pages/management/finance/dashboard/FinanceDashboard").then((m) => ({ default: m.FinanceDashboard })));
 const ManagementFinancePaymentHub = lazy(() => import("../pages/management/finance/payment-hub/FinancePaymentHub"));
+const ManagementFinanceDebts = lazy(() => import("../pages/management/finance/debts/FinanceDebts"));
+const ManagementFinanceRevenue = lazy(() => import("../pages/management/finance/revenue/FinanceRevenue"));
+const ManagementFinancePaymentHistory = lazy(() => import("../pages/management/finance/payment-history/FinancePaymentHistory"));
 const ManagementApprovals = lazy(() => import("../pages/management/approvals/index.js"));
 const ManagementNotifications = lazy(() => import("../pages/management/notifications/ManagementNotifications"));
 const ManagementReports = lazy(() => import("../pages/management/reports/ManagementReports"));
 const ManagementChat = lazy(() => import("../pages/management/chat/ManagementChat"));
+const ManagementPromotion = lazy(() => import("../pages/management/promotion/PromotionPage"));
+const ManagementSummerTraining = lazy(() => import("../pages/management/summer-training/SummerTrainingPage"));
 
 
 /* ADMIN SUB-ROLE LAYOUTS (đã xóa — chuyển sang /management) */
@@ -81,6 +90,7 @@ const TeacherDashboard = lazy(
   () => import("../pages/teacher/dashboard/TeacherDashboard")
 );
 const TeacherGrades = lazy(() => import("../pages/teacher/grades/TeacherGrades"));
+const TeacherStudentGradeDetail = lazy(() => import("../pages/teacher/grades/StudentGradeDetail"));
 const TeacherHomeroom = lazy(
   () => import("../pages/teacher/homeroom/TeacherHomeroom")
 );
@@ -204,6 +214,7 @@ export default function AppRoutes() {
         <Route path="audit-log"   element={<AdminAuditLog />} />
         <Route path="system-log"  element={<AdminSystemLog />} />
         <Route path="classes"       element={<Navigate to="/management/classes" replace />} />
+        <Route path="classes/*"     element={<Navigate to="/management/classes" replace />} />
         <Route path="quiz"          element={<Navigate to="/management/quiz" replace />} />
         <Route path="timetable"     element={<Navigate to="/management/timetable" replace />} />
         <Route path="payment"       element={<Navigate to="/management/finance" replace />} />
@@ -228,6 +239,10 @@ export default function AppRoutes() {
         <Route path="academic/dashboard" element={<ManagementAcademicDashboard />} />
         <Route path="discipline"   element={<ManagementDiscipline />} />
         <Route path="discipline-reports" element={<ManagementDisciplineReports />} />
+        <Route path="discipline/export" element={<ManagementTranscriptExport />} />
+        <Route path="discipline/bonus-points" element={<ManagementBonusPoints />} />
+        <Route path="discipline/period-closing" element={<ManagementPeriodClosing />} />
+        <Route path="discipline/class-deduction-logs/:classId" element={<ManagementClassDeductionLogs />} />
         <Route path="competition"  element={<ManagementCompetition />} />
         <Route path="grades"       element={<ManagementGrades />} />
         <Route path="quiz"         element={<ManagementQuiz />} />
@@ -240,10 +255,15 @@ export default function AppRoutes() {
         <Route path="finance"      element={<ManagementFinance />} />
         <Route path="finance/dashboard" element={<ManagementFinanceDashboard />} />
         <Route path="finance/payment-hub" element={<ManagementFinancePaymentHub />} />
+        <Route path="finance/debts" element={<ManagementFinanceDebts />} />
+        <Route path="finance/revenue" element={<ManagementFinanceRevenue />} />
+        <Route path="finance/payment-history" element={<ManagementFinancePaymentHistory />} />
         <Route path="approvals"    element={<ManagementApprovals />} />
         <Route path="notifications" element={<ManagementNotifications />} />
         <Route path="reports"      element={<ManagementReports />} />
         <Route path="chat"         element={<ManagementChat />} />
+        <Route path="promotion"   element={<ManagementPromotion />} />
+        <Route path="summer-training" element={<ManagementSummerTraining />} />
       </Route>
 
       {/* ── Redirect tương thích ngược ── */}
@@ -288,6 +308,7 @@ export default function AppRoutes() {
         <Route path="homeroom"         element={<TeacherHomeroom />} />
         <Route path="lessons"          element={<TeacherLessons />} />
         <Route path="grades"           element={<TeacherGrades />} />
+        <Route path="grades/student/:enrollmentId" element={<TeacherStudentGradeDetail />} />
         <Route path="quiz"             element={<TeacherQuiz />} />
         <Route path="quiz/create"      element={<TeacherCreateQuiz />} />
         <Route path="quiz/:quizId/submissions" element={<TeacherQuizSubmissions />} />

@@ -101,6 +101,7 @@ export default function QuizListSection({
                             ) : (
                                 <div className="question-answers-grid">
                                     {answerKeys.map((key) => {
+                                        if (!item.answers[key]) return null;
                                         const isCorrect = item.correctAnswer === key;
 
                                         return (

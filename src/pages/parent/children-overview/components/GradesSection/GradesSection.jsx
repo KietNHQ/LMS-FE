@@ -10,10 +10,9 @@ const SEMESTER_OPTIONS = [
 function getRank(average) {
     const score = Number(average);
 
-    if (score >= 8.5) return "Xuất sắc";
-    if (score >= 7.0) return "Tốt";
-    if (score >= 5.5) return "Khá";
-    if (score >= 4.0) return "Trung bình";
+    if (score >= 8.0) return "Giỏi";
+    if (score >= 6.5) return "Khá";
+    if (score >= 5.0) return "Trung bình";
     return "Yếu";
 }
 

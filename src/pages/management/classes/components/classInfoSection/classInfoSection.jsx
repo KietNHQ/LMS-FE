@@ -15,28 +15,32 @@ const gradeLetterMap = {
     "Khối 12": "C",
 };
 
-const gradeOptions = [
-    { label: "Khối 10", value: "Khối 10" },
-    { label: "Khối 11", value: "Khối 11" },
-    { label: "Khối 12", value: "Khối 12" },
-];
-
-const defaultForm = {
-    grade: "Khối 10",
-    name: "10A",
-    year: getCurrentYear(),
-    teacher: "Trần Thị Hương",
-    max_students: 40,
-    room: "",
+const buildDefaultForm = (gradeOptions, defaultSchoolYear) => {
+    const firstGrade = gradeOptions[0];
+    const gradeLabel = firstGrade?.label || "Khối 10";
+    const gradeNum = `${gradeLabel}`.match(/\d+/)?.[0] || "10";
+    return {
+        grade: gradeLabel,
+        name: `${gradeNum}A`,
+        year: defaultSchoolYear || getCurrentYear(),
+        teacher: "",
+    };
 };
 
 export default function ClassInfoSection({
     mode = "create",
     initialData = null,
+    gradeOptions = [],
+    defaultSchoolYear = "",
     onClose,
     onSubmit,
 }) {
-    const [formData, setFormData] = useState(() => defaultForm);
+    const selectGradeOptions = gradeOptions.map((g) => ({
+        label: g.label,
+        value: g.label,
+    }));
+
+    const [formData, setFormData] = useState(() => buildDefaultForm(selectGradeOptions, defaultSchoolYear));
     const [isTeacherDialogOpen, setIsTeacherDialogOpen] = useState(false);
 
     useEffect(() => {
@@ -49,31 +53,21 @@ export default function ClassInfoSection({
                 grade: initialData.grade || "Khối 10",
                 name: initialData.name || "",
                 year: initialData.year || getCurrentYear(),
-                teacher: initialData.teacher || "Trần Thị Hương",
-                max_students: initialData.max_students ?? initialData.maxStudents ?? 40,
-                room: initialData.room || "",
+                teacher: initialData.teacher || "",
                 id: initialData.id,
                 students: initialData.students || 0,
                 subjects: initialData.subjects || [],
                 color: initialData.color || "blue",
             });
         } else if (mode === "create") {
-            const currentYear = getCurrentYear();
-            setFormData({
-                grade: "Khối 10",
-                name: "10A",
-                year: currentYear,
-                teacher: "Trần Thị Hương",
-                max_students: 40,
-                room: "",
-            });
+            setFormData(buildDefaultForm(selectGradeOptions, defaultSchoolYear));
         }
-    }, [mode, initialData]);
+    }, [mode, initialData, defaultSchoolYear, gradeOptions]);
 
     const handleGradeChange = (e) => {
         const newGrade = e.target.value;
-        const letter = gradeLetterMap[newGrade];
-        const gradeNum = newGrade.match(/\d+/)[0];
+        const letter = gradeLetterMap[newGrade] || "A";
+        const gradeNum = newGrade.match(/\d+/)?.[0] || "10";
 
         setFormData((prev) => ({
             ...prev,
@@ -121,20 +115,13 @@ export default function ClassInfoSection({
 
         const normalizedName = formData.name.trim();
         const normalizedYear = formData.year.trim();
-        const maxStudents = Number(formData.max_students);
 
         if (!normalizedName || !normalizedYear) return;
-        if (!Number.isFinite(maxStudents) || maxStudents < 1 || maxStudents > 100) {
-            window.alert("Sĩ số tối đa phải từ 1 đến 100.");
-            return;
-        }
 
         onSubmit({
             ...formData,
             name: normalizedName,
             year: normalizedYear,
-            max_students: maxStudents,
-            room: formData.room.trim(),
         });
     };
 
@@ -149,7 +136,7 @@ export default function ClassInfoSection({
                     <div className="form-group">
                         <Select
                             label="Khối lớp"
-                            options={gradeOptions}
+                            options={selectGradeOptions.length > 0 ? selectGradeOptions : [{ label: "Khối 10", value: "Khối 10" }]}
                             value={formData.grade}
                             onChange={handleGradeChange}
                             name="grade"
@@ -212,33 +199,6 @@ export default function ClassInfoSection({
                             <span>{formData.teacher}</span>
                             <span className="teacher-chevron">▼</span>
                         </button>
-                    </div>
-
-                    <div className="form-row-2col">
-                        <div className="form-group">
-                            <label htmlFor="max_students">Sĩ số tối đa</label>
-                            <input
-                                id="max_students"
-                                name="max_students"
-                                type="number"
-                                min="1"
-                                max="100"
-                                value={formData.max_students}
-                                onChange={(e) => setFormData((prev) => ({ ...prev, max_students: e.target.value }))}
-                                placeholder="40"
-                            />
-                        </div>
-                        <div className="form-group">
-                            <label htmlFor="room">Phòng học</label>
-                            <input
-                                id="room"
-                                name="room"
-                                type="text"
-                                value={formData.room}
-                                onChange={(e) => setFormData((prev) => ({ ...prev, room: e.target.value }))}
-                                placeholder="A101"
-                            />
-                        </div>
                     </div>
 
                     <div className="class-info-actions">

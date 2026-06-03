@@ -434,6 +434,27 @@
     padding-left: 3.5rem;
 }
 
+.essay-grading-area--auto {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    background: #f0fdf4;
+    border: 1.5px solid #bbf7d0;
+    border-radius: 12px;
+    padding: 1rem 1.25rem;
+    color: #15803d;
+    font-weight: 600;
+    font-size: 0.95rem;
+    margin-top: 1rem;
+}
+
+.essay-grading-area--auto .auto-graded-icon {
+    color: #16a34a;
+    font-size: 1.2rem;
+    flex-shrink: 0;
+}
+
+
 .student-answer-box {
     background: #f8fafc;
     padding: 1.25rem;

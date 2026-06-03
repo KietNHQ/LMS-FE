@@ -73,34 +73,33 @@ export default function WeeklyScheduleSection({
       const monday = getStartOfIsoWeek(new Date());
       monday.setDate(monday.getDate() + weekOffset * 7);
 
-      const baseLessons = getTeacherWeekLessons(monday, selectedClass);
-      
-      if (!apiData || apiData.length === 0) return baseLessons;
-      
+      // If API returns no data, show empty schedule (no mock fallback)
+      if (!apiData || apiData.length === 0) return [];
+
       const dayMapping = {
+        1: "Sunday",
         2: "Monday",
         3: "Tuesday",
         4: "Wednesday",
         5: "Thursday",
         6: "Friday",
-        7: "Saturday",
-        8: "Sunday"
+        7: "Saturday"
       };
 
       // Map API data to UI format
       const apiLessons = apiData.map((item, idx) => {
-        const subjectKey = item.subject_code || "Toan";
+        const subjectKey = item.subject_code || item.subjectCode || "TOAN";
         return {
           id: item.id || idx,
-          day: dayMapping[item.day_of_week] || item.day_of_week,
-          periodStart: item.period_number,
-          periodEnd: item.period_number,
-          subject: item.subject_name || SUBJECT_DISPLAY[subjectKey] || subjectKey,
-          className: item.class_name || "Lớp",
-          room: item.room || "Phòng học",
-          teacher: item.teacher_name || "Giáo viên",
+          day: dayMapping[item.day_of_week] || dayMapping[item.dayOfWeek] || item.dayOfWeek,
+          periodStart: item.period_number || item.period,
+          periodEnd: item.period_number || item.period,
+          subject: item.subject_name || item.subjectName || SUBJECT_DISPLAY[subjectKey] || subjectKey,
+          className: item.class_name || item.className || "Lớp",
+          room: item.room || item.roomName || "Phòng học",
+          teacher: item.teacher_name || item.teacherName || "Giáo viên",
           color: item.color || SUBJECT_COLOR_MAP[subjectKey] || "teal",
-          note: item.notes || "",
+          note: item.note || item.notes || "",
           status: item.status || "normal",
           start_time: item.start_time,
           end_time: item.end_time

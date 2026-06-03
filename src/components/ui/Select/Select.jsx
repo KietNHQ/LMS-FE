@@ -40,17 +40,25 @@ export default function Select({
   const customDropdownRef = useRef(null);
 
   const normalizedOptions = useMemo(() => {
-    return options.map((option) => ({
+    const result = options.map((option) => ({
       value: getOptionValue(option),
       label: getOptionLabel(option),
       disabled: option.disabled || false,
       color: option.color || null,
     }));
-  }, [options]);
+    console.log(`[Select:${label}] options:`, result.length, result.slice(0, 3));
+    return result;
+  }, [options, label]);
 
   const selectedOption = useMemo(() => {
     return normalizedOptions.find((option) => String(option.value) === String(value));
   }, [normalizedOptions, value]);
+
+  const displayLabel = useMemo(() => {
+    if (selectedOption) return selectedOption.label;
+    if (value !== undefined && value !== null && value !== "") return String(value);
+    return null;
+  }, [selectedOption, value]);
 
   const filteredOptions = useMemo(() => {
     if (!searchable) return normalizedOptions;
@@ -133,7 +141,7 @@ export default function Select({
               {selectedOption?.color && (
                 <span className={`event-calendar__legend-color event-calendar__event--${selectedOption.color}`} style={{ width: '12px', height: '12px', borderRadius: '3px', flexShrink: 0 }}></span>
               )}
-              <span>{selectedOption?.label || placeholder || "Chọn"}</span>
+              <span>{displayLabel || placeholder || "Chọn"}</span>
             </div>
             <FiChevronDown className="dropdown-arrow" />
           </button>
@@ -153,12 +161,12 @@ export default function Select({
 
             <div className="custom-dropdown-list">
               {filteredOptions.length ? (
-                filteredOptions.map((option) => {
+                filteredOptions.map((option, index) => {
                   const isActive = String(option.value) === String(value);
 
                   return (
                     <button
-                      key={String(option.value)}
+                      key={`${String(option.value)}-${index}`}
                       type="button"
                       className={`custom-dropdown-item ${isActive ? "active" : ""} ${option.disabled ? "disabled" : ""}`}
                       onClick={() => {

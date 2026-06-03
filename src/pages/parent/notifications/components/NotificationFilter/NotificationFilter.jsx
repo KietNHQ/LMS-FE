@@ -17,9 +17,9 @@ export default function NotificationFilter({
         Tổng
       </button>
 
-      {classList.map((c) => (
+      {classList.map((c, idx) => (
         <button
-          key={c}
+          key={`${c}-${idx}`}
           className={filter === c ? "active" : ""}
           onClick={() => setFilter(c)}
         >

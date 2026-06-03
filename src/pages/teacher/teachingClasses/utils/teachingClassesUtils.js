@@ -115,38 +115,38 @@ export const parseDateKey = (dateKey) => {
 
 export const REVIEW_CONTENT_MAPPING = {
   "Vi phạm: Chuyên cần": [
-    { label: "Nghỉ học không phép (-15đ)", pts: -15 },
-    { label: "Đi học muộn (-5đ)", pts: -5 },
-    { label: "Trốn học, bỏ tiết (-50đ)", pts: -50 },
-    { label: "Bỏ giờ trong tiết (-10đ)", pts: -10 },
+    { label: "Nghỉ học không phép (-15đ)", pts: -15, code: "TRUANCY" },
+    { label: "Đi học muộn (-5đ)", pts: -5, code: "LATE" },
+    { label: "Trốn học, bỏ tiết (-50đ)", pts: -50, code: "SKIP_CLASS" },
+    { label: "Bỏ giờ trong tiết (-10đ)", pts: -10, code: "SKIP_PERIOD" },
   ],
   "Vi phạm: Nề nếp - Tác phong": [
-    { label: "Vi phạm đồng phục/tác phong (-10đ)", pts: -10 },
-    { label: "Mất trật tự trong giờ (-20đ)", pts: -20 },
-    { label: "Nói tục, chửi thề (-15đ)", pts: -15 },
-    { label: "Sử dụng điện thoại trái phép (-5đ)", pts: -5 },
-    { label: "Ăn uống trong giờ (-3đ)", pts: -3 },
-    { label: "Gây gổ, xô đẩy (-25đ)", pts: -25 },
-    { label: "Bắt nạt, xúc phạm (-30đ)", pts: -30 },
+    { label: "Vi phạm đồng phục/tác phong (-10đ)", pts: -10, code: "UNIFORM" },
+    { label: "Mất trật tự trong giờ (-20đ)", pts: -20, code: "DISORDER" },
+    { label: "Nói tục, chửi thề (-15đ)", pts: -15, code: "SWEARING" },
+    { label: "Sử dụng điện thoại trái phép (-5đ)", pts: -5, code: "PHONE" },
+    { label: "Ăn uống trong giờ (-3đ)", pts: -3, code: "EATING" },
+    { label: "Gây gổ, xô đẩy (-25đ)", pts: -25, code: "FIGHTING" },
+    { label: "Bắt nạt, xúc phạm (-30đ)", pts: -30, code: "BULLYING" },
   ],
   "Vi phạm: Tài sản - Môi trường": [
-    { label: "Làm hư hỏng tài sản trường (-20đ)", pts: -20 },
-    { label: "Vẽ bậy, bôi bẩn (-10đ)", pts: -10 },
-    { label: "Vứt rác bừa bãi (-3đ)", pts: -3 },
-    { label: "Không tắt điện/quạt khi ra về (-2đ)", pts: -2 },
+    { label: "Làm hư hỏng tài sản trường (-20đ)", pts: -20, code: "PROPERTY_DAMAGE" },
+    { label: "Vẽ bậy, bôi bẩn (-10đ)", pts: -10, code: "VANDALISM" },
+    { label: "Vứt rác bừa bãi (-3đ)", pts: -3, code: "LITTERING" },
+    { label: "Không tắt điện/quạt khi ra về (-2đ)", pts: -2, code: "NO_ELECTRICITY" },
   ],
   "Vi phạm: Học tập": [
-    { label: "Không làm bài tập (-2đ)", pts: -2 },
-    { label: "Không mang sách vở (-2đ)", pts: -2 },
-    { label: "Gian lận thi cử (-50đ)", pts: -50 },
-    { label: "Không tham gia hoạt động ngoại khóa (-5đ)", pts: -5 },
+    { label: "Không làm bài tập (-2đ)", pts: -2, code: "NO_HOMEWORK" },
+    { label: "Không mang sách vở (-2đ)", pts: -2, code: "NO_MATERIALS" },
+    { label: "Gian lận thi cử (-50đ)", pts: -50, code: "CHEATING" },
+    { label: "Không tham gia hoạt động ngoại khóa (-5đ)", pts: -5, code: "NO_EXTRACURRICULAR" },
   ],
   "Khen thưởng & Tích cực": [
-    { label: "Nhặt được của rơi trả lại (+20đ)", pts: 20 },
-    { label: "Gương mẫu được tuyên dương (+20đ)", pts: 20 },
-    { label: "Giúp đỡ bạn bè được ghi nhận (+10đ)", pts: 10 },
-    { label: "Phát hiện sai phạm, báo cáo (+15đ)", pts: 15 },
-    { label: "Tiến bộ rõ rệt (+20đ)", pts: 20 },
+    { label: "Nhặt được của rơi trả lại (+20đ)", pts: 20, code: "FOUND_LOST" },
+    { label: "Gương mẫu được tuyên dương (+20đ)", pts: 20, code: "ROLE_MODEL" },
+    { label: "Giúp đỡ bạn bè được ghi nhận (+10đ)", pts: 10, code: "HELP_PEERS" },
+    { label: "Phát hiện sai phạm, báo cáo (+15đ)", pts: 15, code: "REPORT_VIOLATION" },
+    { label: "Tiến bộ rõ rệt (+20đ)", pts: 20, code: "IMPROVEMENT" },
   ],
   "Đánh giá thường xuyên (Điểm miệng)": [
     { label: "Điểm ", pts: 0 },
@@ -199,7 +199,10 @@ export const getTermLabel = (term) => (term === "hk1" ? "Học kỳ 1" : "Học 
 
 export const formatDate = (dateString) => {
   if (!dateString) return "";
-  const [year, month, day] = dateString.split("-");
+  const pureDate = dateString.includes("T") ? dateString.split("T")[0] : dateString;
+  const parts = pureDate.split("-");
+  if (parts.length !== 3) return dateString;
+  const [year, month, day] = parts;
   return `${day}/${month}/${year}`;
 };
 

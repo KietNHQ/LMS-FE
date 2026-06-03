@@ -5,67 +5,140 @@ import DisciplineHeaderActions from "../components/DisciplineHeaderActions";
 import { useSchoolYearTerm } from "../../../../hooks/useSchoolYearTerm";
 import { FiAlertTriangle, FiFileText, FiSearch, FiX } from "react-icons/fi";
 import { toast } from "react-toastify";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { vpDisciplineService } from "../../../../services/pages/management/vp-discipline";
 import "./VpDisciplineViolations.css";
 
-const MOCK_VIOLATIONS = [
-  { id: "VR-101", student: "Tran Thi B", className: "11A5", type: "Vang khong phep", severity: "high", status: "new", date: "2026-10-15" },
-  { id: "VR-102", student: "Hoang D", className: "11A5", type: "Di tre", severity: "medium", status: "reviewed", date: "2026-10-14" },
-  { id: "VR-103", student: "Nguyen E", className: "10A3", type: "Noi chuyen trong gio", severity: "low", status: "new", date: "2026-10-15" },
-  { id: "VR-104", student: "Le C", className: "12A2", type: "Vi pham dong phuc", severity: "medium", status: "escalated", date: "2026-10-13" },
-];
+const PAGE_SIZE = 10;
 
-const PAGE_SIZE = 3;
+// Map snake_case BE → camelCase FE
+function mapViolation(v) {
+  return {
+    id: v.id,
+    studentEnrollmentId: v.student_enrollment_id,
+    studentId: v.student_id,
+    studentName: v.student_name || `${v.given_name || ""} ${v.surname || ""}`.trim(),
+    studentCode: v.student_code,
+    className: v.class_name || v.class || "",
+    violationCode: v.violation_code,
+    violationName: v.violation_name,
+    violationCategory: v.violation_category,
+    severity: v.severity || "medium",
+    pointsDeducted: v.points_deducted,
+    date: v.date,
+    status: v.status,
+    notes: v.notes,
+    evidenceUrl: v.evidence_url,
+    evidenceType: v.evidence_type,
+    verifiedBy: v.verified_by,
+    verifiedAt: v.verified_at,
+    createdAt: v.created_at,
+  };
+}
+
+const STATUS_LABELS = {
+  pending: "Chờ duyệt",
+  approved: "Đã duyệt",
+  rejected: "Từ chối",
+};
 
 export default function VpDisciplineViolations() {
   const { selectedSchoolYear, selectedTerm, handleYearArrow, handleTermChange } = useSchoolYearTerm();
   const [searchParams, setSearchParams] = useSearchParams();
-  const [rows, setRows] = useState(MOCK_VIOLATIONS);
+  const queryClient = useQueryClient();
+
   const [statusFilter, setStatusFilter] = useState(() => searchParams.get("status") || "all");
   const [search, setSearch] = useState(() => searchParams.get("q") || "");
-  const [debugState, setDebugState] = useState(() => searchParams.get("debug") || "none");
   const [currentPage, setCurrentPage] = useState(() => Number(searchParams.get("page")) || 1);
 
-  const filteredRows = useMemo(
-    () =>
-      rows.filter((row) => {
-        const matchesStatus = statusFilter === "all" || row.status === statusFilter;
-        const matchesSearch = [row.id, row.student, row.className, row.type].join(" ").toLowerCase().includes(search.toLowerCase());
-        return matchesStatus && matchesSearch;
-      }),
-    [rows, search, statusFilter],
-  );
+  const params = {
+    status: statusFilter !== "all" ? statusFilter : undefined,
+    page: currentPage,
+    limit: PAGE_SIZE,
+    schoolYearId: selectedSchoolYear,
+    semesterId: selectedTerm,
+  };
 
-  const totalPages = Math.max(1, Math.ceil(filteredRows.length / PAGE_SIZE));
+  const { data, isLoading, isError, error } = useQuery({
+    queryKey: ["discipline-violations", params],
+    queryFn: async () => {
+      const res = await vpDisciplineService.callByKey("get_discipline_violations", {
+        params,
+      });
+      return res?.data || [];
+    },
+    select: (data) => {
+      if (Array.isArray(data)) return data.map(mapViolation);
+      if (data?.data) return data.data.map(mapViolation);
+      return [];
+    },
+    staleTime: 30_000,
+  });
+
+  // Approve / Reject mutations
+  const approveMutation = useMutation({
+    mutationFn: (id) =>
+      vpDisciplineService.callByKey("put_discipline_violations_by_id_approve", {
+        pathParams: { id },
+      }),
+    onSuccess: () => {
+      toast.success("Đã phê duyệt vi phạm");
+      queryClient.invalidateQueries({ queryKey: ["discipline-violations"] });
+    },
+    onError: () => toast.error("Không thể phê duyệt"),
+  });
+
+  const rejectMutation = useMutation({
+    mutationFn: (id) =>
+      vpDisciplineService.callByKey("put_discipline_violations_by_id_reject", {
+        pathParams: { id },
+        body: {},
+      }),
+    onSuccess: () => {
+      toast.success("Đã từ chối vi phạm");
+      queryClient.invalidateQueries({ queryKey: ["discipline-violations"] });
+    },
+    onError: () => toast.error("Không thể từ chối"),
+  });
+
+  const filteredRows = useMemo(() => {
+    if (!data) return [];
+    return data.filter((row) => {
+      const q = search.toLowerCase();
+      const matchesSearch =
+        !q ||
+        [row.id, row.studentName, row.className, row.violationName, row.studentCode]
+          .join(" ")
+          .toLowerCase()
+          .includes(q);
+      return matchesSearch;
+    });
+  }, [data, search]);
+
+  const totalCount = data?.length || 0;
+  const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
   const safePage = Math.min(Math.max(1, currentPage), totalPages);
-  const isLoading = debugState === "loading";
-  const loadError = debugState === "error" ? "Khong the tai danh sach vi pham. Hay thu lai." : "";
 
   useEffect(() => {
     setSearchParams(
       {
         status: statusFilter,
         q: search,
-        debug: debugState,
         page: String(safePage),
       },
       { replace: true },
     );
-  }, [debugState, safePage, search, setSearchParams, statusFilter]);
+  }, [safePage, search, setSearchParams, statusFilter]);
 
   const pagedRows = useMemo(() => {
     const start = (safePage - 1) * PAGE_SIZE;
     return filteredRows.slice(start, start + PAGE_SIZE);
   }, [filteredRows, safePage]);
 
-  const updateStatus = (id, status) => {
-    setRows((prev) => prev.map((row) => (row.id === id ? { ...row, status } : row)));
-    toast.success("Da cap nhat ho so vi pham.");
-  };
-
   return (
     <div className="vpd-violations">
       <PageHeader
-        title="Ho so vi pham"
+        title="Hồ sơ vi phạm"
         actions={
           <DisciplineHeaderActions
             selectedSchoolYear={selectedSchoolYear}
@@ -85,7 +158,7 @@ export default function VpDisciplineViolations() {
               setSearch(event.target.value);
               setCurrentPage(1);
             }}
-            placeholder="Tim hoc sinh, lop, ma ho so..."
+            placeholder="Tìm học sinh, lớp, mã hồ sơ..."
           />
         </div>
         <select
@@ -95,20 +168,14 @@ export default function VpDisciplineViolations() {
             setCurrentPage(1);
           }}
         >
-          <option value="all">Tat ca trang thai</option>
-          <option value="new">Moi ghi nhan</option>
-          <option value="reviewed">Da ra soat</option>
-          <option value="escalated">Da nang muc</option>
-        </select>
-
-        <select value={debugState} onChange={(event) => setDebugState(event.target.value)}>
-          <option value="none">Debug: Normal</option>
-          <option value="loading">Debug: Loading</option>
-          <option value="error">Debug: Error</option>
+          <option value="all">Tất cả trạng thái</option>
+          <option value="pending">Chờ duyệt</option>
+          <option value="approved">Đã duyệt</option>
+          <option value="rejected">Từ chối</option>
         </select>
       </div>
 
-      <div className="vpd-violations__chips" aria-label="Bo loc dang ap dung">
+      <div className="vpd-violations__chips" aria-label="Bộ lọc đang áp dụng">
         {statusFilter !== "all" ? (
           <button type="button" className="vpd-violations__chip" onClick={() => setStatusFilter("all")}>
             status: {statusFilter} <FiX />
@@ -119,57 +186,91 @@ export default function VpDisciplineViolations() {
             q: {search} <FiX />
           </button>
         ) : null}
-        {debugState !== "none" ? (
-          <button type="button" className="vpd-violations__chip" onClick={() => setDebugState("none")}>
-            debug: {debugState} <FiX />
-          </button>
-        ) : null}
       </div>
 
       <div className="vpd-violations__table-wrap">
-        {isLoading ? <LoadingSpinner label="Dang tai ho so vi pham..." /> : null}
+        {isLoading ? <LoadingSpinner label="Đang tải hồ sơ vi phạm..." /> : null}
 
-        {!isLoading && loadError ? (
+        {isError ? (
           <div className="vpd-violations__state">
-            <p>{loadError}</p>
-            <button type="button" onClick={() => setSearch("")}>Thu lai</button>
+            <p>{error?.message || "Không thể tải danh sách vi phạm. Hãy thử lại."}</p>
+            <button type="button" onClick={() => queryClient.invalidateQueries({ queryKey: ["discipline-violations"] })}>
+              Thử lại
+            </button>
           </div>
         ) : null}
 
-        {!isLoading && !loadError && filteredRows.length === 0 ? (
-          <EmptyState title="Khong co ho so phu hop" description="Thu dieu chinh bo loc trang thai hoac tim kiem." compact />
+        {!isLoading && !isError && filteredRows.length === 0 ? (
+          <EmptyState title="Không có hồ sơ phù hợp" description="Thử điều chỉnh bộ lọc trạng thái hoặc tìm kiếm." compact />
         ) : null}
 
-        {!isLoading && !loadError && filteredRows.length > 0 ? (
+        {!isLoading && !isError && filteredRows.length > 0 ? (
           <>
             <table className="vpd-violations__table">
               <thead>
                 <tr>
-                  <th>Ma</th>
-                  <th>Hoc sinh</th>
-                  <th>Lop</th>
-                  <th>Loai vi pham</th>
-                  <th>Muc do</th>
-                  <th>Ngay</th>
-                  <th>Trang thai</th>
-                  <th>Action</th>
+                  <th>Mã</th>
+                  <th>Học sinh</th>
+                  <th>Lớp</th>
+                  <th>Loại vi phạm</th>
+                  <th>Điểm trừ</th>
+                  <th>Ngày</th>
+                  <th>Trạng thái</th>
+                  <th>Hành động</th>
                 </tr>
               </thead>
               <tbody>
                 {pagedRows.map((row) => (
                   <tr key={row.id}>
                     <td>{row.id}</td>
-                    <td>{row.student}</td>
+                    <td>
+                      <div className="student-cell">
+                        <span className="student-avatar">{row.studentName?.charAt(0) || "?"}</span>
+                        <div>
+                          <strong>{row.studentName}</strong>
+                          <br />
+                          <small>{row.studentCode}</small>
+                        </div>
+                      </div>
+                    </td>
                     <td>{row.className}</td>
-                    <td>{row.type}</td>
-                    <td><span className={`sev sev--${row.severity}`}>{row.severity}</span></td>
+                    <td>{row.violationName}</td>
+                    <td>
+                      <span className={`points points--${row.pointsDeducted > 5 ? "high" : "low"}`}>
+                        -{row.pointsDeducted}
+                      </span>
+                    </td>
                     <td>{row.date}</td>
-                    <td><span className={`state state--${row.status}`}>{row.status}</span></td>
+                    <td>
+                      <span className={`state state--${row.status}`}>
+                        {STATUS_LABELS[row.status] || row.status}
+                      </span>
+                    </td>
                     <td>
                       <div className="vpd-violations__actions">
-                        <button type="button" onClick={() => toast.info(`Mo ho so ${row.id}`)}><FiFileText /> Xem</button>
-                        <button type="button" onClick={() => updateStatus(row.id, "reviewed")}>Ra soat</button>
-                        <button type="button" onClick={() => updateStatus(row.id, "escalated")}><FiAlertTriangle /> Nang muc</button>
+                        <button type="button" title="Xem chi tiết" onClick={() => toast.info(`Mở hồ sơ ${row.id}`)}>
+                          <FiFileText /> Xem
+                        </button>
+                        {row.status === "pending" && (
+                          <>
+                            <button
+                              type="button"
+                              title="Phê duyệt"
+                              onClick={() => approveMutation.mutate(row.id)}
+                              disabled={approveMutation.isPending}
+                            >
+                              Duyệt
+                            </button>
+                            <button
+                              type="button"
+                              title="Từ chối"
+                              onClick={() => rejectMutation.mutate(row.id)}
+                              disabled={rejectMutation.isPending}
+                            >
+                              <FiAlertTriangle /> Từ chối
+                            </button>
+                          </>
+                        )}
                       </div>
                     </td>
                   </tr>
@@ -186,4 +287,3 @@ export default function VpDisciplineViolations() {
     </div>
   );
 }
-

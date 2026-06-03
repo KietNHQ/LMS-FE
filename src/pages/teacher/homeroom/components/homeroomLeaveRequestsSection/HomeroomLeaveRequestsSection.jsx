@@ -17,7 +17,7 @@ export default function HomeroomLeaveRequestsSection({ classId }) {
             setIsLoading(true);
             const res = await teacherService.getClassLeaveRequests({
                 pathParams: { classId },
-                mock: true // Use stateful mock layer
+                mock: false // Use real API
             });
             if (res.success && res.data) {
                 setRequests(res.data);
@@ -53,19 +53,19 @@ export default function HomeroomLeaveRequestsSection({ classId }) {
             const res = await teacherService.updateLeaveRequestStatus({
                 pathParams: { id },
                 body: {
-                    status: actionType,
-                    feedback: feedback.trim() || (actionType === "approved" ? "Đã đồng ý đơn xin phép." : "Từ chối đơn xin phép.")
+                    action: actionType,
+                    admin_notes: feedback.trim() || (actionType === "approved" ? "Đã đồng ý đơn xin phép." : "Từ chối đơn xin phép.")
                 },
-                mock: true
+                mock: false // Use real API
             });
 
-            if (res.success || res.id) {
+            if (res.success) {
                 toast.success(actionType === "approved" ? "Đã phê duyệt đơn thành công." : "Đã từ chối đơn xin nghỉ học.");
                 setActiveActionId(null);
                 setActionType("");
                 fetchLeaveRequests();
             } else {
-                toast.error(res.message || "Cập nhật đơn xin nghỉ thất bại.");
+                toast.error(res.error || res.message || "Cập nhật đơn xin nghỉ thất bại.");
             }
         } catch (error) {
             console.error("Error updating leave request status:", error);

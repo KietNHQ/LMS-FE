@@ -11,6 +11,7 @@ import {
 import { Modal, Select, Button, Input } from "../../../../components/ui";
 import OperationalAlerts from "./components/OperationalAlerts";
 import { INITIAL_CALENDAR_EVENTS, CALENDAR_EVENT_TYPES } from "../../../../components/common/EventCalendar/eventData";
+import { resolveSemesterId } from "../../../../services/shared/schoolYearLookup";
 import "./VpAcademicDashboard.css";
 
 const LATEST_UPDATES = [
@@ -36,12 +37,22 @@ export default function VpAcademicDashboard() {
         { value: "Thời khóa biểu", label: "Thời khóa biểu" },
     ];
 
-    // 1. Sử dụng TanStack Query để quản lý dữ liệu thống kê học vụ
+    // 1. Resolve semester ID first
+    const { data: resolvedSemesterId } = useQuery({
+        queryKey: ["semester-id", selectedSchoolYear, selectedTerm],
+        queryFn: () => resolveSemesterId(selectedSchoolYear, selectedTerm || "hk1"),
+        enabled: Boolean(selectedSchoolYear),
+        staleTime: 5 * 60 * 1000,
+    });
+
+    // 2. Sử dụng TanStack Query để quản lý dữ liệu thống kê học vụ
     const { data: stats } = useQuery({
-        queryKey: ["academic-stats", selectedSchoolYear, selectedTerm],
-        queryFn: () => vpAcademicService.getAssessmentWorkflowStats(selectedTerm, {
-            params: { schoolYearId: selectedSchoolYear },
-        }),
+        queryKey: ["academic-stats", resolvedSemesterId],
+        queryFn: async () => {
+            if (!resolvedSemesterId) return null;
+            return vpAcademicService.getAssessmentWorkflowStats(resolvedSemesterId);
+        },
+        enabled: Boolean(resolvedSemesterId),
         staleTime: 5 * 60 * 1000,
     });
 

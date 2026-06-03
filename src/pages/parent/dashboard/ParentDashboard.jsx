@@ -60,6 +60,47 @@ export default function ParentDashboard() {
     staleTime: 2 * 60 * 1000,
   });
 
+  // 4. Lấy sự kiện hệ thống cho lịch
+  const { data: systemEventsResponse } = useQuery({
+    queryKey: ["system-events", selectedSchoolYear, selectedTerm],
+    queryFn: () => parentService.getSystemEvents({
+      params: {
+        schoolYearId: selectedSchoolYear,
+        semesterId: selectedTerm,
+      },
+      mock: false
+    }),
+    enabled: !!selectedSchoolYear,
+    staleTime: 10 * 60 * 1000,
+  });
+
+  const calendarEvents = useMemo(() => {
+    if (!systemEventsResponse?.success || !systemEventsResponse?.data) return [];
+    return systemEventsResponse.data.map(event => ({
+      id: event.id,
+      title: event.title,
+      date: event.date,
+      type: event.eventType || event.type || "other",
+    }));
+  }, [systemEventsResponse]);
+
+  // 5. Lấy tổng hợp thanh toán để hiển thị học phí chưa đóng
+  const { data: paymentsResponse } = useQuery({
+    queryKey: ["parent-payments-summary"],
+    queryFn: () => parentService.listPayments({ params: { limit: 100 }, mock: false }),
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const unpaidAmount = useMemo(() => {
+    if (!paymentsResponse?.success || !paymentsResponse?.data?.summary) return 0;
+    return paymentsResponse.data.summary.unpaid || 0;
+  }, [paymentsResponse]);
+
+  const formatCurrency = (amount) => {
+    if (!amount || amount === 0) return "0đ";
+    return new Intl.NumberFormat('vi-VN').format(amount) + 'đ';
+  };
+
   const unreadCount = useMemo(() => {
     if (!notificationsResponse?.success || !notificationsResponse?.data) return 0;
     return notificationsResponse.data.filter(n => n.unread).length;
@@ -113,7 +154,7 @@ export default function ParentDashboard() {
       ) : (
         <>
           <PaymentSummary selectedChild={selectedChild} yearAvg={yearAvg} />
-          <OverviewCards yearAvg={yearAvg} hk1Avg={hk1Avg} unreadCount={unreadCount} />
+          <OverviewCards yearAvg={yearAvg} hk1Avg={hk1Avg} unreadCount={unreadCount} unpaidAmount={formatCurrency(unpaidAmount)} />
           <div className="parent-dashboard-grid-top">
             <div className="parent-dashboard-calendar-card">
               <EventCalendar
@@ -122,7 +163,7 @@ export default function ParentDashboard() {
                 userRole="parent"
                 isCompact={true}
                 eventTypes={CALENDAR_EVENT_TYPES}
-                initialEvents={[]}
+                initialEvents={calendarEvents}
                 selectedSchoolYear={selectedSchoolYear}
                 selectedTerm={selectedTerm}
                 rolePolicy={{

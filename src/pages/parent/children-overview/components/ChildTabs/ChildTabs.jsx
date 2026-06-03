@@ -6,7 +6,8 @@ const tabs = [
     { key: "attendance", label: "Điểm danh" },
     { key: "calendar", label: "Lịch học & Sự kiện" },
     { key: "grades", label: "Điểm số" },
-    { key: "leave", label: "Đơn xin phép nghỉ" }
+    { key: "leave", label: "Đơn xin phép nghỉ" },
+    { key: "conduct", label: "Hạnh kiểm" }
 ]
 
 export default function ChildTabs({ activeTab, onChange }) {

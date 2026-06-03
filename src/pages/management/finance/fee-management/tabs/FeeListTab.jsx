@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from "react";
-import { FiDollarSign, FiSearch, FiFileText, FiX, FiCheckCircle } from "react-icons/fi";
+import { FiDollarSign, FiSearch, FiFileText, FiX, FiCheckCircle, FiSend, FiPrinter } from "react-icons/fi";
 import { toast } from "react-toastify";
 import { Pagination } from "../../../../../components/common";
 import Select from "../../../../../components/ui/Select/Select";
@@ -47,19 +47,33 @@ export default function FeeListTab({ schoolYear, term }) {
     const [paymentMethod, setPaymentMethod] = useState("cash");
     const [issueEInvoice, setIssueEInvoice] = useState(true);
     const [transactionNote, setTransactionNote] = useState("");
+    const [invoiceModal, setInvoiceModal] = useState(null);
+    const [invoiceLoading, setInvoiceLoading] = useState(false);
+    const [invoiceLoading2, setInvoiceLoading2] = useState(false);
 
     // Load initial student profiles and class catalogs
     const loadInitialData = async () => {
         setIsLoading(true);
         try {
-            const [studentRows, classRows] = await Promise.all([
-                studentsService.listStudents(),
+            const [studentRes, classRes] = await Promise.all([
+                studentsService.listStudents({ params: { limit: 2000 } }),
                 classesService.listClasses()
             ]);
-            setAllStudentsList(studentRows);
-            setClasses(classRows);
+            
+            const studentData = studentRes?.success ? studentRes.data : (Array.isArray(studentRes) ? studentRes : []);
+            const classData = classRes?.success ? classRes.data : (Array.isArray(classRes) ? classRes : []);
+            
+            console.log("[FeeListTab] Students loaded:", studentData.length);
+            console.log("[FeeListTab] Classes loaded:", classData.length);
+            console.log("[FeeListTab] Sample student:", studentData[0]);
+            console.log("[FeeListTab] Sample class:", classData[0]);
+            
+            setAllStudentsList(studentData);
+            setClasses(classData);
         } catch (err) {
             console.error("Failed to load initial data for school fees:", err);
+            setAllStudentsList([]);
+            setClasses([]);
         } finally {
             setIsLoading(false);
         }
@@ -67,21 +81,28 @@ export default function FeeListTab({ schoolYear, term }) {
 
     // Load debt accounts whenever context changes
     const loadDebts = async () => {
-        if (!schoolYear) return;
         setIsLoading(true);
         try {
             const res = await financeService.listDebts({
                 params: {
-                    schoolYearId: schoolYear,
-                    semesterId: term,
-                    limit: 2000 // Get a rich collection for lightning fast client filtering
+                    limit: 2000
                 }
             });
-            if (res && res.data) {
+            console.log("[FeeListTab] Debts API response:", res);
+            
+            if (res?.success && res.data) {
                 setDebts(res.data);
+                console.log("[FeeListTab] Debts loaded:", res.data.length);
+            } else if (Array.isArray(res)) {
+                setDebts(res);
+                console.log("[FeeListTab] Debts loaded (array):", res.length);
+            } else {
+                console.log("[FeeListTab] No debts data found");
+                setDebts([]);
             }
         } catch (err) {
             console.error("Failed to load student debts:", err);
+            setDebts([]);
         } finally {
             setIsLoading(false);
         }
@@ -93,7 +114,7 @@ export default function FeeListTab({ schoolYear, term }) {
 
     useEffect(() => {
         loadDebts();
-    }, [schoolYear, term, filterStatus, selectedClass, filterScope]);
+    }, [schoolYear, term]);
 
     // Build Sequential Class Options matching chosen Grade Level
     const classOptions = useMemo(() => {
@@ -105,31 +126,64 @@ export default function FeeListTab({ schoolYear, term }) {
 
     // Parse backend debt items to UI friendly formats
     const parsedStudents = useMemo(() => {
+        if (!debts.length || !allStudentsList.length) {
+            // If no students list, just use debt data directly
+            if (!allStudentsList.length && debts.length) {
+                console.log("[FeeListTab] No students list, mapping debts directly:", debts.slice(0, 3));
+                return debts.map((d, idx) => ({
+                    id: d.id,
+                    studentCode: d.student_code || d.studentCode || `HS${d.student_id || idx + 1}`,
+                    studentId: d.student_id || d.studentId || idx + 1,
+                    name: d.student_name || d.studentName || d.student?.fullName || "Học sinh",
+                    class: d.className || d.class?.name || "Chưa phân lớp",
+                    grade: "10",
+                    amount: new Intl.NumberFormat('vi-VN').format(d.amount || 0),
+                    reqAmount: (d.amount || 0) - (d.paid_amount ?? d.paidAmount ?? 0),
+                    originalAmount: d.amount || 0,
+                    paidAmount: d.paid_amount ?? d.paidAmount ?? 0,
+                    status: d.status || "unpaid"
+                }));
+            }
+            return [];
+        }
+
         const studentMap = {};
         allStudentsList.forEach(s => {
-            studentMap[s.id] = s;
-            if (s.studentTableId) {
-                studentMap[s.studentTableId] = s;
-            }
+            const sid = s.id || s.studentId || s.student_id || s.userId;
+            const tableId = s.studentTableId || s.student_table_id || s.studentTable?.id;
+            
+            studentMap[sid] = s;
+            if (tableId) studentMap[tableId] = s;
+            
+            const code = s.studentCode || s.student_code || s.code;
+            if (code) studentMap[code] = s;
         });
 
         return debts.map(d => {
-            const studentProfile = studentMap[d.student_id];
-            const className = studentProfile?.className || "10A1";
+            // Support multiple field name formats from debt API
+            const sid = d.student_id || d.studentId || d.student?.id;
+            const studentCode = d.student_code || d.studentCode || d.student?.studentCode || d.student?.code || "";
+            const studentName = d.student_name || d.studentName || d.student?.fullName || d.student?.name || "Học sinh";
+            const paidAmount = d.paid_amount ?? d.paidAmount ?? 0;
+            const debtAmount = d.amount ?? d.totalAmount ?? 0;
+            const debtStatus = d.status || "unpaid";
+            
+            const studentProfile = studentMap[sid] || studentMap[studentCode];
+            const className = studentProfile?.className || studentProfile?.class_name || d.className || d.class?.name || "Chưa phân lớp";
             const grade = className.match(/\d+/) ? className.match(/\d+/)[0] : "10";
 
             return {
-                id: d.id, // database integer ID of student debt
-                studentCode: d.student_code || studentProfile?.studentCode || "",
-                studentId: d.student_id,
-                name: d.student_name || studentProfile?.name || "Học sinh",
+                id: d.id,
+                studentCode: studentCode,
+                studentId: sid,
+                name: studentName,
                 class: className,
                 grade: grade,
-                amount: new Intl.NumberFormat('vi-VN').format(d.amount),
-                reqAmount: d.amount - d.paid_amount,
-                originalAmount: d.amount,
-                paidAmount: d.paid_amount,
-                status: d.status
+                amount: new Intl.NumberFormat('vi-VN').format(debtAmount),
+                reqAmount: debtAmount - paidAmount,
+                originalAmount: debtAmount,
+                paidAmount: paidAmount,
+                status: debtStatus
             };
         });
     }, [debts, allStudentsList]);
@@ -137,7 +191,18 @@ export default function FeeListTab({ schoolYear, term }) {
     // Apply filters matching search query, scope, and status
     const filteredStudents = useMemo(() => {
         return parsedStudents.filter(s => {
-            const matchesStatus = filterStatus === "all" || s.status === filterStatus;
+            // More flexible status matching
+            let matchesStatus = true;
+            if (filterStatus !== "all") {
+                const statusLower = (s.status || "").toLowerCase();
+                if (filterStatus === "unpaid") {
+                    matchesStatus = statusLower === "unpaid" || statusLower === "pending" || statusLower === "open" || !statusLower;
+                } else if (filterStatus === "paid") {
+                    matchesStatus = statusLower === "paid" || statusLower === "completed";
+                } else if (filterStatus === "overdue") {
+                    matchesStatus = statusLower === "overdue" || statusLower === "expired";
+                }
+            }
             
             let matchesScope = true;
             if (filterScope === "grade") {
@@ -188,22 +253,69 @@ export default function FeeListTab({ schoolYear, term }) {
     };
 
     const handleConfirmPayment = async () => {
+        const paidAmount = typeof amountPaid === 'number' ? amountPaid : parseInt(amountPaid.toString().replace(/,/g, '')) || 0;
+        if (paidAmount <= 0) {
+            toast.error("Số tiền thanh toán phải lớn hơn 0");
+            return;
+        }
         if (isUnderpaid) {
             toast.error("Số tiền thu chưa đủ, vui lòng kiểm tra lại.");
             return;
         }
 
         try {
-            await financeService.recordDebtPayment(modalData.id, { amount: amountPaid });
-            toast.success(`Đã xác nhận thu học phí thành công cho ${modalData.name}`);
-            setModalData(null);
-            loadDebts();
+            const res = await financeService.recordDebtPayment(modalData.id, {
+                amount: paidAmount,
+                paymentMethod,
+            });
+            if (res?.success) {
+                toast.success(`Đã xác nhận thu học phí thành công cho ${modalData.name}`);
+                setModalData(null);
+                loadDebts();
+            } else {
+                toast.error(res?.error?.message || "Có lỗi khi ghi nhận thanh toán.");
+            }
         } catch (err) {
-            toast.error("Không thể ghi nhận thanh toán: " + (err.response?.data?.error || err.message));
+            const msg = err?.response?.data?.error || err?.response?.data?.message || err?.message || "Không rõ lỗi";
+            toast.error("Không thể ghi nhận thanh toán: " + msg);
         }
     };
 
     const formatMoney = (val) => new Intl.NumberFormat('vi-VN').format(val);
+
+    const handleSignInvoice = async (student) => {
+        setInvoiceLoading(true);
+        try {
+            const res = await financeService.signInvoice(student.id);
+            if (res?.success) {
+                toast.success(`Đã ký hóa đơn cho ${student.name}.`);
+                setInvoiceModal(student);
+                loadDebts();
+            } else {
+                toast.error(res?.error?.message || "Có lỗi khi ký hóa đơn.");
+            }
+        } catch (err) {
+            toast.error("Có lỗi khi ký hóa đơn.");
+        } finally {
+            setInvoiceLoading(false);
+        }
+    };
+
+    const handleSendInvoice = async (student) => {
+        setInvoiceLoading2(true);
+        try {
+            const res = await financeService.sendInvoice(student.id, { body: {} });
+            if (res?.success) {
+                toast.success(`Đã gửi hóa đơn cho ${student.name}.`);
+            } else {
+                toast.error(res?.error?.message || "Có lỗi khi gửi hóa đơn.");
+            }
+        } catch (err) {
+            toast.error("Có lỗi khi gửi hóa đơn.");
+        } finally {
+            setInvoiceLoading2(false);
+        }
+    };
 
     return (
         <div className="fee-panel">
@@ -312,14 +424,32 @@ export default function FeeListTab({ schoolYear, term }) {
                                 </td>
                                 <td>
                                     {s.status === 'paid' ? (
-                                        <button
-                                            className="fee-action-btn invoice"
-                                            onClick={() => toast.info("Đang tải hóa đơn PDF...")}
-                                            title="Xem hóa đơn"
-                                            aria-label={`Xem hóa đơn của ${s.name}`}
-                                        >
-                                            <FiFileText />
-                                        </button>
+                                        <div style={{ display: 'flex', gap: '0.25rem' }}>
+                                            <button
+                                                className="fee-action-btn invoice"
+                                                onClick={() => setInvoiceModal(s)}
+                                                title="Xem hóa đơn"
+                                                aria-label={`Xem hóa đơn của ${s.name}`}
+                                            >
+                                                <FiFileText />
+                                            </button>
+                                            <button
+                                                className="fee-action-btn invoice"
+                                                onClick={() => handleSignInvoice(s)}
+                                                title="Ký hóa đơn"
+                                                aria-label={`Ký hóa đơn của ${s.name}`}
+                                            >
+                                                <FiCheckCircle />
+                                            </button>
+                                            <button
+                                                className="fee-action-btn invoice"
+                                                onClick={() => handleSendInvoice(s)}
+                                                title="Gửi hóa đơn"
+                                                aria-label={`Gửi hóa đơn cho ${s.name}`}
+                                            >
+                                                <FiSend />
+                                            </button>
+                                        </div>
                                     ) : (
                                         <button
                                             className="fee-action-btn collect"
@@ -443,6 +573,47 @@ export default function FeeListTab({ schoolYear, term }) {
                             <button className="btn-primary" onClick={handleConfirmPayment} disabled={isUnderpaid}>
                                 <FiCheckCircle /> Xác nhận thu tiền
                             </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Invoice Modal */}
+            {invoiceModal && (
+                <div className="fee-modal-overlay">
+                    <div className="fee-modal">
+                        <div className="fee-modal-header">
+                            <div>
+                                <h3>Hóa đơn điện tử</h3>
+                                <p className="fm-modal-subtitle">{invoiceModal.name} — {invoiceModal.studentCode || invoiceModal.id}</p>
+                            </div>
+                            <button className="btn-close-modal" onClick={() => setInvoiceModal(null)}>
+                                <FiX />
+                            </button>
+                        </div>
+                        <div className="fee-modal-body">
+                            <div style={{ textAlign: "center", padding: "1.5rem 0" }}>
+                                <FiFileText style={{ fontSize: "3rem", color: "#2563eb", marginBottom: "0.5rem" }} />
+                                <h4 style={{ margin: "0.5rem 0" }}>Hóa đơn điện tử</h4>
+                                <p style={{ color: "#64748b", fontSize: "0.85rem" }}>
+                                    Học sinh: <strong>{invoiceModal.name}</strong> — Lớp {invoiceModal.class}
+                                </p>
+                                <p style={{ color: "#64748b", fontSize: "0.85rem" }}>
+                                    Số tiền đã thanh toán: <strong style={{ color: "#16a34a" }}>{formatMoney(invoiceModal.paidAmount)} đ</strong>
+                                </p>
+                            </div>
+                            <div style={{ display: "flex", gap: "0.75rem", justifyContent: "center", marginTop: "1rem" }}>
+                                <button className="btn-secondary" onClick={() => setInvoiceModal(null)}>Đóng</button>
+                                <button
+                                    className="btn-primary"
+                                    onClick={() => {
+                                        window.print();
+                                    }}
+                                    disabled={invoiceLoading}
+                                >
+                                    <FiPrinter /> In hóa đơn
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>

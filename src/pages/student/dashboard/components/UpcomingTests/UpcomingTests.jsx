@@ -5,9 +5,9 @@ export default function UpcomingTests({ quizzes, onOpenQuiz }) {
 
             <div className="student-quiz-scroll-area">
                 <div className="student-quiz-list">
-                    {quizzes.map((quiz) => (
+                    {quizzes.map((quiz, index) => (
                         <button
-                            key={quiz.title}
+                            key={quiz.id || `${quiz.title}-${index}`}
                             className="student-quiz-item"
                             type="button"
                             onClick={onOpenQuiz}

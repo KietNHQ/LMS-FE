@@ -35,24 +35,29 @@ export default function ManagementClasses() {
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedGrade, setSelectedGrade] = useState(initialGrade);
   const [searchKeyword, setSearchKeyword] = useState(initialClassKeyword);
+  const [gradeFilters, setGradeFilters] = useState([{ value: "all", label: "Tất cả", id: null }]);
 
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [selectedClass, setSelectedClass] = useState(null);
 
-  const gradeFilters = [
-    { value: "all", label: "Tất cả" },
-    { value: "10", label: "Khối 10" },
-    { value: "11", label: "Khối 11" },
-    { value: "12", label: "Khối 12" },
-  ];
+  useEffect(() => {
+    classesService.getGradeLevelFilterOptions().then((options) => {
+      if (options.length > 0) setGradeFilters(options);
+    });
+  }, []);
 
   const loadClasses = useCallback(async () => {
     setIsLoading(true);
     setLoadError("");
 
     try {
-      const rows = await classesService.listClasses();
+      const gradeFilter = gradeFilters.find((f) => f.value === selectedGrade);
+      const rows = await classesService.listClasses({
+        schoolYearName: selectedSchoolYear,
+        gradeLevelId: gradeFilter?.id ?? undefined,
+        search: searchKeyword.trim() || undefined,
+      });
       setClasses(rows);
     } catch (error) {
       setClasses([]);
@@ -60,7 +65,7 @@ export default function ManagementClasses() {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [selectedSchoolYear, selectedGrade, searchKeyword, gradeFilters]);
 
   useEffect(() => {
     loadClasses();
@@ -68,30 +73,7 @@ export default function ManagementClasses() {
 
   const totalClasses = useMemo(() => classes.length, [classes]);
 
-  const filteredClasses = useMemo(() => {
-    const keyword = searchKeyword.trim().toLowerCase();
-
-    return classes.filter((item) => {
-      const yearMatch = item.year === selectedSchoolYear || !item.year;
-      if (!yearMatch) {
-        return false;
-      }
-
-      const gradeMatch = selectedGrade === "all" || item.grade === `Khối ${selectedGrade}`;
-      if (!gradeMatch) {
-        return false;
-      }
-
-      if (!keyword) {
-        return true;
-      }
-
-      return [item.name, item.grade, item.teacher, item.year]
-        .join(" ")
-        .toLowerCase()
-        .includes(keyword);
-    });
-  }, [classes, searchKeyword, selectedGrade, selectedSchoolYear]);
+  const filteredClasses = useMemo(() => classes, [classes]);
 
   const totalPages = useMemo(
     () => Math.max(1, Math.ceil(filteredClasses.length / ITEMS_PER_PAGE)),
@@ -271,6 +253,8 @@ export default function ManagementClasses() {
       {isCreateOpen && (
         <ClassInfoSection
           mode="create"
+          gradeOptions={gradeFilters.filter((f) => f.value !== "all")}
+          defaultSchoolYear={selectedSchoolYear}
           onClose={handleCloseCreate}
           onSubmit={handleCreateClass}
         />
@@ -279,6 +263,8 @@ export default function ManagementClasses() {
       {isEditOpen && selectedClass && (
         <ClassInfoSection
           mode="edit"
+          gradeOptions={gradeFilters.filter((f) => f.value !== "all")}
+          defaultSchoolYear={selectedSchoolYear}
           initialData={selectedClass}
           onClose={handleCloseEdit}
           onSubmit={handleUpdateClass}

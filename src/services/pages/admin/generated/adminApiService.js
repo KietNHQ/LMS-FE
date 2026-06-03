@@ -48,7 +48,7 @@ const createMockResponse = (endpoint, input) => ({
 
 const createEndpointCaller = (endpoint) => {
   return async (input = {}) => {
-    const shouldMock = input.mock !== false;
+    const shouldMock = input.mock === true; // Only mock when explicitly requested
     if (shouldMock) {
       await wait(input.delayMs ?? DEFAULT_DELAY_MS);
       return createMockResponse(endpoint, input);

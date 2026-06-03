@@ -1,13 +1,55 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { PageHeader, WeekPicker, EventCalendar } from "../../../../components/common";
 import DisciplineHeaderActions from "../components/DisciplineHeaderActions";
 import Select from "../../../../components/ui/Select/Select";
 import { useSchoolYearTerm } from "../../../../hooks/useSchoolYearTerm";
+import { resolveSemesterId } from "../../../../services/shared/schoolYearLookup";
 import { vpDisciplineService } from "../../../../services/pages/management/vp-discipline";
+import { disciplineService } from "../../../../services/pages/management/discipline/disciplineService";
+import axiosClient from "../../../../services/shared/http/axiosClient";
 import { FiAlertTriangle, FiUsers, FiClock, FiAward, FiBarChart2, FiArrowRight } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import { INITIAL_CALENDAR_EVENTS, CALENDAR_EVENT_TYPES } from "../../../../components/common/EventCalendar/eventData";
 import "./VpDisciplineDashboard.css";
+
+const STATUS_LABELS = { open: "Mở", in_progress: "Đang xử lý", resolved: "Đã giải quyết", closed: "Đóng" };
+const INCIDENT_STATUS_LABELS = { open: "Khẩn cấp", in_progress: "Giao việc", resolved: "Đã xử lý", closed: "Đã đóng" };
+
+// Tính ngày bắt đầu/kết thúc của 1 tuần trong năm học
+const getWeekDateRange = (weekNumber, schoolYear) => {
+    if (!schoolYear) return null;
+    const [startYear] = schoolYear.split("-").map(Number);
+    // Năm học bắt đầu tháng 9
+    const yearStart = new Date(startYear, 8, 1); // Sept 1
+    // Tính ngày bắt đầu tuần (Thứ 2)
+    const daysOffset = (weekNumber - 1) * 7;
+    const weekStart = new Date(yearStart);
+    weekStart.setDate(weekStart.getDate() + daysOffset);
+    // Ngày kết thúc tuần (CN)
+    const weekEnd = new Date(weekStart);
+    weekEnd.setDate(weekEnd.getDate() + 6);
+    return {
+        startDate: weekStart.toISOString().split("T")[0],
+        endDate: weekEnd.toISOString().split("T")[0],
+    };
+};
+
+// Chuyển đổi violations thành calendar events
+const violationsToCalendarEvents = (violations) => {
+    if (!Array.isArray(violations)) return [];
+    return violations.map((v, idx) => ({
+        startDay: new Date(v.violation_date || v.date || Date.now()).getDate(),
+        endDay: new Date(v.violation_date || v.date || Date.now()).getDate(),
+        title: v.student_name || v.studentName || `VP #${v.id}`,
+        content: v.violation_type_name || v.violationTypeName || v.description || "",
+        color: v.severity === "high" ? "red" : v.severity === "medium" ? "orange" : "yellow",
+        target: "all",
+        type: "violation",
+        violationId: v.id,
+        studentId: v.student_id || v.studentId,
+    }));
+};
 
 export default function VpDisciplineDashboard() {
     const { selectedSchoolYear, selectedTerm, handleYearArrow, handleTermChange } = useSchoolYearTerm();
@@ -16,35 +58,135 @@ export default function VpDisciplineDashboard() {
     const [leaderboardGrade, setLeaderboardGrade] = useState("all");
     const [conductGrade, setConductGrade] = useState("all");
 
-    // Mock Business Data
-    const [stats, setStats] = useState({
-        violationsToday: 18,
-        studentsInvolved: 22,
-        attendanceRate: 98.5,
-        topRank: "12A1"
+    // Resolve semesterId from selectedSchoolYear and selectedTerm
+    const { data: resolvedSemesterId } = useQuery({
+        queryKey: ["semester-id", selectedSchoolYear, selectedTerm],
+        queryFn: () => resolveSemesterId(selectedSchoolYear, selectedTerm || "hk1"),
+        enabled: Boolean(selectedSchoolYear),
+        staleTime: 5 * 60 * 1000,
     });
+
+    // Tính date range của tuần được chọn
+    const weekDateRange = useMemo(() => {
+        return getWeekDateRange(selectedWeek, selectedSchoolYear);
+    }, [selectedWeek, selectedSchoolYear]);
+
+    // Fetch violations cho tuần được chọn
+    const { data: weekViolations = [] } = useQuery({
+        queryKey: ["discipline-violations-week", resolvedSemesterId, weekDateRange],
+        queryFn: async () => {
+            if (!resolvedSemesterId || !weekDateRange) return [];
+            try {
+                const res = await axiosClient.get("/discipline/violations", {
+                    params: {
+                        semesterId: resolvedSemesterId,
+                        startDate: weekDateRange.startDate,
+                        endDate: weekDateRange.endDate,
+                    },
+                });
+                const data = res?.data?.data || res?.data || [];
+                return Array.isArray(data) ? data : [];
+            } catch { return []; }
+        },
+        enabled: Boolean(resolvedSemesterId && weekDateRange),
+        staleTime: 30_000,
+    });
+
+    // Chuyển violations thành calendar events cho tuần
+    const violationEvents = useMemo(() => {
+        return violationsToCalendarEvents(weekViolations);
+    }, [weekViolations]);
+
+    // Fetch violations trend cho biểu đồ
+    const { data: trendRaw = [] } = useQuery({
+        queryKey: ["discipline-dashboard-trend", resolvedSemesterId],
+        queryFn: async () => {
+            if (!resolvedSemesterId) return [];
+            try {
+                const res = await vpDisciplineService.getViolationsTrend({ params: { semesterId: resolvedSemesterId } });
+                return res?.data || res || [];
+            } catch { return []; }
+        },
+        enabled: Boolean(resolvedSemesterId),
+        staleTime: 60_000,
+    });
+
+    // Gộp violation events vào calendar
+    const calendarEvents = useMemo(() => {
+        return [...INITIAL_CALENDAR_EVENTS, ...violationEvents];
+    }, [violationEvents]);
+
+    // Fetch grade levels from API
+    const { data: gradeLevelsData = [] } = useQuery({
+        queryKey: ["grade-levels-dashboard"],
+        queryFn: async () => {
+            const res = await vpDisciplineService.getGradeLevels();
+            return res?.data || [];
+        },
+        staleTime: 10 * 60_000,
+    });
+
+    // Build grade options from API
+    const gradeOptions = useMemo(() => {
+        const defaultOption = [{ value: "all", label: "Tất cả khối" }];
+        if (!gradeLevelsData.length) {
+            return [
+                { value: "all", label: "Tất cả khối" },
+                { value: "10", label: "Khối 10" },
+                { value: "11", label: "Khối 11" },
+                { value: "12", label: "Khối 12" },
+            ];
+        }
+        const apiOptions = gradeLevelsData
+            .map(gl => ({
+                value: String(gl.level_number || gl.levelNumber || gl.id),
+                label: gl.name || `Khối ${gl.level_number || gl.levelNumber}`,
+            }))
+            .sort((a, b) => parseInt(a.value) - parseInt(b.value));
+        return [...defaultOption, ...apiOptions];
+    }, [gradeLevelsData]);
+
+    // ── Dashboard state (populated from real API) ──
+    const [stats, setStats] = useState({
+        violationsToday: 0,
+        studentsInvolved: 0,
+        attendanceRate: 0,
+        topRank: "—",
+    });
+    const [alerts, setAlerts] = useState([]);
+    const [incidents, setIncidents] = useState([]);
+    const [fullLeaderboard, setFullLeaderboard] = useState([]);
 
     useEffect(() => {
         let isMounted = true;
 
         const loadDashboardData = async () => {
             try {
-                const [summaryResult, rankingResult] = await Promise.allSettled([
-                    vpDisciplineService.getReportSummary(selectedTerm, {
+                const semesterId = await resolveSemesterId(selectedSchoolYear, selectedTerm);
+                if (!semesterId || !isMounted) return;
+
+                const [summaryResult, rankingsResult, escalationsResult] = await Promise.allSettled([
+                    vpDisciplineService.getReportSummary(semesterId, {
                         params: { schoolYearId: selectedSchoolYear },
                     }),
                     vpDisciplineService.getClassRankings({
-                        params: { schoolYearId: selectedSchoolYear, semesterId: selectedTerm },
+                        params: { schoolYearId: selectedSchoolYear, semesterId },
+                    }),
+                    vpDisciplineService.callByKey("get_discipline_escalations_stats_by_semesterid", {
+                        pathParams: { semesterId },
                     }),
                 ]);
 
                 if (!isMounted) return;
 
                 const summary = summaryResult.status === "fulfilled" ? (summaryResult.value || {}) : {};
-                const rankings = rankingResult.status === "fulfilled" ? (rankingResult.value || []) : [];
-                const topRank = Array.isArray(rankings) && rankings.length > 0
-                    ? (rankings[0]?.label || rankings[0]?.className || rankings[0]?.name || "12A1")
-                    : "12A1";
+                const rankings = rankingsResult.status === "fulfilled" ? (rankingsResult.value || []) : [];
+                const escalations = escalationsResult.status === "fulfilled" ? (escalationsResult.value || []) : [];
+
+                const topRank =
+                    Array.isArray(rankings) && rankings.length > 0
+                        ? rankings[0]?.label || rankings[0]?.className || rankings[0]?.name || "—"
+                        : "—";
 
                 setStats((prev) => ({
                     ...prev,
@@ -53,49 +195,136 @@ export default function VpDisciplineDashboard() {
                     attendanceRate: Number(summary.attendanceRate ?? prev.attendanceRate) || prev.attendanceRate,
                     topRank,
                 }));
-            } catch (_) {}
+
+                const sortedEscalations = [...(Array.isArray(escalations) ? escalations : [])].sort(
+                    (a, b) => {
+                        const pOrder = { high: 0, medium: 1, low: 2 };
+                        return (pOrder[a.priority] ?? 3) - (pOrder[b.priority] ?? 3);
+                    }
+                );
+                setAlerts(
+                    sortedEscalations.slice(0, 5).map((e, idx) => ({
+                        id: e.id ?? idx,
+                        title: e.title || e.incident_title || `Sự vụ #${e.id}`,
+                        desc: e.description || e.incident_description || "",
+                        path: `/vp-discipline/discipline-management?incident=${e.id}`,
+                    }))
+                );
+                setIncidents(
+                    sortedEscalations.slice(0, 3).map((e) => ({
+                        id: e.id,
+                        title: e.title || e.incident_title || "Sự vụ",
+                        subtitle: e.due_date ? `Hạn: ${e.due_date}` : "",
+                        status: INCIDENT_STATUS_LABELS[e.status] || e.status || "Mở",
+                        priority: e.priority,
+                    }))
+                );
+                setFullLeaderboard(
+                    rankings.map((r, idx) => ({
+                        id: r.id ?? idx,
+                        grade: r.grade ?? 0,
+                        name: r.label || r.className || r.name || "—",
+                        score: r.score ?? r.discipline_score ?? 0,
+                        rank: idx + 1,
+                    }))
+                );
+            } catch {
+                // silent — stats remain at zero
+            }
         };
 
-        loadDashboardData();
+        if (selectedSchoolYear && selectedTerm) {
+            loadDashboardData();
+        }
         return () => { isMounted = false; };
     }, [selectedSchoolYear, selectedTerm]);
-
-    const alerts = [
-        { id: 1, title: "Lớp vi phạm nhiều nhất tuần này: 10A3", desc: "Tổng cộng 15 vi phạm. Tăng 50% so với tuần trước. Chủ yếu là đi học trễ.", path: "/vp-discipline/discipline-management?class=10A3" },
-        { id: 2, title: "Lớp có dấu hiệu tụt dốc trong ngày: 11A1", desc: "Hôm nay vắng 4 học sinh không phép và 2 trường hợp vi phạm tác phong.", path: "/vp-discipline/attendance" },
-        { id: 3, title: "Các học sinh vi phạm nhiều nhất trong tháng", desc: "Nguyễn Văn A (12A2), Lê Thị B (10A1)... Cần mời phụ huynh làm việc.", path: "/vp-discipline/discipline-management?filter=serious" },
-    ];
-
-
-
-    const incidents = [
-        { id: 1, title: "Xô xát tại sân trường", subtitle: "Cần xử lý trước 16/10", status: "Khẩn cấp" },
-        { id: 2, title: "Tái phạm đi trễ 3 lần", subtitle: "Gửi hồ sơ GVCN", status: "Giao việc" },
-        { id: 3, title: "Mất trật tự trong giờ học", subtitle: "Hòa giải trực tiếp", status: "Đã xử lý" },
-    ].slice(0, 3);
-
-    const fullLeaderboard = [
-        { id: 1, grade: 12, name: "Lớp 12A1", score: 98.5, rank: 1 },
-        { id: 2, grade: 10, name: "Lớp 10A1", score: 96.0, rank: 2 },
-        { id: 3, grade: 11, name: "Lớp 11A2", score: 92.5, rank: 3 },
-        { id: 4, grade: 12, name: "Lớp 12A5", score: 91.0, rank: 4 },
-        { id: 5, grade: 10, name: "Lớp 10B2", score: 89.5, rank: 5 },
-        { id: 6, grade: 11, name: "Lớp 11C1", score: 88.0, rank: 6 },
-    ];
 
     const filteredLeaderboard = (leaderboardGrade === "all" 
         ? fullLeaderboard 
         : fullLeaderboard.filter(l => l.grade === parseInt(leaderboardGrade))
     ).slice(0, 3);
 
-    const chartData = [
-        { day: 'T2', value: 12, h: '40%' },
-        { day: 'T3', value: 8, h: '30%' },
-        { day: 'T4', value: 18, h: '60%' },
-        { day: 'T5', value: 25, h: '90%' },
-        { day: 'T6', value: 10, h: '35%' },
-        { day: 'T7', value: 5, h: '15%' },
-    ];
+    // chartData uses trendRaw from line 101
+
+    const chartData = useMemo(() => {
+        if (!trendRaw || !Array.isArray(trendRaw) || trendRaw.length === 0) {
+            return [
+                { day: 'T2', value: 0, h: '10%' },
+                { day: 'T3', value: 0, h: '10%' },
+                { day: 'T4', value: 0, h: '10%' },
+                { day: 'T5', value: 0, h: '10%' },
+                { day: 'T6', value: 0, h: '10%' },
+                { day: 'T7', value: 0, h: '10%' },
+            ];
+        }
+        // Group by month label
+        const maxVal = Math.max(...trendRaw.map(r => Number(r.total_violations || 0)), 1);
+        return trendRaw.slice(0, 6).map(r => ({
+            day: r.month ? r.month.slice(5) : '?',
+            value: Number(r.total_violations || 0),
+            h: `${Math.max(4, (Number(r.total_violations || 0) / maxVal) * 100)}%`,
+        }));
+    }, [trendRaw]);
+
+    // Total students count from API
+    const { data: totalStudentsRaw } = useQuery({
+        queryKey: ["discipline-dashboard-total-students", resolvedSemesterId],
+        queryFn: async () => {
+            if (!resolvedSemesterId) return 0;
+            try {
+                const res = await vpDisciplineService.getReportSummary(resolvedSemesterId);
+                return res?.data?.totalStudents || res?.totalStudents || 0;
+            } catch { return 0; }
+        },
+        enabled: Boolean(resolvedSemesterId),
+        staleTime: 60_000,
+    });
+
+    const totalStudentsDisplay = totalStudentsRaw > 0
+        ? totalStudentsRaw.toLocaleString('vi-VN')
+        : "—";
+
+    // Fetch conduct distribution from API
+    const { data: conductStatsRaw } = useQuery({
+        queryKey: ["discipline-dashboard-conduct", resolvedSemesterId],
+        queryFn: async () => {
+            if (!resolvedSemesterId) return null;
+            try {
+                const res = await vpDisciplineService.getReportSummary(resolvedSemesterId);
+                // Try to get conduct distribution from summary response
+                return {
+                    tot: res?.totCount || res?.tot_count || 0,
+                    kha: res?.khaCount || res?.kha_count || 0,
+                    tb: res?.tbCount || res?.tb_count || 0,
+                    yeu: res?.yeuCount || res?.yeu_count || 0,
+                    totPct: res?.totPct || 0,
+                    khaPct: res?.khaPct || 0,
+                    tbPct: res?.tbPct || 0,
+                    yeuPct: res?.yeuPct || 0,
+                };
+            } catch { return null; }
+        },
+        enabled: Boolean(resolvedSemesterId),
+        staleTime: 60_000,
+    });
+
+    const conductData = useMemo(() => {
+        if (!conductStatsRaw || !totalStudentsRaw) {
+            return [
+                { label: "Hạnh kiểm Tốt", pct: 0, count: 0, cls: "tot", width: "10%" },
+                { label: "Hạnh kiểm Khá", pct: 0, count: 0, cls: "kha", width: "10%" },
+                { label: "Trung bình", pct: 0, count: 0, cls: "tb", width: "10%" },
+                { label: "Hạnh kiểm Yếu", pct: 0, count: 0, cls: "yeu", width: "10%" },
+            ];
+        }
+        const total = totalStudentsRaw || 1;
+        return [
+            { label: "Hạnh kiểm Tốt", pct: conductStatsRaw.totPct, count: conductStatsRaw.tot, cls: "tot", width: `${Math.max(1, conductStatsRaw.totPct)}%` },
+            { label: "Hạnh kiểm Khá", pct: conductStatsRaw.khaPct, count: conductStatsRaw.kha, cls: "kha", width: `${Math.max(1, conductStatsRaw.khaPct)}%` },
+            { label: "Trung bình", pct: conductStatsRaw.tbPct, count: conductStatsRaw.tb, cls: "tb", width: `${Math.max(1, conductStatsRaw.tbPct)}%` },
+            { label: "Hạnh kiểm Yếu", pct: conductStatsRaw.yeuPct, count: conductStatsRaw.yeu, cls: "yeu", width: `${Math.max(1, conductStatsRaw.yeuPct)}%` },
+        ];
+    }, [conductStatsRaw, totalStudentsRaw]);
 
     return (
         <div className="vp-dashboard discipline-layout">
@@ -188,6 +417,15 @@ export default function VpDisciplineDashboard() {
                 </div>
             </div>
             <div style={{marginTop: '2rem'}}>
+                {/* Violations summary for selected week */}
+                <div className="vp-panel" style={{ marginBottom: '1rem' }}>
+                    <div className="vp-panel-header">
+                        <h3><FiAlertTriangle /> Vi Phạm Tuần {selectedWeek}</h3>
+                        <span style={{ color: weekViolations.length > 0 ? '#e53e3e' : '#48bb78', fontWeight: 'bold' }}>
+                            {weekViolations.length} vi phạm
+                        </span>
+                    </div>
+                </div>
                 <EventCalendar 
                     title="Lịch Vận Hành Nghiệp Vụ"
                     selectedSchoolYear={selectedSchoolYear}
@@ -195,8 +433,8 @@ export default function VpDisciplineDashboard() {
                     themeClass="theme-discipline"
                     userRole="admin"
                     isCompact={false}
-                    initialEvents={INITIAL_CALENDAR_EVENTS}
-                    eventTypes={CALENDAR_EVENT_TYPES}
+                    initialEvents={calendarEvents}
+                    eventTypes={[...CALENDAR_EVENT_TYPES, { value: "red", label: "Vi phạm nặng" }, { value: "orange", label: "Vi phạm vừa" }, { value: "yellow", label: "Vi phạm nhẹ" }]}
                     rolePolicy={{
                         canCreate: false,
                         canViewDetails: true,
@@ -221,7 +459,7 @@ export default function VpDisciplineDashboard() {
                                     <strong>{item.title}</strong>
                                     <span>{item.subtitle}</span>
                                 </div>
-                                <span className={`status-chip ${item.status === 'Khẩn cấp' ? 'serious' : item.status === 'Giao việc' ? 'serious' : 'success'}`}>
+                                <span className={`status-chip ${item.priority === 'high' || item.priority === 'medium' ? 'serious' : 'success'}`}>
                                     {item.status}
                                 </span>
                             </div>
@@ -238,12 +476,7 @@ export default function VpDisciplineDashboard() {
                             variant="custom"
                             value={leaderboardGrade}
                             onChange={(e) => setLeaderboardGrade(e.target.value)}
-                            options={[
-                                { value: "all", label: "Tất cả khối" },
-                                { value: "10", label: "Khối 10" },
-                                { value: "11", label: "Khối 11" },
-                                { value: "12", label: "Khối 12" }
-                            ]}
+                            options={gradeOptions}
                         />
                     </div>
                     <div className="mini-stat-list">
@@ -271,7 +504,7 @@ export default function VpDisciplineDashboard() {
                         <FiBarChart2 /> 
                         Phân bộ Hạnh kiểm {conductGrade === 'all' ? 'Toàn trường' : `Khối ${conductGrade}`}
                         <span className="header-count-badge">
-                            (Tổng {conductGrade === 'all' ? '1,250' : (conductGrade === '10' ? '420' : (conductGrade === '11' ? '410' : '420'))} HS)
+                            (Tổng {totalStudentsDisplay} HS)
                         </span>
                     </h3>
                     <Select 
@@ -279,51 +512,21 @@ export default function VpDisciplineDashboard() {
                         variant="custom"
                         value={conductGrade}
                         onChange={(e) => setConductGrade(e.target.value)}
-                        options={[
-                            { value: "all", label: "Toàn trường" },
-                            { value: "10", label: "Khối 10" },
-                            { value: "11", label: "Khối 11" },
-                            { value: "12", label: "Khối 12" }
-                        ]}
+                        options={gradeOptions}
                     />
                 </div>
                 <div className="pulse-bar-container">
+                    {conductData.map(row => (
                     <div className="pulse-row">
                         <div className="pulse-label">
-                            <span>Hạnh kiểm Tốt (85.2%)</span>
-                            <strong>1,065 học sinh</strong>
+                            <span>{row.label} ({row.pct > 0 ? row.pct.toFixed(1) + '%' : '—'})</span>
+                            <strong>{row.count > 0 ? row.count.toLocaleString('vi-VN') + ' học sinh' : 'Chưa có dữ liệu'}</strong>
                         </div>
                         <div className="pulse-track">
-                            <div className="pulse-fill tot" style={{width: '85.2%'}}></div>
+                            <div className={`pulse-fill ${row.cls}`} style={{width: row.width}}></div>
                         </div>
                     </div>
-                    <div className="pulse-row">
-                        <div className="pulse-label">
-                            <span>Hạnh kiểm Khá (10.4%)</span>
-                            <strong>130 học sinh</strong>
-                        </div>
-                        <div className="pulse-track">
-                            <div className="pulse-fill kha" style={{width: '10.4%'}}></div>
-                        </div>
-                    </div>
-                    <div className="pulse-row">
-                        <div className="pulse-label">
-                            <span>Trung bình (3.8%)</span>
-                            <strong>48 học sinh</strong>
-                        </div>
-                        <div className="pulse-track">
-                            <div className="pulse-fill tb" style={{width: '3.8%'}}></div>
-                        </div>
-                    </div>
-                    <div className="pulse-row">
-                        <div className="pulse-label">
-                            <span>Hạnh kiểm Yếu (0.6%)</span>
-                            <strong>7 học sinh</strong>
-                        </div>
-                        <div className="pulse-track">
-                            <div className="pulse-fill yeu" style={{width: '0.6%'}}></div>
-                        </div>
-                    </div>
+                    ))}
                 </div>
             </div>
         </div>

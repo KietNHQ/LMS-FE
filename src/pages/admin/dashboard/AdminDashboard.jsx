@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { FiUsers, FiLock, FiActivity, FiShield, FiAlertTriangle, FiCheckCircle, FiClock, FiList } from "react-icons/fi";
 import { adminDashboardService } from "../../../services/pages/admin/dashboard/dashboardService";
+import EventCalendarSection from "./components/eventCalendarSection/eventCalendarSection";
 import "./AdminDashboard.css";
 
 const AdminDashboard = () => {
@@ -89,6 +90,11 @@ const AdminDashboard = () => {
             </section>
 
             <div className="admin-dashboard-new__grid">
+                {/* Lịch Sự Kiện */}
+                <section className="admin-dashboard-new__card event-calendar-card">
+                    <EventCalendarSection />
+                </section>
+
                 <div className="admin-dashboard-new__card role-dist">
                     <div className="card-header">
                         <h3>Cơ cấu người dùng</h3>

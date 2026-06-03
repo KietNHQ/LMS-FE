@@ -4,76 +4,138 @@ import {
     FiStar, FiTrendingUp, FiHeart, FiSettings 
 } from "react-icons/fi";
 import { toast } from "react-toastify";
+import { useQuery } from "@tanstack/react-query";
 import Select from "../../../../components/ui/Select/Select";
+import { vpDisciplineService } from "../../../../services/pages/management/vp-discipline";
 import "./BonusPointModal.css";
 
-const MOCK_STUDENTS = [
-    { id: "HS001", name: "Nguyễn Văn A", class: "10A1", grade: "10" },
-    { id: "HS002", name: "Trần Thị B", class: "11A5", grade: "11" },
-    { id: "HS003", name: "Lê Văn C", class: "12A2", grade: "12" },
-    { id: "HS004", name: "Phạm Minh D", class: "10A1", grade: "10" },
-    { id: "HS005", name: "Hoàng Anh E", class: "10A2", grade: "10" },
-    { id: "HS006", name: "Vũ Thu F", class: "11B1", grade: "11" },
-    { id: "HS092", name: "Phạm F", class: "12A1", grade: "12" },
-    { id: "HS093", name: "Đỗ G", class: "12A1", grade: "12" },
-];
+// REMOVED: MOCK_STUDENTS - now fetched from API
+// REMOVED: REWARD_CATEGORIES - now fetched from API
 
-const REWARD_CATEGORIES = [
-    { 
-        id: "attendance", 
-        label: "Chuyên cần", 
-        icon: <FiStar />,
-        items: [
-            { key: "month", label: "Đi học đủ 1 tháng", points: 20 },
-            { key: "semester", label: "100% chuyên cần HK", points: 50 },
-            { key: "no_late_semester", label: "K đi muộn trong HK", points: 10 },
-        ]
-    },
-    { 
-        id: "academic", 
-        label: "Học tập", 
-        icon: <FiAward />,
-        items: [
-            { key: "school", label: "HSG cấp trường", points: 30 },
-            { key: "province", label: "HSG Tỉnh/TP", points: 50 },
-            { key: "national", label: "HSG QG/QT", points: 100 },
-            { key: "improvement", label: "Tiến bộ rõ rệt", points: 20 },
-        ]
-    },
-    { 
-        id: "activity", 
-        label: "Phong trào", 
-        icon: <FiTrendingUp />,
-        items: [
-            { key: "first_school", label: "Giải Nhất trường", points: 20 },
-            { key: "second_school", label: "Giải Nhì/Ba trường", points: 15 },
-            { key: "volunteer", label: "Tình nguyện viên", points: 15 },
-            { key: "club", label: "Tham gia CLB tích cực", points: 10 },
-        ]
-    },
-    { 
-        id: "positive", 
-        label: "Tích cực", 
-        icon: <FiHeart />,
-        items: [
-            { key: "found_lost", label: "Nhặt của rơi trả lại", points: 20 },
-            { key: "report_risk", label: "Phát hiện nguy cơ", points: 5 },
-            { key: "role_model", label: "Gương mẫu điển hình", points: 20 },
-            { key: "help_peers", label: "Giúp đỡ bạn bè", points: 10 },
-        ]
-    }
-];
-
-export default function BonusPointModal({ isOpen, onClose, onSuccess, initialClass = "all" }) {
+export default function BonusPointModal({ isOpen, onClose, onSuccess, initialClass = "all", selectedSchoolYear, selectedTerm }) {
     const [targetType, setTargetType] = useState("collective"); // 'collective' or 'individual'
     const [selectedGrade, setSelectedGrade] = useState("10");
     const [selectedClass, setSelectedClass] = useState("");
     const [selectedStudentId, setSelectedStudentId] = useState("");
     
-    const [selectedCategory, setSelectedCategory] = useState("attendance");
+    const [selectedCategory, setSelectedCategory] = useState("");
     const [selectedReasonKey, setSelectedReasonKey] = useState("");
     const [customPoints, setCustomPoints] = useState("");
     const [comment, setComment] = useState("");
+
+    // Resolve semesterId for API calls
+    const { data: semesterId } = useQuery({
+        queryKey: ["semester-id", selectedSchoolYear, selectedTerm],
+        queryFn: async () => {
+            const { resolveSemesterId } = await import("../../../../services/shared/schoolYearLookup");
+            return resolveSemesterId(selectedSchoolYear, selectedTerm || "hk1");
+        },
+        enabled: Boolean(selectedSchoolYear),
+    });
+
+    // Fetch students from API
+    const { data: apiStudents = [] } = useQuery({
+        queryKey: ["class-students", selectedClass],
+        queryFn: async () => {
+            const res = await vpDisciplineService.callByKey("get_classes_by_id_students", {
+                pathParams: { id: selectedClass },
+            });
+            return res?.data || res || [];
+        },
+        enabled: Boolean(selectedClass),
+    });
+
+    // Fetch reward types from API
+    const { data: apiRewardTypes = [] } = useQuery({
+        queryKey: ["reward-types"],
+        queryFn: async () => {
+            const res = await vpDisciplineService.callByKey("get_reward_types");
+            return res?.data || res || [];
+        },
+    });
+
+    // Fetch grade levels from API
+    const { data: gradeLevelsData = [] } = useQuery({
+        queryKey: ["grade-levels-bonus"],
+        queryFn: async () => {
+            const res = await vpDisciplineService.getGradeLevels();
+            return res?.data || [];
+        },
+        staleTime: 10 * 60_000,
+    });
+
+    // Build grade options from API
+    const gradeOptions = useMemo(() => {
+        if (!gradeLevelsData.length) {
+            return [
+                { value: "10", label: "Khối 10" },
+                { value: "11", label: "Khối 11" },
+                { value: "12", label: "Khối 12" },
+            ];
+        }
+        return gradeLevelsData
+            .map(gl => ({
+                value: String(gl.level_number || gl.levelNumber || gl.id),
+                label: gl.name || `Khối ${gl.level_number || gl.levelNumber}`,
+            }))
+            .sort((a, b) => parseInt(a.value) - parseInt(b.value));
+    }, [gradeLevelsData]);
+
+    // Transform API students to component format
+    const students = useMemo(() => {
+        return apiStudents.map(s => ({
+            id: s.id || s.student_id || s.enrollmentId || s.studentEnrollmentId,
+            name: s.name || s.full_name || s.studentName || "",
+            class: s.class_name || s.className || s.class || "",
+            grade: s.grade || s.grade_level || s.gradeLevel || selectedGrade,
+            enrollmentId: s.enrollmentId || s.studentEnrollmentId || s.id,
+        }));
+    }, [apiStudents, selectedGrade]);
+
+    // Build reward categories from API data
+    const rewardCategories = useMemo(() => {
+        if (!apiRewardTypes.length) return [];
+        const categoryMap = {};
+        apiRewardTypes.forEach(rt => {
+            const cat = rt.category || rt.reward_category || "other";
+            if (!categoryMap[cat]) {
+                categoryMap[cat] = { 
+                    id: cat, 
+                    label: formatCategoryLabel(cat), 
+                    icon: getCategoryIcon(cat),
+                    items: [] 
+                };
+            }
+            categoryMap[cat].items.push({
+                key: rt.id,
+                label: rt.name || rt.reward_name || rt.description || "",
+                points: rt.default_points || rt.points || 0,
+            });
+        });
+        return Object.values(categoryMap);
+    }, [apiRewardTypes]);
+
+    // Moved outside of component in a refactor, or we can just use function keyword to hoist them.
+    function formatCategoryLabel(cat) {
+        const labels = {
+            attendance: "Chuyên cần",
+            academic: "Học tập",
+            activity: "Phong trào",
+            positive: "Tích cực",
+            other: "Khác",
+        };
+        return labels[cat] || cat;
+    }
+
+    function getCategoryIcon(cat) {
+        switch(cat) {
+            case "attendance": return <FiStar />;
+            case "academic": return <FiAward />;
+            case "activity": return <FiTrendingUp />;
+            case "positive": return <FiHeart />;
+            default: return <FiStar />;
+        }
+    }
 
     // Initialize/Sync
     useEffect(() => {
@@ -82,49 +144,50 @@ export default function BonusPointModal({ isOpen, onClose, onSuccess, initialCla
                 setSelectedClass(initialClass);
                 setSelectedGrade(initialClass.slice(0, 2));
             } else {
-                setSelectedGrade("10");
+                setSelectedGrade(gradeOptions[0]?.value || "10");
                 setSelectedClass("");
             }
             setTargetType("collective");
-            setSelectedCategory("attendance");
+            setSelectedCategory(rewardCategories[0]?.id || "");
             setSelectedReasonKey("");
             setCustomPoints("");
             setComment("");
         }
-    }, [isOpen, initialClass]);
+    }, [isOpen, initialClass, rewardCategories, gradeOptions]);
+
+    // Update category when rewardTypes load
+    useEffect(() => {
+        if (rewardCategories.length && !selectedCategory) {
+            setSelectedCategory(rewardCategories[0].id);
+        }
+    }, [rewardCategories]);
 
     // Handle auto-point fill
     useEffect(() => {
-        const cat = REWARD_CATEGORIES.find(c => c.id === selectedCategory);
+        const cat = rewardCategories.find(c => c.id === selectedCategory);
         const item = cat?.items.find(i => i.key === selectedReasonKey);
         if (item) {
             setCustomPoints(item.points.toString());
         }
-    }, [selectedCategory, selectedReasonKey]);
-
-    const gradeOptions = [
-        { value: "10", label: "Khối 10" },
-        { value: "11", label: "Khối 11" },
-        { value: "12", label: "Khối 12" }
-    ];
+    }, [selectedCategory, selectedReasonKey, rewardCategories]);
 
     const classOptions = useMemo(() => {
-        const classes = [...new Set(MOCK_STUDENTS.filter(s => s.grade === selectedGrade).map(s => s.class))];
+        const classes = [...new Set(students.filter(s => s.grade === selectedGrade).map(s => s.class))];
         return classes.map(c => ({ value: c, label: c }));
-    }, [selectedGrade]);
+    }, [selectedGrade, students]);
 
     const studentOptions = useMemo(() => {
-        return MOCK_STUDENTS
+        return students
             .filter(s => s.class === selectedClass)
             .map(s => ({ value: s.id, label: `${s.name} (${s.id})` }));
-    }, [selectedClass]);
+    }, [selectedClass, students]);
 
     const reasonOptions = useMemo(() => {
-        const cat = REWARD_CATEGORIES.find(c => c.id === selectedCategory);
+        const cat = rewardCategories.find(c => c.id === selectedCategory);
         return cat ? cat.items.map(i => ({ value: i.key, label: i.label })) : [];
-    }, [selectedCategory]);
+    }, [selectedCategory, rewardCategories]);
 
-    const handleSubmit = () => {
+    const handleSubmit = async () => {
         if (!selectedClass) {
             toast.error("Vui lòng chọn lớp!");
             return;
@@ -138,26 +201,43 @@ export default function BonusPointModal({ isOpen, onClose, onSuccess, initialCla
             return;
         }
 
-        const cat = REWARD_CATEGORIES.find(c => c.id === selectedCategory);
+        const cat = rewardCategories.find(c => c.id === selectedCategory);
         const item = cat?.items.find(i => i.key === selectedReasonKey);
-        const student = MOCK_STUDENTS.find(s => s.id === selectedStudentId);
+        const student = students.find(s => s.id === selectedStudentId);
+        const points = parseInt(customPoints) || 0;
 
-        const rewardData = {
-            id: Date.now(),
-            targetType,
-            className: selectedClass,
-            studentName: targetType === "individual" ? student?.name : `Lớp ${selectedClass}`,
-            reason: item?.label || comment,
-            points: parseInt(customPoints) || 0,
-            type: "bonus",
-            dayOfWeek: 0, // Weekly/Special bonus
-            week: 12, // Default to current week for mock
-            history: []
-        };
+        try {
+            if (targetType === "individual") {
+                // Post individual bonus
+                await vpDisciplineService.callByKey("post_discipline_rewards", {
+                    body: {
+                        studentEnrollmentId: student?.enrollmentId || selectedStudentId,
+                        rewardTypeId: selectedReasonKey,
+                        semesterId: semesterId,
+                        points: points,
+                        notes: comment,
+                    },
+                });
+                toast.success(`Đã cộng ${points} điểm thưởng cá nhân cho ${student?.name}!`);
+            } else {
+                // Post collective/class bonus
+                await vpDisciplineService.callByKey("post_discipline_rewards", {
+                    body: {
+                        classId: selectedClass,
+                        rewardTypeId: selectedReasonKey,
+                        semesterId: semesterId,
+                        points: points,
+                        notes: comment,
+                    },
+                });
+                toast.success(`Đã cộng ${points} điểm thưởng tập thể cho lớp ${selectedClass}!`);
+            }
 
-        onSuccess(rewardData);
-        onClose();
-        toast.success(`Đã cộng ${rewardData.points} điểm thưởng ${targetType === 'individual' ? 'cá nhân' : 'tập thể'}!`);
+            onClose();
+            if (onSuccess) onSuccess();
+        } catch (err) {
+            toast.error(err?.message || "Không thể lưu khen thưởng. Vui lòng thử lại.");
+        }
     };
 
     if (!isOpen) return null;
@@ -231,7 +311,7 @@ export default function BonusPointModal({ isOpen, onClose, onSuccess, initialCla
                     <div className="bonus-reward-section">
                         <label className="section-label">Danh mục khen thưởng</label>
                         <div className="category-selection-grid">
-                            {REWARD_CATEGORIES.map(cat => (
+                            {rewardCategories.map(cat => (
                                 <div 
                                     key={cat.id}
                                     className={`cat-premium-card cat-${cat.id} ${selectedCategory === cat.id ? 'active' : ''}`}

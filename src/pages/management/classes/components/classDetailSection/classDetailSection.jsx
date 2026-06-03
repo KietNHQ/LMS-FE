@@ -1,28 +1,18 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
-import { FiSearch, FiChevronLeft, FiChevronRight, FiEdit2, FiUserX, FiUserCheck, FiCalendar } from "react-icons/fi";
+import { FiSearch, FiChevronLeft, FiChevronRight, FiEdit2, FiUserX, FiUserCheck } from "react-icons/fi";
+import axiosClient from "../../../../../services/shared/http/axiosClient";
 import "./classDetailSection.css";
 
-// Helper function to format date DD/MM/YYYY
 function formatDateDDMMYYYY(dateString) {
     if (!dateString) return "";
-    const [year, month, day] = dateString.split("-");
+    const date = new Date(dateString);
+    if (isNaN(date)) return "";
+    const [year, month, day] = date.toISOString().split("T")[0].split("-");
     return `${day}/${month}/${year}`;
 }
 
-// Mock student data
-const mockStudents = [
-    { id: 1, name: "Nguyễn Minh Tuấn", dob: "2008-03-15", enrollmentDate: "2024-09-01", parentName: "Nguyễn Văn An", parentPhone: "0912345678", tuitionPaid: true },
-    { id: 2, name: "Trần Thị Bảo Châu", dob: "2008-07-22", enrollmentDate: "2024-09-01", parentName: "Trần Văn Bình", parentPhone: "0987654321", tuitionPaid: false },
-    { id: 3, name: "Phạm Văn Hùng", dob: "2008-05-10", enrollmentDate: "2024-09-01", parentName: "Phạm Thị Hoa", parentPhone: "0923456789", tuitionPaid: true },
-    { id: 4, name: "Hoàng Thị Hoa", dob: "2008-02-28", enrollmentDate: "2024-09-01", parentName: "Hoàng Văn Hùng", parentPhone: "0934567890", tuitionPaid: false },
-    { id: 5, name: "Lê Văn Dũng", dob: "2008-08-12", enrollmentDate: "2024-09-03", parentName: "Lê Thị Linh", parentPhone: "0945678901", tuitionPaid: true },
-    { id: 6, name: "Vũ Thị Trang", dob: "2008-04-05", enrollmentDate: "2024-09-01", parentName: "Vũ Văn Tuấn", parentPhone: "0956789012", tuitionPaid: false },
-    { id: 7, name: "Đặng Quốc Hùng", dob: "2007-09-12", enrollmentDate: "2024-09-02", parentName: "Đặng Thị Mai", parentPhone: "0967890123", tuitionPaid: true },
-    { id: 8, name: "Phạm Thu Hà", dob: "2007-10-21", enrollmentDate: "2024-09-04", parentName: "Phạm Văn Cường", parentPhone: "0978901234", tuitionPaid: true },
-];
-
-const ITEMS_PER_PAGE = 6;
+const ITEMS_PER_PAGE = 10;
 const ATTENDANCE_ALERT_THRESHOLD = 95;
 
 const timeFilterOptions = [
@@ -37,83 +27,18 @@ const sortOptions = [
     { value: "late-desc", label: "Số lần đi muộn nhiều đến ít" },
 ];
 
-const mockClasses = [
-    {
-        id: 1,
-        name: "10A1",
-        grade: "Khối 10",
-        year: "2024-2025",
-        teacher: "Trần Thị Hương",
-        students: 35,
-        diemTong: 8.5,
-        semester1Closed: true,
-        subjects: ["Toán", "Vật lý", "Hóa học", "Ngữ văn", "Tiếng Anh"],
-    },
-    {
-        id: 2,
-        name: "10A2",
-        grade: "Khối 10",
-        year: "2024-2025",
-        teacher: "Lê Văn Minh",
-        students: 33,
-        diemTong: 7.8,
-        semester1Closed: true,
-        subjects: ["Toán", "Vật lý", "Hóa học", "Ngữ văn", "Tiếng Anh"],
-    },
-];
-
-const mockAttendanceByStudent = {
-    1: {
-        "this-week": { attendancePercent: 96, absentDays: 0, lateCount: 1, excusedAbsence: 0, unexcusedAbsence: 0, updatedAt: "2026-03-25" },
-        "last-week": { attendancePercent: 92, absentDays: 1, lateCount: 2, excusedAbsence: 1, unexcusedAbsence: 0, updatedAt: "2026-03-18" },
-        "semester-1": { attendancePercent: 94, absentDays: 4, lateCount: 6, excusedAbsence: 2, unexcusedAbsence: 2, updatedAt: "2025-12-20" },
-    },
-    2: {
-        "this-week": { attendancePercent: 98, absentDays: 0, lateCount: 0, excusedAbsence: 0, unexcusedAbsence: 0, updatedAt: "2026-03-25" },
-        "last-week": { attendancePercent: 96, absentDays: 0, lateCount: 1, excusedAbsence: 0, unexcusedAbsence: 0, updatedAt: "2026-03-18" },
-        "semester-1": { attendancePercent: 97, absentDays: 2, lateCount: 3, excusedAbsence: 1, unexcusedAbsence: 1, updatedAt: "2025-12-20" },
-    },
-    3: {
-        "this-week": { attendancePercent: 89, absentDays: 2, lateCount: 2, excusedAbsence: 1, unexcusedAbsence: 1, updatedAt: "2026-03-25" },
-        "last-week": { attendancePercent: 91, absentDays: 1, lateCount: 3, excusedAbsence: 1, unexcusedAbsence: 0, updatedAt: "2026-03-18" },
-        "semester-1": { attendancePercent: 90, absentDays: 6, lateCount: 8, excusedAbsence: 2, unexcusedAbsence: 4, updatedAt: "2025-12-20" },
-    },
-    4: {
-        "this-week": { attendancePercent: 94, absentDays: 1, lateCount: 1, excusedAbsence: 1, unexcusedAbsence: 0, updatedAt: "2026-03-25" },
-        "last-week": { attendancePercent: 95, absentDays: 0, lateCount: 2, excusedAbsence: 0, unexcusedAbsence: 0, updatedAt: "2026-03-18" },
-        "semester-1": { attendancePercent: 93, absentDays: 5, lateCount: 5, excusedAbsence: 3, unexcusedAbsence: 2, updatedAt: "2025-12-20" },
-    },
-    5: {
-        "this-week": { attendancePercent: 97, absentDays: 0, lateCount: 1, excusedAbsence: 0, unexcusedAbsence: 0, updatedAt: "2026-03-25" },
-        "last-week": { attendancePercent: 94, absentDays: 1, lateCount: 1, excusedAbsence: 1, unexcusedAbsence: 0, updatedAt: "2026-03-18" },
-        "semester-1": { attendancePercent: 95, absentDays: 3, lateCount: 4, excusedAbsence: 2, unexcusedAbsence: 1, updatedAt: "2025-12-20" },
-    },
-    6: {
-        "this-week": { attendancePercent: 90, absentDays: 1, lateCount: 3, excusedAbsence: 0, unexcusedAbsence: 1, updatedAt: "2026-03-25" },
-        "last-week": { attendancePercent: 88, absentDays: 2, lateCount: 2, excusedAbsence: 1, unexcusedAbsence: 1, updatedAt: "2026-03-18" },
-        "semester-1": { attendancePercent: 89, absentDays: 7, lateCount: 9, excusedAbsence: 3, unexcusedAbsence: 4, updatedAt: "2025-12-20" },
-    },
-    7: {
-        "this-week": { attendancePercent: 95, absentDays: 0, lateCount: 2, excusedAbsence: 0, unexcusedAbsence: 0, updatedAt: "2026-03-25" },
-        "last-week": { attendancePercent: 93, absentDays: 1, lateCount: 2, excusedAbsence: 1, unexcusedAbsence: 0, updatedAt: "2026-03-18" },
-        "semester-1": { attendancePercent: 92, absentDays: 5, lateCount: 6, excusedAbsence: 2, unexcusedAbsence: 3, updatedAt: "2025-12-20" },
-    },
-    8: {
-        "this-week": { attendancePercent: 99, absentDays: 0, lateCount: 0, excusedAbsence: 0, unexcusedAbsence: 0, updatedAt: "2026-03-25" },
-        "last-week": { attendancePercent: 97, absentDays: 0, lateCount: 1, excusedAbsence: 0, unexcusedAbsence: 0, updatedAt: "2026-03-18" },
-        "semester-1": { attendancePercent: 98, absentDays: 1, lateCount: 2, excusedAbsence: 1, unexcusedAbsence: 0, updatedAt: "2025-12-20" },
-    },
-};
-
 export default function ClassDetailSection() {
     const { classId } = useParams();
     const navigate = useNavigate();
     const location = useLocation();
+
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState("");
+    const [classData, setClassData] = useState(null);
+    const [students, setStudents] = useState([]);
+    const [attendanceData, setAttendanceData] = useState({});
     const [searchTerm, setSearchTerm] = useState("");
     const [currentPage, setCurrentPage] = useState(1);
-    const [students, setStudents] = useState(() =>
-        mockStudents.map((student) => ({ ...student, isHidden: false }))
-    );
     const [activeModalMode, setActiveModalMode] = useState(null);
     const [activeStudentId, setActiveStudentId] = useState(null);
     const [editForm, setEditForm] = useState({
@@ -126,10 +51,100 @@ export default function ClassDetailSection() {
     const [selectedTimeFilter, setSelectedTimeFilter] = useState("this-week");
     const [selectedSort, setSelectedSort] = useState("attendance-asc");
 
-    // Logic to check if Principal View
     const isPrincipalView = location.pathname.startsWith("/principal");
 
-    const classData = mockClasses.find((c) => String(c.id) === String(classId)) || null;
+    const fetchClassData = async () => {
+        setIsLoading(true);
+        setError("");
+        try {
+            const [classResponse, studentsResponse] = await Promise.all([
+                axiosClient.get(`/classes/${classId}`),
+                axiosClient.get(`/classes/${classId}/students`)
+            ]);
+
+            const classInfo = classResponse.data?.data || classResponse.data || {};
+            const studentsList = classResponse.data?.students ||
+                                studentsResponse.data?.data ||
+                                studentsResponse.data?.students ||
+                                [];
+
+            setClassData({
+                id: classInfo.id,
+                name: classInfo.class_name || classInfo.className || "",
+                grade: classInfo.grade_level_name ? `Khối ${classInfo.grade_level_number || ""}` : "",
+                year: classInfo.school_year_name || classInfo.year || "",
+                teacher: classInfo.homeroom_given_name || classInfo.homeroomSurname ?
+                    `${classInfo.homeroom_surname || ""} ${classInfo.homeroom_given_name || ""}`.trim() :
+                    (classInfo.teacher || "Chưa phân công"),
+                students: classInfo.current_student_count || studentsList.length,
+                diemTong: classInfo.diemTong || 8.5,
+                subjects: classInfo.subjects || []
+            });
+
+            const parsedStudents = studentsList.map((s, index) => ({
+                id: s.id || index + 1,
+                name: `${s.surname || ""} ${s.given_name || ""}`.trim() || s.name || s.fullName || `Học sinh ${index + 1}`,
+                dob: s.dob || s.birth_date || "",
+                enrollmentDate: s.enrollment_date || s.created_at || "",
+                parentName: s.parent_name || s.parentName || "",
+                parentPhone: s.parent_phone || s.parentPhone || "",
+                tuitionPaid: s.tuition_status === "paid" || s.tuitionPaid === true,
+                isHidden: false
+            }));
+
+            setStudents(parsedStudents);
+        } catch (err) {
+            console.error("Error fetching class data:", err);
+            setError(err.response?.data?.error || "Không thể tải dữ liệu lớp học");
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchClassData();
+    }, [classId]);
+
+    const fetchAttendanceStatistics = async (filter) => {
+        try {
+            const response = await axiosClient.get(`/classes/${classId}/attendance-statistics`, {
+                params: { timeFilter: filter }
+            });
+            const data = response.data?.data || response.data || {};
+            const byStudent = {};
+
+            const stats = Array.isArray(data.details) ? data.details : [];
+
+            stats.forEach((stat) => {
+                const total = parseInt(stat.total || 0);
+                const present = parseInt(stat.present || 0);
+                const absent = parseInt(stat.absent || 0);
+                const late = parseInt(stat.late || 0);
+                const excused = parseInt(stat.excused || 0);
+
+                byStudent[stat.student_id] = {
+                    attendancePercent: total > 0 ? Math.round((present / total) * 100) : 100,
+                    absentDays: absent,
+                    lateCount: late,
+                    excusedAbsence: excused,
+                    unexcusedAbsence: absent - excused,
+                    updatedAt: new Date().toISOString()
+                };
+            });
+
+            setAttendanceData((prev) => ({ ...prev, [filter]: byStudent }));
+        } catch (err) {
+            console.error("Error fetching attendance:", err);
+        }
+    };
+
+    useEffect(() => {
+        if (selectedTimeFilter && classId) {
+            if (!attendanceData[selectedTimeFilter]) {
+                fetchAttendanceStatistics(selectedTimeFilter);
+            }
+        }
+    }, [selectedTimeFilter, classId]);
 
     const filteredStudents = useMemo(() => {
         if (!searchTerm) return students;
@@ -140,15 +155,14 @@ export default function ClassDetailSection() {
 
     const attendanceRows = useMemo(() => {
         const rows = filteredStudents.map((student) => {
-            const attendanceMetrics =
-                mockAttendanceByStudent[student.id]?.[selectedTimeFilter] || {
-                    attendancePercent: 100,
-                    absentDays: 0,
-                    lateCount: 0,
-                    excusedAbsence: 0,
-                    unexcusedAbsence: 0,
-                    updatedAt: student.enrollmentDate,
-                };
+            const attendanceMetrics = attendanceData[selectedTimeFilter]?.[student.id] || {
+                attendancePercent: 100,
+                absentDays: 0,
+                lateCount: 0,
+                excusedAbsence: 0,
+                unexcusedAbsence: 0,
+                updatedAt: student.enrollmentDate,
+            };
 
             const isAtRisk =
                 attendanceMetrics.attendancePercent < ATTENDANCE_ALERT_THRESHOLD ||
@@ -172,7 +186,7 @@ export default function ClassDetailSection() {
         }
 
         return sortedRows;
-    }, [filteredStudents, selectedSort, selectedTimeFilter]);
+    }, [filteredStudents, selectedSort, selectedTimeFilter, attendanceData]);
 
     const attendanceSummary = useMemo(() => {
         if (!attendanceRows.length) {
@@ -230,7 +244,7 @@ export default function ClassDetailSection() {
     };
 
     const handleEditStudent = (student) => {
-        if (isPrincipalView) return; // View only
+        if (isPrincipalView) return;
         setActiveModalMode("edit");
         setActiveStudentId(student.id);
         setEditForm({
@@ -261,7 +275,7 @@ export default function ClassDetailSection() {
     };
 
     const handleOpenToggleHiddenDialog = (studentId) => {
-        if (isPrincipalView) return; // View only
+        if (isPrincipalView) return;
         setActiveModalMode("toggle-hidden");
         setActiveStudentId(studentId);
     };
@@ -306,18 +320,31 @@ export default function ClassDetailSection() {
         if (window.history.length > 1) {
             navigate(-1);
         } else {
-            navigate(isPrincipalView ? "/principal/overview" : "/admin/classes");
+            navigate(isPrincipalView ? "/principal/overview" : "/management/classes");
         }
     };
 
-    if (!classData) {
+    if (isLoading) {
         return (
             <div className="class-detail-page">
                 <button className="back-btn" onClick={handleBack}>
                     ← Quay lại
                 </button>
                 <div className="empty-state">
-                    <p>Không tìm thấy lớp học này</p>
+                    <p>Đang tải dữ liệu...</p>
+                </div>
+            </div>
+        );
+    }
+
+    if (error || !classData) {
+        return (
+            <div className="class-detail-page">
+                <button className="back-btn" onClick={handleBack}>
+                    ← Quay lại
+                </button>
+                <div className="empty-state">
+                    <p>{error || "Không tìm thấy lớp học này"}</p>
                 </div>
             </div>
         );
@@ -352,14 +379,6 @@ export default function ClassDetailSection() {
                     >
                         <span className="info-label">Điểm rèn luyện</span>
                         <span className="info-value score">{classData.diemTong}</span>
-                    </button>
-                    <button
-                        type="button"
-                        className="info-item info-item--timetable-trigger"
-                        onClick={() => navigate("/management/timetable", { state: { selectedClass: classData.name } })}
-                    >
-                        <span className="info-label">Thời khóa biểu</span>
-                        <span className="info-value timetable-btn-text">Xem chi tiết →</span>
                     </button>
                 </div>
             </div>
@@ -586,7 +605,6 @@ export default function ClassDetailSection() {
                 </div>
             )}
 
-            {/* Modals for Edit and Toggle Hidden */}
             {activeModalMode === "edit" && activeStudent && (
                 <div className="class-student-modal-overlay" onClick={handleCloseModal}>
                     <div className="class-student-modal" onClick={(e) => e.stopPropagation()}>

@@ -1,6 +1,7 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { PageHeader, SchoolYearTermSelector } from "../../../../components/common";
 import { useSchoolYearTerm } from "../../../../hooks/useSchoolYearTerm";
+import { financeService } from "../../../../services/pages/management/finance";
 import {
     FiAlertCircle,
     FiCheck,
@@ -27,8 +28,8 @@ const STATUS_TABS = [
 const TYPE_OPTIONS = [
     { id: "all", label: "Tất cả loại" },
     { id: "refund", label: "Hoàn phí" },
-    { id: "discount", label: "Miễn giảm thủ công" },
-    { id: "write-off", label: "Xóa nợ" },
+    { id: "debt_relief", label: "Miễn giảm" },
+    { id: "write_off", label: "Xóa nợ" },
     { id: "adjustment", label: "Điều chỉnh bút toán" },
 ];
 
@@ -62,97 +63,18 @@ const PRIORITY_LABEL = {
 
 const TYPE_LABEL = {
     refund: "Hoàn phí",
-    discount: "Miễn giảm thủ công",
-    "write-off": "Xóa nợ",
+    debt_relief: "Miễn giảm",
+    write_off: "Xóa nợ",
     adjustment: "Điều chỉnh bút toán",
 };
 
-const MOCK_REQUESTS = [
-    {
-        id: "APR-2026-091",
-        type: "refund",
-        requester: "Thu ngân Phạm K",
-        requesterRole: "Thu ngân",
-        student: "Nguyễn Quang Minh",
-        detail: "Hoàn phí bán trú do thôi học từ giữa kỳ II.",
-        amount: 1200000,
-        submittedAt: "2026-10-16T08:20:00",
-        dueAt: "2026-10-17T17:00:00",
-        status: "pending",
-        priority: "critical",
-    },
-    {
-        id: "APR-2026-088",
-        type: "discount",
-        requester: "Kế toán Lê Thị M",
-        requesterRole: "Kế toán",
-        student: "Lê Vĩnh Hào",
-        detail: "Giảm 50% phí đồng phục theo biên bản họp hội đồng hỗ trợ.",
-        amount: 450000,
-        submittedAt: "2026-10-15T14:10:00",
-        dueAt: "2026-10-18T16:00:00",
-        status: "pending",
-        priority: "high",
-    },
-    {
-        id: "APR-2026-083",
-        type: "write-off",
-        requester: "Kế toán trưởng Trần D",
-        requesterRole: "Kế toán trưởng",
-        student: "Phan Bảo Khánh",
-        detail: "Xóa nợ khoản khó đòi niên độ 2023 sau đối chiếu đầy đủ chứng từ.",
-        amount: 500000,
-        submittedAt: "2026-10-14T09:30:00",
-        dueAt: "2026-10-20T17:30:00",
-        status: "approved",
-        priority: "medium",
-    },
-    {
-        id: "APR-2026-076",
-        type: "adjustment",
-        requester: "Nhân viên quỹ Võ T",
-        requesterRole: "Nhân viên quỹ",
-        student: "Trương Gia Huy",
-        detail: "Điều chỉnh sai lệch bút toán thu phí tháng 9 do nhập nhầm mã lớp.",
-        amount: 780000,
-        submittedAt: "2026-10-13T10:15:00",
-        dueAt: "2026-10-19T09:00:00",
-        status: "pending",
-        priority: "medium",
-    },
-    {
-        id: "APR-2026-070",
-        type: "refund",
-        requester: "Thu ngân Vũ N",
-        requesterRole: "Thu ngân",
-        student: "Ngô Thiên Phúc",
-        detail: "Hoàn lệ phí CLB do học sinh chuyển trường.",
-        amount: 350000,
-        submittedAt: "2026-10-12T15:05:00",
-        dueAt: "2026-10-16T16:00:00",
-        status: "rejected",
-        priority: "low",
-    },
-    {
-        id: "APR-2026-064",
-        type: "discount",
-        requester: "Kế toán Nguyễn C",
-        requesterRole: "Kế toán",
-        student: "Hoàng Nhật Lam",
-        detail: "Miễn giảm bổ sung học phí theo quyết định mới từ phòng đào tạo.",
-        amount: 2200000,
-        submittedAt: "2026-10-11T11:40:00",
-        dueAt: "2026-10-17T11:30:00",
-        status: "pending",
-        priority: "high",
-    },
-];
 
 function formatCurrency(amount) {
     return `${amount.toLocaleString()} đ`;
 }
 
 function formatDateTime(isoDate) {
+    if (!isoDate) return "—";
     return new Date(isoDate).toLocaleString("vi-VN", {
         day: "2-digit",
         month: "2-digit",
@@ -160,6 +82,31 @@ function formatDateTime(isoDate) {
         hour: "2-digit",
         minute: "2-digit",
     });
+}
+
+function transformRequest(record) {
+    return {
+        id: record.id,
+        type: record.request_type,
+        requester: record.requester_name || "—",
+        requesterRole: record.requester_role || "—",
+        student: [record.student_surname, record.student_given_name].filter(Boolean).join(" ") || record.student_id || "—",
+        detail: record.reason || record.description || "—",
+        amount: parseFloat(record.request_amount || 0),
+        submittedAt: record.created_at,
+        dueAt: record.sla_due_at,
+        status: record.status,
+        priority: record.priority || "medium",
+        requestAmount: parseFloat(record.request_amount || 0),
+        originalAmount: parseFloat(record.original_amount || 0),
+        adjustedAmount: parseFloat(record.adjusted_amount || 0),
+        feeName: record.fee_name,
+        description: record.description,
+        reason: record.reason,
+        reviewedBy: record.reviewed_by_name,
+        reviewedAt: record.reviewed_at,
+        approvalNote: record.approval_note,
+    };
 }
 
 function getSlaLabel(dueAt, status) {
@@ -181,7 +128,8 @@ function getSlaLabel(dueAt, status) {
 
 export default function FinanceApprovals() {
     const { selectedSchoolYear, selectedTerm, handleYearArrow, handleTermChange } = useSchoolYearTerm();
-    const [requests, setRequests] = useState(MOCK_REQUESTS);
+    const [requests, setRequests] = useState([]);
+    const [isLoading, setIsLoading] = useState(false);
     const [activeStatus, setActiveStatus] = useState("pending");
     const [typeFilter, setTypeFilter] = useState("all");
     const [priorityFilter, setPriorityFilter] = useState("all");
@@ -189,6 +137,32 @@ export default function FinanceApprovals() {
     const [searchQuery, setSearchQuery] = useState("");
     const [selectedIds, setSelectedIds] = useState([]);
     const [focusedRequestId, setFocusedRequestId] = useState("");
+
+    const fetchRequests = async () => {
+        setIsLoading(true);
+        try {
+            const res = await financeService.listApprovals({
+                params: {
+                    limit: 200,
+                    status: activeStatus !== "all" ? activeStatus : undefined,
+                    studentId: undefined,
+                },
+            });
+
+            if (res?.success && res.data) {
+                setRequests(res.data.map(transformRequest));
+            }
+        } catch (error) {
+            console.error("Error fetching requests:", error);
+            setRequests([]);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchRequests();
+    }, [activeStatus, selectedSchoolYear, selectedTerm]);
 
     const statusSummary = useMemo(() => {
         const pending = requests.filter((item) => item.status === "pending");
@@ -250,10 +224,19 @@ export default function FinanceApprovals() {
 
     const isAllPendingSelected = pendingSelectableIds.length > 0 && pendingSelectableIds.every((id) => selectedIds.includes(id));
 
-    const applyStatus = (id, status) => {
-        setRequests((prev) => prev.map((item) => (item.id === id ? { ...item, status } : item)));
-        setSelectedIds((prev) => prev.filter((selectedId) => selectedId !== id));
-        toast.success(status === "approved" ? `Đã phê duyệt hồ sơ ${id}.` : `Đã từ chối hồ sơ ${id}.`);
+    const applyStatus = async (id, newStatus) => {
+        try {
+            if (newStatus === "approved") {
+                await financeService.approveRequest(id, { note: "Đã phê duyệt" });
+            } else {
+                await financeService.rejectRequest(id, { note: "Từ chối" });
+            }
+            setRequests((prev) => prev.map((item) => (item.id === id ? { ...item, status: newStatus } : item)));
+            setSelectedIds((prev) => prev.filter((selectedId) => selectedId !== id));
+            toast.success(newStatus === "approved" ? `Đã phê duyệt hồ sơ ${id}.` : `Đã từ chối hồ sơ ${id}.`);
+        } catch (error) {
+            toast.error("Có lỗi xảy ra khi cập nhật trạng thái");
+        }
     };
 
     const toggleSelect = (id) => {
@@ -268,7 +251,7 @@ export default function FinanceApprovals() {
         setSelectedIds((prev) => Array.from(new Set([...prev, ...pendingSelectableIds])));
     };
 
-    const approveSelected = () => {
+    const approveSelected = async () => {
         if (selectedRows.length === 0) {
             toast.info("Hãy chọn ít nhất 1 hồ sơ đang chờ duyệt.");
             return;
@@ -280,11 +263,26 @@ export default function FinanceApprovals() {
             return;
         }
 
-        setRequests((prev) =>
-            prev.map((item) => (selectedPending.some((selected) => selected.id === item.id) ? { ...item, status: "approved" } : item))
-        );
-        setSelectedIds([]);
-        toast.success(`Đã phê duyệt ${selectedPending.length} hồ sơ.`);
+        try {
+            await Promise.all(
+                selectedPending.map((item) =>
+                    financeService.approveRequest(item.id, { note: "Đã phê duyệt hàng loạt" }).catch((err) => {
+                        console.warn(`[FinanceApprovals] approve failed for ${item.id}:`, err);
+                    })
+                )
+            );
+            setRequests((prev) =>
+                prev.map((item) =>
+                    selectedPending.some((selected) => selected.id === item.id)
+                        ? { ...item, status: "approved" }
+                        : item
+                )
+            );
+            setSelectedIds([]);
+            toast.success(`Đã phê duyệt ${selectedPending.length} hồ sơ.`);
+        } catch (error) {
+            toast.error("Có lỗi khi phê duyệt hồ sơ.");
+        }
     };
 
     return (

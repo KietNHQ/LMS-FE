@@ -1,21 +1,57 @@
 import React, { useState } from "react";
+import { teacherService } from "../../../../../services/pages/teacher/teacherService";
+import { toast } from "react-toastify";
 import { FiSend, FiBell, FiAlertCircle, FiMessageSquare } from "react-icons/fi";
 import "./HomeroomAnnouncementsSection.css";
 
-export default function HomeroomAnnouncementsSection({ data }) {
+export default function HomeroomAnnouncementsSection({ classId, data }) {
     const [title, setTitle] = useState("");
     const [content, setContent] = useState("");
     const [target, setTarget] = useState("all");
     const [isUrgent, setIsUrgent] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     if (!data) return null;
 
-    const handleSend = (e) => {
+    const handleSend = async (e) => {
         e.preventDefault();
-        // Mock send action
-        alert("Đã gửi thông báo thành công!");
-        setTitle("");
-        setContent("");
+        if (!title.trim() || !content.trim()) {
+            toast.error("Vui lòng nhập đầy đủ tiêu đề và nội dung.");
+            return;
+        }
+
+        if (!classId) {
+            toast.error("Không tìm thấy thông tin lớp.");
+            return;
+        }
+
+        setIsSubmitting(true);
+        try {
+            const res = await teacherService.broadcastToClass({
+                pathParams: { id: classId },
+                body: {
+                    title: title.trim(),
+                    content: content.trim(),
+                    isUrgent,
+                    targetType: target,
+                },
+                mock: false,
+            });
+
+            if (res.success) {
+                toast.success("Đã gửi thông báo thành công!");
+                setTitle("");
+                setContent("");
+                setIsUrgent(false);
+            } else {
+                toast.error(res.error || res.message || "Gửi thông báo thất bại.");
+            }
+        } catch (error) {
+            console.error("Failed to send announcement:", error);
+            toast.error("Có lỗi xảy ra khi gửi thông báo.");
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
     return (
@@ -71,8 +107,8 @@ export default function HomeroomAnnouncementsSection({ data }) {
                             </div>
                         </div>
                         <div className="form-actions">
-                            <button type="submit" className="btn-send">
-                                <FiSend /> Gửi Thông Báo
+                            <button type="submit" className="btn-send" disabled={isSubmitting}>
+                                <FiSend /> {isSubmitting ? "Đang gửi..." : "Gửi Thông Báo"}
                             </button>
                         </div>
                     </form>
@@ -88,8 +124,8 @@ export default function HomeroomAnnouncementsSection({ data }) {
                     </div>
                     <div className="history-list">
                         {data.announcements && data.announcements.length > 0 ? (
-                            data.announcements.map((ann, idx) => (
-                                <div key={idx} className={`history-item ${ann.isUrgent ? 'urgent' : ''}`}>
+                            data.announcements.map((ann) => (
+                                <div key={ann.id || ann.title} className={`history-item ${ann.isUrgent ? 'urgent' : ''}`}>
                                     <div className="item-header">
                                         <h4>{ann.title}</h4>
                                         {ann.isUrgent && <span className="urgent-badge">Quan trọng</span>}

@@ -169,40 +169,39 @@ const STUDENT_QUIZ_ATTEMPT_MOCK = {
 };
 
 const STUDENT_ENDPOINTS = [
-  { key: "get_student_dashboard", method: "GET", path: "/dashboard/student", module: "dashboard", mock: () => STUDENT_DASHBOARD_MOCK },
-  { key: "get_students_by_id", method: "GET", path: "/students/:id", module: "profile", mock: () => STUDENT_PROFILE_MOCK },
-  { key: "get_students_by_id_grades", method: "GET", path: "/students/:id/grades", module: "grades", mock: () => STUDENT_GRADES_MOCK },
-  { key: "get_students_by_id_attendance", method: "GET", path: "/students/:id/attendance", module: "grades", mock: () => ({ weekly: [], monthly: [] }) },
-  { key: "get_classes", method: "GET", path: "/classes", module: "classes", mock: () => STUDENT_CLASSES_MOCK },
-  { key: "get_classes_by_id", method: "GET", path: "/classes/:id", module: "classes", mock: (input) => STUDENT_CLASSES_MOCK.find((item) => `${item.id}` === `${input.pathParams?.id}`) || null },
-  { key: "get_classes_by_id_schedule", method: "GET", path: "/classes/:id/schedule", module: "schedule", mock: () => STUDENT_SCHEDULE_MOCK },
-  { key: "get_student_schedule", method: "GET", path: "/timetable", module: "schedule", mock: () => STUDENT_SCHEDULE_MOCK },
-  { key: "get_student_notifications", method: "GET", path: "/notifications/my", module: "notifications", mock: () => STUDENT_NOTIFICATIONS_MOCK },
-  { key: "patch_student_notifications_mark_all_read", method: "PUT", path: "/notifications/my/read-all", module: "notifications", mock: () => ({ updated: true }) },
-  { key: "patch_student_notifications_by_id_read", method: "PUT", path: "/notifications/my/:id/read", module: "notifications", mock: (input) => ({ id: input.pathParams?.id, unread: false }) },
-  { key: "get_student_support_faqs", method: "GET", path: "/communications/faqs", module: "support", mock: () => STUDENT_FAQS_MOCK },
-  { key: "post_student_support_tickets", method: "POST", path: "/communications/tickets", module: "support", mock: (input) => ({ id: Date.now(), ...(input.body || {}), status: "open" }) },
-  { key: "get_quizzes", method: "GET", path: "/quizzes", module: "quiz", mock: () => STUDENT_QUIZZES_MOCK },
-  { key: "get_quizzes_by_id", method: "GET", path: "/quizzes/:id", module: "quiz", mock: (input) => {
-      const matched = STUDENT_QUIZZES_MOCK.find((item) => `${item.id}` === `${input.pathParams?.id}`);
-      return matched ? { ...STUDENT_QUIZ_DETAIL_MOCK, ...matched } : null;
-    } },
-  { key: "post_quizzes_by_id_start", method: "POST", path: "/quizzes/:id/start", module: "quiz", mock: (input) => ({
-      attemptId: "attempt-1",
-      type: "new",
-      isResume: false,
-      quiz: { ...STUDENT_QUIZ_DETAIL_MOCK, id: input.pathParams?.id },
-      attempt: { ...STUDENT_QUIZ_ATTEMPT_MOCK, quizId: input.pathParams?.id },
-      questions: STUDENT_QUIZ_DETAIL_MOCK.questions,
-      timeRemaining: STUDENT_QUIZ_ATTEMPT_MOCK.timeRemaining,
-    }) },
-  { key: "get_quizzes_by_id_status", method: "GET", path: "/quizzes/:id/status", module: "quiz", mock: () => STUDENT_QUIZ_STATUS_MOCK },
-  { key: "get_quizzes_attempts_by_attemptid", method: "GET", path: "/quizzes/attempts/:attemptId", module: "quiz", mock: (input) => ({ ...STUDENT_QUIZ_ATTEMPT_MOCK, id: input.pathParams?.attemptId, status: "in_progress" }) },
-  { key: "put_quizzes_attempts_by_attemptid", method: "PUT", path: "/quizzes/attempts/:attemptId", module: "quiz", mock: (input) => ({ ...STUDENT_QUIZ_ATTEMPT_MOCK, id: input.pathParams?.attemptId, ...(input.body || {}), updated: true }) },
-  { key: "put_quizzes_attempts_by_attemptid_submit", method: "PUT", path: "/quizzes/attempts/:attemptId/submit", module: "quiz", mock: (input) => ({ id: input.pathParams?.attemptId, status: "submitted", score: 8.0, passed: true }) },
-  { key: "put_quizzes_attempts_by_id_sync", method: "PUT", path: "/quizzes/attempts/:id/sync", module: "quiz", mock: (input) => ({ attemptId: input.pathParams?.id, questionId: input.body?.questionId, savedAt: new Date().toISOString(), message: "Đã lưu đáp án" }) },
-  { key: "put_quizzes_attempts_by_id_heartbeat", method: "PUT", path: "/quizzes/attempts/:id/heartbeat", module: "quiz", mock: (input) => ({ attemptId: input.pathParams?.id, timeRemaining: 1800, heartbeatAt: new Date().toISOString(), message: "Heartbeat OK" }) },
-  { key: "post_quizzes_attempts_by_id_validate", method: "POST", path: "/quizzes/attempts/:id/validate", module: "quiz", mock: (input) => ({ attemptId: input.pathParams?.id, canSubmit: true, timeRemaining: 600, status: "in_progress" }) },
+  { key: "get_student_dashboard", method: "GET", path: "/dashboard/student", module: "dashboard", mock: false },
+  { key: "get_school_years", method: "GET", path: "/school-years", module: "system", mock: false },
+  { key: "get_students_by_id", method: "GET", path: "/students/:id", module: "profile", mock: false },
+  { key: "get_students_by_id_grades", method: "GET", path: "/students/:id/grades", module: "grades", mock: false },
+  { key: "get_students_by_id_grade_summary", method: "GET", path: "/students/:id/grade-summary", module: "grades", mock: false },
+  { key: "get_students_by_id_attendance", method: "GET", path: "/students/:id/attendance", module: "grades", mock: false },
+  { key: "get_classes", method: "GET", path: "/students/:id/classes", module: "classes", mock: false },
+  { key: "get_classes_by_id", method: "GET", path: "/students/:id/classes/:classId", module: "classes", mock: false },
+  { key: "get_classes_by_id_schedule", method: "GET", path: "/classes/:id/schedule", module: "schedule", mock: false },
+  { key: "get_student_schedule", method: "GET", path: "/timetable/student", module: "schedule", mock: false },
+  { key: "get_student_notifications", method: "GET", path: "/notifications/my", module: "notifications", mock: false },
+  { key: "patch_student_notifications_mark_all_read", method: "PUT", path: "/notifications/my/read-all", module: "notifications", mock: false },
+  { key: "patch_student_notifications_by_id_read", method: "PUT", path: "/notifications/my/:id/read", module: "notifications", mock: false },
+  { key: "get_student_support_faqs", method: "GET", path: "/communications/faqs", module: "support", mock: false },
+  { key: "post_student_support_tickets", method: "POST", path: "/communications/tickets", module: "support", mock: false },
+  { key: "get_quizzes", method: "GET", path: "/students/:id/quizzes", module: "quiz", mock: false },
+  { key: "get_quizzes_by_id", method: "GET", path: "/quizzes/:id", module: "quiz", mock: false },
+  { key: "post_quizzes_by_id_start", method: "POST", path: "/quizzes/:id/start", module: "quiz", mock: false },
+  { key: "get_quizzes_by_id_status", method: "GET", path: "/quizzes/:id/status", module: "quiz", mock: false },
+  { key: "get_quizzes_attempts_by_attemptid", method: "GET", path: "/quizzes/attempts/:attemptId", module: "quiz", mock: false },
+  { key: "put_quizzes_attempts_by_attemptid", method: "PUT", path: "/quizzes/attempts/:attemptId", module: "quiz", mock: false },
+  { key: "put_quizzes_attempts_by_attemptid_submit", method: "PUT", path: "/quizzes/attempts/:attemptId/submit", module: "quiz", mock: false },
+  { key: "put_quizzes_attempts_by_id_sync", method: "PUT", path: "/quizzes/attempts/:id/sync", module: "quiz", mock: false },
+  { key: "put_quizzes_attempts_by_id_heartbeat", method: "PUT", path: "/quizzes/attempts/:id/heartbeat", module: "quiz", mock: false },
+  { key: "post_quizzes_attempts_by_id_validate", method: "POST", path: "/quizzes/attempts/:id/validate", module: "quiz", mock: false },
+  { key: "get_lesson_by_id", method: "GET", path: "/lessons/:id", module: "lessons", mock: false },
+  // Class Committee endpoints
+  { key: "get_class_committee_context", method: "GET", path: "/students/me/class-committee-context", module: "class_committee", mock: false },
+  { key: "get_class_committee_violations", method: "GET", path: "/class-committee/:classId/violations", module: "class_committee", mock: false },
+  { key: "get_class_committee_lesson_evaluations", method: "GET", path: "/class-committee/:classId/lesson-evaluations", module: "class_committee", mock: false },
+  // Conduct / Discipline
+  { key: "get_student_conduct_summary", method: "GET", path: "/students/:id/conduct-summary", module: "conduct", mock: false },
+  { key: "get_student_discipline_scores", method: "GET", path: "/students/:id/discipline-scores", module: "conduct", mock: false },
 ];
 
 const createEndpointCaller = (endpoint) => async (input = {}) => {
@@ -262,15 +261,47 @@ export const studentService = {
   getDashboard: (input) => endpointCallers.get_student_dashboard(input),
   getStudentById: (input) => endpointCallers.get_students_by_id(input),
   getStudentGrades: (input) => endpointCallers.get_students_by_id_grades(input),
+  getStudentGradeSummary: (input) => endpointCallers.get_students_by_id_grade_summary(input),
+  getSchoolYears: (input) => endpointCallers.get_school_years(input),
   getStudentAttendance: (input) => endpointCallers.get_students_by_id_attendance(input),
   listClasses: (input) => endpointCallers.get_classes(input),
+  getClasses: (input) => endpointCallers.get_classes(input),
   getClassById: (input) => endpointCallers.get_classes_by_id(input),
   getClassSchedule: (input) => endpointCallers.get_classes_by_id_schedule(input),
   getStudentSchedule: (input) => endpointCallers.get_student_schedule(input),
+  getStudentScheduleMapped: async (input) => {
+    const response = await endpointCallers.get_student_schedule(input);
+    if (response && response.success && Array.isArray(response.data)) {
+      return response.data.map((p, idx) => {
+        const beToFeDayMap = { 2: 0, 3: 1, 4: 2, 5: 3, 6: 4, 7: 5, 1: 6 };
+        const dayIdx = beToFeDayMap[p.dayOfWeek] ?? 0;
+        const dayKey = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"][dayIdx];
+
+        const periodNum = p.period;
+        const subjectName = p.subjectName || "Môn học";
+        const teacherName = p.teacherName || "Chưa phân công";
+        
+        return {
+          id: p.id || `lesson-${idx}`,
+          day: dayKey,
+          periodStart: periodNum,
+          periodEnd: periodNum,
+          subject: subjectName,
+          teacher: teacherName,
+          room: p.roomName || "—",
+          status: p.status || "normal",
+          mode: p.mode || "offline",
+          color: p.color || (subjectName.includes("Toán") ? "teal" : subjectName.includes("Văn") ? "pink" : "blue"),
+        };
+      });
+    }
+    return [];
+  },
   listNotifications: (input) => endpointCallers.get_student_notifications(input),
   markAllNotificationsRead: (input) => endpointCallers.patch_student_notifications_mark_all_read(input),
   markNotificationRead: (input) => endpointCallers.patch_student_notifications_by_id_read(input),
   listFaqs: (input) => endpointCallers.get_student_support_faqs(input),
+  submitSupportTicket: (input) => endpointCallers.post_student_support_tickets(input),
   listQuizzes: (input) => endpointCallers.get_quizzes(input),
   getQuizById: (input) => endpointCallers.get_quizzes_by_id(input),
   startQuiz: (input) => endpointCallers.post_quizzes_by_id_start(input),
@@ -281,6 +312,13 @@ export const studentService = {
   syncQuizAttempt: (input) => endpointCallers.put_quizzes_attempts_by_id_sync(input),
   heartbeatQuizAttempt: (input) => endpointCallers.put_quizzes_attempts_by_id_heartbeat(input),
   validateQuizAttempt: (input) => endpointCallers.post_quizzes_attempts_by_id_validate(input),
+  getLessonById: (input) => endpointCallers.get_lesson_by_id(input),
+  // Conduct / Discipline
+  getClassCommitteeContext: (input) => endpointCallers.get_class_committee_context(input),
+  getClassViolations: (input) => endpointCallers.get_class_committee_violations(input),
+  getClassLessonEvaluations: (input) => endpointCallers.get_class_committee_lesson_evaluations(input),
+  getConductSummary: (input) => endpointCallers.get_student_conduct_summary(input),
+  getDisciplineScores: (input) => endpointCallers.get_student_discipline_scores(input),
 };
 
 export default studentService;

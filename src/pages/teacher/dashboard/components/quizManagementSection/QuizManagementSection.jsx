@@ -3,67 +3,49 @@ import "./QuizManagementSection.css";
 import { ClipboardList } from "lucide-react";
 import WeekPicker from "../../../../../components/common/WeekPicker/WeekPicker";
 import teacherService from "../../../../../services/pages/teacher/teacherService";
+import { useSchoolYearTerm } from "../../../../../hooks/useSchoolYearTerm";
 
 const QuizManagementSection = () => {
-  const [selectedWeek, setSelectedWeek] = useState(28);
+  const { selectedSchoolYear } = useSchoolYearTerm();
+  const [selectedWeek, setSelectedWeek] = useState(1);
   const [apiQuizzes, setApiQuizzes] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
 
-  const hardcodedQuizzes = [
-    {
-      id: 1,
-      title: "Kiểm tra Toán chương 1",
-      class: "10A1",
-      duration: "15 phút",
-      type: "15 phút",
-      week: 28,
-      status: "active",
-      statusText: "Đang mở",
-    },
-    {
-      id: 2,
-      title: "Kiểm tra Toán chương 2",
-      class: "10A2",
-      duration: "45 phút",
-      type: "1 tiết",
-      week: 28,
-      status: "closed",
-      statusText: "Đã đóng",
-    },
-    {
-      id: 3,
-      title: "Kiểm tra 15p Tiếng Anh",
-      class: "11B2",
-      duration: "15 phút",
-      type: "15 phút",
-      week: 28,
-      status: "pending",
-      statusText: "Chờ chấm",
-    },
-    {
-      id: 4,
-      title: "Ôn tập giữa kỳ",
-      class: "12A5",
-      duration: "45 phút",
-      type: "1 tiết",
-      week: 27,
-      status: "closed",
-      statusText: "Đã đóng",
-    },
-  ];
+  const getAcademicWeek = (dateValue) => {
+    const date = new Date(dateValue);
+    if (Number.isNaN(date.getTime())) return 1;
+
+    const startYear = Number.parseInt(String(selectedSchoolYear || "").split("-")[0], 10) || date.getFullYear();
+    const schoolYearStart = new Date(startYear, 7, 25); // 25/08 of school-year start
+    const diffDays = Math.max(0, Math.floor((date - schoolYearStart) / 86400000));
+    return Math.max(1, Math.floor(diffDays / 7) + 1);
+  };
+
+  const currentAcademicWeek = React.useMemo(() => getAcademicWeek(new Date()), [selectedSchoolYear]);
+
+  const getQuizWeek = (quiz) => {
+    const sourceDate = quiz?.start_date || quiz?.end_date || quiz?.created_at;
+    if (!sourceDate) return null;
+    return getAcademicWeek(sourceDate);
+  };
 
   useEffect(() => {
     const fetchQuizzes = async () => {
       setIsLoading(true);
       try {
         const response = await teacherService.listQuizzes({ mock: false });
-        if (response.success && response.data) {
-          // Handle both old array structure and new { items, total } structure
-          const quizzesData = Array.isArray(response.data) 
-            ? response.data 
-            : (response.data.items || []);
-          setApiQuizzes(quizzesData);
-        }
+        if (!response) return;
+
+        const quizzesData = Array.isArray(response)
+          ? response
+          : Array.isArray(response?.data?.items)
+            ? response.data.items
+            : Array.isArray(response?.data)
+              ? response.data
+              : Array.isArray(response?.items)
+                ? response.items
+                : [];
+        setApiQuizzes(quizzesData);
       } catch (error) {
         console.error("Failed to fetch quizzes:", error);
       } finally {
@@ -71,23 +53,30 @@ const QuizManagementSection = () => {
       }
     };
     fetchQuizzes();
-  }, []);
+  }, [selectedSchoolYear]);
+
+  useEffect(() => {
+    setSelectedWeek(currentAcademicWeek);
+  }, [currentAcademicWeek]);
 
   // Map API data to UI structure
   const mappedApiQuizzes = apiQuizzes.map(q => ({
     id: q.id,
     title: q.title,
-    class: q.class_name || "Lớp chung",
+    class: q.class_name || q.className || q.class_teacher_subject?.classes?.class_name || "Lớp chung",
     duration: q.duration_minutes ? `${q.duration_minutes} phút` : "N/A",
     type: q.quiz_type === 'exam' ? 'Kiểm tra' : 'Luyện tập',
-    week: 28, // Giả sử tuần 28 vì BE chưa có thông tin tuần
-    status: q.status === 'published' ? 'active' : 'closed',
-    statusText: q.status === 'published' ? 'Đang mở' : 'Đã đóng'
+    week: getQuizWeek(q),
+    status: (q.is_published ?? q.isPublished ?? q.status) ? 'active' : 'closed',
+    statusText: (q.is_published ?? q.isPublished ?? q.status) ? 'Đang mở' : 'Đã đóng'
   }));
 
-  const quizzes = mappedApiQuizzes.length > 0 ? mappedApiQuizzes : hardcodedQuizzes;
+  const quizzes = mappedApiQuizzes;
+  const maxQuizWeek = quizzes.reduce((maxWeek, quiz) => {
+    return quiz.week && quiz.week > maxWeek ? quiz.week : maxWeek;
+  }, currentAcademicWeek);
 
-  const filteredQuizzes = quizzes.filter((q) => q.week === selectedWeek);
+  const filteredQuizzes = quizzes.filter((q) => q.week == null || q.week === selectedWeek);
 
   return (
     <div className="teacher-dashboard-quiz">
@@ -97,6 +86,7 @@ const QuizManagementSection = () => {
           value={selectedWeek} 
           onChange={setSelectedWeek} 
           label="Tuần" 
+          totalWeeks={Math.max(35, maxQuizWeek)}
         />
       </div>
 

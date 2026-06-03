@@ -82,7 +82,13 @@ export default function StudentLayout() {
                 // 3. Prefetch Thời khóa biểu - KEY MUST MATCH StudentSchedule.jsx
                 queryClient.prefetchQuery({
                     queryKey: ["student-schedule", schoolYear, term],
-                    queryFn: () => studentService.getStudentSchedule(),
+                    queryFn: () => {
+                        const hasAuth = !!(localStorage.getItem("accessToken") || sessionStorage.getItem("accessToken"));
+                        return studentService.getStudentScheduleMapped({
+                            mock: !hasAuth,
+                            params: { schoolYear, term }
+                        });
+                    },
                     staleTime: 5 * 60 * 1000,
                 }),
 
@@ -101,6 +107,8 @@ export default function StudentLayout() {
     // [NEW] Fetch notification count on layout mount and then poll every 2 minutes
     useEffect(() => {
         const syncNotificationCount = async () => {
+            const hasAuth = !!(localStorage.getItem("accessToken") || sessionStorage.getItem("accessToken"));
+            if (!hasAuth) return;
             try {
                 const response = await studentService.listNotifications({ mock: false });
                 

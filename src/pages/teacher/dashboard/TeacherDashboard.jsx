@@ -1,20 +1,21 @@
-import React, { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import React from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import teacherService from "../../../services/pages/teacher/teacherService";
 import "./TeacherDashboard.css";
 import SchoolYearTermSelector from "../../../components/common/SchoolYearTermSelector/SchoolYearTermSelector";
 import EventCalendar from "../../../components/common/EventCalendar/EventCalendar";
 import LoadingSpinner from "../../../components/common/LoadingSpinner/LoadingSpinner";
-import { INITIAL_CALENDAR_EVENTS, CALENDAR_EVENT_TYPES } from "../../../components/common/EventCalendar/eventData";
+import { CALENDAR_EVENT_TYPES } from "../../../components/common/EventCalendar/eventData";
 
 import OverviewCardsSection from "./components/overviewCardsSection/OverviewCardsSection";
 import RecentActivitiesSection from "./components/recentActivitiesSection/RecentActivitiesSection";
 import UpcomingScheduleSection from "./components/upcomingScheduleSection/UpcomingScheduleSection";
 import QuizManagementSection from "./components/quizManagementSection/QuizManagementSection";
+import { useSchoolYearTerm } from "../../../hooks/useSchoolYearTerm";
 
 const TeacherDashboard = () => {
-  const [selectedSchoolYear, setSelectedSchoolYear] = useState("2024-2025");
-  const [selectedTerm, setSelectedTerm] = useState("hk2");
+  const { selectedSchoolYear, selectedTerm, handleYearArrow, handleTermChange } = useSchoolYearTerm();
+  const queryClient = useQueryClient();
 
   // Sử dụng TanStack Query để quản lý dữ liệu dashboard
   const { data: dashboardResponse, isLoading, error } = useQuery({
@@ -46,13 +47,40 @@ const TeacherDashboard = () => {
     return data;
   }, [dashboardResponse]);
 
+  const calendarEvents = React.useMemo(() => {
+    return (dashboardData?.schoolEvents || []).map((event) => ({
+      date: event.date ? new Date(event.date).toISOString().slice(0, 10) : undefined,
+      endDate: event.endDate ? new Date(event.endDate).toISOString().slice(0, 10) : undefined,
+      title: event.title,
+      content: event.content || "",
+      color: event.color || "blue",
+      createdBy: event.createdBy || "",
+      createdRole: event.createdRole || "",
+      target: "all",
+    }));
+  }, [dashboardData?.schoolEvents]);
+
+  const calendarTargetOptions = React.useMemo(() => {
+    const classes = dashboardData?.classes || [];
+    const options = [
+      { value: "all", label: "Tất cả lớp giảng dạy" },
+      { value: "homeroom", label: "Lớp chủ nhiệm" },
+    ];
+
+    classes.forEach((item) => {
+      const className = item.class_name || item.className || item.name;
+      if (!className) return;
+      options.push({
+        value: String(item.id),
+        label: `Lớp ${className}`,
+      });
+    });
+
+    return options;
+  }, [dashboardData?.classes]);
+
   const handleYearChange = (direction) => {
-    const years = selectedSchoolYear.split("-").map(Number);
-    if (direction === "next") {
-      setSelectedSchoolYear(`${years[0] + 1}-${years[1] + 1}`);
-    } else {
-      setSelectedSchoolYear(`${years[0] - 1}-${years[1] - 1}`);
-    }
+    handleYearArrow(direction);
   };
 
   if (error) {
@@ -75,7 +103,7 @@ const TeacherDashboard = () => {
           selectedSchoolYear={selectedSchoolYear}
           selectedTerm={selectedTerm}
           onYearChange={handleYearChange}
-          onTermChange={setSelectedTerm}
+          onTermChange={handleTermChange}
         />
       </div>
 
@@ -100,16 +128,44 @@ const TeacherDashboard = () => {
                 themeClass="theme-teacher"
                 userRole="teacher"
                 isCompact={true}
-                currentUser="Giáo viên"
+                currentUser={dashboardData?.teacherName || "Giáo viên"}
                 eventTypes={CALENDAR_EVENT_TYPES}
-                initialEvents={INITIAL_CALENDAR_EVENTS}
+                initialEvents={calendarEvents}
                 selectedSchoolYear={selectedSchoolYear}
                 selectedTerm={selectedTerm}
+                targetOptions={calendarTargetOptions}
                 rolePolicy={{
                   canCreate: true,
                   canViewDetails: true,
                   canEdit: true,
                   canDelete: true
+                }}
+                onAddEvent={(newEvent) => {
+                  let mappedEventType = 'other';
+                  if (newEvent.color === 'blue') mappedEventType = 'exam';
+                  else if (newEvent.color === 'orange') mappedEventType = 'holiday';
+                  else if (newEvent.color === 'teal') mappedEventType = 'meeting';
+                  else if (newEvent.color === 'red') mappedEventType = 'ceremony';
+
+                  teacherService.createSchoolEvent({
+                    body: {
+                      title: newEvent.title,
+                      description: newEvent.content,
+                      date: newEvent.date,
+                      endDate: newEvent.endDate,
+                      eventType: mappedEventType,
+                      color: newEvent.color,
+                      schoolYear: selectedSchoolYear,
+                      term: selectedTerm,
+                      affectedClasses: newEvent.target === 'all' ? [] : [String(newEvent.target)],
+                    }
+                  }).then(() => {
+                    queryClient.invalidateQueries(["teacher-dashboard", selectedSchoolYear, selectedTerm]);
+                    alert("Tạo sự kiện thành công!");
+                  }).catch(err => {
+                    console.error(err);
+                    alert("Có lỗi xảy ra khi tạo sự kiện. Vui lòng kiểm tra console.");
+                  });
                 }}
               />
             </div>

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import "./DailyScheduleSection.css";
 import { MapPin, Users, Clock, BookOpen, ChevronRight, FileText, BookMarked, Pencil, BarChart3 } from "lucide-react";
-import { getStartOfIsoWeek, getTeacherWeekLessons } from "../../../../../utils/timetableShared";
+import { getStartOfIsoWeek, getTeacherWeekLessons, SUBJECT_DISPLAY, SUBJECT_COLOR_MAP } from "../../../../../utils/timetableShared";
 
 const PERIOD_TIME = {
   1: "07:00 - 07:45",
@@ -91,7 +91,7 @@ export default function DailyScheduleSection({
         5: "Thursday",
         6: "Friday",
         7: "Saturday",
-        8: "Sunday"
+        1: "Sunday"
       };
 
       return apiData
@@ -101,19 +101,22 @@ export default function DailyScheduleSection({
           return itemDay === dayKey && classMatch;
         })
         .sort((a, b) => a.period_number - b.period_number)
-        .map(item => ({
-          period: item.period_number,
-          subject: item.subject_name,
-          class: item.class_name,
-          room: item.room,
-          students: 35,
-          color: item.color || "teal",
-          note: item.notes || "",
-          periodEnd: item.period_number,
-          status: item.status || "normal",
-          start_time: item.start_time,
-          end_time: item.end_time,
-        }));
+        .map(item => {
+          const subjectKey = item.subject_code || item.subjectCode || "TOAN";
+          return {
+            period: item.period_number || item.period,
+            subject: item.subject_name || item.subjectName || SUBJECT_DISPLAY[subjectKey] || subjectKey,
+            class: item.class_name || item.className || "Lớp",
+            room: item.room || item.roomName,
+            students: 35,
+            color: item.color || SUBJECT_COLOR_MAP[subjectKey] || "teal",
+            note: item.note || item.notes || "",
+            periodEnd: item.period_number || item.period,
+            status: item.status || "normal",
+            start_time: item.start_time,
+            end_time: item.end_time,
+          };
+        });
     }
 
     const allLessons = getTeacherWeekLessons(monday, selectedClass);
@@ -217,7 +220,7 @@ export default function DailyScheduleSection({
 
                   return (
                     <div
-                      key={idx}
+                      key={`${lesson.period}-${lesson.class}-${idx}`}
                       className={`daily-item color-${lesson.color}`}
                       onClick={() => onLessonSelect?.(buildLessonDetail(lesson))}
                     >

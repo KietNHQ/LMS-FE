@@ -1,8 +1,9 @@
-import React, { useState } from "react";
-import { FiPlus, FiEdit2, FiTrash2, FiInfo, FiX, FiCheck, FiAlertTriangle, FiCreditCard, FiUpload } from "react-icons/fi";
+import React, { useState, useEffect, useCallback } from "react";
+import { FiPlus, FiEdit2, FiTrash2, FiInfo, FiX, FiCheck, FiAlertTriangle, FiUpload, FiRefreshCw } from "react-icons/fi";
 import { toast } from "react-toastify";
 import Select from "../../../../../components/ui/Select/Select";
 import { Tooltip } from "../../../../../components/ui";
+import financeService from "../../../../../services/pages/management/finance/financeService";
 
 const CATEGORY_OPTIONS = [
     { value: "Tuition", label: "Học phí" },
@@ -53,11 +54,31 @@ const EMPTY_FORM = {
 };
 
 export default function FeeCatalogTab() {
-    const [catalog, setCatalog] = useState(INITIAL_CATALOG);
+    const [catalog, setCatalog] = useState([]);
+    const [loading, setLoading] = useState(false);
+    const [submitting, setSubmitting] = useState(false);
     const [showModal, setShowModal] = useState(false);
     const [editingItem, setEditingItem] = useState(null);
     const [form, setForm] = useState(EMPTY_FORM);
     const [deleteConfirm, setDeleteConfirm] = useState(null);
+
+    const loadCatalog = useCallback(async () => {
+        setLoading(true);
+        try {
+            const res = await financeService.getFees({ params: {} });
+            const rows = Array.isArray(res?.data) ? res.data
+                : Array.isArray(res?.items) ? res.items
+                : Array.isArray(res) ? res : [];
+            setCatalog(rows);
+        } catch (err) {
+            console.error("[FeeCatalogTab] loadCatalog error:", err);
+            toast.error("Không thể tải danh sách khoản thu");
+        } finally {
+            setLoading(false);
+        }
+    }, []);
+
+    useEffect(() => { loadCatalog(); }, [loadCatalog]);
 
     const openAddModal = () => {
         setEditingItem(null);
@@ -68,17 +89,17 @@ export default function FeeCatalogTab() {
     const openEditModal = (item) => {
         setEditingItem(item);
         setForm({
-            code: item.code,
-            name: item.name,
-            category: item.category,
-            amount: item.amount.toString(),
-            nature: item.nature,
-            mandatory: item.mandatory,
-            qrBank: item.qrBank || "Vietcombank",
-            qrAccount: item.qrAccount || "",
-            qrHolder: item.qrHolder || "",
-            qrTemplate: item.qrTemplate || "",
-            qrImage: item.qrImage || "",
+            code: item.code || "",
+            name: item.name || "",
+            category: item.category || "Tuition",
+            amount: (item.amount || "").toString(),
+            nature: item.nature || "School Revenue",
+            mandatory: item.is_mandatory ?? item.mandatory ?? true,
+            qrBank: item.qr_bank || item.qrBank || "Vietcombank",
+            qrAccount: item.qr_account || item.qrAccount || "",
+            qrHolder: item.qr_holder || item.qrHolder || "",
+            qrTemplate: item.qr_template || item.qrTemplate || "",
+            qrImage: item.qr_image || item.qrImage || "",
         });
         setShowModal(true);
     };
@@ -93,7 +114,7 @@ export default function FeeCatalogTab() {
         setForm(prev => ({ ...prev, [field]: value }));
     };
 
-    const handleSubmit = () => {
+    const handleSubmit = async () => {
         if (!form.code.trim()) {
             toast.error("Vui lòng nhập mã khoản thu.");
             return;
@@ -108,66 +129,53 @@ export default function FeeCatalogTab() {
             return;
         }
 
-        const isDuplicate = catalog.some(
-            item => item.code === form.code.trim().toUpperCase() && item.id !== editingItem?.id
-        );
-        if (isDuplicate) {
-            toast.error(`Mã khoản thu "${form.code}" đã tồn tại.`);
-            return;
-        }
+        setSubmitting(true);
+        try {
+            const payload = {
+                code: form.code.trim().toUpperCase(),
+                name: form.name.trim(),
+                category: form.category,
+                amount,
+                nature: form.nature,
+                isMandatory: form.mandatory,
+                qrBank: form.qrBank || null,
+                qrAccount: form.qrAccount.trim() || null,
+                qrHolder: form.qrHolder.trim().toUpperCase() || null,
+                qrTemplate: form.qrTemplate.trim() || null,
+                qrImage: form.qrImage || null,
+                dueDate: new Date().toISOString().split("T")[0],
+            };
 
-        if (editingItem) {
-            setCatalog(prev =>
-                prev.map(item =>
-                    item.id === editingItem.id
-                        ? {
-                            ...item,
-                            code: form.code.trim().toUpperCase(),
-                            name: form.name.trim(),
-                            category: form.category,
-                            amount,
-                            nature: form.nature,
-                            mandatory: form.mandatory,
-                            qrBank: form.qrBank,
-                            qrAccount: form.qrAccount.trim(),
-                            qrHolder: form.qrHolder.trim().toUpperCase(),
-                            qrTemplate: form.qrTemplate.trim(),
-                            qrImage: form.qrImage,
-                        }
-                        : item
-                )
-            );
-            toast.success(`Đã cập nhật khoản thu "${form.name.trim()}".`);
-        } else {
-            const newId = Math.max(0, ...catalog.map(c => c.id)) + 1;
-            setCatalog(prev => [
-                ...prev,
-                {
-                    id: newId,
-                    code: form.code.trim().toUpperCase(),
-                    name: form.name.trim(),
-                    category: form.category,
-                    amount,
-                    nature: form.nature,
-                    mandatory: form.mandatory,
-                    qrBank: form.qrBank,
-                    qrAccount: form.qrAccount.trim(),
-                    qrHolder: form.qrHolder.trim().toUpperCase(),
-                    qrTemplate: form.qrTemplate.trim(),
-                    qrImage: form.qrImage,
-                },
-            ]);
-            toast.success(`Đã thêm khoản thu "${form.name.trim()}" thành công.`);
+            if (editingItem) {
+                await financeService.updateFee(editingItem.id, { body: payload });
+                toast.success(`Đã cập nhật khoản thu "${form.name.trim()}".`);
+            } else {
+                await financeService.createFee({ body: payload });
+                toast.success(`Đã thêm khoản thu "${form.name.trim()}" thành công.`);
+            }
+            closeModal();
+            await loadCatalog();
+        } catch (err) {
+            console.error("[FeeCatalogTab] handleSubmit error:", err);
+            const msg = err?.response?.data?.error?.message || err?.message || "Đã xảy ra lỗi";
+            toast.error(msg);
+        } finally {
+            setSubmitting(false);
         }
-
-        closeModal();
     };
 
-    const handleDelete = (id) => {
+    const handleDelete = async (id) => {
         const item = catalog.find(c => c.id === id);
-        setCatalog(prev => prev.filter(c => c.id !== id));
-        setDeleteConfirm(null);
-        toast.success(`Đã xóa khoản thu "${item?.name}".`);
+        try {
+            await financeService.deleteFee(id);
+            setCatalog(prev => prev.filter(c => c.id !== id));
+            setDeleteConfirm(null);
+            toast.success(`Đã xóa khoản thu "${item?.name}".`);
+        } catch (err) {
+            console.error("[FeeCatalogTab] handleDelete error:", err);
+            const msg = err?.response?.data?.error?.message || err?.message || "Đã xảy ra lỗi";
+            toast.error(msg);
+        }
     };
 
     const formatMoney = (val) => new Intl.NumberFormat("vi-VN").format(val);
@@ -206,6 +214,9 @@ export default function FeeCatalogTab() {
                 <button className="btn-primary" onClick={openAddModal}>
                     <FiPlus /> Thêm khoản thu mới
                 </button>
+                <button className="btn-secondary" onClick={loadCatalog} disabled={loading} title="Làm mới">
+                    <FiRefreshCw className={loading ? "spin" : ""} />
+                </button>
             </div>
 
             <div className="fee-table-wrap">
@@ -223,31 +234,44 @@ export default function FeeCatalogTab() {
                         </tr>
                     </thead>
                     <tbody>
-                        {catalog.map(item => (
+                        {loading && catalog.length === 0 ? (
+                            <tr>
+                                <td colSpan="6" className="empty-state-cell">Đang tải...</td>
+                            </tr>
+                        ) : catalog.length === 0 ? (
+                            <tr>
+                                <td colSpan="6" className="empty-state-cell">
+                                    Chưa có khoản thu nào. Nhấn "Thêm khoản thu mới" để bắt đầu.
+                                </td>
+                            </tr>
+                        ) : (
+                            catalog.map(item => {
+                                const amt = typeof item.amount === "string" ? parseFloat(item.amount) : (item.amount || 0);
+                                return (
                             <tr key={item.id}>
                                 <td>
                                     <div className="catalog-cell-code">
-                                        <span className="catalog-code-label">{item.code}</span>
+                                        <span className="catalog-code-label">{item.code || "—"}</span>
                                         <strong>{item.name}</strong>
                                     </div>
                                 </td>
                                 <td>
-                                    <span className="fee-tag">{CATEGORY_OPTIONS.find(c => c.value === item.category)?.label || item.category}</span>
+                                    <span className="fee-tag">{CATEGORY_OPTIONS.find(c => c.value === item.category)?.label || item.category || "—"}</span>
                                 </td>
                                 <td>
                                     <Tooltip text={NATURE_TOOLTIPS[item.nature] || ""}>
                                         <span className="catalog-nature-text" style={{ cursor: "help" }}>
-                                            {NATURE_OPTIONS.find(n => n.value === item.nature)?.label || item.nature}
+                                            {NATURE_OPTIONS.find(n => n.value === item.nature)?.label || item.nature || "—"}
                                         </span>
                                     </Tooltip>
                                 </td>
                                 <td className="td-money">
-                                    {item.amount.toLocaleString()} ₫
+                                    {amt.toLocaleString("vi-VN")} ₫
                                     {item.category === "Service" && <span className="catalog-unit-label">/ngày</span>}
                                 </td>
                                 <td>
-                                    <span className={`status-badge ${item.mandatory ? "paid" : "unpaid"}`}>
-                                        {item.mandatory ? "Bắt buộc" : "Tự nguyện"}
+                                    <span className={`status-badge ${item.is_mandatory ?? item.mandatory ? "paid" : "unpaid"}`}>
+                                        {item.is_mandatory ?? item.mandatory ? "Bắt buộc" : "Tự nguyện"}
                                     </span>
                                 </td>
                                 <td>
@@ -261,13 +285,8 @@ export default function FeeCatalogTab() {
                                     </div>
                                 </td>
                             </tr>
-                        ))}
-                        {catalog.length === 0 && (
-                            <tr>
-                                <td colSpan="6" className="empty-state-cell">
-                                    Chưa có khoản thu nào. Nhấn "Thêm khoản thu mới" để bắt đầu.
-                                </td>
-                            </tr>
+                                );
+                            })
                         )}
                     </tbody>
                 </table>
