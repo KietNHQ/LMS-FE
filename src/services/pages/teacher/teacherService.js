@@ -241,6 +241,7 @@ const teacherEndpointRegistry = [
   { key: "get_notifications", method: "GET", path: "/notifications/my", module: "notifications", mock: false },
   // Leave Requests - Real API endpoints (no mock)
   { key: "get_class_leave_requests", method: "GET", path: "/leave-requests/classes/:classId/leave-requests", module: "leave" },
+  { key: "get_approved_leaves_by_date", method: "GET", path: "/leave-requests/classes/:classId/leave-requests/approved-on-date", module: "leave" },
   { key: "patch_leave_request_status", method: "PATCH", path: "/leave-requests/:id/approve", module: "leave" },
   { 
     key: "get_timetable", 
@@ -438,6 +439,7 @@ export const teacherService = {
   listQuizzes: (input) => endpointCallers.get_quizzes(input),
   getNotifications: (input) => endpointCallers.get_notifications(input),
   getClassLeaveRequests: (input) => endpointCallers.get_class_leave_requests(input),
+  getApprovedLeavesByDate: (input) => endpointCallers.get_approved_leaves_by_date(input),
   updateLeaveRequestStatus: (input) => endpointCallers.patch_leave_request_status(input),
   getTimetable: (input) => endpointCallers.get_timetable(input),
   getGradesByClass: (input) => endpointCallers.get_grades_class(input),

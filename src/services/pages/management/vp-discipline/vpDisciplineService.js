@@ -1,4 +1,5 @@
 import { createScopedApiService } from "../../admin/generated/createScopedApiService";
+import axiosClient from "../../../shared/http/axiosClient";
 
 const VP_DISCIPLINE_MODULES = [
   "dashboard",
@@ -56,10 +57,8 @@ export const vpDisciplineService = {
       pathParams: { enrollmentId, semesterId },
       body: { conductLevel },
     }),
-  submitConduct: (classId) =>
-    scopedApi.callByKey("post_conduct_by_id_submit", {
-      pathParams: { id: classId },
-    }),
+  submitConduct: (classId, semesterId) =>
+    axiosClient.post(`/conduct/class/${classId}/finalize`, { semesterId }),
   finalizeConductSemester: (semesterId) =>
     scopedApi.callByKey("post_conduct_finalize_semester", {
       body: { semesterId },

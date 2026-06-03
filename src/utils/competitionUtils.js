@@ -16,20 +16,24 @@ export const getWeekDateRange = (schoolYear, term, week) => {
     return {};
   }
 
-  const [startRaw, endRaw] = `${schoolYear || ""}`.split("-");
+  const [startRaw] = `${schoolYear || ""}`.split("-");
   const startYear = parseInt(startRaw, 10);
-  const endYear = parseInt(endRaw, 10);
-  if (!Number.isFinite(startYear) || !Number.isFinite(endYear)) {
+  if (!Number.isFinite(startYear)) {
     return {};
   }
 
-  // HK1: August to January, HK2: January to June
-  const termStart = term === "hk2" ? new Date(endYear, 0, 1) : new Date(startYear, 7, 1);
-  termStart.setHours(0, 0, 0, 0);
+  // Mốc bắt đầu: Thứ 2, 25/08 của năm học
+  const startDate = new Date(startYear, 7, 25);
+  let totalDays = (weekNum - 1) * 7;
+  
+  // Cộng thêm các tuần nghỉ/thi (Gaps) để 35 tuần thực học trải dài đến hết tháng 5
+  if (weekNum > 8) totalDays += 7;  // Thi Giữa HK1
+  if (weekNum > 17) totalDays += 14; // Thi Cuối HK1 + Nghỉ giữa học kỳ
+  if (weekNum > 22) totalDays += 14; // Nghỉ Tết Nguyên Đán (thường 2 tuần)
+  if (weekNum > 30) totalDays += 7;  // Thi Giữa HK2
 
-  const startDate = new Date(termStart);
-  startDate.setDate(startDate.getDate() + (weekNum - 1) * 7);
-
+  startDate.setDate(startDate.getDate() + totalDays);
+  
   const endDate = new Date(startDate);
   endDate.setDate(endDate.getDate() + 6);
 

@@ -25,11 +25,11 @@ function mapRanking(r) {
         rank: r.rank || 0,
         classId: r.classId || r.class_id,
         class: r.className || r.class_name || "",
-        homeroom: r.homeroomTeacherName || r.homeroom_teacher_name || "",
-        points: r.avgDisciplineScore ?? r.avg_discipline_score ?? r.totalPoints ?? 0,
-        rawScore: r.rawScore ?? r.raw_score ?? null,
+        homeroom: r.homeroomTeacher || r.homeroomTeacherName || r.homeroom_teacher_name || "",
+        points: r.currentScore ?? r.avgScore ?? r.avgDisciplineScore ?? r.avg_discipline_score ?? r.totalPoints ?? 0,
+        rawScore: r.baseScore ?? r.rawScore ?? r.raw_score ?? null,
         bonusPoints: r.bonusPoints ?? r.bonus_points ?? 0,
-        penaltyPoints: r.penaltyPoints ?? r.penalty_points ?? 0,
+        penaltyPoints: r.deductedPoints ?? r.penaltyPoints ?? r.penalty_points ?? 0,
         normalizedScore: r.normalizedScore ?? r.normalized_score ?? null,
         trend: r.trend || "stable",
         previousRank: r.previousRank ?? r.previous_rank ?? null,
@@ -38,9 +38,9 @@ function mapRanking(r) {
         rewardBreakdown: r.rewardBreakdown ?? r.reward_breakdown ?? null,
         attendance: null,
         conduct: "",
-        studentCount: r.studentCount || r.student_count || 0,
+        studentCount: r.totalStudents ?? r.studentCount ?? r.student_count ?? 0,
         grade,
-        isNew: r.isNew ?? r.is_new ?? false,
+        isNew: r.trend === "NEW" || (r.isNew ?? r.is_new ?? false),
     };
 }
 
@@ -116,6 +116,7 @@ export default function VpDisciplineCompetition({ isEmbedded = false, onClassCli
                     endDate,
                     semesterId: selectedTerm?.id,
                     normalizeBySize,
+                    week: selectedWeek,
                 },
             });
             return res?.data || [];

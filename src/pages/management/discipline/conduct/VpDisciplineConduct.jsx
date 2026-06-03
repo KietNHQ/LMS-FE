@@ -11,7 +11,7 @@ import {
 import { toast } from "react-toastify";
 import { useQuery } from "@tanstack/react-query";
 import { vpDisciplineService } from "../../../../services/pages/management/vp-discipline";
-import { resolveSemesterId } from "../../../../services/shared/schoolYearLookup";
+import { resolveSemesterId, resolveSchoolYearId } from "../../../../services/shared/schoolYearLookup";
 import { getWeekDateRange } from "../../../../utils/competitionUtils";
 import "./VpDisciplineConduct.css";
 
@@ -84,13 +84,7 @@ export default function VpDisciplineConduct({ isEmbedded = false }) {
     const [hk1Id, setHk1Id] = useState(null);
     const [hk2Id, setHk2Id] = useState(null);
 
-    useEffect(() => {
-        if (urlClass) {
-            setSelectedClass(urlClass);
-            const grade = urlClass.slice(0, 2);
-            if (["10", "11", "12"].includes(grade)) setSelectedGrade(grade);
-        }
-    }, [urlClass]);
+
 
     // Resolve HK1/HK2 semester IDs whenever school year changes
     useEffect(() => {
@@ -113,8 +107,11 @@ export default function VpDisciplineConduct({ isEmbedded = false }) {
     const { data: classesData } = useQuery({
         queryKey: ["classes-for-conduct", selectedSchoolYear, selectedGrade],
         queryFn: async () => {
+            if (!selectedSchoolYear) return [];
+            const schoolYearId = await resolveSchoolYearId(selectedSchoolYear);
+            if (!schoolYearId) return [];
             const res = await vpDisciplineService.callByKey("get_classes", {
-                params: { schoolYearId: selectedSchoolYear, gradeLevelId: selectedGrade === "all" ? undefined : parseInt(selectedGrade) },
+                params: { schoolYearId, gradeLevelId: selectedGrade === "all" ? undefined : parseInt(selectedGrade) },
             });
             return res?.data || [];
         },
@@ -122,12 +119,35 @@ export default function VpDisciplineConduct({ isEmbedded = false }) {
         staleTime: 5 * 60_000,
     });
 
+    useEffect(() => {
+        if (urlClass) {
+            if (classesData && classesData.length > 0) {
+                const foundClass = classesData.find(
+                    (c) => String(c.id) === urlClass || c.name === urlClass || c.class_name === urlClass
+                );
+                if (foundClass) {
+                    setSelectedClass(foundClass.id);
+                    const gradeStr = String(foundClass.grade_level || foundClass.gradeLevel || (foundClass.name || foundClass.class_name || "").slice(0, 2));
+                    if (["10", "11", "12"].includes(gradeStr)) {
+                        setSelectedGrade(gradeStr);
+                    }
+                } else {
+                    setSelectedClass(urlClass);
+                }
+            } else {
+                setSelectedClass(urlClass);
+                const grade = urlClass.slice(0, 2);
+                if (["10", "11", "12"].includes(grade)) setSelectedGrade(grade);
+            }
+        }
+    }, [urlClass, classesData]);
+
     const classOptions = useMemo(() => {
         if (!classesData) return [];
         return classesData.map((c) => ({
-            value: c.id || c.name || c.class_name || "",
+            value: c.id,
             label: c.name || c.class_name || "",
-            grade: String(c.grade_level || c.gradeLevel || (c.name || "").slice(0, 2)),
+            grade: String(c.grade_level || c.gradeLevel || (c.name || c.class_name || "").slice(0, 2)),
         }));
     }, [classesData]);
 
@@ -293,7 +313,8 @@ export default function VpDisciplineConduct({ isEmbedded = false }) {
                     await vpDisciplineService.finalizeConductSemester(semesterId);
                 }
             } else {
-                await vpDisciplineService.submitConduct(selectedClass);
+                const semesterId = selectedTerm === "hk2" ? hk2Id : hk1Id;
+                await vpDisciplineService.submitConduct(selectedClass, semesterId);
             }
             toast.success(`Đã phê duyệt dự kiến hạnh kiểm. Thông báo đã được gửi đến GVCN, Phụ huynh và Học sinh.`);
             refetchAnnual();

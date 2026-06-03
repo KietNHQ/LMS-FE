@@ -1,5 +1,6 @@
 import { useMemo, useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
+import { getWeekDateRange } from "../../../../utils/competitionUtils";
 import { PageHeader, WeekPicker, StatusBadge, Pagination, LoadingSpinner } from "../../../../components/common";
 import DisciplineHeaderActions from "../components/DisciplineHeaderActions";
 import { useSchoolYearTerm } from "../../../../hooks/useSchoolYearTerm";
@@ -96,31 +97,40 @@ export default function VpDisciplineAttendance({ isEmbedded = false }) {
       setError(null);
 
       try {
-        let statsRes;
         if (selectedClass === "all") {
-          statsRes = await axiosClient.get("/attendance/stats", {
-            params: { semesterId: selectedTerm },
-          });
-        } else {
-          statsRes = await axiosClient.get(`/attendance/class/${selectedClass}/stats`, {
-            params: { semesterId: selectedTerm },
-          });
+          // If no specific class is selected, clear data
+          setAllRecords([]);
+          setRecords([]);
+          setIsLoading(false);
+          return;
         }
 
-        const statsData = statsRes?.data?.data || statsRes?.data || statsRes || {};
-        const details = statsData.details || [];
+        const { startDate, endDate } = getWeekDateRange(selectedSchoolYear, selectedTerm, selectedWeek);
 
-        const transformedRecords = details.map((student, idx) => ({
-          id: student.enrollment_id || idx + 1,
-          studentName: student.student_name || student.studentName || "Unknown",
-          className: student.class_name || student.className || selectedClass,
-          week: selectedWeek,
-          dayOfWeek: selectedDay,
-          reason: student.whole_day_status || student.status || "",
-          type: mapAttendanceStatus(student.whole_day_status || student.status),
-          points: calculatePoints(student.whole_day_status || student.status),
-          history: [],
-        }));
+        const statsRes = await axiosClient.get(`/attendance/class/${selectedClass}/monitoring`, {
+          params: { 
+            startDate,
+            endDate
+          },
+        });
+
+        const violations = statsRes?.data?.data || statsRes?.data || [];
+
+        const transformedRecords = violations.map((violation) => {
+          const vDate = new Date(violation.date);
+          const dayOfWeek = vDate.getDay() === 0 ? 8 : vDate.getDay() + 1; // 2=Thứ 2, ..., 8=CN
+          return {
+            id: violation.id,
+            studentName: violation.studentName || "Unknown",
+            className: selectedClass,
+            week: selectedWeek,
+            dayOfWeek: dayOfWeek.toString(), // string format to match selectedDay
+            reason: violation.reason || "",
+            type: violation.type, // 'excused', 'unexcused', 'late', 'skipping'
+            points: -Math.abs(violation.points || 0),
+            history: [],
+          };
+        });
 
         setAllRecords(transformedRecords);
         setRecords(transformedRecords);
@@ -134,7 +144,15 @@ export default function VpDisciplineAttendance({ isEmbedded = false }) {
     };
 
     fetchAttendanceData();
-  }, [selectedClass, selectedTerm, selectedWeek]);
+  }, [selectedClass, selectedTerm, selectedWeek, selectedSchoolYear]);
+
+  const mapViolationToType = (violationName) => {
+    const name = violationName?.toLowerCase() || "";
+    if (name.includes("muộn")) return "late";
+    if (name.includes("không phép") || name.includes("vắng mặt")) return "unexcused";
+    if (name.includes("trốn")) return "skipping";
+    return "unexcused";
+  };
 
   const mapAttendanceStatus = (status) => {
     const statusMap = {
