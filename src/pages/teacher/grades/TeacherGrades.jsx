@@ -9,10 +9,23 @@ import { gradeService } from "../../../services/pages/management/grades/gradeSer
 import { dataLockingService } from "../../../services/pages/admin/locking/dataLockingService";
 import { resolveSemesterId, resolveSchoolYearId } from "../../../services/shared/schoolYearLookup";
 import GradeListSection from "./components/gradeListSection/GradeListSection";
-import { FiPlus, FiSave, FiX, FiTrash2, FiLock, FiUnlock, FiSend, FiUser } from "react-icons/fi";
+import { FiPlus, FiSave, FiX, FiTrash2, FiLock, FiUnlock, FiSend, FiUser, FiCornerDownLeft } from "react-icons/fi";
 import GradeSummarySection, { GradeSummaryHeader } from "./components/gradeSummarySection/GradeSummarySection";
 import { toast } from "react-toastify";
+import { io } from "socket.io-client";
 import "./TeacherGrades.css";
+
+const getSocketUrl = () => {
+    const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:3000/api/v1";
+    return apiUrl.replace("/api/v1", "");
+};
+
+const getToken = () => {
+    const storedUser = JSON.parse(localStorage.getItem("user") || sessionStorage.getItem("user") || "{}");
+    return storedUser?.accessToken || localStorage.getItem("accessToken") || "";
+};
+
+let socket = null;
 
 const SEMESTERS = { hk1: { label: "Học kỳ 1" }, hk2: { label: "Học kỳ 2" } };
 const TABS = [
@@ -60,6 +73,8 @@ function buildStudentGradeRecords(students = [], gradeRows = [], gradeItems = []
       score: toScoreNumber(row.score),
       note: row.note || "",
       enteredAt: row.entered_at || row.created_at || null,
+      status: row.status,
+      unlockUntil: row.unlock_until,
     });
   }
 
@@ -148,7 +163,6 @@ export default function TeacherGrades() {
   const [atRiskDialogOpen, setAtRiskDialogOpen] = useState(false);
   const [unlockRequestOpen, setUnlockRequestOpen] = useState(false);
   const [unlockReason, setUnlockReason] = useState("");
-  const [retractedGradeId, setRetractedGradeId] = useState(null);
   const [isRetracting, setIsRetracting] = useState(false);
   const [lockStatus, setLockStatus] = useState("draft");
 
@@ -201,11 +215,68 @@ export default function TeacherGrades() {
     setSelectedSubjectId("");
   }, [selectedSchoolYear, selectedTerm]);
 
+  // ---- Socket.IO: listen for unlock request approvals/rejections ----
+  useEffect(() => {
+    const token = getToken();
+    if (!token) return;
+
+    if (socket) socket.disconnect();
+    socket = io(getSocketUrl(), {
+      auth: { token },
+      transports: ["websocket", "polling"],
+      reconnection: true,
+    });
+
+    socket.on("connect", () => {
+      console.log("[TeacherGrades] Socket connected:", socket.id);
+    });
+
+    // VP/Principal approved a request the teacher submitted → refresh lock status
+    socket.on("unlock_request:approved", ({ requestId, unlock_expires_at, hours }) => {
+      toast.success(`Yêu cầu mở khóa đã được duyệt! Dữ liệu sẽ mở trong ${hours} giờ.`);
+    });
+
+    // VP/Principal rejected a request the teacher submitted
+    socket.on("unlock_request:rejected", ({ requestId, reason }) => {
+      toast.info(`Yêu cầu mở khóa bị từ chối. Lý do: ${reason}`);
+    });
+
+    return () => {
+      if (socket) {
+        socket.off("connect");
+        socket.off("unlock_request:approved");
+        socket.off("unlock_request:rejected");
+        socket.disconnect();
+        socket = null;
+      }
+    };
+  }, []);
+
+  // Check if any finalized grade has an active unlock window
+  const hasActiveUnlock = useMemo(() => {
+    return records.some((r) => {
+      if (r.status !== "finalized") return false;
+      if (!r.unlockUntil) return false;
+      return new Date(r.unlockUntil) > new Date();
+    });
+  }, [records]);
+
   const canEdit = useMemo(() => {
-    if (lockStatus === "locked" || lockStatus === "pending") return false;
-    if (!selectedAssignment) return false;
-    return !!selectedAssignment.classTeacherSubjectId;
-  }, [lockStatus, selectedAssignment]);
+    // Must be GVBM to edit
+    if (!selectedAssignment?.classTeacherSubjectId) return false;
+    
+    // Draft: always editable
+    if (lockStatus === "draft") return true;
+    
+    // Pending: never editable (must retract first)
+    if (lockStatus === "pending") return false;
+    
+    // Finalized: editable only if has active unlock window
+    if (lockStatus === "finalized") return hasActiveUnlock;
+    
+    // Any other status: check unlock anyway
+    return hasActiveUnlock;
+  }, [lockStatus, selectedAssignment, hasActiveUnlock]);
 
   // ---- Load assignments when schoolYear/term changes ----
   useEffect(() => {
@@ -535,28 +606,77 @@ export default function TeacherGrades() {
     } catch { toast.error("Lỗi khi nộp điểm."); }
   };
 
+  const [retractLoading, setRetractLoading] = useState(false);
+
+  const handleRetract = async () => {
+    const confirmed = window.confirm("Bạn có chắc chắn muốn thu hồi điểm về bản nháp?");
+    if (!confirmed) return;
+    setRetractLoading(true);
+    try {
+      const semesterDbId = await resolveSemesterId(selectedSchoolYear, selectedTerm);
+      if (!semesterDbId) { toast.error("Không tìm thấy học kỳ."); return; }
+      const { teacherService } = await import("../../../services/pages/teacher/teacherService");
+      const res = await teacherService.retractGrade({
+        body: { classId: selectedClassId, classTeacherSubjectId: selectedAssignment?.classTeacherSubjectId, semesterId: semesterDbId },
+        mock: false,
+      });
+      if (res?.success) {
+        setLockStatus("draft");
+        toast.success("Đã thu hồi điểm về bản nháp!");
+      } else {
+        toast.error(res?.error || "Không thể thu hồi điểm.");
+      }
+    } catch { toast.error("Lỗi khi thu hồi điểm."); }
+    finally { setRetractLoading(false); }
+  };
+
   const handleSendUnlockRequest = async () => {
     if (!unlockReason.trim()) { toast.warning("Nhập lý do yêu cầu mở khóa."); return; }
-    if (!retractedGradeId) { toast.error("Không tìm thấy thông tin điểm để mở khóa."); return; }
+    if (unlockReason.trim().length < 10) { toast.warning("Lý do phải có ít nhất 10 ký tự."); return; }
+    if (!selectedAssignment?.classTeacherSubjectId) { toast.error("Không tìm thấy thông tin môn học."); return; }
 
     setIsRetracting(true);
     try {
       const semesterDbId = await resolveSemesterId(selectedSchoolYear, selectedTerm);
-      const { teacherService } = await import("../../../services/pages/teacher/teacherService");
-      const res = await teacherService.retractGrade({
-        pathParams: { id: retractedGradeId },
-        body: { notes: unlockReason },
-        mock: false,
-      });
-      if (res?.success) {
-        toast.success("Yêu cầu mở khóa đã được gửi!");
+      const classStudents = students.length > 0 ? students : [];
+
+      if (classStudents.length === 0) {
+        toast.error("Không có học sinh nào trong lớp.");
+        setIsRetracting(false);
+        return;
+      }
+
+      const { teacherGradeService } = await import("../../../services/pages/teacher/teacherGradeService");
+      const batchSize = 5;
+      let successCount = 0;
+      let failCount = 0;
+
+      for (let i = 0; i < classStudents.length; i += batchSize) {
+        const batch = classStudents.slice(i, i + batchSize);
+        const batchResults = await Promise.allSettled(
+          batch.map((s) =>
+            teacherGradeService.createUnlockRequest({
+              enrollmentId: s.enrollment_id,
+              semesterId: semesterDbId,
+              targetType: "grade",
+              reason: unlockReason,
+            })
+          )
+        );
+        successCount += batchResults.filter((r) => r.status === "fulfilled" && r.value && !r.value?.error).length;
+        failCount += batchResults.filter((r) => r.status === "rejected" || !r.value || r.value?.error).length;
+      }
+
+      if (failCount === 0) {
+        toast.success(`Đã gửi ${successCount} yêu cầu mở khóa!`);
         setUnlockRequestOpen(false);
-        setLockStatus("draft");
+        setUnlockReason("");
       } else {
-        toast.error("Không thể gửi yêu cầu: " + (res?.message || "Lỗi không xác định"));
+        toast.warning(`Đã gửi ${successCount} yêu cầu. ${failCount} yêu cầu thất bại (có thể đã có yêu cầu chờ duyệt).`);
+        setUnlockRequestOpen(false);
       }
     } catch (e) {
-      console.error("Retract grade error:", e);
+      console.error("Unlock request error:", e);
       toast.error("Lỗi khi gửi yêu cầu mở khóa.");
     } finally {
       setIsRetracting(false);
@@ -600,8 +720,12 @@ export default function TeacherGrades() {
           <span className={`grade-lock-status-badge ${lockStatus === "pending" || lockStatus === "locked" ? "is-locked" : "is-draft"}`}>
             {lockStatus === "pending" ? <><FiLock style={{ marginRight: 6 }} /> Đã nộp (chờ duyệt)</> : lockStatus === "locked" ? <><FiLock style={{ marginRight: 6 }} /> Đã khóa</> : <><FiUnlock style={{ marginRight: 6 }} /> Bản nháp</>}
           </span>
-          {(lockStatus === "pending" || lockStatus === "locked") ? (
-            <button className="teacher-grades-action-btn is-unlock-request" onClick={() => { setUnlockReason(""); setRetractedGradeId(selectedAssignment?.classTeacherSubjectId); setUnlockRequestOpen(true); }}>
+          {lockStatus === "pending" ? (
+            <button className="teacher-grades-action-btn is-draft" onClick={handleRetract} disabled={retractLoading}>
+              <FiCornerDownLeft style={{ marginRight: 6 }} /> Thu hồi
+            </button>
+          ) : (lockStatus === "locked") ? (
+            <button className="teacher-grades-action-btn is-unlock-request" onClick={() => { setUnlockReason(""); setUnlockRequestOpen(true); }}>
               <FiSend style={{ marginRight: 6 }} /> Yêu cầu mở khóa
             </button>
           ) : (

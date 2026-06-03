@@ -5,14 +5,26 @@ import Select from "../../../../components/ui/Select/Select";
 import { useSchoolYearTerm } from "../../../../hooks/useSchoolYearTerm";
 import { managementLeaveService } from "../../../../services/pages/management/leave-requests/managementLeaveService";
 import { unlockRequestService } from "../../../../services/pages/management/approvals/unlockRequestService";
+import { teacherService } from "../../../../services/pages/teacher/teacherService";
 import {
   FiCheckSquare, FiClock, FiSearch,
   FiInbox, FiAlertTriangle, FiX, FiCheck, FiChevronLeft, FiChevronRight
 } from "react-icons/fi";
 import { toast } from "react-toastify";
+import { io } from "socket.io-client";
 import "./PrincipalApprovals.css";
 
-// WORK_ITEMS removed. Data now comes from managementLeaveService via useQuery.
+const getSocketUrl = () => {
+    const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:3000/api/v1";
+    return apiUrl.replace("/api/v1", "");
+};
+
+const getToken = () => {
+    const storedUser = JSON.parse(localStorage.getItem("user") || sessionStorage.getItem("user") || "{}");
+    return storedUser?.accessToken || localStorage.getItem("accessToken") || "";
+};
+
+let socket = null;
 
 const STATUS_OPTIONS = [
   { value: "all", label: "Tất cả" },
@@ -124,11 +136,17 @@ export default function PrincipalApprovals() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [rejectNotes, setRejectNotes] = useState("");
   const [unlockRejectModal, setUnlockRejectModal] = useState({ open: false, request: null });
+  const [unlockApproveModal, setUnlockApproveModal] = useState({ open: false, request: null, hours: 1, notes: "" });
+  const [unlockPage, setUnlockPage] = useState(1);
+  const [unlockGradeLevel, setUnlockGradeLevel] = useState(null);
+  const unlockPageSize = 10;
+  const [gradeApprovals, setGradeApprovals] = useState([]);
+  const [gradeApprovalsLoading, setGradeApprovalsLoading] = useState(false);
+  const [selectedGradeApprovals, setSelectedGradeApprovals] = useState([]);
 
   const itemsPerPage = 6;
   const sectionLabel = selectedTerm === "hk1" ? "Học kỳ 1" : "Học kỳ 2";
 
-  // Fetch leave requests from backend via managementLeaveService
   const { data: leaveResponse, isLoading } = useQuery({
     queryKey: ["management-leave-requests", activeStatus],
     queryFn: () => managementLeaveService.getLeaveRequests({ status: activeStatus, limit: 100 }),
@@ -154,6 +172,41 @@ export default function PrincipalApprovals() {
     setItems(mappedLeaves);
     setCurrentPage(1);
   }, [leaveResponse]);
+
+  const queryClient = useQueryClient();
+
+  // ---- Socket.IO: listen for new unlock requests from teachers ----
+  useEffect(() => {
+    const token = getToken();
+    if (!token) return;
+
+    if (socket) socket.disconnect();
+    socket = io(getSocketUrl(), {
+      auth: { token },
+      transports: ["websocket", "polling"],
+      reconnection: true,
+    });
+
+    socket.on("connect", () => {
+      console.log("[PrincipalApprovals] Socket connected:", socket.id);
+    });
+
+    // A teacher created a new unlock request → refresh the list
+    socket.on("unlock_request:created", ({ request }) => {
+      toast.info(`Có yêu cầu mở khóa mới từ giáo viên!`);
+      // Force refetch the unlock-requests query so the list updates
+      queryClient.invalidateQueries({ queryKey: ["unlock-requests"] });
+    });
+
+    return () => {
+      if (socket) {
+        socket.off("connect");
+        socket.off("unlock_request:created");
+        socket.disconnect();
+        socket = null;
+      }
+    };
+  }, [queryClient]);
 
   const metrics = useMemo(() => {
     return {
@@ -221,19 +274,77 @@ export default function PrincipalApprovals() {
   };
 
   // ─── Unlock Requests ────────────────────────────────────────────────────────
-  const queryClient = useQueryClient();
 
   const unlockStatusParam = activeSection === "unlock"
     ? (activeStatus === "all" ? undefined : activeStatus)
     : undefined;
 
-  const { data: unlockResponse, isLoading: unlockLoading } = useQuery({
-    queryKey: ["unlock-requests", unlockStatusParam],
-    queryFn: () => unlockRequestService.listRequests({
-      status: unlockStatusParam,
-      limit: 100,
-    }),
+  // Reset page when status filter changes
+  useEffect(() => { setUnlockPage(1); }, [activeStatus, unlockGradeLevel]);
+
+  // ─── Grade Approvals (Chuyên môn) ────────────────────────────────────────
+  const [gradeApprovalGradeLevel, setGradeApprovalGradeLevel] = useState(null);
+
+  useEffect(() => {
+    if (activeSection !== "grades") return;
+    setGradeApprovalsLoading(true);
+    teacherService.getPendingGradeApprovals({
+      params: {
+        semesterId: selectedTerm === "hk1" ? 1 : 2,
+        gradeLevelId: gradeApprovalGradeLevel || undefined,
+      },
+      mock: false,
+    }).then(res => {
+      if (res?.success && res?.data?.items) {
+        setGradeApprovals(res.data.items);
+      } else {
+        setGradeApprovals([]);
+      }
+    }).catch(() => setGradeApprovals([])).finally(() => setGradeApprovalsLoading(false));
+  }, [activeSection, selectedTerm, gradeApprovalGradeLevel]);
+
+  const handleApproveGradeBatch = async () => {
+    if (selectedGradeApprovals.length === 0) {
+      toast.warning("Chọn ít nhất một điểm để duyệt");
+      return;
+    }
+    try {
+      const res = await teacherService.approveGradeBatch({
+        body: { gradeIds: selectedGradeApprovals, notes: "Duyệt chốt điểm" },
+        mock: false,
+      });
+      if (res?.success) {
+        toast.success(res.message || "Đã duyệt chốt điểm");
+        setSelectedGradeApprovals([]);
+        // Refresh
+        setGradeApprovalGradeLevel(null);
+      } else {
+        toast.error(res?.error || "Lỗi khi duyệt điểm");
+      }
+    } catch (e) {
+      toast.error("Lỗi khi duyệt điểm");
+    }
+  };
+
+  const toggleGradeApproval = (gradeId) => {
+    setSelectedGradeApprovals(prev =>
+      prev.includes(gradeId) ? prev.filter(id => id !== gradeId) : [...prev, gradeId]
+    );
+  };
+
+  const { data: unlockResponse, isLoading: unlockLoading, refetch: refetchUnlock } = useQuery({
+    queryKey: ["unlock-requests", unlockStatusParam, unlockPage, unlockPageSize, unlockGradeLevel],
+    queryFn: async () => {
+      const result = await unlockRequestService.listRequests({
+        status: unlockStatusParam,
+        page: unlockPage,
+        limit: unlockPageSize,
+        gradeLevelId: unlockGradeLevel || undefined,
+      });
+      return result;
+    },
     enabled: activeSection === "unlock" || activeSection === "all",
+    staleTime: 0,
   });
 
   const unlockApproveMutation = useMutation({
@@ -261,7 +372,23 @@ export default function PrincipalApprovals() {
   });
 
   const handleApproveUnlock = (request) => {
-    unlockApproveMutation.mutate({ id: request.id, hours: 24, notes: "Duyệt mở khóa điểm" });
+    setUnlockApproveModal({ open: true, request, hours: 1, notes: "" });
+  };
+
+  const handleBulkApproveUnlock = () => {
+    const pending = unlockResponse?.requests?.filter(r => r.status === "pending") || [];
+    if (pending.length === 0) { toast.info("Không có yêu cầu nào chờ duyệt."); return; }
+    // Use default 1 hour for bulk approve
+    pending.forEach(req => unlockApproveMutation.mutate({ id: req.id, hours: 0.1, notes: "Duyệt mở khóa điểm" }));
+  };
+
+  const confirmApproveUnlock = () => {
+    unlockApproveMutation.mutate({
+      id: unlockApproveModal.request.id,
+      hours: unlockApproveModal.hours,
+      notes: unlockApproveModal.notes || "Duyệt mở khóa điểm"
+    });
+    setUnlockApproveModal({ open: false, request: null, hours: 1, notes: "" });
   };
 
   const handleRejectUnlock = (request) => {
@@ -490,11 +617,103 @@ export default function PrincipalApprovals() {
         )}
       </div>
 
+      {/* ─── Chuyên môn (Duyệt chốt điểm) ─────────────────────────────────── */}
+      {activeSection === "grades" && (
+        <div className="approvals-table-container unlock-section">
+          <div className="table-header-context">
+            <h3>Duyệt chốt điểm chuyên môn</h3>
+            <div style={{ display: 'flex', gap: '12px', alignItems: 'center', marginBottom: '12px' }}>
+              <select
+                className="filter-dropdown"
+                value={gradeApprovalGradeLevel || ""}
+                onChange={(e) => setGradeApprovalGradeLevel(e.target.value ? Number(e.target.value) : null)}
+                style={{ minWidth: '150px' }}
+              >
+                <option value="">Tất cả khối lớp</option>
+                <option value="10">Khối 10</option>
+                <option value="11">Khối 11</option>
+                <option value="12">Khối 12</option>
+              </select>
+              {selectedGradeApprovals.length > 0 && (
+                <button className="btn-table-action" onClick={handleApproveGradeBatch}>
+                  Duyệt chốt ({selectedGradeApprovals.length})
+                </button>
+              )}
+            </div>
+          </div>
+
+          {gradeApprovalsLoading ? (
+            <div className="empty-state">
+              <div className="loading-spinner" />
+              <p>Đang tải điểm chờ duyệt...</p>
+            </div>
+          ) : gradeApprovals.length === 0 ? (
+            <div className="empty-state">
+              <FiAlertTriangle />
+              <p>Không có điểm nào đang chờ duyệt.</p>
+            </div>
+          ) : (
+            <table className="modern-table">
+              <thead>
+                <tr>
+                  <th style={{ width: 30 }}></th>
+                  <th>Lớp</th>
+                  <th>Môn</th>
+                  <th>Giáo viên</th>
+                  <th>Số điểm</th>
+                  <th>Trạng thái</th>
+                  <th className="text-right">Hành động</th>
+                </tr>
+              </thead>
+              <tbody>
+                {gradeApprovals.map((item) => (
+                  <tr key={`${item.classId}-${item.subjectId}`}>
+                    <td>
+                      <input
+                        type="checkbox"
+                        checked={item.grades.every(g => selectedGradeApprovals.includes(g.gradeId))}
+                        onChange={() => item.grades.forEach(g => toggleGradeApproval(g.gradeId))}
+                      />
+                    </td>
+                    <td>{item.className}</td>
+                    <td>{item.subjectName}</td>
+                    <td>{item.teacherName}</td>
+                    <td>{item.grades.length}</td>
+                    <td><span className="status-badge pending">Chờ duyệt</span></td>
+                    <td className="text-right">
+                      <button
+                        className="btn-table-action"
+                        onClick={() => item.grades.forEach(g => toggleGradeApproval(g.gradeId))}
+                      >
+                        {item.grades.every(g => selectedGradeApprovals.includes(g.gradeId)) ? "Bỏ chọn" : "Chọn tất cả"}
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+      )}
+
       {/* ─── Mở khóa điểm ───────────────────────────────────────────────────── */}
-      {(activeSection === "unlock" || activeSection === "all") && (
+      {activeSection === "unlock" && (
         <div className="approvals-table-container unlock-section">
           <div className="table-header-context">
             <h3>Yêu cầu mở khóa điểm</h3>
+            <div style={{ display: 'flex', gap: '12px', alignItems: 'center', marginBottom: '12px' }}>
+              <select
+                className="filter-dropdown"
+                value={unlockGradeLevel || ""}
+                onChange={(e) => setUnlockGradeLevel(e.target.value ? Number(e.target.value) : null)}
+                style={{ minWidth: '150px' }}
+              >
+                <option value="">Tất cả khối lớp</option>
+                <option value="10">Khối 10</option>
+                <option value="11">Khối 11</option>
+                <option value="12">Khối 12</option>
+              </select>
+            </div>
           </div>
 
           {unlockLoading ? (
@@ -502,13 +721,14 @@ export default function PrincipalApprovals() {
               <div className="loading-spinner" />
               <p>Đang tải yêu cầu...</p>
             </div>
-          ) : !unlockResponse?.data?.requests?.length ? (
+          ) : !unlockResponse?.requests?.length ? (
             <div className="empty-state">
               <FiAlertTriangle />
               <p>Không có yêu cầu mở khóa nào.</p>
             </div>
           ) : (
-            <table className="modern-table">
+            <>
+              <table className="modern-table">
               <thead>
                 <tr>
                   <th>Học sinh</th>
@@ -522,7 +742,7 @@ export default function PrincipalApprovals() {
                 </tr>
               </thead>
               <tbody>
-                {unlockResponse.data.requests.map((req) => (
+                {unlockResponse.requests.map((req) => (
                   <tr key={req.id}>
                     <td><strong>{req.student_id}</strong></td>
                     <td>{req.class_name || req.class_id}</td>
@@ -583,6 +803,55 @@ export default function PrincipalApprovals() {
                 ))}
               </tbody>
             </table>
+
+            {/* Footer actions */}
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 16 }}>
+              <span style={{ color: "#64748b", fontSize: "0.85rem" }}>
+                Tổng: {unlockResponse.pagination?.total || unlockResponse.requests.length} yêu cầu
+              </span>
+              <div style={{ display: "flex", gap: 8 }}>
+                {unlockResponse.requests.some(r => r.status === "pending") && (
+                  <button
+                    className="btn-table-action"
+                    style={{ backgroundColor: "#28a745", fontWeight: 600 }}
+                    onClick={handleBulkApproveUnlock}
+                    disabled={unlockApproveMutation.isPending || unlockRejectMutation.isPending}
+                  >
+                    <FiCheckSquare style={{ marginRight: 4 }} />
+                    Duyệt tất cả ({unlockResponse.requests.filter(r => r.status === "pending").length})
+                  </button>
+                )}
+                {unlockResponse.pagination && unlockResponse.pagination.totalPages > 1 && (
+                  <div className="page-numbers">
+                    <button
+                      className="page-btn"
+                      onClick={() => setUnlockPage(p => Math.max(1, p - 1))}
+                      disabled={unlockPage === 1}
+                    >
+                      <FiChevronLeft />
+                    </button>
+                    {Array.from({ length: unlockResponse.pagination.totalPages }, (_, i) => i + 1).map(page => (
+                      <button
+                        key={page}
+                        className={`page-num ${unlockPage === page ? "active" : ""}`}
+                        style={unlockPage === page ? { background: "#3b82f6", color: "#fff", border: "1px solid #3b82f6" } : {}}
+                        onClick={() => setUnlockPage(page)}
+                      >
+                        {page}
+                      </button>
+                    ))}
+                    <button
+                      className="page-btn"
+                      onClick={() => setUnlockPage(p => Math.min(unlockResponse.pagination.totalPages, p + 1))}
+                      disabled={unlockPage === unlockResponse.pagination.totalPages}
+                    >
+                      <FiChevronRight />
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+            </>
           )}
         </div>
       )}
@@ -623,6 +892,97 @@ export default function PrincipalApprovals() {
                 disabled={unlockRejectMutation.isPending}
               >
                 {unlockRejectMutation.isPending ? "Đang xử lý..." : "Xác nhận từ chối"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ─── Approve Unlock Modal ─────────────────────────────────────────────── */}
+      {unlockApproveModal.open && (
+        <div className="modal-overlay" onClick={() => setUnlockApproveModal({ open: false, request: null, hours: 1, notes: "" })}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 450 }}>
+            <div className="modal-header">
+              <h2>Phê duyệt mở khóa điểm</h2>
+              <button className="modal-close" onClick={() => setUnlockApproveModal({ open: false, request: null, hours: 1, notes: "" })}>
+                <FiX />
+              </button>
+            </div>
+            <div className="modal-body">
+              <div className="modal-section">
+                <label>Yêu cầu mở khóa của: <strong>{unlockApproveModal.request?.requestedByName}</strong></label>
+                <p style={{ color: "#64748b", fontSize: "0.9rem", margin: "8px 0" }}>
+                  Học sinh: {unlockApproveModal.request?.studentName || unlockApproveModal.request?.student?.fullName || "N/A"} - Lớp: {unlockApproveModal.request?.className || "N/A"}
+                </p>
+              </div>
+
+              <div className="modal-section">
+                <label>Thời gian mở khóa <span style={{ color: "red" }}>*</span></label>
+                <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+                  <input
+                    type="number"
+                    min="0"
+                    max="720"
+                    step="0.1"
+                    placeholder="VD: 0.1 = 6 phút, 1 = 1 giờ"
+                    value={unlockApproveModal.hours}
+                    onChange={(e) => setUnlockApproveModal(prev => ({ ...prev, hours: parseFloat(e.target.value) || 0 }))}
+                    style={{ width: 100, padding: 8, borderRadius: 6, border: "1px solid #ddd", fontSize: "1rem" }}
+                  />
+                  <span style={{ color: "#64748b" }}>giờ</span>
+                  <div style={{ display: "flex", gap: 6, marginLeft: 12 }}>
+                    <button type="button" onClick={() => setUnlockApproveModal(prev => ({ ...prev, hours: 0.5 }))}
+                      style={{ padding: "4px 10px", borderRadius: 4, border: "1px solid #ddd", background: unlockApproveModal.hours === 0.5 ? "#3b82f6" : "#fff", color: unlockApproveModal.hours === 0.5 ? "#fff" : "#333", cursor: "pointer", fontSize: "0.8rem" }}>
+                      30p
+                    </button>
+                    <button type="button" onClick={() => setUnlockApproveModal(prev => ({ ...prev, hours: 1 }))}
+                      style={{ padding: "4px 10px", borderRadius: 4, border: "1px solid #ddd", background: unlockApproveModal.hours === 1 ? "#3b82f6" : "#fff", color: unlockApproveModal.hours === 1 ? "#fff" : "#333", cursor: "pointer", fontSize: "0.8rem" }}>
+                      1h
+                    </button>
+                    <button type="button" onClick={() => setUnlockApproveModal(prev => ({ ...prev, hours: 2 }))}
+                      style={{ padding: "4px 10px", borderRadius: 4, border: "1px solid #ddd", background: unlockApproveModal.hours === 2 ? "#3b82f6" : "#fff", color: unlockApproveModal.hours === 2 ? "#fff" : "#333", cursor: "pointer", fontSize: "0.8rem" }}>
+                      2h
+                    </button>
+                    <button type="button" onClick={() => setUnlockApproveModal(prev => ({ ...prev, hours: 4 }))}
+                      style={{ padding: "4px 10px", borderRadius: 4, border: "1px solid #ddd", background: unlockApproveModal.hours === 4 ? "#3b82f6" : "#fff", color: unlockApproveModal.hours === 4 ? "#fff" : "#333", cursor: "pointer", fontSize: "0.8rem" }}>
+                      4h
+                    </button>
+                    <button type="button" onClick={() => setUnlockApproveModal(prev => ({ ...prev, hours: 24 }))}
+                      style={{ padding: "4px 10px", borderRadius: 4, border: "1px solid #ddd", background: unlockApproveModal.hours === 24 ? "#3b82f6" : "#fff", color: unlockApproveModal.hours === 24 ? "#fff" : "#333", cursor: "pointer", fontSize: "0.8rem" }}>
+                      24h
+                    </button>
+                  </div>
+                </div>
+                <p style={{ color: "#94a3b8", fontSize: "0.8rem", marginTop: 6 }}>
+                  Hệ thống sẽ tự động khóa lại sau {unlockApproveModal.hours} giờ
+                </p>
+              </div>
+
+              <div className="modal-section">
+                <label>Ghi chú (tùy chọn)</label>
+                <textarea
+                  rows={2}
+                  value={unlockApproveModal.notes}
+                  onChange={(e) => setUnlockApproveModal(prev => ({ ...prev, notes: e.target.value }))}
+                  placeholder="Nhập ghi chú phê duyệt..."
+                  style={{ width: "100%", padding: 8, borderRadius: 6, border: "1px solid #ddd", resize: "vertical" }}
+                />
+              </div>
+            </div>
+            <div className="modal-footer">
+              <button
+                className="btn-modal-reject"
+                onClick={() => setUnlockApproveModal({ open: false, request: null, hours: 1, notes: "" })}
+                disabled={unlockApproveMutation.isPending}
+              >
+                Hủy
+              </button>
+              <button
+                className="btn-modal-approve"
+                onClick={confirmApproveUnlock}
+                disabled={unlockApproveMutation.isPending || unlockApproveModal.hours <= 0}
+              >
+                {unlockApproveMutation.isPending ? "Đang xử lý..." : "Xác nhận duyệt"}
               </button>
             </div>
           </div>

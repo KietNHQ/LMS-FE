@@ -208,15 +208,15 @@ export default function TeacherHomeroom() {
 
     // Load conduct summary for homeroom class
     const { data: conductData, refetch: refetchConduct } = useQuery({
-        queryKey: ["teacher-homeroom-conduct", classData?.id, selectedTerm],
+        queryKey: ["teacher-homeroom-conduct", classData?.id, selectedTerm, hkSemesterIds],
         queryFn: async () => {
             if (!classData?.id) return null;
 
             const students = classData.students || [];
 
             // Per-student classifySemester for the selected term
-            const hk1Id = selectedTerm === "hk1" ? hkSemesterIds.hk1 : hkSemesterIds.hk1;
-            const hk2Id = selectedTerm === "hk2" ? hkSemesterIds.hk2 : hkSemesterIds.hk2;
+            const hk1Id = hkSemesterIds.hk1;
+            const hk2Id = hkSemesterIds.hk2;
 
             // Determine which semester IDs to fetch based on term
             const semesterIdsToFetch = [];

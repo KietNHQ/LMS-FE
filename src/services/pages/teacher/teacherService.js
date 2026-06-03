@@ -281,7 +281,7 @@ const teacherEndpointRegistry = [
   {
     key: "post_grades_retract",
     method: "POST",
-    path: "/grades/retract/:id",
+    path: "/grades/retract-batch",
     module: "grades",
     mock: false
   },
@@ -289,6 +289,20 @@ const teacherEndpointRegistry = [
     key: "get_grades_lock_status",
     method: "GET",
     path: "/grades/lock-status",
+    module: "grades",
+    mock: false
+  },
+  {
+    key: "get_pending_grade_approvals",
+    method: "GET",
+    path: "/grades/pending-approvals",
+    module: "grades",
+    mock: false
+  },
+  {
+    key: "post_grades_approve_batch",
+    method: "POST",
+    path: "/grades/approve-batch",
     module: "grades",
     mock: false
   },
@@ -435,6 +449,8 @@ export const teacherService = {
   submitBatchGrades: (input) => endpointCallers.post_grades_submit_batch(input),
   retractGrade: (input) => endpointCallers.post_grades_retract(input),
   getGradesLockStatus: (input) => endpointCallers.get_grades_lock_status(input),
+  getPendingGradeApprovals: (input) => endpointCallers.get_pending_grade_approvals(input),
+  approveGradeBatch: (input) => endpointCallers.post_grades_approve_batch(input),
   getChatContacts: (input) => endpointCallers.get_chat_contacts(input),
   getChatMessages: (input) => endpointCallers.get_chat_messages(input),
   sendMessage: (input) => endpointCallers.post_chat_message(input),

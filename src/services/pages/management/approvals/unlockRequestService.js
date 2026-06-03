@@ -10,8 +10,12 @@ export const unlockRequestService = {
    * @param {object} params - { status, semesterId, schoolYearId, targetType, page, limit }
    */
   listRequests: async (params = {}) => {
-    const response = await axiosClient.get("/unlock-requests", { params });
-    return response?.data ?? response;
+    const response = await axiosClient.get("/unlock-requests", { params, cache: "no-store" });
+    console.log("[unlockRequestService] raw response:", response);
+    console.log("[unlockRequestService] response?.data:", response?.data);
+    const result = response?.data ?? response;
+    console.log("[unlockRequestService] returning:", result);
+    return result;
   },
 
   /**

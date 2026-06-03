@@ -10,6 +10,7 @@ import { toast } from "react-toastify";
 import DisciplineHeaderActions from "../components/DisciplineHeaderActions";
 import ViolationRecordModal from "../components/ViolationRecordModal";
 import IncidentHandleModal from "../components/IncidentHandleModal";
+import ViolationCalendar from "../components/ViolationCalendar";
 import ManagementLeaveRequests from "../../leave-requests/ManagementLeaveRequests";
 import { vpDisciplineService } from "../../../../services/pages/management/vp-discipline";
 import { resolveSemesterId, resolveSchoolYearId } from "../../../../services/shared/schoolYearLookup";
@@ -30,6 +31,7 @@ export default function VpDisciplineMgmt() {
     // Tab Navigation States
     const [activeTab, setActiveTab] = useState("discipline");
     const [canViewLeaveRequests, setCanViewLeaveRequests] = useState(false);
+    const [disciplineView, setDisciplineView] = useState("table"); // "table" | "calendar"
 
     useEffect(() => {
         try {
@@ -392,7 +394,31 @@ export default function VpDisciplineMgmt() {
                         ))}
                     </div>
 
-                    <div className="dm-main-container">
+                    <div className="dm-calendar-toggle">
+                        <button
+                            className={`dm-view-toggle-btn ${disciplineView === "table" ? "active" : ""}`}
+                            onClick={() => setDisciplineView("table")}
+                        >
+                            <FiBarChart2 />
+                            Bảng
+                        </button>
+                        <button
+                            className={`dm-view-toggle-btn ${disciplineView === "calendar" ? "active" : ""}`}
+                            onClick={() => setDisciplineView("calendar")}
+                        >
+                            <FiCalendar />
+                            Lịch
+                        </button>
+                    </div>
+
+                    {disciplineView === "calendar" ? (
+                        <ViolationCalendar
+                            selectedSchoolYear={selectedSchoolYear}
+                            selectedTerm={selectedTerm}
+                            selectedGrade={selectedGrade}
+                            selectedClass={selectedClass}
+                        />
+                    ) : (
                         <div className="dm-panel main-ops-panel-full">
                             <div className="dm-header-v2">
                                 <div className="dm-toolbar-integrated">
@@ -473,10 +499,10 @@ export default function VpDisciplineMgmt() {
                                                         </td>
                                                         <td>
                                                             <StatusBadge status={incident.status || 'new'}>
-                                                                {incident.status === 'processing' ? 'Đang xử lý' : 
-                                                                 incident.status === 'resolved' ? 'Đã giải quyết' : 
-                                                                 incident.status === 'closed' ? 'Đã đóng' : 
-                                                                 incident.status === 'approved' ? 'Đã duyệt' : 
+                                                                {incident.status === 'processing' ? 'Đang xử lý' :
+                                                                 incident.status === 'resolved' ? 'Đã giải quyết' :
+                                                                 incident.status === 'closed' ? 'Đã đóng' :
+                                                                 incident.status === 'approved' ? 'Đã duyệt' :
                                                                  incident.status === 'rejected' ? 'Từ chối' : 'Mới'}
                                                             </StatusBadge>
                                                         </td>
@@ -506,15 +532,15 @@ export default function VpDisciplineMgmt() {
                                 </>
                             )}
                         </div>
-                    </div>
+                )}
                 </>
             ) : (
                 <div className="leave-requests-wrapper">
                     <ManagementLeaveRequests />
                 </div>
             )}
-            <ViolationRecordModal 
-                isOpen={isViolationModalOpen} 
+            <ViolationRecordModal
+                isOpen={isViolationModalOpen}
                 onClose={() => {
                     setIsViolationModalOpen(false);
                     setEditingIncident(null);
@@ -523,7 +549,7 @@ export default function VpDisciplineMgmt() {
                 incidents={incidents}
                 editData={editingIncident}
             />
-            <IncidentHandleModal 
+            <IncidentHandleModal
                 isOpen={isHandleModalOpen}
                 onClose={() => setIsHandleModalOpen(false)}
                 incident={selectedIncident}
