@@ -70,8 +70,10 @@ const ClassStudentsSection = ({ classId, students, readOnly = false, isStudentVi
   useEffect(() => {
     if (!selectedSchoolYear || !selectedTerm) return;
     let cancelled = false;
-    resolveSemesterId(selectedSchoolYear, selectedTerm).then((id) => {
-      if (!cancelled) setResolvedSemester(id ? { id } : null);
+    import("../../../../../services/shared/schoolYearLookup").then((module) => {
+      module.resolveSemester(selectedSchoolYear, selectedTerm).then((sem) => {
+        if (!cancelled) setResolvedSemester(sem || null);
+      });
     });
     return () => { cancelled = true; };
   }, [selectedSchoolYear, selectedTerm]);
@@ -809,10 +811,21 @@ const ClassStudentsSection = ({ classId, students, readOnly = false, isStudentVi
     console.log("Drafted studentReviews:", JSON.parse(JSON.stringify(studentReviews)));
     console.log("Compiled studentReports to send:", JSON.parse(JSON.stringify(studentReports)));
 
+    let finalPeriodId = currentSchedule?.periodId || currentSchedule?.id || null;
+    if (selectedLessonPeriod && selectedLessonPeriod.toString().startsWith("new_")) {
+      const parts = selectedLessonPeriod.split("_");
+      finalPeriodId = parseInt(parts[1], 10);
+    } else if (selectedLessonPeriod && !isNaN(parseInt(selectedLessonPeriod))) {
+       const existingReview = lessonReviews.find(r => r.id === selectedLessonPeriod);
+       if (existingReview && existingReview.periodId) {
+          finalPeriodId = existingReview.periodId;
+       }
+    }
+
     const evaluationData = {
       classId: parseInt(classId),
       subjectAssignmentId: currentSchedule?.subject_assignment_id || null,
-      periodId: currentSchedule?.periodId || currentSchedule?.id || null,
+      periodId: finalPeriodId,
       lessonInstanceId: currentSchedule?.lessonInstanceId || null,
       schoolDayId: currentSchedule?.schoolDayId || null,
       dayOfWeek: currentSchedule?.dayOfWeek || null,
@@ -901,7 +914,8 @@ const ClassStudentsSection = ({ classId, students, readOnly = false, isStudentVi
   const firstOfMonth = new Date(calendarViewDate.getFullYear(), calendarViewDate.getMonth(), 1);
   const daysInMonth = new Date(calendarViewDate.getFullYear(), calendarViewDate.getMonth() + 1, 0).getDate();
   const firstWeekday = (firstOfMonth.getDay() + 6) % 7;
-  const calendarCells = Array.from({ length: 42 }, (_, idx) => {
+  
+  const generateCalendarCells = () => Array.from({ length: 42 }, (_, idx) => {
     const dayOffset = idx - firstWeekday + 1;
     const dateObj = new Date(calendarViewDate.getFullYear(), calendarViewDate.getMonth(), dayOffset);
     const dateKey = toDateKey(dateObj);
@@ -917,6 +931,38 @@ const ClassStudentsSection = ({ classId, students, readOnly = false, isStudentVi
       hasLesson: Array.isArray(teachingDays) && teachingDays.includes(dayOfWeekInDB),
     };
   });
+
+  // Calendar props based on semester dates
+  let minDateStr = undefined;
+  let maxDateStr = undefined;
+  if (resolvedSemester) {
+    if (resolvedSemester.start_date) {
+      minDateStr = resolvedSemester.start_date.split('T')[0];
+    }
+    if (resolvedSemester.end_date) {
+      maxDateStr = resolvedSemester.end_date.split('T')[0];
+      // Expand maxDateStr to today if the current date is after the semester end date
+      const maxDateObj = new Date(maxDateStr);
+      const todayObj = new Date();
+      todayObj.setHours(0, 0, 0, 0);
+      if (todayObj > maxDateObj) {
+         maxDateStr = new Date(todayObj.getTime() - (todayObj.getTimezoneOffset() * 60000)).toISOString().split('T')[0];
+      }
+    }
+  }
+
+  const calendarProps = {
+    calendarMonthLabel,
+    calendarViewDate,
+    setCalendarViewDate,
+    calendarCells: generateCalendarCells(),
+    onSelectDate: (dateKey) => {
+      setSelectedHistoryDate(dateKey);
+      setIsCalendarOpen(false);
+    },
+    minDate: minDateStr,
+    maxDate: maxDateStr,
+  };
 
   return (
     <div className="students-card">
@@ -937,16 +983,7 @@ const ClassStudentsSection = ({ classId, students, readOnly = false, isStudentVi
         onEditLessonReview={handleEditLessonReview}
         onDeleteLessonReview={handleDeleteLessonReview}
         readOnly={readOnly}
-        calendarProps={{
-          calendarMonthLabel,
-          calendarViewDate,
-          setCalendarViewDate,
-          calendarCells,
-          onSelectDate: (dateKey) => {
-            setSelectedHistoryDate(dateKey);
-            setIsCalendarOpen(false);
-          }
-        }}
+        calendarProps={calendarProps}
       />
 
       <div className="students-card-actions-row">

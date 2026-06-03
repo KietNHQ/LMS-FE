@@ -73,6 +73,7 @@ export default function TeacherHomeroom() {
             if (!teacherId) return null;
 
             let classResData = null;
+            let consolidatedSuccess = false;
 
             try {
                 // Thử gọi API Consolidated trước
@@ -83,30 +84,41 @@ export default function TeacherHomeroom() {
                         term: selectedTerm 
                     }
                 });
-                if (consolidatedRes.success && consolidatedRes.data) {
-                    classResData = consolidatedRes.data;
+                if (consolidatedRes.success) {
+                    consolidatedSuccess = true;
+                    const data = consolidatedRes.data;
+                    if (Array.isArray(data) && data.length === 0) {
+                        classResData = null;
+                    } else if (Array.isArray(data)) {
+                        classResData = data[0];
+                    } else if (data && Object.keys(data).length > 0) {
+                        classResData = data;
+                    }
                 }
             } catch (e) {
                 // Silently fallback to multiple calls if consolidated API is not ready
             }
 
             // Fallback: Gọi chuỗi API cũ
-            if (!classResData) {
+            if (!consolidatedSuccess && !classResData) {
                 const homeroomRes = await teacherService.getHomeroomClasses({
                     mock: false,
                     pathParams: { id: teacherId }
                 });
 
                 if (homeroomRes.success && homeroomRes.data && homeroomRes.data.length > 0) {
-                    const firstClass = homeroomRes.data[0];
-                    const detailRes = await teacherService.getClassDetails({ pathParams: { id: firstClass.id } });
-                    if (detailRes.success && detailRes.data) {
-                        classResData = detailRes.data;
+                    // Cố gắng lọc theo năm học nếu API cũ có trả về school_year
+                    const filteredClass = homeroomRes.data.find(c => c.school_year === selectedSchoolYear);
+                    if (filteredClass) {
+                        const detailRes = await teacherService.getClassDetails({ pathParams: { id: filteredClass.id } });
+                        if (detailRes.success && detailRes.data) {
+                            classResData = detailRes.data;
+                        }
                     }
                 }
             }
 
-            if (!classResData) return homeroomData;
+            if (!classResData || Object.keys(classResData).length === 0) return null;
 
             // Fetch actual grades for accurate academic stats
             let academicData = null;
@@ -455,6 +467,17 @@ export default function TeacherHomeroom() {
     if (isLoading) {
         return (
             <div className="teacher-homeroom-page">
+                <PageHeader
+                    title="Lớp chủ nhiệm"
+                    actions={
+                        <SchoolYearTermSelector
+                            selectedSchoolYear={selectedSchoolYear}
+                            selectedTerm={selectedTerm}
+                            onYearChange={handleYearArrow}
+                            onTermChange={handleTermChange}
+                        />
+                    }
+                />
                 <div className="loading-state">
                     <div className="spinner"></div>
                     <p>Đang tải dữ liệu lớp chủ nhiệm...</p>
@@ -466,6 +489,17 @@ export default function TeacherHomeroom() {
     if (!classData) {
         return (
             <div className="teacher-homeroom-page">
+                <PageHeader
+                    title="Lớp chủ nhiệm"
+                    actions={
+                        <SchoolYearTermSelector
+                            selectedSchoolYear={selectedSchoolYear}
+                            selectedTerm={selectedTerm}
+                            onYearChange={handleYearArrow}
+                            onTermChange={handleTermChange}
+                        />
+                    }
+                />
                 <div className="empty-state">
                     <div className="empty-state-icon">
                         <FiInfo size={48} />

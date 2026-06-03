@@ -42,7 +42,9 @@ const LessonTimeline = ({
   onTodayClick,
   onEditLessonReview,
   onDeleteLessonReview,
-  readOnly
+  readOnly,
+  minDate,
+  maxDate
 }) => {
   return (
     <section className="lesson-timeline" aria-label="Mốc thời gian tiết học">
@@ -84,6 +86,8 @@ const LessonTimeline = ({
             <input
               type="date"
               value={selectedHistoryDate}
+              min={minDate}
+              max={maxDate}
               onChange={(e) => setSelectedHistoryDate(e.target.value)}
               onMouseDown={(e) => {
                 e.preventDefault();

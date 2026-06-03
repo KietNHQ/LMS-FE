@@ -1,9 +1,10 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { createPortal } from "react-dom";
 import { FiChevronLeft, FiChevronRight, FiX, FiUser, FiAlertTriangle, FiClock, FiCheckCircle } from "react-icons/fi";
 import { vpDisciplineService } from "../../../../services/pages/management/vp-discipline/vpDisciplineService";
 import { resolveSemesterId } from "../../../../services/shared/schoolYearLookup";
+import { getWeekDateObjects } from "../../../../components/common/WeekPicker/WeekPicker";
 import StatusBadge from "../../../../components/common/StatusBadge/StatusBadge.jsx";
 import "./ViolationCalendar.css";
 
@@ -28,9 +29,29 @@ const ViolationCalendar = ({
   selectedTerm,
   selectedGrade = "all",
   selectedClass = "all",
+  selectedWeek,
 }) => {
   const today = new Date();
-  const [currentDate, setCurrentDate] = useState(new Date(today.getFullYear(), today.getMonth(), 1));
+  
+  // Initialize currentDate based on selectedWeek if provided
+  const initialDate = useMemo(() => {
+    if (selectedWeek) {
+        const { start } = getWeekDateObjects(selectedWeek);
+        return new Date(start.getFullYear(), start.getMonth(), 1);
+    }
+    return new Date(today.getFullYear(), today.getMonth(), 1);
+  }, [selectedWeek]);
+
+  const [currentDate, setCurrentDate] = useState(initialDate);
+  
+  // Sync when selectedWeek changes externally
+  useEffect(() => {
+      if (selectedWeek) {
+          const { start } = getWeekDateObjects(selectedWeek);
+          setCurrentDate(new Date(start.getFullYear(), start.getMonth(), 1));
+      }
+  }, [selectedWeek]);
+
   const [calendarView, setCalendarView] = useState("month"); // "month" | "week"
   const [selectedDayViolations, setSelectedDayViolations] = useState(null);
   const [isPanelOpen, setIsPanelOpen] = useState(false);
@@ -55,13 +76,11 @@ const ViolationCalendar = ({
 
   // Fetch violations for the visible month
   const { data: violations = [], isLoading: isLoadingViolations } = useQuery({
-    queryKey: ["discipline-violations-cal", resolvedSemesterId, rangeStart, rangeEnd],
+    queryKey: ["discipline-violations-cal", rangeStart, rangeEnd],
     queryFn: async () => {
-      if (!resolvedSemesterId) return [];
       try {
         const res = await vpDisciplineService.callByKey("get_discipline_violations", {
           params: {
-            semesterId: resolvedSemesterId,
             startDate: rangeStart,
             endDate: rangeEnd,
             page: 1,
@@ -85,7 +104,7 @@ const ViolationCalendar = ({
         return [];
       }
     },
-    enabled: Boolean(resolvedSemesterId),
+    enabled: Boolean(rangeStart && rangeEnd),
     staleTime: 30_000,
   });
 
