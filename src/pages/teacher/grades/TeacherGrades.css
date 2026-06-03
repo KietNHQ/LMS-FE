@@ -511,6 +511,257 @@
 }
 
 /* Glassmorphism details for request unlock modal text area */
+/* Glassmorphism details for request unlock modal text area */
 .teacher-grade-unlock-request-modal textarea {
   resize: none;
 }
+
+/* ---- Filter Bar ---- */
+.tg-filter-bar {
+  display: flex;
+  align-items: flex-end;
+  gap: 16px;
+  background: #ffffff;
+  padding: 20px 24px;
+  border-radius: 20px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.05);
+  border: 1px solid var(--tc-border-soft);
+  flex-wrap: wrap;
+}
+
+.tg-select {
+  min-width: 180px;
+}
+
+.tg-lock-controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-left: auto;
+}
+
+/* ---- Tabs ---- */
+.tg-tabs {
+  display: flex;
+  gap: 4px;
+  background: #ffffff;
+  padding: 6px;
+  border-radius: 16px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  border: 1px solid var(--tc-border-soft);
+  width: fit-content;
+}
+
+.tg-tab {
+  padding: 10px 24px;
+  border-radius: 12px;
+  border: none;
+  background: transparent;
+  color: #64748b;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: inherit;
+}
+
+.tg-tab:hover {
+  background: var(--tc-primary-soft);
+  color: var(--tc-primary);
+}
+
+.tg-tab.is-active {
+  background: var(--tc-primary);
+  color: #ffffff;
+  box-shadow: 0 2px 8px rgba(4,160,148,0.3);
+}
+
+/* ---- Tab Content ---- */
+.tg-tab-content {
+  animation: fadeIn 0.3s ease-out;
+}
+
+.tg-empty-hint {
+  padding: 60px 20px;
+  text-align: center;
+  color: #94a3b8;
+  font-size: 15px;
+  font-weight: 600;
+  background: #ffffff;
+  border-radius: 20px;
+  border: 1px dashed #cbd5e1;
+}
+
+.tg-empty-state {
+  text-align: center;
+  color: #94a3b8;
+  padding: 24px;
+  font-size: 14px;
+}
+
+/* ---- Class Overview ---- */
+.tg-overview-grid {
+  background: #ffffff;
+  border-radius: 20px;
+  border: 1px solid var(--tc-border-soft);
+  overflow: hidden;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.04);
+}
+
+.tg-overview-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.tg-overview-table thead th {
+  background: #f8fafc;
+  padding: 14px 20px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #475569;
+  text-align: left;
+  border-bottom: 1px solid #e2e8f0;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.tg-overview-row {
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.tg-overview-row:hover {
+  background: var(--tc-primary-soft);
+}
+
+.tg-overview-row td {
+  padding: 14px 20px;
+  font-size: 14px;
+  color: #1e293b;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+/* ---- Student List ---- */
+.tg-students-list {
+  background: #ffffff;
+  border-radius: 20px;
+  border: 1px solid var(--tc-border-soft);
+  overflow: hidden;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.04);
+}
+
+.tg-students-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.tg-students-table thead th {
+  background: #f8fafc;
+  padding: 14px 20px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #475569;
+  text-align: left;
+  border-bottom: 1px solid #e2e8f0;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.tg-students-table tbody td {
+  padding: 14px 20px;
+  font-size: 14px;
+  color: #1e293b;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.tg-students-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.tg-detail-btn {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 14px;
+  background: var(--tc-primary-soft);
+  color: var(--tc-primary);
+  border: none;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: inherit;
+}
+
+.tg-detail-btn:hover {
+  background: var(--tc-primary);
+  color: #ffffff;
+}
+
+/* ---- Student Detail Modal ---- */
+.tg-student-detail-modal {
+  border-radius: 28px;
+  overflow: hidden;
+}
+
+.tg-student-detail-body {
+  padding: 24px;
+  background: #ffffff;
+  max-height: 65vh;
+  overflow-y: auto;
+}
+
+.tg-student-specs {
+  display: flex;
+  gap: 24px;
+  padding: 12px 16px;
+  background: #f8fafc;
+  border-radius: 12px;
+  margin-bottom: 20px;
+  font-size: 14px;
+  color: #475569;
+}
+
+.tg-detail-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 16px;
+}
+
+.tg-detail-table thead th {
+  background: #f8fafc;
+  padding: 12px 16px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-bottom: 2px solid #e2e8f0;
+}
+
+.tg-detail-table tbody td {
+  padding: 12px 16px;
+  font-size: 14px;
+  color: #1e293b;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.tg-detail-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.tg-detail-formula {
+  font-size: 13px;
+  color: #64748b;
+  text-align: center;
+  padding: 12px;
+  background: #f8fafc;
+  border-radius: 10px;
+  margin-top: 8px;
+}
+
+.bold { font-weight: 700; }
+
+.text-center { text-align: center; }
+
+.success { color: #059669; }

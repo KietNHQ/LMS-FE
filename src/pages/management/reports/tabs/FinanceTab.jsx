@@ -63,7 +63,7 @@ const FinanceTab = ({ reportData, formatCurrency }) => {
                                             <td>{item.category}</td>
                                             <td className="text-right bold">{formatCurrency(item.amount)}</td>
                                             <td className="text-right">
-                                                {((item.amount / summary.totalRevenue) * 100).toFixed(1)}%
+                                                {summary.totalRevenue > 0 ? ((item.amount / summary.totalRevenue) * 100).toFixed(1) : 0}%
                                             </td>
                                         </tr>
                                     ))}
@@ -119,7 +119,7 @@ const FinanceTab = ({ reportData, formatCurrency }) => {
                                             <td>{item.category}</td>
                                             <td className="text-right bold danger-text">{formatCurrency(item.amount)}</td>
                                             <td className="text-right">
-                                                {((item.amount / summary.totalExpense) * 100).toFixed(1)}%
+                                                {summary.totalExpense > 0 ? ((item.amount / summary.totalExpense) * 100).toFixed(1) : 0}%
                                             </td>
                                         </tr>
                                     ))}

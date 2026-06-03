@@ -15,26 +15,32 @@ const gradeLetterMap = {
     "Khối 12": "C",
 };
 
-const gradeOptions = [
-    { label: "Khối 10", value: "Khối 10" },
-    { label: "Khối 11", value: "Khối 11" },
-    { label: "Khối 12", value: "Khối 12" },
-];
-
-const defaultForm = {
-    grade: "Khối 10",
-    name: "10A",
-    year: getCurrentYear(),
-    teacher: "Trần Thị Hương",
+const buildDefaultForm = (gradeOptions, defaultSchoolYear) => {
+    const firstGrade = gradeOptions[0];
+    const gradeLabel = firstGrade?.label || "Khối 10";
+    const gradeNum = `${gradeLabel}`.match(/\d+/)?.[0] || "10";
+    return {
+        grade: gradeLabel,
+        name: `${gradeNum}A`,
+        year: defaultSchoolYear || getCurrentYear(),
+        teacher: "",
+    };
 };
 
 export default function ClassInfoSection({
     mode = "create",
     initialData = null,
+    gradeOptions = [],
+    defaultSchoolYear = "",
     onClose,
     onSubmit,
 }) {
-    const [formData, setFormData] = useState(() => defaultForm);
+    const selectGradeOptions = gradeOptions.map((g) => ({
+        label: g.label,
+        value: g.label,
+    }));
+
+    const [formData, setFormData] = useState(() => buildDefaultForm(selectGradeOptions, defaultSchoolYear));
     const [isTeacherDialogOpen, setIsTeacherDialogOpen] = useState(false);
 
     useEffect(() => {
@@ -47,27 +53,21 @@ export default function ClassInfoSection({
                 grade: initialData.grade || "Khối 10",
                 name: initialData.name || "",
                 year: initialData.year || getCurrentYear(),
-                teacher: initialData.teacher || "Trần Thị Hương",
+                teacher: initialData.teacher || "",
                 id: initialData.id,
                 students: initialData.students || 0,
                 subjects: initialData.subjects || [],
                 color: initialData.color || "blue",
             });
         } else if (mode === "create") {
-            const currentYear = getCurrentYear();
-            setFormData({
-                grade: "Khối 10",
-                name: "10A",
-                year: currentYear,
-                teacher: "Trần Thị Hương",
-            });
+            setFormData(buildDefaultForm(selectGradeOptions, defaultSchoolYear));
         }
-    }, [mode, initialData]);
+    }, [mode, initialData, defaultSchoolYear, gradeOptions]);
 
     const handleGradeChange = (e) => {
         const newGrade = e.target.value;
-        const letter = gradeLetterMap[newGrade];
-        const gradeNum = newGrade.match(/\d+/)[0];
+        const letter = gradeLetterMap[newGrade] || "A";
+        const gradeNum = newGrade.match(/\d+/)?.[0] || "10";
 
         setFormData((prev) => ({
             ...prev,
@@ -136,7 +136,7 @@ export default function ClassInfoSection({
                     <div className="form-group">
                         <Select
                             label="Khối lớp"
-                            options={gradeOptions}
+                            options={selectGradeOptions.length > 0 ? selectGradeOptions : [{ label: "Khối 10", value: "Khối 10" }]}
                             value={formData.grade}
                             onChange={handleGradeChange}
                             name="grade"

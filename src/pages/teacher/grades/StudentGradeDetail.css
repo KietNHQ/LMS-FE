@@ -1,0 +1,166 @@
+.student-grade-detail-page {
+  padding: 0 24px 32px;
+}
+
+.btn-back {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 16px;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  color: #475569;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.btn-back:hover {
+  background: #f8fafc;
+  border-color: #94a3b8;
+  color: #1e293b;
+}
+
+.sgd-info-bar {
+  display: flex;
+  gap: 24px;
+  padding: 16px 20px;
+  background: #fff;
+  border-radius: 10px;
+  margin: 16px 0 20px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  flex-wrap: wrap;
+}
+
+.sgd-info-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.sgd-info-label {
+  font-size: 11px;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 500;
+}
+
+.sgd-info-value {
+  font-size: 15px;
+  color: #334155;
+}
+.sgd-info-value.bold {
+  font-weight: 700;
+  color: #1e293b;
+  font-size: 17px;
+}
+
+.sgd-table-wrapper {
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  overflow: hidden;
+}
+
+.sgd-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.sgd-table thead {
+  background: #f8fafc;
+}
+
+.sgd-table th {
+  padding: 12px 16px;
+  text-align: left;
+  font-size: 12px;
+  font-weight: 600;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-bottom: 2px solid #e2e8f0;
+}
+
+.sgd-table td {
+  padding: 12px 16px;
+  border-bottom: 1px solid #f1f5f9;
+  color: #334155;
+}
+
+.sgd-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.sgd-table tbody tr:hover {
+  background: #f8fafc;
+}
+
+.sgd-table .bold {
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid #e2e8f0;
+  border-top-color: #3b82f6;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.sgd-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px;
+  color: #64748b;
+  gap: 12px;
+}
+
+.sgd-subjects-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+  background: #fff;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+}
+
+.sgd-subjects-table thead {
+  background: #f8fafc;
+}
+
+.sgd-subjects-table th {
+  padding: 12px 16px;
+  text-align: left;
+  font-size: 12px;
+  font-weight: 600;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-bottom: 2px solid #e2e8f0;
+}
+
+.sgd-subjects-table td {
+  padding: 12px 16px;
+  border-bottom: 1px solid #f1f5f9;
+  color: #334155;
+}
+
+.sgd-subjects-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.sgd-subjects-table tbody tr:hover {
+  background: #f8fafc;
+}

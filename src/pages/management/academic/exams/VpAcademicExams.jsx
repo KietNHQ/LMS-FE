@@ -1,42 +1,98 @@
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
-import { 
-    SchoolYearTermSelector, 
-    Pagination, 
-    PageHeader, 
-    StatusBadge, 
-    SectionCard 
+import {
+    SchoolYearTermSelector,
+    Pagination,
+    PageHeader,
+    StatusBadge,
+    SectionCard
 } from "../../../../components/common";
 import { Button, Input, Select, Modal } from "../../../../components/ui";
 import { useSchoolYearTerm } from "../../../../hooks/useSchoolYearTerm";
 import { FiCalendar, FiPlus, FiClock, FiUsers, FiBookOpen } from "react-icons/fi";
 import { toast } from "react-toastify";
+import examService from "../../../../services/pages/management/exam/examService";
+import { resolveSchoolYearId, resolveSemesterId } from "../../../../services/shared/schoolYearLookup";
+import LoadingSpinner from "../../../../components/common/LoadingSpinner/LoadingSpinner";
 import "./VpAcademicExams.css";
 
 export default function VpAcademicExams() {
     const navigate = useNavigate();
     const { selectedSchoolYear, selectedTerm, handleYearArrow, handleTermChange } = useSchoolYearTerm();
 
-    const exams = [
-        { id: 1, title: "Thi Giữa Học Kỳ II - Môn Toán - Khối 12", date: "25/11/2026", status: "SẮP TỚI", statusType: "success", candidates: "450 học sinh", type: "Tập trung", duration: "90 phút", staffArrival: "07:15", startTime: "07:30", description: "Kỳ thi đánh giá năng lực môn Toán học kỳ II cho toàn bộ học sinh khối 12.", subjects: ["Toán học"], rooms: 15, staff: 30 },
-        { id: 2, title: "Thi Giữa Học Kỳ II - Môn Ngữ Văn - Khối 12", date: "25/11/2026", status: "SẮP TỚI", statusType: "success", candidates: "450 học sinh", type: "Tập trung", duration: "120 phút", staffArrival: "13:45", startTime: "14:00", description: "Kỳ thi đánh giá năng lực môn Ngữ văn học kỳ II cho toàn bộ học sinh khối 12.", subjects: ["Ngữ văn"], rooms: 15, staff: 30 },
-        { id: 3, title: "Thi thử Đại học Lần 1 - Môn Tiếng Anh - Khối 12", date: "15/12/2026", status: "ĐANG LẬP KẾ HOẠCH", statusType: "info", candidates: "450 học sinh", type: "Thử nghiệm", duration: "60 phút", staffArrival: "07:30", startTime: "08:00", description: "Mô phỏng kỳ thi tốt nghiệp THPT môn Tiếng Anh.", subjects: ["Tiếng Anh"], rooms: 18, staff: 36 },
-        { id: 4, title: "Kiểm tra tập trung - Môn Vật lý - Khối 11", date: "20/11/2026", status: "SẮP TỚI", statusType: "success", candidates: "480 học sinh", type: "Định kỳ", duration: "45 phút", staffArrival: "07:30", startTime: "07:45", description: "Kiểm tra kiến thức chương I & II môn Vật lý.", subjects: ["Vật lý"], rooms: 16, staff: 32 },
-        { id: 5, title: "Thi HSG Cấp Trường - Môn Hóa Học - Khối 10,11,12", date: "10/01/2027", status: "ĐANG LẬP KẾ HOẠCH", statusType: "info", candidates: "120 học sinh", type: "Bồi dưỡng", duration: "150 phút", staffArrival: "07:00", startTime: "07:30", description: "Tuyển chọn đội tuyển học sinh giỏi môn Hóa học.", subjects: ["Hóa học"], rooms: 5, staff: 10 },
-        { id: 6, title: "Khảo sát năng lực - Môn Tiếng Anh - Khối 10", date: "15/11/2026", status: "SẮP TỚI", statusType: "success", candidates: "520 học sinh", type: "Khảo sát", duration: "60 phút", staffArrival: "13:30", startTime: "14:00", description: "Đánh giá trình độ tiếng Anh đầu vào học kỳ I.", subjects: ["Tiếng Anh"], rooms: 18, staff: 36 },
-        { id: 7, title: "Thi Giữa Học Kỳ II - Môn Sinh Học - Khối 12", date: "26/11/2026", status: "SẮP TỚI", statusType: "success", candidates: "450 học sinh", type: "Tập trung", duration: "60 phút", staffArrival: "07:30", startTime: "08:00", description: "Đánh giá năng lực môn Sinh học.", subjects: ["Sinh học"], rooms: 15, staff: 30 },
-        { id: 8, title: "Thi Giữa Học Kỳ II - Môn Lịch Sử - Khối 12", date: "26/11/2026", status: "SẮP TỚI", statusType: "success", candidates: "450 học sinh", type: "Tập trung", duration: "45 phút", staffArrival: "13:30", startTime: "14:00", description: "Đánh giá năng lực môn Lịch sử.", subjects: ["Lịch sử"], rooms: 15, staff: 30 },
-        { id: 9, title: "Thi Giữa Học Kỳ II - Môn Địa Lý - Khối 12", date: "27/11/2026", status: "SẮP TỚI", statusType: "success", candidates: "450 học sinh", type: "Tập trung", duration: "45 phút", staffArrival: "07:30", startTime: "08:00", description: "Đánh giá năng lực môn Địa lý.", subjects: ["Địa lý"], rooms: 15, staff: 30 },
-        { id: 10, title: "Thi Giữa Học Kỳ II - Môn GDCD - Khối 12", date: "27/11/2026", status: "SẮP TỚI", statusType: "success", candidates: "450 học sinh", type: "Tập trung", duration: "45 phút", staffArrival: "13:30", startTime: "14:00", description: "Đánh giá năng lực môn GDCD.", subjects: ["GDCD"], rooms: 15, staff: 30 },
-        { id: 11, title: "Thi thử Đại học Lần 2 - Môn Toán - Khối 12", date: "15/02/2027", status: "ĐANG LẬP KẾ HOẠCH", statusType: "info", candidates: "450 học sinh", type: "Thử nghiệm", duration: "90 phút", staffArrival: "07:15", startTime: "07:30", description: "Lần thi thử thứ 2 để rà soát kiến thức.", subjects: ["Toán học"], rooms: 15, staff: 30 },
-        { id: 12, title: "Kiểm tra năng lực số - Khối 10,11", date: "05/12/2026", status: "ĐANG LẬP KẾ HOẠCH", statusType: "info", candidates: "1000 học sinh", type: "Khảo sát", duration: "45 phút", staffArrival: "08:00", startTime: "08:30", description: "Khảo sát kỹ năng sử dụng công nghệ số.", subjects: ["Tin học"], rooms: 35, staff: 70 },
-    ];
+    // Fetch school year and semester IDs
+    const [lookupIds, setLookupIds] = useState({ schoolYearId: null, semesterId: null });
 
+    const { data: lookupData } = useQuery({
+        queryKey: ["school-year-lookup", selectedSchoolYear, selectedTerm],
+        queryFn: async () => {
+            const [schoolYearId, semesterId] = await Promise.all([
+                resolveSchoolYearId(selectedSchoolYear),
+                resolveSemesterId(selectedSchoolYear, selectedTerm),
+            ]);
+            return { schoolYearId, semesterId };
+        },
+        onSuccess: (data) => setLookupIds(data),
+    });
+
+    // Fetch exams from API
+    const {
+        data: exams = [],
+        isLoading,
+        error,
+    } = useQuery({
+        queryKey: ["exams", lookupIds.semesterId, lookupIds.schoolYearId],
+        queryFn: () => examService.listExams({
+            semesterId: lookupIds.semesterId,
+            schoolYearId: lookupIds.schoolYearId,
+        }),
+        enabled: !!lookupIds.semesterId || !!lookupIds.schoolYearId,
+        staleTime: 5 * 60 * 1000,
+    });
+
+    // Normalize API exam data to match UI expectations
+    const normalizeExam = (exam) => {
+        // Handle API response fields
+        const statusMap = {
+            'SCHEDULED': 'success',
+            'PLANNING': 'info',
+            'COMPLETED': 'secondary',
+            'CANCELLED': 'danger',
+        };
+
+        const typeMap = {
+            'CENTERED': 'Tập trung',
+            'SURVEY': 'Khảo sát',
+            'PRACTICE': 'Thử nghiệm',
+            'GIFTED': 'Bồi dưỡng',
+            'REGULAR': 'Định kỳ',
+        };
+
+        return {
+            id: exam.id,
+            title: exam.title || exam.name || "Kỳ thi",
+            date: exam.start_date ? new Date(exam.start_date).toLocaleDateString('vi-VN') : (exam.date || ""),
+            status: exam.status || exam.state || "SẮP TỚI",
+            statusType: statusMap[exam.status] || statusMap[exam.state] || exam.statusType || "info",
+            candidates: exam.candidates || exam.student_count ? `${exam.candidates || exam.student_count} học sinh` : "—",
+            type: typeMap[exam.exam_type] || exam.examType || exam.type || "Tập trung",
+            duration: exam.duration ? `${exam.duration} phút` : (exam.duration_text || "90 phút"),
+            staffArrival: exam.staff_arrival || exam.staffArrival || "07:00",
+            startTime: exam.start_time || exam.startTime || "07:30",
+            description: exam.description || exam.desc || "",
+            subjects: exam.subjects || exam.subject_list || exam.exam_subjects || [],
+            rooms: exam.rooms || exam.room_count || exam.room || 0,
+            staff: exam.staff || exam.invigilators || 0,
+        };
+    };
+
+    const normalizedExams = exams.map(normalizeExam);
     const ITEMS_PER_PAGE = 6;
     const [currentPage, setCurrentPage] = useState(1);
-    const totalPages = Math.ceil(exams.length / ITEMS_PER_PAGE);
-    
-    const paginatedExams = exams.slice(
+    const totalPages = Math.ceil(normalizedExams.length / ITEMS_PER_PAGE);
+
+    const paginatedExams = normalizedExams.slice(
         (currentPage - 1) * ITEMS_PER_PAGE,
         currentPage * ITEMS_PER_PAGE
     );
@@ -123,14 +179,31 @@ export default function VpAcademicExams() {
                 <div className="section-header-vpa-simple">
                     <div className="sh-left">
                         <FiBookOpen className="sh-icon" />
-                        <span>Danh sách các kỳ thi ({exams.length})</span>
+                        <span>Danh sách các kỳ thi ({normalizedExams.length})</span>
                     </div>
                     <Button variant="primary" onClick={openCreate} className="vpa-btn-main">
                         <FiPlus /> Tạo kỳ thi mới
                     </Button>
                 </div>
 
-                <div className="exams-grid-vpa">
+                {isLoading ? (
+                    <div style={{ textAlign: "center", padding: "3rem" }}>
+                        <LoadingSpinner size="lg" label="Đang tải danh sách kỳ thi..." />
+                    </div>
+                ) : error ? (
+                    <div style={{ textAlign: "center", padding: "3rem", color: "#c0392b" }}>
+                        <p>Đã xảy ra lỗi khi tải danh sách kỳ thi.</p>
+                        <p style={{ fontSize: "0.9rem" }}>{error.message || "Vui lòng thử lại sau."}</p>
+                    </div>
+                ) : paginatedExams.length === 0 ? (
+                    <div style={{ textAlign: "center", padding: "3rem", color: "#666" }}>
+                        <p>Chưa có kỳ thi nào cho học kỳ này.</p>
+                        <Button variant="primary" onClick={openCreate} style={{ marginTop: "1rem" }}>
+                            <FiPlus /> Tạo kỳ thi đầu tiên
+                        </Button>
+                    </div>
+                ) : (
+                    <div className="exams-grid-vpa">
                     {paginatedExams.map((exam, i) => (
                         <SectionCard key={i} className={`exam-card-vpa status-border-${exam.statusType}`}>
                             <div className="exam-card-header">
@@ -166,15 +239,16 @@ export default function VpAcademicExams() {
                             </div>
                         </SectionCard>
                     ))}
-                </div>
+                    <div className="vpa-pagination-wrapper">
+                        <Pagination
+                            currentPage={currentPage}
+                            totalPages={totalPages}
+                            onPageChange={setCurrentPage}
+                        />
+                    </div>
+                    </div>
+                )}
 
-                <div className="vpa-pagination-wrapper">
-                    <Pagination 
-                        currentPage={currentPage} 
-                        totalPages={totalPages} 
-                        onPageChange={setCurrentPage} 
-                    />
-                </div>
             </div>
 
             {/* DETAIL MODAL */}

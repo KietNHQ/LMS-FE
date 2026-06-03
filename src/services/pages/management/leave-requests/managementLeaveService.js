@@ -282,7 +282,17 @@ export const managementLeaveService = {
           search: search || undefined
         }
       });
-      return response?.data ?? response;
+      const data = response ?? {};
+      if (data.data) {
+        data.data = data.data.map(req => ({
+          ...req,
+          studentName: req.student?.fullName || "",
+          studentCode: req.student?.studentCode || "",
+          className: req.student?.className || "",
+          guardianName: req.guardian?.fullName || "",
+        }));
+      }
+      return data;
     } catch (error) {
       console.warn("API GET /management/leave-requests failed. Falling back to stateful mock.");
       return managementLeaveService.getLeaveRequests({ ...filters, mock: true });
@@ -331,9 +341,10 @@ export const managementLeaveService = {
 
     try {
       const response = await axiosClient.patch(`/management/leave-requests/${id}/approve`, {
+        action: "approved",
         admin_notes: adminNotes
       });
-      return response?.data ?? response;
+      return response ?? {};
     } catch (error) {
       console.warn(`PATCH /management/leave-requests/${id}/approve failed. Trying mock fallback.`);
       // Fallback to local
@@ -412,9 +423,10 @@ export const managementLeaveService = {
 
     try {
       const response = await axiosClient.patch(`/management/leave-requests/${id}/reject`, {
+        action: "rejected",
         admin_notes: adminNotes
       });
-      return response?.data ?? response;
+      return response ?? {};
     } catch (error) {
       console.warn(`PATCH /management/leave-requests/${id}/reject failed. Trying mock fallback.`);
       let list = getMockRequests();

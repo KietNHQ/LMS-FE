@@ -1,7 +1,8 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useCallback } from "react";
 import { PageHeader, Pagination, SchoolYearTermSelector } from "../../../../components/common";
 import Modal from "../../../../components/ui/Modal/Modal";
 import { useSchoolYearTerm } from "../../../../hooks/useSchoolYearTerm";
+import financeService from "../../../../services/pages/management/finance/financeService";
 import {
     FiAlertCircle,
     FiBell,
@@ -14,6 +15,7 @@ import {
     FiMail,
     FiMonitor,
     FiPlus,
+    FiRefreshCw,
     FiSearch,
     FiSend,
     FiSmartphone,
@@ -78,136 +80,6 @@ const TARGET_OPTIONS = [
 
 const PRIORITY_LEVEL = { low: 1, medium: 2, high: 3, critical: 4 };
 
-const MOCK_NOTIFICATIONS = [
-    {
-        id: "NOTI-3012",
-        title: "Nhắc nộp báo cáo công nợ tuần 3",
-        summary: "Khối 10 chưa gửi đủ báo cáo đối chiếu công nợ trước 16:30 hôm nay.",
-        reportType: "Công nợ theo khối",
-        target: "Giáo vụ + Kế toán khối 10",
-        channel: "in-app",
-        priority: "critical",
-        status: "unread",
-        requiresAction: true,
-        pinned: true,
-        sentAt: "2026-04-21T08:45:00",
-        dueAt: "2026-04-21T16:30:00",
-        sender: "Hệ thống Tài chính",
-        deliveryRate: 100,
-    },
-    {
-        id: "NOTI-3011",
-        title: "Báo cáo thu học phí tháng 4 đã phát hành",
-        summary: "File tổng hợp đã phát hành và sẵn sàng duyệt.",
-        reportType: "Thu học phí tháng",
-        target: "Ban giám hiệu",
-        channel: "email",
-        priority: "high",
-        status: "read",
-        requiresAction: false,
-        pinned: false,
-        sentAt: "2026-04-21T07:15:00",
-        dueAt: "2026-04-22T12:00:00",
-        sender: "Kế toán trưởng",
-        deliveryRate: 96,
-    },
-    {
-        id: "NOTI-3009",
-        title: "Lịch nhắc xác nhận dữ liệu quyết toán quý",
-        summary: "Thông báo sẽ gửi tự động vào 09:00 ngày mai.",
-        reportType: "Quyết toán quý",
-        target: "Phòng tài vụ + VP học vụ",
-        channel: "sms",
-        priority: "medium",
-        status: "scheduled",
-        requiresAction: false,
-        pinned: false,
-        sentAt: "2026-04-20T15:00:00",
-        dueAt: "2026-04-22T09:00:00",
-        sender: "Kế toán trưởng",
-        deliveryRate: 0,
-    },
-    {
-        id: "NOTI-3008",
-        title: "Cảnh báo thiếu phụ lục báo cáo miễn giảm",
-        summary: "03 hồ sơ miễn giảm thiếu phụ lục hợp lệ.",
-        reportType: "Miễn giảm học phí",
-        target: "Tổ kế toán",
-        channel: "in-app",
-        priority: "high",
-        status: "unread",
-        requiresAction: true,
-        pinned: false,
-        sentAt: "2026-04-20T14:10:00",
-        dueAt: "2026-04-21T15:00:00",
-        sender: "Hệ thống kiểm soát",
-        deliveryRate: 100,
-    },
-    {
-        id: "NOTI-3007",
-        title: "Kết quả đối soát thu hộ bán trú",
-        summary: "Đối soát hoàn tất, còn 2 mục chênh lệch.",
-        reportType: "Đối soát thu hộ",
-        target: "Tài vụ + Thủ quỹ",
-        channel: "email",
-        priority: "medium",
-        status: "read",
-        requiresAction: true,
-        pinned: false,
-        sentAt: "2026-04-20T10:20:00",
-        dueAt: "2026-04-22T10:00:00",
-        sender: "Kế toán tổng hợp",
-        deliveryRate: 93,
-    },
-    {
-        id: "NOTI-3006",
-        title: "Đã chốt báo cáo thu chi tuần",
-        summary: "Phiên bản v1.2 đã chốt và lưu trữ.",
-        reportType: "Thu chi tuần",
-        target: "Phòng tài chính",
-        channel: "in-app",
-        priority: "low",
-        status: "read",
-        requiresAction: false,
-        pinned: false,
-        sentAt: "2026-04-19T17:00:00",
-        dueAt: "2026-04-23T17:00:00",
-        sender: "Hệ thống Tài chính",
-        deliveryRate: 100,
-    },
-    {
-        id: "NOTI-3005",
-        title: "Nhắc bổ sung số liệu công khai tài chính",
-        summary: "Biểu mẫu 02 còn thiếu dữ liệu ở khối 11.",
-        reportType: "Công khai tài chính",
-        target: "Kế toán công khai",
-        channel: "email",
-        priority: "critical",
-        status: "unread",
-        requiresAction: true,
-        pinned: true,
-        sentAt: "2026-04-19T09:30:00",
-        dueAt: "2026-04-21T11:00:00",
-        sender: "Ban kiểm soát nội bộ",
-        deliveryRate: 88,
-    },
-    {
-        id: "NOTI-3004",
-        title: "Lịch phát hành báo cáo tổng hợp cuối tháng",
-        summary: "Lịch gửi nhắc cho toàn bộ nhóm phụ trách đã đặt trước.",
-        reportType: "Tổng hợp cuối tháng",
-        target: "Toàn bộ bộ phận tài chính",
-        channel: "sms",
-        priority: "low",
-        status: "scheduled",
-        requiresAction: false,
-        pinned: false,
-        sentAt: "2026-04-18T13:20:00",
-        dueAt: "2026-04-25T08:30:00",
-        sender: "Kế toán trưởng",
-        deliveryRate: 0,
-    },
-];
 
 function formatDateTime(value) {
     return new Date(value).toLocaleString("vi-VN", {
@@ -238,7 +110,8 @@ function getPriorityLabel(priority) {
 
 export default function FinanceNotifications() {
     const { selectedSchoolYear, selectedTerm, handleYearArrow, handleTermChange } = useSchoolYearTerm();
-    const [notifications, setNotifications] = useState(MOCK_NOTIFICATIONS);
+    const [notifications, setNotifications] = useState([]);
+    const [loading, setLoading] = useState(false);
     const [activeTab, setActiveTab] = useState("all");
     const [searchQuery, setSearchQuery] = useState("");
     const [priorityFilter, setPriorityFilter] = useState("all");
@@ -246,7 +119,7 @@ export default function FinanceNotifications() {
     const [sortBy, setSortBy] = useState("newest");
     const [showPinnedOnly, setShowPinnedOnly] = useState(false);
     const [currentPage, setCurrentPage] = useState(1);
-    const [selectedId, setSelectedId] = useState(MOCK_NOTIFICATIONS[0]?.id ?? null);
+    const [selectedId, setSelectedId] = useState(null);
     const [dialogMode, setDialogMode] = useState(null);
     const [composer, setComposer] = useState({
         title: "",
@@ -258,6 +131,43 @@ export default function FinanceNotifications() {
         requiresAction: true,
         scheduleAt: "",
     });
+
+    const normalizeNotification = (item) => ({
+        id: item.id,
+        title: item.title || "",
+        summary: item.content || item.summary || "",
+        reportType: item.reportType || item.report_type || (item.type || "").replace(/_/g, " "),
+        target: item.target || TARGET_OPTIONS[0],
+        channel: item.channel || (item.send_email ? "email" : "in-app"),
+        priority: item.priority || "medium",
+        status: item.status || "unread",
+        requiresAction: item.requiresAction ?? item.requires_action ?? false,
+        pinned: item.pinned ?? false,
+        sentAt: item.sent_at || item.created_at || item.sentAt,
+        dueAt: item.due_at || item.dueAt || null,
+        sender: item.sender || [item.created_by_given_name, item.created_by_surname].filter(Boolean).join(" ") || "Kế toán",
+        deliveryRate: item.delivery_rate || item.deliveryRate || 0,
+    });
+
+    const loadNotifications = useCallback(async () => {
+        setLoading(true);
+        try {
+            const res = await financeService.getNotifications({
+                params: { schoolYearId: selectedSchoolYear?.id },
+            });
+            const rows = Array.isArray(res?.data) ? res.data
+                : Array.isArray(res?.items) ? res.items
+                : Array.isArray(res) ? res : [];
+            setNotifications(rows.map(normalizeNotification));
+        } catch (err) {
+            console.error("[FinanceNotifications] loadNotifications error:", err);
+            toast.error("Không thể tải danh sách thông báo");
+        } finally {
+            setLoading(false);
+        }
+    }, [selectedSchoolYear?.id]);
+
+    useEffect(() => { loadNotifications(); }, [loadNotifications]);
 
     const unreadCount = useMemo(
         () => notifications.filter((item) => item.status === "unread").length,
@@ -388,26 +298,46 @@ export default function FinanceNotifications() {
         setDialogMode(null);
     };
 
-    const markAsRead = (id) => {
-        setNotifications((prev) => prev.map((item) => (item.id === id ? { ...item, status: "read" } : item)));
-        toast.success("Đã đánh dấu đã đọc.");
+    const markAsRead = async (id) => {
+        try {
+            await financeService.markNotificationRead(id);
+            setNotifications((prev) => prev.map((item) => (item.id === id ? { ...item, status: "read" } : item)));
+            toast.success("Đã đánh dấu đã đọc.");
+        } catch (err) {
+            console.error("[FinanceNotifications] markAsRead error:", err);
+        }
     };
 
-    const markAllVisibleAsRead = () => {
-        const visibleIds = new Set(filteredNotifications.map((item) => item.id));
-        setNotifications((prev) =>
-            prev.map((item) => (visibleIds.has(item.id) && item.status === "unread" ? { ...item, status: "read" } : item))
-        );
-        toast.success("Đã đánh dấu toàn bộ thông báo trong bộ lọc là đã đọc.");
+    const markAllVisibleAsRead = async () => {
+        const visibleIds = filteredNotifications
+            .filter((item) => item.status === "unread")
+            .map((item) => item.id);
+        try {
+            await Promise.all(visibleIds.map((id) => financeService.markNotificationRead(id).catch(() => {})));
+            setNotifications((prev) =>
+                prev.map((item) => (visibleIds.includes(item.id) ? { ...item, status: "read" } : item))
+            );
+            toast.success("Đã đánh dấu toàn bộ thông báo trong bộ lọc là đã đọc.");
+        } catch (err) {
+            console.error("[FinanceNotifications] markAllVisibleAsRead error:", err);
+        }
     };
 
     const togglePin = (id) => {
         setNotifications((prev) => prev.map((item) => (item.id === id ? { ...item, pinned: !item.pinned } : item)));
     };
 
-    const sendReminder = () => {
-        toast.info("Hệ thống đang xếp hàng gửi nhắc báo cáo còn thiếu tới nhóm phụ trách.");
-        setTimeout(() => toast.success("Đã tạo chiến dịch nhắc báo cáo thành công."), 700);
+    const sendReminder = async (notificationId) => {
+        try {
+            const res = await financeService.sendNotification(notificationId);
+            if (res?.success) {
+                toast.success("Đã gửi lại thông báo thành công.");
+            } else {
+                toast.error(res?.error?.message || "Có lỗi khi gửi lại.");
+            }
+        } catch (err) {
+            toast.error("Có lỗi khi gửi lại thông báo.");
+        }
     };
 
     const applyTemplate = (reportType) => {
@@ -419,46 +349,43 @@ export default function FinanceNotifications() {
         }));
     };
 
-    const createNotification = () => {
+    const createNotification = async () => {
         if (!composer.title.trim() || !composer.summary.trim()) {
             toast.error("Vui lòng nhập tiêu đề và nội dung thông báo.");
             return;
         }
 
-        const now = new Date();
-        const scheduleDate = composer.scheduleAt ? new Date(composer.scheduleAt) : null;
-        const isScheduled = scheduleDate && scheduleDate.getTime() > now.getTime();
-        const idSeed = Date.now();
+        try {
+            const now = new Date();
+            const scheduleDate = composer.scheduleAt ? new Date(composer.scheduleAt) : null;
+            const isScheduled = scheduleDate && scheduleDate.getTime() > now.getTime();
 
-        const newItem = {
-            id: `NOTI-${idSeed}`,
-            title: composer.title.trim(),
-            summary: composer.summary.trim(),
-            reportType: composer.reportType,
-            target: composer.target,
-            channel: composer.channel,
-            priority: composer.priority,
-            status: isScheduled ? "scheduled" : "unread",
-            requiresAction: composer.requiresAction,
-            pinned: false,
-            sentAt: now.toISOString(),
-            dueAt: isScheduled ? scheduleDate.toISOString() : new Date(now.getTime() + 48 * 60 * 60 * 1000).toISOString(),
-            sender: "Kế toán trưởng",
-            deliveryRate: isScheduled ? 0 : 97,
-        };
+            await financeService.createNotification({
+                body: {
+                    title: composer.title.trim(),
+                    content: composer.summary.trim(),
+                    priority: composer.priority,
+                    target_type: composer.target || "all",
+                    target_id: null,
+                    send_email: composer.channel === "email" || composer.channel === "sms",
+                    scheduled_at: isScheduled ? scheduleDate.toISOString() : null,
+                },
+            });
 
-        setNotifications((prev) => [newItem, ...prev]);
-        setSelectedId(newItem.id);
-        setCurrentPage(1);
-        setDialogMode(null);
-        setComposer((prev) => ({
-            ...prev,
-            title: "",
-            summary: "",
-            scheduleAt: "",
-        }));
-
-        toast.success(isScheduled ? "Đã lên lịch thông báo báo cáo." : "Đã phát hành thông báo báo cáo mới.");
+            setComposer((prev) => ({
+                ...prev,
+                title: "",
+                summary: "",
+                scheduleAt: "",
+            }));
+            setDialogMode(null);
+            toast.success(isScheduled ? "Đã lên lịch thông báo." : "Đã phát hành thông báo mới.");
+            await loadNotifications();
+        } catch (err) {
+            console.error("[FinanceNotifications] createNotification error:", err);
+            const msg = err?.response?.data?.error || err?.message || "Đã xảy ra lỗi";
+            toast.error(typeof msg === "string" ? msg : JSON.stringify(msg));
+        }
     };
 
     const detailDialog = dialogMode === "detail" && selectedNotification;
@@ -469,12 +396,17 @@ export default function FinanceNotifications() {
                 title="Trung Tâm Thông Báo Báo Cáo"
                 eyebrow="Giám sát, nhắc việc và theo dõi tình trạng phát hành báo cáo tài chính"
                 actions={
-                    <SchoolYearTermSelector
-                        selectedSchoolYear={selectedSchoolYear}
-                        selectedTerm={selectedTerm}
-                        onYearChange={handleYearArrow}
-                        onTermChange={handleTermChange}
-                    />
+                    <>
+                        <button className="btn-icon" onClick={loadNotifications} disabled={loading} title="Làm mới">
+                            <FiRefreshCw className={loading ? "spin" : ""} />
+                        </button>
+                        <SchoolYearTermSelector
+                            selectedSchoolYear={selectedSchoolYear}
+                            selectedTerm={selectedTerm}
+                            onYearChange={handleYearArrow}
+                            onTermChange={handleTermChange}
+                        />
+                    </>
                 }
             />
 
@@ -581,15 +513,19 @@ export default function FinanceNotifications() {
                     </div>
 
                     <div className="fin-notif-list">
-                        {paginatedNotifications.length === 0 && (
+                        {loading ? (
+                            <div className="fin-notif-empty">
+                                <FiRefreshCw className="spin" />
+                                <strong>Đang tải thông báo...</strong>
+                            </div>
+                        ) : paginatedNotifications.length === 0 ? (
                             <div className="fin-notif-empty">
                                 <FiAlertCircle />
                                 <strong>Không có mục phù hợp</strong>
                                 <p>Đổi bộ lọc hoặc từ khóa.</p>
                             </div>
-                        )}
-
-                        {paginatedNotifications.map((item) => (
+                        ) : (
+                            paginatedNotifications.map((item) => (
                             <button
                                 type="button"
                                 key={item.id}
@@ -611,7 +547,8 @@ export default function FinanceNotifications() {
                                     <span><FiClock /> {formatDateTime(item.sentAt)}</span>
                                 </div>
                             </button>
-                        ))}
+                            ))
+                        )}
                     </div>
 
                     <div className="fin-notif-pagination">
@@ -768,7 +705,7 @@ export default function FinanceNotifications() {
                             <button type="button" className="fin-notif-btn fin-notif-btn--ghost" onClick={() => togglePin(detailDialog.id)}>
                                 <FiBookmark /> {detailDialog.pinned ? "Bỏ ghim" : "Ghim"}
                             </button>
-                            <button type="button" className="fin-notif-btn fin-notif-btn--primary" onClick={sendReminder}>
+                            <button type="button" className="fin-notif-btn fin-notif-btn--primary" onClick={() => sendReminder(detailDialog.id)}>
                                 <FiEdit3 /> Nhắc lại
                             </button>
                         </div>

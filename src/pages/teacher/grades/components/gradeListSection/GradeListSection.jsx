@@ -35,6 +35,7 @@ export default function GradeListSection({
     subjectLabel,
     semesterLabel,
     isLocked = false,
+    canEdit = true,
 }) {
     const [searchValue, setSearchValue] = useState("");
     const [currentPage, setCurrentPage] = useState(1);
@@ -71,11 +72,13 @@ export default function GradeListSection({
     const pageStartIndex = (currentPage - 1) * ITEMS_PER_PAGE;
 
     const getDisplayScore = (scores) => {
-      if (!scores || !scores.length) return "-";
-      const nums = scores.filter(v => v !== "").map(Number);
-      if (!nums.length) return "-";
-      const avg = nums.reduce((a, b) => a + b, 0) / nums.length;
-      return avg.toFixed(1);
+        if (!scores || !scores.length) return "-";
+        const nums = scores
+            .map((item) => Number(item?.score ?? item))
+            .filter((value) => Number.isFinite(value));
+        if (!nums.length) return "-";
+        const avg = nums.reduce((a, b) => a + b, 0) / nums.length;
+        return avg.toFixed(1);
     };
 
     return (
@@ -99,7 +102,8 @@ export default function GradeListSection({
                         <button
                             type="button"
                             className={`grade-list-item__info ${isLocked ? 'is-locked-row' : ''}`}
-                            onClick={() => !isLocked && onOpenEditDialog?.(record)}
+                            onClick={() => !isLocked && canEdit && onOpenEditDialog?.(record)}
+                            disabled={!canEdit}
                         >
                             <strong>{pageStartIndex + index + 1}. {record.name}</strong>
                             <span>{record.code}</span>
@@ -107,35 +111,42 @@ export default function GradeListSection({
                         </button>
 
                         <div className="grade-list-score">
-                            <span>Miệng</span>
-                            <strong>{getDisplayScore(record.oralScores)}</strong>
-                        </div>
-
-                        <div className="grade-list-score">
-                            <span>15 phút</span>
-                            <strong>{getDisplayScore(record.test15Scores)}</strong>
+                            <span>Thường xuyên</span>
+                            {record.regularScores?.length ? (
+                                <div className="grade-list-regular-list">
+                                    {record.regularScores.map((item, itemIndex) => (
+                                        <span key={`${record.id}-regular-${item.id ?? itemIndex}`} className="grade-list-regular-chip" title={item.label}>
+                                            <strong>{formatScore(item.score)}</strong>
+                                            <small>{item.label}</small>
+                                        </span>
+                                    ))}
+                                </div>
+                            ) : (
+                                <strong>-</strong>
+                            )}
                         </div>
 
                         <div className="grade-list-score">
                             <span>Giữa kỳ</span>
-                            <strong>{formatScore(record.midterm)}</strong>
+                            <strong>{formatScore(record.midtermScore)}</strong>
                         </div>
 
                         <div className="grade-list-score">
                             <span>Cuối kỳ</span>
-                            <strong>{formatScore(record.final)}</strong>
+                            <strong>{formatScore(record.finalScore)}</strong>
                         </div>
 
                         <div className="grade-list-item__summary">
                             <div className="grade-list-averages-row">
                                 <div className="grade-list-score">
-                                    <span>Học kỳ</span>
+                                    <span>{record.isProvisional ? "HK tạm tính" : "Học kỳ"}</span>
                                     <strong className="score-hk">{formatScore(record.average)}</strong>
                                 </div>
                             </div>
                             <span className={`grade-list-rank rank-${record.rank}`}>
                                 {RANK_LABELS[record.rank] || record.rank}
                             </span>
+                            {record.isProvisional && <small className="grade-list-provisional">Chưa đủ cột điểm để chốt HK</small>}
                         </div>
 
                         {isLocked ? (
@@ -147,8 +158,9 @@ export default function GradeListSection({
                                 type="button"
                                 className="grade-list-action"
                                 onClick={() => onOpenEditDialog?.(record)}
+                                disabled={!canEdit}
                             >
-                                Sửa
+                                {canEdit && !isLocked ? "Sửa" : "Chỉ xem"}
                             </button>
                         )}
                     </article>

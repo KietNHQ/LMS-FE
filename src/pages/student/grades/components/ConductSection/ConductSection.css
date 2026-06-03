@@ -1,0 +1,351 @@
+.conduct-section {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+}
+
+/* ===== LEVEL CARDS ===== */
+.conduct-levels-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1rem;
+}
+
+.conduct-score-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+    padding: 1.1rem 1rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.6rem;
+    text-align: center;
+    transition: box-shadow 0.25s ease, transform 0.25s ease;
+}
+
+.conduct-score-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 20px rgba(37, 99, 255, 0.1);
+}
+
+.conduct-score-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 800;
+    background: #f1f5f9;
+    color: #475569;
+    flex-shrink: 0;
+}
+
+.conduct-score-body {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    align-items: center;
+}
+
+.conduct-score-label {
+    font-size: 11px;
+    font-weight: 700;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+
+.conduct-score-value {
+    font-size: 18px;
+    font-weight: 800;
+    color: #1b2a41;
+    line-height: 1.2;
+}
+
+.conduct-score-sub {
+    font-size: 11px;
+    color: #94a3b8;
+}
+
+/* Level color variants */
+.conduct-score-card.good {
+    border-color: #bbf7d0;
+    background: linear-gradient(180deg, #ffffff 0%, #f0fdf4 100%);
+}
+.conduct-score-card.good .conduct-score-icon {
+    background: #dcfce7;
+    color: #16a34a;
+}
+.conduct-score-card.good .conduct-score-value {
+    color: #16a34a;
+}
+
+.conduct-score-card.fair {
+    border-color: #fde68a;
+    background: linear-gradient(180deg, #ffffff 0%, #fffbeb 100%);
+}
+.conduct-score-card.fair .conduct-score-icon {
+    background: #fef9c3;
+    color: #ca8a04;
+}
+.conduct-score-card.fair .conduct-score-value {
+    color: #ca8a04;
+}
+
+.conduct-score-card.avg {
+    border-color: #bfdbfe;
+    background: linear-gradient(180deg, #ffffff 0%, #eff6ff 100%);
+}
+.conduct-score-card.avg .conduct-score-icon {
+    background: #dbeafe;
+    color: #2563eb;
+}
+.conduct-score-card.avg .conduct-score-value {
+    color: #2563eb;
+}
+
+.conduct-score-card.weak {
+    border-color: #fecaca;
+    background: linear-gradient(180deg, #ffffff 0%, #fef2f2 100%);
+}
+.conduct-score-card.weak .conduct-score-icon {
+    background: #fee2e2;
+    color: #dc2626;
+}
+.conduct-score-card.weak .conduct-score-value {
+    color: #dc2626;
+}
+
+/* Cap notice */
+.conduct-cap-notice {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+    background: #fffbeb;
+    border: 1px solid #fde68a;
+    border-radius: 10px;
+    padding: 0.75rem 1rem;
+    font-size: 13px;
+    color: #92400e;
+}
+
+.conduct-cap-icon {
+    font-size: 16px;
+    flex-shrink: 0;
+    margin-top: 1px;
+}
+
+.conduct-cap-notice strong {
+    font-weight: 800;
+}
+
+/* ===== DISCIPLINE SCORE BLOCK ===== */
+.conduct-discipline-block {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+    padding: 1.25rem;
+}
+
+.conduct-section-title {
+    margin: 0 0 1rem;
+    font-size: 15px;
+    font-weight: 800;
+    color: #16233b;
+}
+
+.conduct-discipline-inner {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.conduct-score-main {
+    display: flex;
+    align-items: baseline;
+    gap: 4px;
+    flex-shrink: 0;
+}
+
+.conduct-score-number {
+    font-size: 40px;
+    font-weight: 900;
+    color: #16233b;
+    line-height: 1;
+}
+
+.conduct-score-max {
+    font-size: 14px;
+    color: #94a3b8;
+    font-weight: 600;
+}
+
+.conduct-score-bar-wrap {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.conduct-score-bar-track {
+    flex: 1;
+    height: 10px;
+    background: #f1f5f9;
+    border-radius: 999px;
+    overflow: hidden;
+}
+
+.conduct-score-bar-fill {
+    height: 100%;
+    border-radius: 999px;
+    transition: width 0.6s ease;
+}
+
+.conduct-score-bar-label {
+    font-size: 16px;
+    font-weight: 800;
+    flex-shrink: 0;
+    min-width: 40px;
+    text-align: right;
+}
+
+.conduct-reward-violation-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+}
+
+.conduct-point-chip {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    border-radius: 10px;
+    padding: 0.6rem 0.85rem;
+    font-size: 13px;
+}
+
+.conduct-point-chip.reward {
+    background: #f0fdf4;
+    border: 1px solid #bbf7d0;
+    color: #15803d;
+}
+
+.conduct-point-chip.violation {
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    color: #b91c1c;
+}
+
+.point-chip-icon {
+    font-size: 14px;
+    font-weight: 900;
+    flex-shrink: 0;
+}
+
+.point-chip-count {
+    font-size: 18px;
+    font-weight: 800;
+    line-height: 1;
+}
+
+.point-chip-label {
+    font-weight: 600;
+    flex: 1;
+}
+
+.point-chip-n {
+    font-size: 11px;
+    opacity: 0.75;
+    font-weight: 500;
+}
+
+/* ===== ATTENDANCE BLOCK ===== */
+.conduct-attendance-block {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+    padding: 1.25rem;
+}
+
+.conduct-stat-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.conduct-stat-row:last-child {
+    border-bottom: none;
+}
+
+.conduct-stat-row.highlight .conduct-stat-value {
+    color: #dc2626;
+    font-weight: 800;
+}
+
+.conduct-stat-icon {
+    font-size: 18px;
+    flex-shrink: 0;
+}
+
+.conduct-stat-label {
+    flex: 1;
+    font-size: 14px;
+    color: #475569;
+}
+
+.conduct-stat-value {
+    font-size: 15px;
+    font-weight: 800;
+    color: #1b2a41;
+}
+
+/* ===== LOADING ===== */
+.conduct-loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    min-height: 200px;
+    color: #64748b;
+    font-size: 14px;
+}
+
+.conduct-loading-spinner {
+    width: 32px;
+    height: 32px;
+    border: 3px solid #e2e8f0;
+    border-top-color: #2563ff;
+    border-radius: 50%;
+    animation: conduct-spin 0.8s linear infinite;
+}
+
+@keyframes conduct-spin {
+    to { transform: rotate(360deg); }
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 900px) {
+    .conduct-levels-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .conduct-reward-violation-row {
+        grid-template-columns: 1fr;
+    }
+
+    .conduct-discipline-inner {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .conduct-score-bar-wrap {
+        width: 100%;
+    }
+}

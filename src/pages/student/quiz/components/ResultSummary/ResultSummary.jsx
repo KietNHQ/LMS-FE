@@ -4,6 +4,12 @@ import "./ResultSummary.css";
 import QuestionItem from "../QuestionItem/QuestionItem";
 
 export default function ResultSummary({ result, onBack }) {
+    const isPendingReview = Boolean(result.pendingReview);
+    const scoreLabel = isPendingReview ? "Chờ chấm" : `${result.score}/10`;
+    const subtitle = isPendingReview
+        ? "Bài tự luận đã được nộp. Giáo viên sẽ chấm và cập nhật điểm sau."
+        : `${result.correctCount}/${result.total} câu đúng · ${result.quizTitle}`;
+
     return (
         <div className="result-summary-page">
             <div className="result-summary-content">
@@ -14,11 +20,9 @@ export default function ResultSummary({ result, onBack }) {
                                 <BiTrophy />
                             </div>
                             <div>
-                                <span>Kết quả bài làm</span>
-                                <h1>{result.score}/10</h1>
-                                <p>
-                                    {result.correctCount}/{result.total} câu đúng · {result.quizTitle}
-                                </p>
+                                <span>{isPendingReview ? "Kết quả bài nộp" : "Kết quả bài làm"}</span>
+                                <h1>{scoreLabel}</h1>
+                                <p>{subtitle}</p>
                             </div>
                         </div>
                     </div>

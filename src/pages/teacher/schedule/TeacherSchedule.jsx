@@ -72,27 +72,22 @@ export default function TeacherSchedule() {
           mock: false,
           params: { schoolYear: selectedSchoolYear, term: selectedTerm }
         });
-        if (response.success && response.data) return response.data;
+        // The axios interceptor returns response.data directly
+        if (response?.success && response?.data?.lessons !== undefined) {
+          return response.data.lessons;
+        }
         if (Array.isArray(response)) return response;
-        if (Array.isArray(response?.data)) return response.data;
+        return null; // signal "no data yet" so React Query doesn't cache []
       } catch (apiErr) {
-        console.warn("API getTimetable failed, using mock:", apiErr);
-        const response = await teacherService.getTimetable({ 
-          mock: true,
-          params: { schoolYear: selectedSchoolYear, term: selectedTerm }
-        });
-        if (response.success && response.data) return response.data;
-        if (Array.isArray(response)) return response;
-        if (Array.isArray(response?.data)) return response.data;
+        console.warn("API getTimetable failed:", apiErr);
       }
-      return [];
+      return null;
     },
-    staleTime: 10 * 60 * 1000,
+    staleTime: 0, // always refetch on mount to avoid 304 caching issues
   });
 
   const safeTimetableData = useMemo(() => {
     if (Array.isArray(timetableData)) return timetableData;
-    if (timetableData && Array.isArray(timetableData.data)) return timetableData.data;
     return [];
   }, [timetableData]);
   
@@ -107,11 +102,46 @@ export default function TeacherSchedule() {
     : "";
   const reminderList = selectedLesson ? getReminderByType(lessonType) : [];
 
+  // Fetch teacher classes from API for filter dropdown
+  const { data: teacherClassesData = [] } = useQuery({
+    queryKey: ["teacher-classes", teacherId],
+    queryFn: async () => {
+      try {
+        const res = await teacherService.getTeacherClasses({ mock: false, pathParams: { id: teacherId } });
+        return res?.data || res || [];
+      } catch {
+        return [];
+      }
+    },
+    staleTime: 10 * 60 * 1000,
+    enabled: !!teacherId,
+  });
+
   const uniqueClasses = useMemo(() => {
-    if (!safeTimetableData || safeTimetableData.length === 0) return [];
-    const classes = [...new Set(safeTimetableData.map(item => item.class_name))].filter(Boolean);
-    return classes.sort();
-  }, [safeTimetableData]);
+    // Use teacher's assigned classes from API (teacherClassesData has flat class_name field)
+    if (teacherClassesData && teacherClassesData.length > 0) {
+      const seen = new Set();
+      const classes = [];
+      for (const c of teacherClassesData) {
+        const name = c.class_name || c.name;
+        if (name && !seen.has(name)) {
+          seen.add(name);
+          classes.push(name);
+        }
+      }
+      return classes.sort();
+    }
+    // Fallback: extract from timetable data
+    if (safeTimetableData && safeTimetableData.length > 0) {
+      const seen = new Set();
+      for (const item of safeTimetableData) {
+        const name = item.class_name || item.className;
+        if (name) seen.add(name);
+      }
+      return [...seen].sort();
+    }
+    return [];
+  }, [teacherClassesData, safeTimetableData]);
 
   return (
     <div className="teacher-schedule-page">
@@ -141,16 +171,27 @@ export default function TeacherSchedule() {
         />
 
         <div className="teacher-schedule-content">
-          <WeeklyScheduleSection
-            weekOffset={weekOffset}
-            selectedClass={selectedClass}
-            onSelectDay={handleSelectDay}
-            onLessonSelect={setSelectedLesson}
-            sessionView={sessionView}
-            setSessionView={setSessionView}
-            apiData={safeTimetableData}
-            isLoading={isLoading}
-          />
+          {isLoading ? (
+            <div style={{ textAlign: "center", padding: "3rem", color: "#666" }}>
+              Đang tải lịch giảng dạy...
+            </div>
+          ) : safeTimetableData.length === 0 ? (
+            <div style={{ textAlign: "center", padding: "3rem", color: "#666" }}>
+              <p style={{ marginBottom: "0.5rem", fontWeight: 500 }}>Chưa có lịch giảng dạy cho học kỳ này.</p>
+              <p style={{ fontSize: "0.9rem" }}>Vui lòng liên hệ phòng bộ môn để được phân công.</p>
+            </div>
+          ) : (
+            <WeeklyScheduleSection
+              weekOffset={weekOffset}
+              selectedClass={selectedClass}
+              onSelectDay={handleSelectDay}
+              onLessonSelect={setSelectedLesson}
+              sessionView={sessionView}
+              setSessionView={setSessionView}
+              apiData={safeTimetableData}
+              isLoading={isLoading}
+            />
+          )}
         </div>
       </div>
 

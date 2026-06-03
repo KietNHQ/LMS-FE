@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { PageHeader, SchoolYearTermSelector } from "../../../../components/common";
 import { useSchoolYearTerm } from "../../../../hooks/useSchoolYearTerm";
 import { useSearchParams } from "react-router-dom";
@@ -6,7 +6,6 @@ import { FiBarChart2, FiDollarSign, FiUsers, FiAlertCircle } from "react-icons/f
 import { financeService } from "../../../../services/pages/management/finance";
 import "./FinanceFeeManagement.css";
 
-// Import Tabs
 import FeeListTab from "./tabs/FeeListTab";
 import FeeCatalogTab from "./tabs/FeeCatalogTab";
 import ChargeBatchWizard from "./tabs/ChargeBatchWizard";
@@ -18,6 +17,15 @@ const TABS = [
     { id: "batches", label: "Tạo đợt thu (Wizard)", component: ChargeBatchWizard },
     { id: "policies", label: "Hồ sơ miễn giảm", component: PolicyExemptionTab },
 ];
+
+const formatCurrency = (v) =>
+    typeof v === "number" ? v.toLocaleString("vi-VN") : parseFloat(v || 0).toLocaleString("vi-VN");
+
+const formatCompact = (v) => {
+    if (v >= 1_000_000_000) return `${(v / 1_000_000_000).toFixed(2)} tỷ`;
+    if (v >= 1_000_000) return `${Math.round(v / 1_000_000)} triệu`;
+    return `${formatCurrency(v)} đ`;
+};
 
 export default function FinanceFeeManagement() {
     const { selectedSchoolYear, selectedTerm, handleYearArrow, handleTermChange } = useSchoolYearTerm();
@@ -31,67 +39,111 @@ export default function FinanceFeeManagement() {
         setSearchParams({ tab: tabId });
     };
 
-    // Summary Statistics State
-    const [feeStats, setFeeStats] = useState({
-        totalCharged: "0 ₫",
-        totalCollected: "0 ₫",
+    const [stats, setStats] = useState({
+        totalCharged: "0 đ",
+        totalCollected: "0 đ",
         collectionRate: "0%",
-        pendingAmount: "0 ₫",
-        overdueAmount: "0 ₫",
+        pendingAmount: "0 đ",
+        overdueAmount: "0 đ",
         unpaidCount: 0,
-        overdueCount: 0
+        overdueCount: 0,
     });
+    const [isLoading, setIsLoading] = useState(false);
 
-    const formatValue = (val) => {
-        if (typeof val === 'string') return val;
-        if (!val || isNaN(val)) return "0 ₫";
-        if (val >= 1_000_000_000) {
-            return `${(val / 1_000_000_000).toFixed(2)}T`;
-        }
-        if (val >= 1_000_000) {
-            return `${(val / 1_000_000).toFixed(0)}tr`;
-        }
-        return new Intl.NumberFormat('vi-VN').format(val) + " ₫";
-    };
-
-    useEffect(() => {
-        let isMounted = true;
-
-        const loadStats = async () => {
-            try {
-                const res = await financeService.getDebtSummary({
+    const loadStats = useCallback(async () => {
+        setIsLoading(true);
+        try {
+            const [summaryRes, invoicesRes] = await Promise.allSettled([
+                financeService.getDebtSummary({
                     params: {
-                        schoolYearId: selectedSchoolYear,
-                        semesterId: selectedTerm
-                    }
-                });
+                        schoolYearId: selectedSchoolYear?.id,
+                        semesterId: selectedTerm?.id,
+                    },
+                }),
+                financeService.getAllInvoices({
+                    params: {
+                        schoolYearId: selectedSchoolYear?.id,
+                        semesterId: selectedTerm?.id,
+                        limit: 1000,
+                    },
+                }),
+            ]);
 
-                if (res && isMounted) {
-                    const totalCollected = Number(res.totalCollected || 0);
-                    const totalDebt = Number(res.totalDebt || 0);
-                    const grossTotal = totalCollected + totalDebt;
-                    const collectionRate = res.collectionRate != null ? res.collectionRate : (grossTotal > 0 ? Math.round((totalCollected / grossTotal) * 1000) / 10 : 0);
-                    const overdueCount = Number(res.overdueCount || 0);
-                    const unpaidCount = Number((res.byStatus?.unpaid || 0) + (res.byStatus?.partial || 0));
+            let totalCollected = 0;
+            let totalDebt = 0;
+            let overdueCount = 0;
+            let unpaidCount = 0;
+            let overdueAmount = 0;
+            const unpaidStudents = new Set();
+            const overdueStudents = new Set();
 
-                    setFeeStats({
-                        totalCharged: formatValue(grossTotal),
-                        totalCollected: formatValue(totalCollected),
-                        collectionRate: `${collectionRate}%`,
-                        pendingAmount: formatValue(totalDebt),
-                        overdueAmount: formatValue(totalDebt * 0.4), // Dynamic portion estimation for overdue amounts
-                        unpaidCount,
-                        overdueCount
-                    });
-                }
-            } catch (err) {
-                console.error("Failed to load school fee stats:", err);
+            // Try to get from debt summary
+            if (summaryRes.status === "fulfilled" && summaryRes.value?.success) {
+                const d = summaryRes.value.data || {};
+                totalCollected += parseFloat(d.totalCollected || d.collected || 0);
+                totalDebt += parseFloat(d.totalDebt || d.remaining || 0);
+                overdueCount += Number(d.overdueCount || 0);
+                overdueAmount += parseFloat(d.overdueAmount || 0);
             }
-        };
 
-        loadStats();
-        return () => { isMounted = false; };
-    }, [selectedSchoolYear, selectedTerm]);
+            // Derive from invoices
+            let invoiceRows = [];
+            if (invoicesRes.status === "fulfilled" && invoicesRes.value?.success) {
+                const raw = invoicesRes.value.data;
+                invoiceRows = Array.isArray(raw) ? raw : raw?.items || raw?.data || [];
+            }
+
+            invoiceRows.forEach((inv) => {
+                const amount = parseFloat(
+                    inv.total_amount || inv.amount || inv.expected_amount || inv.total || 0
+                );
+                const paid = parseFloat(
+                    inv.paid_amount || inv.amount_paid || 0
+                );
+                const remaining = Math.max(0, amount - paid);
+                totalCollected += paid;
+                totalDebt += remaining;
+                const sid = inv.student_id;
+                if (remaining > 0) {
+                    unpaidStudents.add(sid);
+                    if (remaining === amount) unpaidCount++;
+                }
+                // overdue: check due_date
+                if (inv.due_date) {
+                    const due = new Date(inv.due_date);
+                    const now = new Date();
+                    if (due < now && remaining > 0) {
+                        overdueStudents.add(sid);
+                        overdueCount++;
+                        overdueAmount += remaining;
+                    }
+                }
+            });
+
+            // Deduplicate counts
+            unpaidCount = unpaidStudents.size;
+            overdueCount = overdueStudents.size;
+
+            const total = totalCollected + totalDebt;
+            const collectionRate = total > 0 ? Math.round((totalCollected / total) * 100) : 0;
+
+            setStats({
+                totalCharged: formatCompact(total),
+                totalCollected: formatCompact(totalCollected),
+                collectionRate: `${collectionRate}%`,
+                pendingAmount: formatCompact(totalDebt),
+                overdueAmount: formatCompact(overdueAmount),
+                unpaidCount,
+                overdueCount,
+            });
+        } catch (err) {
+            console.error("[FinanceFeeManagement] loadStats error:", err);
+        } finally {
+            setIsLoading(false);
+        }
+    }, [selectedSchoolYear?.id, selectedTerm?.id]);
+
+    useEffect(() => { loadStats(); }, [loadStats]);
 
     return (
         <div className="fin-fee">
@@ -109,63 +161,49 @@ export default function FinanceFeeManagement() {
 
             {/* Summary Stats Bar */}
             <div className="fee-summary-bar">
-                {/* Card 1: Total Charged - Information Priority */}
-                <div className="fee-stat-card stat-neutral" style={{ order: 1 }}>
-                    <div className="fee-stat-icon">
-                        <FiDollarSign />
-                    </div>
-                    <div className="fee-stat-content">
-                        <span className="fee-stat-label">Tổng phải thu</span>
-                        <span className="fee-stat-value">{feeStats.totalCharged}</span>
-                        <span className="fee-stat-rate">Số tiền cần thu</span>
+                <div className="fee-stat">
+                    <div className="fee-stat__icon"><FiDollarSign /></div>
+                    <div className="fee-stat__content">
+                        <span>Tổng phải thu</span>
+                        <strong>{stats.totalCharged}</strong>
+                        <p>Số tiền cần thu</p>
                     </div>
                 </div>
 
-                {/* Card 2: Total Collected - Success Priority */}
-                <div className="fee-stat-card stat-success" style={{ order: 2 }}>
-                    <div className="fee-stat-icon">
-                        <FiBarChart2 />
-                    </div>
-                    <div className="fee-stat-content">
-                        <span className="fee-stat-label">✓ Đã thu</span>
-                        <span className="fee-stat-value">{feeStats.totalCollected}</span>
-                        <span className="fee-stat-rate">
-                            ↑ {feeStats.collectionRate}
-                        </span>
+                <div className="fee-stat stat-success">
+                    <div className="fee-stat__icon"><FiBarChart2 /></div>
+                    <div className="fee-stat__content">
+                        <span>✓ Đã thu</span>
+                        <strong>{stats.totalCollected}</strong>
+                        <p>↑ {stats.collectionRate}</p>
                     </div>
                 </div>
 
-                {/* Card 3: Unpaid - Warning Priority - ORDER 4 TO PUT AT END */}
-                <div className="fee-stat-card stat-warning" style={{ order: 4 }}>
-                    <div className="fee-stat-icon">
-                        <FiUsers />
-                    </div>
-                    <div className="fee-stat-content">
-                        <span className="fee-stat-label">Chưa thanh toán</span>
-                        <span className="fee-stat-value">{feeStats.unpaidCount} HS</span>
-                        <span className="fee-stat-rate">{feeStats.pendingAmount} nợ</span>
+                <div className="fee-stat stat-warning">
+                    <div className="fee-stat__icon"><FiAlertCircle /></div>
+                    <div className="fee-stat__content">
+                        <span>Quá hạn (cần xử lý)</span>
+                        <strong>{stats.overdueCount} HS</strong>
+                        <p>{stats.overdueAmount} nợ</p>
                     </div>
                 </div>
 
-                {/* Card 4: Overdue - Critical Priority - ORDER 3 TO PUT SECOND TO LAST */}
-                <div className="fee-stat-card stat-danger" style={{ order: 3 }}>
-                    <div className="fee-stat-icon">
-                        <FiAlertCircle />
-                    </div>
-                    <div className="fee-stat-content">
-                        <span className="fee-stat-label">Quá hạn (cần xử lý)</span>
-                        <span className="fee-stat-value">{feeStats.overdueCount} HS</span>
-                        <span className="fee-stat-rate">{feeStats.overdueAmount} nợ</span>
+                <div className="fee-stat stat-danger">
+                    <div className="fee-stat__icon"><FiUsers /></div>
+                    <div className="fee-stat__content">
+                        <span>Chưa thanh toán</span>
+                        <strong>{stats.unpaidCount} HS</strong>
+                        <p>{stats.pendingAmount} nợ</p>
                     </div>
                 </div>
             </div>
 
             {/* Tab Navigation */}
-            <div className="fin-fee__tabs">
+            <div className="fee-tabs">
                 {TABS.map((tab) => (
                     <button
                         key={tab.id}
-                        className={`fin-fee__tab ${activeTabId === tab.id ? "active" : ""}`}
+                        className={`fee-tab ${activeTabId === tab.id ? "active" : ""}`}
                         onClick={() => handleTabChange(tab.id)}
                     >
                         {tab.label}
@@ -174,8 +212,8 @@ export default function FinanceFeeManagement() {
             </div>
 
             {/* Tab Content */}
-            <div className="fin-fee__content">
-                <ActiveComponent 
+            <div className="fee-content">
+                <ActiveComponent
                     schoolYear={selectedSchoolYear}
                     term={selectedTerm}
                 />
@@ -183,5 +221,3 @@ export default function FinanceFeeManagement() {
         </div>
     );
 }
-
-

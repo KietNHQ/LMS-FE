@@ -17,6 +17,7 @@ export default function TimetableFiltersSection({
     onClassChange,
     onTeacherChange,
     onDayChange,
+    onBlockChange,
     onSearchChange,
     children,
 }) {

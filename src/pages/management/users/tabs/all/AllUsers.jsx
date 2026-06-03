@@ -140,7 +140,7 @@ export default function AllUsers({ onCountChange, schoolYear, term, hasPermissio
     useEffect(() => {
         const fetchAllPermissions = async () => {
             try {
-                const perms = await permissionService.getAllPermissions();
+                const perms = await permissionService.getAllPermissions({ limit: 1000 });
                 setAllSystemPermissions(perms);
                 
                 const map = {};
@@ -451,12 +451,10 @@ export default function AllUsers({ onCountChange, schoolYear, term, hasPermissio
                             })
                             .filter(id => id !== null);
 
-                        if (permissionIds.length > 0) {
-                            await permissionService.updateUserPermissions(id, {
-                                mode: "replace",
-                                permissionIds,
-                            });
-                        }
+                        await permissionService.updateUserPermissions(id, {
+                            mode: "replace",
+                            permissionIds,
+                        });
                     }
 
                     setEditingUser(null);
@@ -697,7 +695,7 @@ export default function AllUsers({ onCountChange, schoolYear, term, hasPermissio
                 <ManagerInformationSection
                     mode={activeModalMode}
                     formData={selectedUser}
-                    roleOptions={["Quản trị viên", "Quản lý", "Hiệu trưởng", "Phó HT học vụ", "Phó HT nề nếp", "Giáo vụ", "Tài chính", "Tổ trưởng bộ môn"]}
+                    roleOptions={["Quản lý", "Hiệu trưởng", "Phó HT học vụ", "Phó HT nề nếp", "Giáo vụ", "Tài chính", "Tổ trưởng bộ môn"]}
                     onChange={(field, val) => setSelectedUser(prev => ({ ...prev, [field]: val }))}
                     onClose={handleCloseModal}
                     onSubmit={() => handleSaveEdit(selectedUser)}

@@ -97,7 +97,7 @@ export default function TuitionFeeSection({ tuitionData, selectedGrade, selected
         });
 
         saveJson(PAYMENT_STORAGE_KEYS.PARENT_RECORDS, [...nextRecords, ...generated]);
-        window.dispatchEvent(new Event("management-payment-records-updated"));
+        window.dispatchEvent(new Event("admin-payment-records-updated"));
     };
 
 

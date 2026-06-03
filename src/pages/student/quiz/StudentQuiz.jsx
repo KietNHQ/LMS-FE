@@ -17,6 +17,11 @@ import studentService from "../../../services/pages/student/studentService";
 
 const ITEMS_PER_PAGE = 4;
 
+function getCurrentStudentId() {
+    const storedUser = JSON.parse(localStorage.getItem("user") || sessionStorage.getItem("user") || "{}");
+    return storedUser?.profile?.id || storedUser?.id || null;
+}
+
 export default function StudentQuiz() {
     const { selectedSchoolYear, selectedTerm, handleYearArrow, handleTermChange } = useSchoolYearTerm();
     const [search, setSearch] = useState("");
@@ -34,9 +39,19 @@ export default function StudentQuiz() {
     const fetchQuizzes = async () => {
         try {
             setLoading(true);
+            const studentId = getCurrentStudentId();
+            if (!studentId) {
+                setError("Không tìm thấy thông tin học sinh.");
+                return;
+            }
+
             const response = await studentService.listQuizzes({
-                schoolYearId: selectedSchoolYear?.id,
-                semesterId: selectedTerm?.id
+                pathParams: { id: studentId },
+                params: {
+                    schoolYear: selectedSchoolYear,
+                    term: selectedTerm,
+                },
+                mock: false,
             });
             if (response.success) {
                 // Handle both old array structure and new { items, total } structure
@@ -46,31 +61,39 @@ export default function StudentQuiz() {
 
                 // Map backend data to UI format if needed
                 const mappedQuizzes = quizzesData.map(q => {
-                    const latestAttempt = q.quiz_attempts?.[0];
-                    let status = q.is_published ? "open" : "closed";
-                    
-                    if (latestAttempt?.status === "submitted" || latestAttempt?.status === "graded") {
-                        status = "done";
-                    } else if (q.start_date && new Date(q.start_date) > new Date()) {
-                        status = "upcoming";
-                    } else if (q.end_date && new Date(q.end_date) < new Date()) {
-                        status = "closed";
-                    }
+                    const latestAttempt = q.quiz_attempts?.[0] || null;
+                    const teacherName = q.teacher
+                        || (q.class_teacher_subject?.teachers
+                            ? `${q.class_teacher_subject.teachers.surname} ${q.class_teacher_subject.teachers.given_name}`
+                            : "Giáo viên");
+                    const status = q.status || (
+                        latestAttempt?.status === "submitted" || latestAttempt?.status === "graded"
+                            ? "done"
+                            : q.is_published === false
+                                ? "closed"
+                                : "open"
+                    );
+                    const normalizedQuestions = (q.questions || []).map((question) => ({
+                        ...question,
+                        text: question.text || question.question_text,
+                        options: (question.answers || question.quiz_answers || []).map((answer) => answer.answer_text),
+                        correctAnswer: (question.answers || question.quiz_answers || []).find((answer) => answer.is_correct)?.answer_text || "",
+                        questionImage: question.questionImage || "",
+                    }));
 
                     return {
                         id: q.id,
                         title: q.title,
                         description: q.description || "Không có mô tả",
-                        subject: q.class_teacher_subject?.subject_assignments?.display_name || "Môn học",
-                        teacher: q.class_teacher_subject?.teachers ? 
-                            `${q.class_teacher_subject.teachers.surname} ${q.class_teacher_subject.teachers.given_name}` : 
-                            "Giáo viên",
-                        duration: q.duration_minutes || 0,
-                        dueDate: q.end_date ? new Date(q.end_date).toLocaleDateString("vi-VN") : "Không thời hạn",
+                        subject: q.subject || q.class_teacher_subject?.subject_assignments?.display_name || "Môn học",
+                        teacher: teacherName,
+                        duration: q.duration || q.duration_minutes || 0,
+                        dueDate: q.dueDate || (q.end_date ? new Date(q.end_date).toLocaleDateString("vi-VN") : "Không thời hạn"),
                         status,
-                        type: q.quiz_type === "exam" ? "Bài thi" : q.quiz_type === "practice" ? "Luyện tập" : "Bài tập",
-                        questionsCount: q._count?.questions || 0,
-                        score: latestAttempt?.total_score || latestAttempt?.totalScore
+                        type: q.type || (q.quiz_type === "exam" ? "Bài thi" : q.quiz_type === "practice" ? "Luyện tập" : "Bài tập"),
+                        questionsCount: q.questionsCount || q._count?.questions || 0,
+                        score: q.score ?? latestAttempt?.total_score ?? latestAttempt?.totalScore ?? null,
+                        questions: normalizedQuestions,
                     };
                 });
                 setQuizzes(mappedQuizzes);
@@ -132,7 +155,7 @@ export default function StudentQuiz() {
     const handleStartQuiz = async (quiz) => {
         try {
             setLoading(true);
-            const response = await studentService.startQuiz({ id: quiz.id });
+            const response = await studentService.startQuiz({ pathParams: { id: quiz.id }, mock: false });
             if (response.success) {
                 const quizData = response.data.quiz;
                 const attemptData = response.data.attempt;
@@ -146,7 +169,9 @@ export default function StudentQuiz() {
                         type: q.question_type,
                         points: q.points,
                         options: q.quiz_answers?.map(a => a.answer_text) || [],
-                        quiz_answers: q.quiz_answers // Keep original for ID lookup
+                        quiz_answers: q.quiz_answers,
+                        questionImage: q.questionImage || "",
+                        correctAnswer: q.quiz_answers?.find(a => a.is_correct)?.answer_text || "",
                     })),
                     attemptId: attemptData.id,
                     timeRemaining: response.data.timeRemaining
@@ -168,25 +193,67 @@ export default function StudentQuiz() {
             setLoading(true);
             const responses = Object.entries(answers).map(([qId, ans]) => ({
                 questionId: parseInt(qId),
-                answerId: quiz.questions.find(q => q.id === parseInt(qId))
-                    ?.quiz_answers?.find(a => a.answer_text === ans)?.id,
-                essayAnswer: typeof ans === "string" ? ans : undefined
+                answerId: (() => {
+                    const question = quiz.questions.find(q => q.id === parseInt(qId));
+                    const questionType = String(question?.type || question?.questionType || question?.question_type || "").toLowerCase();
+                    if (questionType === "essay") return undefined;
+                    return question?.quiz_answers?.find(a => a.answer_text === ans)?.id;
+                })(),
+                essayAnswer: (() => {
+                    const question = quiz.questions.find(q => q.id === parseInt(qId));
+                    const questionType = String(question?.type || question?.questionType || question?.question_type || "").toLowerCase();
+                    if (questionType !== "essay") return undefined;
+                    return typeof ans === "string" ? ans : undefined;
+                })()
             }));
 
             const response = await studentService.submitQuiz({
-                attemptId: quiz.attemptId,
-                responses
+                pathParams: { attemptId: quiz.attemptId },
+                body: { responses },
+                mock: false,
             });
 
             if (response.success) {
-                const result = response.data;
+                const attempt = response.data?.data || response.data || {};
+                const hasEssayQuestions = quiz.questions.some((question) => {
+                    const questionType = String(
+                        question?.type || question?.questionType || question?.question_type || ""
+                    ).toLowerCase();
+                    return questionType === "essay";
+                });
+
+                const objectiveQuestions = quiz.questions.filter((question) => {
+                    const questionType = String(
+                        question?.type || question?.questionType || question?.question_type || ""
+                    ).toLowerCase();
+                    return questionType !== "essay";
+                });
+
+                const correctCount = objectiveQuestions.reduce((count, question) => {
+                    const selected = answers[question.id];
+                    return count + (selected && selected === question.correctAnswer ? 1 : 0);
+                }, 0);
+
+                const isPendingReview = hasEssayQuestions || attempt.status === "pending_review";
+                const autoScore = Number(attempt.score_auto ?? attempt.scoreAuto ?? 0);
+                const manualScore = Number(attempt.score_manual ?? attempt.scoreManual ?? 0);
+                const finalScore = Number(
+                    attempt.total_score ?? attempt.totalScore ?? attempt.score ?? autoScore + manualScore
+                );
                 setQuizResult({
                     quizTitle: quiz.title,
-                    score: result.score_final,
-                    correctCount: result.score_raw, // This might need mapping from BE
-                    total: quiz.questions.length,
+                    score: isPendingReview ? null : finalScore,
+                    autoScore,
+                    manualScore,
+                    pendingReview: isPendingReview,
+                    correctCount,
+                    total: objectiveQuestions.length || quiz.questions.length,
                     answers,
-                    questions: quiz.questions,
+                    questions: quiz.questions.map((question) => ({
+                        ...question,
+                        correctAnswer: question.correctAnswer || (question.quiz_answers || []).find((answer) => answer.is_correct)?.answer_text || "",
+                    })),
+                    attempt,
                 });
                 setSelectedQuiz(null);
                 fetchQuizzes(); // Refresh list to show 'done' status

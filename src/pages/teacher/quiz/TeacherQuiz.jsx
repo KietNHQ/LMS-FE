@@ -393,6 +393,9 @@ export default function TeacherQuiz() {
                 title: quizMeta.title,
                 duration: quizMeta.duration,
                 classTeacherSubjectId: quizMeta.classTeacherSubjectId,
+                gradingMode: quizMeta.gradingMode,
+                semesterId: quizMeta.semesterId,
+                assessmentType: quizMeta.assessmentType,
             });
 
             setQuizzes((prev) =>
@@ -404,6 +407,8 @@ export default function TeacherQuiz() {
                             subject: quizMeta.subject,
                             grade: quizMeta.grade,
                             className: quizMeta.className,
+                            semesterId: quizMeta.semesterId,
+                            gradingMode: quizMeta.gradingMode,
                             duration: parseDurationMinutes(quizMeta.duration || quiz.duration),
                             durationLabel: formatDurationLabel(quizMeta.duration || quiz.durationLabel),
                             createdByRole: quizMeta.createdByRole,
@@ -515,6 +520,9 @@ export default function TeacherQuiz() {
                     duration: editingQuiz.durationLabel || formatDurationLabel(editingQuiz.duration),
                     createdByRole: editingQuiz.createdByRole || "teacher",
                     createdByName: editingQuiz.createdByName || "",
+                    semesterId: editingQuiz.semesterId || editingQuiz.semester_id,
+                    gradingMode: editingQuiz.gradingMode || editingQuiz.grading_mode,
+                    assessmentType: editingQuiz.assessmentType || editingQuiz.assessment_type,
                 } : undefined}
             />
 

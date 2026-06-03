@@ -42,7 +42,9 @@ const LessonTimeline = ({
   onTodayClick,
   onEditLessonReview,
   onDeleteLessonReview,
-  readOnly
+  readOnly,
+  minDate,
+  maxDate
 }) => {
   return (
     <section className="lesson-timeline" aria-label="Mốc thời gian tiết học">
@@ -84,6 +86,8 @@ const LessonTimeline = ({
             <input
               type="date"
               value={selectedHistoryDate}
+              min={minDate}
+              max={maxDate}
               onChange={(e) => setSelectedHistoryDate(e.target.value)}
               onMouseDown={(e) => {
                 e.preventDefault();
@@ -110,11 +114,11 @@ const LessonTimeline = ({
           <p className="lesson-history-empty">Ngày này chưa có đánh giá tiết học.</p>
         ) : (
           <ul className="lesson-history-list">
-            {reviewsForSelectedDate.map((review) => {
+            {reviewsForSelectedDate.map((review, _idx) => {
               const isLate = checkIsLate(review.lessonTime, review.createdAt);
               
               return (
-                <li key={review.id} className={`lesson-history-item ${isLate ? 'is-late' : ''}`}>
+                <li key={review.id || `review-${_idx}`} className={`lesson-history-item ${isLate ? 'is-late' : ''}`}>
                   <div className="lesson-history-content">
                     <div className="lesson-history-item-top">
                       <span className="lesson-history-tag">
@@ -139,7 +143,7 @@ const LessonTimeline = ({
                           {review.studentReports.map((report, idx) => {
                             const studentName = report.student_name || `${report.surname || ""} ${report.given_name || ""}`.trim() || "Học sinh";
                             return (
-                              <li key={idx} className="lesson-history-report-item">
+                              <li key={`report-${review.id}-${idx}`} className="lesson-history-report-item">
                                 • <strong>{studentName}</strong>: {report.category} - {typeof report.content === 'object' ? (report.content.label || "N/A") : report.content} ({report.points > 0 ? "+" : ""}{report.points}đ)
                                 {report.note && <span className="lesson-report-note-text"> - Ghi chú: <em>{report.note}</em></span>}
                               </li>

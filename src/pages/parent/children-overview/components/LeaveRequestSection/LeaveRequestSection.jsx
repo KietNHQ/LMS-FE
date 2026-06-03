@@ -24,6 +24,7 @@ export default function LeaveRequestSection({ requests = [], childId, onSuccess 
         return requests.map((item) => {
             const statusInfo = normalizeStatus(item.statusText || item.status)
             return {
+                id: item.id || `${item.studentId}-${item.startDate}-${Date.now()}-${Math.random()}`,
                 title: item.title || item.reason || "Đơn xin nghỉ học",
                 date: item.startDate && item.endDate ? `${item.startDate} đến ${item.endDate}` : (item.date || "--"),
                 approvedBy: item.approvedByRole === "teacher" ? "Giáo viên chủ nhiệm" : (item.approvedByRole === "manager" ? "Quản lý trường" : (item.approvedBy || "—")),
@@ -43,11 +44,11 @@ export default function LeaveRequestSection({ requests = [], childId, onSuccess 
         try {
             const res = await parentService.createLeaveRequest({
                 body: {
-                    studentEnrollmentId: childId,
+                    studentId: childId,
                     reason: formData.reason,
                     startDate: formData.startDate,
                     endDate: formData.endDate,
-                    note: formData.note
+                    notes: formData.note
                 },
                 mock: false
             })
@@ -82,8 +83,8 @@ export default function LeaveRequestSection({ requests = [], childId, onSuccess 
                 </div>
             ) : (
             <div className="leave-list">
-                {normalizedRequests.map((item, index) => (
-                    <div key={index} className="leave-item">
+                {normalizedRequests.map((item) => (
+                    <div key={item.id} className="leave-item">
                         <div className="leave-info">
                             <strong>{item.title}</strong>
                             <span>

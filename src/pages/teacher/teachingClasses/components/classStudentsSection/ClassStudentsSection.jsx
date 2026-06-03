@@ -2,6 +2,9 @@ import React, { useEffect, useMemo, useState } from "react";
 import { FiSearch } from "react-icons/fi";
 import { toast } from "react-toastify";
 import teacherService from "../../../../../services/pages/teacher/teacherService";
+import studentService from "../../../../../services/pages/student/studentService";
+import { useSchoolYearContext } from "../../../../../context/SchoolYearContext";
+import { resolveSemesterId } from "../../../../../services/shared/schoolYearLookup";
 import "./ClassStudentsSection.css";
 
 // Utilities
@@ -20,10 +23,11 @@ import StudentReviewModal from "./subcomponents/StudentReviewModal";
 import LessonReviewModal from "./subcomponents/LessonReviewModal";
 import StudentsTable from "./subcomponents/StudentsTable";
 import Pagination from "./subcomponents/Pagination";
+import ConfirmationModal from "../../../../../components/common/Dialog/ConfirmationModal/ConfirmationModal";
 
 const ITEMS_PER_PAGE = 8;
 
-const ClassStudentsSection = ({ classId, students, readOnly = false }) => {
+const ClassStudentsSection = ({ classId, students, readOnly = false, isStudentView = false }) => {
   // --- State ---
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
@@ -52,6 +56,27 @@ const ClassStudentsSection = ({ classId, students, readOnly = false }) => {
   const [lessonPeriodOptions, setLessonPeriodOptions] = useState([]);
   const [selectedLessonPeriod, setSelectedLessonPeriod] = useState("");
   const [todayPeriods, setTodayPeriods] = useState([]); // Danh sách các tiết dạy hôm nay
+  const [deleteReviewId, setDeleteReviewId] = useState(null);
+  
+  // Leave Requests State
+  const [approvedLeaveStudentIds, setApprovedLeaveStudentIds] = useState(new Set());
+
+  // --- Context ---
+  const { selectedSchoolYear, selectedTerm } = useSchoolYearContext();
+
+  const [resolvedSemester, setResolvedSemester] = useState(null);
+
+  // Resolve semesterId from context (year/term)
+  useEffect(() => {
+    if (!selectedSchoolYear || !selectedTerm) return;
+    let cancelled = false;
+    import("../../../../../services/shared/schoolYearLookup").then((module) => {
+      module.resolveSemester(selectedSchoolYear, selectedTerm).then((sem) => {
+        if (!cancelled) setResolvedSemester(sem || null);
+      });
+    });
+    return () => { cancelled = true; };
+  }, [selectedSchoolYear, selectedTerm]);
 
   // Timeline & Calendar State
   const [todayLessonInfo, setTodayLessonInfo] = useState(() => getCurrentLessonInfo(new Date()));
@@ -63,7 +88,7 @@ const ClassStudentsSection = ({ classId, students, readOnly = false }) => {
   const filteredStudents = useMemo(() => {
     if (!students) return [];
     return students.filter((s) =>
-      s.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (s.name || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
       (s.id && s.id.toString().includes(searchTerm))
     );
   }, [students, searchTerm]);
@@ -84,15 +109,15 @@ const ClassStudentsSection = ({ classId, students, readOnly = false }) => {
   const selectedDateObj = parseDateKey(selectedHistoryDate);
   const selectedDateLabel = selectedDateObj.toLocaleDateString("vi-VN");
 
-  const currentLessonLabel = currentSchedule 
-    ? `Tiết học thực tế (Tiết ${currentSchedule.id || "?"})` 
+  const currentLessonLabel = currentSchedule
+    ? `Tiết học thực tế (Tiết ${currentSchedule.periodId || currentSchedule.period_number || currentSchedule.period || currentSchedule.id || "?"})`
     : (todayLessonInfo?.periodLabel || `Tiết học dự kiến (${lessonReviews.length + 1})`);
 
   const currentLessonTime = currentSchedule 
     ? `${currentSchedule.start_time?.substring(0, 5)} - ${currentSchedule.end_time?.substring(0, 5)} - ${selectedDateLabel}`
     : todayLessonInfo?.timeRange 
       ? `${todayLessonInfo.timeRange} - ${selectedDateLabel}`
-      : `07:15 - 08:00 - ${selectedDateLabel}`;
+      : `07:15 - 08:00 - ${selectedDateLabel || ""}`;
 
   const availableReviewDates = useMemo(
     () => [...new Set(lessonReviews.map((review) => review.reviewDate))].sort((a, b) => b.localeCompare(a)),
@@ -116,7 +141,22 @@ const ClassStudentsSection = ({ classId, students, readOnly = false }) => {
   // --- Effects ---
   useEffect(() => {
     if (selectedDateLatestReview) {
-      setStudentAttendance(selectedDateLatestReview.attendanceSnapshot || {});
+      let snapshot = { ...selectedDateLatestReview.attendanceSnapshot } || {};
+      
+      // Nếu không có dữ liệu điểm danh chi tiết từ BE (chưa có trong snapshot),
+      // fallback đánh dấu 'Có mặt' (true) cho tất cả học sinh để giao diện không bị trắng trơn.
+      // TRỪ những em có đơn xin phép đã duyệt thì bỏ đánh dấu (false).
+      if (students) {
+        students.forEach(s => {
+          if (approvedLeaveStudentIds.has(s.id)) {
+            snapshot[s.id] = false;
+          } else if (snapshot[s.id] === undefined) {
+            snapshot[s.id] = true;
+          }
+        });
+      }
+
+      setStudentAttendance(snapshot);
       setStudentReviews(selectedDateLatestReview.studentReviewSnapshot || {});
       
       setEditingEvaluationId(selectedDateLatestReview.id);
@@ -132,11 +172,12 @@ const ClassStudentsSection = ({ classId, students, readOnly = false }) => {
       setLessonNote(selectedDateLatestReview.note || "");
       setIsDoublePeriod(selectedDateLatestReview.isDoublePeriod || false);
     } else {
-      // Nếu không có lịch sử cho ngày này, reset trạng thái để giáo viên điểm danh mới (mặc định tích đi học cho tất cả)
+      // Nếu không có lịch sử cho ngày này, reset trạng thái để giáo viên điểm danh mới (mặc định tích đi học cho tất cả, TRỪ những em có đơn xin phép)
       const defaultAttendance = {};
       if (students) {
         students.forEach(s => {
-          defaultAttendance[s.id] = true;
+          // Uncheck by default if student has approved leave
+          defaultAttendance[s.id] = !approvedLeaveStudentIds.has(s.id);
         });
       }
       setStudentAttendance(defaultAttendance);
@@ -149,12 +190,28 @@ const ClassStudentsSection = ({ classId, students, readOnly = false }) => {
       setIsDoublePeriod(false);
     }
     setCurrentPage(1);
-  }, [selectedDateLatestReview, students]);
+  }, [selectedDateLatestReview, students, approvedLeaveStudentIds]);
 
   const mapBackendHistory = (resData) => {
     if (!Array.isArray(resData)) return [];
     return resData.map(item => {
       const restoredReviews = {};
+      
+      const attendanceSnapshot = {};
+      if (item.student_reports) {
+        item.student_reports.forEach(report => {
+           // We assume if a student has a report with category 'absent' or containing 'vắng', they were marked absent
+           const isAbsent = report.category === 'absent' || 
+                            (report.category || '').toLowerCase().includes('vắng') ||
+                            (report.content || '').toLowerCase().includes('vắng') ||
+                            (report.content || '').toLowerCase().includes('nghỉ học');
+           // If they are in reports and absent, snapshot is false (unchecked)
+           if (isAbsent && (report.student_id || report.student_enrollment_id)) {
+               attendanceSnapshot[report.student_id || report.student_enrollment_id] = false;
+           }
+        });
+      }
+
       if (item.student_reports && item.student_reports.length > 0) {
         item.student_reports.forEach(report => {
           const sId = report.student_id || report.student_enrollment_id;
@@ -197,27 +254,33 @@ const ClassStudentsSection = ({ classId, students, readOnly = false }) => {
         }
       });
 
-      const attendanceSnapshot = item.attendance_snapshot 
+      const finalAttendanceSnapshot = item.attendance_snapshot 
         ? Object.entries(item.attendance_snapshot).reduce((acc, [sId, status]) => {
             acc[sId] = status === 'present';
             return acc;
           }, {}) 
-        : {};
+        : { ...attendanceSnapshot };
+
+      const periodNum = item.periodId || item.period_id || item.period_number;
+      const periodDisplay = periodNum ? `Tiết ${periodNum}` : "Tiết chưa xác định";
 
       return {
         id: item.id,
-        lessonLabel: `Tiết ${item.period_number || item.period_id || ""}`,
-        lessonTime: `${item.start_time ? item.start_time.substring(0, 5) : ""} - ${new Date(item.evaluation_date).toLocaleDateString("vi-VN")}`,
-        attended: item.present_count || 0,
-        absent: item.absent_count || 0,
+        lessonLabel: periodDisplay,
+        lessonTime: item.start_time ? `${item.start_time.substring(0, 5)} - ${new Date(item.evaluation_date).toLocaleDateString("vi-VN")}` : new Date(item.evaluation_date).toLocaleDateString("vi-VN"),
+        attended: item.attended !== undefined ? item.attended : (item.present_count || 0),
+        absent: item.absent !== undefined ? item.absent : (item.absent_count || 0),
         score: item.score,
         note: item.note,
         studentReports: item.student_reports || [],
         reviewDate: toDateKey(new Date(item.evaluation_date)),
         createdAt: new Date(item.created_at).toLocaleString("vi-VN"),
         isDoublePeriod: item.is_double_period,
-        attendanceSnapshot,
-        studentReviewSnapshot: restoredReviews
+        attendanceSnapshot: finalAttendanceSnapshot,
+        studentReviewSnapshot: restoredReviews,
+        lessonInstanceId: item.lesson_instance_id || null,
+        periodId: item.periodId || item.period_id || null,
+        schoolDayId: item.school_day_id || null
       };
     });
   };
@@ -231,27 +294,36 @@ const ClassStudentsSection = ({ classId, students, readOnly = false }) => {
     const fetchHistory = async () => {
       if (!classId) return;
       try {
-        const res = await teacherService.getLessonEvaluations({
-          mock: false,
-          pathParams: { classId }
-        });
+        const res = isStudentView
+          ? await studentService.getClassLessonEvaluations({
+              mock: false,
+              pathParams: { classId }
+            })
+          : await teacherService.getLessonEvaluations({
+              mock: false,
+              pathParams: { classId }
+            });
         if (res.success && res.data) {
           const history = mapBackendHistory(res.data);
           if (history.length > 0) {
             setLessonReviews(history);
+          } else {
+            setLessonReviews([]);
           }
+        } else {
+          setLessonReviews([]);
         }
       } catch (err) {
         console.error("Failed to fetch evaluations:", err);
       }
     };
     fetchHistory();
-  }, [classId]);
+  }, [classId, isStudentView]);
 
   // Tải danh sách cột điểm để hỗ trợ đồng bộ
   useEffect(() => {
     const fetchGradeItems = async () => {
-      if (!classId) return;
+      if (!classId || isStudentView) return;
       try {
         const res = await teacherService.listGradeItems({
           params: { classId }
@@ -264,17 +336,17 @@ const ClassStudentsSection = ({ classId, students, readOnly = false }) => {
       }
     };
     fetchGradeItems();
-  }, [classId]);
+  }, [classId, isStudentView]);
 
   // Lấy TKB hiện tại dựa trên ngày đang chọn
   useEffect(() => {
     const fetchCurrentSchedule = async () => {
-      if (!classId) return;
+      if (!classId || isStudentView || !resolvedSemester?.id) return;
       try {
         const res = await teacherService.getCurrentSchedule({
           mock: false,
           pathParams: { classId },
-          params: { date: selectedHistoryDate } // Gửi ngày đang chọn lên BE
+          params: { date: selectedHistoryDate, semesterId: resolvedSemester.id }
         });
         if (res.success) {
           setCurrentSchedule(res.data || null);
@@ -284,16 +356,17 @@ const ClassStudentsSection = ({ classId, students, readOnly = false }) => {
       }
     };
     fetchCurrentSchedule();
-  }, [classId, selectedHistoryDate]);
+  }, [classId, selectedHistoryDate, isStudentView, resolvedSemester?.id]);
 
   // Lấy các thứ có lịch dạy trong tuần
   useEffect(() => {
     const fetchTeachingDays = async () => {
-      if (!classId) return;
+      if (!classId || isStudentView || !resolvedSemester?.id) return;
       try {
         const res = await teacherService.getTeachingDays({
           mock: false,
-          pathParams: { classId }
+          pathParams: { classId },
+          params: { semesterId: resolvedSemester.id }
         });
         if (res.success && res.data) {
           setTeachingDays(res.data);
@@ -303,27 +376,66 @@ const ClassStudentsSection = ({ classId, students, readOnly = false }) => {
       }
     };
     fetchTeachingDays();
-  }, [classId]);
+  }, [classId, isStudentView, resolvedSemester?.id]);
 
-  // Lấy toàn bộ TKB của lớp để biết chính xác các tiết của giáo viên hôm nay
+  // Lấy TKB của chính giáo viên để chỉ hiện các tiết mà giáo viên này dạy trong lớp
   useEffect(() => {
-    const fetchFullSchedule = async () => {
-      if (!classId) return;
+    const fetchTeacherTimetable = async () => {
+      if (!classId || isStudentView || !resolvedSemester?.id) return;
       try {
-        const res = await teacherService.getClassSchedule({
-          pathParams: { id: classId }
+        const res = await teacherService.getTimetable({
+          params: { semesterId: resolvedSemester.id }
         });
-        if (res.success && res.data) {
+        const lessons = Array.isArray(res?.data?.lessons)
+          ? res.data.lessons
+          : Array.isArray(res?.data?.data?.lessons)
+            ? res.data.data.lessons
+            : Array.isArray(res?.data)
+              ? res.data
+              : [];
+
+        if (Array.isArray(lessons)) {
           const selectedDate = parseDateKey(selectedHistoryDate);
           const selectedDayOfWeek = selectedDate.getDay() + 1; // 1 (CN) - 7 (T7)
-          const periodsToday = res.data.filter(s => s.day_of_week === selectedDayOfWeek);
+          const periodsToday = lessons
+            .filter((lesson) => {
+              const lessonClassId = lesson.classId ?? lesson.class_id;
+              const lessonDayOfWeek = lesson.dayOfWeek ?? lesson.day_of_week;
+              return String(lessonClassId) === String(classId) && Number(lessonDayOfWeek) === selectedDayOfWeek;
+            })
+            .sort((a, b) => {
+              const aPeriod = Number(a.period ?? a.period_number ?? 0);
+              const bPeriod = Number(b.period ?? b.period_number ?? 0);
+              return aPeriod - bPeriod;
+            });
           setTodayPeriods(periodsToday);
         }
       } catch (err) {
-        console.error("Failed to fetch full schedule:", err);
+        console.error("Failed to fetch teacher timetable:", err);
       }
     };
-    fetchFullSchedule();
+    fetchTeacherTimetable();
+  }, [classId, selectedHistoryDate, isStudentView, resolvedSemester?.id]);
+
+  // Lấy danh sách học sinh có đơn xin phép đã duyệt cho ngày hiện tại
+  useEffect(() => {
+    const fetchApprovedLeaves = async () => {
+      if (!classId || !selectedHistoryDate) return;
+      try {
+        const res = await teacherService.getApprovedLeavesByDate({
+          pathParams: { classId },
+          params: { date: selectedHistoryDate }
+        });
+        if (res.success && res.data) {
+          setApprovedLeaveStudentIds(new Set(res.data));
+        } else {
+          setApprovedLeaveStudentIds(new Set());
+        }
+      } catch (err) {
+        console.error("Failed to fetch approved leaves:", err);
+      }
+    };
+    fetchApprovedLeaves();
   }, [classId, selectedHistoryDate]);
 
   // --- Handlers ---
@@ -504,12 +616,16 @@ const ClassStudentsSection = ({ classId, students, readOnly = false }) => {
     setIsLessonReviewDialogOpen(false);
   };
 
+  const getLessonPeriodNumber = (lesson) => {
+    return lesson?.periodId ?? lesson?.period_number ?? lesson?.periodNumber ?? lesson?.period ?? null;
+  };
+
   const handleOpenLessonReview = () => {
     // 1. Xác định các tiết dạy thực tế trong hôm nay từ TKB
     // Nếu không có dữ liệu TKB thì dùng currentSchedule làm fallback
-    const scheduledPeriods = todayPeriods.length > 0 
-      ? todayPeriods.map(p => p.period_number)
-      : (currentSchedule ? [currentSchedule.period_number] : []);
+    const scheduledPeriods = todayPeriods.length > 0
+      ? todayPeriods.map(getLessonPeriodNumber).filter(Boolean)
+      : (currentSchedule ? [getLessonPeriodNumber(currentSchedule)].filter(Boolean) : []);
 
     const targetDate = selectedHistoryDate;
     
@@ -626,20 +742,8 @@ const ClassStudentsSection = ({ classId, students, readOnly = false }) => {
     if (shouldOpenModal) setIsLessonReviewDialogOpen(true);
   };
 
-  const handleDeleteLessonReview = async (evaluationId) => {
-    if (!window.confirm("Bạn có chắc chắn muốn xóa đánh giá tiết học này?")) return;
-    try {
-      const res = await teacherService.deleteLessonEvaluation({
-        pathParams: { id: evaluationId }
-      });
-      if (res.success) {
-        toast.success("Đã xóa đánh giá tiết học");
-        setLessonReviews(prev => prev.filter(r => r.id !== evaluationId));
-      }
-    } catch (err) {
-      console.error("Failed to delete evaluation:", err);
-      toast.error("Không thể xóa đánh giá");
-    }
+  const handleDeleteLessonReview = (evaluationId) => {
+    setDeleteReviewId(evaluationId);
   };
 
   const handleBulkAttendance = (status) => {
@@ -652,6 +756,27 @@ const ClassStudentsSection = ({ classId, students, readOnly = false }) => {
       return next;
     });
     toast.info(`Đã điểm danh cho ${selectedStudentIds.size} học sinh`);
+  };
+
+  const handleConfirmDeleteLessonReview = async () => {
+    console.log("[DELETE] deleteReviewId:", deleteReviewId);
+    if (!deleteReviewId) return;
+    try {
+      console.log("[DELETE] Calling API with id:", deleteReviewId);
+      const res = await teacherService.deleteLessonEvaluation({
+        pathParams: { id: deleteReviewId }
+      });
+      console.log("[DELETE] Response:", res);
+      if (res.success) {
+        toast.success("Đã xóa đánh giá tiết học");
+        setLessonReviews(prev => prev.filter(r => r.id !== deleteReviewId));
+      }
+    } catch (err) {
+      console.error("Failed to delete evaluation:", err);
+      toast.error("Không thể xóa đánh giá");
+    } finally {
+      setDeleteReviewId(null);
+    }
   };
 
   const handleAddLessonReview = async (e) => {
@@ -674,6 +799,7 @@ const ClassStudentsSection = ({ classId, students, readOnly = false }) => {
             studentEnrollmentId: student.enrollmentId || student.enrollment_id,
             category: entry.category,
             content: typeof entry.content === 'object' ? entry.content.label : entry.content,
+            code: typeof entry.content === 'object' ? entry.content.code : undefined,
             points: entry.pts,
             note: entry.note || ""
           });
@@ -682,13 +808,27 @@ const ClassStudentsSection = ({ classId, students, readOnly = false }) => {
     });
 
     console.log("=== COMPILING LESSON EVALUATION ===");
-    console.log("Drafted studentReviews:", studentReviews);
-    console.log("Compiled studentReports to send:", studentReports);
+    console.log("Drafted studentReviews:", JSON.parse(JSON.stringify(studentReviews)));
+    console.log("Compiled studentReports to send:", JSON.parse(JSON.stringify(studentReports)));
+
+    let finalPeriodId = currentSchedule?.periodId || currentSchedule?.id || null;
+    if (selectedLessonPeriod && selectedLessonPeriod.toString().startsWith("new_")) {
+      const parts = selectedLessonPeriod.split("_");
+      finalPeriodId = parseInt(parts[1], 10);
+    } else if (selectedLessonPeriod && !isNaN(parseInt(selectedLessonPeriod))) {
+       const existingReview = lessonReviews.find(r => r.id === selectedLessonPeriod);
+       if (existingReview && existingReview.periodId) {
+          finalPeriodId = existingReview.periodId;
+       }
+    }
 
     const evaluationData = {
       classId: parseInt(classId),
       subjectAssignmentId: currentSchedule?.subject_assignment_id || null,
-      periodId: currentSchedule?.id || null, // Sử dụng ID thực của tiết học từ TKB
+      periodId: finalPeriodId,
+      lessonInstanceId: currentSchedule?.lessonInstanceId || null,
+      schoolDayId: currentSchedule?.schoolDayId || null,
+      dayOfWeek: currentSchedule?.dayOfWeek || null,
       evaluationDate: selectedHistoryDate,
       score: lessonScore.trim().toUpperCase(),
       note: lessonNote.trim(),
@@ -699,20 +839,19 @@ const ClassStudentsSection = ({ classId, students, readOnly = false }) => {
     };
 
     try {
-      // Điểm danh: Lưu danh sách điểm danh cho tiết học thực tế này
-      if (currentSchedule?.id) {
-        await teacherService.saveAttendance({
-          mock: false,
-          body: {
-            periodId: currentSchedule.id,
-            date: selectedHistoryDate,
-            attendances: students.map(s => ({
-              studentEnrollmentId: s.enrollmentId || s.enrollment_id,
-              status: studentAttendance[s.id] ? "present" : "absent"
-            }))
-          }
-        });
-      }
+      // Điểm danh: Luôn luôn lưu danh sách điểm danh cho tiết học này
+      await teacherService.saveAttendance({
+        mock: false,
+        body: {
+          periodId: currentSchedule?.periodId || currentSchedule?.id || null,
+          lessonInstanceId: currentSchedule?.lessonInstanceId || null,
+          date: selectedHistoryDate,
+          attendances: students.map(s => ({
+            studentEnrollmentId: s.enrollmentId || s.enrollment_id,
+            status: studentAttendance[s.id] ? "present" : "absent"
+          }))
+        }
+      });
 
       let res;
       if (editingEvaluationId) {
@@ -728,21 +867,25 @@ const ClassStudentsSection = ({ classId, students, readOnly = false }) => {
 
       if (res.success) {
         toast.success(editingEvaluationId ? "Đã cập nhật đánh giá" : "Đã lưu đánh giá tiết học");
-        
+
         // Refresh history
-        const dRes = await teacherService.getTeachingDays({ 
+        const dRes = await teacherService.getTeachingDays({
           mock: false,
-          pathParams: { classId } 
+          pathParams: { classId },
+          params: { semesterId: resolvedSemester?.id }
         });
         if (dRes.success && Array.isArray(dRes.data)) {
           setTeachingDays(dRes.data);
         }
 
         // Lấy thời khóa biểu hôm nay để biết chính xác các tiết dạy
-        const schRes = await teacherService.getClassSchedule({ pathParams: { id: classId } });
+        const schRes = await teacherService.getClassSchedule({ 
+          pathParams: { id: classId },
+          params: { semesterId: resolvedSemester?.id }
+        });
         if (schRes.success && schRes.data) {
-          const todayDayOfWeek = new Date().getDay() + 1; // 1 (CN) - 7 (T7)
-          const periodsToday = schRes.data.filter(s => s.day_of_week === todayDayOfWeek);
+          const todayDayOfWeek = new Date().getDay() + 1;
+          const periodsToday = schRes.data.filter(s => s.dayOfWeek === todayDayOfWeek || s.day_of_week === todayDayOfWeek);
           setTodayPeriods(periodsToday);
         }
 
@@ -753,6 +896,8 @@ const ClassStudentsSection = ({ classId, students, readOnly = false }) => {
         if (hRes.success && Array.isArray(hRes.data)) {
           const history = mapBackendHistory(hRes.data);
           setLessonReviews(history);
+          // Force selectedHistoryDate to re-trigger the useEffect that loads studentReviews from the latest review
+          setSelectedHistoryDate(selectedHistoryDate);
         }
         resetLessonForm();
       }
@@ -769,7 +914,8 @@ const ClassStudentsSection = ({ classId, students, readOnly = false }) => {
   const firstOfMonth = new Date(calendarViewDate.getFullYear(), calendarViewDate.getMonth(), 1);
   const daysInMonth = new Date(calendarViewDate.getFullYear(), calendarViewDate.getMonth() + 1, 0).getDate();
   const firstWeekday = (firstOfMonth.getDay() + 6) % 7;
-  const calendarCells = Array.from({ length: 42 }, (_, idx) => {
+  
+  const generateCalendarCells = () => Array.from({ length: 42 }, (_, idx) => {
     const dayOffset = idx - firstWeekday + 1;
     const dateObj = new Date(calendarViewDate.getFullYear(), calendarViewDate.getMonth(), dayOffset);
     const dateKey = toDateKey(dateObj);
@@ -785,6 +931,38 @@ const ClassStudentsSection = ({ classId, students, readOnly = false }) => {
       hasLesson: Array.isArray(teachingDays) && teachingDays.includes(dayOfWeekInDB),
     };
   });
+
+  // Calendar props based on semester dates
+  let minDateStr = undefined;
+  let maxDateStr = undefined;
+  if (resolvedSemester) {
+    if (resolvedSemester.start_date) {
+      minDateStr = resolvedSemester.start_date.split('T')[0];
+    }
+    if (resolvedSemester.end_date) {
+      maxDateStr = resolvedSemester.end_date.split('T')[0];
+      // Expand maxDateStr to today if the current date is after the semester end date
+      const maxDateObj = new Date(maxDateStr);
+      const todayObj = new Date();
+      todayObj.setHours(0, 0, 0, 0);
+      if (todayObj > maxDateObj) {
+         maxDateStr = new Date(todayObj.getTime() - (todayObj.getTimezoneOffset() * 60000)).toISOString().split('T')[0];
+      }
+    }
+  }
+
+  const calendarProps = {
+    calendarMonthLabel,
+    calendarViewDate,
+    setCalendarViewDate,
+    calendarCells: generateCalendarCells(),
+    onSelectDate: (dateKey) => {
+      setSelectedHistoryDate(dateKey);
+      setIsCalendarOpen(false);
+    },
+    minDate: minDateStr,
+    maxDate: maxDateStr,
+  };
 
   return (
     <div className="students-card">
@@ -805,16 +983,7 @@ const ClassStudentsSection = ({ classId, students, readOnly = false }) => {
         onEditLessonReview={handleEditLessonReview}
         onDeleteLessonReview={handleDeleteLessonReview}
         readOnly={readOnly}
-        calendarProps={{
-          calendarMonthLabel,
-          calendarViewDate,
-          setCalendarViewDate,
-          calendarCells,
-          onSelectDate: (dateKey) => {
-            setSelectedHistoryDate(dateKey);
-            setIsCalendarOpen(false);
-          }
-        }}
+        calendarProps={calendarProps}
       />
 
       <div className="students-card-actions-row">
@@ -892,6 +1061,7 @@ const ClassStudentsSection = ({ classId, students, readOnly = false }) => {
         selectedStudentIds={selectedStudentIds}
         onToggleSelect={handleToggleSelect}
         onSelectAll={handleSelectAll}
+        approvedLeaveStudentIds={approvedLeaveStudentIds}
       />
 
       <Pagination 
@@ -899,6 +1069,17 @@ const ClassStudentsSection = ({ classId, students, readOnly = false }) => {
         totalPages={totalPages}
         onPrevPage={() => setCurrentPage(p => Math.max(1, p - 1))}
         onNextPage={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+      />
+
+      <ConfirmationModal
+        isOpen={deleteReviewId !== null}
+        title="Xóa đánh giá"
+        message="Bạn có chắc chắn muốn xóa đánh giá tiết học này?"
+        confirmLabel="Xóa"
+        cancelLabel="Hủy"
+        variant="danger"
+        onConfirm={handleConfirmDeleteLessonReview}
+        onCancel={() => setDeleteReviewId(null)}
       />
     </div>
   );

@@ -3,11 +3,11 @@ import "./ScheduleFilterSection.css";
 import { ChevronLeft, ChevronRight, Calendar } from "lucide-react";
 import Select from "../../../../../components/ui/Select/Select";
 import { CLASS_OPTIONS } from "../../../../../utils/timetableShared";
+import { useQuery } from "@tanstack/react-query";
+import teacherService from "../../../../../services/pages/teacher/teacherService";
 
 import { FaRegMoon } from "react-icons/fa";
 import { BsFillSunFill } from "react-icons/bs";
-
-const grades = ["Tất cả", "Khối 10", "Khối 11", "Khối 12"];
 
 function getWeekDates(offset = 0) {
   const now = new Date();
@@ -78,14 +78,46 @@ export default function ScheduleFilterSection({
 
   const isMorning = sessionView === "morning";
 
-  // Cascading Filter Logic
+  // Fetch grade levels from API
+  const { data: gradeLevelsData = [] } = useQuery({
+    queryKey: ["teacher-schedule-grade-levels"],
+    queryFn: async () => {
+      try {
+        const res = await teacherService.getGradeLevels({ mock: false });
+        return res?.data || res || [];
+      } catch {
+        return [];
+      }
+    },
+    staleTime: 10 * 60 * 1000,
+  });
+
+  const gradeOptions = [
+    { label: "Tất cả", value: "Tất cả" },
+    ...gradeLevelsData.map(g => ({
+      label: g.name || `Khối ${g.level_number}`,
+      value: g.name || `Khối ${g.level_number}`,
+    })),
+  ];
+
+  // Cascading Filter Logic - build from API grade levels
+  const gradeLevelMap = useMemo(() => {
+    const map = {};
+    (gradeLevelsData || []).forEach(g => {
+      const name = g.name || `Khối ${g.level_number}`;
+      const gradeNum = String(g.level_number || name.replace(/\D/g, ""));
+      map[name] = gradeNum;
+    });
+    return map;
+  }, [gradeLevelsData]);
+
   const filteredClasses = useMemo(() => {
     const baseList = availableClasses.length > 0 ? availableClasses : CLASS_OPTIONS;
     if (selectedGrade === "Tất cả") return ["Tất cả", ...baseList];
-    const gradeNum = selectedGrade.split(" ")[1]; // "10", "11", "12"
+    const gradeNum = gradeLevelMap[selectedGrade] || selectedGrade.replace("Khối ", "").replace("khối ", "");
     const filtered = baseList.filter(cls => cls.startsWith(gradeNum));
     return ["Tất cả", ...filtered];
-  }, [selectedGrade, availableClasses]);
+  }, [selectedGrade, availableClasses, gradeLevelMap]);
 
   const handleGradeChange = (e) => {
     setSelectedGrade(e.target.value);
@@ -122,7 +154,7 @@ export default function ScheduleFilterSection({
             <Select
               className="schedule-admin-select"
               variant="custom"
-              options={grades}
+              options={gradeOptions}
               value={selectedGrade}
               onChange={handleGradeChange}
             />

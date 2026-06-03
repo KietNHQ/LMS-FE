@@ -184,7 +184,7 @@ export default function ManagementDisciplineReports() {
                       <div className="drp-empty-state">Không ghi nhận vi phạm kỷ luật nào trong kỳ này.</div>
                     ) : (
                       violationsByType.map((v, i) => (
-                        <div key={i} className="drp-chart-row">
+                        <div key={`violation-type-${v.type || v.violationType || i}`} className="drp-chart-row">
                           <span className="drp-chart-label">{v.type || v.violationType || "Vi phạm khác"}</span>
                           <div className="drp-chart-bar-wrap">
                             <div 
@@ -222,7 +222,7 @@ export default function ManagementDisciplineReports() {
                         </tr>
                       ) : (
                         topViolators.map((s, idx) => (
-                          <tr key={idx}>
+                          <tr key={`violator-${s.enrollmentId || s.studentId || idx}`}>
                             <td className="bold">{s.name || s.studentName}</td>
                             <td>{s.class || s.className}</td>
                             <td className="danger bold">{s.count || s.violationCount}</td>
@@ -257,7 +257,7 @@ export default function ManagementDisciplineReports() {
                     </thead>
                     <tbody>
                       {rankings.map((r, idx) => (
-                        <tr key={idx}>
+                        <tr key={`ranking-${r.classId || r.className || idx}`}>
                           <td className="bold text-center">#{idx + 1}</td>
                           <td className="bold">{r.className || r.label || r.name}</td>
                           <td>{r.teacherName || r.teacher || "Chưa phân công"}</td>

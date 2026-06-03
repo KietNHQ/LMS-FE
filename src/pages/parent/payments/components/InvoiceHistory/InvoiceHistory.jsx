@@ -1,6 +1,8 @@
-import React from "react";
+import React, { useState } from "react";
 import "./InvoiceHistory.css";
 import { FiFileText, FiCheckCircle, FiClock, FiAlertCircle, FiCalendar, FiCreditCard } from "react-icons/fi";
+
+const PAGE_SIZE = 10;
 
 const STATUS_CONFIG = {
     paid:      { icon: <FiCheckCircle />, label: "Đã thanh toán",   cls: "status--paid" },
@@ -17,7 +19,11 @@ function getStatusConfig(dueStatus, status) {
     return STATUS_CONFIG[key] || STATUS_CONFIG[status] || STATUS_CONFIG.default;
 }
 
-export default function InvoiceHistory({ invoices }) {
+export default function InvoiceHistory({ invoices = [] }) {
+    const [page, setPage] = useState(1);
+    const totalPages = Math.max(1, Math.ceil(invoices.length / PAGE_SIZE));
+    const paginated = invoices.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+
     if (!invoices || invoices.length === 0) {
         return (
             <div className="ih-card">
@@ -62,7 +68,7 @@ export default function InvoiceHistory({ invoices }) {
                         </tr>
                     </thead>
                     <tbody>
-                        {invoices.map((invoice) => {
+                        {paginated.map((invoice) => {
                             const cfg = getStatusConfig(invoice.dueStatus, invoice.status);
                             return (
                                 <tr key={invoice.id} className={`ih-row ${invoice.status === "paid" ? "ih-row--paid" : ""}`}>
@@ -103,6 +109,35 @@ export default function InvoiceHistory({ invoices }) {
                         })}
                     </tbody>
                 </table>
+            </div>
+
+            <div className="ih-footer">
+                <small>Hiển thị {paginated.length} / {invoices.length} hóa đơn</small>
+                <div className="ih-pagination">
+                    <button className="ih-pg-btn" onClick={() => setPage(1)} disabled={page === 1}>«</button>
+                    <button className="ih-pg-btn" onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}>‹</button>
+                    <input
+                        type="text"
+                        inputMode="numeric"
+                        className="ih-pg-jump"
+                        value={page}
+                        onChange={(e) => {
+                            const raw = e.target.value.replace(/\D/g, "");
+                            const v = parseInt(raw, 10);
+                            if (raw === "" || (!isNaN(v) && v >= 1)) {
+                                setPage(isNaN(v) ? 1 : v);
+                            }
+                        }}
+                        onBlur={(e) => {
+                            const raw = e.target.value.replace(/\D/g, "");
+                            const v = parseInt(raw, 10);
+                            if (!isNaN(v)) setPage(Math.min(Math.max(1, v), totalPages));
+                        }}
+                    />
+                    <span className="ih-pg-info">/ {totalPages}</span>
+                    <button className="ih-pg-btn" onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page >= totalPages}>›</button>
+                    <button className="ih-pg-btn" onClick={() => setPage(totalPages)} disabled={page >= totalPages}>»</button>
+                </div>
             </div>
         </div>
     );

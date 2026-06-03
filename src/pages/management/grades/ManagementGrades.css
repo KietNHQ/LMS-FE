@@ -62,6 +62,212 @@
   box-shadow: none;
 }
 
+/* Lock Status Bar */
+.mg-lock-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1.25rem;
+  border-radius: 12px;
+  border: 1.5px solid;
+  font-size: 0.875rem;
+  font-weight: 600;
+  gap: 1rem;
+}
+
+.mg-lock--draft {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+  color: #475569;
+}
+.mg-lock--pending {
+  background: #fffbeb;
+  border-color: #fcd34d;
+  color: #92400e;
+}
+.mg-lock--finalized {
+  background: #f0fdf4;
+  border-color: #86efac;
+  color: #166534;
+}
+.mg-lock--mixed {
+  background: #fefce8;
+  border-color: #fde047;
+  color: #854d0e;
+}
+
+.mg-lock-bar__left {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+.mg-lock-icon {
+  display: flex;
+  align-items: center;
+}
+.mg-lock-stats {
+  display: flex;
+  gap: 0.75rem;
+}
+.mg-lock-stat {
+  padding: 0.2rem 0.5rem;
+  border-radius: 6px;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+.mg-lock-stat.finalized { background: #dcfce7; color: #166534; }
+.mg-lock-stat.pending   { background: #fef3c7; color: #92400e; }
+.mg-lock-stat.draft     { background: #f1f5f9; color: #475569; }
+
+.mg-btn-unlock {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.45rem 0.9rem;
+  border-radius: 8px;
+  border: none;
+  background: #ef4444;
+  color: #fff;
+  font-weight: 600;
+  font-size: 0.82rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.mg-btn-unlock:hover:not(:disabled) { background: #dc2626; }
+.mg-btn-unlock:disabled { background: #fca5a5; cursor: not-allowed; }
+
+.mg-btn-lock {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.45rem 0.9rem;
+  border-radius: 8px;
+  border: none;
+  background: #6366f1;
+  color: #fff;
+  font-weight: 600;
+  font-size: 0.82rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.mg-btn-lock:hover:not(:disabled) { background: #4f46e5; }
+.mg-btn-lock:disabled { background: #a5b4fc; cursor: not-allowed; }
+
+/* Teacher Submission Status Panel */
+.mg-teacher-panel {
+  background: rgba(255, 255, 255, 0.75);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  border-radius: 12px;
+  padding: 1rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+.mg-teacher-panel__title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #334155;
+  margin: 0;
+}
+.mg-teacher-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.mg-teacher-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 8px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+}
+.mg-teacher-name {
+  min-width: 160px;
+  font-weight: 600;
+  font-size: 0.875rem;
+  color: #1e293b;
+}
+.mg-teacher-progress {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+.mg-progress-bar {
+  flex: 1;
+  height: 6px;
+  background: #e2e8f0;
+  border-radius: 999px;
+  overflow: hidden;
+}
+.mg-progress-fill {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 0.4s ease;
+}
+.mg-progress-fill.all-done    { background: #22c55e; }
+.mg-progress-fill.all-pending { background: #f59e0b; }
+.mg-progress-fill.partial    { background: #6366f1; }
+
+.mg-teacher-badge {
+  min-width: 80px;
+  text-align: right;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #475569;
+}
+.mg-teacher-badge.all-done    { color: #16a34a; }
+.mg-teacher-badge.all-pending { color: #d97706; }
+.mg-teacher-badge.partial     { color: #6366f1; }
+
+.mg-btn-remind {
+  display: flex;
+  align-items: center;
+  padding: 0.35rem 0.6rem;
+  border-radius: 6px;
+  border: 1px solid #cbd5e1;
+  background: #fff;
+  color: #475569;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.mg-btn-remind:hover { background: #eff6ff; border-color: #6366f1; color: #6366f1; }
+
+.mg-teacher-done-icon {
+  color: #22c55e;
+  display: flex;
+  align-items: center;
+}
+
+/* Conduct Pill */
+.conduct-pill {
+  display: inline-block;
+  padding: 0.2rem 0.55rem;
+  border-radius: 6px;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+.conduct-pill--good {
+  background: #dcfce7;
+  color: #166534;
+}
+.conduct-pill--warning {
+  background: #fef3c7;
+  color: #92400e;
+}
+.conduct-pill--danger {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
 /* Content Box */
 .mg-content-box {
   background: rgba(255, 255, 255, 0.75);
@@ -391,4 +597,105 @@
   color: #64748b;
   font-weight: 500;
   font-size: 0.95rem;
+}
+
+/* Period Classification & Conduct Cards */
+.mg-period-details {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+
+.mg-period-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  padding: 0.85rem 1rem;
+  border-radius: 10px;
+  border: 1.5px solid;
+}
+
+.mg-period-card--hk1 {
+  border-color: #bfdbfe;
+  background: #eff6ff;
+}
+
+.mg-period-card--hk2 {
+  border-color: #a7f3d0;
+  background: #ecfdf5;
+}
+
+.mg-period-card--year {
+  border-color: #ddd6fe;
+  background: #f5f3ff;
+}
+
+.mg-period-card-title {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.15rem;
+}
+
+.mg-period-card--hk1 .mg-period-card-title { color: #1d4ed8; }
+.mg-period-card--hk2 .mg-period-card-title { color: #065f46; }
+.mg-period-card--year .mg-period-card-title { color: #5b21b6; }
+
+.mg-period-card-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.82rem;
+  color: #475569;
+}
+
+.mg-period-card-row .bold {
+  font-size: 0.85rem;
+  color: #1e293b;
+}
+
+/* GPA Summary Cards */
+.mg-gpa-summary-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.gpa-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 1.25rem 1rem;
+  border-radius: 12px;
+  border: 2px solid;
+  gap: 0.35rem;
+}
+
+.gpa-card-label {
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.gpa-card-value {
+  font-size: 2rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.gpa-card-classif {
+  font-size: 0.8rem;
+  color: #475569;
+  font-weight: 600;
+}
+
+.gpa-card-formula {
+  font-size: 0.72rem;
+  color: #94a3b8;
+  font-style: italic;
+  margin-top: 0.2rem;
 }

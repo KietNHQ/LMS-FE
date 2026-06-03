@@ -84,9 +84,9 @@ const getRows = (payload) => {
 };
 
 export const teachersService = {
-  listTeachers: async () => {
+  listTeachers: async ({ limit = 2000 } = {}) => {
     const response = await requestWithFallback(["/teachers", "/users"], (basePath) => {
-      const params = { page: 1, limit: 2000, _t: Date.now() };
+      const params = { page: 1, limit, _t: Date.now() };
       if (basePath === "/users") {
         return axiosClient.get(basePath, { params: { ...params, role: "teacher" } });
       }

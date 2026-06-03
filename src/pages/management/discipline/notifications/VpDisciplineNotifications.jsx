@@ -3,139 +3,147 @@ import { PageHeader, Pagination } from "../../../../components/common";
 import { Modal, Select } from "../../../../components/ui";
 import DisciplineHeaderActions from "../components/DisciplineHeaderActions";
 import { useSchoolYearTerm } from "../../../../hooks/useSchoolYearTerm";
-import { 
-    FiBell, 
-    FiCheck, 
-    FiClock, 
-    FiSend, 
-    FiUsers, 
-    FiPlus, 
-    FiAlertTriangle, 
-    FiAward, 
-    FiDatabase 
+import {
+    FiBell,
+    FiCheck,
+    FiClock,
+    FiSend,
+    FiUsers,
+    FiPlus,
+    FiAlertTriangle,
+    FiAward,
+    FiDatabase
 } from "react-icons/fi";
 import { toast } from "react-toastify";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { adminApiService } from "../../../../services/pages/admin/generated/adminApiService";
 import "./VpDisciplineNotifications.css";
 
-const MOCK_NOTIFICATIONS = [
-    { 
-        id: 1, 
-        title: "Chấn chỉnh đội hình báo bài khối 10", 
-        desc: "Phát hiện tình trạng học sinh sử dụng tài liệu trong giờ kiểm tra T10 tăng cao. Yêu cầu GVCN các lớp 10A1, 10A3 nhắc nhở học sinh nghiêm túc.", 
-        type: "warning", 
-        isRead: false, 
-        time: "15 phút trước", 
-        audience: "homeroom" 
-    },
-    { 
-        id: 2, 
-        title: "Kết quả thi đua tuần 12 - Khối 12", 
-        desc: "Chúc mừng tập thể 12A1 dẫn đầu thi đua tuần qua với điểm số tuyệt đối 100/100. Biểu dương sự cố gắng của ban cán sự lớp.", 
-        type: "competition", 
-        isRead: false, 
-        time: "3 giờ trước", 
-        audience: "all_students" 
-    },
-    { 
-        id: 3, 
-        title: "Thông báo lịch trực tuần ban Giám thị", 
-        desc: "Cập nhật danh sách giáo viên trực tuần từ ngày 20/10 đến 25/10. Vui lòng kiểm tra file đính kèm trong hệ thống quản lý.", 
-        type: "system", 
-        isRead: true, 
-        time: "Hôm qua", 
-        audience: "homeroom" 
-    },
-    { 
-        id: 4, 
-        title: "Cảnh báo vi phạm nề nếp tập trung", 
-        desc: "Nhiều học sinh vẫn còn tình trạng đi trễ và không mặc đúng đồng phục trong giờ chào cờ đầu tuần. Yêu cầu xử lý nghiêm các trường hợp tái phạm.", 
-        type: "warning", 
-        isRead: true, 
-        time: "2 ngày trước", 
-        audience: "all_students" 
-    },
-    { 
-        id: 5, 
-        title: "Nhắc nhở hoàn thành hồ sơ bán trú", 
-        desc: "Bố mẹ học sinh lưu ý hoàn tất hồ sơ đăng ký bán trú học kỳ 2 trước ngày 30/10.", 
-        type: "system", 
-        isRead: true, 
-        time: "3 ngày trước", 
-        audience: "all_parents" 
-    },
-    { 
-        id: 6, 
-        title: "Khen thưởng học sinh đạt giải HSG Tỉnh", 
-        desc: "Danh sách 15 học sinh đạt giải trong kỳ thi vừa qua. Nhà trường sẽ tổ chức trao thưởng vào sáng thứ 2 tuần tới.", 
-        type: "competition", 
-        isRead: true, 
-        time: "4 ngày trước", 
-        audience: "all_students" 
-    },
-    { 
-        id: 7, 
-        title: "Lệnh chấn chỉnh vệ sinh lớp học", 
-        desc: "Các lớp 11A1, 11A2 để tình trạng rác thải trong ngăn bàn kéo dài. Yêu cầu Ban cán sự lớp xử lý ngay.", 
-        type: "warning", 
-        isRead: true, 
-        time: "5 ngày trước", 
-        audience: "specific_class" 
-    },
-    { 
-        id: 8, 
-        title: "Thông báo họp cha mẹ học sinh đột xuất", 
-        desc: "Học sinh khối 12 chuẩn bị cho buổi họp định hướng thi Tốt nghiệp vào chiều thứ 7 này.", 
-        type: "system", 
-        isRead: true, 
-        time: "1 tuần trước", 
-        audience: "all_parents" 
-    },
-    { 
-        id: 9, 
-        title: "Tổng kết phong trào Kế hoạch nhỏ", 
-        desc: "Toàn trường đã thu gom được hơn 500kg giấy vụn. Cảm ơn sự nhiệt tình của các em học sinh.", 
-        type: "competition", 
-        isRead: true, 
-        time: "1 tuần trước", 
-        audience: "all_students" 
-    },
-];
+const ITEMS_PER_PAGE = 8;
+
+const FE_TO_BE_TYPE = {
+    warning: "alert",
+    competition: "announcement",
+    system: "general",
+};
+
+const BE_TO_FE_TYPE = {
+    alert: "warning",
+    announcement: "competition",
+    general: "system",
+};
+
+const FE_TO_BE_TARGET = {
+    all_students: "school",
+    homeroom: "teacher",
+    all_teachers: "teacher",
+    all_parents: "student",
+};
+
+const BE_TO_FE_AUDIENCE = {
+    school: "all_students",
+    teacher: "homeroom",
+    student: "all_parents",
+    class: "specific_class",
+};
+
+function formatRelativeTime(dateStr) {
+    if (!dateStr) return "";
+    const date = new Date(dateStr);
+    if (isNaN(date.getTime())) return dateStr;
+    const now = new Date();
+    const diffMs = now - date;
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMins / 60);
+    const diffDays = Math.floor(diffHours / 24);
+    if (diffMins < 1) return "Vừa xong";
+    if (diffMins < 60) return `${diffMins} phút trước`;
+    if (diffHours < 24) return `${diffHours} giờ trước`;
+    if (diffDays === 1) return "Hôm qua";
+    if (diffDays < 7) return `${diffDays} ngày trước`;
+    if (diffDays < 14) return "1 tuần trước";
+    return `${Math.floor(diffDays / 7)} tuần trước`;
+}
 
 export default function VpDisciplineNotifications() {
     const { selectedSchoolYear, selectedTerm, handleYearArrow, handleTermChange } = useSchoolYearTerm();
     const [isComposeOpen, setIsComposeOpen] = useState(false);
     const [selectedNotif, setSelectedNotif] = useState(null);
     const [currentPage, setCurrentPage] = useState(1);
-    const itemsPerPage = 8;
+    const queryClient = useQueryClient();
 
-    const [notifications, setNotifications] = useState(MOCK_NOTIFICATIONS);
+    const { data: listRes, isLoading } = useQuery({
+        queryKey: ["notifications", "admin-list"],
+        queryFn: () =>
+            adminApiService.get_notifications({ params: { page: 1, limit: 100 } }),
+        staleTime: 30_000,
+    });
+
+    const notifications = Array.isArray(listRes?.data) ? listRes.data : [];
+    const totalSent = listRes?.pagination?.total ?? notifications.length;
 
     const [formData, setFormData] = useState({
         title: "",
         audience: "all_students",
         type: "warning",
-        content: ""
+        content: "",
     });
 
-    const unreadCount = notifications.filter(n => !n.isRead).length;
-    const totalPages = Math.ceil(notifications.length / itemsPerPage);
-    const paginatedNotifications = notifications.slice(
-        (currentPage - 1) * itemsPerPage,
-        currentPage * itemsPerPage
+    const createMutation = useMutation({
+        mutationFn: (payload) => adminApiService.post_notifications({ body: payload }),
+        onSuccess: async (res) => {
+            const notifId = res?.data?.id;
+            if (notifId) {
+                try {
+                    await adminApiService.post_notifications_by_id_send({
+                        pathParams: { id: notifId },
+                    });
+                } catch { /* send step optional */ }
+            }
+            toast.success("Thông báo đã được ban hành thành công!");
+            queryClient.invalidateQueries({ queryKey: ["notifications"] });
+            setFormData({ title: "", audience: "all_students", type: "warning", content: "" });
+            setIsComposeOpen(false);
+        },
+        onError: () => toast.error("Không thể tạo thông báo. Vui lòng thử lại."),
+    });
+
+    const markReadMutation = useMutation({
+        mutationFn: (id) => adminApiService.put_notifications_by_id_read({ pathParams: { id } }),
+        onSuccess: () => queryClient.invalidateQueries({ queryKey: ["notifications"] }),
+    });
+
+    const markAllReadMutation = useMutation({
+        mutationFn: () => adminApiService.put_notifications_read_all(),
+        onSuccess: () => {
+            toast.success("Đã đánh dấu đọc tất cả thông báo");
+            queryClient.invalidateQueries({ queryKey: ["notifications"] });
+        },
+    });
+
+    const mapNotif = (item) => ({
+        id: item.id,
+        title: item.title || "",
+        desc: item.content || item.description || "",
+        type: BE_TO_FE_TYPE[item.type] || item.type || "system",
+        isRead: item.is_read ?? item.isRead ?? true,
+        time: item.sent_at ? formatRelativeTime(item.sent_at) : "",
+        audience: BE_TO_FE_AUDIENCE[item.targetType] || item.targetType || "all_students",
+    });
+
+    const mapped = notifications.map(mapNotif);
+    const unreadCount = mapped.filter((n) => !n.isRead).length;
+    const totalPages = Math.ceil(mapped.length / ITEMS_PER_PAGE) || 1;
+    const paginatedNotifications = mapped.slice(
+        (currentPage - 1) * ITEMS_PER_PAGE,
+        currentPage * ITEMS_PER_PAGE
     );
 
-    const handleMarkAllRead = () => {
-        setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
-        toast.success("Đã đánh dấu đọc tất cả thông báo");
-    };
+    const handleMarkAllRead = () => markAllReadMutation.mutate();
 
     const handleViewDetail = (notif) => {
         setSelectedNotif(notif);
-        if (!notif.isRead) {
-            setNotifications(prev => prev.map(n => 
-                n.id === notif.id ? { ...n, isRead: true } : n
-            ));
-        }
+        if (!notif.isRead) markReadMutation.mutate(notif.id);
     };
 
     const handleSendNotification = (e) => {
@@ -144,21 +152,15 @@ export default function VpDisciplineNotifications() {
             toast.error("Vui lòng nhập đủ chủ đề và nội dung thông báo.");
             return;
         }
-
-        const newNotif = {
-            id: Date.now(),
+        const beType = FE_TO_BE_TYPE[formData.type] || formData.type;
+        const beTargetType = FE_TO_BE_TARGET[formData.audience] || formData.audience;
+        createMutation.mutate({
             title: formData.title,
-            desc: formData.content,
-            type: formData.type,
-            isRead: true,
-            time: "Vừa xong",
-            audience: formData.audience
-        };
-
-        setNotifications([newNotif, ...notifications]);
-        toast.success("Thông báo đã được ban hành thành công!");
-        setFormData({ title: "", audience: "all_students", type: "warning", content: "" });
-        setIsComposeOpen(false);
+            content: formData.content,
+            type: beType,
+            targetType: beTargetType,
+            status: "sent",
+        });
     };
 
     const getAudienceLabel = (aud) => {
@@ -203,7 +205,7 @@ export default function VpDisciplineNotifications() {
                     </div>
                     <div className="metric-info">
                         <h4>Tổng thông báo</h4>
-                        <div className="value">{notifications.length}</div>
+                        <div className="value">{totalSent}</div>
                     </div>
                 </div>
                 <div className="metric-card">
@@ -221,7 +223,7 @@ export default function VpDisciplineNotifications() {
                     </div>
                     <div className="metric-info">
                         <h4>Đã ban hành</h4>
-                        <div className="value">{notifications.filter(n => n.id > 1000).length}</div>
+                        <div className="value">{totalSent}</div>
                     </div>
                 </div>
             </div>
@@ -231,7 +233,7 @@ export default function VpDisciplineNotifications() {
                 <div className="notif-list-header">
                     <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                         <h3>Hộp thư đến & Lịch sử thông báo</h3>
-                        <button 
+                        <button
                             className="compose-btn-header"
                             onClick={() => setIsComposeOpen(true)}
                         >
@@ -245,10 +247,22 @@ export default function VpDisciplineNotifications() {
                     )}
                 </div>
 
+                {isLoading ? (
+                    <div style={{ padding: '4rem', textAlign: 'center', color: '#94a3b8' }}>
+                        <FiBell style={{ fontSize: '3rem', marginBottom: '1rem', opacity: 0.3 }} />
+                        <p>Đang tải thông báo...</p>
+                    </div>
+                ) : mapped.length === 0 ? (
+                    <div style={{ padding: '4rem', textAlign: 'center', color: '#94a3b8' }}>
+                        <FiBell style={{ fontSize: '3rem', marginBottom: '1rem', opacity: 0.3 }} />
+                        <p>Chưa có thông báo nào nhận được</p>
+                    </div>
+                ) : (
+                    <>
                 <div className="notif-list">
                     {paginatedNotifications.map(notif => (
-                        <div 
-                            key={notif.id} 
+                        <div
+                            key={notif.id}
                             className={`notif-item ${!notif.isRead ? 'unread' : ''}`}
                             onClick={() => handleViewDetail(notif)}
                         >
@@ -265,19 +279,13 @@ export default function VpDisciplineNotifications() {
                                 <p className="notif-desc">{notif.desc}</p>
                                 <div className="notif-footer-row">
                                     <span className="audience-badge">
-                                        <FiUsers style={{marginRight: '6px'}} /> 
+                                        <FiUsers style={{marginRight: '6px'}} />
                                         {getAudienceLabel(notif.audience)}
                                     </span>
                                 </div>
                             </div>
                         </div>
                     ))}
-                    {notifications.length === 0 && (
-                        <div style={{ padding: '4rem', textAlign: 'center', color: '#94a3b8' }}>
-                            <FiBell style={{ fontSize: '3rem', marginBottom: '1rem', opacity: 0.3 }} />
-                            <p>Chưa có thông báo nào nhận được</p>
-                        </div>
-                    )}
                 </div>
 
                 {totalPages > 1 && (
@@ -288,6 +296,8 @@ export default function VpDisciplineNotifications() {
                             onPageChange={setCurrentPage}
                         />
                     </div>
+                )}
+                    </>
                 )}
             </div>
 

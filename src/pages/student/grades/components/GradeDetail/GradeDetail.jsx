@@ -1,92 +1,75 @@
 export default function GradeDetail({ subject }) {
+    const renderRegularGrades = (regularGrades = []) => {
+        if (!regularGrades || regularGrades.length === 0) return <strong>-</strong>;
+        return (
+            <div className="regular-grades-list">
+                {regularGrades.map((g, idx) => (
+                    <span key={idx} className="grade-chip">{`KT TX lần ${idx + 1}: ${g}`}</span>
+                ))}
+            </div>
+        );
+    };
+
+    const yearIsComplete = subject.yearIsComplete !== undefined ? subject.yearIsComplete : true;
+
     return (
         <div className="table-detail-row">
             <div className="detail-panels">
                 <div className="detail-card">
-                    <h3>Semester 1</h3>
+                    <h3>Học kỳ 1</h3>
 
                     <div className="detail-item">
-                        <span>Oral Test 1</span>
-                        <strong>{subject.hk1.oral1}</strong>
+                        <span>Thường xuyên</span>
+                        {renderRegularGrades(subject.hk1?.regularGrades)}
                     </div>
                     <div className="detail-item">
-                        <span>Oral Test 2</span>
-                        <strong>{subject.hk1.oral2}</strong>
+                        <span>Giữa kỳ</span>
+                        <strong>{subject.hk1?.midtermScore ?? "-"}</strong>
                     </div>
                     <div className="detail-item">
-                        <span>15-min Test 1</span>
-                        <strong>{subject.hk1.test15_1}</strong>
+                        <span>Cuối kỳ</span>
+                        <strong>{subject.hk1?.finalScore ?? "-"}</strong>
                     </div>
-                    <div className="detail-item">
-                        <span>15-min Test 2</span>
-                        <strong>{subject.hk1.test15_2}</strong>
-                    </div>
-                    <div className="detail-item">
-                        <span>45-min Test</span>
-                        <strong>{subject.hk1.test45 ?? subject.hk1.midterm}</strong>
-                    </div>
-                    <div className="detail-item">
-                        <span>Midterm</span>
-                        <strong>{subject.hk1.midterm}</strong>
-                    </div>
-                    <div className="detail-item">
-                        <span>Final Exam</span>
-                        <strong>{subject.hk1.final}</strong>
-                    </div>
+
                     <div className="detail-divider" />
                     <div className="detail-item detail-average">
-                        <span>Semester 1 Average</span>
-                        <strong>{subject.hk1Avg.toFixed(2)}</strong>
+                        <span>Điểm trung bình HK1</span>
+                        <strong>{(subject.hk1Avg || 0).toFixed(2)}</strong>
                     </div>
                 </div>
 
                 <div className="detail-card">
-                    <h3>Semester 2</h3>
+                    <h3>Học kỳ 2</h3>
 
                     <div className="detail-item">
-                        <span>Oral Test 1</span>
-                        <strong>{subject.hk2.oral1}</strong>
+                        <span>Thường xuyên</span>
+                        {renderRegularGrades(subject.hk2?.regularGrades)}
                     </div>
                     <div className="detail-item">
-                        <span>Oral Test 2</span>
-                        <strong>{subject.hk2.oral2}</strong>
+                        <span>Giữa kỳ</span>
+                        <strong>{subject.hk2?.midtermScore ?? "-"}</strong>
                     </div>
                     <div className="detail-item">
-                        <span>15-min Test 1</span>
-                        <strong>{subject.hk2.test15_1}</strong>
+                        <span>Cuối kỳ</span>
+                        <strong>{subject.hk2?.finalScore ?? "-"}</strong>
                     </div>
-                    <div className="detail-item">
-                        <span>15-min Test 2</span>
-                        <strong>{subject.hk2.test15_2}</strong>
-                    </div>
-                    <div className="detail-item">
-                        <span>45-min Test</span>
-                        <strong>{subject.hk2.test45 ?? subject.hk2.midterm}</strong>
-                    </div>
-                    <div className="detail-item">
-                        <span>Midterm</span>
-                        <strong>{subject.hk2.midterm}</strong>
-                    </div>
-                    <div className="detail-item">
-                        <span>Final Exam</span>
-                        <strong>{subject.hk2.final}</strong>
-                    </div>
+
                     <div className="detail-divider" />
                     <div className="detail-item detail-average">
-                        <span>Semester 2 Average</span>
-                        <strong>{subject.hk2Avg.toFixed(2)}</strong>
+                        <span>Điểm trung bình HK2</span>
+                        <strong>{(subject.hk2Avg || 0).toFixed(2)}</strong>
                     </div>
                 </div>
             </div>
 
             <div className="year-summary-card">
                 <div className="year-summary-item">
-                    <span>Full-Year Average</span>
-                    <strong>{subject.yearAvg.toFixed(2)}</strong>
+                    <span>Điểm cả năm</span>
+                    <strong>{(subject.yearAvg || 0).toFixed(2)} {!yearIsComplete && <small style={{ marginLeft: 8, color: '#888' }}>(Tạm tính)</small>}</strong>
                 </div>
 
                 <div className="year-summary-item">
-                    <span>Academic Rank</span>
+                    <span>Xếp loại</span>
                     <strong>{subject.rank}</strong>
                 </div>
             </div>

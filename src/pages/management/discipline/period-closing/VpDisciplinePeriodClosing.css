@@ -1,0 +1,450 @@
+.vp-period-closing {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  padding: 1.5rem;
+  padding-bottom: 2.5rem;
+  max-width: 1400px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+/* ── Two-column layout ── */
+.period-closing-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  align-items: start;
+}
+
+@media (max-width: 1024px) {
+  .period-closing-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ── Section Panel ── */
+.period-panel {
+  background: #ffffff;
+  border-radius: 1.25rem;
+  border: 1px solid #e2e8f0;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.panel-header {
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid #e2e8f0;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: var(--admin-primary-soft, #f0f4ff);
+}
+
+.panel-header-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: var(--admin-primary);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  flex-shrink: 0;
+}
+
+.panel-header h3 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 800;
+  color: var(--admin-primary, #1e2f5a);
+}
+
+.panel-body {
+  padding: 1.5rem;
+}
+
+/* ── Form Elements ── */
+.form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin-bottom: 1.25rem;
+}
+
+.form-field:last-child {
+  margin-bottom: 0;
+}
+
+.form-field label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.form-field label svg {
+  color: #94a3b8;
+  flex-shrink: 0;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.form-row-single {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+}
+
+.dm-input,
+.dm-select {
+  width: 100%;
+  padding: 0.625rem 0.875rem;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  color: #1e293b;
+  background: #ffffff;
+  outline: none;
+  transition: border-color 0.2s;
+  box-sizing: border-box;
+}
+
+.dm-input:focus,
+.dm-select:focus {
+  border-color: var(--admin-primary, #1e2f5a);
+}
+
+.dm-input::placeholder {
+  color: #94a3b8;
+}
+
+.dm-textarea {
+  width: 100%;
+  min-height: 80px;
+  padding: 0.625rem 0.875rem;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  color: #1e293b;
+  background: #ffffff;
+  outline: none;
+  resize: vertical;
+  transition: border-color 0.2s;
+  box-sizing: border-box;
+  font-family: inherit;
+}
+
+.dm-textarea:focus {
+  border-color: var(--admin-primary, #1e2f5a);
+}
+
+/* ── Radio Group (Period Type) ── */
+.period-type-group {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.period-type-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1.5px solid #e2e8f0;
+  background: #ffffff;
+  color: #64748b;
+  transition: all 0.2s;
+}
+
+.period-type-btn:hover {
+  border-color: var(--admin-primary, #1e2f5a);
+  color: var(--admin-primary, #1e2f5a);
+}
+
+.period-type-btn.active {
+  background: var(--admin-primary, #1e2f5a);
+  border-color: var(--admin-primary, #1e2f5a);
+  color: #ffffff;
+}
+
+/* ── Primary Button ── */
+.btn-lock-period {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.75rem 1.5rem;
+  margin-top: 1.5rem;
+  background: var(--admin-primary, #1e2f5a);
+  color: #ffffff;
+  border: none;
+  border-radius: 10px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 4px 6px -1px rgba(30, 47, 90, 0.25);
+}
+
+.btn-lock-period:hover {
+  background: var(--admin-primary-hover, #253a7a);
+  transform: translateY(-1px);
+  box-shadow: 0 8px 12px -2px rgba(30, 47, 90, 0.3);
+}
+
+.btn-lock-period:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* ── Table ── */
+.closed-periods-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0 0.5rem;
+}
+
+.closed-periods-table th {
+  background: transparent;
+  padding: 0.625rem 0.875rem;
+  color: #94a3b8;
+  font-size: 0.7rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  border: none;
+  text-align: left;
+}
+
+.closed-periods-table td {
+  padding: 0.875rem;
+  background: #ffffff;
+  border-top: 1px solid #f1f5f9;
+  border-bottom: 1px solid #f1f5f9;
+  font-size: 0.875rem;
+  color: #1e293b;
+}
+
+.closed-periods-table td:first-child {
+  border-left: 1px solid #f1f5f9;
+  border-top-left-radius: 0.5rem;
+  border-bottom-left-radius: 0.5rem;
+}
+
+.closed-periods-table td:last-child {
+  border-right: 1px solid #f1f5f9;
+  border-top-right-radius: 0.5rem;
+  border-bottom-right-radius: 0.5rem;
+}
+
+.closed-periods-table tr:hover td {
+  background: #f8fafc;
+}
+
+.td-period-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 600;
+}
+
+.lock-icon {
+  color: #94a3b8;
+  flex-shrink: 0;
+}
+
+.td-date {
+  color: #64748b;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.td-user {
+  font-weight: 500;
+}
+
+.td-notes {
+  color: #64748b;
+  font-size: 0.8rem;
+  max-width: 160px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.td-actions {
+  text-align: center;
+}
+
+/* ── Unlock Button ── */
+.btn-unlock {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.4rem 0.875rem;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  border: 1.5px solid #e2e8f0;
+  background: #ffffff;
+  color: #64748b;
+  transition: all 0.2s;
+}
+
+.btn-unlock:hover {
+  background: #fff7ed;
+  border-color: #f97316;
+  color: #f97316;
+}
+
+/* ── Filter Bar ── */
+.filter-bar {
+  display: flex;
+  align-items: flex-end;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+  flex-wrap: wrap;
+}
+
+.filter-bar .filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  min-width: 160px;
+}
+
+.filter-bar .filter-group label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* ── Empty State ── */
+.empty-state {
+  text-align: center;
+  padding: 3rem 1.5rem;
+  color: #94a3b8;
+}
+
+.empty-state-icon {
+  font-size: 3rem;
+  margin-bottom: 0.75rem;
+  opacity: 0.4;
+}
+
+.empty-state h4 {
+  margin: 0 0 0.5rem;
+  font-size: 1rem;
+  color: #64748b;
+}
+
+.empty-state p {
+  margin: 0;
+  font-size: 0.875rem;
+}
+
+/* ── Loading State ── */
+.table-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem;
+}
+
+/* ── Confirm Modal Styles ── */
+.confirm-modal-warning {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.875rem;
+  background: #fff7ed;
+  border: 1px solid #fed7aa;
+  border-radius: 8px;
+  margin-bottom: 1.25rem;
+}
+
+.confirm-modal-warning-icon {
+  color: #f97316;
+  font-size: 1.25rem;
+  flex-shrink: 0;
+  margin-top: 0.1rem;
+}
+
+.confirm-modal-warning-text {
+  font-size: 0.875rem;
+  color: #9a3412;
+  line-height: 1.5;
+}
+
+.confirm-modal-info {
+  margin-bottom: 0.5rem;
+}
+
+.confirm-modal-info p {
+  margin: 0 0 0.5rem;
+  font-size: 0.875rem;
+  color: #475569;
+}
+
+.confirm-modal-info strong {
+  color: #1e293b;
+}
+
+/* ── Period Already Locked Banner ── */
+.period-already-locked {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1rem;
+  background: #fefce8;
+  border: 1px solid #fef08a;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  color: #854d0e;
+  margin-top: 0.75rem;
+}
+
+.period-already-locked svg {
+  color: #ca8a04;
+  flex-shrink: 0;
+}
+
+/* ── Success Banner ── */
+.success-banner {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 8px;
+  color: #15803d;
+  font-size: 0.875rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
+}

@@ -43,7 +43,7 @@ const LessonReviewModal = ({
                   placeholder="-- Chọn tiết học --"
                 />
               ) : (
-                <p className="tc-readonly-value">{currentLessonLabel}{isDoublePeriod ? " (Tiết đôi)" : ""}</p>
+                <p className="tc-readonly-value">{currentLessonLabel || "Chưa xác định"}{isDoublePeriod ? " (Tiết đôi)" : ""}</p>
               )}
               
               {/* Chỉ cho chọn Tiết đôi khi không có nhiều option (đang tạo mới hoặc sửa 1 cái đơn) */}

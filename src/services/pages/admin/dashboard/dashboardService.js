@@ -177,4 +177,6 @@ export const adminDashboardService = {
   },
 };
 
+export const dashboardService = adminDashboardService;
+
 

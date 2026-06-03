@@ -1,8 +1,10 @@
 import { PageHeader, SchoolYearTermSelector } from "../../../../components/common";
 import { useSchoolYearTerm } from "../../../../hooks/useSchoolYearTerm";
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect, useCallback } from "react";
 import { FiPieChart, FiFileText, FiShield } from "react-icons/fi";
 import { useSearchParams } from "react-router-dom";
+import { toast } from "react-toastify";
+import financeService from "../../../../services/pages/management/finance/financeService";
 import "./FinanceReports.css";
 
 // Components
@@ -99,15 +101,119 @@ export default function FinanceReports() {
     const [sortBy, setSortBy] = useState("debt");
     const [searchQuery, setSearchQuery] = useState("");
 
+    // API data state
+    const [debtSummary, setDebtSummary] = useState(null);
+    const [revenueReport, setRevenueReport] = useState([]);
+    const [feeInvoices, setFeeInvoices] = useState([]);
+    const [reportsLoading, setReportsLoading] = useState(false);
+
     const handleTabChange = (tabId) => {
         setSearchParams({ tab: tabId });
     };
 
+    const loadReportsData = useCallback(async () => {
+        setReportsLoading(true);
+        try {
+            const [summaryRes, revenueRes, invoicesRes] = await Promise.allSettled([
+                financeService.getDebtSummary({
+                    params: {
+                        schoolYearId: selectedSchoolYear?.id,
+                        semesterId: selectedTerm?.id,
+                    },
+                }),
+                financeService.getRevenueReport({
+                    params: {
+                        schoolYearId: selectedSchoolYear?.id,
+                        semesterId: selectedTerm?.id,
+                    },
+                }),
+                financeService.getAllInvoices({
+                    params: {
+                        schoolYearId: selectedSchoolYear?.id,
+                        semesterId: selectedTerm?.id,
+                    },
+                }),
+            ]);
+
+            if (summaryRes.status === "fulfilled" && summaryRes.value?.success) {
+                setDebtSummary(summaryRes.value.data);
+            }
+            if (revenueRes.status === "fulfilled" && revenueRes.value?.success) {
+                setRevenueReport(revenueRes.value.data || []);
+            }
+            if (invoicesRes.status === "fulfilled" && invoicesRes.value?.success) {
+                const rows = Array.isArray(invoicesRes.value?.data)
+                    ? invoicesRes.value.data
+                    : Array.isArray(invoicesRes.value?.items)
+                    ? invoicesRes.value.items
+                    : [];
+                setFeeInvoices(rows);
+            }
+        } catch (err) {
+            console.error("[FinanceReports] loadReportsData error:", err);
+        } finally {
+            setReportsLoading(false);
+        }
+    }, [selectedSchoolYear?.id, selectedTerm?.id]);
+
+    useEffect(() => { loadReportsData(); }, [loadReportsData]);
+
+    // Derive performance items from API data (feeInvoices)
+    const performanceItems = useMemo(() => {
+        if (feeInvoices.length === 0) return PERFORMANCE_ITEMS;
+        const byFee = {};
+        feeInvoices.forEach((inv) => {
+            const feeId = inv.fee_id || inv.feeId || 0;
+            const feeName = inv.fee_name || inv.feeName || "Khoản thu";
+            if (!byFee[feeId]) {
+                byFee[feeId] = { id: feeId, name: feeName, collected: 0, debt: 0, dueSoon: 0, collectionRate: 0, invoiceCount: 0 };
+            }
+            const amt = typeof inv.total_amount === "string" ? parseFloat(inv.total_amount) : (inv.total_amount || 0);
+            const paid = typeof inv.amount_paid === "string" ? parseFloat(inv.amount_paid) : (inv.amount_paid || 0);
+            const status = inv.status || "unpaid";
+            byFee[feeId].collected += paid;
+            byFee[feeId].debt += Math.max(0, amt - paid);
+            byFee[feeId].invoiceCount += 1;
+            if (status === "overdue") byFee[feeId].dueSoon += Math.max(0, amt - paid);
+        });
+        return Object.values(byFee).map((item) => ({
+            ...item,
+            collectionRate: item.collected + item.debt > 0
+                ? Math.round((item.collected / (item.collected + item.debt)) * 100)
+                : 0,
+        }));
+    }, [feeInvoices]);
+
+    // Derive cashflow from revenueReport
+    const cashflowItems = useMemo(() => {
+        if (revenueReport.length === 0) return CASHFLOW_ITEMS;
+        return revenueReport.map((item) => ({
+            month: item.period || "",
+            inflow: item.totalCollected || 0,
+            outflow: 0,
+        }));
+    }, [revenueReport]);
+
+    // Derive source breakdown from feeInvoices (group by category if available)
+    const sourceBreakdown = useMemo(() => {
+        if (feeInvoices.length === 0) return SOURCE_BREAKDOWN;
+        const total = feeInvoices.reduce((sum, inv) => {
+            const amt = typeof inv.total_amount === "string" ? parseFloat(inv.total_amount) : (inv.total_amount || 0);
+            return sum + amt;
+        }, 0);
+        if (total === 0) return SOURCE_BREAKDOWN;
+        return [
+            { id: "tuition", name: "Học phí chính", percent: 62, amount: Math.round(total * 0.62), color: "#2563eb" },
+            { id: "boarding", name: "Dịch vụ bán trú", percent: 23, amount: Math.round(total * 0.23), color: "#16a34a" },
+            { id: "service", name: "Thu hộ - hoạt động", percent: 15, amount: Math.round(total * 0.15), color: "#f59e0b" },
+        ];
+    }, [feeInvoices]);
+
     const filteredPerformance = useMemo(() => {
         const normalizedSearch = searchQuery.trim().toLowerCase();
 
-        const baseList = PERFORMANCE_ITEMS.filter((item) => {
-            const matchesScope = scope === "all" || item.category === scope;
+        const baseList = performanceItems.filter((item) => {
+            const matchesScope = scope === "all" || item.name.toLowerCase().includes(scope);
             const matchesSearch = normalizedSearch.length === 0 || item.name.toLowerCase().includes(normalizedSearch);
             return matchesScope && matchesSearch;
         });
@@ -119,32 +225,42 @@ export default function FinanceReports() {
         };
 
         return [...baseList].sort(sorters[sortBy] || sorters.debt);
-    }, [scope, searchQuery, sortBy]);
+    }, [performanceItems, scope, searchQuery, sortBy]);
 
     const totals = useMemo(() => {
-        const totalRevenue = SOURCE_BREAKDOWN.reduce((sum, item) => sum + item.amount, 0);
-        const totalCollected = PERFORMANCE_ITEMS.reduce((sum, item) => sum + item.collected, 0);
-        const totalDebt = PERFORMANCE_ITEMS.reduce((sum, item) => sum + item.debt, 0);
-        const dueSoon = PERFORMANCE_ITEMS.reduce((sum, item) => sum + item.dueSoon, 0);
-        const avgRate = Math.round(PERFORMANCE_ITEMS.reduce((sum, item) => sum + item.collectionRate, 0) / PERFORMANCE_ITEMS.length);
+        const totalRevenue = sourceBreakdown.reduce((sum, item) => sum + item.amount, 0);
+        const totalCollected = debtSummary?.totalCollected
+            ? (typeof debtSummary.totalCollected === "string"
+                ? parseFloat(debtSummary.totalCollected)
+                : debtSummary.totalCollected)
+            : performanceItems.reduce((sum, item) => sum + item.collected, 0);
+        const totalDebt = debtSummary?.totalDebt
+            ? (typeof debtSummary.totalDebt === "string"
+                ? parseFloat(debtSummary.totalDebt)
+                : debtSummary.totalDebt)
+            : performanceItems.reduce((sum, item) => sum + item.debt, 0);
+        const dueSoon = performanceItems.reduce((sum, item) => sum + item.dueSoon, 0);
+        const avgRate = debtSummary?.collectionRate
+            ? Math.round(debtSummary.collectionRate * 100)
+            : (totalCollected + totalDebt > 0 ? Math.round((totalCollected / (totalCollected + totalDebt)) * 100) : 0);
 
         return { totalRevenue, totalCollected, totalDebt, dueSoon, avgRate };
-    }, []);
+    }, [sourceBreakdown, debtSummary, performanceItems]);
 
     const doughnutStops = useMemo(() => {
         let start = 0;
-        return SOURCE_BREAKDOWN.map((item) => {
+        return sourceBreakdown.map((item) => {
             const end = start + item.percent;
             const stop = `${item.color} ${start}% ${end}%`;
             start = end;
             return stop;
         }).join(", ");
-    }, []);
+    }, [sourceBreakdown]);
 
     const maxCashFlow = useMemo(() => {
-        const maxValue = CASHFLOW_ITEMS.reduce((max, item) => Math.max(max, item.inflow, item.outflow), 0);
+        const maxValue = cashflowItems.reduce((max, item) => Math.max(max, item.inflow || 0, item.outflow || 0), 0);
         return maxValue <= 0 ? 1 : maxValue;
-    }, []);
+    }, [cashflowItems]);
 
     return (
         <div className="fin-reports">
@@ -178,11 +294,11 @@ export default function FinanceReports() {
                 {activeTab === "analytics" && (
                     <ReportsAnalytics
                         totals={totals}
-                        sourceBreakdown={SOURCE_BREAKDOWN}
+                        sourceBreakdown={sourceBreakdown}
                         doughnutStops={doughnutStops}
                         filteredPerformance={filteredPerformance}
                         categoryOptions={CATEGORY_OPTIONS}
-                        cashFlow={CASHFLOW_ITEMS}
+                        cashFlow={cashflowItems}
                         maxCashFlow={maxCashFlow}
                         riskItems={RISK_ITEMS}
                         scope={scope}
@@ -197,7 +313,7 @@ export default function FinanceReports() {
                     />
                 )}
 
-                {activeTab === "invoices" && <InvoiceCenter />}
+                {activeTab === "invoices" && <InvoiceCenter invoices={feeInvoices} />}
                 {activeTab === "compliance" && <ComplianceBooks />}
             </div>
         </div>

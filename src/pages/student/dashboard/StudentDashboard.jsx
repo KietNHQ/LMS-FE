@@ -24,9 +24,9 @@ export default function StudentDashboard() {
     const { selectedSchoolYear, selectedTerm, handleYearArrow, handleTermChange } = useSchoolYearTerm();
     const [localProfile, setLocalProfile] = useState(null);
 
-    // 1. Lấy thông tin từ localStorage ngay khi mount
+    // 1. Lấy thông tin từ localStorage/sessionStorage ngay khi mount
     useEffect(() => {
-        const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
+        const storedUser = JSON.parse(localStorage.getItem("user") || sessionStorage.getItem("user") || "{}");
         if (storedUser?.profile) {
             setLocalProfile(storedUser.profile);
         }
@@ -111,10 +111,10 @@ export default function StudentDashboard() {
         <div className="student-dashboard-content">
             <div className="student-dashboard-top-panel">
                 <WelcomeHeader
-                    studentName={localProfile?.fullName?.split(" ").pop() || "User"}
-                    classNameLabel={localProfile?.className || "—"}
-                    studentCode={localProfile?.studentCode || "—"}
-                    homeroomTeacher={localProfile?.homeroomTeacher || "—"}
+                    studentName={dashboardData?.profile?.fullName?.split(" ").pop() || localProfile?.fullName?.split(" ").pop() || "User"}
+                    classNameLabel={dashboardData?.profile?.className || localProfile?.className || "—"}
+                    studentCode={dashboardData?.profile?.studentCode || localProfile?.studentCode || "—"}
+                    homeroomTeacher={dashboardData?.profile?.homeroomTeacher || localProfile?.homeroomTeacher || "—"}
                 />
 
                 <div className="student-dashboard-toolbar">

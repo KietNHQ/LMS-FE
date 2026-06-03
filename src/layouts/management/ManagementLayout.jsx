@@ -7,6 +7,7 @@ import { useGetMe } from "../../hooks/useAuth";
 import { principalService } from "../../services/pages/management/principal";
 import { vpAcademicService } from "../../services/pages/management/vp-academic";
 import { getCurrentSchoolYear, getCurrentTerm } from "../../utils/dateUtils";
+import { resolveSchoolYearId } from "../../services/shared/schoolYearLookup";
 import ChangePasswordDialog from "../../components/common/Dialog/ChangePasswordDialog/ChangePasswordDialog";
 import "./ManagementLayout.css";
 import { formatName } from "../../utils/nameUtils";
@@ -37,7 +38,7 @@ export default function ManagementLayout() {
             import("../../pages/management/dashboard/index.js");
             import("../../pages/management/users/ManagementUsers");
             import("../../pages/management/classes/ManagementClasses");
-            import("../../pages/management/grades/index.js");
+            import("../../pages/management/academic/grades/VpAcademicGrades");
             import("../../pages/management/timetable/ManagementTimetable");
             import("../../pages/management/notifications/ManagementNotifications");
         };
@@ -68,13 +69,14 @@ export default function ManagementLayout() {
                 }),
 
                 // 2. Prefetch Academic Stats (cho PHT Chuyên môn)
-                queryClient.prefetchQuery({
-                    queryKey: ["academic-stats", schoolYear, term],
-                    queryFn: () => vpAcademicService.getAssessmentWorkflowStats(term, {
-                        params: { schoolYearId: schoolYear },
-                    }),
-                    staleTime: 5 * 60 * 1000,
-                })
+                // Only prefetch if schoolYearId resolves successfully
+                (async () => {
+                    const numericSchoolYearId = await resolveSchoolYearId(schoolYear);
+                    if (!numericSchoolYearId) return;
+                    await vpAcademicService.getAssessmentWorkflowStats(term, {
+                        params: { schoolYearId: numericSchoolYearId },
+                    });
+                })(),
             ]);
         };
 
