@@ -116,7 +116,7 @@ export default function ClassPresidentTab({ classId }) {
         body: {
           title: "Báo cáo từ Lớp trưởng",
           content: fullContent,
-          notifyHomeroomTeacher: true,
+          onlyHomeroomTeacher: true,
         },
       });
 

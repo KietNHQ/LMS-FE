@@ -115,7 +115,8 @@ export default function BonusPointModal({ isOpen, onClose, onSuccess, initialCla
         return Object.values(categoryMap);
     }, [apiRewardTypes]);
 
-    const formatCategoryLabel = (cat) => {
+    // Moved outside of component in a refactor, or we can just use function keyword to hoist them.
+    function formatCategoryLabel(cat) {
         const labels = {
             attendance: "Chuyên cần",
             academic: "Học tập",
@@ -124,9 +125,9 @@ export default function BonusPointModal({ isOpen, onClose, onSuccess, initialCla
             other: "Khác",
         };
         return labels[cat] || cat;
-    };
+    }
 
-    const getCategoryIcon = (cat) => {
+    function getCategoryIcon(cat) {
         switch(cat) {
             case "attendance": return <FiStar />;
             case "academic": return <FiAward />;
@@ -134,7 +135,7 @@ export default function BonusPointModal({ isOpen, onClose, onSuccess, initialCla
             case "positive": return <FiHeart />;
             default: return <FiStar />;
         }
-    };
+    }
 
     // Initialize/Sync
     useEffect(() => {

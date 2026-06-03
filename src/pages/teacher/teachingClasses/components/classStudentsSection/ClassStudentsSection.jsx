@@ -57,6 +57,9 @@ const ClassStudentsSection = ({ classId, students, readOnly = false, isStudentVi
   const [selectedLessonPeriod, setSelectedLessonPeriod] = useState("");
   const [todayPeriods, setTodayPeriods] = useState([]); // Danh sách các tiết dạy hôm nay
   const [deleteReviewId, setDeleteReviewId] = useState(null);
+  
+  // Leave Requests State
+  const [approvedLeaveStudentIds, setApprovedLeaveStudentIds] = useState(new Set());
 
   // --- Context ---
   const { selectedSchoolYear, selectedTerm } = useSchoolYearContext();
@@ -136,7 +139,22 @@ const ClassStudentsSection = ({ classId, students, readOnly = false, isStudentVi
   // --- Effects ---
   useEffect(() => {
     if (selectedDateLatestReview) {
-      setStudentAttendance(selectedDateLatestReview.attendanceSnapshot || {});
+      let snapshot = { ...selectedDateLatestReview.attendanceSnapshot } || {};
+      
+      // Nếu không có dữ liệu điểm danh chi tiết từ BE (chưa có trong snapshot),
+      // fallback đánh dấu 'Có mặt' (true) cho tất cả học sinh để giao diện không bị trắng trơn.
+      // TRỪ những em có đơn xin phép đã duyệt thì bỏ đánh dấu (false).
+      if (students) {
+        students.forEach(s => {
+          if (approvedLeaveStudentIds.has(s.id)) {
+            snapshot[s.id] = false;
+          } else if (snapshot[s.id] === undefined) {
+            snapshot[s.id] = true;
+          }
+        });
+      }
+
+      setStudentAttendance(snapshot);
       setStudentReviews(selectedDateLatestReview.studentReviewSnapshot || {});
       
       setEditingEvaluationId(selectedDateLatestReview.id);
@@ -152,11 +170,12 @@ const ClassStudentsSection = ({ classId, students, readOnly = false, isStudentVi
       setLessonNote(selectedDateLatestReview.note || "");
       setIsDoublePeriod(selectedDateLatestReview.isDoublePeriod || false);
     } else {
-      // Nếu không có lịch sử cho ngày này, reset trạng thái để giáo viên điểm danh mới (mặc định tích đi học cho tất cả)
+      // Nếu không có lịch sử cho ngày này, reset trạng thái để giáo viên điểm danh mới (mặc định tích đi học cho tất cả, TRỪ những em có đơn xin phép)
       const defaultAttendance = {};
       if (students) {
         students.forEach(s => {
-          defaultAttendance[s.id] = true;
+          // Uncheck by default if student has approved leave
+          defaultAttendance[s.id] = !approvedLeaveStudentIds.has(s.id);
         });
       }
       setStudentAttendance(defaultAttendance);
@@ -169,12 +188,28 @@ const ClassStudentsSection = ({ classId, students, readOnly = false, isStudentVi
       setIsDoublePeriod(false);
     }
     setCurrentPage(1);
-  }, [selectedDateLatestReview, students]);
+  }, [selectedDateLatestReview, students, approvedLeaveStudentIds]);
 
   const mapBackendHistory = (resData) => {
     if (!Array.isArray(resData)) return [];
     return resData.map(item => {
       const restoredReviews = {};
+      
+      const attendanceSnapshot = {};
+      if (item.student_reports) {
+        item.student_reports.forEach(report => {
+           // We assume if a student has a report with category 'absent' or containing 'vắng', they were marked absent
+           const isAbsent = report.category === 'absent' || 
+                            (report.category || '').toLowerCase().includes('vắng') ||
+                            (report.content || '').toLowerCase().includes('vắng') ||
+                            (report.content || '').toLowerCase().includes('nghỉ học');
+           // If they are in reports and absent, snapshot is false (unchecked)
+           if (isAbsent && (report.student_id || report.student_enrollment_id)) {
+               attendanceSnapshot[report.student_id || report.student_enrollment_id] = false;
+           }
+        });
+      }
+
       if (item.student_reports && item.student_reports.length > 0) {
         item.student_reports.forEach(report => {
           const sId = report.student_id || report.student_enrollment_id;
@@ -217,12 +252,12 @@ const ClassStudentsSection = ({ classId, students, readOnly = false, isStudentVi
         }
       });
 
-      const attendanceSnapshot = item.attendance_snapshot 
+      const finalAttendanceSnapshot = item.attendance_snapshot 
         ? Object.entries(item.attendance_snapshot).reduce((acc, [sId, status]) => {
             acc[sId] = status === 'present';
             return acc;
           }, {}) 
-        : {};
+        : { ...attendanceSnapshot };
 
       const periodNum = item.periodId || item.period_id || item.period_number;
       const periodDisplay = periodNum ? `Tiết ${periodNum}` : "Tiết chưa xác định";
@@ -239,7 +274,7 @@ const ClassStudentsSection = ({ classId, students, readOnly = false, isStudentVi
         reviewDate: toDateKey(new Date(item.evaluation_date)),
         createdAt: new Date(item.created_at).toLocaleString("vi-VN"),
         isDoublePeriod: item.is_double_period,
-        attendanceSnapshot,
+        attendanceSnapshot: finalAttendanceSnapshot,
         studentReviewSnapshot: restoredReviews,
         lessonInstanceId: item.lesson_instance_id || null,
         periodId: item.periodId || item.period_id || null,
@@ -379,6 +414,27 @@ const ClassStudentsSection = ({ classId, students, readOnly = false, isStudentVi
     };
     fetchTeacherTimetable();
   }, [classId, selectedHistoryDate, isStudentView, resolvedSemester?.id]);
+
+  // Lấy danh sách học sinh có đơn xin phép đã duyệt cho ngày hiện tại
+  useEffect(() => {
+    const fetchApprovedLeaves = async () => {
+      if (!classId || !selectedHistoryDate) return;
+      try {
+        const res = await teacherService.getApprovedLeavesByDate({
+          pathParams: { classId },
+          params: { date: selectedHistoryDate }
+        });
+        if (res.success && res.data) {
+          setApprovedLeaveStudentIds(new Set(res.data));
+        } else {
+          setApprovedLeaveStudentIds(new Set());
+        }
+      } catch (err) {
+        console.error("Failed to fetch approved leaves:", err);
+      }
+    };
+    fetchApprovedLeaves();
+  }, [classId, selectedHistoryDate]);
 
   // --- Handlers ---
   const handleBackToToday = () => setSelectedHistoryDate(toDateKey(new Date()));
@@ -770,21 +826,19 @@ const ClassStudentsSection = ({ classId, students, readOnly = false, isStudentVi
     };
 
     try {
-      // Điểm danh: Lưu danh sách điểm danh cho tiết học thực tế này
-      if (currentSchedule?.periodId || currentSchedule?.id) {
-        await teacherService.saveAttendance({
-          mock: false,
-          body: {
-            periodId: currentSchedule.periodId || currentSchedule.id,
-            lessonInstanceId: currentSchedule.lessonInstanceId || null,
-            date: selectedHistoryDate,
-            attendances: students.map(s => ({
-              studentEnrollmentId: s.enrollmentId || s.enrollment_id,
-              status: studentAttendance[s.id] ? "present" : "absent"
-            }))
-          }
-        });
-      }
+      // Điểm danh: Luôn luôn lưu danh sách điểm danh cho tiết học này
+      await teacherService.saveAttendance({
+        mock: false,
+        body: {
+          periodId: currentSchedule?.periodId || currentSchedule?.id || null,
+          lessonInstanceId: currentSchedule?.lessonInstanceId || null,
+          date: selectedHistoryDate,
+          attendances: students.map(s => ({
+            studentEnrollmentId: s.enrollmentId || s.enrollment_id,
+            status: studentAttendance[s.id] ? "present" : "absent"
+          }))
+        }
+      });
 
       let res;
       if (editingEvaluationId) {
@@ -970,6 +1024,7 @@ const ClassStudentsSection = ({ classId, students, readOnly = false, isStudentVi
         selectedStudentIds={selectedStudentIds}
         onToggleSelect={handleToggleSelect}
         onSelectAll={handleSelectAll}
+        approvedLeaveStudentIds={approvedLeaveStudentIds}
       />
 
       <Pagination 

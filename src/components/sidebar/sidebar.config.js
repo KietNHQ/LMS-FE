@@ -102,7 +102,7 @@ export const sidebarConfig = {
         { label: "  Khóa sổ thi đua", icon: FiLock, path: "/management/discipline/period-closing", requiredPermissions: [PERMISSIONS.DISCIPLINE_VIEW] },
         { label: "Xếp Lớp & Lên Lớp", icon: FiTrendingUp,   path: "/management/promotion" },
         { label: "Rèn Luyện Hè",      icon: FiSun,           path: "/management/summer-training" },
-        { label: "Thi Đua",            icon: FiStar,          path: "/management/competition",  requiredPermissions: [PERMISSIONS.COMPETITION_MANAGE] },
+        { label: "Thi Đua",            icon: FiStar,          path: "/management/competition",  requiredPermissions: [PERMISSIONS.DISCIPLINE_VIEW] },
         { label: "Bài Kiểm Tra",       icon: FiFileText,      path: "/management/quiz",         requiredPermissions: [PERMISSIONS.QUIZ_VIEW] },
         { label: "Kỳ Thi",             icon: FiCalendar,      path: "/management/exams",        requiredPermissions: [PERMISSIONS.EXAM_VIEW] },
         { label: "Thời Khóa Biểu",    icon: FiCalendar,      path: "/management/timetable",   requiredPermissions: [PERMISSIONS.TIMETABLE_VIEW] },
