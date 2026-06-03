@@ -167,7 +167,7 @@ export default function ManagementQuiz() {
 
     const handleCreateQuiz = (quizMeta) => {
         handleCloseCreateDialog();
-        navigate("/admin/quiz/create", {
+        navigate("/management/quiz/create", {
             state: {
                 quizMeta,
             },
@@ -175,7 +175,7 @@ export default function ManagementQuiz() {
     };
 
     const handleOpenQuizQuestions = (quiz) => {
-        navigate("/admin/quiz/create", {
+        navigate("/management/quiz/create", {
             state: {
                 quizId: quiz.id,
                 quizMeta: {

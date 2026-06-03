@@ -9,6 +9,16 @@ import LeaveRequestActionModal from "./components/LeaveRequestActionModal";
 import { normalizePermissions } from "../../../hooks/useAuth";
 import "./ManagementLeaveRequests.css";
 
+const formatDate = (dateString) => {
+  if (!dateString) return "—";
+  const date = new Date(dateString);
+  if (Number.isNaN(date.getTime())) return dateString;
+  const day = String(date.getDate()).padStart(2, "0");
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const year = date.getFullYear();
+  return `${day}/${month}/${year}`;
+};
+
 export default function ManagementLeaveRequests() {
   // State
   const [requests, setRequests] = useState([]);
@@ -336,7 +346,7 @@ export default function ManagementLeaveRequests() {
                     <td className="guardian-name-val">{req.guardianName}</td>
                     <td>
                       <div className="date-duration-cell">
-                        <span className="date-range-text">{req.startDate} → {req.endDate}</span>
+                        <span className="date-range-text">{formatDate(req.startDate)} → {formatDate(req.endDate)}</span>
                         <span className="duration-pill">{req.totalDays} ngày</span>
                       </div>
                     </td>

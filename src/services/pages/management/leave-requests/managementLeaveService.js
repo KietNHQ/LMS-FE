@@ -315,7 +315,9 @@ export const managementLeaveService = {
           try {
             const user = JSON.parse(storedUserStr);
             reviewerName = user.fullName || user.username || reviewerName;
-          } catch {}
+          } catch (e) {
+            // ignore error
+          }
         }
 
         const now = new Date();
@@ -357,7 +359,9 @@ export const managementLeaveService = {
           try {
             const user = JSON.parse(storedUserStr);
             reviewerName = user.fullName || user.username || reviewerName;
-          } catch {}
+          } catch (e) {
+            // ignore error
+          }
         }
         const now = new Date();
         const formattedDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")} ${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
@@ -397,7 +401,9 @@ export const managementLeaveService = {
           try {
             const user = JSON.parse(storedUserStr);
             reviewerName = user.fullName || user.username || reviewerName;
-          } catch {}
+          } catch (e) {
+            // ignore error
+          }
         }
 
         const now = new Date();
@@ -438,7 +444,9 @@ export const managementLeaveService = {
           try {
             const user = JSON.parse(storedUserStr);
             reviewerName = user.fullName || user.username || reviewerName;
-          } catch {}
+          } catch (e) {
+            // ignore error
+          }
         }
         const now = new Date();
         const formattedDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")} ${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;

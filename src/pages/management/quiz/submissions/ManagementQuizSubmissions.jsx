@@ -104,7 +104,7 @@ export default function ManagementQuizSubmissions() {
         <div className="admin-quiz-subs">
             <header className="admin-quiz-subs__header">
                 <div className="header-left">
-                    <button className="back-btn" onClick={() => navigate("/admin/quiz")}>
+                    <button className="back-btn" onClick={() => navigate("/management/quiz")}>
                         <FiArrowLeft /> Quay lại
                     </button>
                     <div className="title-section">

@@ -623,7 +623,7 @@ export default function CreateQuizPage() {
         const savedCard = await saveQuizAndReturnCard({ showSuccessAlert: false });
         if (!savedCard) return;
 
-        navigate("/admin/quiz", {
+        navigate("/management/quiz", {
             state: {
                 refreshList: true,
             },
@@ -635,7 +635,7 @@ export default function CreateQuizPage() {
         if (!quiz.questions.length) {
             setQuiz(createQuizFromMeta(routeQuizMeta));
             resetForm();
-            navigate("/admin/quiz");
+            navigate("/management/quiz");
             return;
         }
 
@@ -646,7 +646,7 @@ export default function CreateQuizPage() {
 
         setQuiz(createQuizFromMeta(routeQuizMeta));
         resetForm();
-        navigate("/admin/quiz");
+        navigate("/management/quiz");
     };
 
     const handleToggleScrollQuickActions = () => {
@@ -842,7 +842,7 @@ export default function CreateQuizPage() {
                 open={showSetupDialog}
                 title="Tạo bài kiểm tra"
                 submitLabel="Tạo bài kiểm tra"
-                onClose={() => navigate("/admin/quiz")}
+                onClose={() => navigate("/management/quiz")}
                 onSubmit={handleSetupQuiz}
                 initialValues={routeQuizMeta}
                 assignmentOptions={assignmentOptions}

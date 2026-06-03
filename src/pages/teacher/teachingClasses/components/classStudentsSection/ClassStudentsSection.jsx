@@ -141,7 +141,7 @@ const ClassStudentsSection = ({ classId, students, readOnly = false, isStudentVi
   // --- Effects ---
   useEffect(() => {
     if (selectedDateLatestReview) {
-      let snapshot = { ...selectedDateLatestReview.attendanceSnapshot } || {};
+      let snapshot = selectedDateLatestReview.attendanceSnapshot ? { ...selectedDateLatestReview.attendanceSnapshot } : {};
       
       // Nếu không có dữ liệu điểm danh chi tiết từ BE (chưa có trong snapshot),
       // fallback đánh dấu 'Có mặt' (true) cho tất cả học sinh để giao diện không bị trắng trơn.

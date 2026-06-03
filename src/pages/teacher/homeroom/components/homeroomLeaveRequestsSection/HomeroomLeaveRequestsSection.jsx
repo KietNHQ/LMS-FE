@@ -4,6 +4,16 @@ import { toast } from "react-toastify";
 import { FiCheck, FiX, FiAlertCircle, FiClock, FiFileText, FiMessageCircle } from "react-icons/fi";
 import "./HomeroomLeaveRequestsSection.css";
 
+const formatDate = (dateString) => {
+    if (!dateString) return "—";
+    const date = new Date(dateString);
+    if (Number.isNaN(date.getTime())) return dateString;
+    const day = String(date.getDate()).padStart(2, "0");
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const year = date.getFullYear();
+    return `${day}/${month}/${year}`;
+};
+
 export default function HomeroomLeaveRequestsSection({ classId }) {
     const [requests, setRequests] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -162,7 +172,7 @@ export default function HomeroomLeaveRequestsSection({ classId }) {
                                 <div className="info-item date">
                                     <span className="info-label"><FiClock /> Thời gian nghỉ:</span>
                                     <span className="info-value text-highlight">
-                                        {req.startDate} đến {req.endDate}
+                                        {formatDate(req.startDate)} đến {formatDate(req.endDate)}
                                     </span>
                                 </div>
                                 

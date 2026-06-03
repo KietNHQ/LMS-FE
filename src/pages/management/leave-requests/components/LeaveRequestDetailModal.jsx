@@ -3,6 +3,16 @@ import { FiX, FiCheck, FiClock, FiAlertCircle } from "react-icons/fi";
 import { StatusBadge } from "../../../../components/common";
 import "./LeaveRequestModal.css"; // We will put modal styles here or in ManagementLeaveRequests.css
 
+const formatDate = (dateString) => {
+  if (!dateString) return "—";
+  const date = new Date(dateString);
+  if (Number.isNaN(date.getTime())) return dateString;
+  const day = String(date.getDate()).padStart(2, "0");
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const year = date.getFullYear();
+  return `${day}/${month}/${year}`;
+};
+
 export default function LeaveRequestDetailModal({ request, onClose, onAction, canApprove }) {
   if (!request) return null;
 
@@ -61,11 +71,11 @@ export default function LeaveRequestDetailModal({ request, onClose, onAction, ca
             <div className="mlr-detail-grid">
               <div className="detail-item">
                 <span className="detail-label">Ngày bắt đầu:</span>
-                <span className="detail-value">{request.startDate}</span>
+                <span className="detail-value">{formatDate(request.startDate)}</span>
               </div>
               <div className="detail-item">
                 <span className="detail-label">Ngày kết thúc:</span>
-                <span className="detail-value">{request.endDate}</span>
+                <span className="detail-value">{formatDate(request.endDate)}</span>
               </div>
               <div className="detail-item">
                 <span className="detail-label">Tổng số ngày:</span>

@@ -1,7 +1,16 @@
 import { Suspense, lazy } from "react";
-import { Navigate, Route, Routes } from "react-router-dom";
+import { Navigate, Route, Routes, useLocation } from "react-router-dom";
 import { LoadingAnimationBook } from "../components/common";
 import ProtectedRoute from "../components/common/ProtectedRoute/ProtectedRoute";
+
+const AdminRedirect = () => {
+  const location = useLocation();
+  let targetPath = location.pathname.replace(/^\/admin/, "/management");
+  if (targetPath.startsWith("/management/payment")) {
+    targetPath = targetPath.replace("/management/payment", "/management/finance");
+  }
+  return <Navigate to={targetPath} replace />;
+};
 
 /* AUTH PAGES */
 import Login from "../pages/auth/Login";
@@ -213,13 +222,18 @@ export default function AppRoutes() {
         <Route path="notifications" element={<AdminNotifications />} />
         <Route path="audit-log"   element={<AdminAuditLog />} />
         <Route path="system-log"  element={<AdminSystemLog />} />
-        <Route path="classes"       element={<Navigate to="/management/classes" replace />} />
-        <Route path="classes/*"     element={<Navigate to="/management/classes" replace />} />
-        <Route path="quiz"          element={<Navigate to="/management/quiz" replace />} />
-        <Route path="timetable"     element={<Navigate to="/management/timetable" replace />} />
-        <Route path="payment"       element={<Navigate to="/management/finance" replace />} />
-        <Route path="competition"   element={<Navigate to="/management/competition" replace />} />
-        <Route path="reports"       element={<Navigate to="/management/reports" replace />} />
+        <Route path="classes"       element={<AdminRedirect />} />
+        <Route path="classes/*"     element={<AdminRedirect />} />
+        <Route path="quiz"          element={<AdminRedirect />} />
+        <Route path="quiz/*"        element={<AdminRedirect />} />
+        <Route path="timetable"     element={<AdminRedirect />} />
+        <Route path="timetable/*"   element={<AdminRedirect />} />
+        <Route path="payment"       element={<AdminRedirect />} />
+        <Route path="payment/*"     element={<AdminRedirect />} />
+        <Route path="competition"   element={<AdminRedirect />} />
+        <Route path="competition/*" element={<AdminRedirect />} />
+        <Route path="reports"       element={<AdminRedirect />} />
+        <Route path="reports/*"     element={<AdminRedirect />} />
       </Route>
 
 

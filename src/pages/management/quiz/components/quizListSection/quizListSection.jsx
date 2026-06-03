@@ -58,7 +58,7 @@ export default function QuizListSection({
                                             onClick={(event) => {
                                                 event.stopPropagation();
                                                 // Admin now uses dedicated admin route
-                                                navigate(`/admin/quiz/${quiz.id}/submissions`);
+                                                navigate(`/management/quiz/${quiz.id}/submissions`);
                                             }}
                                         >
                                             <FiClipboard />

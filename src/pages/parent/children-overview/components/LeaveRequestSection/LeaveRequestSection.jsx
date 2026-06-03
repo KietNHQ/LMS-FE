@@ -2,6 +2,16 @@ import React, { useMemo, useState } from "react";
 import "./LeaveRequestSection.css";
 import { parentService } from "../../../../../services/pages/parent/parentService";
 
+const formatDate = (dateString) => {
+    if (!dateString) return "—";
+    const date = new Date(dateString);
+    if (Number.isNaN(date.getTime())) return dateString;
+    const day = String(date.getDate()).padStart(2, "0");
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const year = date.getFullYear();
+    return `${day}/${month}/${year}`;
+};
+
 const statusMap = {
     approved: { key: "approved", text: "Đã duyệt" },
     pending: { key: "pending", text: "Đang chờ" },
@@ -26,7 +36,7 @@ export default function LeaveRequestSection({ requests = [], childId, onSuccess 
             return {
                 id: item.id || `${item.studentId}-${item.startDate}-${Date.now()}-${Math.random()}`,
                 title: item.title || item.reason || "Đơn xin nghỉ học",
-                date: item.startDate && item.endDate ? `${item.startDate} đến ${item.endDate}` : (item.date || "--"),
+                date: item.startDate && item.endDate ? `${formatDate(item.startDate)} đến ${formatDate(item.endDate)}` : (item.date || "--"),
                 approvedBy: item.approvedByRole === "teacher" ? "Giáo viên chủ nhiệm" : (item.approvedByRole === "manager" ? "Quản lý trường" : (item.approvedBy || "—")),
                 status: statusInfo.key,
                 statusText: item.statusText || statusInfo.text
@@ -53,7 +63,7 @@ export default function LeaveRequestSection({ requests = [], childId, onSuccess 
                 mock: false
             })
             if (res?.success) {
-                setSubmitMessage(`Đã gửi đơn xin nghỉ học từ ${formData.startDate} đến ${formData.endDate} thành công!`)
+                setSubmitMessage(`Đã gửi đơn xin nghỉ học từ ${formatDate(formData.startDate)} đến ${formatDate(formData.endDate)} thành công!`)
                 setIsDialogOpen(false)
                 setFormData({ reason: "", startDate: "", endDate: "", note: "" })
                 if (onSuccess) onSuccess()

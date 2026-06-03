@@ -1,5 +1,5 @@
 import '@testing-library/jest-dom'
-import { vi } from 'vitest'
+import { vi, beforeEach } from 'vitest'
 
 // Mock react-toastify
 vi.mock('react-toastify', () => ({
@@ -12,7 +12,7 @@ vi.mock('react-toastify', () => ({
 }))
 
 // Mock BroadcastChannel
-global.BroadcastChannel = vi.fn(() => ({
+window.BroadcastChannel = vi.fn(() => ({
   postMessage: vi.fn(),
   addEventListener: vi.fn(),
   removeEventListener: vi.fn(),
@@ -21,7 +21,7 @@ global.BroadcastChannel = vi.fn(() => ({
 
 // Mock sessionStorage
 const mockStorage = {}
-global.sessionStorage = {
+window.sessionStorage = {
   getItem: vi.fn((key) => mockStorage[key] ?? null),
   setItem: vi.fn((key, value) => { mockStorage[key] = value }),
   removeItem: vi.fn((key) => { delete mockStorage[key] }),
@@ -30,7 +30,7 @@ global.sessionStorage = {
 
 // Mock localStorage
 const mockLocalStorage = {}
-global.localStorage = {
+window.localStorage = {
   getItem: vi.fn((key) => mockLocalStorage[key] ?? null),
   setItem: vi.fn((key, value) => { mockLocalStorage[key] = value }),
   removeItem: vi.fn((key) => { delete mockLocalStorage[key] }),
