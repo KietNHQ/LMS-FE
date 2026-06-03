@@ -431,7 +431,7 @@ export default function VpDisciplinePeriodClosing() {
                       <td>
                         <div className="td-period-label">
                           <FiLock className="lock-icon" />
-                          <span>{getPeriodLabel(period.periodType, period.periodKey, period.schoolYear)}</span>
+                          <span>{getPeriodLabel(period.periodType || period.period_type, period.periodKey || period.period_key, period.schoolYear || period.school_year_name)}</span>
                         </div>
                       </td>
                       <td className="td-date">{formatDate(period.closedAt || period.closed_at)}</td>
@@ -515,7 +515,7 @@ export default function VpDisciplinePeriodClosing() {
         {selectedPeriod && (
           <div className="confirm-modal-info">
             <p>
-              <strong>Kỳ:</strong> {getPeriodLabel(selectedPeriod.periodType, selectedPeriod.periodKey, selectedPeriod.schoolYear)}
+              <strong>Kỳ:</strong> {getPeriodLabel(selectedPeriod.periodType || selectedPeriod.period_type, selectedPeriod.periodKey || selectedPeriod.period_key, selectedPeriod.schoolYear || selectedPeriod.school_year_name)}
             </p>
             <p>
               <strong>Đã khóa lúc:</strong> {formatDate(selectedPeriod.closedAt || selectedPeriod.closed_at)}

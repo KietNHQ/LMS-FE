@@ -171,6 +171,26 @@ export async function resolveSemesterId(schoolYearName, termKey) {
   return matched?.id;
 }
 
+export async function resolveSemester(schoolYearName, termKey) {
+  const schoolYearId = await resolveSchoolYearId(schoolYearName);
+  if (!schoolYearId || !termKey) return undefined;
+
+  const cacheKey = `semesters:${schoolYearId}`;
+  let semesters = lookupCache.semesters.rows;
+  if (
+    lookupCache.semesters.key !== schoolYearId ||
+    semesters.length === 0 ||
+    Date.now() - lookupCache.semesters.ts > LOOKUP_CACHE_TTL
+  ) {
+    semesters = await loadSemesters(schoolYearId);
+    lookupCache.semesters = { ts: Date.now(), rows: semesters, key: schoolYearId };
+  }
+
+  const termLabel = termKey === "hk1" ? "học kỳ 1" : "học kỳ 2";
+  const matched = semesters.find((row) => normalizeText(row.name || "").includes(termLabel));
+  return matched;
+}
+
 export async function getGradeLevelFilterOptions() {
   const rows = await getCachedRows("gradeLevels", loadGradeLevels);
   const sorted = [...rows].sort(

@@ -166,7 +166,27 @@ export default function VpDisciplineMgmt() {
             toast.success("Duyệt vi phạm thành công. Đã cập nhật điểm thi đua và hạnh kiểm!");
         },
         onError: (err) => {
-            toast.error(err?.message || "Lỗi khi duyệt vi phạm.");
+            const errData = err?.response?.data;
+            const msg = typeof errData?.error === 'string' ? errData.error : errData?.error?.message || errData?.message || err?.message;
+            toast.error(msg || "Lỗi khi duyệt vi phạm.");
+        }
+    });
+
+    const deleteMutation = useMutation({
+        mutationFn: async (id) => {
+            return vpDisciplineService.callByKey("delete_discipline_violations_by_id", {
+                pathParams: { id },
+            });
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["discipline-violations"] });
+            queryClient.invalidateQueries({ queryKey: ["discipline-category-stats"] });
+            toast.success("Đã xóa hồ sơ vi phạm thành công!");
+        },
+        onError: (err) => {
+            const errData = err?.response?.data;
+            const msg = typeof errData?.error === 'string' ? errData.error : errData?.error?.message || errData?.message || err?.message;
+            toast.error(msg || "Lỗi khi xóa vi phạm.");
         }
     });
 
@@ -190,9 +210,7 @@ export default function VpDisciplineMgmt() {
 
     const handleDeleteIncident = (id) => {
         if (window.confirm("Bạn có chắc chắn muốn xóa hồ sơ vi phạm này? Hành động này không thể hoàn tác.")) {
-            // TODO: Wire up DELETE endpoint when available; invalidate to refresh
-            invalidateIncidents();
-            toast.success("Đã xóa hồ sơ vi phạm!");
+            deleteMutation.mutate(id);
         }
     };
 
@@ -417,6 +435,7 @@ export default function VpDisciplineMgmt() {
                             selectedTerm={selectedTerm}
                             selectedGrade={selectedGrade}
                             selectedClass={selectedClass}
+                            selectedWeek={selectedWeek}
                         />
                     ) : (
                         <div className="dm-panel main-ops-panel-full">
