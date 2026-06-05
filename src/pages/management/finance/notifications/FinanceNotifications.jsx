@@ -165,7 +165,7 @@ export default function FinanceNotifications() {
         } finally {
             setLoading(false);
         }
-    }, [selectedSchoolYear?.id]);
+    }, [selectedSchoolYear]);
 
     useEffect(() => { loadNotifications(); }, [loadNotifications]);
 

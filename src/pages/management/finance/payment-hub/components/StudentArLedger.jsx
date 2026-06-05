@@ -18,13 +18,13 @@ export default function StudentArLedger({ student, onClose }) {
     const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
 
     useEffect(() => {
-        if (student?.id) {
+        if (student?.student_id || student?.id) {
             fetchStudentLedger();
         }
     }, [student]);
 
     const fetchStudentLedger = async () => {
-        if (!student?.id || student.id.startsWith("HS")) {
+        if (!student?.student_id && (!student?.id || student.id.startsWith("HS"))) {
             // Mock data for demo
             setLedger([]);
             setSummary({ totalDebt: 0, paid: 0, remaining: 0 });
@@ -33,8 +33,9 @@ export default function StudentArLedger({ student, onClose }) {
         }
 
         setIsLoading(true);
+        const studentKey = student.student_id || student.id;
         try {
-            const res = await financeService.getStudentDebts(student.id, {
+            const res = await financeService.getStudentDebts(studentKey, {
                 params: { limit: 50 },
             });
 

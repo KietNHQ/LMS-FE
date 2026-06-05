@@ -89,7 +89,7 @@ export default function PolicyExemptionTab() {
         } finally {
             setIsLoading(false);
         }
-    }, [selectedSchoolYear?.id, selectedTerm?.id, filterStatus]);
+    }, [selectedSchoolYear, selectedTerm, filterStatus]);
 
     // Fetch from API
     useEffect(() => {

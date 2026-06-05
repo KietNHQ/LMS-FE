@@ -24,7 +24,7 @@ export const getClassPromotionSummary = async (classId, hk1SemesterId, hk2Semest
   const response = await axiosClient.get(`/promotion/class/${classId}/summary`, {
     params: { hk1SemesterId, hk2SemesterId, page, limit },
   });
-  return response;
+  return response.data || null;
 };
 
 /**

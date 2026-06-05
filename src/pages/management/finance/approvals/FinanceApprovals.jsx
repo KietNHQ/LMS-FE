@@ -145,7 +145,10 @@ export default function FinanceApprovals() {
                 params: {
                     limit: 200,
                     status: activeStatus !== "all" ? activeStatus : undefined,
+                    type: typeFilter !== "all" ? typeFilter : undefined,
                     studentId: undefined,
+                    schoolYearId: selectedSchoolYear?.id,
+                    semesterId: selectedTerm?.id,
                 },
             });
 
@@ -162,7 +165,7 @@ export default function FinanceApprovals() {
 
     useEffect(() => {
         fetchRequests();
-    }, [activeStatus, selectedSchoolYear, selectedTerm]);
+    }, [activeStatus, typeFilter, priorityFilter, selectedSchoolYear, selectedTerm]);
 
     const statusSummary = useMemo(() => {
         const pending = requests.filter((item) => item.status === "pending");

@@ -6,9 +6,9 @@ import axiosClient from "../../../shared/http/axiosClient";
  * @param {number} [page=1] - Trang hiện tại
  * @param {number} [limit=10] - Số items per page
  */
-export const getSummerTrainingSummary = async (classId, page = 1, limit = 10) => {
+export const getSummerTrainingSummary = async (classId, page = 1, limit = 10, schoolYearId) => {
   const response = await axiosClient.get(`/summer-training/class/${classId}/summary`, {
-    params: { page, limit },
+    params: { page, limit, schoolYearId },
   });
   return response;
 };

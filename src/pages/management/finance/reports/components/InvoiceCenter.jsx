@@ -62,7 +62,7 @@ export default function InvoiceCenter({ invoices: propInvoices }) {
         } finally {
             setIsLoading(false);
         }
-    }, [selectedSchoolYear?.id, selectedTerm?.id]);
+    }, [selectedSchoolYear, selectedTerm]);
 
     useEffect(() => {
         if (propInvoices && propInvoices.length > 0) {

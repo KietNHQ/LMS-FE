@@ -3,6 +3,7 @@ import { FiPlus, FiEdit2, FiTrash2, FiInfo, FiX, FiCheck, FiAlertTriangle, FiUpl
 import { toast } from "react-toastify";
 import Select from "../../../../../components/ui/Select/Select";
 import { Tooltip } from "../../../../../components/ui";
+import { useSchoolYearTerm } from "../../../../../hooks/useSchoolYearTerm";
 import financeService from "../../../../../services/pages/management/finance/financeService";
 
 const CATEGORY_OPTIONS = [
@@ -54,6 +55,7 @@ const EMPTY_FORM = {
 };
 
 export default function FeeCatalogTab() {
+    const { selectedSchoolYear, selectedTerm } = useSchoolYearTerm();
     const [catalog, setCatalog] = useState([]);
     const [loading, setLoading] = useState(false);
     const [submitting, setSubmitting] = useState(false);

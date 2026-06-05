@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { useSearchParams } from "react-router-dom";
-import { PageHeader, EmptyState } from "../../../components/common";
+import { PageHeader, EmptyState, SchoolYearTermSelector } from "../../../components/common";
 import { useSchoolYearTerm } from "../../../hooks/useSchoolYearTerm";
 import Select from "../../../components/ui/Select/Select";
 import {
@@ -11,7 +11,7 @@ import { toast } from "react-toastify";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { promotionService } from "../../../services/pages/management/promotion/promotionService";
 import { classesService } from "../../../services/pages/management/classes/classesService";
-import { resolveSemesterId } from "../../../services/shared/schoolYearLookup";
+import { resolveSemesterId, resolveSchoolYearId } from "../../../services/shared/schoolYearLookup";
 import "./PromotionPage.css";
 
 const STATUS_COLORS = {
@@ -56,7 +56,7 @@ const formatCurrency = (amount) => {
 export default function PromotionPage() {
   const [searchParams] = useSearchParams();
   const urlClass = searchParams.get("class");
-  const { selectedSchoolYear } = useSchoolYearTerm();
+  const { selectedSchoolYear, selectedTerm, handleYearArrow, handleTermChange } = useSchoolYearTerm();
 
   const [selectedGrade, setSelectedGrade] = useState("10");
   const [selectedClass, setSelectedClass] = useState(urlClass || "");
@@ -142,19 +142,38 @@ export default function PromotionPage() {
   });
 
   const { data: promotionData, isLoading, refetch } = useQuery({
-    queryKey: ["promotion-class-summary", selectedClass, hk1Id, hk2Id, currentPage],
+    queryKey: ["promotion-class-summary", selectedClass, hk1Id, hk2Id],
     queryFn: async () => {
       if (!selectedClass || !hk1Id || !hk2Id) return null;
-      const res = await promotionService.getClassPromotionSummary(selectedClass, hk1Id, hk2Id, currentPage, ITEMS_PER_PAGE);
+      // #region agent log
+      fetch('http://127.0.0.1:7327/ingest/2c66a085-4ebf-4354-b3da-5d8073414dc9',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'7cfba0'},body:JSON.stringify({sessionId:'7cfba0',location:'PromotionPage.jsx:promotionQuery',message:'promotion query',data:{selectedClass,hk1Id,hk2Id,selectedSchoolYear},timestamp:Date.now()})}).catch(()=>{});
+      // #endregion
+      const res = await promotionService.getClassPromotionSummary(selectedClass, hk1Id, hk2Id, 1, 100);
+      console.error("[DEBUG-FE] promotionService result:", JSON.stringify(res)?.slice(0, 500));
       return res || null;
     },
     enabled: Boolean(selectedClass && hk1Id && hk2Id),
     staleTime: 60_000,
+    onSuccess: (data) => {
+      // #region agent log
+      fetch('http://127.0.0.1:7327/ingest/2c66a085-4ebf-4354-b3da-5d8073414dc9',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'7cfba0'},body:JSON.stringify({sessionId:'7cfba0',location:'PromotionPage.jsx:promotionQuery:onSuccess',message:'promotion query success',data:{selectedClass,hk1Id,hk2Id,total:data?.total,studentsCount:Array.isArray(data?.students)?data.students.length:0},timestamp:Date.now()})}).catch(()=>{});
+      // #endregion
+    },
+    onError: (err) => {
+      // #region agent log
+      fetch('http://127.0.0.1:7327/ingest/2c66a085-4ebf-4354-b3da-5d8073414dc9',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'7cfba0'},body:JSON.stringify({sessionId:'7cfba0',location:'PromotionPage.jsx:promotionQuery:onError',message:'promotion query error',data:{selectedClass,hk1Id,hk2Id,error:String(err)},timestamp:Date.now()})}).catch(()=>{});
+      // #endregion
+    },
   });
 
   const promoteMutation = useMutation({
     mutationFn: async ({ isGrade12 }) => {
-      const nextSchoolYearId = Number(selectedSchoolYear) + 1;
+      // Resolve string school year name to numeric ID
+      let currentSyId = selectedSchoolYear;
+      if (typeof currentSyId === "string" && isNaN(Number(currentSyId))) {
+        currentSyId = await resolveSchoolYearId(currentSyId);
+      }
+      const nextSchoolYearId = Number(currentSyId) + 1;
       if (isGrade12) {
         return promotionService.graduateClass(selectedClass, nextSchoolYearId, hk1Id, hk2Id);
       }
@@ -179,7 +198,12 @@ export default function PromotionPage() {
 
   const rollbackMutation = useMutation({
     mutationFn: async (reason) => {
-      return promotionService.rollbackClass(selectedClass, selectedSchoolYear, reason);
+      // Resolve string school year name to numeric ID
+      let syId = selectedSchoolYear;
+      if (typeof syId === "string" && isNaN(Number(syId))) {
+        syId = await resolveSchoolYearId(syId);
+      }
+      return promotionService.rollbackClass(selectedClass, syId, reason);
     },
     onSuccess: (data) => {
       toast.success(data?.data?.message || data?.message || "Đã hủy lên lớp.");
@@ -210,7 +234,7 @@ export default function PromotionPage() {
     return list;
   }, [promotionData, searchTerm, selectedClassName]);
 
-  const totalPages = useMemo(() => promotionData?.totalPages ?? 1, [promotionData]);
+  const totalPages = useMemo(() => Math.ceil(studentList.length / ITEMS_PER_PAGE) || 1, [studentList]);
   const effectivePage = Math.min(currentPage, totalPages);
   const paginatedStudents = useMemo(() => {
     const start = (effectivePage - 1) * ITEMS_PER_PAGE;
@@ -266,7 +290,12 @@ export default function PromotionPage() {
       return;
     }
     try {
-      const nextSchoolYearId = Number(selectedSchoolYear) + 1;
+      // Resolve string school year name to numeric ID
+      let syId = selectedSchoolYear;
+      if (typeof syId === "string" && isNaN(Number(syId))) {
+        syId = await resolveSchoolYearId(syId);
+      }
+      const nextSchoolYearId = Number(syId) + 1;
       const financeRes = await promotionService.getFinanceCheck(selectedClass, nextSchoolYearId);
       const financeData = financeRes;
       if (financeData?.hasUnpaidStudents) {
@@ -307,6 +336,15 @@ export default function PromotionPage() {
       <PageHeader
         title="Xếp Lớp & Lên Lớp"
         subtitle="Quản lý xếp lớp, lên lớp và rèn luyện hè"
+        actions={
+          <SchoolYearTermSelector
+            selectedSchoolYear={selectedSchoolYear}
+            selectedTerm={selectedTerm}
+            onYearChange={handleYearArrow}
+            onTermChange={handleTermChange}
+            showTerm={true}
+          />
+        }
       />
 
       {/* Lock Status Warning */}

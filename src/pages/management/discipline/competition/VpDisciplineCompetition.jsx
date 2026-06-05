@@ -461,7 +461,7 @@ export default function VpDisciplineCompetition({ isEmbedded = false, onClassCli
                                     </div>
                                 ))}
                             </div>
-                            <button className="btn-view-incidents" onClick={() => navigate("/management/discipline/discipline")}>
+                            <button className="btn-view-incidents" onClick={() => navigate("/management/discipline")}>
                                 Xem chi tiết sai phạm <FiArrowRight />
                             </button>
                         </div>

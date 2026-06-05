@@ -91,12 +91,14 @@ function LessonModal({ mode, formData, onChange, onClose, onSubmit, allSessions,
     const [filteredTeachers, setFilteredTeachers] = useState([]);
     const [isLoadingTeachers, setIsLoadingTeachers] = useState(false);
 
-    // Teacher list to display: use filtered by subject, fallback to all
+    // Teacher list to display: use filtered by subject, fallback to all ONLY if no subject is selected
     const displayedTeacherNames = useMemo(() => {
         if (isLoadingTeachers) return [];
-        if (filteredTeachers.length > 0) return filteredTeachers.map((t) => t.label || t.value);
+        if (formData.subject) {
+            return filteredTeachers.map((t) => t.label || t.value);
+        }
         return allTeacherNames;
-    }, [filteredTeachers, isLoadingTeachers, allTeacherNames]);
+    }, [filteredTeachers, isLoadingTeachers, allTeacherNames, formData.subject]);
 
     // Fetch teachers filtered by selected subject
     useEffect(() => {
@@ -131,6 +133,20 @@ function LessonModal({ mode, formData, onChange, onClose, onSubmit, allSessions,
 
         return () => { cancelled = true; };
     }, [formData.subject, selectedClassRecord?.id, periodIds?.semesterId, periodIds?.schoolYearId, subjectDisplayToCode]);
+
+    // Reset selected teacher if they do not teach the newly selected subject
+    useEffect(() => {
+        if (isLoadingTeachers) return;
+        
+        if (formData.subject) {
+            const exists = filteredTeachers.some(t => t.value === formData.teacher);
+            if (!exists && filteredTeachers.length > 0) {
+                emit("teacher", filteredTeachers[0]?.value);
+            } else if (filteredTeachers.length === 0 && formData.teacher) {
+                emit("teacher", "");
+            }
+        }
+    }, [filteredTeachers, isLoadingTeachers, formData.subject, formData.teacher]);
 
     // [NEW] Kiểm tra xem giáo viên có bận ở lớp khác không
     const getTeacherStatus = (teacherName) => {

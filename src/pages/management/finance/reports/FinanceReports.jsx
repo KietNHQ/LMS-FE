@@ -154,7 +154,7 @@ export default function FinanceReports() {
         } finally {
             setReportsLoading(false);
         }
-    }, [selectedSchoolYear?.id, selectedTerm?.id]);
+    }, [selectedSchoolYear, selectedTerm]);
 
     useEffect(() => { loadReportsData(); }, [loadReportsData]);
 

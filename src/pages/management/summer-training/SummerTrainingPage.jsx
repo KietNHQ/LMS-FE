@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { useSearchParams } from "react-router-dom";
-import { PageHeader, EmptyState } from "../../../components/common";
+import { PageHeader, EmptyState, SchoolYearTermSelector } from "../../../components/common";
 import { useSchoolYearTerm } from "../../../hooks/useSchoolYearTerm";
 import Select from "../../../components/ui/Select/Select";
 import {
@@ -11,6 +11,7 @@ import { toast } from "react-toastify";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { summerTrainingService } from "../../../services/pages/management/summerTraining/summerTrainingService";
 import { classesService } from "../../../services/pages/management/classes/classesService";
+import { resolveSchoolYearId } from "../../../services/shared/schoolYearLookup";
 import "./SummerTrainingPage.css";
 
 const TRAINING_STATUS = {
@@ -37,7 +38,7 @@ const mapStudentData = (s) => ({
 export default function SummerTrainingPage() {
   const [searchParams] = useSearchParams();
   const urlClass = searchParams.get("class");
-  const { selectedSchoolYear } = useSchoolYearTerm();
+  const { selectedSchoolYear, selectedTerm, handleYearArrow, handleTermChange } = useSchoolYearTerm();
   const queryClient = useQueryClient();
 
   const [selectedGrade, setSelectedGrade] = useState("10");
@@ -89,19 +90,40 @@ export default function SummerTrainingPage() {
   }, [classOptions, selectedGrade]);
 
   const { data: trainingData, isLoading, refetch } = useQuery({
-    queryKey: ["summer-training-summary", selectedClass, currentPage],
+    queryKey: ["summer-training-summary", selectedClass, selectedSchoolYear, currentPage],
     queryFn: async () => {
       if (!selectedClass) return null;
-      const res = await summerTrainingService.getSummerTrainingSummary(selectedClass, currentPage, ITEMS_PER_PAGE);
+      const schoolYearId = await resolveSchoolYearId(selectedSchoolYear);
+      // #region agent log
+      fetch('http://127.0.0.1:7327/ingest/2c66a085-4ebf-4354-b3da-5d8073414dc9',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'7cfba0'},body:JSON.stringify({sessionId:'7cfba0',location:'SummerTrainingPage.jsx:trainingQuery',message:'summer training query',data:{selectedClass,selectedSchoolYear,schoolYearId},timestamp:Date.now()})}).catch(()=>{});
+      // #endregion
+      const res = await summerTrainingService.getSummerTrainingSummary(
+        selectedClass, currentPage, ITEMS_PER_PAGE, schoolYearId
+      );
       return res || null;
     },
-    enabled: Boolean(selectedClass),
+    enabled: Boolean(selectedClass && selectedSchoolYear),
     staleTime: 60_000,
+    onSuccess: (data) => {
+      // #region agent log
+      fetch('http://127.0.0.1:7327/ingest/2c66a085-4ebf-4354-b3da-5d8073414dc9',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'7cfba0'},body:JSON.stringify({sessionId:'7cfba0',location:'SummerTrainingPage.jsx:trainingQuery:onSuccess',message:'summer training query success',data:{selectedClass,selectedSchoolYear,total:data?.total,studentsCount:Array.isArray(data?.students)?data.students.length:0},timestamp:Date.now()})}).catch(()=>{});
+      // #endregion
+    },
+    onError: (err) => {
+      // #region agent log
+      fetch('http://127.0.0.1:7327/ingest/2c66a085-4ebf-4354-b3da-5d8073414dc9',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'7cfba0'},body:JSON.stringify({sessionId:'7cfba0',location:'SummerTrainingPage.jsx:trainingQuery:onError',message:'summer training query error',data:{selectedClass,selectedSchoolYear,error:String(err)},timestamp:Date.now()})}).catch(()=>{});
+      // #endregion
+    },
   });
 
   const startTrainingMutation = useMutation({
     mutationFn: async (enrollmentId) => {
-      await summerTrainingService.enrollConditionalStudents(selectedSchoolYear);
+      // Resolve string school year name to numeric ID
+      let syId = selectedSchoolYear;
+      if (typeof syId === "string" && isNaN(Number(syId))) {
+        syId = await resolveSchoolYearId(syId);
+      }
+      await summerTrainingService.enrollConditionalStudents(syId);
     },
     onSuccess: () => {
       toast.success("Đã bắt đầu rèn luyện hè.");
@@ -229,6 +251,14 @@ export default function SummerTrainingPage() {
       <PageHeader
         title="Rèn Luyện Hè"
         subtitle="Quản lý danh sách và theo dõi rèn luyện hè cho học sinh"
+        actions={
+          <SchoolYearTermSelector
+            selectedSchoolYear={selectedSchoolYear}
+            selectedTerm={selectedTerm}
+            onYearChange={handleYearArrow}
+            showTerm={false}
+          />
+        }
       />
 
       {/* Stats Grid */}

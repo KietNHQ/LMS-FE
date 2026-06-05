@@ -1,8 +1,9 @@
-import React, { useState, useCallback } from "react";
-import { FiCheckCircle, FiChevronRight, FiUsers, FiLayers, FiAlertCircle, FiCheck, FiRefreshCw } from "react-icons/fi";
+import React, { useState, useCallback, useEffect } from "react";
+import { FiCheckCircle, FiChevronRight, FiUsers, FiLayers, FiAlertCircle, FiCheck, FiRefreshCw, FiCalendar } from "react-icons/fi";
 import { toast } from "react-toastify";
 import { financeService } from "../../../../../services/pages/management/finance";
 import { studentsService } from "../../../../../services/pages/management/users";
+import { resolveSemester } from "../../../../../services/shared/schoolYearLookup";
 
 export default function ChargeBatchWizard({ onSuccess, schoolYear, term }) {
     const [step, setStep] = useState(1);
@@ -15,6 +16,11 @@ export default function ChargeBatchWizard({ onSuccess, schoolYear, term }) {
     const [selectedStudents, setSelectedStudents] = useState([]);
     const [loadingFees, setLoadingFees] = useState(false);
     const [loadingStudents, setLoadingStudents] = useState(false);
+
+    const [semesterOptions, setSemesterOptions] = useState([]);
+    const [selectedSemester, setSelectedSemester] = useState(null);
+    const [dueDate, setDueDate] = useState("");
+    const [loadingSemesters, setLoadingSemesters] = useState(false);
 
     const targetOptions = [
         { code: "K10", name: "Khối 10", grade: "10" },
@@ -44,6 +50,38 @@ export default function ChargeBatchWizard({ onSuccess, schoolYear, term }) {
         }
     }, []);
 
+    const loadSemesters = useCallback(async () => {
+        if (!schoolYear) return;
+        const syName = typeof schoolYear === "string" ? schoolYear : schoolYear?.name;
+        if (!syName) return;
+        setLoadingSemesters(true);
+        try {
+            const [hk1, hk2] = await Promise.all([
+                resolveSemester(syName, "hk1"),
+                resolveSemester(syName, "hk2"),
+            ]);
+            const options = [];
+            if (hk1) options.push({ ...hk1, label: `Học kỳ 1 (${hk1.name || "HK1"})` });
+            if (hk2) options.push({ ...hk2, label: `Học kỳ 2 (${hk2.name || "HK2"})` });
+            setSemesterOptions(options);
+        } catch (err) {
+            console.error("[ChargeBatchWizard] loadSemesters error:", err);
+        } finally {
+            setLoadingSemesters(false);
+        }
+    }, [schoolYear]);
+
+    useEffect(() => {
+        loadSemesters();
+    }, [loadSemesters]);
+
+    useEffect(() => {
+        if (semesterOptions.length > 0 && !selectedSemester) {
+            const current = semesterOptions.find(o => o.is_current || o.isCurrent) || semesterOptions[0];
+            setSelectedSemester(current);
+        }
+    }, [semesterOptions]);
+
     const loadStudents = useCallback(async () => {
         if (selectedTargets.length === 0) {
             setSelectedStudents([]);
@@ -57,12 +95,12 @@ export default function ChargeBatchWizard({ onSuccess, schoolYear, term }) {
             }).filter(Boolean);
 
             const res = await studentsService.listStudents();
-
             const rows = Array.isArray(res) ? res : [];
 
             const filtered = rows.filter((s) => {
-                const grade = String(s.grade || "").replace("Khối ", "");
-                return grades.includes(grade);
+                if (!s.className) return false;
+                const classGrade = String(s.className).match(/^(\d+)/)?.[1];
+                return grades.includes(classGrade);
             });
             setSelectedStudents(filtered);
         } catch (err) {
@@ -72,6 +110,10 @@ export default function ChargeBatchWizard({ onSuccess, schoolYear, term }) {
         }
     }, [selectedTargets]);
 
+    useEffect(() => {
+        loadStudents();
+    }, [loadStudents]);
+
     const handleOpen = () => {
         loadFees();
         if (selectedTargets.length > 0) {
@@ -79,20 +121,39 @@ export default function ChargeBatchWizard({ onSuccess, schoolYear, term }) {
         }
     };
 
-    React.useEffect(() => {
-        loadStudents();
-    }, [loadStudents]); // eslint-disable-line
-
     const handleNext = () => {
         if (step === 1 && selectedFees.length === 0) {
             toast.warning("Vui lòng chọn ít nhất 1 khoản thu.");
             return;
         }
-        if (step === 2 && selectedTargets.length === 0) {
-            toast.warning("Vui lòng chọn ít nhất 1 đối tượng áp dụng.");
-            return;
-        }
         if (step === 2) {
+            if (selectedTargets.length === 0) {
+                toast.warning("Vui lòng chọn ít nhất 1 đối tượng áp dụng.");
+                return;
+            }
+            if (!selectedSemester) {
+                toast.warning("Vui lòng chọn học kỳ phát hành.");
+                return;
+            }
+            if (!dueDate) {
+                toast.warning("Vui lòng chọn hạn chót đóng tiền.");
+                return;
+            }
+            const semStart = selectedSemester.start_date || selectedSemester.startDate;
+            const semEnd = selectedSemester.end_date || selectedSemester.endDate || selectedSemester.end_date;
+            if (semStart) {
+                const start = new Date(semStart);
+                const end = semEnd ? new Date(semEnd) : new Date(start.getFullYear(), start.getMonth() + 6, 0);
+                const chosen = new Date(dueDate);
+                if (chosen < start) {
+                    toast.error(`Hạn chót phải từ ngày ${start.toLocaleDateString("vi-VN")} (ngày bắt đầu HK).`);
+                    return;
+                }
+                if (chosen > end) {
+                    toast.error(`Hạn chót phải trước ngày ${end.toLocaleDateString("vi-VN")} (ngày kết thúc HK).`);
+                    return;
+                }
+            }
             handleOpen();
         }
         setStep((prev) => prev + 1);
@@ -123,22 +184,30 @@ export default function ChargeBatchWizard({ onSuccess, schoolYear, term }) {
             const debtItems = selectedStudents.flatMap((student) =>
                 selectedFees.map((feeId) => {
                     const fee = feeOptions.find((f) => f.id === feeId);
+                    const studentId = Number(student.studentTableId || student.id);
+                    if (!studentId || isNaN(studentId)) return null;
+                    const amount = fee?.amountValue;
+                    if (!amount || amount <= 0) return null;
                     return {
-                        studentId: student.id,
+                        studentId,
                         feeId,
-                        amount: fee?.amountValue || 0,
-                        dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+                        amount,
+                        dueDate: new Date(dueDate).toISOString(),
                         description: `Phát hành hàng loạt - ${fee?.name || ""}`,
+                        schoolYearId: schoolYear?.id,
+                        semesterId: selectedSemester?.id,
                     };
                 })
-            );
+            ).filter(Boolean);
+
+            if (debtItems.length === 0) {
+                toast.error("Không có công nợ nào hợp lệ để phát hành. Vui lòng kiểm tra lại danh sách học sinh và khoản thu.");
+                setIsPublishing(false);
+                return;
+            }
 
             const res = await financeService.createBatchDebts({
-                body: {
-                    schoolYearId: schoolYear?.id,
-                    semesterId: term?.id,
-                    debts: debtItems,
-                },
+                debts: debtItems,
             });
             if (res?.success) {
                 toast.success(`Đã phát hành ${debtItems.length} công nợ thành công!`);
@@ -147,6 +216,8 @@ export default function ChargeBatchWizard({ onSuccess, schoolYear, term }) {
                 setSelectedFees([]);
                 setSelectedTargets([]);
                 setSelectedStudents([]);
+                setDueDate("");
+                setSelectedSemester(null);
             } else {
                 toast.error(res?.error?.message || "Có lỗi xảy ra khi phát hành.");
             }
@@ -157,6 +228,9 @@ export default function ChargeBatchWizard({ onSuccess, schoolYear, term }) {
             setIsPublishing(false);
         }
     };
+
+    const semStart = selectedSemester ? (selectedSemester.start_date || selectedSemester.startDate) : null;
+    const semEnd = selectedSemester ? (selectedSemester.end_date || selectedSemester.endDate) : null;
 
     return (
         <div className="fee-panel">
@@ -222,6 +296,58 @@ export default function ChargeBatchWizard({ onSuccess, schoolYear, term }) {
                     <div className="wizard-step-2">
                         <h4>Bước 2: Chọn đối tượng áp dụng</h4>
                         <p className="wizard-step-desc">Chọn khối/lớp cần áp dụng. Hệ thống sẽ tự loại các hồ sơ miễn giảm 100%.</p>
+
+                        {/* Học kỳ phát hành */}
+                        <div className="wizard-due-date-row">
+                            <div className="wizard-field-group">
+                                <label className="wizard-field-label">
+                                    <FiCalendar /> Học kỳ phát hành <span className="required">*</span>
+                                </label>
+                                {loadingSemesters ? (
+                                    <span style={{ color: "#64748b", fontSize: "0.85rem" }}>Đang tải học kỳ...</span>
+                                ) : (
+                                    <select
+                                        className="fee-input wizard-semester-select"
+                                        value={selectedSemester?.id || ""}
+                                        onChange={(e) => {
+                                            const found = semesterOptions.find(o => String(o.id) === e.target.value);
+                                            setSelectedSemester(found || null);
+                                            setDueDate("");
+                                        }}
+                                    >
+                                        <option value="">-- Chọn học kỳ --</option>
+                                        {semesterOptions.map((s) => (
+                                            <option key={s.id} value={s.id}>{s.label}</option>
+                                        ))}
+                                    </select>
+                                )}
+                            </div>
+
+                            {/* Hạn chót */}
+                            <div className="wizard-field-group">
+                                <label className="wizard-field-label">
+                                    <FiCalendar /> Hạn chót đóng tiền <span className="required">*</span>
+                                </label>
+                                <input
+                                    type="date"
+                                    className="fee-input"
+                                    value={dueDate}
+                                    min={semStart || ""}
+                                    max={semEnd || ""}
+                                    onChange={(e) => setDueDate(e.target.value)}
+                                    disabled={!selectedSemester}
+                                />
+                                {selectedSemester && (semStart || semEnd) && (
+                                    <span className="wizard-date-hint">
+                                        Chỉ chọn ngày trong: {semStart ? new Date(semStart).toLocaleDateString("vi-VN") : "?"}
+                                        {" → "}
+                                        {semEnd ? new Date(semEnd).toLocaleDateString("vi-VN") : "?"}
+                                    </span>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Khối */}
                         <div className="wizard-target-grid">
                             {targetOptions.map((g) => (
                                 <button
@@ -292,6 +418,16 @@ export default function ChargeBatchWizard({ onSuccess, schoolYear, term }) {
                                 <strong className="primary">{formatMoney(estimatedRevenue)} ₫</strong>
                             </div>
                         </div>
+
+                        {/* Thông tin hạn chót */}
+                        {selectedSemester && dueDate && (
+                            <div className="wizard-due-info">
+                                <FiCalendar />
+                                <span>
+                                    Phát hành cho <strong>{selectedSemester.label}</strong> — Hạn chót: <strong>{new Date(dueDate).toLocaleDateString("vi-VN")}</strong>
+                                </span>
+                            </div>
+                        )}
                     </div>
                 )}
             </div>

@@ -40,7 +40,7 @@ export default function FeeListTab({ schoolYear, term }) {
     const [searchQuery, setSearchQuery] = useState("");
     
     const [currentPage, setCurrentPage] = useState(1);
-    const itemsPerPage = 5;
+    const [totalRecords, setTotalRecords] = useState(0);
 
     const [modalData, setModalData] = useState(null);
     const [amountPaid, setAmountPaid] = useState(0);
@@ -63,11 +63,6 @@ export default function FeeListTab({ schoolYear, term }) {
             const studentData = studentRes?.success ? studentRes.data : (Array.isArray(studentRes) ? studentRes : []);
             const classData = classRes?.success ? classRes.data : (Array.isArray(classRes) ? classRes : []);
             
-            console.log("[FeeListTab] Students loaded:", studentData.length);
-            console.log("[FeeListTab] Classes loaded:", classData.length);
-            console.log("[FeeListTab] Sample student:", studentData[0]);
-            console.log("[FeeListTab] Sample class:", classData[0]);
-            
             setAllStudentsList(studentData);
             setClasses(classData);
         } catch (err) {
@@ -79,30 +74,46 @@ export default function FeeListTab({ schoolYear, term }) {
         }
     };
 
+    // Build Sequential Class Options matching chosen Grade Level
+    const classOptions = useMemo(() => {
+        if (!selectedGrade) return [];
+        return classes
+            .filter(c => c.grade === `Khối ${selectedGrade}`)
+            .map(c => ({ value: c.id, label: `Lớp ${c.name}` }));
+    }, [classes, selectedGrade]);
+
     // Load debt accounts whenever context changes
     const loadDebts = async () => {
         setIsLoading(true);
         try {
             const res = await financeService.listDebts({
                 params: {
-                    limit: 2000
+                    schoolYearId: schoolYear,
+                    semesterId: term,
+                    page: currentPage,
+                    limit: 10,
+                    status: filterStatus !== "all" ? filterStatus : undefined,
+                    grade: filterScope === "grade" ? selectedGrade : undefined,
+                    classId: selectedClass || undefined,
+                    search: searchQuery || undefined,
                 }
             });
-            console.log("[FeeListTab] Debts API response:", res);
-            
+
             if (res?.success && res.data) {
-                setDebts(res.data);
-                console.log("[FeeListTab] Debts loaded:", res.data.length);
+                setDebts(Array.isArray(res.data) ? res.data : []);
+                const total = res.pagination?.total ?? res.data?.total ?? 0;
+                setTotalRecords(total);
             } else if (Array.isArray(res)) {
                 setDebts(res);
-                console.log("[FeeListTab] Debts loaded (array):", res.length);
+                setTotalRecords(res.length);
             } else {
-                console.log("[FeeListTab] No debts data found");
                 setDebts([]);
+                setTotalRecords(0);
             }
         } catch (err) {
             console.error("Failed to load student debts:", err);
             setDebts([]);
+            setTotalRecords(0);
         } finally {
             setIsLoading(false);
         }
@@ -113,24 +124,20 @@ export default function FeeListTab({ schoolYear, term }) {
     }, []);
 
     useEffect(() => {
-        loadDebts();
-    }, [schoolYear, term]);
+        setCurrentPage(1);
+    }, [schoolYear, term, filterStatus, filterScope, selectedGrade, selectedClass, searchQuery]);
 
-    // Build Sequential Class Options matching chosen Grade Level
-    const classOptions = useMemo(() => {
-        if (!selectedGrade) return [];
-        return classes
-            .filter(c => c.grade === `Khối ${selectedGrade}`)
-            .map(c => ({ value: c.id, label: `Lớp ${c.name}` }));
-    }, [classes, selectedGrade]);
+    useEffect(() => {
+        loadDebts();
+    }, [currentPage, schoolYear, term, filterStatus, filterScope, selectedGrade, selectedClass, searchQuery]);
 
     // Parse backend debt items to UI friendly formats
     const parsedStudents = useMemo(() => {
-        if (!debts.length || !allStudentsList.length) {
-            // If no students list, just use debt data directly
-            if (!allStudentsList.length && debts.length) {
-                console.log("[FeeListTab] No students list, mapping debts directly:", debts.slice(0, 3));
-                return debts.map((d, idx) => ({
+        if (!debts.length) return [];
+        
+        // If students not loaded yet but debts are, use debt data directly
+        if (!allStudentsList.length) {
+            return debts.map((d, idx) => ({
                     id: d.id,
                     studentCode: d.student_code || d.studentCode || `HS${d.student_id || idx + 1}`,
                     studentId: d.student_id || d.studentId || idx + 1,
@@ -143,8 +150,6 @@ export default function FeeListTab({ schoolYear, term }) {
                     paidAmount: d.paid_amount ?? d.paidAmount ?? 0,
                     status: d.status || "unpaid"
                 }));
-            }
-            return [];
         }
 
         const studentMap = {};
@@ -163,12 +168,12 @@ export default function FeeListTab({ schoolYear, term }) {
             // Support multiple field name formats from debt API
             const sid = d.student_id || d.studentId || d.student?.id;
             const studentCode = d.student_code || d.studentCode || d.student?.studentCode || d.student?.code || "";
-            const studentName = d.student_name || d.studentName || d.student?.fullName || d.student?.name || "Học sinh";
             const paidAmount = d.paid_amount ?? d.paidAmount ?? 0;
             const debtAmount = d.amount ?? d.totalAmount ?? 0;
             const debtStatus = d.status || "unpaid";
             
             const studentProfile = studentMap[sid] || studentMap[studentCode];
+            const studentName = studentProfile?.name || d.student_name || d.studentName || d.student?.fullName || d.student?.name || "Học sinh";
             const className = studentProfile?.className || studentProfile?.class_name || d.className || d.class?.name || "Chưa phân lớp";
             const grade = className.match(/\d+/) ? className.match(/\d+/)[0] : "10";
 
@@ -188,48 +193,7 @@ export default function FeeListTab({ schoolYear, term }) {
         });
     }, [debts, allStudentsList]);
 
-    // Apply filters matching search query, scope, and status
-    const filteredStudents = useMemo(() => {
-        return parsedStudents.filter(s => {
-            // More flexible status matching
-            let matchesStatus = true;
-            if (filterStatus !== "all") {
-                const statusLower = (s.status || "").toLowerCase();
-                if (filterStatus === "unpaid") {
-                    matchesStatus = statusLower === "unpaid" || statusLower === "pending" || statusLower === "open" || !statusLower;
-                } else if (filterStatus === "paid") {
-                    matchesStatus = statusLower === "paid" || statusLower === "completed";
-                } else if (filterStatus === "overdue") {
-                    matchesStatus = statusLower === "overdue" || statusLower === "expired";
-                }
-            }
-            
-            let matchesScope = true;
-            if (filterScope === "grade") {
-                if (selectedGrade && s.grade !== selectedGrade) {
-                    matchesScope = false;
-                }
-                if (selectedClass) {
-                    const targetClassObj = classes.find(c => c.id === Number(selectedClass));
-                    if (targetClassObj && s.class !== targetClassObj.name) {
-                        matchesScope = false;
-                    }
-                }
-            }
-
-            const matchesSearch = searchQuery === "" ||
-                s.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                s.studentCode.toLowerCase().includes(searchQuery.toLowerCase());
-
-            return matchesStatus && matchesScope && matchesSearch;
-        });
-    }, [parsedStudents, filterStatus, filterScope, selectedGrade, selectedClass, searchQuery, classes]);
-
-    // Pagination Logic
-    const totalPages = Math.ceil(filteredStudents.length / itemsPerPage);
-    const paginatedStudents = useMemo(() => {
-        return filteredStudents.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
-    }, [filteredStudents, currentPage]);
+    const totalPages = Math.ceil(totalRecords / 10);
 
     // Reset quick collection overlay states when opening
     const handleOpenModal = (student) => {
@@ -286,7 +250,7 @@ export default function FeeListTab({ schoolYear, term }) {
     const handleSignInvoice = async (student) => {
         setInvoiceLoading(true);
         try {
-            const res = await financeService.signInvoice(student.id);
+            const res = await financeService.signInvoice(student.studentId);
             if (res?.success) {
                 toast.success(`Đã ký hóa đơn cho ${student.name}.`);
                 setInvoiceModal(student);
@@ -304,7 +268,7 @@ export default function FeeListTab({ schoolYear, term }) {
     const handleSendInvoice = async (student) => {
         setInvoiceLoading2(true);
         try {
-            const res = await financeService.sendInvoice(student.id, { body: {} });
+            const res = await financeService.sendInvoice(student.studentId, { body: {} });
             if (res?.success) {
                 toast.success(`Đã gửi hóa đơn cho ${student.name}.`);
             } else {
@@ -411,7 +375,7 @@ export default function FeeListTab({ schoolYear, term }) {
                         </tr>
                     </thead>
                     <tbody>
-                        {paginatedStudents.map(s => (
+                        {parsedStudents.map(s => (
                             <tr key={s.id}>
                                 <td>{s.studentCode || s.id}</td>
                                 <td><strong>{s.name}</strong></td>
@@ -463,7 +427,7 @@ export default function FeeListTab({ schoolYear, term }) {
                                 </td>
                             </tr>
                         ))}
-                        {paginatedStudents.length === 0 && (
+                        {parsedStudents.length === 0 && (
                             <tr>
                                 <td colSpan="6" style={{ textAlign: 'center', padding: '3rem', color: '#64748b' }}>
                                     Không tìm thấy học sinh nào phù hợp với bộ lọc.
