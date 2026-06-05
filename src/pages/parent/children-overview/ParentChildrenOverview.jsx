@@ -62,17 +62,17 @@ const transformGradesData = (gradesArray) => {
             }
         }
 
-        const name = (g.grade_item_name || "").toLowerCase()
+        const category = (g.category || "").toLowerCase()
         const score = Number(g.score)
-        if (name.includes("miệng") || name.includes("oral")) subjectMap[key].oral = score
-        else if (name.includes("15") || name.includes("15p") || name.includes("15phut")) subjectMap[key].test15 = score
-        else if (name.includes("giữa") || name.includes("midterm") || name.includes("gk")) subjectMap[key].midterm = score
-        else if (name.includes("cuối") || name.includes("final") || name.includes("ck")) subjectMap[key].final = score
+        if (category.includes("miệng") || category.includes("oral")) subjectMap[key].oral = score
+        else if (category.includes("15") || category.includes("15phut")) subjectMap[key].test15 = score
+        else if (category.includes("giữa") || category.includes("midterm") || category.includes("gk")) subjectMap[key].midterm = score
+        else if (category.includes("cuối") || category.includes("final") || category.includes("ck")) subjectMap[key].final = score
         else {
             if (subjectMap[key].oral == null) subjectMap[key].oral = score
             else if (subjectMap[key].test15 == null) subjectMap[key].test15 = score
             else if (subjectMap[key].midterm == null) subjectMap[key].midterm = score
-            else subjectMap[key].final = score
+            else if (subjectMap[key].final == null) subjectMap[key].final = score
         }
     }
 
