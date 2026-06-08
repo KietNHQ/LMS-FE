@@ -24,6 +24,7 @@ const ManagementDashboard = lazy(() => import("../pages/management/dashboard/ind
 const ManagementUsers = lazy(() => import("../pages/management/users/ManagementUsers"));
 const ManagementClasses = lazy(() => import("../pages/management/classes/ManagementClasses"));
 const ManagementClassDetail = lazy(() => import("../pages/management/classes/components/classDetailSection/classDetailSection"));
+const ClassAssignment = lazy(() => import("../pages/management/classes/ClassAssignment"));
 const ManagementAcademicDashboard = lazy(() => import("../pages/management/academic/dashboard/VpAcademicDashboard"));
 const ManagementDiscipline = lazy(() => import("../pages/management/discipline/index.js"));
 const ManagementDisciplineReports = lazy(() => import("../pages/management/discipline/ManagementDisciplineReports"));
@@ -52,6 +53,7 @@ const ManagementReports = lazy(() => import("../pages/management/reports/Managem
 const ManagementChat = lazy(() => import("../pages/management/chat/ManagementChat"));
 const ManagementPromotion = lazy(() => import("../pages/management/promotion/PromotionPage"));
 const ManagementSummerTraining = lazy(() => import("../pages/management/summer-training/SummerTrainingPage"));
+const ManagementBuildings = lazy(() => import("../pages/management/buildings/ManagementBuildings"));
 
 
 /* ADMIN SUB-ROLE LAYOUTS (đã xóa — chuyển sang /management) */
@@ -132,6 +134,7 @@ const ParentNotifications = lazy(
 );
 const ParentMessages = lazy(() => import("../pages/parent/messages/ParentMessages"));
 const ParentPayments = lazy(() => import("../pages/parent/payments/ParentPayments"));
+const PaymentConfirm = lazy(() => import("../pages/parent/payments/PaymentConfirm"));
 const ParentSupport = lazy(() => import("../pages/parent/support/ParentSupport"));
 
 /**
@@ -234,6 +237,7 @@ export default function AppRoutes() {
         <Route path="dashboard"    element={<ManagementDashboard />} />
         <Route path="users"        element={<ManagementUsers />} />
         <Route path="classes"      element={<ManagementClasses />} />
+        <Route path="classes/xeplop" element={<ClassAssignment />} />
         <Route path="classes/:classId" element={<ManagementClassDetail />} />
         <Route path="academic"    element={<Navigate to="academic/dashboard" replace />} />
         <Route path="academic/dashboard" element={<ManagementAcademicDashboard />} />
@@ -264,6 +268,7 @@ export default function AppRoutes() {
         <Route path="chat"         element={<ManagementChat />} />
         <Route path="promotion"   element={<ManagementPromotion />} />
         <Route path="summer-training" element={<ManagementSummerTraining />} />
+        <Route path="buildings"   element={<ManagementBuildings />} />
       </Route>
 
       {/* ── Redirect tương thích ngược ── */}
@@ -331,6 +336,7 @@ export default function AppRoutes() {
             <Route path="notifications" element={<ParentNotifications />} />
             <Route path="messages" element={<ParentMessages />} />
             <Route path="payments" element={<ParentPayments />} />
+            <Route path="payments/confirm" element={<PaymentConfirm />} />
             <Route path="support" element={<ParentSupport />} />
         </Route>
 

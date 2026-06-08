@@ -246,6 +246,29 @@ export default function SummerTrainingPage() {
     }
   };
 
+  const handleEnrollAndCompleteAll = async () => {
+    try {
+      let syId = selectedSchoolYear;
+      if (typeof syId === "string" && isNaN(Number(syId))) {
+        syId = await resolveSchoolYearId(syId);
+      }
+      // Step 1: Ghi danh tất cả HS có điều kiện
+      await summerTrainingService.enrollConditionalStudents(syId);
+      queryClient.invalidateQueries(["summer-training-summary"]);
+      // Step 2: Hoàn thành tất cả HS đang ở trạng thái enrolled/in_progress trong danh sách hiện tại
+      const toComplete = studentList.filter(
+        (s) => s.status === "enrolled" || s.status === "in_progress" || s.status === "not_started"
+      );
+      for (const student of toComplete) {
+        await summerTrainingService.completeSummerTraining(student.enrollmentId, true, 21);
+      }
+      queryClient.invalidateQueries(["summer-training-summary"]);
+      toast.success(`Đã ghi danh và hoàn thành rèn luyện hè cho ${toComplete.length} học sinh.`);
+    } catch {
+      toast.error("Không thể hoàn thành rèn luyện hè.");
+    }
+  };
+
   return (
     <div className="summer-training-page">
       <PageHeader
@@ -328,12 +351,22 @@ export default function SummerTrainingPage() {
               type="text"
               placeholder="Tên hoặc mã HS..."
               value={searchTerm}
-              onChange={(e) => {
+                onChange={(e) => {
                 setSearchTerm(e.target.value);
                 setCurrentPage(1);
               }}
             />
           </div>
+        </div>
+        <div className="summer-actions">
+          <button
+            className="btn-enroll-all"
+            onClick={handleEnrollAndCompleteAll}
+            disabled={!selectedClass || startTrainingMutation.isPending}
+          >
+            <FiSun />
+            Ghi danh & Hoàn thành tất cả
+          </button>
         </div>
       </div>
 

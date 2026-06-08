@@ -418,6 +418,7 @@ export default function ManagementTimetable() {
                     value: c.name,
                     label: c.name,
                     gradeNumber: `${c.grade || ""}`.replace(/^khối\s*/i, "").trim(),
+                    buildingName: c.building_name || null,
                 }));
 
                 setRealSubjects(subjects);
@@ -1005,6 +1006,7 @@ export default function ManagementTimetable() {
                 onSearchChange={setSearchTerm}
                 onCreateSession={openCreateModal}
                 onReset={handleResetTimetable}
+                selectedBuildingName={selectedClassRecord?.buildingName}
             >
                 <SchoolYearTermSelector
                     selectedSchoolYear={selectedSchoolYear}

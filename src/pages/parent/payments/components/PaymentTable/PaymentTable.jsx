@@ -3,6 +3,7 @@ import "./PaymentTable.css";
 import { FiCheckCircle } from "react-icons/fi";
 import StatusBadge from "../../../../../components/common/StatusBadge/StatusBadge";
 import { formatVnd } from "../../../../../services/shared/payment/paymentShared";
+import StripeCheckoutButton from "../StripeCheckout/StripeCheckoutButton";
 
 export default function PaymentTable({
     payment,
@@ -10,6 +11,9 @@ export default function PaymentTable({
     onOpenPayment,
     onExportPdf,
     onOpenDetail,
+    onStripeSuccess,
+    onStripeError,
+    onBeforeStripeRedirect,
 }) {
     // Debug log
     if (payment && payment.id === 91) {
@@ -96,6 +100,12 @@ export default function PaymentTable({
                         <button type="button" className="pay-now-btn" onClick={withStop(onOpenPayment)}>
                             Thanh toán QR
                         </button>
+                        <StripeCheckoutButton
+                            payment={payment}
+                            onSuccess={onStripeSuccess}
+                            onError={onStripeError}
+                            onBeforeRedirect={onBeforeStripeRedirect}
+                        />
                     </div>
                 )}
             </div>

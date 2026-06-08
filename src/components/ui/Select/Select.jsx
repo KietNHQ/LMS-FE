@@ -46,7 +46,6 @@ export default function Select({
       disabled: option.disabled || false,
       color: option.color || null,
     }));
-    console.log(`[Select:${label}] options:`, result.length, result.slice(0, 3));
     return result;
   }, [options, label]);
 

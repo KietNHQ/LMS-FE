@@ -1,0 +1,27 @@
+.btn-stripe-checkout {
+  background: #635BFF;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 16px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: background 0.2s ease;
+}
+
+.btn-stripe-checkout:hover:not(:disabled) {
+  background: #4a41d4;
+}
+
+.btn-stripe-checkout:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
+
+.btn-stripe-checkout svg {
+  flex-shrink: 0;
+}

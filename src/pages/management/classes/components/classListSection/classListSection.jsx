@@ -1,7 +1,7 @@
 import React from "react";
 import { FiEdit2, FiTrash2, FiBookOpen } from "react-icons/fi";
 import { PiStudent } from "react-icons/pi";
-import { LuSchool } from "react-icons/lu";
+import { LuSchool, LuBuilding2 } from "react-icons/lu";
 import "./classListSection.css";
 
 const colorMap = {
@@ -14,8 +14,8 @@ export default function ClassListSection({ classes, onView, onEdit, onDelete }) 
     return (
         <div className="class-list-grid">
             {classes.map((item) => (
-                <article 
-                    className="class-list-card" 
+                <article
+                    className="class-list-card"
                     key={item.id}
                     onClick={() => onView(item)}
                     style={{ cursor: "pointer" }}
@@ -30,6 +30,12 @@ export default function ClassListSection({ classes, onView, onEdit, onDelete }) 
                             <p>
                                 {item.grade} • {item.year}
                             </p>
+                            {item.building_name && (
+                                <p className="class-list-card__building">
+                                    <LuBuilding2 />
+                                    {item.building_name}
+                                </p>
+                            )}
                         </div>
 
                         <div className="class-list-card__actions" onClick={(e) => e.stopPropagation()}>
@@ -44,26 +50,26 @@ export default function ClassListSection({ classes, onView, onEdit, onDelete }) 
 
                     <div className="class-list-card__meta">
                         <div className="meta-row">
-              <span className="meta-left">
-                <PiStudent />
-                Học sinh
-              </span>
-                            <strong>{item.students}</strong>
+                            <span className="meta-left">
+                                <PiStudent />
+                                Học sinh
+                            </span>
+                            <strong>{item.students}{item.maxStudents ? `/${item.maxStudents}` : ""}</strong>
                         </div>
 
                         <div className="meta-row">
-              <span className="meta-left">
-                <PiStudent />
-                Đã đóng học phí
-              </span>
+                            <span className="meta-left">
+                                <PiStudent />
+                                Đã đóng học phí
+                            </span>
                             <strong>{item.paidStudents ?? 0}/{item.students}</strong>
                         </div>
 
                         <div className="meta-row">
-              <span className="meta-left">
-                <FiBookOpen />
-                Môn học
-              </span>
+                            <span className="meta-left">
+                                <FiBookOpen />
+                                Môn học
+                            </span>
                             <strong>{item.subjects.length}</strong>
                         </div>
                     </div>

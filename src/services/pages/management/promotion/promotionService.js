@@ -53,6 +53,19 @@ export const singlePromote = async (enrollmentId) => {
 };
 
 /**
+ * Xét lên lớp THỦ CÔNG cho một học sinh — bypass summer training và conditional status.
+ * @param {number} enrollmentId - ID ghi danh
+ * @param {string} reason       - Lý do override (bắt buộc)
+ */
+export const manualPromote = async (enrollmentId, reason) => {
+  const response = await axiosClient.post(
+    `/promotion/student/${enrollmentId}/manual-promote`,
+    { reason },
+  );
+  return response;
+};
+
+/**
  * Lấy trạng thái khóa điểm của lớp cho trang xét lên lớp
  * @param {number} classId - ID lớp
  * @param {number} hk1SemesterId - ID học kỳ 1
@@ -112,6 +125,7 @@ export const promotionService = {
   getClassPromotionSummary,
   bulkPromote,
   singlePromote,
+  manualPromote,
   getLockStatus,
   getFinanceCheck,
   graduateClass,

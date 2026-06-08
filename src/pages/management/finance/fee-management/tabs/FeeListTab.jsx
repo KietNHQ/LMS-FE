@@ -74,11 +74,11 @@ export default function FeeListTab({ schoolYear, term }) {
         }
     };
 
-    // Build Sequential Class Options matching chosen Grade Level
+    // Build Sequential Class Options matching chosen Grade Level (active classes only)
     const classOptions = useMemo(() => {
         if (!selectedGrade) return [];
         return classes
-            .filter(c => c.grade === `Khối ${selectedGrade}`)
+            .filter(c => c.grade === `Khối ${selectedGrade}` && c.status !== "inactive")
             .map(c => ({ value: c.id, label: `Lớp ${c.name}` }));
     }, [classes, selectedGrade]);
 

@@ -9,6 +9,7 @@ import { parentService } from "../../../services/pages/parent/parentService";
 import PaymentSummaryCard from "./components/PaymentSummaryCard/PaymentSummaryCard";
 import PaymentTable from "./components/PaymentTable/PaymentTable";
 import InvoiceHistory from "./components/InvoiceHistory/InvoiceHistory";
+import StripeStatusChecker from "./components/StripeCheckout/StripeStatusChecker";
 import StatusBadge from "../../../components/common/StatusBadge/StatusBadge";
 import {
     PAYMENT_STORAGE_KEYS,
@@ -78,6 +79,60 @@ function deriveSemester(dueDate) {
     } else {
         return "Học kỳ 2";
     }
+}
+
+/**
+ * Map a raw backend invoice row to the frontend payment shape.
+ * Used by both the initial fetch and the sync effect.
+ */
+function mapBackendInvoiceToPayment(inv) {
+    const dueDate = inv.due_date || inv.fee_due_date || "";
+    const schoolYear = inv.school_year_name
+        || deriveSchoolYear(dueDate)
+        || (inv.school_year_id ? String(inv.school_year_id) : "");
+
+    const semester = inv.semester_name
+        || (inv.semester_id ? `Học kỳ ${inv.semester_id}` : null)
+        || deriveSemester(dueDate);
+
+    const amount = parseFloat(inv.amount || 0);
+    const discountAmount = parseFloat(inv.discount_amount || 0);
+    const rawPaidAmount = parseFloat(inv.paid_amount || 0);
+    const finalAmount = Math.max(amount - discountAmount, 0);
+    const isPaid = inv.status === "paid";
+    const paidAmount = isPaid && rawPaidAmount === 0 ? finalAmount : rawPaidAmount;
+
+    return {
+        id: inv.id,
+        title: inv.fee_name || "Học phí",
+        term: semester,
+        schoolYear,
+        grade: "",
+        className: inv.class_name || "",
+        childName: inv.student_name || "",
+        deadline: dueDate,
+        feeItems: [],
+        description: inv.description || "",
+        discountCode: inv.discount_code || "",
+        discountAmount,
+        status: inv.status || "unpaid",
+        paidDate: inv.paid_date || "",
+        paidAmount,
+        invoiceCode: inv.invoice_no || inv.invoice_code || "",
+        amount,
+        feeAmount: parseFloat(inv.fee_amount || 0),
+        feeId: inv.fee_id,
+        studentId: inv.student_id,
+        finalAmount,
+        originalAmount: amount,
+        breakdown: [
+            { key: "original", label: "Số tiền gốc", amount },
+            { key: "deduction", label: "Giảm giá", amount: discountAmount },
+            { key: "total", label: "Tổng cộng", amount: finalAmount },
+            { key: "paid", label: "Đã thanh toán", amount: paidAmount },
+            { key: "remaining", label: "Còn lại", amount: Math.max(finalAmount - paidAmount, 0) },
+        ],
+    };
 }
 
 function getFallbackPayments() {
@@ -252,59 +307,7 @@ export default function ParentPayments() {
                 if (paymentArray.length > 0) {
                     console.log("💳 Sample raw invoice from API:", JSON.stringify(paymentArray[0], null, 2));
 
-                    // Map backend fields to FE expected format
-                    const mappedPayments = paymentArray.map(inv => {
-                        const dueDate = inv.due_date || inv.fee_due_date || "";
-                        const schoolYear = inv.school_year_name 
-                            || deriveSchoolYear(dueDate) 
-                            || (inv.school_year_id ? String(inv.school_year_id) : "");
-                        
-                        // Derive semester from due date if not provided
-                        const semester = inv.semester_name 
-                            || (inv.semester_id ? `Học kỳ ${inv.semester_id}` : null)
-                            || deriveSemester(dueDate);
-                        
-                        const amount = parseFloat(inv.amount || 0);
-                        const discountAmount = parseFloat(inv.discount_amount || 0);
-                        const rawPaidAmount = parseFloat(inv.paid_amount || 0);
-                        const finalAmount = Math.max(amount - discountAmount, 0);
-                        // Fix: if status is "paid" but paid_amount is 0, show full amount as paid
-                        const isPaid = inv.status === "paid";
-                        const paidAmount = isPaid && rawPaidAmount === 0 ? finalAmount : rawPaidAmount;
-                        
-                        return {
-                            id: inv.id,
-                            title: inv.fee_name || "Học phí",
-                            term: semester,
-                            schoolYear,
-                            grade: "",
-                            className: inv.class_name || "",
-                            childName: inv.student_name || "",
-                            deadline: dueDate,
-                            feeItems: [],
-                            description: inv.description || "",
-                            discountCode: inv.discount_code || "",
-                            discountAmount,
-                            status: inv.status || "unpaid",
-                            paidDate: inv.paid_date || "",
-                            paidAmount,
-                            invoiceCode: inv.invoice_no || inv.invoice_code || "",
-                            amount,
-                            feeAmount: parseFloat(inv.fee_amount || 0),
-                            feeId: inv.fee_id,
-                            studentId: inv.student_id,
-                            // Computed fields
-                            finalAmount,
-                            originalAmount: amount,
-                            breakdown: [
-                                { key: "original", label: "Số tiền gốc", amount },
-                                { key: "deduction", label: "Giảm giá", amount: discountAmount },
-                                { key: "total", label: "Tổng cộng", amount: finalAmount },
-                                { key: "paid", label: "Đã thanh toán", amount: paidAmount },
-                                { key: "remaining", label: "Còn lại", amount: Math.max(finalAmount - paidAmount, 0) },
-                            ],
-                        };
-                    });
+                    const mappedPayments = paymentArray.map(mapBackendInvoiceToPayment);
 
                     console.log("💳 Mapped payments sample:", mappedPayments[0]);
                     console.log("💳 All mapped schoolYears:", mappedPayments.map(p => p.schoolYear));
@@ -329,15 +332,34 @@ export default function ParentPayments() {
     }, []);
 
     useEffect(() => {
-        const handleSync = () => {
+        const handleSync = async () => {
+            try {
+                const response = await parentService.listPayments({ mock: false });
+                const responseData = response.data || {};
+                const invoices = responseData.invoices || [];
+
+                if (Array.isArray(invoices) && invoices.length > 0) {
+                    const mapped = invoices.map(mapBackendInvoiceToPayment);
+                    saveJson(PAYMENT_STORAGE_KEYS.PARENT_RECORDS, mapped);
+                    setPaymentList(mapped);
+                    return;
+                }
+            } catch (error) {
+                console.error("Failed to sync parent payments from API:", error);
+            }
+
             const stored = loadJson(PAYMENT_STORAGE_KEYS.PARENT_RECORDS, []);
             if (stored.length) {
-                setPaymentList(normalizePaymentList(stored));
+                setPaymentList(stored);
             }
         };
 
         window.addEventListener("admin-payment-records-updated", handleSync);
-        return () => window.removeEventListener("admin-payment-records-updated", handleSync);
+        window.addEventListener("parent-payment-confirmed", handleSync);
+        return () => {
+            window.removeEventListener("admin-payment-records-updated", handleSync);
+            window.removeEventListener("parent-payment-confirmed", handleSync);
+        };
     }, []);
 
     const childOptions = useMemo(
@@ -688,6 +710,12 @@ export default function ParentPayments() {
                         onOpenPayment={() => openQrDialog(item.id)}
                         onExportPdf={() => exportPdf(item)}
                         onOpenDetail={() => openDetailDialog(item.id)}
+                        onStripeSuccess={() => {}}
+                        onBeforeStripeRedirect={(payment) => {
+                            setSelectedPaymentId(payment.id);
+                            setIsQrDialogOpen(false);
+                        }}
+                        onStripeError={(msg) => toast.error(msg)}
                     />
                 );
                 })}
@@ -811,6 +839,8 @@ export default function ParentPayments() {
                     </div>
                 ) : null}
             </Modal>
+
+            <StripeStatusChecker onStatusUpdate={() => {}} />
         </div>
     );
 }

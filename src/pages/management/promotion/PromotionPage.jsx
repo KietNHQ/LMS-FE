@@ -1,11 +1,11 @@
 import { useState, useEffect, useMemo } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, Link } from "react-router-dom";
 import { PageHeader, EmptyState, SchoolYearTermSelector } from "../../../components/common";
 import { useSchoolYearTerm } from "../../../hooks/useSchoolYearTerm";
 import Select from "../../../components/ui/Select/Select";
 import {
   FiAward, FiCheckCircle, FiXCircle, FiAlertTriangle, FiChevronRight,
-  FiDownload, FiEye, FiCheck, FiX, FiRotateCcw, FiChevronLeft
+  FiDownload, FiEye, FiCheck, FiX, FiRotateCcw, FiChevronLeft, FiLock
 } from "react-icons/fi";
 import { toast } from "react-toastify";
 import { useQuery, useMutation } from "@tanstack/react-query";
@@ -28,10 +28,12 @@ const mapStudentData = (s) => ({
   studentId: s.studentId || s.student_id,
   studentCode: s.studentCode || s.student_code,
   studentName: s.studentName || s.student_name || "",
-  annualGpa: s.annualGpa ?? s.annual_gpa ?? s.gpa ?? null,
-  hk1Conduct: s.hk1Conduct || s.hk1_conduct || s.conduct_hk1 || "",
-  hk2Conduct: s.hk2Conduct || s.hk2_conduct || s.conduct_hk2 || "",
-  annualConduct: s.annualConduct || s.annual_conduct || s.conduct_annual || "",
+  hk1Avg: s.hk1Avg ?? s.hk1_avg ?? null,
+  hk2Avg: s.hk2Avg ?? s.hk2_avg ?? null,
+  annualAvg: s.annualAvg ?? s.annual_avg ?? null,
+  hk1Conduct: s.hk1Level || s.hk1_conduct || s.conduct_hk1 || "",
+  hk2Conduct: s.hk2Level || s.hk2_conduct || s.conduct_hk2 || "",
+  annualConduct: s.annualConductLevel || s.annual_conduct || s.conduct_annual || "",
   absentDays: s.absentDays ?? s.absent_days ?? 0,
   status: s.status || s.promotionStatus || "pending",
   note: s.note || s.notes || "",
@@ -63,6 +65,7 @@ export default function PromotionPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedStudents, setSelectedStudents] = useState(new Set());
   const [detailModal, setDetailModal] = useState(null);
+  const [manualPromoteModal, setManualPromoteModal] = useState(null); // { student, reason }
   const [hk1Id, setHk1Id] = useState(null);
   const [hk2Id, setHk2Id] = useState(null);
   const [financeModal, setFinanceModal] = useState(null);
@@ -327,6 +330,21 @@ export default function PromotionPage() {
     rollbackMutation.mutate(reason || "Hủy lên lớp thủ công");
   };
 
+  const manualPromoteMutation = useMutation({
+    mutationFn: async ({ enrollmentId, reason }) => {
+      return promotionService.manualPromote(enrollmentId, reason);
+    },
+    onSuccess: (data) => {
+      const res = data?.data || data || {};
+      toast.success(res?.data?.message || "Đã xét lên lớp thủ công.");
+      setManualPromoteModal(null);
+      refetch();
+    },
+    onError: () => {
+      toast.error("Không thể xét lên lớp thủ công.");
+    },
+  });
+
   const exportToExcel = () => {
     toast.info("Đang xuất Excel...");
   };
@@ -474,10 +492,10 @@ export default function PromotionPage() {
                   />
                 </th>
                 <th className="col-name">Họ tên học sinh</th>
+                <th className="col-gpa">Điểm HK1</th>
+                <th className="col-gpa">Điểm HK2</th>
                 <th className="col-gpa">Điểm TB cả năm</th>
-                <th className="col-conduct">HK1</th>
-                <th className="col-conduct">HK2</th>
-                <th className="col-conduct">Cả năm</th>
+                <th className="col-conduct">Hạnh kiểm</th>
                 <th className="col-absent">Ngày nghỉ</th>
                 <th className="col-next">Lớp năm sau</th>
                 <th className="col-status">Trạng thái</th>
@@ -511,15 +529,29 @@ export default function PromotionPage() {
                           <small>{student.studentCode}</small>
                         </div>
                         {isSummerTraining && (
-                          <span className="summer-badge" title="Cần rèn luyện hè">
+                          <Link
+                            to={`/management/summer-training?class=${selectedClass}`}
+                            className="summer-badge-link"
+                            title="Chuyển sang rèn luyện hè"
+                          >
                             🔶
-                          </span>
+                          </Link>
                         )}
                       </div>
                     </td>
                     <td className="col-gpa">
-                      <span className={`gpa-value ${student.annualGpa !== null ? (student.annualGpa >= 5 ? "pass" : "fail") : ""}`}>
-                        {student.annualGpa !== null ? student.annualGpa.toFixed(2) : "—"}
+                      <span className={`gpa-value ${student.hk1Avg !== null ? (student.hk1Avg >= 5 ? "pass" : "fail") : ""}`}>
+                        {student.hk1Avg !== null ? student.hk1Avg.toFixed(2) : "—"}
+                      </span>
+                    </td>
+                    <td className="col-gpa">
+                      <span className={`gpa-value ${student.hk2Avg !== null ? (student.hk2Avg >= 5 ? "pass" : "fail") : ""}`}>
+                        {student.hk2Avg !== null ? student.hk2Avg.toFixed(2) : "—"}
+                      </span>
+                    </td>
+                    <td className="col-gpa">
+                      <span className={`gpa-value ${student.annualAvg !== null ? (student.annualAvg >= 5 ? "pass" : "fail") : ""}`}>
+                        {student.annualAvg !== null ? student.annualAvg.toFixed(2) : "—"}
                       </span>
                     </td>
                     <td className="col-conduct">
@@ -560,6 +592,15 @@ export default function PromotionPage() {
                             title="Lên lớp"
                           >
                             <FiChevronRight />
+                          </button>
+                        )}
+                        {!canSelect && student.status !== "promoted" && student.status !== "GRADUATED" && (
+                          <button
+                            className="btn-promote-override"
+                            onClick={() => setManualPromoteModal({ student, reason: "" })}
+                            title="Xét lên lớp thủ công"
+                          >
+                            <FiLock />
                           </button>
                         )}
                       </div>
@@ -607,8 +648,16 @@ export default function PromotionPage() {
               </div>
               <div className="detail-grid">
                 <div className="detail-item">
+                  <label>Điểm TB HK1</label>
+                  <span>{detailModal.hk1Avg !== null ? detailModal.hk1Avg.toFixed(2) : "—"}</span>
+                </div>
+                <div className="detail-item">
+                  <label>Điểm TB HK2</label>
+                  <span>{detailModal.hk2Avg !== null ? detailModal.hk2Avg.toFixed(2) : "—"}</span>
+                </div>
+                <div className="detail-item">
                   <label>Điểm TB cả năm</label>
-                  <span>{detailModal.annualGpa !== null ? detailModal.annualGpa.toFixed(2) : "—"}</span>
+                  <span>{detailModal.annualAvg !== null ? detailModal.annualAvg.toFixed(2) : "—"}</span>
                 </div>
                 <div className="detail-item">
                   <label>Hạnh kiểm HK1</label>
@@ -728,6 +777,61 @@ export default function PromotionPage() {
                 }}
               >
                 <FiRotateCcw /> Xác nhận hủy
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Manual Promote Override Modal */}
+      {manualPromoteModal && (
+        <div className="promotion-modal-overlay" onClick={() => setManualPromoteModal(null)}>
+          <div className="promotion-modal rollback-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header danger">
+              <h3><FiLock /> Xét lên lớp thủ công</h3>
+              <button className="btn-close" onClick={() => setManualPromoteModal(null)}>
+                <FiX />
+              </button>
+            </div>
+            <div className="modal-body">
+              <p>
+                Bạn đang xét lên lớp thủ công cho học sinh:{" "}
+                <strong>{manualPromoteModal.student?.studentName}</strong>
+              </p>
+              <p className="warning-text">
+                Hành động này bỏ qua kiểm tra rèn luyện hè. Vui lòng nhập lý do rõ ràng.
+              </p>
+              <div className="form-group">
+                <label>Lý do override <span style={{ color: "red" }}>*</span></label>
+                <textarea
+                  id="override-reason"
+                  rows={3}
+                  placeholder="VD: Học sinh đã hoàn thành rèn luyện hè tại địa phương, được phép của Hiệu trưởng..."
+                  defaultValue={manualPromoteModal.reason}
+                  onChange={(e) =>
+                    setManualPromoteModal((prev) => ({ ...prev, reason: e.target.value }))
+                  }
+                />
+              </div>
+            </div>
+            <div className="modal-footer">
+              <button className="btn-cancel" onClick={() => setManualPromoteModal(null)}>
+                <FiX /> Đóng
+              </button>
+              <button
+                className="btn-danger"
+                disabled={
+                  !manualPromoteModal.reason?.trim() ||
+                  manualPromoteMutation.isPending
+                }
+                onClick={() => {
+                  manualPromoteMutation.mutate({
+                    enrollmentId: manualPromoteModal.student.enrollmentId,
+                    reason: manualPromoteModal.reason,
+                  });
+                }}
+              >
+                <FiLock /> Xác nhận override
               </button>
             </div>
           </div>

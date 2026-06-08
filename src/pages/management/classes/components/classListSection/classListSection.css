@@ -70,6 +70,19 @@
     font-weight: 600;
 }
 
+.class-list-card__heading p + p {
+    margin-top: 2px;
+}
+
+.class-list-card__building {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    margin-top: 3px !important;
+    color: #7c8599 !important;
+    font-size: 12px !important;
+}
+
 .class-list-card__actions {
     display: flex;
     align-items: center;

@@ -15,7 +15,7 @@ import * as XLSX from "xlsx";
 import axiosClient from "../../../shared/http/axiosClient";
 import { vpDisciplineService } from "./vpDisciplineService";
 
-const getPayload = (response) => response?.data ?? response ?? {};
+const getPayload = (response) => response ?? {};
 
 export const vpTranscriptService = {
   /**
@@ -55,15 +55,59 @@ export const vpTranscriptService = {
   getTranscriptData: async (enrollmentId, opts = {}) => {
     const { schoolYearId, hk1SemesterId, hk2SemesterId } = opts;
 
+    // Normalize semester IDs — FE may pass string like "hk1", convert to numeric
+    const normalizedHk1 = typeof hk1SemesterId === "string" && !isNaN(Number(hk1SemesterId))
+      ? Number(hk1SemesterId)
+      : hk1SemesterId;
+    const normalizedHk2 = typeof hk2SemesterId === "string" && !isNaN(Number(hk2SemesterId))
+      ? Number(hk2SemesterId)
+      : hk2SemesterId;
+
     const [reportCard, conduct] = await Promise.allSettled([
       vpTranscriptService.getReportCard(enrollmentId, { schoolYearId }),
-      hk1SemesterId && hk2SemesterId
-        ? vpDisciplineService.getStudentAnnualConduct(enrollmentId, hk1SemesterId, hk2SemesterId)
+      normalizedHk1 && normalizedHk2
+        ? vpDisciplineService.getStudentAnnualConduct(enrollmentId, normalizedHk1, normalizedHk2)
         : Promise.resolve(null),
     ]);
 
+    const rawReportCard = reportCard.status === "fulfilled" ? reportCard.value : null;
+
+    // Normalize BE response: BE year-report returns grades.semester1/semester2
+    // FE expects semesters array — transform to match preview table expectation
+    let normalizedSemesters = [];
+    if (rawReportCard?.grades) {
+      if (rawReportCard.grades.semester1) {
+        normalizedSemesters.push({
+          semesterId: 1,
+          semesterName: "Học kỳ I",
+          averageScore: rawReportCard.grades.semester1.gpa ?? null,
+          classification: rawReportCard.grades.semester1.classification ?? null,
+          subjects: (rawReportCard.grades.semester1.results || []).map((r) => ({
+            ...r,
+            averageScore: r.averageScore ?? r.avgScore ?? null,
+            average_score: r.averageScore ?? r.avgScore ?? null,
+          })),
+        });
+      }
+      if (rawReportCard.grades.semester2) {
+        normalizedSemesters.push({
+          semesterId: 2,
+          semesterName: "Học kỳ II",
+          averageScore: rawReportCard.grades.semester2.gpa ?? null,
+          classification: rawReportCard.grades.semester2.classification ?? null,
+          subjects: (rawReportCard.grades.semester2.results || []).map((r) => ({
+            ...r,
+            averageScore: r.averageScore ?? r.avgScore ?? null,
+            average_score: r.averageScore ?? r.avgScore ?? null,
+          })),
+        });
+      }
+    }
+
     const data = {
-      reportCard: reportCard.status === "fulfilled" ? reportCard.value : null,
+      reportCard: rawReportCard
+        ? { ...rawReportCard, semesters: normalizedSemesters }
+        : null,
       conduct: conduct.status === "fulfilled" ? conduct.value : null,
     };
 

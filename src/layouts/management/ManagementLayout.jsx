@@ -38,6 +38,7 @@ export default function ManagementLayout() {
             import("../../pages/management/dashboard/index.js");
             import("../../pages/management/users/ManagementUsers");
             import("../../pages/management/classes/ManagementClasses");
+            import("../../pages/management/classes/ClassAssignment");
             import("../../pages/management/academic/grades/VpAcademicGrades");
             import("../../pages/management/timetable/ManagementTimetable");
             import("../../pages/management/notifications/ManagementNotifications");

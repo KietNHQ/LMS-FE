@@ -482,3 +482,87 @@
   background: #fee2e2;
   color: #991b1b;
 }
+
+/* ── Graduation Eligibility Badge ── */
+.graduation-check-section {
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+}
+
+.graduation-badge {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  border-radius: 0.75rem;
+  border: 2px solid;
+}
+
+.graduation-badge.pass {
+  background: linear-gradient(135deg, #f0fdf4, #dcfce7);
+  border-color: #16a34a;
+  color: #15803d;
+}
+
+.graduation-badge.fail {
+  background: linear-gradient(135deg, #fef2f2, #fee2e2);
+  border-color: #dc2626;
+  color: #b91c1c;
+}
+
+.graduation-badge-icon {
+  flex-shrink: 0;
+  padding-top: 0.1rem;
+}
+
+.graduation-badge.pass .graduation-badge-icon { color: #16a34a; }
+.graduation-badge.fail .graduation-badge-icon { color: #dc2626; }
+
+.graduation-badge-title {
+  font-weight: 700;
+  font-size: 1rem;
+  margin-bottom: 0.35rem;
+}
+
+.graduation-score {
+  font-size: 0.875rem;
+  margin-bottom: 0.5rem;
+}
+
+.graduation-score strong {
+  font-size: 1.125rem;
+  font-weight: 800;
+}
+
+.graduation-score-detail {
+  font-size: 0.75rem;
+  color: inherit;
+  opacity: 0.8;
+}
+
+.graduation-conditions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 0.5rem;
+}
+
+.condition-chip {
+  display: inline-block;
+  padding: 0.2rem 0.6rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.condition-chip.pass {
+  background: #dcfce7;
+  color: #15803d;
+  border: 1px solid #86efac;
+}
+
+.condition-chip.fail {
+  background: #fee2e2;
+  color: #b91c1c;
+  border: 1px solid #fca5a5;
+}

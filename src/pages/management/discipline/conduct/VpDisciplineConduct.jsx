@@ -310,7 +310,7 @@ export default function VpDisciplineConduct({ isEmbedded = false }) {
             if (viewMode === "annual") {
                 const semesterId = selectedTerm === "hk2" ? hk2Id : hk1Id;
                 if (semesterId) {
-                    await vpDisciplineService.finalizeConductSemester(semesterId);
+                    await vpDisciplineService.submitConductSemester(semesterId);
                 }
             } else {
                 const semesterId = selectedTerm === "hk2" ? hk2Id : hk1Id;
