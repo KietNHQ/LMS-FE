@@ -75,8 +75,6 @@ const parseClass = (item = {}) => {
     color: getColorByGrade(gradeNumber),
     status: item.status || "active",
     maxStudents: toNumber(item.max_students ?? item.maxStudents),
-    buildingId: toNumber(item.building_id ?? item.buildingId),
-    building_name: item.building_name ?? item.building?.name ?? null,
   };
 };
 
@@ -94,7 +92,6 @@ const toApiPayload = async (classData = {}) => {
     ...(schoolYearId ? { schoolYearId: toNumber(schoolYearId) } : {}),
     ...(homeroomTeacherId ? { homeroomTeacherId: toNumber(homeroomTeacherId) } : {}),
     ...(classData.maxStudents ? { maxStudents: toNumber(classData.maxStudents) } : {}),
-    ...(classData.buildingId ? { buildingId: toNumber(classData.buildingId) } : {}),
     status: classData.status || "active",
 
     // Backward-compatible aliases for deployments still using legacy field names.

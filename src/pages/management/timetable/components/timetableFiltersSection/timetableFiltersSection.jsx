@@ -1,5 +1,4 @@
 import { FiAlertTriangle, FiClock, FiLayers } from "react-icons/fi";
-import { LuBuilding2 } from "react-icons/lu";
 import Select from "../../../../../components/ui/Select/Select";
 import "./timetableFiltersSection.css";
 
@@ -20,7 +19,6 @@ export default function TimetableFiltersSection({
     onDayChange,
     onBlockChange,
     onSearchChange,
-    selectedBuildingName,
     children,
 }) {
     return (
@@ -105,16 +103,6 @@ export default function TimetableFiltersSection({
                             onChange={(e) => onDayChange(e.target.value)}
                         />
                     </div>
-
-                    {selectedBuildingName && (
-                        <div className="tt-input-field tt-input-field--readonly">
-                            <label>Tòa nhà</label>
-                            <div className="tt-building-badge">
-                                <LuBuilding2 />
-                                {selectedBuildingName}
-                            </div>
-                        </div>
-                    )}
                 </div>
             </div>
         </section>

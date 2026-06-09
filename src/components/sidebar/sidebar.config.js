@@ -99,7 +99,6 @@ export const sidebarConfig = {
         { label: "Người Dùng",         icon: LuUserCog,       path: "/management/users",        requiredPermissions: [PERMISSIONS.USER_VIEW] },
         { label: "Lớp Học",           icon: FiBookOpen,      path: "/management/classes",      requiredPermissions: [PERMISSIONS.CLASS_VIEW] },
         { label: "  Xếp Lớp Đầu Năm", icon: FiUsers,        path: "/management/classes/xeplop", requiredPermissions: [PERMISSIONS.CLASS_VIEW] },
-        { label: "Tòa Nhà",            icon: FiShoppingBag,   path: "/management/buildings",    requiredPermissions: [PERMISSIONS.BUILDING_VIEW] },
         { label: "Quản Lý Điểm Số",    icon: FiAward,         path: "/management/grades",      requiredPermissions: [PERMISSIONS.GRADE_VIEW] },
         { label: "NỀ Nếp & Kỷ Luật", icon: FiAlertTriangle, path: "/management/discipline",   requiredPermissions: [PERMISSIONS.DISCIPLINE_VIEW] },
         { label: "  Khóa sổ thi đua", icon: FiLock, path: "/management/discipline/period-closing", requiredPermissions: [PERMISSIONS.DISCIPLINE_VIEW] },

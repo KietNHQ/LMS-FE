@@ -182,11 +182,7 @@ export const PERMISSIONS = {
     BACKUP_RESTORE: 'backup:restore',
     SYSTEM_LOG_VIEW: 'system_logs:read',
 
-    // 29. Tòa nhà
-    BUILDING_VIEW: 'buildings:read',
-    BUILDING_CREATE: 'buildings:create',
-    BUILDING_UPDATE: 'buildings:update',
-    BUILDING_DELETE: 'buildings:delete',
+    // 29. Tòa nhà (deprecated — xóa feature)
 };
 
 export const MANAGEMENT_TITLES = [

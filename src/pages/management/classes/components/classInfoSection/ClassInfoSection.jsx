@@ -2,7 +2,6 @@ import React, { useEffect, useState } from "react";
 import "./classInfoSection.css";
 import { Select } from "../../../../../components/ui";
 import TeacherSelectDialog from "./TeacherSelectDialog";
-import { buildingsService } from "../../../../../services/pages/management/buildings/buildingsService";
 
 const getCurrentYear = () => {
     const now = new Date();
@@ -25,7 +24,6 @@ const buildDefaultForm = (gradeOptions, defaultSchoolYear) => {
         name: `${gradeNum}A`,
         year: defaultSchoolYear || getCurrentYear(),
         teacher: "",
-        buildingId: "",
         maxStudents: 40,
     };
 };
@@ -45,23 +43,6 @@ export default function ClassInfoSection({
 
     const [formData, setFormData] = useState(() => buildDefaultForm(selectGradeOptions, defaultSchoolYear));
     const [isTeacherDialogOpen, setIsTeacherDialogOpen] = useState(false);
-    const [buildings, setBuildings] = useState([]);
-    const [isLoadingBuildings, setIsLoadingBuildings] = useState(false);
-
-    useEffect(() => {
-        const loadBuildings = async () => {
-            setIsLoadingBuildings(true);
-            try {
-                const data = await buildingsService.listBuildings();
-                setBuildings(data);
-            } catch {
-                setBuildings([]);
-            } finally {
-                setIsLoadingBuildings(false);
-            }
-        };
-        loadBuildings();
-    }, []);
 
     useEffect(() => {
         if (mode === "edit" && !initialData) {
@@ -78,7 +59,6 @@ export default function ClassInfoSection({
                 subjects: initialData.subjects || [],
                 color: initialData.color || "blue",
                 maxStudents: initialData.maxStudents || 40,
-                buildingId: initialData.buildingId || "",
                 id: initialData.id,
             });
         } else if (mode === "create") {
@@ -132,13 +112,6 @@ export default function ClassInfoSection({
         }));
     };
 
-    const handleBuildingChange = (e) => {
-        setFormData((prev) => ({
-            ...prev,
-            buildingId: e.target.value,
-        }));
-    };
-
     const handleMaxStudentsChange = (e) => {
         setFormData((prev) => ({
             ...prev,
@@ -162,11 +135,6 @@ export default function ClassInfoSection({
     };
 
     const isEdit = mode === "edit";
-
-    const buildingOptions = [
-        { label: "— Không chọn —", value: "" },
-        ...buildings.map((b) => ({ label: b.name, value: String(b.id) })),
-    ];
 
     return (
         <div className="class-info-modal-overlay" onClick={onClose}>
@@ -228,20 +196,6 @@ export default function ClassInfoSection({
                                 ▶
                             </button>
                         </div>
-                    </div>
-
-                    <div className="form-group">
-                        <Select
-                            label="Tòa nhà"
-                            options={buildingOptions}
-                            value={String(formData.buildingId || "")}
-                            onChange={handleBuildingChange}
-                            name="building"
-                            id="building"
-                            variant="custom"
-                            className="form-select"
-                            disabled={isLoadingBuildings}
-                        />
                     </div>
 
                     {isEdit && (

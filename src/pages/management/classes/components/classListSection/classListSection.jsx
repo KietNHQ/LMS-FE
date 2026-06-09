@@ -1,7 +1,7 @@
 import React from "react";
 import { FiEdit2, FiTrash2, FiBookOpen } from "react-icons/fi";
 import { PiStudent } from "react-icons/pi";
-import { LuSchool, LuBuilding2 } from "react-icons/lu";
+import { LuSchool } from "react-icons/lu";
 import "./classListSection.css";
 
 const colorMap = {
@@ -30,12 +30,6 @@ export default function ClassListSection({ classes, onView, onEdit, onDelete }) 
                             <p>
                                 {item.grade} • {item.year}
                             </p>
-                            {item.building_name && (
-                                <p className="class-list-card__building">
-                                    <LuBuilding2 />
-                                    {item.building_name}
-                                </p>
-                            )}
                         </div>
 
                         <div className="class-list-card__actions" onClick={(e) => e.stopPropagation()}>
