@@ -396,6 +396,7 @@ export default function TeacherQuiz() {
                 gradingMode: quizMeta.gradingMode,
                 semesterId: quizMeta.semesterId,
                 assessmentType: quizMeta.assessmentType,
+                isSynchronous: quizMeta.isSynchronous,
             });
 
             setQuizzes((prev) =>
@@ -523,6 +524,7 @@ export default function TeacherQuiz() {
                     semesterId: editingQuiz.semesterId || editingQuiz.semester_id,
                     gradingMode: editingQuiz.gradingMode || editingQuiz.grading_mode,
                     assessmentType: editingQuiz.assessmentType || editingQuiz.assessment_type,
+                    isSynchronous: editingQuiz.isSynchronous || editingQuiz.is_synchronous,
                 } : undefined}
             />
 

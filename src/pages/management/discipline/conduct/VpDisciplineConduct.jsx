@@ -157,6 +157,15 @@ export default function VpDisciplineConduct({ isEmbedded = false }) {
         [selectedSchoolYear, selectedTerm, selectedWeek],
     );
 
+    // Adjust selectedWeek if it's out of bounds for the selectedTerm
+    useEffect(() => {
+        if (selectedTerm === "hk1" && selectedWeek > 18) {
+            setSelectedWeek(1);
+        } else if (selectedTerm === "hk2" && selectedWeek <= 18) {
+            setSelectedWeek(19);
+        }
+    }, [selectedTerm]);
+
     // Load student scores for selected class
     const { data: scoresData, isLoading: scoresLoading, isError: scoresError } = useQuery({
         queryKey: ["discipline-class-scores", selectedClass, startDate, endDate],
@@ -301,25 +310,71 @@ export default function VpDisciplineConduct({ isEmbedded = false }) {
     };
 
     const handleApprove = async () => {
-        const ungraded = studentList.filter((s) => !conductGrades[s.enrollmentId] && !s.grade);
-        if (ungraded.length > 0) {
-            toast.error(`Không thể phê duyệt! Còn ${ungraded.length} học sinh chưa được đánh giá hạnh kiểm.`);
+        const isAnnual = viewMode === "annual";
+        const currentSemesterId = selectedTerm === "hk2" ? hk2Id : hk1Id;
+        if (!currentSemesterId || !selectedClass) return;
+
+        let ungradedCount = 0;
+        
+        if (isAnnual) {
+            if (annualData && annualData.students) {
+                ungradedCount = annualData.students.filter(s => {
+                    const key = s.enrollmentId + "__" + currentSemesterId;
+                    const val = conductGrades[key] || (selectedTerm === "hk2" ? s.hk2Level : s.hk1Level);
+                    return !val;
+                }).length;
+            }
+        } else {
+            ungradedCount = studentList.filter((s) => !conductGrades[s.enrollmentId] && !s.grade).length;
+        }
+
+        if (ungradedCount > 0) {
+            toast.error(`Không thể phê duyệt! Còn ${ungradedCount} học sinh chưa được đánh giá hạnh kiểm.`);
             return;
         }
+
         try {
-            if (viewMode === "annual") {
-                const semesterId = selectedTerm === "hk2" ? hk2Id : hk1Id;
-                if (semesterId) {
-                    await vpDisciplineService.submitConductSemester(semesterId);
+            // Auto-save any pending changes first
+            if (Object.keys(conductGrades).length > 0) {
+                if (isAnnual && annualData?.students) {
+                    for (const [key, value] of Object.entries(conductGrades)) {
+                        const [enrollmentId, semesterId] = key.split("__");
+                        if (semesterId && value) {
+                            await handleSaveStudentConduct(enrollmentId, semesterId, value);
+                        }
+                    }
+                } else {
+                    for (const [enrollmentId, grade] of Object.entries(conductGrades)) {
+                        await handleSaveStudentConduct(enrollmentId, currentSemesterId, grade);
+                    }
                 }
-            } else {
-                const semesterId = selectedTerm === "hk2" ? hk2Id : hk1Id;
-                await vpDisciplineService.submitConduct(selectedClass, semesterId);
+                setConductGrades({});
             }
-            toast.success(`Đã phê duyệt dự kiến hạnh kiểm. Thông báo đã được gửi đến GVCN, Phụ huynh và Học sinh.`);
+
+            await vpDisciplineService.submitConduct(selectedClass, currentSemesterId);
+            toast.success(`Đã phê duyệt hạnh kiểm lớp. Thông báo đã được gửi đến GVCN, Phụ huynh và Học sinh.`);
             refetchAnnual();
-        } catch {
+        } catch (error) {
+            console.error(error);
             toast.error("Không thể phê duyệt hạnh kiểm.");
+        }
+    };
+
+    const handleUnlock = async () => {
+        const currentSemesterId = selectedTerm === "hk2" ? hk2Id : hk1Id;
+        if (!currentSemesterId || !selectedClass) return;
+
+        if (!window.confirm("Bạn có chắc chắn muốn mở khóa hạnh kiểm của toàn bộ học sinh trong lớp này?\nHành động này sẽ chuyển trạng thái của tất cả đánh giá về Bản nháp (DRAFT).")) {
+            return;
+        }
+
+        try {
+            await vpDisciplineService.unlockConduct(selectedClass, currentSemesterId);
+            toast.success("Đã mở khóa hạnh kiểm lớp thành công.");
+            refetchAnnual();
+        } catch (error) {
+            console.error(error);
+            toast.error("Không thể mở khóa hạnh kiểm.");
         }
     };
 
@@ -360,6 +415,48 @@ export default function VpDisciplineConduct({ isEmbedded = false }) {
             { key: "ungraded", title: "Chưa Đánh giá", val: ungraded, sub: "học sinh", icon: <FiCheckCircle />, color: "warning" },
         ];
     }, [studentList, conductGrades]);
+
+    const handleApplySuggestions = () => {
+        if (viewMode !== "annual" || !annualData || !annualData.students) return;
+        const currentSemesterId = selectedTerm === "hk2" ? hk2Id : hk1Id;
+        if (!currentSemesterId) return;
+
+        const overwriteAll = window.confirm(
+            "Bạn có muốn ghi đè các đánh giá hiện tại bằng mức Đề xuất không?\n\n- Chọn OK: Áp dụng Đề xuất cho TẤT CẢ học sinh.\n- Chọn Cancel: Chỉ áp dụng cho những học sinh CHƯA CÓ điểm."
+        );
+
+        const newGrades = { ...conductGrades };
+        let appliedCount = 0;
+
+        annualData.students.forEach(student => {
+            const isHK1 = selectedTerm === "hk1";
+            const status = isHK1 ? student.hk1Status : student.hk2Status;
+            
+            // Bỏ qua học sinh đã được chốt (finalized)
+            if (status === "finalized") return;
+
+            const key = student.enrollmentId + "__" + currentSemesterId;
+            const currentVal = conductGrades[key] || (isHK1 ? student.hk1Level : student.hk2Level);
+            
+            if (overwriteAll || !currentVal) {
+                const score = isHK1 ? student.hk1Score : student.hk2Score;
+                const suggested = suggestGrade(score || 100);
+                
+                // Chỉ thêm vào danh sách cập nhật nếu giá trị đề xuất khác với giá trị gốc trong DB
+                if (suggested !== (isHK1 ? student.hk1Level : student.hk2Level) || currentVal !== suggested) {
+                    newGrades[key] = suggested;
+                    appliedCount++;
+                }
+            }
+        });
+
+        if (appliedCount > 0) {
+            setConductGrades(newGrades);
+            toast.success(`Đã điền đề xuất cho ${appliedCount} học sinh.`);
+        } else {
+            toast.info("Tất cả học sinh đã được đánh giá.");
+        }
+    };
 
     return (
         <div className="vp-conduct vp-discipline-layout">
@@ -430,9 +527,14 @@ export default function VpDisciplineConduct({ isEmbedded = false }) {
                                 width: "100%",
                             }}
                         >
-                            {Array.from({ length: 18 }, (_, i) => i + 1).map((w) => (
-                                <option key={w} value={w}>Tuần {w}</option>
-                            ))}
+                            {selectedTerm === "hk2" 
+                                ? Array.from({ length: 17 }, (_, i) => i + 19).map((w) => (
+                                    <option key={w} value={w}>Tuần {w}</option>
+                                ))
+                                : Array.from({ length: 18 }, (_, i) => i + 1).map((w) => (
+                                    <option key={w} value={w}>Tuần {w}</option>
+                                ))
+                            }
                         </select>
                     </div>
                     <div className="filter-group" style={{ minWidth: "180px" }}>
@@ -468,14 +570,22 @@ export default function VpDisciplineConduct({ isEmbedded = false }) {
                     </div>
                 </div>
 
-                <div className="dm-primary-actions-compact">
-                    <button className="btn-save-draft" onClick={handleSave}>
-                        <FiSave /> Lưu Bản Nháp
-                    </button>
-                    <button className="btn-add-violation-premium" style={{ width: "auto" }} onClick={handleApprove}>
-                        <FiCheckCircle /> Phê Duyệt & Gửi Thông Báo
-                    </button>
-                </div>
+                {viewMode === "annual" && (
+                    <div className="dm-primary-actions-compact">
+                        <button className="btn-outline" style={{ display: "flex", alignItems: "center", gap: "0.5rem", padding: "0.5rem 1rem", borderRadius: "0.5rem", border: "1px solid #cbd5e1", background: "white" }} onClick={handleApplySuggestions}>
+                            <FiTrendingUp /> Áp dụng Đề xuất
+                        </button>
+                        <button className="btn-save-draft" onClick={handleSave}>
+                            <FiSave /> Lưu Bản Nháp
+                        </button>
+                        <button className="btn-warning-premium" style={{ width: "auto" }} onClick={handleUnlock}>
+                            <FiAlertCircle /> Mở Khóa
+                        </button>
+                        <button className="btn-add-violation-premium" style={{ width: "auto" }} onClick={handleApprove}>
+                            <FiCheckCircle /> Phê Duyệt & Gửi Thông Báo
+                        </button>
+                    </div>
+                )}
             </div>
 
             {/* Warning banner khi discipline score thay đổi */}
@@ -540,7 +650,9 @@ export default function VpDisciplineConduct({ isEmbedded = false }) {
                                         <thead>
                                             <tr>
                                                 <th>Học sinh</th>
+                                                <th className="th-center">Điểm HK I</th>
                                                 <th className="th-center">HK I</th>
+                                                <th className="th-center">Điểm HK II</th>
                                                 <th className="th-center">HK II</th>
                                                 <th className="th-center">Cả năm</th>
                                             </tr>
@@ -552,6 +664,10 @@ export default function VpDisciplineConduct({ isEmbedded = false }) {
                                                 const hk1Val = conductGrades[hk1Key] || student.hk1Level || "";
                                                 const hk2Val = conductGrades[hk2Key] || student.hk2Level || "";
                                                 const annualVal = student.annualLevel || "";
+                                                
+                                                const hk1Suggested = suggestGrade(student.hk1Score || 100);
+                                                const hk2Suggested = suggestGrade(student.hk2Score || 100);
+
                                                 return (
                                                     <tr key={student.enrollmentId}>
                                                         <td className="td-student">
@@ -565,13 +681,30 @@ export default function VpDisciplineConduct({ isEmbedded = false }) {
                                                             </div>
                                                         </td>
                                                         <td className="th-center">
+                                                            <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+                                                                <span className={`score-cell ${student.hk1Score < 90 ? "low" : "good"}`}>
+                                                                    {student.hk1Score}đ
+                                                                </span>
+                                                                <small className="text-muted" style={{ fontSize: "0.75rem", marginTop: "2px" }}>Đề xuất: {hk1Suggested}</small>
+                                                            </div>
+                                                        </td>
+                                                        <td className="th-center">
                                                             <div style={{ width: "120px", margin: "0 auto" }}>
                                                                 <Select
                                                                     variant="custom"
                                                                     value={hk1Val}
                                                                     onChange={(e) => setConductGrades((prev) => ({ ...prev, [hk1Key]: e.target.value }))}
                                                                     options={GRADE_OPTIONS}
+                                                                    disabled={student.hk1Status === "finalized"}
                                                                 />
+                                                            </div>
+                                                        </td>
+                                                        <td className="th-center">
+                                                            <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+                                                                <span className={`score-cell ${student.hk2Score < 90 ? "low" : "good"}`}>
+                                                                    {student.hk2Score}đ
+                                                                </span>
+                                                                <small className="text-muted" style={{ fontSize: "0.75rem", marginTop: "2px" }}>Đề xuất: {hk2Suggested}</small>
                                                             </div>
                                                         </td>
                                                         <td className="th-center">
@@ -581,6 +714,7 @@ export default function VpDisciplineConduct({ isEmbedded = false }) {
                                                                     value={hk2Val}
                                                                     onChange={(e) => setConductGrades((prev) => ({ ...prev, [hk2Key]: e.target.value }))}
                                                                     options={GRADE_OPTIONS}
+                                                                    disabled={student.hk2Status === "finalized"}
                                                                 />
                                                             </div>
                                                         </td>

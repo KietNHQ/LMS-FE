@@ -207,6 +207,7 @@ export default function TeacherCreateQuizPage() {
                             assessmentType: routeQuizMeta.assessmentType || "none",
                             gradingMode: routeQuizMeta.gradingMode,
                             semesterId: routeQuizMeta.semesterId,
+                            isSynchronous: routeQuizMeta.isSynchronous || false,
                             isPublished: false,
                         });
                         try {
@@ -691,6 +692,7 @@ export default function TeacherCreateQuizPage() {
                 assessmentType: quizMeta.assessmentType || "none",
                 gradingMode: quizMeta.gradingMode,
                 semesterId: quizMeta.semesterId,
+                isSynchronous: quizMeta.isSynchronous || false,
                 isPublished: false,
             });
 
