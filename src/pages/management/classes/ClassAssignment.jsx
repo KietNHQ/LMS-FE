@@ -108,22 +108,11 @@ export default function ClassAssignment() {
   const handleAssign = useCallback(() => {
     if (!selectedClassId || selectedEnrollmentIds.size === 0) return;
 
-    const canFit = selectedClass
-      ? selectedClass.available >= selectedEnrollmentIds.size
-      : true;
-
-    if (!canFit) {
-      toast.error(
-        `Lớp ${selectedClass.name} chỉ còn ${selectedClass.available} chỗ trống.`,
-      );
-      return;
-    }
-
     assignMutation.mutate({
       enrollmentIds: Array.from(selectedEnrollmentIds),
       classId: selectedClassId,
     });
-  }, [selectedClassId, selectedEnrollmentIds, selectedClass, assignMutation]);
+  }, [selectedClassId, selectedEnrollmentIds, assignMutation]);
 
   return (
     <div className="class-assignment-page">
@@ -222,7 +211,7 @@ export default function ClassAssignment() {
               <div
                 key={cls.id}
                 className={`ca-class-item ${selectedClassId === cls.id ? "is-selected" : ""} ${cls.isFull ? "is-full" : ""}`}
-                onClick={() => !cls.isFull && setSelectedClassId(cls.id)}
+                onClick={() => setSelectedClassId(cls.id)}
               >
                 <div className="ca-class-info">
                   <span className="ca-class-name">{cls.name}</span>
@@ -260,7 +249,6 @@ export default function ClassAssignment() {
                 onClick={handleAssign}
                 disabled={
                   selectedEnrollmentIds.size === 0 ||
-                  selectedEnrollmentIds.size > selectedClass.available ||
                   assignMutation.isPending
                 }
               >

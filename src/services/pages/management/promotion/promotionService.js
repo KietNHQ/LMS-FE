@@ -34,11 +34,18 @@ export const getClassPromotionSummary = async (classId, hk1SemesterId, hk2Semest
  * @param {number} hk1SemesterId - ID học kỳ 1
  * @param {number} hk2SemesterId - ID học kỳ 2
  */
-export const bulkPromote = async (classId, schoolYearId, hk1SemesterId, hk2SemesterId) => {
+export const bulkPromote = async (
+  classId,
+  schoolYearId,
+  hk1SemesterId,
+  hk2SemesterId,
+  enrollmentIds = [],
+) => {
   const response = await axiosClient.post(`/promotion/class/${classId}/bulk-promote`, {
     schoolYearId,
     hk1SemesterId,
     hk2SemesterId,
+    enrollmentIds,
   });
   return response;
 };

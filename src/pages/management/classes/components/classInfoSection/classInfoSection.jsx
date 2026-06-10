@@ -24,6 +24,7 @@ const buildDefaultForm = (gradeOptions, defaultSchoolYear) => {
         name: `${gradeNum}A`,
         year: defaultSchoolYear || getCurrentYear(),
         teacher: "",
+        maxStudents: 40,
     };
 };
 
@@ -58,6 +59,7 @@ export default function ClassInfoSection({
                 students: initialData.students || 0,
                 subjects: initialData.subjects || [],
                 color: initialData.color || "blue",
+                maxStudents: initialData.maxStudents || 40,
             });
         } else if (mode === "create") {
             setFormData(buildDefaultForm(selectGradeOptions, defaultSchoolYear));
@@ -107,6 +109,13 @@ export default function ClassInfoSection({
         setFormData((prev) => ({
             ...prev,
             teacher: teacherName,
+        }));
+    };
+
+    const handleMaxStudentsChange = (e) => {
+        setFormData((prev) => ({
+            ...prev,
+            maxStudents: parseInt(e.target.value, 10) || 40,
         }));
     };
 
@@ -199,6 +208,20 @@ export default function ClassInfoSection({
                             <span>{formData.teacher}</span>
                             <span className="teacher-chevron">▼</span>
                         </button>
+                    </div>
+
+                    <div className="form-group">
+                        <label htmlFor="maxStudents">Sĩ số tối đa</label>
+                        <input
+                            id="maxStudents"
+                            name="maxStudents"
+                            type="number"
+                            min="1"
+                            max="100"
+                            value={formData.maxStudents}
+                            onChange={handleMaxStudentsChange}
+                            className="class-info-number-input"
+                        />
                     </div>
 
                     <div className="class-info-actions">

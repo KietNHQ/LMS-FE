@@ -16,6 +16,7 @@ import "./PromotionPage.css";
 
 const STATUS_COLORS = {
   promoted: { bg: "bg-emerald-100", text: "text-emerald-700", border: "border-emerald-300", label: "Được lên lớp" },
+  already_promoted: { bg: "bg-emerald-100", text: "text-emerald-700", border: "border-emerald-300", label: "Đã lên lớp" },
   summer_training: { bg: "bg-amber-100", text: "text-amber-700", border: "border-amber-300", label: "Rèn luyện hè" },
   retained: { bg: "bg-red-100", text: "text-red-700", border: "border-red-300", label: "Ở lại lớp" },
   pending: { bg: "bg-gray-100", text: "text-gray-600", border: "border-gray-300", label: "Chưa đủ điều kiện" },
@@ -23,23 +24,40 @@ const STATUS_COLORS = {
   GRADUATED: { bg: "bg-blue-100", text: "text-blue-700", border: "border-blue-300", label: "Tốt nghiệp" },
 };
 
-const mapStudentData = (s) => ({
-  enrollmentId: s.enrollmentId || s.enrollment_id,
-  studentId: s.studentId || s.student_id,
-  studentCode: s.studentCode || s.student_code,
-  studentName: s.studentName || s.student_name || "",
-  hk1Avg: s.hk1Avg ?? s.hk1_avg ?? null,
-  hk2Avg: s.hk2Avg ?? s.hk2_avg ?? null,
-  annualAvg: s.annualAvg ?? s.annual_avg ?? null,
-  hk1Conduct: s.hk1Level || s.hk1_conduct || s.conduct_hk1 || "",
-  hk2Conduct: s.hk2Level || s.hk2_conduct || s.conduct_hk2 || "",
-  annualConduct: s.annualConductLevel || s.annual_conduct || s.conduct_annual || "",
-  absentDays: s.absentDays ?? s.absent_days ?? 0,
-  status: s.status || s.promotionStatus || "pending",
-  note: s.note || s.notes || "",
-  canPromote: s.canPromote ?? s.can_promote ?? false,
-  nextClass: s.nextClass || null,
-});
+const mapStudentData = (s) => {
+  const promotionStatus = s.promotionStatus || s.status || "pending";
+  const enrollmentStatus = s.enrollmentStatus || s.enrollment_status || "";
+  const isCurrentEnrollment = enrollmentStatus === "active" || enrollmentStatus === "studying";
+  const status =
+    enrollmentStatus === "promoted"
+      ? "already_promoted"
+      : promotionStatus === "conditional"
+        ? "summer_training"
+        : promotionStatus;
+  const canPromote =
+    isCurrentEnrollment &&
+    (s.canPromote ?? s.can_promote ?? false) &&
+    promotionStatus === "promoted";
+  return {
+    enrollmentId: s.enrollmentId || s.enrollment_id,
+    studentId: s.studentId || s.student_id,
+    studentCode: s.studentCode || s.student_code,
+    studentName: s.studentName || s.student_name || "",
+    hk1Avg: s.hk1Avg ?? s.hk1_avg ?? null,
+    hk2Avg: s.hk2Avg ?? s.hk2_avg ?? null,
+    annualAvg: s.annualAvg ?? s.annual_avg ?? null,
+    hk1Conduct: s.hk1Level || s.hk1_conduct || s.conduct_hk1 || "",
+    hk2Conduct: s.hk2Level || s.hk2_conduct || s.conduct_hk2 || "",
+    annualConduct: s.annualConductLevel || s.annual_conduct || s.conduct_annual || "",
+    absentDays: s.absentDays ?? s.absent_days ?? 0,
+    status,
+    promotionStatus,
+    enrollmentStatus,
+    note: s.note || s.notes || "",
+    canPromote,
+    nextClass: s.nextClass || null,
+  };
+};
 
 const computeNextClass = (className) => {
   if (!className) return null;
@@ -70,6 +88,7 @@ export default function PromotionPage() {
   const [hk2Id, setHk2Id] = useState(null);
   const [financeModal, setFinanceModal] = useState(null);
   const [rollbackModal, setRollbackModal] = useState(false);
+  const [promoting, setPromoting] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const ITEMS_PER_PAGE = 10;
 
@@ -118,7 +137,7 @@ export default function PromotionPage() {
     return classesData.map((c) => ({
       value: c.id || c.name || c.class_name || "",
       label: c.name || c.class_name || "",
-      grade: String((c.name || "").slice(0, 2)),
+      grade: String((c.grade || "").match(/\d+/)?.[0] || (c.name || "").slice(0, 2)),
       className: c.name || c.class_name || "",
     }));
   }, [classesData]);
@@ -148,25 +167,11 @@ export default function PromotionPage() {
     queryKey: ["promotion-class-summary", selectedClass, hk1Id, hk2Id],
     queryFn: async () => {
       if (!selectedClass || !hk1Id || !hk2Id) return null;
-      // #region agent log
-      fetch('http://127.0.0.1:7327/ingest/2c66a085-4ebf-4354-b3da-5d8073414dc9',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'7cfba0'},body:JSON.stringify({sessionId:'7cfba0',location:'PromotionPage.jsx:promotionQuery',message:'promotion query',data:{selectedClass,hk1Id,hk2Id,selectedSchoolYear},timestamp:Date.now()})}).catch(()=>{});
-      // #endregion
       const res = await promotionService.getClassPromotionSummary(selectedClass, hk1Id, hk2Id, 1, 100);
-      console.error("[DEBUG-FE] promotionService result:", JSON.stringify(res)?.slice(0, 500));
       return res || null;
     },
     enabled: Boolean(selectedClass && hk1Id && hk2Id),
     staleTime: 60_000,
-    onSuccess: (data) => {
-      // #region agent log
-      fetch('http://127.0.0.1:7327/ingest/2c66a085-4ebf-4354-b3da-5d8073414dc9',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'7cfba0'},body:JSON.stringify({sessionId:'7cfba0',location:'PromotionPage.jsx:promotionQuery:onSuccess',message:'promotion query success',data:{selectedClass,hk1Id,hk2Id,total:data?.total,studentsCount:Array.isArray(data?.students)?data.students.length:0},timestamp:Date.now()})}).catch(()=>{});
-      // #endregion
-    },
-    onError: (err) => {
-      // #region agent log
-      fetch('http://127.0.0.1:7327/ingest/2c66a085-4ebf-4354-b3da-5d8073414dc9',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'7cfba0'},body:JSON.stringify({sessionId:'7cfba0',location:'PromotionPage.jsx:promotionQuery:onError',message:'promotion query error',data:{selectedClass,hk1Id,hk2Id,error:String(err)},timestamp:Date.now()})}).catch(()=>{});
-      // #endregion
-    },
   });
 
   const promoteMutation = useMutation({
@@ -176,16 +181,21 @@ export default function PromotionPage() {
       if (typeof currentSyId === "string" && isNaN(Number(currentSyId))) {
         currentSyId = await resolveSchoolYearId(currentSyId);
       }
-      const nextSchoolYearId = Number(currentSyId) + 1;
       if (isGrade12) {
-        return promotionService.graduateClass(selectedClass, nextSchoolYearId, hk1Id, hk2Id);
+        return promotionService.graduateClass(selectedClass, currentSyId, hk1Id, hk2Id);
       }
-      return promotionService.bulkPromote(selectedClass, nextSchoolYearId, hk1Id, hk2Id);
+      return promotionService.bulkPromote(
+        selectedClass,
+        currentSyId,
+        hk1Id,
+        hk2Id,
+        Array.from(selectedStudents),
+      );
     },
     onSuccess: (data) => {
       const res = data?.data || data || {};
-      const count = res.graduated?.length || res.promoted?.length || 0;
-      if (res.graduated) {
+      const count = res.graduated ?? res.results?.graduated?.length ?? res.results?.promoted?.length ?? 0;
+      if (isGrade12) {
         toast.success(`Đã xét tốt nghiệp ${count} học sinh.`);
       } else {
         toast.success(`Đã lên lớp ${count} học sinh.`);
@@ -252,7 +262,7 @@ export default function PromotionPage() {
     if (!total) return { total: 0, promoted: 0, summerTraining: 0, retained: 0, pending: 0, graduated: 0 };
     return {
       total,
-      promoted: studentList.filter((s) => s.status === "promoted").length,
+      promoted: studentList.filter((s) => s.status === "promoted" || s.status === "already_promoted").length,
       summerTraining: studentList.filter((s) => s.status === "summer_training").length,
       retained: studentList.filter((s) => s.status === "retained").length,
       pending: studentList.filter((s) => s.status === "pending").length,
@@ -261,7 +271,9 @@ export default function PromotionPage() {
   }, [studentList, promotionData]);
 
   const promoteableStudents = studentList.filter((s) => s.canPromote && s.status !== "summer_training");
-  const hasPromotedStudents = studentList.some((s) => s.status === "promoted" || s.status === "GRADUATED");
+  const hasPromotedStudents = studentList.some(
+    (s) => s.enrollmentStatus === "promoted" || s.enrollmentStatus === "GRADUATED",
+  );
   const isGrade12 = selectedGrade === "12";
   const canPromote = lockStatusData?.canPromote !== false;
 
@@ -284,22 +296,21 @@ export default function PromotionPage() {
   };
 
   const handleBulkPromote = async () => {
-    if (selectedStudents.size === 0) {
-      toast.warn("Vui lòng chọn học sinh để lên lớp.");
+    if (promoting || selectedStudents.size === 0) {
+      if (selectedStudents.size === 0) toast.warn("Vui lòng chọn học sinh để lên lớp.");
       return;
     }
     if (!canPromote) {
       toast.warn("Chưa thể lên lớp. Vui lòng kiểm tra trạng thái khóa điểm.");
       return;
     }
+    setPromoting(true);
     try {
-      // Resolve string school year name to numeric ID
       let syId = selectedSchoolYear;
       if (typeof syId === "string" && isNaN(Number(syId))) {
         syId = await resolveSchoolYearId(syId);
       }
-      const nextSchoolYearId = Number(syId) + 1;
-      const financeRes = await promotionService.getFinanceCheck(selectedClass, nextSchoolYearId);
+      const financeRes = await promotionService.getFinanceCheck(selectedClass, syId);
       const financeData = financeRes;
       if (financeData?.hasUnpaidStudents) {
         setFinanceModal(financeData);
@@ -308,6 +319,8 @@ export default function PromotionPage() {
       promoteMutation.mutate({ isGrade12 });
     } catch {
       toast.error("Không thể kiểm tra công nợ.");
+    } finally {
+      setPromoting(false);
     }
   };
 
@@ -464,7 +477,7 @@ export default function PromotionPage() {
           <button
             className={isGrade12 ? "btn-graduate" : "btn-promote-all"}
             onClick={handleBulkPromote}
-            disabled={selectedStudents.size === 0 || !canPromote}
+            disabled={selectedStudents.size === 0 || !canPromote || promoting}
           >
             <FiCheck /> {isGrade12 ? "Xét tốt nghiệp" : "Lên lớp"} ({selectedStudents.size})
           </button>
@@ -495,7 +508,9 @@ export default function PromotionPage() {
                 <th className="col-gpa">Điểm HK1</th>
                 <th className="col-gpa">Điểm HK2</th>
                 <th className="col-gpa">Điểm TB cả năm</th>
-                <th className="col-conduct">Hạnh kiểm</th>
+                <th className="col-conduct">HK1</th>
+                <th className="col-conduct">HK2</th>
+                <th className="col-conduct">Cả năm</th>
                 <th className="col-absent">Ngày nghỉ</th>
                 <th className="col-next">Lớp năm sau</th>
                 <th className="col-status">Trạng thái</th>
@@ -506,7 +521,8 @@ export default function PromotionPage() {
               {paginatedStudents.map((student) => {
                 const statusInfo = STATUS_COLORS[student.status] || STATUS_COLORS.pending;
                 const isSummerTraining = student.status === "summer_training";
-                const canSelect = student.canPromote && !isSummerTraining;
+                const isAlreadyPromoted = student.status === "already_promoted";
+                const canSelect = student.canPromote && !isSummerTraining && !isAlreadyPromoted;
                 const isSelected = selectedStudents.has(student.enrollmentId);
 
                 return (
@@ -517,7 +533,7 @@ export default function PromotionPage() {
                         checked={isSelected}
                         onChange={() => handleSelectStudent(student.enrollmentId)}
                         disabled={!canSelect}
-                        title={!canSelect ? "Học sinh cần rèn luyện hè trước khi lên lớp" : ""}
+                        title={!canSelect ? "Học sinh không thể chọn để lên lớp" : ""}
                       />
                     </td>
                     <td className="col-name">
@@ -594,7 +610,7 @@ export default function PromotionPage() {
                             <FiChevronRight />
                           </button>
                         )}
-                        {!canSelect && student.status !== "promoted" && student.status !== "GRADUATED" && (
+                        {!canSelect && !isAlreadyPromoted && student.status !== "promoted" && student.status !== "GRADUATED" && (
                           <button
                             className="btn-promote-override"
                             onClick={() => setManualPromoteModal({ student, reason: "" })}

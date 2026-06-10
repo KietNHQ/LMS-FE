@@ -12,7 +12,7 @@ export const enrollmentService = {
       .get("/enrollments/unassigned-pool", {
         params: { schoolYearId },
       })
-      .then((res) => res.data?.data ?? []);
+      .then((res) => res.data ?? []);
   },
 
   /**
