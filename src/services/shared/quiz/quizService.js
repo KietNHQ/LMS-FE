@@ -222,6 +222,7 @@ const mapApiQuizToView = (quiz = {}) => {
         passScore: quiz.pass_score ?? quiz.passScore ?? null,
         startDate: quiz.start_date || quiz.startDate || null,
         endDate: quiz.end_date || quiz.endDate || null,
+        isSynchronous: Boolean(quiz.is_synchronous ?? quiz.isSynchronous),
         raw: quiz,
     };
 };
@@ -259,6 +260,7 @@ const normalizeCreatePayload = (quizData = {}) => {
                 : quizData.status
                     ? quizData.status === "open"
                     : false,
+        isSynchronous: Boolean(quizData.isSynchronous ?? false),
         startDate: quizData.startDate || null,
         endDate: quizData.endDate || null,
     };
@@ -308,6 +310,10 @@ const normalizeUpdatePayload = (quizData = {}) => {
                 : quizData.status
                     ? quizData.status === "open"
                     : undefined,
+        isSynchronous:
+            typeof quizData.isSynchronous === "boolean"
+                ? quizData.isSynchronous
+                : undefined,
         startDate:
             quizData.startDate === undefined ? undefined : (quizData.startDate || null),
         endDate: quizData.endDate === undefined ? undefined : (quizData.endDate || null),

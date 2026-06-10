@@ -61,6 +61,10 @@ export const vpDisciplineService = {
     axiosClient.post(`/conduct/class/${classId}/finalize`, { semesterId }, {
       timeout: 60000,
     }),
+  unlockConduct: (classId, semesterId) =>
+    axiosClient.post(`/conduct/class/${classId}/unlock`, { semesterId }, {
+      timeout: 60000,
+    }),
   submitConductSemester: (semesterId) =>
     axiosClient.post(`/conduct/finalize-semester`, { semesterId }, {
       timeout: 60000,

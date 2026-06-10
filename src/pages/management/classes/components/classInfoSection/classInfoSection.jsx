@@ -55,11 +55,11 @@ export default function ClassInfoSection({
                 name: initialData.name || "",
                 year: initialData.year || getCurrentYear(),
                 teacher: initialData.teacher || "",
-                id: initialData.id,
                 students: initialData.students || 0,
                 subjects: initialData.subjects || [],
                 color: initialData.color || "blue",
                 maxStudents: initialData.maxStudents || 40,
+                id: initialData.id,
             });
         } else if (mode === "create") {
             setFormData(buildDefaultForm(selectGradeOptions, defaultSchoolYear));
@@ -198,6 +198,38 @@ export default function ClassInfoSection({
                         </div>
                     </div>
 
+                    {isEdit && (
+                        <div className="form-group">
+                            <label htmlFor="maxStudents">Sĩ số tối đa</label>
+                            <input
+                                id="maxStudents"
+                                name="maxStudents"
+                                type="number"
+                                min="1"
+                                max="100"
+                                value={formData.maxStudents}
+                                onChange={handleMaxStudentsChange}
+                                className="class-info-number-input"
+                            />
+                        </div>
+                    )}
+
+                    {!isEdit && (
+                        <div className="form-group">
+                            <label htmlFor="maxStudents">Sĩ số tối đa</label>
+                            <input
+                                id="maxStudents"
+                                name="maxStudents"
+                                type="number"
+                                min="1"
+                                max="100"
+                                value={formData.maxStudents}
+                                onChange={handleMaxStudentsChange}
+                                className="class-info-number-input"
+                            />
+                        </div>
+                    )}
+
                     <div className="form-group">
                         <label htmlFor="teacher">Giáo viên chủ nhiệm</label>
                         <button
@@ -208,20 +240,6 @@ export default function ClassInfoSection({
                             <span>{formData.teacher}</span>
                             <span className="teacher-chevron">▼</span>
                         </button>
-                    </div>
-
-                    <div className="form-group">
-                        <label htmlFor="maxStudents">Sĩ số tối đa</label>
-                        <input
-                            id="maxStudents"
-                            name="maxStudents"
-                            type="number"
-                            min="1"
-                            max="100"
-                            value={formData.maxStudents}
-                            onChange={handleMaxStudentsChange}
-                            className="class-info-number-input"
-                        />
                     </div>
 
                     <div className="class-info-actions">

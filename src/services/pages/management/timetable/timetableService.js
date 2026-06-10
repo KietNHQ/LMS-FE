@@ -51,19 +51,19 @@ const timetableService = {
      */
     createLesson: async (lessonData = {}) => {
         const payload = {};
-        if (lessonData.classId != null) payload.class_id = lessonData.classId;
-        if (lessonData.subjectCode != null) payload.subject_code = lessonData.subjectCode;
-        if (lessonData.teacherId != null) payload.teacher_id = lessonData.teacherId;
-        if (lessonData.roomId != null) payload.room_id = lessonData.roomId;
-        if (lessonData.dayOfWeek != null) payload.day_of_week = lessonData.dayOfWeek;
-        if (lessonData.periodNumber != null) payload.period_number = lessonData.periodNumber;
-        if (lessonData.periodEnd != null) payload.period_end = lessonData.periodEnd;
-        if (lessonData.semesterId != null) payload.semester_id = lessonData.semesterId;
-        if (lessonData.schoolYearId != null) payload.school_year_id = lessonData.schoolYearId;
+        if (lessonData.classId != null) payload.classId = lessonData.classId;
+        if (lessonData.subjectCode != null) payload.subjectCode = lessonData.subjectCode;
+        if (lessonData.teacherId != null) payload.teacherId = lessonData.teacherId;
+        if (lessonData.roomId != null) payload.roomId = lessonData.roomId;
+        if (lessonData.dayOfWeek != null) payload.dayOfWeek = lessonData.dayOfWeek;
+        if (lessonData.periodNumber != null) payload.periodNumber = lessonData.periodNumber;
+        if (lessonData.periodEnd != null) payload.periodEnd = lessonData.periodEnd;
+        if (lessonData.semesterId != null) payload.semesterId = lessonData.semesterId;
+        if (lessonData.schoolYearId != null) payload.schoolYearId = lessonData.schoolYearId;
         if (lessonData.note != null) payload.note = lessonData.note;
         if (lessonData.mode != null) payload.mode = lessonData.mode;
 
-        const response = await axiosClient.post(TIMETABLE_ENDPOINTS.BASE, payload);
+        const response = await axiosClient.post(`${TIMETABLE_ENDPOINTS.BASE}/lessons`, payload);
         return response;
     },
 
@@ -74,17 +74,17 @@ const timetableService = {
      */
     updateLesson: async (lessonId, lessonData = {}) => {
         const payload = {};
-        if (lessonData.classId != null) payload.class_id = lessonData.classId;
-        if (lessonData.subjectCode != null) payload.subject_code = lessonData.subjectCode;
-        if (lessonData.teacherId != null) payload.teacher_id = lessonData.teacherId;
-        if (lessonData.roomId != null) payload.room_id = lessonData.roomId;
-        if (lessonData.dayOfWeek != null) payload.day_of_week = lessonData.dayOfWeek;
-        if (lessonData.periodNumber != null) payload.period_number = lessonData.periodNumber;
-        if (lessonData.periodEnd != null) payload.period_end = lessonData.periodEnd;
+        if (lessonData.classId != null) payload.classId = lessonData.classId;
+        if (lessonData.subjectCode != null) payload.subjectCode = lessonData.subjectCode;
+        if (lessonData.teacherId != null) payload.teacherId = lessonData.teacherId;
+        if (lessonData.roomId != null) payload.roomId = lessonData.roomId;
+        if (lessonData.dayOfWeek != null) payload.dayOfWeek = lessonData.dayOfWeek;
+        if (lessonData.periodNumber != null) payload.periodNumber = lessonData.periodNumber;
+        if (lessonData.periodEnd != null) payload.periodEnd = lessonData.periodEnd;
         if (lessonData.note != null) payload.note = lessonData.note;
         if (lessonData.mode != null) payload.mode = lessonData.mode;
 
-        const response = await axiosClient.put(`${TIMETABLE_ENDPOINTS.BASE}/${lessonId}`, payload);
+        const response = await axiosClient.put(`${TIMETABLE_ENDPOINTS.BASE}/lessons/${lessonId}`, payload);
         return response;
     },
 
@@ -93,7 +93,7 @@ const timetableService = {
      * @param {number} lessonId - The lesson ID to delete
      */
     deleteLesson: async (lessonId) => {
-        const response = await axiosClient.delete(`${TIMETABLE_ENDPOINTS.BASE}/${lessonId}`);
+        const response = await axiosClient.delete(`${TIMETABLE_ENDPOINTS.BASE}/lessons/${lessonId}`);
         return response;
     },
 

@@ -25,6 +25,7 @@ const defaultForm = {
     semesterId: "",
     gradingMode: "auto",
     assessmentType: "regular",
+    isSynchronous: false,
     duration: DEFAULT_QUIZ_DURATION_LABEL,
     createdByRole: "teacher",
     createdByName: CURRENT_TEACHER_NAME,
@@ -51,6 +52,7 @@ export default function CreateTeacherQuizDialog({
         semesterId: initialValues?.semesterId || defaultForm.semesterId,
         gradingMode: initialValues?.gradingMode || defaultForm.gradingMode,
         assessmentType: initialValues?.assessmentType || defaultForm.assessmentType,
+        isSynchronous: initialValues?.isSynchronous ?? defaultForm.isSynchronous,
         duration: formatDurationLabel(initialValues?.duration || defaultForm.duration),
         createdByRole: "teacher",
         createdByName: initialValues?.createdByName || CURRENT_TEACHER_NAME,
@@ -132,6 +134,7 @@ export default function CreateTeacherQuizDialog({
                 semesterId: initialValues.semesterId || "",
                 gradingMode: initialValues.gradingMode || "auto",
                 assessmentType: initialValues.assessmentType || "regular",
+                isSynchronous: initialValues.isSynchronous ?? false,
                 duration: formatDurationLabel(initialValues.duration || DEFAULT_QUIZ_DURATION_LABEL),
                 createdByRole: "teacher",
                 createdByName: initialValues.createdByName || CURRENT_TEACHER_NAME,
@@ -195,6 +198,7 @@ export default function CreateTeacherQuizDialog({
             semesterId: formData.semesterId,
             gradingMode: formData.gradingMode,
             assessmentType: formData.assessmentType,
+            isSynchronous: formData.isSynchronous,
             duration: formData.duration,
             classTeacherSubjectId: matched ? matched.class_teacher_subject_id : (initialValues?.classTeacherSubjectId || null),
             createdByRole: "teacher",
@@ -379,6 +383,19 @@ export default function CreateTeacherQuizDialog({
                             if (val === "Giữa kỳ") type = "midterm";
                             if (val === "Cuối kỳ") type = "final";
                             handleChange("assessmentType", type);
+                        }}
+                    />
+                </div>
+
+                <div className="teacher-create-quiz-dialog__field">
+                    <Select
+                        label="Chế độ đếm giờ"
+                        name="teacher-quiz-timer-mode"
+                        options={["Tính giờ từ lúc bấm bắt đầu (Tự học)", "Tính giờ từ lúc phát đề (Thi tập trung)"]}
+                        value={formData.isSynchronous ? "Tính giờ từ lúc phát đề (Thi tập trung)" : "Tính giờ từ lúc bấm bắt đầu (Tự học)"}
+                        onChange={(event) => {
+                            const val = event.target.value;
+                            handleChange("isSynchronous", val === "Tính giờ từ lúc phát đề (Thi tập trung)");
                         }}
                     />
                 </div>
