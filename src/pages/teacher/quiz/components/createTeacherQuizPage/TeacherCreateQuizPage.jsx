@@ -85,6 +85,42 @@ const mapQuestionFromApiToView = (apiQuestion) => {
 
 const creationCache = {};
 
+const normalizeId = (value) => {
+    if (value === undefined || value === null || value === "") return "";
+    return String(value);
+};
+
+const getTeacherSubjectName = (assignment = {}) =>
+    assignment.subjects?.[0]?.name || assignment.subject_name || assignment.subject_display_name || "";
+
+const getTeacherSubjectSemesterId = (assignment = {}) =>
+    normalizeId(
+        assignment.class_teacher_subject_semester_id ??
+        assignment.classTeacherSubjectSemesterId ??
+        assignment.semester_id ??
+        assignment.semesterId
+    );
+
+const getTeacherSubjectSchoolYearId = (assignment = {}) =>
+    normalizeId(
+        assignment.class_teacher_subject_school_year_id ??
+        assignment.classTeacherSubjectSchoolYearId ??
+        assignment.school_year_id ??
+        assignment.schoolYearId
+    );
+
+const assignmentMatchesQuizMeta = (assignment = {}, quizMeta = {}) => {
+    const semesterId = normalizeId(quizMeta.semesterId);
+    const schoolYearId = normalizeId(quizMeta.schoolYearId);
+
+    if ((assignment.class_name || assignment.className) !== quizMeta.className) return false;
+    if (getTeacherSubjectName(assignment) !== quizMeta.subject) return false;
+    if (semesterId && getTeacherSubjectSemesterId(assignment) !== semesterId) return false;
+    if (schoolYearId && getTeacherSubjectSchoolYearId(assignment) !== schoolYearId) return false;
+
+    return true;
+};
+
 export default function TeacherCreateQuizPage() {
     const location = useLocation();
     const navigate = useNavigate();
@@ -167,8 +203,7 @@ export default function TeacherCreateQuizPage() {
                             });
                             if (teacherSubs && teacherSubs.success && Array.isArray(teacherSubs.data)) {
                                 const matched = teacherSubs.data.find(
-                                    a => a.class_name === routeQuizMeta.className &&
-                                         (a.subjects?.[0]?.name === routeQuizMeta.subject || a.subject_name === routeQuizMeta.subject)
+                                    (assignment) => assignmentMatchesQuizMeta(assignment, routeQuizMeta)
                                 );
                                 if (matched) {
                                     targetCtsId = matched.class_teacher_subject_id || matched.id;
@@ -179,8 +214,16 @@ export default function TeacherCreateQuizPage() {
                     
                     if (!targetCtsId) {
                         // Ultimate fallback: check listClassTeacherSubjects
-                        const assignments = await quizService.listClassTeacherSubjects();
-                        const matched = assignments.find((item) => item.className === routeQuizMeta.className);
+                        const assignments = await quizService.listClassTeacherSubjects({
+                            ...(routeQuizMeta.schoolYearId ? { schoolYearId: routeQuizMeta.schoolYearId } : {}),
+                            ...(routeQuizMeta.semesterId ? { semesterId: routeQuizMeta.semesterId } : {}),
+                        });
+                        const matched = assignments.find((item) =>
+                            item.className === routeQuizMeta.className &&
+                            item.subject === routeQuizMeta.subject &&
+                            (!routeQuizMeta.schoolYearId || normalizeId(item.schoolYearId) === normalizeId(routeQuizMeta.schoolYearId)) &&
+                            (!routeQuizMeta.semesterId || normalizeId(item.semesterId) === normalizeId(routeQuizMeta.semesterId))
+                        );
                         if (matched) {
                             targetCtsId = matched.value;
                         }
@@ -193,7 +236,13 @@ export default function TeacherCreateQuizPage() {
                     const durationMin = parseDurationMinutes(routeQuizMeta.duration);
                     
                     // Create quiz on backend with caching to prevent StrictMode duplicates
-                    const cacheKey = `${routeQuizMeta.title}_${routeQuizMeta.className}_${routeQuizMeta.subject}`;
+                    const cacheKey = [
+                        routeQuizMeta.title,
+                        routeQuizMeta.className,
+                        routeQuizMeta.subject,
+                        routeQuizMeta.schoolYearId || "",
+                        routeQuizMeta.semesterId || "",
+                    ].join("_");
                     let response;
                     if (creationCache[cacheKey]) {
                         response = await creationCache[cacheKey];

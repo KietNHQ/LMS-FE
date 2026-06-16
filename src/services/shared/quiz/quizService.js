@@ -165,6 +165,18 @@ const mapAssignmentOption = (item = {}) => {
     const subject = item.subject_display_name || item.subject_name || "";
     const className = item.class_name || "";
     const teacherName = item.teacher_name || "";
+    const semesterId =
+        item.class_teacher_subject_semester_id ??
+        item.classTeacherSubjectSemesterId ??
+        item.semester_id ??
+        item.semesterId ??
+        null;
+    const schoolYearId =
+        item.class_teacher_subject_school_year_id ??
+        item.classTeacherSubjectSchoolYearId ??
+        item.school_year_id ??
+        item.schoolYearId ??
+        null;
 
     return {
         value: item.id,
@@ -173,6 +185,15 @@ const mapAssignmentOption = (item = {}) => {
         className,
         grade: extractGradeFromClassName(className),
         teacherName,
+        semesterId,
+        semesterName: item.semester_name || item.semesterName || "",
+        schoolYearId,
+        schoolYearName:
+            item.school_year_name ||
+            item.school_year ||
+            item.schoolYearName ||
+            item.schoolYear ||
+            "",
         raw: item,
     };
 };
@@ -250,6 +271,7 @@ const normalizeCreatePayload = (quizData = {}) => {
         }),
         durationMinutes,
         maxAttempts: toNumber(quizData.maxAttempts ?? quizData.max_attempts) || 1,
+        semesterId: toNumber(quizData.semesterId ?? quizData.semester_id) || null,
         passScore:
             quizData.passScore === "" || quizData.passScore == null
                 ? null
@@ -617,4 +639,3 @@ export function buildFinalScore({ autoScore = 0, essayScore = 0 }) {
     const total = Number(autoScore || 0) + Number(essayScore || 0);
     return Number(Math.min(10, total).toFixed(2));
 }
-
