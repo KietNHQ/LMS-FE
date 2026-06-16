@@ -62,6 +62,21 @@ const getSchoolYearId = (schoolYear = {}) =>
 const getSchoolYearName = (schoolYear = {}) =>
     schoolYear.name || schoolYear.school_year_name || schoolYear.schoolYearName || schoolYear.year || "";
 
+const assignmentMatchesScope = (assignment = {}, schoolYearId, semesterId) => {
+    const assignmentSchoolYearId = getAssignmentSchoolYearId(assignment);
+    const assignmentSemesterId = getAssignmentSemesterId(assignment);
+
+    if (schoolYearId && assignmentSchoolYearId && assignmentSchoolYearId !== schoolYearId) {
+        return false;
+    }
+
+    if (semesterId && assignmentSemesterId && assignmentSemesterId !== semesterId) {
+        return false;
+    }
+
+    return true;
+};
+
 const defaultForm = {
     title: "",
     schoolYearId: "",
@@ -335,18 +350,7 @@ export default function CreateTeacherQuizDialog({
         const selectedSemesterId = normalizeId(formData.semesterId);
 
         return assignments.filter((assignment) => {
-            const assignmentSchoolYearId = getAssignmentSchoolYearId(assignment);
-            const assignmentSemesterId = getAssignmentSemesterId(assignment);
-
-            if (selectedSchoolYearId && assignmentSchoolYearId && assignmentSchoolYearId !== selectedSchoolYearId) {
-                return false;
-            }
-
-            if (selectedSemesterId && assignmentSemesterId && assignmentSemesterId !== selectedSemesterId) {
-                return false;
-            }
-
-            return true;
+            return assignmentMatchesScope(assignment, selectedSchoolYearId, selectedSemesterId);
         });
     }, [assignments, formData.schoolYearId, formData.semesterId]);
 
@@ -457,8 +461,7 @@ export default function CreateTeacherQuizDialog({
         const matched = assignments.find(
             a => getSubjectName(a) === formData.subject &&
                  getClassName(a) === formData.className &&
-                 (!selectedSchoolYearId || getAssignmentSchoolYearId(a) === selectedSchoolYearId) &&
-                 (!selectedSemesterId || getAssignmentSemesterId(a) === selectedSemesterId)
+                 assignmentMatchesScope(a, selectedSchoolYearId, selectedSemesterId)
         );
 
         const payload = {
