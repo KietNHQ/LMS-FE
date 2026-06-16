@@ -1,7 +1,23 @@
 .teacher-dashboard-container {
   padding: 24px;
   background: transparent;
-  min-height: 100vh;
+  height: calc(100vh - 48px);
+  min-width: 0;
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+
+.teacher-dashboard-container::-webkit-scrollbar {
+  width: 8px;
+}
+
+.teacher-dashboard-container::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 999px;
+}
+
+.teacher-dashboard-container::-webkit-scrollbar-track {
+  background: transparent;
 }
 
 /* ===== Teacher Teal Theme Overrides ===== */
@@ -22,7 +38,9 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 16px;
   margin-bottom: 24px;
+  flex-wrap: wrap;
 }
 
 .teacher-dashboard-header h1 {
@@ -58,28 +76,31 @@
 
 /* Layout */
 .teacher-dashboard-middle {
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(300px, 1fr) minmax(340px, 1fr);
   gap: 24px;
   margin-top: 24px;
   align-items: stretch;
+  min-width: 0;
 }
 
 
 .teacher-dashboard-middle> :first-child {
-  flex: 1;
-  /* Take 1/2 of space */
+  min-width: 0;
 }
 
 .teacher-dashboard-middle>.teacher-dashboard-calendar {
-  flex: 1;
-  /* Take 1/2 of space */
+  min-width: 0;
 }
 
 .teacher-dashboard-bottom {
   display: grid;
-  grid-template-columns: 1.2fr 1fr;
+  grid-template-columns: minmax(0, 1.2fr) minmax(320px, 1fr);
   gap: 24px;
   margin-top: 24px;
+  min-width: 0;
+  align-items: stretch;
+  padding-bottom: 24px;
 }
 
 /* Section Titles */
@@ -91,14 +112,15 @@
 }
 
 .teacher-dashboard-calendar {
-  flex: 1;
   display: flex;
-  min-height: 460px;
-  max-height: 540px;
+  min-height: 430px;
+  max-height: 520px;
+  min-width: 0;
 }
 
 .teacher-dashboard-calendar .event-calendar {
   width: 100%;
+  min-width: 0;
 }
 
 /* ===== Quiz ===== */
@@ -163,4 +185,29 @@
 :root {
   --teacher-axis-left: 50px;
   --teacher-chart-height: 150px;
+}
+
+@media (max-width: 1180px) {
+  .teacher-dashboard-middle,
+  .teacher-dashboard-bottom {
+    grid-template-columns: 1fr;
+  }
+
+  .teacher-dashboard-calendar,
+  .teacher-dashboard-schedule {
+    max-height: none;
+  }
+}
+
+@media (max-width: 760px) {
+  .teacher-dashboard-container {
+    padding: 16px;
+    height: calc(100vh - 32px);
+  }
+
+  .teacher-dashboard-middle,
+  .teacher-dashboard-bottom {
+    gap: 16px;
+    margin-top: 16px;
+  }
 }

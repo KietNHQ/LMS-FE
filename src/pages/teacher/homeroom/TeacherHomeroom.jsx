@@ -95,7 +95,7 @@ export default function TeacherHomeroom() {
                         classResData = data;
                     }
                 }
-            } catch (e) {
+            } catch {
                 // Silently fallback to multiple calls if consolidated API is not ready
             }
 
@@ -219,7 +219,7 @@ export default function TeacherHomeroom() {
     });
 
     // Load conduct summary for homeroom class
-    const { data: conductData, refetch: refetchConduct } = useQuery({
+    const { data: conductData } = useQuery({
         queryKey: ["teacher-homeroom-conduct", classData?.id, selectedTerm, hkSemesterIds],
         queryFn: async () => {
             if (!classData?.id) return null;
@@ -308,7 +308,7 @@ export default function TeacherHomeroom() {
         staleTime: 60_000,
     });
 
-    // Load teacher's own timetable for "Mốc tiết học" section
+    // Load timetable, then filter markers to the homeroom class.
     const { data: teacherTimetableData } = useQuery({
         queryKey: ["teacher-timetable", teacherId, selectedSchoolYear, selectedTerm],
         queryFn: async () => {
@@ -328,12 +328,31 @@ export default function TeacherHomeroom() {
 
     const lessonMarkers = useMemo(() => {
         const lessons = teacherTimetableData?.lessons || teacherTimetableData || [];
+        const homeroomClassId = classData?.id ? String(classData.id) : "";
+        const homeroomClassName = String(classData?.name || classData?.className || classData?.class_name || "")
+            .trim()
+            .toLowerCase();
+
+        const homeroomLessons = Array.isArray(lessons)
+            ? lessons.filter((lesson) => {
+                const lessonClassId = String(lesson.classId || lesson.class_id || lesson.class?.id || "");
+                const lessonClassName = String(lesson.className || lesson.class_name || lesson.class?.class_name || "")
+                    .trim()
+                    .toLowerCase();
+
+                return (
+                    (homeroomClassId && lessonClassId === homeroomClassId) ||
+                    (homeroomClassName && lessonClassName === homeroomClassName)
+                );
+            })
+            : [];
+
         const markers = {};
         const dayLabels = { 2: "Thứ 2", 3: "Thứ 3", 4: "Thứ 4", 5: "Thứ 5", 6: "Thứ 6", 7: "Thứ 7" };
         const today = new Date();
         today.setHours(0, 0, 0, 0);
 
-        lessons.forEach((lesson) => {
+        homeroomLessons.forEach((lesson) => {
             const dow = lesson.dayOfWeek;
             if (!dayLabels[dow]) return;
 
@@ -367,7 +386,7 @@ export default function TeacherHomeroom() {
         return Object.values(markers)
             .sort((a, b) => a.date.localeCompare(b.date))
             .slice(0, 14);
-    }, [teacherTimetableData]);
+    }, [classData?.class_name, classData?.className, classData?.id, classData?.name, teacherTimetableData]);
 
     // Hàm mapping dữ liệu từ API sang cấu trúc UI
     const mapApiDataToUI = (apiData, academicData = null) => {
@@ -445,10 +464,6 @@ export default function TeacherHomeroom() {
         };
     };
 
-    const handleSectionChange = (section) => {
-        setActiveSection(section);
-    };
-
     const officerRows = useMemo(() => {
         if (!classData || !classData.students) return [];
         return Object.entries(officerRoleConfig).map(([key, config]) => {
@@ -510,16 +525,6 @@ export default function TeacherHomeroom() {
             </div>
         );
     }
-
-    const handleUpdateStudent = (studentId, updates) => {
-        // Local update logic
-        return true;
-    };
-
-    const handleAssignOfficer = (studentId, roleKey) => {
-        toast.info("Vui lòng sử dụng nút 'Ban cán sự lớp' để phân công chính thức.");
-        return false;
-    };
 
     const openOfficerDialog = () => setActionDialog({ open: true, mode: "officer", editingData: null });
     const openActivityDialog = (activity = null) => setActionDialog({ open: true, mode: "activity", editingData: activity });

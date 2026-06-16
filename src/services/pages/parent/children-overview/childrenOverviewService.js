@@ -8,10 +8,13 @@ export const childrenOverviewService = {
   getChildGrades: parentService.getChildGrades,
   getChildAttendance: parentService.getChildAttendance,
   getChildSchedule: parentService.getChildSchedule,
+  getSystemEvents: parentService.getSystemEvents,
+  listLeaveRequests: parentService.listLeaveRequests,
+  getChildConductSummary: parentService.getChildConductSummary,
+  getChildDisciplineScores: parentService.getChildDisciplineScores,
   moduleServices: parentService.moduleServices,
   listByModule: parentService.listByModule,
   callByKey: parentService.callByKey,
 };
 
 export default childrenOverviewService;
-

@@ -327,9 +327,12 @@
 .event-calendar__events-dots {
   display: flex;
   justify-content: center;
+  align-items: center;
   gap: 2px;
   width: 100%;
   margin-bottom: 2px;
+  min-width: 0;
+  flex-wrap: wrap;
 }
 
 .event-calendar__dot {
@@ -346,6 +349,17 @@
   border: 1.5px solid white;
   width: clamp(9px, 0.8vw, 13px);
   height: clamp(9px, 0.8vw, 13px);
+}
+
+.event-calendar__dot-count {
+  font-size: 10px;
+  font-weight: 800;
+  color: var(--admin-text-secondary, #64748b);
+  line-height: 1;
+}
+
+.event-calendar__day--today .event-calendar__dot-count {
+  color: #ffffff;
 }
 
 .event-calendar__event--blue {

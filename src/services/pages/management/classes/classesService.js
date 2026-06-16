@@ -1,7 +1,5 @@
 import axiosClient from "../../../shared/http/axiosClient";
 import {
-  getGradeLevelNumber,
-  getSchoolYearName,
   resolveGradeLevelId,
   resolveSchoolYearId,
   getGradeLevelFilterOptions,
@@ -117,15 +115,10 @@ export const classesService = {
     if (resolvedSchoolYearId && typeof resolvedSchoolYearId === "string" && isNaN(Number(resolvedSchoolYearId))) {
       resolvedSchoolYearId = await resolveSchoolYearId(resolvedSchoolYearId);
     }
-    if (!resolvedSchoolYearId || (typeof resolvedSchoolYearId === "number" && isNaN(resolvedSchoolYearId))) {
-      // #region agent log
-      fetch('http://127.0.0.1:7327/ingest/2c66a085-4ebf-4354-b3da-5d8073414dc9',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'7cfba0'},body:JSON.stringify({sessionId:'7cfba0',location:'classesService.js:listClasses:early_return',message:'listClasses returning early',data:{inputSchoolYearId:schoolYearId,resolvedSchoolYearId,schoolYearName},timestamp:Date.now()})}).catch(()=>{});
-      // #endregion
-      return [];
+
+    if (typeof resolvedSchoolYearId === "number" && isNaN(resolvedSchoolYearId)) {
+      resolvedSchoolYearId = undefined;
     }
-    // #region agent log
-    fetch('http://127.0.0.1:7327/ingest/2c66a085-4ebf-4354-b3da-5d8073414dc9',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'7cfba0'},body:JSON.stringify({sessionId:'7cfba0',location:'classesService.js:listClasses:api_call',message:'listClasses calling API',data:{inputSchoolYearId:schoolYearId,resolvedSchoolYearId,gradeLevelId},timestamp:Date.now()})}).catch(()=>{});
-    // #endregion
 
     const params = {
       page: 1,
@@ -136,9 +129,6 @@ export const classesService = {
     };
 
     const response = await axiosClient.get("/classes", { params });
-    // #region agent log
-    fetch('http://127.0.0.1:7327/ingest/2c66a085-4ebf-4354-b3da-5d8073414dc9',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'7cfba0'},body:JSON.stringify({sessionId:'7cfba0',location:'classesService.js:listClasses:result',message:'listClasses result',data:{params,responseDataKeys:Object.keys(response||{}),rowsCount:Array.isArray(response?.data?.classes)?response.data.classes.length:Array.isArray(response?.data)?response.data.length:Array.isArray(response?.classes)?response.classes.length:0},timestamp:Date.now()})}).catch(()=>{});
-    // #endregion
     return getRows(response).map(parseClass);
   },
 
@@ -156,7 +146,5 @@ export const classesService = {
     return axiosClient.delete(`/classes/${id}`);
   },
 };
-
-
 
 

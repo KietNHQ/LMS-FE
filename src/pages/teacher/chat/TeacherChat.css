@@ -131,6 +131,7 @@
     display: flex;
     flex-direction: column;
     min-width: 0;
+    flex: 1;
 }
 
 .target-name {
@@ -142,6 +143,23 @@
 .target-sub {
     font-size: 0.8rem;
     color: #64748b;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.target-unread {
+    min-width: 22px;
+    height: 22px;
+    padding: 0 6px;
+    border-radius: 999px;
+    background: var(--admin-primary, #1e2f5a);
+    color: #fff;
+    font-size: 0.75rem;
+    font-weight: 800;
+    line-height: 22px;
+    text-align: center;
+    flex-shrink: 0;
 }
 
 /* 2. Main Chat Area */
@@ -194,6 +212,7 @@
     padding: 10px 14px;
     border-radius: 15px;
     font-size: 0.95rem;
+    position: relative;
 }
 
 .msg-me {
@@ -217,6 +236,43 @@
     margin-top: 4px;
     opacity: 0.7;
     text-align: right;
+}
+
+.msg-delete-btn {
+    position: absolute;
+    top: 50%;
+    right: calc(100% + 8px);
+    transform: translateY(-50%);
+    width: 28px;
+    height: 28px;
+    border: 1px solid #dbe3ef;
+    border-radius: 50%;
+    background: #ffffff;
+    color: var(--admin-primary, #1e2f5a);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.16s ease, transform 0.16s ease, color 0.16s ease;
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.12);
+}
+
+.msg-delete-btn svg {
+    width: 14px;
+    height: 14px;
+}
+
+.msg-me:hover .msg-delete-btn,
+.msg-delete-btn:focus-visible {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.msg-delete-btn:hover {
+    color: #dc2626;
+    transform: translateY(-50%) scale(1.05);
 }
 
 .chat-input-wrapper {

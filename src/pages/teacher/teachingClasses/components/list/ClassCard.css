@@ -6,6 +6,7 @@
   box-shadow: 0 6px 16px rgba(15, 118, 110, 0.08);
   transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
   cursor: pointer;
+  min-width: 0;
 }
 
 .teacher-class-list-card:hover {
@@ -39,6 +40,7 @@
 
 .teacher-class-list-card__heading {
   min-width: 0;
+  flex: 1;
 }
 
 .teacher-class-list-card__heading h3 {
@@ -46,6 +48,9 @@
   color: var(--tc-text-main);
   font-size: 16px;
   font-weight: 800;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .teacher-class-list-card__heading p {
@@ -53,6 +58,7 @@
   color: var(--tc-text-subtle);
   font-size: 13px;
   font-weight: 600;
+  overflow-wrap: anywhere;
 }
 
 .teacher-class-list-card__meta {
@@ -104,4 +110,6 @@
   color: var(--tc-text-main);
   font-size: 14px;
   font-weight: 800;
+  display: block;
+  overflow-wrap: anywhere;
 }

@@ -13,9 +13,9 @@
       (function() {
         var isPersistent = localStorage.getItem("isPersistent") === "true";
         if (!isPersistent) {
-          // Kiểm tra xem tab này có "giấy thông hành" (sessionStorage flag) không
-          // Nếu không có flag -> Đây là tab mới hoặc tab vừa được Firefox khôi phục từ quá khứ
-          if (!sessionStorage.getItem("tab_authorized_entry")) {
+          // Login creates tab_session_id for non-persistent sessions.
+          // If it is missing, this tab is new/restored and must not reuse localStorage auth.
+          if (!sessionStorage.getItem("tab_session_id")) {
             console.warn("Security Breach Detected: Restored session without authorization. Purging...");
             localStorage.removeItem("accessToken");
             localStorage.removeItem("refreshToken");

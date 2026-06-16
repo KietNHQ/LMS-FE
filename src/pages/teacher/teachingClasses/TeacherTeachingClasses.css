@@ -35,6 +35,17 @@
   padding: 0;
   box-sizing: border-box;
   min-height: 100vh;
+  min-width: 0;
+}
+
+.teacher-classes-page {
+  gap: 16px;
+  height: calc(100vh - 48px);
+  overflow: hidden;
+}
+
+.teacher-classes-page .common-page-header {
+  flex: 0 0 auto;
 }
 
 .class-detail-page {

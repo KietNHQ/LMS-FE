@@ -1,14 +1,15 @@
-import { useEffect, useMemo } from "react";
+import { useMemo } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { PageHeader, SchoolYearTermSelector, EventCalendar, LoadingSpinner } from "../../../../components/common";
 import { useSchoolYearTerm } from "../../../../hooks/useSchoolYearTerm";
 import { dashboardStatsService } from "../../../../services/pages/admin";
 import { schoolEventsService } from "../../../../services/pages/admin/school-events/schoolEventsService";
 import { resolveSemesterId } from "../../../../services/shared/schoolYearLookup";
+import { classesService } from "../../../../services/pages/management/classes/classesService";
 import {
     FiUsers, FiUserCheck, FiHome, FiDollarSign, FiStar, FiActivity,
     FiShield, FiBell, FiTrendingUp, FiCheckCircle, FiBarChart2, FiAlertCircle,
-    FiArrowRight, FiTrendingDown, FiBookOpen, FiCalendar
+    FiArrowRight, FiTrendingDown, FiBookOpen
 } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
 import { CALENDAR_EVENT_TYPES } from "../../../../components/common/EventCalendar/eventData";
@@ -71,6 +72,25 @@ export default function PrincipalDashboard() {
         enabled: Boolean(selectedSchoolYear),
         staleTime: 5 * 60 * 1000,
     });
+
+    const { data: classRows = [] } = useQuery({
+        queryKey: ["dashboard-event-target-classes", selectedSchoolYear],
+        queryFn: () => classesService.listClasses({ schoolYearName: selectedSchoolYear }),
+        enabled: Boolean(selectedSchoolYear),
+        staleTime: 5 * 60 * 1000,
+    });
+
+    const calendarTargetOptions = useMemo(() => {
+        const options = [{ value: "all", label: "Toàn trường" }];
+        classRows.forEach((classItem) => {
+            if (!classItem?.id || !classItem?.name) return;
+            options.push({
+                value: String(classItem.id),
+                label: `Lớp ${classItem.name}`,
+            });
+        });
+        return options;
+    }, [classRows]);
 
     // Normalize events to what EventCalendar expects
     const calendarEvents = useMemo(() => {
@@ -155,6 +175,7 @@ export default function PrincipalDashboard() {
         try {
             await schoolEventsService.create({
                 ...eventData,
+                affectedClasses: eventData.target === "all" ? [] : [String(eventData.target)],
                 semesterId,
                 schoolYearId: null,
             });
@@ -359,6 +380,7 @@ export default function PrincipalDashboard() {
                         isCompact={false}
                         initialEvents={calendarEvents}
                         eventTypes={CALENDAR_EVENT_TYPES}
+                        targetOptions={calendarTargetOptions}
                         onAddEvent={handleAddEvent}
                     />
                 </div>

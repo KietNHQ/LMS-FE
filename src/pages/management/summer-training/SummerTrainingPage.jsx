@@ -21,6 +21,11 @@ const TRAINING_STATUS = {
   not_completed: { bg: "bg-red-100", text: "text-red-700", border: "border-red-300", label: "Không hoàn thành", icon: FiXCircle },
 };
 
+const normalizeTrainingStatus = (status) => {
+  if (status === "enrolled") return "not_started";
+  return status || "not_started";
+};
+
 const mapStudentData = (s) => ({
   enrollmentId: s.enrollmentId || s.enrollment_id,
   studentId: s.studentId || s.student_id,
@@ -30,8 +35,8 @@ const mapStudentData = (s) => ({
   annualGpa: s.annualGpa ?? s.annual_gpa ?? s.gpa ?? null,
   currentConduct: s.currentConduct || s.current_conduct || s.conduct || "",
   targetConduct: s.targetConduct || s.target_conduct || "Tốt",
-  daysAttended: s.daysAttended ?? s.days_attended ?? s.days ?? 0,
-  status: s.status || "not_started",
+  daysAttended: s.daysAttended ?? s.days_attended ?? s.attendance_days ?? s.days ?? 0,
+  status: normalizeTrainingStatus(s.status || s.completion_status),
   note: s.note || s.notes || "",
 });
 
@@ -78,9 +83,9 @@ export default function SummerTrainingPage() {
   const classOptions = useMemo(() => {
     if (!classesData) return [];
     return classesData.map((c) => ({
-      value: c.id || c.name || c.class_name || "",
+      value: String(c.id || c.name || c.class_name || ""),
       label: c.name || c.class_name || "",
-      grade: String((c.name || "").slice(0, 2)),
+      grade: String((c.name || c.class_name || "").slice(0, 2)),
     }));
   }, [classesData]);
 
@@ -94,9 +99,6 @@ export default function SummerTrainingPage() {
     queryFn: async () => {
       if (!selectedClass) return null;
       const schoolYearId = await resolveSchoolYearId(selectedSchoolYear);
-      // #region agent log
-      fetch('http://127.0.0.1:7327/ingest/2c66a085-4ebf-4354-b3da-5d8073414dc9',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'7cfba0'},body:JSON.stringify({sessionId:'7cfba0',location:'SummerTrainingPage.jsx:trainingQuery',message:'summer training query',data:{selectedClass,selectedSchoolYear,schoolYearId},timestamp:Date.now()})}).catch(()=>{});
-      // #endregion
       const res = await summerTrainingService.getSummerTrainingSummary(
         selectedClass, currentPage, ITEMS_PER_PAGE, schoolYearId
       );
@@ -104,16 +106,6 @@ export default function SummerTrainingPage() {
     },
     enabled: Boolean(selectedClass && selectedSchoolYear),
     staleTime: 60_000,
-    onSuccess: (data) => {
-      // #region agent log
-      fetch('http://127.0.0.1:7327/ingest/2c66a085-4ebf-4354-b3da-5d8073414dc9',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'7cfba0'},body:JSON.stringify({sessionId:'7cfba0',location:'SummerTrainingPage.jsx:trainingQuery:onSuccess',message:'summer training query success',data:{selectedClass,selectedSchoolYear,total:data?.total,studentsCount:Array.isArray(data?.students)?data.students.length:0},timestamp:Date.now()})}).catch(()=>{});
-      // #endregion
-    },
-    onError: (err) => {
-      // #region agent log
-      fetch('http://127.0.0.1:7327/ingest/2c66a085-4ebf-4354-b3da-5d8073414dc9',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'7cfba0'},body:JSON.stringify({sessionId:'7cfba0',location:'SummerTrainingPage.jsx:trainingQuery:onError',message:'summer training query error',data:{selectedClass,selectedSchoolYear,error:String(err)},timestamp:Date.now()})}).catch(()=>{});
-      // #endregion
-    },
   });
 
   const startTrainingMutation = useMutation({
@@ -177,7 +169,13 @@ export default function SummerTrainingPage() {
 
   const studentList = useMemo(() => {
     if (!trainingData?.students) return [];
-    let list = trainingData.students.map(mapStudentData);
+    let list = trainingData.students.map((student) => {
+      const mapped = mapStudentData(student);
+      if (!mapped.className) {
+        mapped.className = trainingData.class_name || trainingData.className || "";
+      }
+      return mapped;
+    });
     if (searchTerm) {
       const term = searchTerm.toLowerCase();
       list = list.filter((s) =>
@@ -190,10 +188,7 @@ export default function SummerTrainingPage() {
 
   const totalPages = useMemo(() => trainingData?.totalPages ?? 1, [trainingData]);
   const effectivePage = Math.min(currentPage, totalPages);
-  const paginatedStudents = useMemo(() => {
-    const start = (effectivePage - 1) * ITEMS_PER_PAGE;
-    return studentList.slice(start, start + ITEMS_PER_PAGE);
-  }, [studentList, effectivePage]);
+  const paginatedStudents = studentList;
 
   const goPrevPage = () => setCurrentPage((prev) => Math.max(1, prev - 1));
   const goNextPage = () => setCurrentPage((prev) => Math.min(totalPages, prev + 1));
@@ -201,9 +196,10 @@ export default function SummerTrainingPage() {
   const stats = useMemo(() => {
     const total = trainingData?.total ?? 0;
     if (!total) return { total: 0, completed: 0, inProgress: 0, notStarted: 0, rate: 0 };
-    const completed = studentList.filter((s) => s.status === "completed").length;
-    const inProgress = studentList.filter((s) => s.status === "in_progress").length;
-    const notStarted = studentList.filter((s) => s.status === "not_started").length;
+    const backendStats = trainingData?.stats || {};
+    const completed = backendStats.completed ?? studentList.filter((s) => s.status === "completed").length;
+    const inProgress = backendStats.in_progress ?? studentList.filter((s) => s.status === "in_progress").length;
+    const notStarted = backendStats.enrolled ?? studentList.filter((s) => s.status === "not_started").length;
     const rate = total > 0 ? Math.round((completed / total) * 100) : 0;
     return { total, completed, inProgress, notStarted, rate };
   }, [studentList, trainingData]);
@@ -325,8 +321,9 @@ export default function SummerTrainingPage() {
               variant="custom"
               value={selectedGrade}
               onChange={(e) => {
-                setSelectedGrade(e.target.value);
-                const firstClass = filteredClassOptions.find((c) => !e.target.value || e.target.value === "all" || c.grade === e.target.value);
+                const nextGrade = e.target.value;
+                setSelectedGrade(nextGrade);
+                const firstClass = classOptions.find((c) => !nextGrade || nextGrade === "all" || c.grade === nextGrade);
                 if (firstClass) setSelectedClass(firstClass.value);
               }}
               options={[

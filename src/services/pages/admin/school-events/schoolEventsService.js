@@ -26,6 +26,7 @@ export const schoolEventsService = {
       endDate: data.endDate || data.date,
       eventType,
       color: data.color || "#3B82F6",
+      affectedClasses: Array.isArray(data.affectedClasses) ? data.affectedClasses : [],
       semesterId: data.semesterId,
       schoolYearId: data.schoolYearId,
     };

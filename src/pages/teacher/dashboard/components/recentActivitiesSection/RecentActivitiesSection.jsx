@@ -4,6 +4,13 @@ import { BookOpen } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import teacherService from "../../../../../services/pages/teacher/teacherService";
 
+const formatActivityTime = (value) => {
+  if (!value) return "Chưa cập nhật";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "Chưa cập nhật";
+  return date.toLocaleString("vi-VN");
+};
+
 const RecentActivitiesSection = ({ activities: propActivities }) => {
   const currentWeek = 28;
 
@@ -27,7 +34,7 @@ const RecentActivitiesSection = ({ activities: propActivities }) => {
     ? lessonsData.map(l => ({
         title: l.title || l.content || "Hoạt động mới",
         info: l.info || `${l.period || "N/A"} • ${l.subject_name || "Môn học"} • ${l.class_name || "Lớp"}`,
-        time: new Date(l.created_at || l.time || l.date || Date.now()).toLocaleString('vi-VN'),
+        time: formatActivityTime(l.created_at || l.time || l.date),
         status: l.status === 'published' || l.status === 'Đã xuất bản' || l.status === 'success' ? 'published' : 'draft',
         statusLabel: l.status === 'published' || l.status === 'Đã xuất bản' ? 'Đã đăng' : (l.status === 'draft' || l.status === 'Bản nháp' ? 'Nháp' : 'Xong')
       }))

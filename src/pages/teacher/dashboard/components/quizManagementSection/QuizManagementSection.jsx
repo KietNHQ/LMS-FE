@@ -5,33 +5,36 @@ import WeekPicker from "../../../../../components/common/WeekPicker/WeekPicker";
 import teacherService from "../../../../../services/pages/teacher/teacherService";
 import { useSchoolYearTerm } from "../../../../../hooks/useSchoolYearTerm";
 
+const getAcademicWeekForYear = (dateValue, schoolYear) => {
+  const date = new Date(dateValue);
+  if (Number.isNaN(date.getTime())) return 1;
+
+  const startYear = Number.parseInt(String(schoolYear || "").split("-")[0], 10) || date.getFullYear();
+  const schoolYearStart = new Date(startYear, 7, 25);
+  const diffDays = Math.max(0, Math.floor((date - schoolYearStart) / 86400000));
+  return Math.max(1, Math.floor(diffDays / 7) + 1);
+};
+
 const QuizManagementSection = () => {
   const { selectedSchoolYear } = useSchoolYearTerm();
   const [selectedWeek, setSelectedWeek] = useState(1);
   const [apiQuizzes, setApiQuizzes] = useState([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingQuizzes, setIsLoadingQuizzes] = useState(false);
 
-  const getAcademicWeek = (dateValue) => {
-    const date = new Date(dateValue);
-    if (Number.isNaN(date.getTime())) return 1;
-
-    const startYear = Number.parseInt(String(selectedSchoolYear || "").split("-")[0], 10) || date.getFullYear();
-    const schoolYearStart = new Date(startYear, 7, 25); // 25/08 of school-year start
-    const diffDays = Math.max(0, Math.floor((date - schoolYearStart) / 86400000));
-    return Math.max(1, Math.floor(diffDays / 7) + 1);
-  };
-
-  const currentAcademicWeek = React.useMemo(() => getAcademicWeek(new Date()), [selectedSchoolYear]);
+  const currentAcademicWeek = React.useMemo(
+    () => getAcademicWeekForYear(new Date(), selectedSchoolYear),
+    [selectedSchoolYear],
+  );
 
   const getQuizWeek = (quiz) => {
     const sourceDate = quiz?.start_date || quiz?.end_date || quiz?.created_at;
     if (!sourceDate) return null;
-    return getAcademicWeek(sourceDate);
+    return getAcademicWeekForYear(sourceDate, selectedSchoolYear);
   };
 
   useEffect(() => {
     const fetchQuizzes = async () => {
-      setIsLoading(true);
+      setIsLoadingQuizzes(true);
       try {
         const response = await teacherService.listQuizzes({ mock: false });
         if (!response) return;
@@ -49,7 +52,7 @@ const QuizManagementSection = () => {
       } catch (error) {
         console.error("Failed to fetch quizzes:", error);
       } finally {
-        setIsLoading(false);
+        setIsLoadingQuizzes(false);
       }
     };
     fetchQuizzes();
@@ -110,6 +113,10 @@ const QuizManagementSection = () => {
               </span>
             </div>
           ))
+        ) : isLoadingQuizzes ? (
+          <div className="quiz-empty">
+            <p>Đang tải bài kiểm tra...</p>
+          </div>
         ) : (
           <div className="quiz-empty">
             <p>Không có bài kiểm tra nào trong tuần này.</p>
@@ -121,7 +128,6 @@ const QuizManagementSection = () => {
 };
 
 export default QuizManagementSection;
-
 
 
 

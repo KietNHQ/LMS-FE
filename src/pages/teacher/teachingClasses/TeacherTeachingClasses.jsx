@@ -8,8 +8,17 @@ import { useSchoolYearTerm } from "../../../hooks/useSchoolYearTerm";
 import { teachingClassesData } from "./data/teachingClassesData";
 import ClassToolbar from "./components/list/ClassToolbar";
 import ClassGrid from "./components/list/ClassGrid";
-import { formatName } from "../../../utils/nameUtils";
 
+const getSubjectName = (item = {}) => {
+  const [firstSubject] = Array.isArray(item.subjects) ? item.subjects : [];
+  if (typeof firstSubject === "string") return firstSubject;
+  return firstSubject?.name || firstSubject?.subject_name || item.subject_name || "N/A";
+};
+
+const normalizeGrade = (value) => {
+  const matched = `${value || "10"}`.match(/\d+/);
+  return matched ? matched[0] : "10";
+};
 
 const TeacherTeachingClasses = () => {
   const { selectedSchoolYear, selectedTerm, handleYearArrow, handleTermChange } = useSchoolYearTerm();
@@ -24,17 +33,17 @@ const TeacherTeachingClasses = () => {
   const { data: classesResponse, isLoading } = useQuery({
     queryKey: ["teacher-teaching-classes", teacherId, selectedSchoolYear, selectedTerm],
     queryFn: async () => {
-      if (!teacherId) return { success: false, data: [] };
-      
-      // Ưu tiên gọi API consolidated mới, nếu lỗi thì fallback về API cũ
       try {
         const response = await teacherService.getConsolidatedTeachingClasses({
+          mock: false,
           params: { schoolYear: selectedSchoolYear, term: selectedTerm }
         });
         if (response.success) return response;
-      } catch (e) {
+      } catch {
         console.warn("Consolidated API not ready, falling back to legacy API");
       }
+
+      if (!teacherId) return { success: false, data: [] };
 
       return teacherService.getTeacherSubjects({ 
         mock: false,
@@ -42,7 +51,7 @@ const TeacherTeachingClasses = () => {
         params: { schoolYear: selectedSchoolYear, term: selectedTerm }
       });
     },
-    enabled: !!teacherId,
+    enabled: Boolean(selectedSchoolYear && selectedTerm),
   });
 
   const rawClasses = classesResponse?.success && classesResponse.data ? classesResponse.data : [];
@@ -50,20 +59,15 @@ const TeacherTeachingClasses = () => {
   // Mapping logic tập trung để khớp với API mới
   const classes = classesResponse?.success 
     ? rawClasses.map(item => {
-        // Lấy tên môn học đầu tiên trong danh sách môn giảng dạy tại lớp đó
-        const subjectName = item.subjects && item.subjects.length > 0 
-          ? item.subjects[0].name 
-          : (item.subject_name || "N/A");
-
         return {
           id: item.class_id || item.id,
-          name: item.class_name || item.name,
-          grade: (item.grade || item.grade_level || "10").replace("Khối ", ""),
-          subject: subjectName,
+          name: item.class_name || item.className || item.name || "Chưa có tên lớp",
+          grade: normalizeGrade(item.grade || item.grade_level || item.gradeLevel),
+          subject: getSubjectName(item),
           year: selectedSchoolYear,
           term: selectedTerm,
           status: "Đang hoạt động",
-          teacher: item.homeroomTeacher || item.homeroom_teacher_name || "Chưa cập nhật",
+          teacher: item.homeroomTeacher || item.homeroom_teacher_name || item.teacher || "Chưa cập nhật",
           studentsCount: parseInt(item.studentsCount ?? item.actual_students ?? item.student_count ?? 0) || 0,
           students: []
         };
@@ -71,7 +75,9 @@ const TeacherTeachingClasses = () => {
     : (isLoading ? [] : teachingClassesData);
 
   const filteredClasses = classes.filter((cls) => {
-    const matchSearch = cls.name.toLowerCase().includes(searchTerm.toLowerCase());
+    const search = searchTerm.trim().toLowerCase();
+    const searchableText = [cls.name, cls.subject, cls.teacher].filter(Boolean).join(" ").toLowerCase();
+    const matchSearch = !search || searchableText.includes(search);
     const matchFilter = activeToolbarFilter === "all" || cls.grade === activeToolbarFilter;
     return matchSearch && matchFilter;
   });
@@ -118,6 +124,4 @@ const TeacherTeachingClasses = () => {
 };
 
 export default TeacherTeachingClasses;
-
-
 

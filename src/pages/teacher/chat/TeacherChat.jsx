@@ -1,6 +1,5 @@
 import React, { useState, useMemo, useEffect, useRef } from "react";
-import { FiSearch, FiSend, FiUsers, FiMessageSquare, FiHash, FiInfo } from "react-icons/fi";
-import { homeroomData } from "../homeroom/data/homeroomData";
+import { FiSearch, FiSend, FiMessageSquare, FiTrash2 } from "react-icons/fi";
 import { teacherService } from "../../../services/pages/teacher/teacherService";
 import { io } from "socket.io-client";
 import "./TeacherChat.css";
@@ -49,6 +48,7 @@ export default function TeacherChat() {
     // Key messages by conversationId so real-time events route correctly
     const [messagesByConv, setMessagesByConv] = useState({});
     const [apiContacts, setApiContacts] = useState([]);
+    const [existingConversations, setExistingConversations] = useState([]);
     // Map conversationId → target info for routing new_message events (ref for socket handler closure)
     const [convIdToTarget, setConvIdToTarget] = useState({});
     const convIdToTargetRef = useRef({});
@@ -58,11 +58,11 @@ export default function TeacherChat() {
     const messagesEndRef = useRef(null);
 
     const getToken = () => {
-        const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
+        const storedUser = JSON.parse(localStorage.getItem("user") || sessionStorage.getItem("user") || "{}");
         return storedUser?.accessToken || localStorage.getItem("accessToken") || sessionStorage.getItem("accessToken") || "";
     };
     const getUserId = () => {
-        const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
+        const storedUser = JSON.parse(localStorage.getItem("user") || sessionStorage.getItem("user") || "{}");
         return storedUser?.id || "";
     };
 
@@ -73,25 +73,35 @@ export default function TeacherChat() {
     ].find(r => r.id === activeRoomId), [activeRoomId]);
 
     const targets = useMemo(() => {
-        if (apiContacts.length > 0) {
-            if (activeRoomId === "homeroom") {
-                return apiContacts.map(c => ({
-                    id: c.parent_id,
-                    name: c.parent_name,
-                    subLabel: `PH em: ${c.student_name} (${c.class_name})`,
-                    avatar: (c.parent_name || "PH").charAt(0),
-                    type: "parent"
-                }));
-            }
-        }
         if (activeRoomId === "homeroom") {
-            return (homeroomData.students || []).map(s => ({
-                id: `parent-${s.id}`,
-                name: s.parentName,
-                subLabel: `PH em: ${s.name}`,
-                avatar: s.parentName.charAt(0),
-                type: "parent"
+            const contactTargets = apiContacts.map(c => ({
+                id: c.parent_id,
+                name: c.parent_name,
+                subLabel: `PH em: ${c.student_name} (${c.class_name})`,
+                avatar: (c.parent_name || "PH").charAt(0),
+                type: "parent",
+                isRealContact: true,
             }));
+
+            const activeContactIds = new Set(apiContacts.map(c => String(c.parent_id)));
+            const conversationTargets = existingConversations
+                .filter(conv => conv.other_user_id && !activeContactIds.has(String(conv.other_user_id)))
+                .map(conv => {
+                    const name = conv.other_full_name || conv.otherParticipant?.fullName || "Phụ huynh";
+                    const lastMessage = conv.last_message ? `Tin nhắn cuối: ${conv.last_message}` : "Cuộc trò chuyện đã có";
+                    return {
+                        id: conv.other_user_id,
+                        name,
+                        subLabel: lastMessage,
+                        avatar: (name || "PH").charAt(0),
+                        type: "parent",
+                        conversationId: conv.id,
+                        unreadCount: Number(conv.unread_count || 0),
+                        isExistingConversation: true,
+                    };
+                });
+
+            return [...contactTargets, ...conversationTargets];
         }
         if (activeRoomId === "department") {
             return MOCK_DEPT_TEACHERS.map(t => ({
@@ -106,7 +116,7 @@ export default function TeacherChat() {
         return [
             { id: "admin-support", name: "Quản trị viên Hệ thống", subLabel: "Hỗ trợ 24/7", avatar: "A", type: "admin" }
         ];
-    }, [activeRoomId, apiContacts]);
+    }, [activeRoomId, apiContacts, existingConversations]);
 
     const filteredTargets = useMemo(() => {
         const query = searchQuery.toLowerCase().trim();
@@ -132,13 +142,21 @@ export default function TeacherChat() {
             try {
                 // Fetch existing conversations so we can join their socket rooms
                 const convRes = await teacherService.getHumanConversations({ mock: false });
-                if (convRes?.data && convRes.data.length > 0) {
+                const conversations = Array.isArray(convRes?.data)
+                    ? convRes.data
+                    : Array.isArray(convRes?.data?.conversations)
+                        ? convRes.data.conversations
+                    : Array.isArray(convRes?.conversations)
+                        ? convRes.conversations
+                        : [];
+                setExistingConversations(conversations);
+                if (conversations.length > 0) {
                     // Build convIdToTarget from existing conversations
                     const initMap = {};
-                    for (const conv of convRes.data) {
+                    for (const conv of conversations) {
                         const convId = conv.id;
                         const otherId = conv.other_user_id;
-                        const otherName = conv.other_full_name || "Phụ huynh";
+                        const otherName = conv.other_full_name || conv.otherParticipant?.fullName || "Phụ huynh";
                         initMap[`conv-${convId}`] = {
                             targetId: otherId,
                             targetName: otherName,
@@ -205,6 +223,7 @@ export default function TeacherChat() {
             const formatted = {
                 id: String(message.id),
                 text: message.content,
+                userId: message.user_id || message.senderId,
                 from: fromMe ? "me" : "other",
                 senderName: message.senderName || (fromMe ? "Tôi" : targetInfo.targetName || "Phụ huynh"),
                 createdAt: message.created_at || message.timestamp,
@@ -216,6 +235,13 @@ export default function TeacherChat() {
                 if (exists) return prev;
                 return { ...prev, [conversationId]: [...existing, formatted] };
             });
+        });
+
+        socket.on("message_deleted", ({ conversationId, messageId }) => {
+            setMessagesByConv(prev => ({
+                ...prev,
+                [conversationId]: (prev[conversationId] || []).filter(m => String(m.id) !== String(messageId))
+            }));
         });
 
         return () => {
@@ -241,7 +267,27 @@ export default function TeacherChat() {
             return;
         }
 
-        if (selectedTarget.type === "parent") {
+        if (selectedTarget.type === "parent" && selectedTarget.isExistingConversation && selectedTarget.conversationId) {
+            const convId = selectedTarget.conversationId;
+            setActiveConversationId(convId);
+            setConvIdToTarget(prev => {
+                const next = {
+                    ...prev,
+                    [`conv-${convId}`]: {
+                        targetId: selectedTarget.id,
+                        targetName: selectedTarget.name,
+                        subLabel: selectedTarget.subLabel,
+                        type: selectedTarget.type,
+                    }
+                };
+                convIdToTargetRef.current = next;
+                return next;
+            });
+            if (socket?.connected) {
+                socket.emit("join_conversation", convId);
+            }
+            loadMessagesForConv(convId, selectedTarget.id, selectedTarget.name);
+        } else if (selectedTarget.type === "parent" && selectedTarget.isRealContact) {
             const getOrCreateConversation = async () => {
                 try {
                     const response = await teacherService.startHumanChat({
@@ -270,7 +316,7 @@ export default function TeacherChat() {
                             socket.emit("join_conversation", convId);
                         }
                         // Load existing messages
-                        loadMessagesForConv(convId, selectedTarget.id);
+                        loadMessagesForConv(convId, selectedTarget.id, selectedTarget.name);
                     }
                 } catch (err) {
                     console.error("Failed to get/start human conversation:", err);
@@ -282,19 +328,25 @@ export default function TeacherChat() {
         }
     }, [selectedTarget]);
 
-    const loadMessagesForConv = async (convId, targetId) => {
+    const loadMessagesForConv = async (convId, targetId, targetName) => {
         try {
             const response = await teacherService.getHumanMessages({
                 mock: false,
                 pathParams: { conversationId: convId }
             });
-            if (response.success && response.messages) {
-                const mapped = response.messages
+            const messages = Array.isArray(response?.messages)
+                ? response.messages
+                : Array.isArray(response?.data?.messages)
+                    ? response.data.messages
+                    : [];
+            if (response.success && messages.length >= 0) {
+                const mapped = messages
                     .map(m => ({
                         id: String(m.id),
                         text: m.content,
+                        userId: m.user_id,
                         from: String(m.user_id) === String(targetId) ? "other" : "me",
-                        senderName: m.user_full_name || (String(m.user_id) === String(targetId) ? selectedTarget?.name : "Tôi"),
+                        senderName: m.user_full_name || (String(m.user_id) === String(targetId) ? targetName : "Tôi"),
                         createdAt: m.created_at,
                         time: new Date(m.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
                     }))
@@ -318,6 +370,7 @@ export default function TeacherChat() {
             text,
             from: "me",
             senderName: "Tôi",
+            userId: getUserId(),
             createdAt: new Date().toISOString(),
             time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
         };
@@ -342,6 +395,29 @@ export default function TeacherChat() {
                 ...prev,
                 [activeConversationId]: (prev[activeConversationId] || []).filter(m => m.id !== tempId)
             }));
+        }
+    };
+
+    const handleDeleteMessage = async (messageId) => {
+        if (!activeConversationId || !messageId || String(messageId).startsWith("temp-")) return;
+
+        const previousMessages = messagesByConv[activeConversationId] || [];
+        setMessagesByConv(prev => ({
+            ...prev,
+            [activeConversationId]: previousMessages.filter(m => String(m.id) !== String(messageId))
+        }));
+
+        try {
+            const res = await teacherService.deleteHumanMessage({
+                mock: false,
+                pathParams: { messageId }
+            });
+            if (res && res.success === false) {
+                setMessagesByConv(prev => ({ ...prev, [activeConversationId]: previousMessages }));
+            }
+        } catch (err) {
+            console.error("Failed to delete message:", err);
+            setMessagesByConv(prev => ({ ...prev, [activeConversationId]: previousMessages }));
         }
     };
 
@@ -400,6 +476,9 @@ export default function TeacherChat() {
                                         <span className="target-name">{target.name}</span>
                                         <span className="target-sub">{target.subLabel}</span>
                                     </div>
+                                    {target.unreadCount > 0 && (
+                                        <span className="target-unread">{target.unreadCount}</span>
+                                    )}
                                 </div>
                             ))
                         )}
@@ -443,6 +522,7 @@ export default function TeacherChat() {
                                                 </div>
                                             );
                                         }
+                                        const canDelete = item.from === "me" && item.id && !String(item.id).startsWith("temp-");
                                         return (
                                             <div key={item.id} className={`msg-bubble ${item.from === 'me' ? 'msg-me' : 'msg-other'}`}>
                                                 {item.from !== "me" && item.senderName && (
@@ -450,6 +530,17 @@ export default function TeacherChat() {
                                                 )}
                                                 <div className="msg-content">{item.text}</div>
                                                 <span className="msg-time">{item.time}</span>
+                                                {canDelete && (
+                                                    <button
+                                                        type="button"
+                                                        className="msg-delete-btn"
+                                                        onClick={() => handleDeleteMessage(item.id)}
+                                                        aria-label="Xóa tin nhắn"
+                                                        title="Xóa tin nhắn"
+                                                    >
+                                                        <FiTrash2 />
+                                                    </button>
+                                                )}
                                             </div>
                                         );
                                     })

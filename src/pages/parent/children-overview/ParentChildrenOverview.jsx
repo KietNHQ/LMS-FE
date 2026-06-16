@@ -1,8 +1,8 @@
-import React, { useEffect, useState } from "react"
+import React, { useEffect, useMemo, useState } from "react"
 import "./ParentChildrenOverview.css"
-import { PageHeader, SchoolYearTermSelector, LoadingSpinner } from "../../../components/common"
+import { SchoolYearTermSelector, LoadingSpinner } from "../../../components/common"
 import { useSchoolYearTerm } from "../../../hooks/useSchoolYearTerm"
-import { resolveSemesterId } from "../../../services/shared/schoolYearLookup"
+import { resolveSchoolYearId, resolveSemesterId } from "../../../services/shared/schoolYearLookup"
 import ChildHeader from "./components/childHeader/ChildHeader"
 import ChildTabs from "./components/ChildTabs/ChildTabs"
 import AttendanceSection from "./components/attendanceSection/AttendanceSection"
@@ -11,26 +11,40 @@ import GradesSection from "./components/GradesSection/GradesSection"
 import LeaveRequestSection from "./components/LeaveRequestSection/LeaveRequestSection"
 import ConductSection from "./components/ConductSection/ConductSection"
 import ChildSwitcher from "./components/ChildSwitcher/ChildSwitcher"
-import { parentService } from "../../../services/pages/parent/parentService"
+import { childrenOverviewService } from "../../../services/pages/parent/children-overview/childrenOverviewService"
+import { getRows, transformParentGradesData } from "../shared/parentGradeUtils"
 
 const DAY_MAP = {
-    1: "Monday",
-    2: "Tuesday",
-    3: "Wednesday",
-    4: "Thursday",
-    5: "Friday",
-    6: "Saturday",
-    7: "Sunday",
+    1: "Sunday",
+    2: "Monday",
+    3: "Tuesday",
+    4: "Wednesday",
+    5: "Thursday",
+    6: "Friday",
+    7: "Saturday",
+    8: "Sunday",
+}
+
+const DAY_LABELS = {
+    Monday: "Thứ 2",
+    Tuesday: "Thứ 3",
+    Wednesday: "Thứ 4",
+    Thursday: "Thứ 5",
+    Friday: "Thứ 6",
+    Saturday: "Thứ 7",
+    Sunday: "Chủ nhật",
 }
 
 const transformScheduleItem = (item) => ({
     id: item.id,
-    day: DAY_MAP[item.dayOfWeek] || `Day${item.dayOfWeek}`,
-    periodStart: item.period_number,
-    periodEnd: item.period_number,
-    subject: item.class_teacher_subject?.subject_assignments?.display_name || item.subject_name || "—",
-    teacher: item.class_teacher_subject?.teachers?.fullName || item.teacher_name || "—",
-    room: item.room || "—",
+    day: DAY_MAP[item.dayOfWeek ?? item.day_of_week] || item.day || `Day${(item.dayOfWeek ?? item.day_of_week) || ""}`,
+    periodStart: item.period_number ?? item.periodNumber ?? item.period,
+    periodEnd: item.period_end ?? item.periodEnd ?? item.period_number ?? item.periodNumber ?? item.period,
+    classId: item.class_teacher_subject?.classes?.id || item.class_id || item.classId || null,
+    className: item.class_teacher_subject?.classes?.class_name || item.class_name || item.className || "",
+    subject: item.class_teacher_subject?.subject_assignments?.display_name || item.subject_name || item.subjectName || item.subject || "—",
+    teacher: item.class_teacher_subject?.teachers?.fullName || item.teacher_name || item.teacherName || "—",
+    room: item.room || item.roomName || "—",
     start: item.start_time || "",
     end: item.end_time || "",
     timeRange: item.start_time && item.end_time ? `${item.start_time} - ${item.end_time}` : "",
@@ -41,53 +55,84 @@ const transformScheduleItem = (item) => ({
     color: "",
 })
 
-const transformGradesData = (gradesArray) => {
-    const bySemester = { hk1: [], hk2: [], year: [] }
-    const subjectMap = {}
+const buildFullName = (item) =>
+    item.name ||
+    item.fullName ||
+    [item.surname, item.given_name || item.givenName].filter(Boolean).join(" ").trim() ||
+    "Học sinh"
 
-    for (const g of gradesArray) {
-        const key = g.subject_assignment_id || g.subject_name || g.subject
-        const semKey = g.semester_id === 1 || String(g.semester_name || "").toLowerCase().includes("1")
-            ? "hk1"
-            : "hk2"
-
-        if (!subjectMap[key]) {
-            subjectMap[key] = {
-                subject: g.subject_name || g.subject || "—",
-                oral: null,
-                test15: null,
-                midterm: null,
-                final: null,
-                average: null,
-            }
-        }
-
-        const category = (g.category || "").toLowerCase()
-        const score = Number(g.score)
-        if (category.includes("miệng") || category.includes("oral")) subjectMap[key].oral = score
-        else if (category.includes("15") || category.includes("15phut")) subjectMap[key].test15 = score
-        else if (category.includes("giữa") || category.includes("midterm") || category.includes("gk")) subjectMap[key].midterm = score
-        else if (category.includes("cuối") || category.includes("final") || category.includes("ck")) subjectMap[key].final = score
-        else {
-            if (subjectMap[key].oral == null) subjectMap[key].oral = score
-            else if (subjectMap[key].test15 == null) subjectMap[key].test15 = score
-            else if (subjectMap[key].midterm == null) subjectMap[key].midterm = score
-            else if (subjectMap[key].final == null) subjectMap[key].final = score
-        }
+const buildAverageScores = (gradesBySemester) => {
+    const averageOf = (rows = []) => {
+        const values = rows.map((row) => Number(row.average)).filter(Number.isFinite)
+        if (!values.length) return "—"
+        return (Math.round((values.reduce((sum, value) => sum + value, 0) / values.length) * 10) / 10).toFixed(1)
     }
 
-    for (const key of Object.keys(subjectMap)) {
-        const s = subjectMap[key]
-        const scores = [s.oral, s.test15, s.midterm, s.final].filter(v => v != null)
-        if (scores.length > 0) {
-            s.average = Math.round((scores.reduce((a, b) => a + b, 0) / scores.length) * 10) / 10
-        }
-        bySemester.hk1.push({ ...s })
-        bySemester.hk2.push({ ...s })
-        bySemester.year.push({ ...s })
+    return {
+        semester1: averageOf(gradesBySemester.hk1),
+        semester2: averageOf(gradesBySemester.hk2),
+        fullYear: averageOf(gradesBySemester.year),
     }
+}
 
-    return bySemester
+const normalizeChild = (child, selectedSchoolYear, gradesBySemester) => {
+    const name = buildFullName(child)
+    return {
+        ...child,
+        name,
+        studentId: child.studentId || child.student_code || child.studentCode || child.id,
+        classId: child.classId || child.class_id || child.currentClassId || child.current_class_id || null,
+        className: child.className || child.class_name || "Chưa xếp lớp",
+        schoolYear: child.schoolYear || child.school_year_name || selectedSchoolYear,
+        status: child.status || "Đang học",
+        parentName: child.parentName || child.guardianName || "Phụ huynh",
+        homeroomTeacher: child.homeroomTeacher || child.teacherName || "Chưa phân công",
+        avatarLetter: child.avatarLetter || name.charAt(0),
+        avatarColor: child.avatarColor || "linear-gradient(135deg, #2563eb, #14b8a6)",
+        averageScores: child.averageScores || buildAverageScores(gradesBySemester),
+    }
+}
+
+const normalizeEvent = (event) => ({
+    id: event.id,
+    title: event.title || event.name || "Sự kiện",
+    date: event.date
+        ? new Date(event.date).toLocaleDateString("vi-VN")
+        : event.startDate
+            ? new Date(event.startDate).toLocaleDateString("vi-VN")
+            : "",
+    type: event.eventType || event.event_type || event.type || "school-event",
+})
+
+const normalizeTitleKey = (value) =>
+    String(value || "")
+        .normalize("NFD")
+        .replace(/\p{Diacritic}/gu, "")
+        .trim()
+        .toLowerCase()
+
+const matchesSelectedClass = (lesson, selectedClassId, selectedClassKey) => {
+    if (!selectedClassId && !selectedClassKey) return true
+    const nameMatches = selectedClassKey && normalizeTitleKey(lesson.className) === selectedClassKey
+    if (selectedClassId && lesson.classId != null) {
+        return String(lesson.classId) === String(selectedClassId) || Boolean(nameMatches)
+    }
+    return Boolean(nameMatches)
+}
+
+const buildLessonEvent = (lesson, index) => {
+    const periodLabel = `Tiết ${lesson.periodStart || "?"}${lesson.periodEnd > lesson.periodStart ? `-${lesson.periodEnd}` : ""}`
+    const timeLabel = lesson.timeRange ? ` • ${lesson.timeRange}` : ""
+    const roomLabel = lesson.room && lesson.room !== "—" ? ` • Phòng ${lesson.room}` : ""
+
+    return {
+        id: `lesson-event-${lesson.id || index}`,
+        title: lesson.subject || "Tiết học",
+        date: `${DAY_LABELS[lesson.day] || lesson.day || "Lịch học"} • ${periodLabel}${timeLabel}`,
+        type: "Lịch học",
+        description: `${periodLabel}${roomLabel}`,
+        source: "schedule",
+    }
 }
 
 export default function ParentChildrenOverview() {
@@ -111,13 +156,13 @@ export default function ParentChildrenOverview() {
     useEffect(() => {
         const fetchChildren = async () => {
             try {
-                const res = await parentService.listChildren({ mock: false })
-                const children = res?.data || []
+                const res = await childrenOverviewService.listChildren({ mock: false })
+                const children = getRows(res).map((child) =>
+                    normalizeChild(child, selectedSchoolYear, { hk1: [], hk2: [], year: [] })
+                )
                 if (children.length > 0) {
                     setChildrenList(children)
-                    if (!selectedChildId) {
-                        setSelectedChildId(children[0].id)
-                    }
+                    setSelectedChildId((currentId) => currentId || children[0].id)
                 }
             } catch (err) {
                 console.error("Error fetching children:", err)
@@ -125,7 +170,7 @@ export default function ParentChildrenOverview() {
             }
         }
         fetchChildren()
-    }, [])
+    }, [selectedSchoolYear])
 
     // 2. Fetch grades, attendance, schedule khi doi con
     useEffect(() => {
@@ -134,33 +179,52 @@ export default function ParentChildrenOverview() {
         const fetchChildData = async () => {
             try {
                 setIsLoading(true)
+                const [semesterId, schoolYearId] = await Promise.all([
+                    resolveSemesterId(selectedSchoolYear, selectedTerm),
+                    resolveSchoolYearId(selectedSchoolYear),
+                ])
 
-                const [gradesRes, attendanceRes, scheduleRes] = await Promise.allSettled([
-                    parentService.getChildGrades({
+                const [gradesRes, attendanceRes, scheduleRes, eventsRes] = await Promise.allSettled([
+                    childrenOverviewService.getChildGrades({
                         pathParams: { childId: selectedChildId },
-                        params: { semesterId: selectedTerm === "hk1" ? 1 : 2 },
+                        params: {
+                            ...(schoolYearId ? { school_year_id: schoolYearId } : {}),
+                        },
                         mock: false
                     }),
-                    parentService.getChildAttendance({
+                    childrenOverviewService.getChildAttendance({
                         pathParams: { childId: selectedChildId },
+                        params: semesterId ? { semesterId } : undefined,
                         mock: false
                     }),
-                    parentService.getChildSchedule({
+                    childrenOverviewService.getChildSchedule({
                         pathParams: { childId: selectedChildId },
+                        params: {
+                            ...(semesterId ? { semester_id: semesterId } : {}),
+                            ...(schoolYearId ? { school_year_id: schoolYearId } : {}),
+                        },
                         mock: false
+                    }),
+                    childrenOverviewService.getSystemEvents({
+                        params: {
+                            ...(semesterId ? { semesterId } : {}),
+                            ...(schoolYearId ? { schoolYearId } : {}),
+                        },
+                        mock: false,
                     }),
                 ])
 
+                let grouped = { hk1: [], hk2: [], year: [] }
                 if (gradesRes.status === "fulfilled" && gradesRes.value?.success) {
-                    const rawGrades = Array.isArray(gradesRes.value.data)
-                        ? gradesRes.value.data
-                        : []
-                    const grouped = transformGradesData(rawGrades)
+                    const rawGrades = getRows(gradesRes.value)
+                    grouped = transformParentGradesData(rawGrades)
+                    setGradesBySemester(grouped)
+                } else {
                     setGradesBySemester(grouped)
                 }
 
                 if (attendanceRes.status === "fulfilled" && attendanceRes.value?.success) {
-                    const records = attendanceRes.value.data?.records || attendanceRes.value.data || []
+                    const records = getRows(attendanceRes.value)
                     const mappedRecords = records.map(r => ({
                         day: r.date || r.day || r.attendance_date || "",
                         status: r.status || r.attendance_status || "",
@@ -170,22 +234,17 @@ export default function ParentChildrenOverview() {
                 }
 
                 if (scheduleRes.status === "fulfilled" && scheduleRes.value?.success) {
-                    const rawSchedule = Array.isArray(scheduleRes.value.data)
-                        ? scheduleRes.value.data
-                        : []
+                    const rawSchedule = getRows(scheduleRes.value)
+                    const currentChild = childrenList.find(c => String(c.id) === String(selectedChildId))
+                    const selectedClassId = currentChild?.classId || currentChild?.class_id || null
+                    const selectedClassName = currentChild?.className || currentChild?.class_name || ""
+                    const selectedClassKey = normalizeTitleKey(selectedClassName)
                     const transformed = rawSchedule.map(transformScheduleItem)
-                    setScheduleData(transformed)
-                    setScheduleError(null)
-                    setUpcomingEvents(
-                        transformed.map(item => ({
-                            id: item.id,
-                            title: item.subject,
-                            date: `${item.day}, Tiết ${item.periodStart}`,
-                            type: "schedule",
-                            startTime: item.start,
-                            endTime: item.end,
-                        }))
+                    const filteredSchedule = transformed.filter((lesson) =>
+                        matchesSelectedClass(lesson, selectedClassId, selectedClassKey)
                     )
+                    setScheduleData(filteredSchedule)
+                    setScheduleError(null)
                 } else if (scheduleRes.status === "rejected" || !scheduleRes.value?.success) {
                     setScheduleData([])
                     setScheduleError(
@@ -194,30 +253,36 @@ export default function ParentChildrenOverview() {
                     )
                 }
 
-                const currentChild = childrenList.find(c => c.id === selectedChildId)
+                if (eventsRes.status === "fulfilled" && eventsRes.value?.success) {
+                    setUpcomingEvents(getRows(eventsRes.value).map(normalizeEvent))
+                } else {
+                    setUpcomingEvents([])
+                }
+
+                const currentChild = childrenList.find(c => String(c.id) === String(selectedChildId))
                 if (currentChild) {
-                    setChildData({
-                        ...currentChild,
-                        schoolYear: currentChild.schoolYear || selectedSchoolYear,
-                        status: "Dang hoc",
-                    })
+                    setChildData(normalizeChild(currentChild, selectedSchoolYear, grouped))
                 }
             } catch (err) {
                 console.error("Error fetching child data:", err)
+                setGradesBySemester({ hk1: [], hk2: [], year: [] })
+                setAttendanceRecords([])
+                setScheduleData([])
+                setUpcomingEvents([])
             } finally {
                 setIsLoading(false)
             }
         }
 
         fetchChildData()
-    }, [selectedChildId, selectedTerm, selectedSchoolYear])
+    }, [selectedChildId, selectedTerm, selectedSchoolYear, childrenList])
 
     // 3. Fetch leave requests khi doi con
     useEffect(() => {
         if (!selectedChildId) return
         const fetchLeaveRequests = async () => {
             try {
-                const res = await parentService.listLeaveRequests({
+                const res = await childrenOverviewService.listLeaveRequests({
                     params: { studentId: selectedChildId },
                     mock: false
                 })
@@ -246,12 +311,12 @@ export default function ParentChildrenOverview() {
                 if (!hk1SemId || !hk2SemId) return
 
                 const [conductRes, disciplineRes] = await Promise.allSettled([
-                    parentService.getChildConductSummary({
+                    childrenOverviewService.getChildConductSummary({
                         pathParams: { childId: selectedChildId },
                         params: { hk1SemesterId: hk1SemId, hk2SemesterId: hk2SemId },
                         mock: false,
                     }),
-                    parentService.getChildDisciplineScores({
+                    childrenOverviewService.getChildDisciplineScores({
                         pathParams: { childId: selectedChildId },
                         params: { semesterId: hk1SemId },
                         mock: false,
@@ -278,16 +343,12 @@ export default function ParentChildrenOverview() {
 
     useEffect(() => {
         if (selectedChildId && childrenList.length > 0) {
-            const currentChild = childrenList.find(c => c.id === selectedChildId)
+            const currentChild = childrenList.find(c => String(c.id) === String(selectedChildId))
             if (currentChild && !childData) {
-                setChildData({
-                    ...currentChild,
-                    schoolYear: currentChild.schoolYear || selectedSchoolYear,
-                    status: "Dang hoc",
-                })
+                setChildData(normalizeChild(currentChild, selectedSchoolYear, gradesBySemester))
             }
         }
-    }, [childrenList, selectedChildId])
+    }, [childrenList, selectedChildId, selectedSchoolYear, gradesBySemester, childData])
 
     const buildAttendanceSummary = (records) => {
         const base = { present: 0, absent: 0, late: 0, excused: 0 }
@@ -322,7 +383,9 @@ export default function ParentChildrenOverview() {
     const handleOverviewCardClick = (semesterKey) => {
         if (!semesterKey) return
         setSelectedSemester(semesterKey)
-        handleTermChange(semesterKey)
+        if (semesterKey !== "year") {
+            handleTermChange(semesterKey)
+        }
         setActiveTab("grades")
     }
 
@@ -342,17 +405,27 @@ export default function ParentChildrenOverview() {
 
     const overviewCurrentSemesterGrades = gradesBySemester?.[selectedTerm] || []
     const overviewSemesterLabel = selectedTerm === "hk2" ? "Hoc ky II" : "Hoc ky I"
+    const calendarEvents = useMemo(() => {
+        const schoolEvents = Array.isArray(upcomingEvents) ? upcomingEvents : []
+        const seenTitles = new Set(schoolEvents.map((event) => normalizeTitleKey(event.title)))
+        const lessonEvents = (Array.isArray(scheduleData) ? scheduleData : [])
+            .filter((lesson) => lesson?.subject && lesson.subject !== "—")
+            .filter((lesson) => !seenTitles.has(normalizeTitleKey(lesson.subject)))
+            .map(buildLessonEvent)
+
+        return [...schoolEvents, ...lessonEvents]
+    }, [scheduleData, upcomingEvents])
 
     if (!selectedChildId || (!childData && isLoading)) {
         return <div className="layout-loading-wrapper"><LoadingSpinner size="lg" label="Dang tai du lieu con em..." role="parent" /></div>
     }
 
     const refreshLeaveRequests = () => {
-        parentService.listLeaveRequests({
+        childrenOverviewService.listLeaveRequests({
             params: { studentId: selectedChildId },
             mock: false
         }).then(res => {
-            if (res.success && res.data) setLeaveRequests(res.data)
+            if (res.success) setLeaveRequests(getRows(res))
         })
     }
 
@@ -411,11 +484,12 @@ export default function ParentChildrenOverview() {
                                     <div className="overview-triple-grid">
                                         <AttendanceSection data={attendanceData} compact />
                                         <CalendarSection
+                                            key={`overview-calendar-${selectedChildId}-${selectedTerm}`}
                                             schedule={scheduleData}
-                                            events={upcomingEvents}
+                                            events={calendarEvents}
                                             compact
                                             classNameValue={childData.className}
-                                            selectedChildId={selectedChildId}
+                                            classIdValue={childData.classId}
                                             scheduleError={scheduleError}
                                         />
                                         <LeaveRequestSection
@@ -434,10 +508,11 @@ export default function ParentChildrenOverview() {
 
                             {activeTab === "calendar" && (
                                 <CalendarSection
+                                    key={`calendar-${selectedChildId}-${selectedTerm}`}
                                     schedule={scheduleData}
-                                    events={upcomingEvents}
+                                    events={calendarEvents}
                                     classNameValue={childData.className}
-                                    selectedChildId={selectedChildId}
+                                    classIdValue={childData.classId}
                                     scheduleError={scheduleError}
                                 />
                             )}
@@ -448,7 +523,9 @@ export default function ParentChildrenOverview() {
                                     selectedSemester={selectedSemester}
                                     onSemesterChange={(semester) => {
                                         setSelectedSemester(semester)
-                                        handleTermChange(semester)
+                                        if (semester !== "year") {
+                                            handleTermChange(semester)
+                                        }
                                     }}
                                 />
                             )}

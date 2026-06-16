@@ -1,8 +1,26 @@
 .admin-classes-body {
   flex: 1;
+  min-height: 0;
+  min-width: 0;
   display: flex;
   flex-direction: column;
   padding: 0 1.1rem 1.1rem;
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+
+.admin-classes-body::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.admin-classes-body::-webkit-scrollbar-thumb {
+  background: #bfe7e2;
+  border-radius: 999px;
+}
+
+.admin-classes-body::-webkit-scrollbar-track {
+  background: transparent;
 }
 
 .admin-classes-empty-state {
@@ -33,13 +51,14 @@
 
 .teacher-class-list-grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
   gap: 14px;
+  min-width: 0;
 }
 
 @media (max-width: 1100px) {
   .teacher-class-list-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
   }
 }
 

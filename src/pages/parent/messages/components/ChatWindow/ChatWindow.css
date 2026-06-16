@@ -259,6 +259,43 @@
     margin-top: 4px;
 }
 
+.parent-chat-window .message-delete-btn {
+    position: absolute;
+    top: 50%;
+    right: calc(100% + 8px);
+    transform: translateY(-50%);
+    width: 28px;
+    height: 28px;
+    border: 1px solid var(--admin-border, #ede9fe);
+    border-radius: 50%;
+    background: #ffffff;
+    color: #7c3aed;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.16s ease, transform 0.16s ease, color 0.16s ease;
+    box-shadow: 0 4px 12px rgba(76, 29, 149, 0.12);
+}
+
+.parent-chat-window .message-delete-btn svg {
+    width: 14px;
+    height: 14px;
+}
+
+.parent-chat-window .parent-chat-message-wrapper--me:hover .message-delete-btn,
+.parent-chat-window .message-delete-btn:focus-visible {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.parent-chat-window .message-delete-btn:hover {
+    color: #dc2626;
+    transform: translateY(-50%) scale(1.05);
+}
+
 /* Input Form */
 .parent-chat-window .parent-chat-input {
     display: flex;

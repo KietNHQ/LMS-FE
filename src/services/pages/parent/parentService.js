@@ -174,7 +174,7 @@ const PARENT_ENDPOINTS = [
   { key: "get_parent_dashboard", method: "GET", path: "/guardians/me/children", module: "dashboard", mock: false },
   { key: "get_parent_children", method: "GET", path: "/guardians/me/children", module: "children", mock: false },
   { key: "get_parent_child_by_id", method: "GET", path: "/guardians/me/children/:childId", module: "children", mock: false },
-  { key: "get_parent_child_grades", method: "GET", path: "/students/:childId/grades", module: "children", mock: false },
+  { key: "get_parent_child_grades", method: "GET", path: "/guardians/me/children/:childId/grades", module: "children", mock: false },
   { key: "get_parent_child_attendance", method: "GET", path: "/guardians/me/children/:childId/attendance", module: "children", mock: false },
   { key: "get_parent_child_schedule", method: "GET", path: "/guardians/me/children/:childId/schedule", module: "children", mock: false },
   // Teachers: list of homeroom teachers for all children
@@ -187,6 +187,8 @@ const PARENT_ENDPOINTS = [
   { key: "post_parent_start_conversation", method: "POST", path: "/chat/human/start", module: "messages", mock: false },
   // Human chat: send a message (in existing conversation)
   { key: "post_parent_send_message", method: "POST", path: "/chat/human/message", module: "messages", mock: false },
+  // Human chat: delete one message sent by current user
+  { key: "delete_parent_message", method: "DELETE", path: "/chat/human/messages/:messageId", module: "messages", mock: false },
   { key: "get_parent_notifications", method: "GET", path: "/guardians/me/notifications", module: "notifications", mock: false },
   { key: "patch_parent_notifications_mark_all_read", method: "PATCH", path: "/guardians/me/notifications/mark-all-read", module: "notifications", mock: false },
   { key: "patch_parent_notifications_by_id_read", method: "PATCH", path: "/guardians/me/notifications/:id/read", module: "notifications", mock: false },
@@ -271,6 +273,7 @@ export const parentService = {
   startHumanChat: (input) => endpointCallers.post_parent_start_conversation(input),
   // Human chat: send a message (in existing conversation)
   sendMessage: (input) => endpointCallers.post_parent_send_message(input),
+  deleteMessage: (input) => endpointCallers.delete_parent_message(input),
   // Deprecated: keep for backwards compat, maps to getConversations
   listMessages: (input) => endpointCallers.get_parent_conversations(input),
   listNotifications: (input) => endpointCallers.get_parent_notifications(input),
@@ -293,5 +296,3 @@ export const parentService = {
 };
 
 export default parentService;
-
-

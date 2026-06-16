@@ -1,9 +1,9 @@
 .grades-card {
     background: #ffffff;
-    border-radius: 1.25rem;
-    padding: 1.1rem;
-    box-shadow: 0 0.25rem 1.125rem rgba(20, 28, 45, 0.06);
-    border: 0.0625rem solid #ececf3;
+    border-radius: 1rem;
+    padding: 1.15rem;
+    box-shadow: 0 0.2rem 0.9rem rgba(20, 28, 45, 0.05);
+    border: 0.0625rem solid #e8edf6;
     display: flex;
     flex-direction: column;
     gap: 0.9rem;
@@ -16,6 +16,14 @@
 .grades-card.compact {
     padding: 1rem;
     gap: 0.8rem;
+}
+
+.grades-header-row {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    min-width: 0;
 }
 
 .section-heading {
@@ -37,7 +45,7 @@
 .section-heading h3 {
     margin: 0;
     color: #182033;
-    font-size: 1.5rem;
+    font-size: 1.12rem;
     font-weight: 900;
     line-height: 1.3;
     flex-shrink: 0;
@@ -45,44 +53,43 @@
 
 .section-heading p {
     margin: 0;
-    color: #7c8597;
+    color: #667085;
     font-size: 0.88rem;
     line-height: 1.45;
 }
 
 .grades-semester-switch {
     display: inline-flex;
+    flex-shrink: 0;
     width: fit-content;
-    background: #f2ebff;
-    border: 0.0625rem solid #decdfd;
-    border-radius: 0.85rem;
+    background: #f8fafc;
+    border: 0.0625rem solid #e2e8f0;
+    border-radius: 0.75rem;
     padding: 0.25rem;
-    gap: 0.25rem;
+    gap: 0.2rem;
 }
 
 .grades-semester-btn {
     border: none;
     background: transparent;
-    color: #4f5a71;
-    font-size: 0.88rem;
+    color: #475569;
+    font-size: 0.84rem;
     font-weight: 700;
-    padding: 0.4rem 0.8rem;
-    border-radius: 0.65rem;
+    padding: 0.42rem 0.78rem;
+    border-radius: 0.55rem;
     cursor: pointer;
     transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease, color 0.18s ease;
 }
 
 .grades-semester-btn:hover {
-    color: #7d57d8;
-    background: #ece2ff;
-    transform: translateY(-0.12rem);
-    box-shadow: 0 0.2rem 0.6rem rgba(136, 93, 239, 0.18);
+    color: #5f3dc4;
+    background: #f3eeff;
 }
 
 .grades-semester-btn.active {
     color: #ffffff;
-    background: linear-gradient(135deg, #b68af8 0%, #885def 100%);
-    box-shadow: 0 0.25rem 0.75rem rgba(136, 93, 239, 0.32);
+    background: #885def;
+    box-shadow: 0 0.18rem 0.55rem rgba(136, 93, 239, 0.28);
 }
 
 .grades-semester-btn.active:hover {
@@ -111,17 +118,51 @@
     color: #5f3dc4;
 }
 
+.grades-summary-strip {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.75rem;
+}
+
+.grades-summary-strip.highlight {
+    margin-top: -0.1rem;
+}
+
+.grades-summary-item {
+    min-width: 0;
+    border: 0.0625rem solid #e7ecf5;
+    border-radius: 0.8rem;
+    background: #fbfcff;
+    padding: 0.75rem 0.85rem;
+}
+
+.grades-summary-item span {
+    display: block;
+    color: #667085;
+    font-size: 0.78rem;
+    font-weight: 700;
+    margin-bottom: 0.25rem;
+}
+
+.grades-summary-item strong {
+    display: block;
+    color: #1e2f5a;
+    font-size: 1.15rem;
+    line-height: 1.2;
+    font-weight: 900;
+}
+
 .grades-table-wrapper {
     width: 100%;
-    overflow-x: hidden;
-    border-radius: 1rem;
+    overflow-x: auto;
+    border-radius: 0.9rem;
     background: #fafbff;
     border: 0.0625rem solid #eef1f6;
 }
 
 .grades-table {
     width: 100%;
-    min-width: 0;
+    min-width: 44rem;
     border-collapse: collapse;
     table-layout: fixed;
 }
@@ -129,9 +170,9 @@
 .grades-table th,
 .grades-table td {
     text-align: left;
-    padding: 1rem;
+    padding: 0.85rem 0.9rem;
     border-bottom: 0.0625rem solid #edf0f5;
-    font-size: 0.92rem;
+    font-size: 0.88rem;
     line-height: 1.4;
     white-space: normal;
     overflow-wrap: anywhere;
@@ -140,13 +181,13 @@
 
 .grades-table th:first-child,
 .grades-table td:first-child {
-    width: 22%;
+    width: 24%;
 }
 
 .grades-table th {
-    color: #7c8597;
-    font-weight: 600;
-    background: #fafbff;
+    color: #64748b;
+    font-weight: 800;
+    background: #f8fafc;
 }
 
 .grades-table td {
@@ -160,6 +201,16 @@
 
 .grades-table tbody tr:hover td {
     background: #fcfbff;
+}
+
+.grades-table .subject-cell {
+    font-weight: 800;
+    color: #1e293b;
+}
+
+.grades-table .average-cell {
+    font-weight: 900;
+    color: #5f3dc4;
 }
 
 .grades-table .grades-total-row td {
@@ -198,6 +249,32 @@
     white-space: nowrap;
 }
 
+.grades-empty-state {
+    border: 0.0625rem dashed #d8c6fb;
+    border-radius: 0.9rem;
+    background: #fbf8ff;
+    min-height: 9rem;
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    gap: 0.35rem;
+}
+
+.grades-empty-state strong {
+    color: #1e2f5a;
+    font-size: 1rem;
+    font-weight: 900;
+}
+
+.grades-empty-state span {
+    color: #667085;
+    font-size: 0.9rem;
+    line-height: 1.45;
+}
+
 .grade-status.xuất-sắc {
     background: #efe8ff;
     color: #7c4dff;
@@ -234,6 +311,11 @@
         padding: 1rem;
     }
 
+    .grades-header-row {
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+
     .section-heading-text {
         align-items: flex-start;
         flex-direction: column;
@@ -249,22 +331,14 @@
         padding: 0.45rem 0.55rem;
     }
 
+    .grades-summary-strip {
+        grid-template-columns: 1fr;
+        gap: 0.55rem;
+    }
+
     .grades-table th,
     .grades-table td {
         padding: 0.75rem 0.5rem;
         font-size: 0.8rem;
-    }
-
-    .grades-table th:first-child,
-    .grades-table td:first-child {
-        width: 30%;
-    }
-
-    /* Ẩn 2 cột phụ ở mobile để không phải scroll ngang */
-    .grades-table th:nth-child(2),
-    .grades-table td:nth-child(2),
-    .grades-table th:nth-child(3),
-    .grades-table td:nth-child(3) {
-        display: none;
     }
 }

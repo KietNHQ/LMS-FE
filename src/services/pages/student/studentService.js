@@ -1,4 +1,6 @@
 import axiosClient from "../../shared/http/axiosClient";
+import { resolveSchoolYearId, resolveSemesterId } from "../../shared/schoolYearLookup";
+import { normalizeTimetableLesson } from "../../../utils/timetableShared";
 
 const DEFAULT_DELAY_MS = 120;
 const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -175,6 +177,7 @@ const STUDENT_ENDPOINTS = [
   { key: "get_students_by_id_grades", method: "GET", path: "/students/:id/grades", module: "grades", mock: false },
   { key: "get_students_by_id_grade_summary", method: "GET", path: "/students/:id/grade-summary", module: "grades", mock: false },
   { key: "get_students_by_id_attendance", method: "GET", path: "/students/:id/attendance", module: "grades", mock: false },
+  { key: "get_students_by_id_schedule", method: "GET", path: "/students/:id/schedule", module: "schedule", mock: false },
   { key: "get_classes", method: "GET", path: "/students/:id/classes", module: "classes", mock: false },
   { key: "get_classes_by_id", method: "GET", path: "/students/:id/classes/:classId", module: "classes", mock: false },
   { key: "get_classes_by_id_schedule", method: "GET", path: "/classes/:id/schedule", module: "schedule", mock: false },
@@ -252,6 +255,45 @@ const callByKey = async (key, input = {}) => {
 
 const listByModule = (moduleName) => STUDENT_ENDPOINTS.filter((item) => item.module === moduleName);
 
+const getRows = (payload) => {
+  if (Array.isArray(payload)) return payload;
+  if (Array.isArray(payload?.data)) return payload.data;
+  if (Array.isArray(payload?.data?.items)) return payload.data.items;
+  if (Array.isArray(payload?.data?.records)) return payload.data.records;
+  if (Array.isArray(payload?.records)) return payload.records;
+  if (Array.isArray(payload?.items)) return payload.items;
+  return [];
+};
+
+const getCurrentUserProfile = async () => {
+  try {
+    const response = await axiosClient.get("/auth/me");
+    return response?.data?.profile || response?.profile || null;
+  } catch {
+    return null;
+  }
+};
+
+const getStoredUserProfile = () => {
+  try {
+    const stored = JSON.parse(localStorage.getItem("user") || sessionStorage.getItem("user") || "{}");
+    return stored?.profile || null;
+  } catch {
+    return null;
+  }
+};
+
+const getScheduleScope = async ({ schoolYear, term } = {}) => {
+  const [schoolYearId, semesterId] = await Promise.all([
+    resolveSchoolYearId(schoolYear),
+    resolveSemesterId(schoolYear, term),
+  ]);
+
+  return { schoolYearId, semesterId };
+};
+
+const mapScheduleRows = (rows) => getRows(rows).map((item, idx) => normalizeTimetableLesson(item, idx));
+
 export const studentService = {
   endpoints: STUDENT_ENDPOINTS,
   modules,
@@ -271,31 +313,26 @@ export const studentService = {
   getStudentSchedule: (input) => endpointCallers.get_student_schedule(input),
   getStudentScheduleMapped: async (input) => {
     const response = await endpointCallers.get_student_schedule(input);
-    if (response && response.success && Array.isArray(response.data)) {
-      return response.data.map((p, idx) => {
-        const beToFeDayMap = { 2: 0, 3: 1, 4: 2, 5: 3, 6: 4, 7: 5, 1: 6 };
-        const dayIdx = beToFeDayMap[p.dayOfWeek] ?? 0;
-        const dayKey = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"][dayIdx];
-
-        const periodNum = p.period;
-        const subjectName = p.subjectName || "Môn học";
-        const teacherName = p.teacherName || "Chưa phân công";
-        
-        return {
-          id: p.id || `lesson-${idx}`,
-          day: dayKey,
-          periodStart: periodNum,
-          periodEnd: periodNum,
-          subject: subjectName,
-          teacher: teacherName,
-          room: p.roomName || "—",
-          status: p.status || "normal",
-          mode: p.mode || "offline",
-          color: p.color || (subjectName.includes("Toán") ? "teal" : subjectName.includes("Văn") ? "pink" : "blue"),
-        };
-      });
+    const studentRows = getRows(response);
+    if (response?.success && studentRows.length > 0) {
+      return mapScheduleRows(studentRows);
     }
-    return [];
+
+    const { schoolYearId, semesterId } = await getScheduleScope(input?.params || {});
+    const profile = getStoredUserProfile() || await getCurrentUserProfile();
+    const profileStudentId = profile?.id || profile?.studentId || profile?.student_id;
+
+    if (!profileStudentId || !schoolYearId || !semesterId) {
+      return [];
+    }
+
+    const fallbackResponse = await endpointCallers.get_students_by_id_schedule({
+      mock: false,
+      pathParams: { id: profileStudentId },
+      params: { semester_id: semesterId, school_year_id: schoolYearId },
+    });
+
+    return mapScheduleRows(fallbackResponse);
   },
   listNotifications: (input) => endpointCallers.get_student_notifications(input),
   markAllNotificationsRead: (input) => endpointCallers.patch_student_notifications_mark_all_read(input),
@@ -322,5 +359,3 @@ export const studentService = {
 };
 
 export default studentService;
-
-
