@@ -1,9 +1,10 @@
-import React, { useMemo } from "react";
+import React from "react";
 import "./PaymentTable.css";
 import { FiCheckCircle } from "react-icons/fi";
 import StatusBadge from "../../../../../components/common/StatusBadge/StatusBadge";
 import { formatVnd } from "../../../../../services/shared/payment/paymentShared";
 import StripeCheckoutButton from "../StripeCheckout/StripeCheckoutButton";
+import VnpayCheckoutButton from "../VnpayCheckout/VnpayCheckoutButton";
 
 export default function PaymentTable({
     payment,
@@ -14,6 +15,9 @@ export default function PaymentTable({
     onStripeSuccess,
     onStripeError,
     onBeforeStripeRedirect,
+    onVnpaySuccess,
+    onVnpayError,
+    onBeforeVnpayRedirect,
 }) {
     // Debug log
     if (payment && payment.id === 91) {
@@ -28,14 +32,8 @@ export default function PaymentTable({
     
     const isPaid = payment.status === "paid";
     const breakdown = Array.isArray(payment.breakdown) ? payment.breakdown : [];
-    const remainingAmount = useMemo(
-        () => breakdown.find((line) => line.key === "remaining")?.amount ?? payment.finalAmount ?? 0,
-        [breakdown, payment.finalAmount]
-    );
-    const paidAmount = useMemo(
-        () => breakdown.find((line) => line.key === "paid")?.amount ?? payment.paidAmount ?? 0,
-        [breakdown, payment.paidAmount]
-    );
+    const remainingAmount = breakdown.find((line) => line.key === "remaining")?.amount ?? payment.finalAmount ?? 0;
+    const paidAmount = breakdown.find((line) => line.key === "paid")?.amount ?? payment.paidAmount ?? 0;
     const compactAmountLabel = isPaid ? "Da thanh toan" : "Con lai";
     const compactAmount = isPaid ? paidAmount : remainingAmount;
     const handleCardKeyDown = (event) => {
@@ -100,12 +98,20 @@ export default function PaymentTable({
                         <button type="button" className="pay-now-btn" onClick={withStop(onOpenPayment)}>
                             Thanh toán QR
                         </button>
-                        <StripeCheckoutButton
-                            payment={payment}
-                            onSuccess={onStripeSuccess}
-                            onError={onStripeError}
-                            onBeforeRedirect={onBeforeStripeRedirect}
-                        />
+                        <div className="online-payment-wrap" onClick={(event) => event.stopPropagation()}>
+                            <StripeCheckoutButton
+                                payment={payment}
+                                onSuccess={onStripeSuccess}
+                                onError={onStripeError}
+                                onBeforeRedirect={onBeforeStripeRedirect}
+                            />
+                            <VnpayCheckoutButton
+                                payment={payment}
+                                onSuccess={onVnpaySuccess}
+                                onError={onVnpayError}
+                                onBeforeRedirect={onBeforeVnpayRedirect}
+                            />
+                        </div>
                     </div>
                 )}
             </div>

@@ -21,6 +21,8 @@ const METHOD_LABELS = {
     cash: "Tiền mặt",
     bank_transfer: "Chuyển khoản",
     online: "Thanh toán online",
+    vnpay: "VNPAY",
+    stripe: "Stripe",
     other: "Khác",
 };
 

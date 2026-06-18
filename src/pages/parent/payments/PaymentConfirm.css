@@ -37,6 +37,11 @@
   color: #4f46e5;
 }
 
+.confirm-icon--pending {
+  background: #eff6ff;
+  color: #2563eb;
+}
+
 .confirm-icon--success {
   background: #f0fdf4;
   color: #16a34a;
@@ -114,6 +119,21 @@
 .confirm-detail-value--mono {
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   font-size: 0.95rem;
+}
+
+.confirm-loading-bar {
+  height: 0.45rem;
+  border-radius: 999px;
+  overflow: hidden;
+  background: #e5e7eb;
+}
+
+.confirm-loading-bar__fill {
+  width: 36%;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #60a5fa 0%, #2563eb 100%);
+  animation: confirm-loading 1.2s ease-in-out infinite;
 }
 
 .confirm-pending-panel {

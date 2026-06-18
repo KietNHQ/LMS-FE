@@ -716,6 +716,12 @@ export default function ParentPayments() {
                             setIsQrDialogOpen(false);
                         }}
                         onStripeError={(msg) => toast.error(msg)}
+                        onVnpaySuccess={() => {}}
+                        onBeforeVnpayRedirect={(payment) => {
+                            setSelectedPaymentId(payment.id);
+                            setIsQrDialogOpen(false);
+                        }}
+                        onVnpayError={(msg) => toast.error(msg)}
                     />
                 );
                 })}
@@ -844,6 +850,5 @@ export default function ParentPayments() {
         </div>
     );
 }
-
 
 

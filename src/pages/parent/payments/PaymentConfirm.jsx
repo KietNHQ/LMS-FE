@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams, useNavigate, Link } from "react-router-dom";
 import { FiCheckCircle, FiXCircle, FiLoader, FiArrowLeft, FiRefreshCw, FiShield } from "react-icons/fi";
 import stripeService from "../../../services/stripeService";
+import vnpayService from "../../../services/vnpayService";
 import { formatVnd } from "../../../services/shared/payment/paymentShared";
 import "./PaymentConfirm.css";
 
@@ -12,6 +13,12 @@ const STATUS = {
   ERROR: "error",
   PENDING: "pending",
 };
+
+function parseDebtIdFromVnpayTxnRef(txnRef) {
+  const match = String(txnRef || "").match(/^D(\d+)T\d{14}$/);
+  const parsed = match ? Number.parseInt(match[1], 10) : Number.NaN;
+  return Number.isInteger(parsed) && parsed > 0 ? parsed : null;
+}
 
 export default function PaymentConfirm() {
   const [searchParams] = useSearchParams();
@@ -24,12 +31,17 @@ export default function PaymentConfirm() {
   const fetchedSessionRef = useRef(null);
 
   const stripeStatus = searchParams.get("stripe_status");
+  const vnpayStatus = searchParams.get("vnpay_status");
+  const vnpayTxnRef = searchParams.get("vnp_TxnRef");
   const sessionId = searchParams.get("session_id");
   const redirectUrl = searchParams.get("redirect_url");
   const debtId = searchParams.get("debt_id");
+  const paymentMethod = vnpayStatus ? "vnpay" : "stripe";
 
+  // The URL query and payment gateways are the external systems driving this screen.
+  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
-    if (stripeStatus === STATUS.PENDING) {
+    if (vnpayStatus === STATUS.PENDING || stripeStatus === STATUS.PENDING) {
       setStatus(STATUS.PENDING);
       setErrorMsg("");
 
@@ -40,6 +52,78 @@ export default function PaymentConfirm() {
 
         return () => window.clearTimeout(timer);
       }
+
+      return;
+    }
+
+    if (vnpayStatus === "return") {
+      const queryString = window.location.search;
+      const txnRef = vnpayTxnRef;
+      const fallbackDebtId = debtId ? Number(debtId) : parseDebtIdFromVnpayTxnRef(txnRef);
+
+      if (fetchedSessionRef.current === txnRef || fetchedSessionRef.current === queryString) {
+        return;
+      }
+
+      fetchedSessionRef.current = txnRef || queryString;
+      setStatus(STATUS.LOADING);
+      setErrorMsg("");
+
+      vnpayService
+        .verifyReturn(queryString)
+        .then((payload) => {
+          const data = payload?.data || payload || {};
+          const responseCode = data?.vnp_ResponseCode;
+          const transactionStatus = data?.vnp_TransactionStatus;
+          const returnedTxnRef = data?.vnp_TxnRef || txnRef;
+          const resolvedDebtId = fallbackDebtId || parseDebtIdFromVnpayTxnRef(returnedTxnRef);
+          const isSuccess =
+            payload?.success === true &&
+            responseCode === "00" &&
+            (!transactionStatus || transactionStatus === "00");
+
+          setSession({
+            provider: "vnpay",
+            amount_total: Number(data?.vnp_Amount || 0) / 100,
+            description: data?.vnp_OrderInfo || "",
+            transactionId: data?.vnp_TransactionNo || returnedTxnRef || "",
+            created: data?.vnp_PayDate || null,
+            metadata: {
+              debt_id: resolvedDebtId ? String(resolvedDebtId) : "",
+              bank_code: data?.vnp_BankCode || "",
+            },
+          });
+
+          if (isSuccess) {
+            setStatus(STATUS.SUCCESS);
+            window.dispatchEvent(
+              new CustomEvent("parent-payment-confirmed", {
+                detail: {
+                  paymentId: resolvedDebtId,
+                  txnRef: returnedTxnRef,
+                  paymentStatus: responseCode,
+                  amount: Number(data?.vnp_Amount || 0) / 100,
+                },
+              }),
+            );
+          } else if (responseCode === "24") {
+            setStatus(STATUS.CANCELLED);
+          } else {
+            setStatus(STATUS.ERROR);
+            setErrorMsg(payload?.message || "Thanh toán VNPAY không thành công.");
+          }
+        })
+        .catch((err) => {
+          fetchedSessionRef.current = null;
+          console.error("VNPAY return verification failed:", err);
+          setStatus(STATUS.ERROR);
+          setErrorMsg(
+            err?.response?.data?.error ||
+              err?.response?.data?.message ||
+              err?.message ||
+              "Không thể xác minh thanh toán VNPAY.",
+          );
+        });
 
       return;
     }
@@ -101,7 +185,8 @@ export default function PaymentConfirm() {
     };
 
     fetchStatus();
-  }, [debtId, redirectUrl, sessionId, stripeStatus, retryCount]);
+  }, [debtId, redirectUrl, sessionId, stripeStatus, vnpayStatus, vnpayTxnRef, retryCount]);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   const handleRetry = () => {
     fetchedSessionRef.current = null;
@@ -159,11 +244,17 @@ export default function PaymentConfirm() {
 
   const subtitle = {
     [STATUS.LOADING]:
-      "Hệ thống đang kiểm tra trạng thái giao dịch với Stripe. Vui lòng đợi trong giây lát.",
+      paymentMethod === "vnpay"
+        ? "Hệ thống đang kiểm tra trạng thái giao dịch với VNPAY. Vui lòng đợi trong giây lát."
+        : "Hệ thống đang kiểm tra trạng thái giao dịch với Stripe. Vui lòng đợi trong giây lát.",
     [STATUS.PENDING]:
-      "Bạn sắp được chuyển sang trang thanh toán Visa/Mastercard. Vui lòng không tắt trình duyệt trong lúc chuyển hướng.",
+      paymentMethod === "vnpay"
+        ? "Bạn sắp được chuyển sang cổng thanh toán VNPAY. Vui lòng không tắt trình duyệt trong lúc chuyển hướng."
+        : "Bạn sắp được chuyển sang trang thanh toán Visa/Mastercard. Vui lòng không tắt trình duyệt trong lúc chuyển hướng.",
     [STATUS.SUCCESS]:
-      "Cảm ơn bạn! Học phí đã được thanh toán thành công qua Visa/Mastercard. Nhà trường sẽ ghi nhận và thông báo sớm nhất.",
+      paymentMethod === "vnpay"
+        ? "Cảm ơn bạn! Học phí đã được thanh toán thành công qua VNPAY. Nhà trường sẽ ghi nhận và thông báo sớm nhất."
+        : "Cảm ơn bạn! Học phí đã được thanh toán thành công qua Visa/Mastercard. Nhà trường sẽ ghi nhận và thông báo sớm nhất.",
     [STATUS.CANCELLED]:
       "Giao dịch thanh toán đã bị hủy. Bạn có thể quay lại trang học phí để thử lại hoặc chọn phương thức khác.",
     [STATUS.ERROR]: errorMsg,
@@ -175,6 +266,12 @@ export default function PaymentConfirm() {
   const studentName = session?.metadata?.student_name || null;
   const description = session?.metadata?.description || session?.description || null;
   const paidAt = useMemo(() => {
+    if (session?.provider === "vnpay" && session?.created) {
+      const raw = String(session.created);
+      if (raw.length === 14) {
+        return `${raw.slice(6, 8)}/${raw.slice(4, 6)}/${raw.slice(0, 4)} ${raw.slice(8, 10)}:${raw.slice(10, 12)}`;
+      }
+    }
     if (!session?.created) return null;
     return new Date(session.created * 1000).toLocaleString("vi-VN", {
       day: "2-digit",
@@ -183,7 +280,7 @@ export default function PaymentConfirm() {
       hour: "2-digit",
       minute: "2-digit",
     });
-  }, [session?.created]);
+  }, [session?.created, session?.provider]);
 
   return (
     <div className="payment-confirm-page">
@@ -232,6 +329,14 @@ export default function PaymentConfirm() {
                 </span>
               </div>
             )}
+            {session?.provider === "vnpay" && session.transactionId && (
+              <div className="confirm-detail-row">
+                <span className="confirm-detail-label">Mã giao dịch</span>
+                <span className="confirm-detail-value confirm-detail-value--mono">
+                  {session.transactionId}
+                </span>
+              </div>
+            )}
           </div>
         )}
 
@@ -257,8 +362,12 @@ export default function PaymentConfirm() {
               <div className="confirm-pending-step is-active">
                 <span>2</span>
                 <div>
-                  <strong>Chuyển sang Stripe</strong>
-                  <p>Trang thanh toán Visa/Mastercard sẽ mở tự động sau giây lát.</p>
+                  <strong>{paymentMethod === "vnpay" ? "Chuyển sang VNPAY" : "Chuyển sang Stripe"}</strong>
+                  <p>
+                    {paymentMethod === "vnpay"
+                      ? "Cổng thanh toán VNPAY sẽ mở tự động sau giây lát."
+                      : "Trang thanh toán Visa/Mastercard sẽ mở tự động sau giây lát."}
+                  </p>
                 </div>
               </div>
               <div className="confirm-pending-step">
