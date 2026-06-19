@@ -1,6 +1,6 @@
 import React from "react";
 import "./notificationHistorySection.css";
-import { Bell, Trash2 } from "lucide-react";
+import { Bell, EyeOff } from "lucide-react";
 
 const getTypeClass = (type) => {
   if (!type) return "all";
@@ -20,7 +20,7 @@ const formatDate = (rawDate) => {
   return date.toLocaleDateString("vi-VN");
 };
 
-const NotificationHistorySection = ({ list, onDelete, onClickItem }) => {
+const NotificationHistorySection = ({ list, onHide, onClickItem }) => {
   if (!list.length) {
     return <div className="admin-list-empty">Không có thông báo phù hợp bộ lọc.</div>;
   }
@@ -60,11 +60,11 @@ const NotificationHistorySection = ({ list, onDelete, onClickItem }) => {
               className="admin-delete"
               onClick={(e) => {
                 e.stopPropagation();
-                onDelete(item.id);
+                onHide(item);
               }}
-              title="Xóa thông báo"
+              title="Ẩn thông báo"
             >
-              <Trash2 size={16} />
+              <EyeOff size={16} />
             </button>
           </div>
         );

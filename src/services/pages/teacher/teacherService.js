@@ -239,6 +239,9 @@ const teacherEndpointRegistry = [
     mock: false
   },
   { key: "get_notifications", method: "GET", path: "/notifications/my", module: "notifications", mock: false },
+  { key: "put_notifications_my_read_all", method: "PUT", path: "/notifications/my/read-all", module: "notifications", mock: false },
+  { key: "put_notifications_my_by_id_read", method: "PUT", path: "/notifications/my/:id/read", module: "notifications", mock: false },
+  { key: "patch_notifications_my_by_id_toggle_important", method: "PATCH", path: "/notifications/my/:id/toggle-important", module: "notifications", mock: false },
   // Leave Requests - Real API endpoints (no mock)
   { key: "get_class_leave_requests", method: "GET", path: "/leave-requests/classes/:classId/leave-requests", module: "leave" },
   { key: "get_approved_leaves_by_date", method: "GET", path: "/leave-requests/classes/:classId/leave-requests/approved-on-date", module: "leave" },
@@ -439,6 +442,9 @@ export const teacherService = {
   createSchoolEvent: (input) => endpointCallers.post_school_events(input),
   listQuizzes: (input) => endpointCallers.get_quizzes(input),
   getNotifications: (input) => endpointCallers.get_notifications(input),
+  markAllNotificationsRead: (input) => endpointCallers.put_notifications_my_read_all(input),
+  markNotificationRead: (input) => endpointCallers.put_notifications_my_by_id_read(input),
+  toggleNotificationImportant: (input) => endpointCallers.patch_notifications_my_by_id_toggle_important(input),
   getClassLeaveRequests: (input) => endpointCallers.get_class_leave_requests(input),
   getApprovedLeavesByDate: (input) => endpointCallers.get_approved_leaves_by_date(input),
   updateLeaveRequestStatus: (input) => endpointCallers.patch_leave_request_status(input),

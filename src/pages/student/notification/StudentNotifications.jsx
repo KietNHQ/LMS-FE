@@ -6,6 +6,20 @@ import { notificationService } from "../../../services/pages/student/notificatio
 
 const LOAD_BATCH_SIZE = 5;
 const STUDENT_UNREAD_COUNT_KEY = "student_unread_notifications_count";
+const STUDENT_HIDDEN_NOTIFICATION_IDS_KEY = "student_hidden_notification_ids";
+
+const readHiddenNotificationIds = () => {
+  try {
+    const ids = JSON.parse(localStorage.getItem(STUDENT_HIDDEN_NOTIFICATION_IDS_KEY) || "[]");
+    return Array.isArray(ids) ? ids.map(String) : [];
+  } catch {
+    return [];
+  }
+};
+
+const saveHiddenNotificationIds = (ids) => {
+  localStorage.setItem(STUDENT_HIDDEN_NOTIFICATION_IDS_KEY, JSON.stringify([...ids]));
+};
 
 export default function StudentNotifications() {
 
@@ -64,7 +78,9 @@ export default function StudentNotifications() {
           return;
         }
 
-        const apiNotifications = Array.isArray(listResponse?.data) ? listResponse.data : [];
+        const hiddenIds = new Set(readHiddenNotificationIds());
+        const apiNotifications = (Array.isArray(listResponse?.data) ? listResponse.data : [])
+          .filter((item) => !hiddenIds.has(String(item.id)));
         setNotifications(apiNotifications);
 
         const unreadCountFromApi = unreadResponse?.unreadCount ?? listResponse?.unreadCount ?? apiNotifications.filter((item) => item.unread).length;
@@ -177,12 +193,22 @@ export default function StudentNotifications() {
     }
   };
 
-  const toggleImportant = (id) => {
+  const toggleImportant = async (id) => {
+    const previousNotifications = notifications;
     setNotifications((prev) =>
       prev.map((item) =>
         item.id === id ? { ...item, important: !item.important } : item
       )
     );
+
+    try {
+      const hasAuth = !!(localStorage.getItem("accessToken") || sessionStorage.getItem("accessToken"));
+      await notificationService.toggleNotificationImportant(id, { mock: !hasAuth });
+    } catch (toggleError) {
+      console.error("Không thể cập nhật đánh dấu thông báo:", toggleError);
+      setNotifications(previousNotifications);
+      setError(toggleError?.message || "Không thể cập nhật đánh dấu thông báo");
+    }
   };
 
   const openNotification = async (item) => {
@@ -206,6 +232,50 @@ export default function StudentNotifications() {
     setSelected(null);
   };
 
+  const markNotificationReadById = async (id) => {
+    const hasAuth = !!(localStorage.getItem("accessToken") || sessionStorage.getItem("accessToken"));
+    await notificationService.markNotificationRead(id, { mock: !hasAuth });
+  };
+
+  const hideNotification = async (item) => {
+    const hiddenIds = new Set(readHiddenNotificationIds());
+    hiddenIds.add(String(item.id));
+    saveHiddenNotificationIds(hiddenIds);
+
+    setNotifications((prev) => prev.filter((notification) => notification.id !== item.id));
+    if (selected?.id === item.id) {
+      setSelected(null);
+    }
+
+    if (item.unread) {
+      try {
+        await markNotificationReadById(item.id);
+      } catch (hideError) {
+        console.warn("Không thể đánh dấu thông báo đã ẩn là đã đọc:", hideError);
+      }
+    }
+  };
+
+  const hideVisibleNotifications = async () => {
+    if (visibleNotifications.length === 0) return;
+
+    const hiddenIds = new Set(readHiddenNotificationIds());
+    visibleNotifications.forEach((item) => hiddenIds.add(String(item.id)));
+    saveHiddenNotificationIds(hiddenIds);
+
+    const hiddenIdSet = new Set(visibleNotifications.map((item) => item.id));
+    setNotifications((prev) => prev.filter((item) => !hiddenIdSet.has(item.id)));
+    if (selected && hiddenIdSet.has(selected.id)) {
+      setSelected(null);
+    }
+
+    await Promise.allSettled(
+      visibleNotifications
+        .filter((item) => item.unread)
+        .map((item) => markNotificationReadById(item.id))
+    );
+  };
+
   return (
     <div className="notification-page">
 
@@ -220,6 +290,8 @@ export default function StudentNotifications() {
           showOnlyMarked={showOnlyMarked}
           onToggleMarkedFilter={() => setShowOnlyMarked((prev) => !prev)}
           markedCount={markedCount}
+          onHideVisible={hideVisibleNotifications}
+          hideVisibleDisabled={visibleNotifications.length === 0}
         />
 
         {isLoading ? (
@@ -231,6 +303,7 @@ export default function StudentNotifications() {
             notifications={visibleNotifications}
             onOpen={openNotification}
             onToggleImportant={toggleImportant}
+            onHide={hideNotification}
             hasMore={hasMore}
             onLoadMore={loadMoreNotifications}
             isFiltered={showOnlyMarked}

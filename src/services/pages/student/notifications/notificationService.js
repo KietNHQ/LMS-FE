@@ -23,7 +23,12 @@ const mapNotification = (item = {}) => ({
   content: item.content || "",
   date: item.sent_at || item.sentAt || item.created_at || item.createdAt || item.date || new Date().toISOString(),
   unread: item.is_read === undefined ? Boolean(item.unread ?? true) : !item.is_read,
-  important: item.important !== undefined ? Boolean(item.important) : isImportantPriority(item.priority),
+  important:
+    item.important !== undefined
+      ? Boolean(item.important)
+      : item.is_important !== undefined
+        ? Boolean(item.is_important)
+        : isImportantPriority(item.priority),
   priority: item.priority ?? "normal",
   category: item.category || CATEGORY_MAP[item.type] || "Hệ thống",
   type: item.type || "general",
@@ -77,7 +82,11 @@ export const notificationService = {
     const response = await axiosClient.get("/notifications/my/unread-count");
     return {
       success: response?.success ?? true,
-      unreadCount: response?.unreadCount ?? response?.data?.unreadCount ?? 0,
+      unreadCount:
+        response?.unreadCount ??
+        response?.data?.unreadCount ??
+        response?.data?.unread_count ??
+        0,
       message: response?.message ?? "",
       data: response,
     };
@@ -94,5 +103,10 @@ export const notificationService = {
     const response = await axiosClient.put(`/notifications/my/${id}/read`);
     return unwrapMutationResponse(response);
   },
-};
 
+  async toggleNotificationImportant(id, { mock = false } = {}) {
+    if (mock) return { success: true };
+    const response = await axiosClient.patch(`/notifications/my/${id}/toggle-important`);
+    return unwrapMutationResponse(response);
+  },
+};

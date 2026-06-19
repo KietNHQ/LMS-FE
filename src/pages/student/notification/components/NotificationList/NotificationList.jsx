@@ -6,6 +6,7 @@ export default function NotificationList({
     notifications,
     onOpen,
     onToggleImportant,
+    onHide,
     hasMore = false,
     onLoadMore,
     isFiltered = false,
@@ -43,6 +44,7 @@ export default function NotificationList({
                     item={item}
                     onOpen={onOpen}
                     onToggleImportant={onToggleImportant}
+                    onHide={onHide}
                 />
             ))}
 
@@ -72,5 +74,4 @@ export default function NotificationList({
         </div>
     );
 }
-
 

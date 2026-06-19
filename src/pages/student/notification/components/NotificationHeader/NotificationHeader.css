@@ -96,6 +96,31 @@
   color: #3559b7;
 }
 
+.notification-hide-visible {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  border: 1px solid #dbe4f5;
+  background: #ffffff;
+  color: #3559b7;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.notification-hide-visible:hover:not(:disabled) {
+  border-color: #9db9ff;
+  background: #f8fbff;
+}
+
+.notification-hide-visible:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
 .notification-bell .bell-badge {
   position: absolute;
   top: -2px;
@@ -132,4 +157,3 @@
 	justify-content: center;
   }
 }
-

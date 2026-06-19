@@ -14,6 +14,20 @@ const CLASS_LABELS = {
 
 const PARENT_UNREAD_COUNT_KEY = "parent_unread_notifications_count";
 const PARENT_UNREAD_COUNT_EVENT = "parent-notification-count-updated";
+const PARENT_HIDDEN_NOTIFICATION_IDS_KEY = "parent_hidden_notification_ids";
+
+const readHiddenNotificationIds = () => {
+  try {
+    const ids = JSON.parse(localStorage.getItem(PARENT_HIDDEN_NOTIFICATION_IDS_KEY) || "[]");
+    return Array.isArray(ids) ? ids.map(String) : [];
+  } catch {
+    return [];
+  }
+};
+
+const saveHiddenNotificationIds = (ids) => {
+  localStorage.setItem(PARENT_HIDDEN_NOTIFICATION_IDS_KEY, JSON.stringify([...ids]));
+};
 
 export default function ParentNotifications() {
 
@@ -54,7 +68,8 @@ export default function ParentNotifications() {
         
         if (response.success && response.data) {
           console.log("✅ [ParentNotifications] Setting notifications:", response.data.length);
-          setNotifications(response.data);
+          const hiddenIds = new Set(readHiddenNotificationIds());
+          setNotifications(response.data.filter((item) => !hiddenIds.has(String(item.id))));
         } else {
           console.warn("⚠️ [ParentNotifications] Invalid response or no data");
         }
@@ -186,6 +201,52 @@ export default function ParentNotifications() {
     }
   };
 
+  const markNotificationReadById = async (id) => {
+    await parentService.markNotificationRead({
+      pathParams: { id },
+      mock: false,
+    });
+  };
+
+  const hideNotification = async (item) => {
+    const hiddenIds = new Set(readHiddenNotificationIds());
+    hiddenIds.add(String(item.id));
+    saveHiddenNotificationIds(hiddenIds);
+
+    setNotifications((prev) => prev.filter((notification) => notification.id !== item.id));
+    if (selected?.id === item.id) {
+      setSelected(null);
+    }
+
+    if (item.unread) {
+      try {
+        await markNotificationReadById(item.id);
+      } catch (err) {
+        console.warn("❌ [ParentNotifications] Error marking hidden notification read:", err);
+      }
+    }
+  };
+
+  const hideVisibleNotifications = async () => {
+    if (filteredNotifications.length === 0) return;
+
+    const hiddenIds = new Set(readHiddenNotificationIds());
+    filteredNotifications.forEach((item) => hiddenIds.add(String(item.id)));
+    saveHiddenNotificationIds(hiddenIds);
+
+    const hiddenIdSet = new Set(filteredNotifications.map((item) => item.id));
+    setNotifications((prev) => prev.filter((item) => !hiddenIdSet.has(item.id)));
+    if (selected && hiddenIdSet.has(selected.id)) {
+      setSelected(null);
+    }
+
+    await Promise.allSettled(
+      filteredNotifications
+        .filter((item) => item.unread)
+        .map((item) => markNotificationReadById(item.id))
+    );
+  };
+
   return(
 
     <div className="parent-notification-page">
@@ -202,14 +263,21 @@ export default function ParentNotifications() {
           showOnlyMarked={showOnlyMarked}
           onToggleMarkedFilter={() => setShowOnlyMarked(!showOnlyMarked)}
           markedCount={markedCount}
+          onHideVisible={hideVisibleNotifications}
+          hideVisibleDisabled={filteredNotifications.length === 0}
         />
 
-        <NotificationList
-          notifications={filteredNotifications}
-          onOpen={openNotification}
-          onToggleImportant={toggleImportant}
-          getClassLabel={getClassLabel}
-        />
+        {isLoading ? (
+          <div className="parent-notification-list-empty">Đang tải thông báo...</div>
+        ) : (
+          <NotificationList
+            notifications={filteredNotifications}
+            onOpen={openNotification}
+            onToggleImportant={toggleImportant}
+            onHide={hideNotification}
+            getClassLabel={getClassLabel}
+          />
+        )}
 
       </div>
 

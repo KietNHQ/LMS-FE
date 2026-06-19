@@ -86,6 +86,13 @@
   border-radius: 50%;
 }
 
+.notification-card-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
 .star-box {
   cursor: pointer;
   font-size: 20px;
@@ -102,7 +109,23 @@
   transition: all 0.2s ease;
 }
 
-.star-box:hover {
+.notification-hide-box {
+  cursor: pointer;
+  width: 34px;
+  height: 34px;
+  border: 1px solid #dbe4f5;
+  border-radius: 10px;
+  background: #ffffff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #9aa3b2;
+  transition: all 0.2s ease;
+  padding: 0;
+}
+
+.star-box:hover,
+.notification-hide-box:hover {
   border-color: #9db9ff;
   background: #f8fbff;
   transform: scale(1.05);

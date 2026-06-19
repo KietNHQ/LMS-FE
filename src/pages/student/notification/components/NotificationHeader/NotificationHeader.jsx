@@ -1,4 +1,4 @@
-import { Bell, Star } from "lucide-react";
+import { Bell, EyeOff, Star } from "lucide-react";
 import NotificationFilter from "../NotificationFilter/NotificationFilter";
 import "./NotificationHeader.css";
 
@@ -11,6 +11,8 @@ export default function NotificationHeader({
     showOnlyMarked = false,
     onToggleMarkedFilter,
     markedCount = 0,
+    onHideVisible,
+    hideVisibleDisabled = false,
 }) {
     return (
         <div className="notification-header">
@@ -45,8 +47,17 @@ export default function NotificationHeader({
                         <span className="bell-badge">{unreadCount > 9 ? "9+" : unreadCount}</span>
                     )}
                 </div>
+
+                <button
+                    type="button"
+                    className="notification-hide-visible"
+                    onClick={onHideVisible}
+                    disabled={hideVisibleDisabled}
+                    title="Ẩn thông báo đang hiển thị"
+                >
+                    <EyeOff size={18} />
+                </button>
             </div>
         </div>
     );
 }
-

@@ -105,6 +105,34 @@
   color: #04a094;
 }
 
+.teacher-notification-hide-btn {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: #ffffff;
+  border: 1px solid #dbe4f5;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #04a094;
+  flex-shrink: 0;
+  box-shadow: 0 4px 12px rgba(20, 28, 45, 0.05);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease, border-color 0.2s ease;
+}
+
+.teacher-notification-hide-btn:hover:not(:disabled) {
+  background: #d9f5f2;
+  border-color: #9ee3dc;
+  transform: translateY(-2px);
+  box-shadow: 0 10px 22px rgba(4, 160, 148, 0.18);
+}
+
+.teacher-notification-hide-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
 .teacher-notification-bell-badge {
   position: absolute;
   top: -4px;
@@ -177,4 +205,3 @@
     flex-wrap: wrap;
   }
 }
-
