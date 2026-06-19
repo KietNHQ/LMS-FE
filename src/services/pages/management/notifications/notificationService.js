@@ -34,7 +34,7 @@ const normalizeTargetInput = (type = "") => {
     return { targetType: "school", targetId: null };
 };
 
-const normalizeCreatePayload = (data = {}) => {
+const normalizeMutationPayload = (data = {}) => {
     const { targetType, targetId } = normalizeTargetInput(data.type);
 
     return {
@@ -62,6 +62,7 @@ const getRows = (payload) => {
 
 const normalizeNotification = (item = {}) => {
     const targetType = item.target_type || item.targetType || "school";
+    const targetId = item.target_id ?? item.targetId ?? null;
     const isRead =
         item.is_read !== undefined
             ? Boolean(item.is_read)
@@ -77,6 +78,10 @@ const normalizeNotification = (item = {}) => {
         type: TARGET_LABELS[targetType] || TYPE_LABELS[item.type] || item.type || "Chung",
         notificationType: item.type || "general",
         targetType,
+        targetId,
+        status: item.status || "sent",
+        priority: item.priority || "normal",
+        sendEmail: Boolean(item.send_email ?? item.sendEmail ?? false),
         date: item.sent_at || item.created_at || item.date || new Date().toISOString(),
         read: isRead,
         unread: !isRead,
@@ -101,8 +106,17 @@ const notificationService = {
      * Create a new notification
      */
     createNotification: async (data) => {
-        const payload = normalizeCreatePayload(data);
+        const payload = normalizeMutationPayload(data);
         const response = await axiosClient.post(NOTIFICATION_ENDPOINTS.BASE, payload);
+        return response;
+    },
+
+    /**
+     * Update an existing notification
+     */
+    updateNotification: async (id, data) => {
+        const payload = normalizeMutationPayload(data);
+        const response = await axiosClient.put(`${NOTIFICATION_ENDPOINTS.BASE}/${id}`, payload);
         return response;
     },
 

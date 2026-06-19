@@ -50,11 +50,24 @@ const saveHiddenNotificationIds = (ids) => {
   localStorage.setItem(HIDDEN_NOTIFICATION_IDS_KEY, JSON.stringify([...ids]));
 };
 
+const EMPTY_FORM = {
+  title: "",
+  content: "",
+  type: "Tất cả",
+  notificationType: "announcement",
+  targetType: "school",
+  targetId: null,
+  status: "draft",
+  priority: "normal",
+  sendEmail: false,
+};
+
 const ManagementNotifications = () => {
   const [open, setOpen] = useState(false);
   const [detail, setDetail] = useState(null);
   const [loadError, setLoadError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [activeFilter, setActiveFilter] = useState("Tất cả");
 
@@ -97,11 +110,8 @@ const ManagementNotifications = () => {
       window.removeEventListener("admin-notifications-updated", handleRefresh);
   }, []);
 
-  const [form, setForm] = useState({
-    title: "",
-    content: "",
-    type: "Tất cả",
-  });
+  const [form, setForm] = useState(EMPTY_FORM);
+  const [editingNotification, setEditingNotification] = useState(null);
 
   const sortedList = useMemo(() => {
     return [...list].sort(
@@ -124,28 +134,76 @@ const ManagementNotifications = () => {
     );
   }, [unreadCount]);
 
-  const handleAdd = async () => {
-    if (!form.title || !form.content) return;
+  const closeForm = () => {
+    setOpen(false);
+    setEditingNotification(null);
+    setForm(EMPTY_FORM);
+  };
 
+  const handleOpenCreate = () => {
+    setEditingNotification(null);
+    setForm(EMPTY_FORM);
+    setOpen(true);
+  };
+
+  const handleOpenEdit = (item) => {
+    setDetail(null);
+    setEditingNotification(item);
+    setForm({
+      title: item.title || "",
+      content: item.content || "",
+      type: item.type || "Tất cả",
+      notificationType: item.notificationType || "announcement",
+      targetType: item.targetType || "school",
+      targetId: item.targetId ?? null,
+      status: item.status || "sent",
+      priority: item.priority || "normal",
+      sendEmail: item.sendEmail ?? false,
+    });
+    setOpen(true);
+  };
+
+  const handleSubmitForm = async () => {
+    if (!form.title.trim() || !form.content.trim() || isSubmitting) return;
+
+    setIsSubmitting(true);
     try {
-      const response = await notificationService.createNotification({
+      const payload = {
         title: form.title,
         content: form.content,
         type: form.type,
-        status: "draft",
-        priority: "normal",
-      });
+        notificationType: form.notificationType || "announcement",
+        status: editingNotification ? form.status : "draft",
+        priority: form.priority || "normal",
+        sendEmail: form.sendEmail ?? false,
+      };
+      if (editingNotification && form.type === editingNotification.type) {
+        payload.targetType = form.targetType;
+        payload.targetId = form.targetId;
+      }
+
+      const response = editingNotification
+        ? await notificationService.updateNotification(editingNotification.id, payload)
+        : await notificationService.createNotification(payload);
 
       if (response.success) {
-        if (response.data?.id) {
+        if (!editingNotification && response.data?.id) {
           await notificationService.sendNotification(response.data.id);
         }
         await fetchNotifications();
-        setOpen(false);
-        setForm({ title: "", content: "", type: "Tất cả" });
+        closeForm();
       }
     } catch (error) {
-      window.alert(getErrorMessage(error, "Không thể gửi thông báo."));
+      window.alert(
+        getErrorMessage(
+          error,
+          editingNotification
+            ? "Không thể cập nhật thông báo."
+            : "Không thể gửi thông báo."
+        )
+      );
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -275,14 +333,7 @@ const ManagementNotifications = () => {
 
           <button
             className="admin-btn-add"
-            onClick={() => {
-              setForm({
-                title: "",
-                content: "",
-                type: "Tất cả",
-              });
-              setOpen(true);
-            }}
+            onClick={handleOpenCreate}
           >
             <BellPlus size={16} />
             Gửi thông báo
@@ -307,6 +358,7 @@ const ManagementNotifications = () => {
       <NotificationHistorySection
         list={filteredList}
         onHide={handleHide}
+        onEdit={handleOpenEdit}
         onClickItem={handleOpenDetail}
       />
 
@@ -315,7 +367,10 @@ const ManagementNotifications = () => {
         setOpen={setOpen}
         form={form}
         setForm={setForm}
-        onSubmit={handleAdd}
+        onSubmit={handleSubmitForm}
+        onClose={closeForm}
+        mode={editingNotification ? "edit" : "create"}
+        isSubmitting={isSubmitting}
         typeOptions={TARGET_OPTIONS}
       />
 

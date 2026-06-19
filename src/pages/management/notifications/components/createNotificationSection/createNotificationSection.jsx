@@ -9,9 +9,22 @@ const CreateNotificationSection = ({
   form,
   setForm,
   onSubmit,
+  onClose,
+  mode = "create",
+  isSubmitting = false,
   typeOptions = [],
 }) => {
   const [showDropdown, setShowDropdown] = useState(false);
+  const isEditMode = mode === "edit";
+
+  const closeModal = () => {
+    setShowDropdown(false);
+    if (onClose) {
+      onClose();
+      return;
+    }
+    setOpen(false);
+  };
 
   const getRoleClass = (type) => {
     if (!type) return "all";
@@ -27,9 +40,9 @@ const CreateNotificationSection = ({
 
 
   return (
-    <div className="create-noti-modal" onClick={() => setOpen(false)}>
+    <div className="create-noti-modal" onClick={closeModal}>
       <div className="create-noti-modal-box" onClick={(e) => e.stopPropagation()}>
-        <h3>Gửi thông báo mới</h3>
+        <h3>{isEditMode ? "Chỉnh sửa thông báo" : "Gửi thông báo mới"}</h3>
 
         <label>Tiêu đề</label>
         <input
@@ -83,12 +96,12 @@ const CreateNotificationSection = ({
 
 
         <div className="create-noti-modal-actions">
-          <button className="cancel" onClick={() => setOpen(false)}>
+          <button className="cancel" onClick={closeModal} disabled={isSubmitting}>
             Hủy
           </button>
 
-          <button className="submit" onClick={onSubmit}>
-            Gửi thông báo
+          <button className="submit" onClick={onSubmit} disabled={isSubmitting}>
+            {isSubmitting ? "Đang lưu..." : isEditMode ? "Lưu thay đổi" : "Gửi thông báo"}
           </button>
         </div>
       </div>

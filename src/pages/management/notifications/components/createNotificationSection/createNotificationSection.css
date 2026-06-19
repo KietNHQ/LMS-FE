@@ -81,6 +81,12 @@
   color: var(--admin-text-secondary, #4d5f82);
 }
 
+.cancel:disabled,
+.submit:disabled {
+  cursor: not-allowed;
+  opacity: 0.72;
+}
+
 .submit {
   background: var(--admin-primary, #1e2f5a);
   color: white;

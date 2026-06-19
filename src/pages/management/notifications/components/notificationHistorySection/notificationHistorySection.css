@@ -122,7 +122,14 @@
 .tag.parent { background: rgba(216, 200, 255, 0.42); color: #7151be; }
 
 
-.admin-delete {
+.admin-card-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.admin-action-btn {
   width: 34px;
   height: 34px;
   border: 1px solid var(--admin-border, #dce5f7);
@@ -135,6 +142,12 @@
   color: var(--admin-text-muted, #7e8eab);
   cursor: pointer;
   transition: all 0.2s ease;
+}
+
+.admin-action-btn:hover {
+  border-color: var(--admin-primary-soft, #e9efff);
+  background: var(--admin-primary-soft, #e9efff);
+  color: var(--admin-primary, #1e2f5a);
 }
 
 .admin-delete:hover {

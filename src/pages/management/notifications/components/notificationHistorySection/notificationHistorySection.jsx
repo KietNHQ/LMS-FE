@@ -1,6 +1,6 @@
 import React from "react";
 import "./notificationHistorySection.css";
-import { Bell, EyeOff } from "lucide-react";
+import { Bell, EyeOff, Pencil } from "lucide-react";
 
 const getTypeClass = (type) => {
   if (!type) return "all";
@@ -20,7 +20,7 @@ const formatDate = (rawDate) => {
   return date.toLocaleDateString("vi-VN");
 };
 
-const NotificationHistorySection = ({ list, onHide, onClickItem }) => {
+const NotificationHistorySection = ({ list, onHide, onEdit, onClickItem }) => {
   if (!list.length) {
     return <div className="admin-list-empty">Không có thông báo phù hợp bộ lọc.</div>;
   }
@@ -55,17 +55,31 @@ const NotificationHistorySection = ({ list, onHide, onClickItem }) => {
               </div>
             </div>
 
-            <button
-              type="button"
-              className="admin-delete"
-              onClick={(e) => {
-                e.stopPropagation();
-                onHide(item);
-              }}
-              title="Ẩn thông báo"
-            >
-              <EyeOff size={16} />
-            </button>
+            <div className="admin-card-actions">
+              <button
+                type="button"
+                className="admin-action-btn"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onEdit(item);
+                }}
+                title="Chỉnh sửa thông báo"
+              >
+                <Pencil size={16} />
+              </button>
+
+              <button
+                type="button"
+                className="admin-action-btn admin-delete"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onHide(item);
+                }}
+                title="Ẩn thông báo"
+              >
+                <EyeOff size={16} />
+              </button>
+            </div>
           </div>
         );
       })}
