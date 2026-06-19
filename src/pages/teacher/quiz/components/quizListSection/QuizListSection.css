@@ -33,6 +33,11 @@
     box-shadow: 0 0.95rem 1.8rem var(--move-highlight-glow);
 }
 
+.quiz-question-card.is-unsaved {
+    border-color: #fed7aa;
+    box-shadow: 0 0.75rem 1.5rem rgba(251, 146, 60, 0.14);
+}
+
 .quiz-question-card.is-moving-up {
     animation: questionMoveUpPulse 0.42s ease;
 }
@@ -76,6 +81,19 @@
     font-size: 0.82rem;
     font-weight: 700;
     margin-bottom: 0.7rem;
+}
+
+.question-draft-chip {
+    display: inline-flex;
+    align-items: center;
+    min-height: 1.8rem;
+    margin: 0 0 0.7rem 0.5rem;
+    padding: 0 0.65rem;
+    border-radius: 999px;
+    background: #fff7ed;
+    color: #c2410c;
+    font-size: 0.82rem;
+    font-weight: 800;
 }
 
 .quiz-question-card:hover {

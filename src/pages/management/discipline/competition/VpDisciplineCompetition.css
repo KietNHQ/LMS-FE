@@ -126,6 +126,28 @@
     font-weight: 500;
 }
 
+.comp-date-jump-group {
+    min-width: 168px;
+}
+
+.comp-date-jump-input {
+    height: 38px;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 10px;
+    background: #ffffff;
+    color: var(--admin-text-primary);
+    font-size: 0.85rem;
+    font-weight: 600;
+    padding: 0 0.75rem;
+    outline: none;
+    transition: all 0.2s;
+}
+
+.comp-date-jump-input:focus {
+    border-color: var(--admin-primary);
+    box-shadow: 0 0 0 3px var(--admin-primary-soft);
+}
+
 .dm-primary-actions-compact {
     display: flex;
     gap: 0.75rem;

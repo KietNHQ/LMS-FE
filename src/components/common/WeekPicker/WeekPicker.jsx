@@ -1,36 +1,14 @@
 import { IoCaretBack, IoCaretForward } from "react-icons/io5";
+import { getWeekDateRangeStr } from "./weekPickerUtils";
 import "./WeekPicker.css";
-
-export const getWeekDateRangeStr = (weekNum) => {
-    const { start, end } = getWeekDateObjects(weekNum);
-    const format = (d) => `${d.getDate().toString().padStart(2, '0')}/${(d.getMonth() + 1).toString().padStart(2, '0')}`;
-    return `${format(start)} - ${format(end)}`;
-};
-
-export const getWeekDateObjects = (weekNum) => {
-    // Mốc bắt đầu: Thứ 2, 25/08/2025
-    const startDate = new Date(2025, 7, 25);
-    let totalDays = (weekNum - 1) * 7;
-    
-    // Cộng thêm các tuần nghỉ/thi (Gaps) để 35 tuần thực học trải dài đến hết tháng 5
-    if (weekNum > 8) totalDays += 7;  // Thi Giữa HK1
-    if (weekNum > 17) totalDays += 14; // Thi Cuối HK1 + Nghỉ giữa học kỳ
-    if (weekNum > 22) totalDays += 14; // Nghỉ Tết Nguyên Đán (thường 2 tuần)
-    if (weekNum > 30) totalDays += 7;  // Thi Giữa HK2
-
-    startDate.setDate(startDate.getDate() + totalDays);
-    const endDate = new Date(startDate);
-    endDate.setDate(endDate.getDate() + 6);
-    endDate.setHours(23, 59, 59, 999);
-    
-    return { start: startDate, end: endDate };
-};
 
 export default function WeekPicker({
   value = 1,
   onChange,
   totalWeeks = 35,
   label = "Tuần",
+  rangeLabel,
+  className = "",
 }) {
   const handlePrev = () => {
     if (value <= 1) return;
@@ -42,8 +20,10 @@ export default function WeekPicker({
     onChange(value + 1);
   };
 
+  const displayRange = rangeLabel || getWeekDateRangeStr(value);
+
   return (
-    <div className="common-week-picker compact-pill">
+    <div className={`common-week-picker compact-pill ${className}`.trim()}>
       <button
         type="button"
         className="week-nav-btn bordered"
@@ -55,7 +35,7 @@ export default function WeekPicker({
       </button>
 
       <div className="week-value-display bold" style={{ minWidth: "150px" }}>
-        {label} {value} <span style={{fontWeight: '500', opacity: 0.8, fontSize: '11px', marginLeft: '4px'}}>({getWeekDateRangeStr(value)})</span>
+        {label} {value} <span style={{fontWeight: '500', opacity: 0.8, fontSize: '11px', marginLeft: '4px'}}>({displayRange})</span>
       </div>
 
       <button
@@ -70,4 +50,3 @@ export default function WeekPicker({
     </div>
   );
 }
-

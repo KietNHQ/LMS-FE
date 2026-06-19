@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { PageHeader, WeekPicker, Pagination, StatusBadge, LoadingSpinner } from "../../../../components/common";
-import { getWeekDateObjects } from "../../../../components/common/WeekPicker/WeekPicker";
+import { getWeekDateObjects } from "../../../../components/common/WeekPicker/weekPickerUtils";
 import { useSchoolYearTerm } from "../../../../hooks/useSchoolYearTerm";
 import { normalizePermissions } from "../../../../hooks/useAuth";
 import Select from "../../../../components/ui/Select/Select";
@@ -577,4 +577,3 @@ export default function VpDisciplineMgmt() {
         </div>
     );
 }
-

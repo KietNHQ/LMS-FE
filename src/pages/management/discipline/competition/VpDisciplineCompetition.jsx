@@ -12,12 +12,20 @@ import {
 import { Trophy, TrendingDown } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { vpDisciplineService } from "../../../../services/pages/management/vp-discipline";
-import { getWeekDateRange, parseGradeFromClass } from "../../../../utils/competitionUtils";
+import {
+    formatDateForDisplay,
+    getSchoolYearForDate,
+    getTermForDate,
+    getWeekDateRange,
+    getWeekForDate,
+    parseGradeFromClass,
+} from "../../../../utils/competitionUtils";
 import { exportRankingToExcel } from "../../../../utils/rankingExportUtils";
 import { toast } from "react-toastify";
 import "./VpDisciplineCompetition.css";
 
 const ITEMS_PER_PAGE = 6;
+const TOTAL_COMPETITION_WEEKS = 35;
 
 function mapRanking(r) {
     const grade = parseGradeFromClass(r.className || r.class_name);
@@ -64,8 +72,15 @@ function buildViolationTooltip(breakdown) {
 
 export default function VpDisciplineCompetition({ isEmbedded = false, onClassClick }) {
     const navigate = useNavigate();
-    const { selectedSchoolYear, selectedTerm, handleYearArrow, handleTermChange } = useSchoolYearTerm();
+    const {
+        selectedSchoolYear,
+        selectedTerm,
+        handleYearArrow,
+        handleTermChange,
+        setSelectedSchoolYear,
+    } = useSchoolYearTerm();
     const [selectedWeek, setSelectedWeek] = useState(1);
+    const [selectedDate, setSelectedDate] = useState("");
     const [selectedGrade, setSelectedGrade] = useState("all");
     const [searchTerm, setSearchTerm] = useState("");
     const [currentPage, setCurrentPage] = useState(1);
@@ -76,6 +91,11 @@ export default function VpDisciplineCompetition({ isEmbedded = false, onClassCli
         () => getWeekDateRange(selectedSchoolYear, selectedTerm, selectedWeek),
         [selectedSchoolYear, selectedTerm, selectedWeek],
     );
+
+    const weekRangeLabel = useMemo(() => {
+        if (!startDate || !endDate) return "";
+        return `${formatDateForDisplay(startDate)} - ${formatDateForDisplay(endDate)}`;
+    }, [startDate, endDate]);
 
     // Fetch grade levels from API
     const { data: gradeLevelsData = [] } = useQuery({
@@ -164,6 +184,40 @@ export default function VpDisciplineCompetition({ isEmbedded = false, onClassCli
         setCurrentPage(1);
     }, [selectedWeek, selectedGrade, searchTerm, normalizeBySize]);
 
+    const handleDateJump = (value) => {
+        setSelectedDate(value);
+        if (!value) return;
+
+        const targetSchoolYear = getSchoolYearForDate(value);
+        const targetTerm = getTermForDate(targetSchoolYear, value);
+        const targetWeek = getWeekForDate(
+            targetSchoolYear,
+            targetTerm,
+            value,
+            TOTAL_COMPETITION_WEEKS,
+        );
+
+        if (!targetSchoolYear || !targetTerm || !targetWeek) {
+            toast.warning("Ngày này không nằm trong lịch tuần thi đua hiện tại.");
+            return;
+        }
+
+        if (targetSchoolYear !== selectedSchoolYear) {
+            if (setSelectedSchoolYear) {
+                setSelectedSchoolYear(targetSchoolYear);
+            } else {
+                toast.info(`Ngày đã chọn thuộc năm học ${targetSchoolYear}. Hãy đổi năm học nếu cần xem dữ liệu năm đó.`);
+            }
+        }
+
+        if (targetTerm !== selectedTerm) {
+            handleTermChange(targetTerm);
+        }
+
+        setSelectedWeek(targetWeek.week);
+        toast.success(`Đã chuyển đến tuần ${targetWeek.week} (${formatDateForDisplay(targetWeek.startDate)} - ${formatDateForDisplay(targetWeek.endDate)}).`);
+    };
+
     const totalPages = Math.max(1, Math.ceil(rankedWithTies.length / ITEMS_PER_PAGE));
     const safePage = Math.min(Math.max(1, currentPage), totalPages);
 
@@ -198,20 +252,48 @@ export default function VpDisciplineCompetition({ isEmbedded = false, onClassCli
         return rankedWithTies.slice(start, start + ITEMS_PER_PAGE);
     }, [rankedWithTies, safePage]);
 
-    const statsCards = [
-        { key: "avg-score", title: "Điểm Thi Đua TB", val: avgScore, sub: "Điểm toàn trường", icon: <FiStar />, color: "success" },
-        { key: "top-class", title: "Lớp Dẫn Đầu", val: topClass?.class || "—", sub: topClass ? `${topClass.points}đ - Hạng ${topClass.rank}` : "Chưa có dữ liệu", icon: <FiAward />, color: "primary" },
-        { key: "total-classes", title: "Tổng Lớp", val: rankedWithTies.length, sub: "Lớp trong bảng xếp hạng", icon: <FiLayers />, color: "info" },
-        { key: "top-3-grade", title: "Top 3 Khối", val: commendationClasses.length, sub: "Lớp xuất sắc nhất", icon: <FiUserCheck />, color: "success" },
-    ];
+	const statsCards = [
+	    { key: "avg-score", title: "Điểm Thi Đua TB", val: avgScore, sub: "Điểm toàn trường", icon: <FiStar />, color: "success" },
+	    { key: "top-class", title: "Lớp Dẫn Đầu", val: topClass?.class || "—", sub: topClass ? `${topClass.points}đ - Hạng ${topClass.rank}` : "Chưa có dữ liệu", icon: <FiAward />, color: "primary" },
+	    { key: "total-classes", title: "Tổng Lớp", val: rankedWithTies.length, sub: "Lớp trong bảng xếp hạng", icon: <FiLayers />, color: "info" },
+	    { key: "top-3-grade", title: "Top 3 Khối", val: commendationClasses.length, sub: "Lớp xuất sắc nhất", icon: <FiUserCheck />, color: "success" },
+	];
 
-    const handleClassClick = (classItem) => {
-        if (onClassClick) {
-            onClassClick(classItem.class);
-        } else {
-            navigate(`/management/discipline/attendance?class=${classItem.class}`);
-        }
-    };
+	const getCurrentPeriodParams = () => {
+	    const termParam =
+	        typeof selectedTerm === "string"
+	            ? selectedTerm
+	            : selectedTerm?.key || selectedTerm?.id || "";
+	    const params = {
+	        week: String(selectedWeek),
+	        startDate: startDate || "",
+	        endDate: endDate || "",
+	        schoolYear: selectedSchoolYear || "",
+	        term: termParam,
+	    };
+
+	    if (selectedDate) {
+	        params.date = selectedDate;
+	    }
+
+	    return Object.fromEntries(
+	        Object.entries(params).filter(([, value]) => value !== ""),
+	    );
+	};
+
+	const handleClassClick = (classItem) => {
+	    const periodParams = getCurrentPeriodParams();
+	    if (onClassClick) {
+	        onClassClick(classItem.class, periodParams);
+	    } else {
+	        const query = new URLSearchParams({
+	            class: classItem.class,
+	            tab: "attendance",
+	            ...periodParams,
+	        });
+	        navigate(`/management/competition?${query.toString()}`);
+	    }
+	};
 
     const handleExportExcel = async () => {
         if (!rankedWithTies.length) return;
@@ -271,7 +353,17 @@ export default function VpDisciplineCompetition({ isEmbedded = false, onClassCli
                             className="dm-week-picker"
                             value={selectedWeek}
                             onChange={setSelectedWeek}
-                            totalWeeks={35}
+                            totalWeeks={TOTAL_COMPETITION_WEEKS}
+                            rangeLabel={weekRangeLabel}
+                        />
+                    </div>
+                    <div className="filter-group comp-date-jump-group">
+                        <label><FiCalendar /> Chọn ngày</label>
+                        <input
+                            className="comp-date-jump-input"
+                            type="date"
+                            value={selectedDate}
+                            onChange={(e) => handleDateJump(e.target.value)}
                         />
                     </div>
                     <div className="filter-group">

@@ -4,6 +4,7 @@ import "./ManagementNotifications.css";
 import notificationService from "../../../services/pages/management/notifications/notificationService";
 import NotificationHistorySection from "./components/notificationHistorySection/notificationHistorySection";
 import CreateNotificationSection from "./components/createNotificationSection/createNotificationSection";
+import { formatNotificationDateTime } from "./utils/dateTime";
 
 const FILTERS = [
   "Tất cả",
@@ -389,7 +390,7 @@ const ManagementNotifications = () => {
 
             <h3>{detail.title}</h3>
             <p>{detail.content}</p>
-            <span>{detail.date}</span>
+            <span>{formatNotificationDateTime(detail.date)}</span>
           </div>
         </div>
       )}

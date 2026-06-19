@@ -1,6 +1,7 @@
 import React from "react";
 import "./notificationHistorySection.css";
 import { Bell, EyeOff, Pencil } from "lucide-react";
+import { formatNotificationDateTime } from "../../utils/dateTime";
 
 const getTypeClass = (type) => {
   if (!type) return "all";
@@ -14,12 +15,6 @@ const getTypeClass = (type) => {
   return "all";
 };
 
-const formatDate = (rawDate) => {
-  const date = new Date(rawDate);
-  if (Number.isNaN(date.getTime())) return rawDate;
-  return date.toLocaleDateString("vi-VN");
-};
-
 const NotificationHistorySection = ({ list, onHide, onEdit, onClickItem }) => {
   if (!list.length) {
     return <div className="admin-list-empty">Không có thông báo phù hợp bộ lọc.</div>;
@@ -29,7 +24,7 @@ const NotificationHistorySection = ({ list, onHide, onEdit, onClickItem }) => {
     <div className="admin-list">
       {list.map((item) => {
         const typeClass = getTypeClass(item.type);
-        const displayDate = formatDate(item.date);
+        const displayDate = formatNotificationDateTime(item.date);
 
         return (
           <div

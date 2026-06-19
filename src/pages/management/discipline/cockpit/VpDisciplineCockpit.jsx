@@ -1,6 +1,5 @@
-import { useState, useEffect } from "react";
-import { useSearchParams, useNavigate } from "react-router-dom";
-import { PageHeader, LoadingSpinner } from "../../../../components/common";
+import { useSearchParams } from "react-router-dom";
+import { PageHeader } from "../../../../components/common";
 import DisciplineHeaderActions from "../components/DisciplineHeaderActions";
 import { useSchoolYearTerm } from "../../../../hooks/useSchoolYearTerm";
 import { FiArrowLeft, FiActivity, FiAward } from "react-icons/fi";
@@ -16,20 +15,21 @@ const TABS = [
 
 export default function VpDisciplineCockpit() {
     const [searchParams, setSearchParams] = useSearchParams();
-    const navigate = useNavigate();
     const selectedClass = searchParams.get("class");
     const activeTab = searchParams.get("tab") || "attendance";
     const { selectedSchoolYear, selectedTerm, handleYearArrow, handleTermChange } = useSchoolYearTerm();
-    const [isLoading, setIsLoading] = useState(true);
 
-    useEffect(() => {
-        setIsLoading(true);
-        const timer = setTimeout(() => setIsLoading(false), 800);
-        return () => clearTimeout(timer);
-    }, [selectedSchoolYear, selectedTerm, selectedClass, activeTab]);
+    const buildDetailParams = (overrides = {}) => {
+        const params = Object.fromEntries(searchParams.entries());
+        return {
+            ...params,
+            class: selectedClass,
+            ...overrides,
+        };
+    };
 
     const setTab = (tab) => {
-        setSearchParams({ class: selectedClass, tab });
+        setSearchParams(buildDetailParams({ tab }));
     };
 
     return (
@@ -55,16 +55,15 @@ export default function VpDisciplineCockpit() {
                 }
             />
 
-            {isLoading ? (
-                <div className="ui-table-loading">
-                    <LoadingSpinner size="lg" label="Đang tổng hợp dữ liệu thi đua..." />
-                </div>
-            ) : (
-                !selectedClass ? (
+            {!selectedClass ? (
                     <div className="cockpit-ranking-view animate-fade-in">
                         <VpDisciplineCompetition 
                             isEmbedded={true} 
-                            onClassClick={(className) => setSearchParams({ class: className, tab: 'attendance' })}
+                            onClassClick={(className, periodParams = {}) => setSearchParams({
+                                class: className,
+                                tab: "attendance",
+                                ...periodParams,
+                            })}
                         />
                     </div>
                 ) : (
@@ -94,9 +93,7 @@ export default function VpDisciplineCockpit() {
                             )}
                         </div>
                     </div>
-                )
             )}
         </div>
     );
 }
-

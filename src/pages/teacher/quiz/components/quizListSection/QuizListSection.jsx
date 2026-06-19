@@ -36,12 +36,16 @@ export default function QuizListSection({
                         item.id === animatedQuestionId && moveDirection === "down"
                             ? "is-moving-down"
                             : "",
+                        item.isDirty ? "is-unsaved" : "",
                     ]
                         .join(" ")
                         .trim()}
                 >
                     {item.type === "essay" ? (
                         <span className="question-type-chip">Tự luận</span>
+                    ) : null}
+                    {item.isDirty ? (
+                        <span className="question-draft-chip">Chưa lưu</span>
                     ) : null}
 
                     <div className="question-top-row">

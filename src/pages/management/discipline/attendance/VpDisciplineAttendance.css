@@ -54,7 +54,7 @@
 .stat-value.warning { color: #d97706; }
 .stat-sub { font-size: 0.65rem; color: var(--admin-text-secondary); }
 
-/* Integrated Toolbar Shared Styles - STRICT 1 ROW */
+/* Integrated Toolbar Shared Styles */
 .dm-toolbar-integrated {
     display: flex !important;
     flex-direction: column !important;
@@ -66,12 +66,12 @@
 }
 
 @media (min-width: 1024px) {
-    .dm-toolbar-integrated {
+    .vp-attendance .dm-toolbar-integrated {
         flex-direction: row !important;
-        align-items: center !important;
+        align-items: flex-end !important;
         justify-content: space-between !important;
         gap: 1rem !important;
-        flex-wrap: nowrap !important;
+        flex-wrap: wrap !important;
         width: 100% !important;
     }
 }
@@ -84,18 +84,18 @@
 }
 
 @media (min-width: 1024px) {
-    .dm-filters-complex {
+    .vp-attendance .dm-filters-complex {
         flex-direction: row !important;
-        align-items: center !important;
+        align-items: flex-end !important;
         gap: 0.75rem !important;
-        flex-wrap: nowrap !important;
+        flex-wrap: wrap !important;
         min-width: 0 !important;
     }
 
-    .filter-group {
-        flex: 1 1 0 !important; /* Allow shrink */
-        min-width: 100px !important;
-        max-width: 200px !important;
+    .vp-attendance .filter-group {
+        flex: 0 1 165px !important;
+        min-width: 135px !important;
+        max-width: 210px !important;
     }
 }
 
@@ -116,6 +116,70 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+}
+
+.att-date-jump-group {
+    min-width: 168px;
+}
+
+.att-date-jump-input {
+    width: 100%;
+    height: 38px;
+    border: 1px solid var(--admin-border);
+    border-radius: 8px;
+    background: #ffffff;
+    color: var(--admin-text-primary);
+    font-size: 0.9rem;
+    font-weight: 600;
+    padding: 0 0.75rem;
+    outline: none;
+    transition: all 0.2s ease;
+}
+
+.att-date-jump-input:hover {
+    border-color: var(--admin-primary);
+}
+
+.att-date-jump-input:focus {
+    border-color: var(--admin-primary);
+    box-shadow: 0 0 0 3px rgba(30, 47, 90, 0.1);
+}
+
+.att-view-mode-group {
+    min-width: 150px;
+}
+
+.att-view-mode-toggle {
+    display: flex;
+    height: 38px;
+    padding: 3px;
+    background: #ffffff;
+    border: 1px solid var(--admin-border);
+    border-radius: 8px;
+    gap: 3px;
+}
+
+.att-view-mode-toggle button {
+    flex: 1;
+    border: 0;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--admin-text-secondary);
+    cursor: pointer;
+    font-size: 0.8rem;
+    font-weight: 800;
+    white-space: nowrap;
+    transition: all 0.2s ease;
+}
+
+.att-view-mode-toggle button:hover {
+    color: var(--admin-primary);
+    background: var(--admin-primary-soft);
+}
+
+.att-view-mode-toggle button.active {
+    background: var(--admin-primary);
+    color: #ffffff;
 }
 
 .dm-primary-actions-compact {
@@ -363,6 +427,19 @@
     background: var(--admin-primary-soft);
     padding: 0.3rem 0.75rem;
     border-radius: 20px;
+}
+
+.td-date-stack {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.25rem;
+}
+
+.td-date-text {
+    color: var(--admin-text-muted);
+    font-size: 0.75rem;
+    font-weight: 700;
 }
 
 .vp-attendance .common-status-badge.status-success,
