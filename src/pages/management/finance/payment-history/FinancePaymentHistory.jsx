@@ -26,6 +26,14 @@ const METHOD_LABELS = {
     other: "Khác",
 };
 
+const ONLINE_METHODS = new Set(["online", "vnpay", "stripe"]);
+
+function matchesMethodFilter(method, filter) {
+    if (filter === "all") return true;
+    if (filter === "online") return ONLINE_METHODS.has(method);
+    return method === filter;
+}
+
 const formatCurrency = (v) =>
     typeof v === "number"
         ? v.toLocaleString("vi-VN")
@@ -166,7 +174,7 @@ export default function FinancePaymentHistory() {
                 || p.studentCode.toLowerCase().includes(query)
                 || p.ref.toLowerCase().includes(query)
                 || p.feeName.toLowerCase().includes(query);
-            const methodMatch = methodFilter === "all" || p.method === methodFilter;
+            const methodMatch = matchesMethodFilter(p.method, methodFilter);
             const statusMatch = statusFilter === "all" || p.status === statusFilter;
             return searchMatch && methodMatch && statusMatch;
         });
@@ -272,7 +280,7 @@ export default function FinancePaymentHistory() {
                 }} disabled={isLoading}>
                     <FiRefreshCw className={isLoading ? "spin" : ""} />
                 </button>
-                <button className="btn-primary" onClick={handleExport}>
+                <button className="btn-primary ph-export-csv-btn" onClick={handleExport}>
                     <FiDownload /> Xuất CSV
                 </button>
             </div>
