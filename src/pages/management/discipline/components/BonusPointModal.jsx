@@ -9,9 +9,6 @@ import Select from "../../../../components/ui/Select/Select";
 import { vpDisciplineService } from "../../../../services/pages/management/vp-discipline";
 import "./BonusPointModal.css";
 
-// REMOVED: MOCK_STUDENTS - now fetched from API
-// REMOVED: REWARD_CATEGORIES - now fetched from API
-
 export default function BonusPointModal({ isOpen, onClose, onSuccess, initialClass = "all", selectedSchoolYear, selectedTerm }) {
     const [targetType, setTargetType] = useState("collective"); // 'collective' or 'individual'
     const [selectedGrade, setSelectedGrade] = useState("10");
@@ -374,4 +371,3 @@ export default function BonusPointModal({ isOpen, onClose, onSuccess, initialCla
         </div>
     );
 }
-

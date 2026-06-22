@@ -34,6 +34,32 @@ const examService = {
         return response;
     },
 
+    listRooms: async (examId) => {
+        if (!examId) return [];
+        const response = await axiosClient.get(`${EXAM_ENDPOINTS.BASE}/${examId}/rooms`);
+        return getRows(response);
+    },
+
+    getRoom: async (examId, roomId) => {
+        if (!examId || !roomId) return null;
+        const response = await axiosClient.get(`${EXAM_ENDPOINTS.BASE}/${examId}/rooms/${roomId}`);
+        return response?.data || response || null;
+    },
+
+    createRoom: async (examId, roomData = {}) => {
+        const payload = {
+            room_name: roomData.roomName,
+            capacity: roomData.capacity,
+            exam_date: roomData.examDate,
+            start_time: roomData.startTime,
+            end_time: roomData.endTime,
+            subject_id: roomData.subjectId,
+            class_id: roomData.classId || null,
+        };
+        const response = await axiosClient.post(`${EXAM_ENDPOINTS.BASE}/${examId}/rooms`, payload);
+        return response;
+    },
+
     /**
      * Create a new exam
      * @param {Object} examData

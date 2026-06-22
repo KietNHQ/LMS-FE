@@ -8,45 +8,11 @@ import SchoolExpenditureSection from "./components/schoolExpenditureSection";
 import "./ManagementPayment.css";
 import paymentService from "../../../services/pages/management/payment/paymentService";
 
-// --- MOCK DATA ---
 const resolveTermKeyByLabel = (term) => {
     if (term === "Học kỳ 1" || term === "hk1") return "hk1";
     if (term === "Học kỳ 2" || term === "hk2") return "hk2";
     return term;
 };
-
-const MOCK_TUITION = {
-    "10": {
-        hk1: [
-            { name: "Học phí (Tiết chuẩn)", amount: 3000000, note: "Bắt buộc" },
-            { name: "Sách giáo khoa", amount: 500000, note: "Bắt buộc" },
-            { name: "Bảo hiểm y tế", amount: 800000, note: "Bắt buộc" }
-        ],
-        hk2: [
-            { name: "Học phí (Tiết chuẩn)", amount: 1500000, note: "Bắt buộc" },
-            { name: "Phi kỹ năng sống", amount: 400000, note: "Tự nguyện" }
-        ]
-    },
-    "11": {
-        hk1: [
-            { name: "Học phí (Tiết chuẩn)", amount: 3000000, note: "Bắt buộc" },
-            { name: "Đồng phục thể dục", amount: 600000, note: "Phát sinh" }
-        ],
-        hk2: [
-            { name: "Học phí (Tiết chuẩn)", amount: 1500000, note: "Bắt buộc" }
-        ]
-    },
-    "12": {
-        hk1: [
-            { name: "Học phí (Tiết chuẩn)", amount: 3000000, note: "Bắt buộc" },
-            { name: "Lệ phí thi tốt nghiệp", amount: 1000000, note: "Bắt buộc" }
-        ],
-        hk2: [
-            { name: "Học phí (Tiết chuẩn)", amount: 1500000, note: "Bắt buộc" }
-        ]
-    }
-};
-
 
 const getErrorMessage = (error, fallback) => {
     const apiError = error?.response?.data?.error;
@@ -68,12 +34,7 @@ const ManagementPayment = () => {
     const [bankAccounts, setBankAccounts] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
     const [loadError, setLoadError] = useState("");
-
-    // Mock data for expenditures as Backend doesn't have it yet
-    const [expenditures] = useState([
-        { id: "GD001", category: "Sửa chữa", description: "Bảo trì máy chiếu phòng học 201", date: "05/10/2025", personInCharge: "Nguyễn Văn Bảo Trì", amount: 1500000 },
-        { id: "GD002", category: "Sự kiện", description: "Thuê MC khai giảng", date: "05/09/2025", personInCharge: "Lê Yến", amount: 3000000 },
-    ]);
+    const expenditures = [];
 
     // Fetch Fees
     React.useEffect(() => {
@@ -107,9 +68,7 @@ const ManagementPayment = () => {
         fetchBankAccounts();
     }, []);
 
-    // Process fees to match UI structure (grouping by Grade is mock for now since DB doesn't have it)
     const groupedFees = useMemo(() => {
-        // Map API items to UI structure
         const mappedFees = fees.map(f => ({
             name: f.name,
             amount: f.amount,
@@ -203,5 +162,4 @@ const ManagementPayment = () => {
 };
 
 export default ManagementPayment;
-
 

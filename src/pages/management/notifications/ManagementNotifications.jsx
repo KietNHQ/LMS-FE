@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useEffect } from "react";
+import React, { useCallback, useMemo, useState, useEffect } from "react";
 import { Bell, BellPlus, EyeOff } from "lucide-react";
 import "./ManagementNotifications.css";
 import notificationService from "../../../services/pages/management/notifications/notificationService";
@@ -74,7 +74,7 @@ const ManagementNotifications = () => {
 
   const [list, setList] = useState([]);
 
-  const fetchNotifications = async () => {
+  const fetchNotifications = useCallback(async () => {
     setIsLoading(true);
     setLoadError("");
     try {
@@ -88,28 +88,21 @@ const ManagementNotifications = () => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
   // Fetch current user's notifications from API
   useEffect(() => {
     fetchNotifications();
-  }, []);
+  }, [fetchNotifications]);
 
-  // Sync to localStorage whenever list changes
-  useEffect(() => {
-    localStorage.setItem("admin_notifications_list", JSON.stringify(list));
-  }, [list]);
-
-  // Listen for updates from other pages
   useEffect(() => {
     const handleRefresh = () => {
-      const saved = localStorage.getItem("admin_notifications_list");
-      if (saved) setList(JSON.parse(saved));
+      fetchNotifications();
     };
     window.addEventListener("admin-notifications-updated", handleRefresh);
     return () =>
       window.removeEventListener("admin-notifications-updated", handleRefresh);
-  }, []);
+  }, [fetchNotifications]);
 
   const [form, setForm] = useState(EMPTY_FORM);
   const [editingNotification, setEditingNotification] = useState(null);

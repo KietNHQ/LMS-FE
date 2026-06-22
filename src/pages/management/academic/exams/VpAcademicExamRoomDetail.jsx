@@ -1,454 +1,196 @@
-import React, { useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import { FiArrowLeft, FiSearch, FiFilePlus, FiDownload, FiTrash2, FiEdit3, FiUser, FiHome, FiBookOpen, FiUsers, FiPlus, FiFilter, FiChevronDown, FiChevronUp } from "react-icons/fi";
-import { Button, Input, Select, Modal, Pagination } from "../../../../components/ui";
-import { toast } from "react-toastify";
+import { useMemo, useState } from "react";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import { FiArrowLeft, FiSearch, FiUser, FiBookOpen, FiUsers } from "react-icons/fi";
+import { Select, Pagination } from "../../../../components/ui";
+import LoadingSpinner from "../../../../components/common/LoadingSpinner/LoadingSpinner";
+import examService from "../../../../services/pages/management/exam/examService";
 import "./VpAcademicExamRoomDetail.css";
+
+const ITEMS_PER_PAGE = 10;
+
+const getExamContext = (locationState) => {
+    const stored = sessionStorage.getItem("selected_exam_context");
+    const parsedStored = stored ? JSON.parse(stored) : {};
+    return {
+        examId: locationState?.examId || parsedStored.examId || null,
+        examName: locationState?.examName || parsedStored.examName || "",
+    };
+};
+
+const formatDate = (value) => {
+    if (!value) return "";
+    const date = new Date(value);
+    return Number.isNaN(date.getTime()) ? String(value) : date.toLocaleDateString("vi-VN");
+};
+
+const normalizeStudent = (row) => {
+    const student = row.student || {};
+    return {
+        id: row.id,
+        code: student.studentCode || student.student_code || student.id || row.id,
+        name: student.fullName || [student.surname, student.middleName, student.givenName].filter(Boolean).join(" ") || "Học sinh",
+        className: student.className || row.className || "—",
+        seatNumber: row.seatNumber || row.seat_number || "—",
+        attendanceStatus: row.attendanceStatus || row.attendance_status || "pending",
+    };
+};
 
 export default function VpAcademicExamRoomDetail() {
     const { roomId } = useParams();
     const navigate = useNavigate();
+    const location = useLocation();
+    const { examId, examName } = useMemo(() => getExamContext(location.state), [location.state]);
     const [searchTerm, setSearchTerm] = useState("");
     const [classFilter, setClassFilter] = useState("all");
-    const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-    const [pickerSearchTerm, setPickerSearchTerm] = useState("");
-    const [pickerSortOrder, setPickerSortOrder] = useState("asc");
-    const [selectedStudentIds, setSelectedStudentIds] = useState([]);
-
     const [currentPage, setCurrentPage] = useState(1);
-    const itemsPerPage = 10;
 
-    // Mock data for the room (normally fetched by roomId)
-    const roomInfo = {
-        name: roomId?.toUpperCase() || "PHÒNG 101",
-        subject: "Ngữ văn",
-        supervisors: ["Nguyễn Văn A", "Trần Thị B"],
-        totalStudents: 30
-    };
+    const { data: room, isLoading, error } = useQuery({
+        queryKey: ["exam-room", examId, roomId],
+        queryFn: () => examService.getRoom(examId, roomId),
+        enabled: Boolean(examId && roomId),
+        staleTime: 60_000,
+    });
 
-    const CLASSES_LIST = [
-        { value: "all", label: "Tất cả lớp" },
-        { value: "12A1", label: "Lớp 12A1" },
-        { value: "12A2", label: "Lớp 12A2" },
-        { value: "12A3", label: "Lớp 12A3" },
-    ];
+    const students = useMemo(() => (room?.students || []).map(normalizeStudent), [room?.students]);
+    const supervisors = room?.supervisors || [];
+    const classOptions = useMemo(() => {
+        const classes = [...new Set(students.map((student) => student.className).filter((item) => item && item !== "—"))];
+        return [{ value: "all", label: "Tất cả lớp" }, ...classes.map((item) => ({ value: item, label: item }))];
+    }, [students]);
 
-    // Master database of all students in the school (for auto-filling)
-    const MASTER_STUDENTS = [
-        { id: "HS001", name: "Nguyễn Hoàng Nam", class: "12A1", parentPhone: "0901234567", teacher: "Cô Mai" },
-        { id: "HS002", name: "Trần Thị Thu Thủy", class: "12A1", parentPhone: "0907654321", teacher: "Cô Mai" },
-        { id: "HS003", name: "Lê Văn Tùng", class: "12A2", parentPhone: "0912345678", teacher: "Thầy Hùng" },
-        { id: "HS004", name: "Phạm Minh Hoàng", class: "12A2", parentPhone: "0918765432", teacher: "Thầy Hùng" },
-        { id: "HS005", name: "Vũ Phương Anh", class: "12A3", parentPhone: "0934567890", teacher: "Cô Lan" },
-        { id: "HS006", name: "Hoàng Đức Anh", class: "12A1", parentPhone: "0909998887", teacher: "Cô Mai" },
-        { id: "HS007", name: "Phan Thanh Trà", class: "12A2", parentPhone: "0917776665", teacher: "Thầy Hùng" },
-        { id: "HS008", name: "Bùi Tuyết Mai", class: "12A3", parentPhone: "0988123456", teacher: "Cô Lan", assignedRoom: "Phòng 102" },
-        { id: "HS009", name: "Đặng Quang Huy", class: "12A1", parentPhone: "0977112233", teacher: "Cô Mai", assignedRoom: "Phòng 105" },
-        { id: "HS010", name: "Hoàng Minh Quân", class: "12A2", parentPhone: "0966445566", teacher: "Thầy Hùng" },
-        { id: "HS011", name: "Trần Bảo Ngọc", class: "12A3", parentPhone: "0955334455", teacher: "Cô Lan" },
-        { id: "HS012", name: "Vũ Gia Bảo", class: "12A1", parentPhone: "0944223344", teacher: "Cô Mai" },
-    ];
+    const filteredStudents = students.filter((student) => {
+        const query = searchTerm.trim().toLowerCase();
+        const matchesSearch = !query || student.name.toLowerCase().includes(query) || String(student.code).toLowerCase().includes(query);
+        const matchesClass = classFilter === "all" || student.className === classFilter;
+        return matchesSearch && matchesClass;
+    });
 
-    // Mock data for students currently in THIS room
-    const [students, setStudents] = useState(MASTER_STUDENTS.slice(0, 5));
-
-    const handleDownloadTemplate = () => {
-        toast.info("Đang tải xuống file Excel mẫu...");
-    };
-
-    const handleImportExcel = () => {
-        toast.success("Đang xử lý file Excel... Nhập danh sách học sinh thành công!");
-    };
-
-    const handleClearAll = () => {
-        if (students.length === 0) return;
-        if (window.confirm("Bạn có chắc chắn muốn xóa toàn bộ học sinh khỏi phòng này?")) {
-            setStudents([]);
-            toast.info("Đã xóa toàn bộ học sinh khỏi phòng.");
-        }
-    };
-
-    const handleQuickArrange = () => {
-        if (classFilter === "all") {
-            toast.warning("Vui lòng chọn một lớp cụ thể để xếp nhanh!");
-            return;
-        }
-        
-        const studentsFromClass = MASTER_STUDENTS.filter(s => s.class === classFilter && !students.find(curr => curr.id === s.id));
-        if (studentsFromClass.length === 0) {
-            toast.info(`Không còn học sinh nào của lớp ${classFilter} để thêm.`);
-            return;
-        }
-
-        const remainingSpots = roomInfo.totalStudents - students.length;
-        if (remainingSpots <= 0) {
-            toast.error("Phòng thi đã đầy!");
-            return;
-        }
-
-        const toAdd = studentsFromClass.slice(0, remainingSpots);
-        setStudents(prev => [...prev, ...toAdd]);
-        toast.success(`Đã xếp nhanh ${toAdd.length} học sinh từ lớp ${classFilter} vào phòng.`);
-    };
-
-    const handleConfirmAdd = () => {
-        if (selectedStudentIds.length === 0) {
-            toast.warning("Vui lòng chọn ít nhất một học sinh!");
-            return;
-        }
-
-        const currentCount = students.length;
-        const addCount = selectedStudentIds.length;
-        const maxCapacity = roomInfo.totalStudents;
-
-        if (currentCount + addCount > maxCapacity) {
-            toast.error(`Vượt quá sĩ số! Phòng chỉ còn ${maxCapacity - currentCount} chỗ trống (Tối đa ${maxCapacity} học sinh).`);
-            return;
-        }
-
-        const newOnes = MASTER_STUDENTS.filter(s => selectedStudentIds.includes(s.id));
-        setStudents(prev => [...prev, ...newOnes]);
-        setIsAddModalOpen(false);
-        setSelectedStudentIds([]);
-        setPickerSearchTerm("");
-        toast.success(`Đã thêm ${newOnes.length} học sinh vào phòng thi.`);
-    };
-
-    const toggleSelectStudent = (id) => {
-        const student = MASTER_STUDENTS.find(s => s.id === id);
-        if (student?.assignedRoom) {
-            toast.warning(`Học sinh này đã được xếp vào ${student.assignedRoom}`);
-            return;
-        }
-        setSelectedStudentIds(prev => 
-            prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]
-        );
-    };
-
-    const handleSelectAllVisible = () => {
-        const selectableIds = availableStudents
-            .filter(s => !s.assignedRoom)
-            .map(s => s.id);
-        
-        if (selectableIds.length === 0) return;
-
-        const currentCount = students.length;
-        const maxCapacity = roomInfo.totalStudents;
-        const remainingSpots = maxCapacity - currentCount;
-
-        const allAlreadySelected = selectableIds.every(id => selectedStudentIds.includes(id));
-        
-        if (allAlreadySelected) {
-            setSelectedStudentIds(prev => prev.filter(id => !selectableIds.includes(id)));
-        } else {
-            // Check if adding all would exceed capacity
-            if (selectableIds.length > remainingSpots) {
-                const limitedIds = selectableIds.slice(0, remainingSpots);
-                setSelectedStudentIds(prev => [...new Set([...prev, ...limitedIds])]);
-                toast.warning(`Chỉ chọn ${remainingSpots} học sinh đầu tiên để không vượt quá sĩ số ${maxCapacity}.`);
-            } else {
-                setSelectedStudentIds(prev => [...new Set([...prev, ...selectableIds])]);
-            }
-        }
-    };
-
-    const handleDeleteStudent = (id) => {
-        setStudents(prev => prev.filter(s => s.id !== id));
-        toast.success("Đã xóa học sinh khỏi phòng thi.");
-    };
-
-    const filteredStudents = students
-        .filter(s => {
-            const matchesSearch = s.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                                 s.id.toLowerCase().includes(searchTerm.toLowerCase());
-            const matchesClass = classFilter === "all" || s.class === classFilter;
-            return matchesSearch && matchesClass;
-        })
-        .sort((a, b) => {
-            const nameA = a.name.split(' ').pop();
-            const nameB = b.name.split(' ').pop();
-            return nameA.localeCompare(nameB, 'vi', { sensitivity: 'base' });
-        });
-
-    const totalPages = Math.ceil(filteredStudents.length / itemsPerPage);
-    const paginatedStudents = filteredStudents.slice(
-        (currentPage - 1) * itemsPerPage,
-        currentPage * itemsPerPage
-    );
-
-    // Reset to page 1 when filtering
-    const handleSearchChange = (e) => {
-        setSearchTerm(e.target.value);
-        setCurrentPage(1);
-    };
-
-    const handleClassChange = (e) => {
-        setClassFilter(e.target.value);
-        setCurrentPage(1);
-    };
-
-    // Students available to be added (not already in room)
-    const availableStudents = MASTER_STUDENTS
-        .filter(s => !students.find(curr => curr.id === s.id))
-        .filter(s => {
-            const nameParts = s.name.split(' ');
-            const firstName = nameParts[nameParts.length - 1]; 
-            
-            const matchesSearch = firstName.toLowerCase().startsWith(pickerSearchTerm.toLowerCase()) || 
-                                 s.id.toLowerCase().includes(pickerSearchTerm.toLowerCase());
-            return matchesSearch;
-        })
-        .sort((a, b) => {
-            const nameA = a.name.split(' ').pop();
-            const nameB = b.name.split(' ').pop();
-            const comparison = nameA.localeCompare(nameB, 'vi', { sensitivity: 'base' });
-            return pickerSortOrder === "asc" ? comparison : -comparison;
-        });
+    const totalPages = Math.ceil(filteredStudents.length / ITEMS_PER_PAGE) || 1;
+    const paginatedStudents = filteredStudents.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
+    const roomName = room?.roomName || room?.room_name || "Phòng thi";
+    const capacity = Number(room?.capacity || 0);
 
     return (
         <div className="vpa-room-detail">
-            {/* Header */}
             <div className="vpa-detail-header">
-                <button className="back-btn" onClick={() => navigate("/management/exams/rooms")}>
+                <button className="back-btn" onClick={() => navigate("/management/exams/rooms", { state: { examId, examName } })}>
                     <FiArrowLeft /> Quay lại
                 </button>
                 <div className="header-info">
-                    <h1>Chi tiết {roomInfo.name}</h1>
-                    <span className="exam-name">Thi Giữa Học Kỳ II - Khối 12</span>
+                    <h1>Chi tiết {roomName}</h1>
+                    <span className="exam-name">{examName || room?.session?.name || ""}</span>
                 </div>
             </div>
 
-            {/* Stats Cards */}
-            <div className="vpa-rooms-stats" style={{ marginBottom: '2rem' }}>
-                <div className="stat-card">
-                    <div className="stat-icon" style={{ backgroundColor: '#34d39920', color: '#10b981' }}>
-                        <FiBookOpen />
-                    </div>
-                    <div className="stat-details">
-                        <span className="label">Môn thi</span>
-                        <span className="value" style={{ fontSize: '1.2rem' }}>{roomInfo.subject}</span>
-                    </div>
+            {!examId ? (
+                <div className="vpa-empty-state">
+                    <FiBookOpen />
+                    <h3>Thiếu thông tin kỳ thi</h3>
+                    <p>Vui lòng mở phòng thi từ trang danh sách phòng để tải dữ liệu thực tế.</p>
                 </div>
-                <div className="stat-card">
-                    <div className="stat-icon" style={{ backgroundColor: '#3b82f620', color: '#3b82f6' }}>
-                        <FiUser />
-                    </div>
-                    <div className="stat-details">
-                        <span className="label">Giám thị</span>
-                        <span className="value" style={{ fontSize: '1.2rem' }}>{roomInfo.supervisors.length}</span>
-                    </div>
+            ) : isLoading ? (
+                <div className="vpa-empty-state">
+                    <LoadingSpinner size="lg" label="Đang tải chi tiết phòng thi..." />
                 </div>
-                <div className="stat-card">
-                    <div className="stat-icon" style={{ backgroundColor: '#1e2f5a20', color: '#1e2f5a' }}>
-                        <FiUsers />
-                    </div>
-                    <div className="stat-details">
-                        <span className="label">Tổng thí sinh</span>
-                        <span className="value" style={{ fontSize: '1.6rem' }}>
-                            {students.length} <span style={{ fontSize: '0.9rem', color: '#94a3b8', fontWeight: 600 }}>/ {roomInfo.totalStudents}</span>
-                        </span>
-                    </div>
+            ) : error ? (
+                <div className="vpa-empty-state">
+                    <h3>Không thể tải phòng thi</h3>
+                    <p>{error.message || "Vui lòng thử lại sau."}</p>
                 </div>
-            </div>
+            ) : (
+                <>
+                    <div className="vpa-rooms-stats" style={{ marginBottom: "2rem" }}>
+                        <div className="stat-card">
+                            <div className="stat-icon" style={{ backgroundColor: "#34d39920", color: "#10b981" }}>
+                                <FiBookOpen />
+                            </div>
+                            <div className="stat-details">
+                                <span className="label">Môn thi</span>
+                                <span className="value" style={{ fontSize: "1.2rem" }}>{room?.subject?.name || "—"}</span>
+                            </div>
+                        </div>
+                        <div className="stat-card">
+                            <div className="stat-icon" style={{ backgroundColor: "#3b82f620", color: "#3b82f6" }}>
+                                <FiUser />
+                            </div>
+                            <div className="stat-details">
+                                <span className="label">Giám thị</span>
+                                <span className="value" style={{ fontSize: "1.2rem" }}>{supervisors.length}</span>
+                            </div>
+                        </div>
+                        <div className="stat-card">
+                            <div className="stat-icon" style={{ backgroundColor: "#1e2f5a20", color: "#1e2f5a" }}>
+                                <FiUsers />
+                            </div>
+                            <div className="stat-details">
+                                <span className="label">Tổng thí sinh</span>
+                                <span className="value" style={{ fontSize: "1.6rem" }}>
+                                    {students.length} <span style={{ fontSize: "0.9rem", color: "#94a3b8", fontWeight: 600 }}>/ {capacity || "—"}</span>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
 
-            {/* Toolbar */}
-            <div className="vpa-detail-toolbar">
-                <div className="toolbar-left">
-                    <div className="search-box">
-                        <FiSearch />
-                        <input 
-                            type="text" 
-                            placeholder="Tìm học sinh theo mã hoặc tên..." 
-                            value={searchTerm}
-                            onChange={handleSearchChange}
-                        />
-                    </div>
-                    <Select 
-                        variant="custom"
-                        options={CLASSES_LIST}
-                        value={classFilter}
-                        onChange={handleClassChange}
-                        className="class-filter-select"
-                        style={{ width: '180px' }}
-                    />
-                    <Button 
-                        variant="outline" 
-                        onClick={handleQuickArrange}
-                        disabled={classFilter === "all"}
-                        style={{ 
-                            borderColor: classFilter === 'all' ? '#e2e8f0' : '#c3d2ef', 
-                            color: classFilter === 'all' ? '#94a3b8' : 'var(--admin-navy)', 
-                            background: classFilter === 'all' ? '#f8fafc' : '#e9efff',
-                            fontWeight: 750
-                        }}
-                    >
-                        Xếp nhanh
-                    </Button>
-                </div>
-                <div className="toolbar-right">
-                    <Button className="vpa-btn-ghost" onClick={handleClearAll} style={{ color: '#ef4444', borderColor: '#fee2e2' }}>
-                        <FiTrash2 /> Xóa tất cả
-                    </Button>
-                    <Button className="vpa-btn-secondary" onClick={() => setIsAddModalOpen(true)}>
-                        <FiPlus /> Thêm học sinh
-                    </Button>
-                    <Button className="vpa-btn-primary" onClick={handleImportExcel}>
-                        <FiFilePlus /> Nhập Excel
-                    </Button>
-                </div>
-            </div>
-
-            {/* Table */}
-            <div className="student-table-wrapper">
-                <table className="vpa-student-table">
-                    <thead>
-                        <tr>
-                            <th>Mã học sinh</th>
-                            <th>Họ và tên</th>
-                            <th>Lớp</th>
-                            <th>Trạng thái</th>
-                            <th>GV Chủ nhiệm</th>
-                            <th style={{ textAlign: 'right' }}>Thao tác</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {paginatedStudents.length > 0 ? (
-                            paginatedStudents.map((student) => (
-                                <tr key={student.id}>
-                                    <td><span className="student-id">{student.id}</span></td>
-                                    <td>
-                                        <div style={{ display: 'flex', flexDirection: 'column' }}>
-                                            <span className="student-name">{student.name}</span>
-                                            <span style={{ fontSize: '0.75rem', color: '#94a3b8' }}>{student.parentPhone}</span>
-                                        </div>
-                                    </td>
-                                    <td>{student.class}</td>
-                                    <td>
-                                        <span className="status-pill ok">Đã xác nhận</span>
-                                    </td>
-                                    <td><span className="teacher-cell">{student.teacher}</span></td>
-                                    <td>
-                                        <div className="actions-cell" style={{ justifyContent: 'flex-end' }}>
-                                            <button 
-                                                className="btn-icon-table delete" 
-                                                title="Xóa"
-                                                onClick={() => handleDeleteStudent(student.id)}
-                                            >
-                                                <FiTrash2 />
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            ))
-                        ) : (
-                            <tr>
-                                <td colSpan="6" style={{ textAlign: 'center', padding: '3rem', color: '#94a3b8' }}>
-                                    Không tìm thấy học sinh nào trong phòng này.
-                                </td>
-                            </tr>
-                        )}
-                    </tbody>
-                </table>
-            </div>
-
-            {/* Pagination */}
-            {totalPages > 1 && (
-                <div className="vpa-pagination-wrapper" style={{ marginTop: '1.5rem', display: 'flex', justifyContent: 'center' }}>
-                    <Pagination 
-                        currentPage={currentPage}
-                        totalPages={totalPages}
-                        onPageChange={setCurrentPage}
-                    />
-                </div>
-            )}
-
-            {/* Modal Picker Student */}
-            <Modal 
-                open={isAddModalOpen} 
-                onClose={() => setIsAddModalOpen(false)}
-                title="Chọn học sinh thêm vào phòng"
-                className="vpa-exam-room-modal"
-                width="800px"
-            >
-                <div className="vpa-picker-container">
-                    <div className="picker-toolbar">
-                        <div className="picker-search">
-                            <FiSearch />
-                            <input 
-                                type="text" 
-                                placeholder="Tìm theo tên hoặc mã học sinh..." 
-                                value={pickerSearchTerm}
-                                onChange={(e) => setPickerSearchTerm(e.target.value)}
+                    <div className="vpa-detail-toolbar">
+                        <div className="toolbar-left">
+                            <div className="search-box">
+                                <FiSearch />
+                                <input
+                                    type="text"
+                                    placeholder="Tìm học sinh theo mã hoặc tên..."
+                                    value={searchTerm}
+                                    onChange={(e) => {
+                                        setSearchTerm(e.target.value);
+                                        setCurrentPage(1);
+                                    }}
+                                />
+                            </div>
+                            <Select
+                                variant="custom"
+                                options={classOptions}
+                                value={classFilter}
+                                onChange={(e) => {
+                                    setClassFilter(e.target.value);
+                                    setCurrentPage(1);
+                                }}
+                                className="class-filter-select"
+                                style={{ width: "180px" }}
                             />
                         </div>
-                        <Button 
-                            variant="outline" 
-                            onClick={() => setPickerSortOrder(prev => prev === "asc" ? "desc" : "asc")}
-                            style={{ gap: '0.5rem', whiteSpace: 'nowrap' }}
-                        >
-                            {pickerSortOrder === "asc" ? <FiChevronUp /> : <FiChevronDown />}
-                            Tên: {pickerSortOrder === "asc" ? "A → Z" : "Z → A"}
-                        </Button>
+                        <div className="toolbar-right">
+                            <span className="exam-name">
+                                {formatDate(room?.examDate || room?.exam_date)} {room?.startTime || room?.start_time || ""} - {room?.endTime || room?.end_time || ""}
+                            </span>
+                        </div>
                     </div>
 
-                    <div className="picker-table-wrapper">
-                        <table className="vpa-student-table picker-table">
+                    <div className="student-table-wrapper">
+                        <table className="vpa-student-table">
                             <thead>
                                 <tr>
-                                    <th style={{ width: '40px' }}>
-                                        <input 
-                                            type="checkbox" 
-                                            onChange={handleSelectAllVisible}
-                                            checked={
-                                                availableStudents.filter(s => !s.assignedRoom).length > 0 && 
-                                                availableStudents.filter(s => !s.assignedRoom).every(s => selectedStudentIds.includes(s.id))
-                                            }
-                                        />
-                                    </th>
-                                    <th>Mã HS</th>
+                                    <th>Mã học sinh</th>
                                     <th>Họ và tên</th>
                                     <th>Lớp</th>
-                                    <th>GV Chủ nhiệm</th>
+                                    <th>Số báo danh / ghế</th>
+                                    <th>Trạng thái</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                {availableStudents.length > 0 ? (
-                                    availableStudents.map(student => (
-                                        <tr 
-                                            key={student.id} 
-                                            onClick={() => toggleSelectStudent(student.id)} 
-                                            style={{ 
-                                                cursor: student.assignedRoom ? 'not-allowed' : 'pointer',
-                                                opacity: student.assignedRoom ? 0.5 : 1,
-                                                background: student.assignedRoom ? '#f8fafc' : ''
-                                            }}
-                                        >
-                                            <td>
-                                                {!student.assignedRoom && (
-                                                    <input 
-                                                        type="checkbox" 
-                                                        checked={selectedStudentIds.includes(student.id)}
-                                                        onChange={() => {}} 
-                                                    />
-                                                )}
-                                            </td>
-                                            <td className="student-id">{student.id}</td>
-                                            <td className="student-name">
-                                                {student.name}
-                                                {student.assignedRoom && (
-                                                    <span className="assigned-badge">
-                                                        {student.assignedRoom}
-                                                    </span>
-                                                )}
-                                            </td>
-                                            <td>{student.class}</td>
-                                            <td>{student.teacher}</td>
+                                {paginatedStudents.length > 0 ? (
+                                    paginatedStudents.map((student) => (
+                                        <tr key={student.id}>
+                                            <td><span className="student-id">{student.code}</span></td>
+                                            <td><span className="student-name">{student.name}</span></td>
+                                            <td>{student.className}</td>
+                                            <td>{student.seatNumber}</td>
+                                            <td><span className="status-pill ok">{student.attendanceStatus}</span></td>
                                         </tr>
                                     ))
                                 ) : (
                                     <tr>
-                                        <td colSpan="5" style={{ textAlign: 'center', padding: '2rem' }}>
-                                            Không có học sinh phù hợp hoặc tất cả đã được thêm.
+                                        <td colSpan="5" style={{ textAlign: "center", padding: "3rem", color: "#94a3b8" }}>
+                                            Không có học sinh nào trong phòng này.
                                         </td>
                                     </tr>
                                 )}
@@ -456,16 +198,13 @@ export default function VpAcademicExamRoomDetail() {
                         </table>
                     </div>
 
-                    <div className="picker-footer">
-                        <span className="selected-count">Đã chọn: <strong>{selectedStudentIds.length}</strong> học sinh</span>
-                        <div style={{ display: 'flex', gap: '1rem' }}>
-                            <Button variant="outline" onClick={() => setIsAddModalOpen(false)}>Hủy</Button>
-                            <Button className="vpa-btn-primary" onClick={handleConfirmAdd}>Xác nhận thêm</Button>
+                    {totalPages > 1 && (
+                        <div className="vpa-pagination-wrapper" style={{ marginTop: "1.5rem", display: "flex", justifyContent: "center" }}>
+                            <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} />
                         </div>
-                    </div>
-                </div>
-            </Modal>
+                    )}
+                </>
+            )}
         </div>
     );
 }
-

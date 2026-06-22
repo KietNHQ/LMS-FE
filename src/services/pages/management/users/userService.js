@@ -237,10 +237,10 @@ export const userService = {
     );
   },
 
-  resetPassword: async (userId, { adminPassword, newPassword }) => {
+  resetPassword: async (userId, { adminPassword, authPassword, newPassword }) => {
     return requestWithEndpointFallback((basePath) =>
       axiosClient.post(`${basePath}/${userId}/reset-password`, {
-        adminPassword,
+        adminPassword: adminPassword || authPassword,
         newPassword,
       })
     );
@@ -272,4 +272,3 @@ export const userService = {
   },
 
 };
-

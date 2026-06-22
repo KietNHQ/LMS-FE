@@ -184,8 +184,7 @@ export default function StudentNotifications() {
     setNotifications(updated);
 
     try {
-      const hasAuth = !!(localStorage.getItem("accessToken") || sessionStorage.getItem("accessToken"));
-      await notificationService.markAllNotificationsRead({ mock: !hasAuth });
+      await notificationService.markAllNotificationsRead({ mock: false });
     } catch (markError) {
       console.error("Không thể đánh dấu tất cả là đã đọc:", markError);
       setNotifications(previousNotifications);
@@ -202,8 +201,7 @@ export default function StudentNotifications() {
     );
 
     try {
-      const hasAuth = !!(localStorage.getItem("accessToken") || sessionStorage.getItem("accessToken"));
-      await notificationService.toggleNotificationImportant(id, { mock: !hasAuth });
+      await notificationService.toggleNotificationImportant(id, { mock: false });
     } catch (toggleError) {
       console.error("Không thể cập nhật đánh dấu thông báo:", toggleError);
       setNotifications(previousNotifications);
@@ -220,8 +218,7 @@ export default function StudentNotifications() {
     setSelected(nextItem);
 
     try {
-      const hasAuth = !!(localStorage.getItem("accessToken") || sessionStorage.getItem("accessToken"));
-      await notificationService.markNotificationRead(item.id, { mock: !hasAuth });
+      await notificationService.markNotificationRead(item.id, { mock: false });
     } catch (readError) {
       console.error("Không thể đánh dấu thông báo đã đọc:", readError);
       setError(readError?.message || "Không thể cập nhật thông báo");
@@ -233,8 +230,7 @@ export default function StudentNotifications() {
   };
 
   const markNotificationReadById = async (id) => {
-    const hasAuth = !!(localStorage.getItem("accessToken") || sessionStorage.getItem("accessToken"));
-    await notificationService.markNotificationRead(id, { mock: !hasAuth });
+    await notificationService.markNotificationRead(id, { mock: false });
   };
 
   const hideNotification = async (item) => {

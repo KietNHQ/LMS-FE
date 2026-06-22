@@ -72,13 +72,7 @@ export default function AdminLayout() {
             try {
                 const { adminApiService } = await import("../../services/pages/admin/generated/adminApiService");
 
-                let response;
-                try {
-                    response = await adminApiService.get_notifications({ mock: false });
-                } catch (err) {
-                    console.warn("Real Admin Notifications API failed, trying mock:", err);
-                    response = await adminApiService.get_notifications({ mock: true });
-                }
+                const response = await adminApiService.get_notifications({ mock: false });
 
                 if (response.success) {
                     const data = response.data || [];
@@ -86,7 +80,7 @@ export default function AdminLayout() {
                         n.unread === true || n.is_read === false || n.status === "unread"
                     ).length : 0;
 
-                    const finalCount = unreadCount || (response.isMock ? 5 : 0);
+                    const finalCount = unreadCount || 0;
                     localStorage.setItem("admin_unread_notifications_count", String(finalCount));
                     window.dispatchEvent(
                         new CustomEvent("admin-notification-count-updated", {
@@ -164,5 +158,4 @@ export default function AdminLayout() {
         </div>
     );
 }
-
 

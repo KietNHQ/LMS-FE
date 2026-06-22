@@ -101,14 +101,8 @@ export default function ManagementLayout() {
                 // Management roles (Principal, etc.) use admin notification system
                 const { adminApiService } = await import("../../services/pages/admin/generated/adminApiService");
                 
-                let response;
-                try {
-                    // Ưu tiên dùng endpoint "my" để lấy thông báo cá nhân, tránh lỗi 403 nếu không phải Admin
-                    response = await adminApiService.get_notifications_my({ mock: false });
-                } catch (err) {
-                    console.warn("Real Management Notifications API failed, trying mock:", err);
-                    response = await adminApiService.get_notifications({ mock: true });
-                }
+                // Ưu tiên dùng endpoint "my" để lấy thông báo cá nhân, tránh lỗi 403 nếu không phải Admin
+                const response = await adminApiService.get_notifications_my({ mock: false });
                 
                 if (response.success) {
                     const data = response.data || [];
@@ -117,7 +111,7 @@ export default function ManagementLayout() {
                         n.unread === true || n.is_read === false || n.status === "unread"
                     ).length : 0);
                     
-                    const finalCount = unreadCount || (response.isMock ? 8 : 0);
+                    const finalCount = unreadCount || 0;
                     localStorage.setItem("admin_unread_notifications_count", String(finalCount));
                     window.dispatchEvent(
                         new CustomEvent("admin-notification-count-updated", {
@@ -194,5 +188,4 @@ export default function ManagementLayout() {
         </div>
     );
 }
-
 

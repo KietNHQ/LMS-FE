@@ -16,7 +16,10 @@ import { io } from "socket.io-client";
 import "./TeacherGrades.css";
 
 const getSocketUrl = () => {
-  const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:3000/api/v1";
+  const apiUrl = import.meta.env.VITE_API_URL || "/api/v1";
+  if (apiUrl.startsWith("/")) {
+    return window.location.origin;
+  }
   return apiUrl.replace("/api/v1", "");
 };
 

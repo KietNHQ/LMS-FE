@@ -5,18 +5,14 @@ import { io } from "socket.io-client";
 import "./TeacherChat.css";
 
 const getSocketUrl = () => {
-    const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:3000/api/v1";
+    const apiUrl = import.meta.env.VITE_API_URL || "/api/v1";
+    if (apiUrl.startsWith("/")) {
+        return window.location.origin;
+    }
     return apiUrl.replace("/api/v1", "");
 };
 
 let socket = null;
-
-const MOCK_DEPT_TEACHERS = [
-    { id: "t1", name: "Thầy Nguyễn Văn An", role: "Tổ trưởng", status: "online" },
-    { id: "t2", name: "Cô Trần Thị Bình", role: "Giáo viên", status: "offline" },
-    { id: "t3", name: "Thầy Lê Văn Cường", role: "Giáo viên", status: "online" },
-    { id: "t4", name: "Cô Phạm Thu Hà", role: "Giáo viên", status: "online" },
-];
 
 // Group messages by date, insert date separators
 const groupMessagesByDate = (messages) => {
@@ -103,19 +99,7 @@ export default function TeacherChat() {
 
             return [...contactTargets, ...conversationTargets];
         }
-        if (activeRoomId === "department") {
-            return MOCK_DEPT_TEACHERS.map(t => ({
-                id: `teacher-${t.id}`,
-                name: t.name,
-                subLabel: t.role,
-                avatar: t.name.charAt(6),
-                type: "teacher",
-                status: t.status
-            }));
-        }
-        return [
-            { id: "admin-support", name: "Quản trị viên Hệ thống", subLabel: "Hỗ trợ 24/7", avatar: "A", type: "admin" }
-        ];
+        return [];
     }, [activeRoomId, apiContacts, existingConversations]);
 
     const filteredTargets = useMemo(() => {
@@ -323,8 +307,6 @@ export default function TeacherChat() {
                 }
             };
             getOrCreateConversation();
-        } else {
-            setActiveConversationId(`mock-${selectedTarget.id}`);
         }
     }, [selectedTarget]);
 

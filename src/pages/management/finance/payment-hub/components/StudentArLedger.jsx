@@ -25,7 +25,6 @@ export default function StudentArLedger({ student, onClose }) {
 
     const fetchStudentLedger = async () => {
         if (!student?.student_id && (!student?.id || student.id.startsWith("HS"))) {
-            // Mock data for demo
             setLedger([]);
             setSummary({ totalDebt: 0, paid: 0, remaining: 0 });
             setIsLoading(false);

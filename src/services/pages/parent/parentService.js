@@ -170,51 +170,6 @@ const normalizeNotificationListResponse = (payload) => ({
   message: payload?.message ?? "",
 });
 
-const PARENT_PAYMENTS_MOCK = [
-  {
-    id: 1,
-    title: "Học phí HK1",
-    term: "Học kỳ 1",
-    schoolYear: "2025-2026",
-    grade: "Khối 10",
-    className: "10A1",
-    childName: "Nguyễn Minh Tuấn",
-    deadline: "2025-09-30",
-    feeItems: [
-      { id: "f-1", name: "Học phí", note: "Bắt buộc", amount: 3800000 },
-      { id: "f-2", name: "Bán trú", note: "Bắt buộc", amount: 700000 },
-    ],
-    description: "Khoản thu học kỳ 1 được tạo từ danh mục thu của nhà trường.",
-    discountCode: "",
-    discountAmount: 0,
-    status: "paid",
-    paidDate: "2025-09-25",
-    paidAmount: 4500000,
-    invoiceCode: "INV-HK1-2025-10A1-01",
-  },
-  {
-    id: 2,
-    title: "Học phí HK2",
-    term: "Học kỳ 2",
-    schoolYear: "2025-2026",
-    grade: "Khối 12",
-    className: "12A2",
-    childName: "Nguyễn Thị Ngọc Hà",
-    deadline: "2026-02-28",
-    feeItems: [
-      { id: "f-5", name: "Học phí", note: "Bắt buộc", amount: 4200000 },
-      { id: "f-6", name: "Bán trú", note: "Bắt buộc", amount: 800000 },
-    ],
-    description: "Khoản thu học kỳ 2 cho học sinh lớp 12A2.",
-    discountCode: "GIAM10",
-    discountAmount: 500000,
-    status: "unpaid",
-    paidDate: "",
-    paidAmount: 0,
-    invoiceCode: "INV-HK2-2026-12A2-01",
-  },
-];
-
 const PARENT_FAQS_MOCK = [
   { category: "Học tập", question: "Làm sao để theo dõi kết quả học tập của con?", answer: "Bạn mở mục Tổng quan con em hoặc Điểm số để xem chi tiết theo học kỳ.", popularity: 96 },
   { category: "Tài chính", question: "Phụ huynh thanh toán học phí cho con ở đâu?", answer: "Bạn có thể thanh toán trong mục Thanh toán hoặc liên hệ phòng tài vụ để được hỗ trợ.", popularity: 90 },
@@ -249,6 +204,7 @@ const PARENT_ENDPOINTS = [
   { key: "patch_parent_notifications_by_id_toggle", method: "PATCH", path: "/guardians/me/notifications/:id/toggle-important", module: "notifications", mock: false },
   { key: "get_parent_payments", method: "GET", path: "/guardians/me/payments", module: "payments", mock: false },
   { key: "get_parent_payments_by_id", method: "GET", path: "/guardians/me/payments/:id", module: "payments", mock: false },
+  { key: "get_school_bank_accounts", method: "GET", path: "/school-bank-accounts", module: "payments", mock: false },
   { key: "get_parent_system_events", method: "GET", path: "/school-events", module: "dashboard", mock: false },
   { key: "post_parent_payments_by_id_pay", method: "POST", path: "/guardians/me/payments/:id/pay", module: "payments", mock: false },
   { key: "post_parent_payments_apply_discount", method: "POST", path: "/guardians/me/payments/apply-discount", module: "payments", mock: false },
@@ -267,7 +223,7 @@ const PARENT_ENDPOINTS = [
 ];
 
 const createEndpointCaller = (endpoint) => async (input = {}) => {
-  const shouldMock = input.mock !== false;
+  const shouldMock = input.mock === true;
   if (shouldMock) {
     await wait(input.delayMs ?? DEFAULT_DELAY_MS);
     const data = typeof endpoint.mock === "function" ? endpoint.mock(input) : null;
@@ -286,7 +242,7 @@ const createEndpointCaller = (endpoint) => async (input = {}) => {
 };
 
 const callNotificationList = async (input) => {
-  if (input?.mock !== false) {
+  if (input?.mock === true) {
     await wait(input?.delayMs ?? DEFAULT_DELAY_MS);
     return normalizeNotificationListResponse({
       success: true,
@@ -349,6 +305,7 @@ export const parentService = {
   toggleNotificationImportant: (input) => endpointCallers.patch_parent_notifications_by_id_toggle(input),
   listPayments: (input) => endpointCallers.get_parent_payments(input),
   getPaymentById: (input) => endpointCallers.get_parent_payments_by_id(input),
+  listBankAccounts: (input) => endpointCallers.get_school_bank_accounts(input),
   getSystemEvents: (input) => endpointCallers.get_parent_system_events(input),
   payInvoice: (input) => endpointCallers.post_parent_payments_by_id_pay(input),
   applyDiscountCode: (input) => endpointCallers.post_parent_payments_apply_discount(input),

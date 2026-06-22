@@ -208,17 +208,6 @@
     word-break: break-word;
 }
 
-.qr-payment-meta .qr-demo-warning {
-    margin: 0 0 10px;
-    padding: 8px 10px;
-    border-radius: 8px;
-    background: #fff4d6;
-    color: #9a6700;
-    border: 1px solid #f3d58a;
-    font-size: 13px;
-    font-weight: 600;
-}
-
 .qr-payment-meta p:last-child {
     margin-bottom: 0;
 }

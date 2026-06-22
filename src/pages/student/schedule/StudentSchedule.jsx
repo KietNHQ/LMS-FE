@@ -26,9 +26,8 @@ export default function StudentSchedule() {
   const { data: lessons = [], isLoading, error } = useQuery({
     queryKey: ["student-schedule", selectedSchoolYear, selectedTerm],
     queryFn: async () => {
-      const hasAuth = !!(localStorage.getItem("accessToken") || sessionStorage.getItem("accessToken"));
       const result = await studentService.getStudentScheduleMapped({
-        mock: !hasAuth,
+        mock: false,
         params: { schoolYear: selectedSchoolYear, term: selectedTerm }
       });
       return result;

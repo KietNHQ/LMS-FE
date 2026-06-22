@@ -355,7 +355,7 @@ const teacherEndpointRegistry = [
 
 const createEndpointCaller = (endpoint) => {
   return async (input = {}) => {
-    const shouldMock = input.mock === true || (input.mock !== false && typeof endpoint.mock === "function");
+    const shouldMock = input.mock === true;
     if (shouldMock) {
       await wait(input.delayMs ?? DEFAULT_DELAY_MS);
       const data = typeof endpoint.mock === "function" ? endpoint.mock(input) : null;

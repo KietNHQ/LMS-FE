@@ -8,25 +8,10 @@ import TeacherListSection from "./components/teacherListSection/teacherListSecti
 import TeacherInformationSection from "./components/teacherInformationSection/teacherInformationSection";
 import TeacherDetailSection from "./components/TeacherDetailSection/TeacherDetailSection";
 import { teachersService, userService } from "../../../../../services/pages/management/users";
+import { classesService } from "../../../../../services/pages/management/classes";
+import { adminApiService } from "../../../../../services/pages/admin/generated";
 
 const statusOptions = ["Tất cả trạng thái", "Hoạt động", "Vô hiệu hóa"];
-const classOptions = ["10A1", "10A2", "11B1", "11B2", "12C1", "12C2"];
-const DEFAULT_SUBJECTS = [
-  "Toán học",
-  "Ngữ văn",
-  "Tiếng Anh",
-  "Vật lý",
-  "Hóa học",
-  "Sinh học",
-  "Lịch sử",
-  "Địa lý",
-  "Tin học",
-  "GDCD",
-  "Thể dục",
-  "Công nghệ",
-  "Mỹ thuật",
-  "Âm nhạc"
-];
 const ITEMS_PER_PAGE = 7;
 
 const getErrorMessage = (error, fallback) => {
@@ -43,34 +28,84 @@ const getErrorMessage = (error, fallback) => {
   return fallback;
 };
 
+const isIntegerId = (value) => /^\d+$/.test(String(value || ""));
+
+const compactUnique = (values = []) =>
+  Array.from(new Set(values.filter((value) => value !== undefined && value !== null && value !== "")));
+
+const normalizeDateValue = (value) => {
+  if (!value || value === "—" || value === "--") return "";
+  const text = String(value).trim();
+  const isoMatch = text.match(/^(\d{4}-\d{2}-\d{2})/);
+  if (isoMatch) return isoMatch[1];
+
+  const vnMatch = text.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if (vnMatch) {
+    const [, day, month, year] = vnMatch;
+    return `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
+  }
+
+  return text;
+};
+
+const getQualificationForSave = (form = {}, subjectCatalogSet = new Set()) => {
+  const rawQualification = String(form.qualification ?? form.profile?.qualification ?? "").trim();
+
+  return subjectCatalogSet.has(rawQualification) ? "" : rawQualification;
+};
+
 const emptyTeacherForm = {
   id: "",
+  userId: "",
+  teacherId: "",
+  teacherIds: [],
+  teacherCode: "",
   name: "",
+  firstName: "",
+  lastName: "",
+  gender: "",
   dob: "",
   email: "",
   subject: "",
+  qualification: "",
+  subjects: "",
+  assignedSubjects: "",
   phone: "",
   homeroomClass: "",
   assignedClasses: [],
+  hireDate: "",
   status: "Hoạt động",
   profile: {},
 };
 
 const toTeacherForm = (teacher = {}) => ({
   id: teacher.id,
+  userId: teacher.userId || teacher.id || "",
+  teacherId: teacher.teacherId || "",
+  teacherIds: teacher.teacherIds || [],
+  teacherCode: teacher.teacherCode || teacher.profile?.teacherCode || "",
   name: teacher.name || "",
-  dob: teacher.dob || "",
+  firstName: teacher.firstName || teacher.profile?.firstName || "",
+  lastName: teacher.lastName || teacher.profile?.lastName || "",
+  gender: teacher.gender || teacher.profile?.gender || "",
+  dob: normalizeDateValue(teacher.dob || teacher.profile?.dob || ""),
   email: teacher.email || "",
   subject: teacher.subject || teacher.profile?.subject || "",
+  qualification: teacher.qualification || teacher.profile?.qualification || "",
+  subjects: teacher.subjects || teacher.assignedSubjects || "",
+  assignedSubjects: teacher.assignedSubjects || teacher.subjects || "",
   phone: teacher.phone === "—" ? "" : teacher.phone || "",
   homeroomClass: teacher.homeroomClass || "",
   assignedClasses: teacher.assignedClasses || [],
+  hireDate: teacher.hireDate || teacher.profile?.hireDate || "",
   status: teacher.status || "Hoạt động",
   profile: teacher.profile || {},
 });
 
 export default function ManagementTeachers({ onCountChange, schoolYear, term, hasPermission, currentUser }) {
   const [teachers, setTeachers] = useState([]);
+  const [subjectCatalog, setSubjectCatalog] = useState([]);
+  const [classCatalog, setClassCatalog] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [loadError, setLoadError] = useState("");
 
@@ -133,22 +168,84 @@ export default function ManagementTeachers({ onCountChange, schoolYear, term, ha
     loadTeachers();
   }, [loadTeachers]);
 
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadCatalogs = async () => {
+      const [subjectsResult, classesResult] = await Promise.allSettled([
+        adminApiService.get_subjects(),
+        classesService.listClasses(),
+      ]);
+
+      if (cancelled) return;
+
+      if (subjectsResult.status === "fulfilled") {
+        const rows = Array.isArray(subjectsResult.value?.data) ? subjectsResult.value.data : [];
+        setSubjectCatalog(Array.from(new Set(rows.map((subject) => subject?.name).filter(Boolean))));
+      } else {
+        setSubjectCatalog([]);
+      }
+
+      if (classesResult.status === "fulfilled") {
+        setClassCatalog(Array.from(new Set(classesResult.value.map((classItem) => classItem?.name).filter(Boolean))));
+      } else {
+        setClassCatalog([]);
+      }
+    };
+
+    loadCatalogs();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   const subjectOptions = useMemo(() => {
     const dataSubjects = teachers.map((teacher) => teacher.subject).filter(Boolean);
-    const combined = Array.from(new Set([...DEFAULT_SUBJECTS, ...dataSubjects]));
+    const combined = Array.from(new Set([...subjectCatalog, ...dataSubjects]));
     return ["Tất cả môn", ...combined.sort((a, b) => a.localeCompare(b, "vi"))];
-  }, [teachers]);
+  }, [subjectCatalog, teachers]);
 
   const editableSubjectOptions = useMemo(() => {
-    const options = subjectOptions.filter((subject) => subject !== "Tất cả môn");
-    if (teacherForm.subject && !options.includes(teacherForm.subject)) {
-      return [teacherForm.subject, ...options];
-    }
-    return options;
-  }, [subjectOptions, teacherForm.subject]);
+    return [...subjectCatalog].sort((a, b) => a.localeCompare(b, "vi"));
+  }, [subjectCatalog]);
+
+  const classOptions = useMemo(() => {
+    return [...classCatalog].sort((a, b) => a.localeCompare(b, "vi"));
+  }, [classCatalog]);
+
+  const subjectCatalogSet = useMemo(() => new Set(subjectCatalog), [subjectCatalog]);
+
+  const resolveTeachingSubject = useCallback((teacher = {}) => {
+    const assignedSubject =
+      teacher.subjects ||
+      teacher.assignedSubjects ||
+      teacher.subject ||
+      teacher.profile?.subject ||
+      "";
+    if (assignedSubject) return assignedSubject;
+
+    const qualification = teacher.qualification || teacher.profile?.qualification || "";
+    return subjectCatalogSet.has(qualification) ? qualification : "";
+  }, [subjectCatalogSet]);
+
+  const displayTeachers = useMemo(() => {
+    return teachers.map((teacher) => {
+      const subject = resolveTeachingSubject(teacher);
+      return {
+        ...teacher,
+        subject,
+        profile: {
+          ...(teacher.profile || {}),
+          subject,
+          qualification: teacher.qualification || teacher.profile?.qualification || "",
+        },
+      };
+    });
+  }, [teachers, resolveTeachingSubject]);
 
   const filteredTeachers = useMemo(() => {
-    return teachers.filter((teacher) => {
+    return displayTeachers.filter((teacher) => {
       const matchSearch =
         (teacher.name || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
         (teacher.email || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -162,7 +259,7 @@ export default function ManagementTeachers({ onCountChange, schoolYear, term, ha
 
       return matchSearch && matchStatus && matchSubject && isActiveInTerm;
     });
-  }, [teachers, searchTerm, selectedStatus, selectedSubject, schoolYear, term]);
+  }, [displayTeachers, searchTerm, selectedStatus, selectedSubject, schoolYear, term]);
 
   useEffect(() => {
     onCountChange?.(filteredTeachers.length);
@@ -170,7 +267,7 @@ export default function ManagementTeachers({ onCountChange, schoolYear, term, ha
 
   const hasFilteredTeachers = filteredTeachers.length > 0;
   const shouldRenderDataSection = !isLoading && !loadError;
-  const emptyMessage = teachers.length === 0 ? "Chưa có dữ liệu giáo viên." : "Không tìm thấy giáo viên phù hợp.";
+  const emptyMessage = displayTeachers.length === 0 ? "Chưa có dữ liệu giáo viên." : "Không tìm thấy giáo viên phù hợp.";
 
   const totalPages = Math.max(1, Math.ceil(filteredTeachers.length / ITEMS_PER_PAGE));
 
@@ -187,6 +284,40 @@ export default function ManagementTeachers({ onCountChange, schoolYear, term, ha
   useEffect(() => {
     setCurrentPage((prev) => Math.min(prev, totalPages));
   }, [totalPages]);
+
+  const enrichTeacherForm = useCallback((form = {}) => {
+    const matches = displayTeachers.filter((teacher) => {
+      const matchesUserId =
+        form.userId && (teacher.userId === form.userId || teacher.id === form.userId);
+      const matchesId =
+        form.id && (teacher.id === form.id || teacher.userId === form.id);
+      const matchesEmail = form.email && teacher.email === form.email;
+      return matchesUserId || matchesId || matchesEmail;
+    });
+    const matchedTeacher = matches[0] || {};
+    const teacherIds = compactUnique([
+      ...(form.teacherIds || []),
+      form.teacherId,
+      ...matches.flatMap((teacher) => [
+        ...(teacher.teacherIds || []),
+        teacher.teacherId,
+      ]),
+    ]);
+    const userId =
+      form.userId ||
+      matchedTeacher.userId ||
+      (!isIntegerId(form.id) ? form.id : "") ||
+      "";
+
+    return {
+      ...form,
+      id: form.id || matchedTeacher.id || userId,
+      userId,
+      teacherId: form.teacherId || matchedTeacher.teacherId || teacherIds[0] || "",
+      teacherIds,
+      dob: normalizeDateValue(form.dob || form.profile?.dob || ""),
+    };
+  }, [displayTeachers]);
 
   const handleCreateTeacherUser = async (formData) => {
     try {
@@ -241,15 +372,17 @@ export default function ManagementTeachers({ onCountChange, schoolYear, term, ha
   };
 
   const handleViewTeacher = (teacher) => {
+    const form = enrichTeacherForm(toTeacherForm(teacher));
     setActiveModalMode("view");
-    setActiveTeacherId(teacher.id);
-    setTeacherForm(toTeacherForm(teacher));
+    setActiveTeacherId(form.userId || form.id || teacher.id);
+    setTeacherForm(form);
   };
 
   const handleEditTeacher = (teacher) => {
+    const form = enrichTeacherForm(toTeacherForm(teacher));
     setActiveModalMode("edit");
-    setActiveTeacherId(teacher.id);
-    setTeacherForm(toTeacherForm(teacher));
+    setActiveTeacherId(form.userId || form.id || teacher.id);
+    setTeacherForm(form);
   };
 
   const handleShowTeacherDetail = (teacher) => {
@@ -260,7 +393,7 @@ export default function ManagementTeachers({ onCountChange, schoolYear, term, ha
   const handleBulkStatusChange = async (targetStatus) => {
     if (selectedUserIds.length === 0) return;
     
-    const actionLabel = targetStatus === "Hoạt động" ? "KÍCH HOẠT" : "KHÓA";
+    const actionLabel = targetStatus === "Hoạt động" ? "KÍCH HOẠT" : "VÔ HIỆU HÓA";
     
     setConfirmConfig({
       isOpen: true,
@@ -273,7 +406,7 @@ export default function ManagementTeachers({ onCountChange, schoolYear, term, ha
         setIsBulkToggling(true);
         try {
           const promises = selectedUserIds.map(id => {
-            const teacher = teachers.find(u => u.id === id);
+            const teacher = displayTeachers.find(u => u.id === id);
             if (!teacher) return Promise.resolve();
             return teachersService.updateTeacher(id, { ...teacher, status: targetStatus });
           });
@@ -305,7 +438,7 @@ export default function ManagementTeachers({ onCountChange, schoolYear, term, ha
         try {
           const results = [];
           for (const id of selectedUserIds) {
-            const teacher = teachers.find(u => u.id === id);
+            const teacher = displayTeachers.find(u => u.id === id);
             if (!teacher) continue;
             
             const generatedPwd = Math.random().toString(36).slice(-10);
@@ -406,7 +539,7 @@ export default function ManagementTeachers({ onCountChange, schoolYear, term, ha
   const handleToggleStatus = async () => {
     if (!statusTarget) return;
     
-    const nextStatus = statusTarget.status === "Hoạt động" ? "Tạm khóa" : "Hoạt động";
+    const nextStatus = statusTarget.status === "Hoạt động" ? "Vô hiệu hóa" : "Hoạt động";
     const actionLabel = nextStatus === "Hoạt động" ? "Kích hoạt" : "Vô hiệu hóa";
 
     try {
@@ -493,19 +626,28 @@ export default function ManagementTeachers({ onCountChange, schoolYear, term, ha
       variant: "primary",
       onConfirm: async () => {
         closeConfirm();
+        const resolvedForm = enrichTeacherForm(teacherForm);
+        const subject = resolvedForm.subject.trim();
+        const qualification = getQualificationForSave(resolvedForm, subjectCatalogSet);
         const payload = {
-          ...teacherForm,
+          ...resolvedForm,
+          dob: normalizeDateValue(resolvedForm.dob || resolvedForm.profile?.dob || ""),
+          qualification,
+          primarySubject: subject,
+          requireTeacherProfileUpdate: true,
           profile: {
-            ...(teacherForm.profile || {}),
-            subject: teacherForm.subject.trim(),
-            phone: teacherForm.phone || "",
-            assignedClasses: teacherForm.assignedClasses || [],
-            homeroomClass: teacherForm.homeroomClass || "",
+            ...(resolvedForm.profile || {}),
+            subject,
+            primarySubject: subject,
+            qualification,
+            phone: resolvedForm.phone || "",
+            assignedClasses: resolvedForm.assignedClasses || [],
+            homeroomClass: resolvedForm.homeroomClass || "",
           },
         };
 
         try {
-          await teachersService.updateTeacher(activeTeacherId, payload);
+          await teachersService.updateTeacher(payload.userId || activeTeacherId, payload);
           await loadTeachers();
           window.alert(`Đã cập nhật giáo viên ${teacherForm.name.trim()} thành công.`);
           handleCloseModal();
@@ -582,7 +724,7 @@ export default function ManagementTeachers({ onCountChange, schoolYear, term, ha
   return (
     <div className="management-teachers-page">
       <TeacherActionsSection
-        totalTeachers={teachers.length}
+        totalTeachers={displayTeachers.length}
         searchTerm={searchTerm}
         selectedStatus={selectedStatus}
         selectedSubject={selectedSubject}
@@ -683,7 +825,7 @@ export default function ManagementTeachers({ onCountChange, schoolYear, term, ha
             <div className="bulk-btns">
             <button
               className="bulk-btn lock" 
-              onClick={() => handleBulkStatusChange("Tạm khóa")}
+              onClick={() => handleBulkStatusChange("Vô hiệu hóa")}
               disabled={isBulkToggling}
             >
               Khóa tài khoản
@@ -783,5 +925,3 @@ export default function ManagementTeachers({ onCountChange, schoolYear, term, ha
     </div>
   );
 }
-
-

@@ -79,20 +79,14 @@ export default function ParentLayout() {
             try {
                 const { parentService } = await import("../../services/pages/parent/parentService");
                 
-                let response;
-                try {
-                    response = await parentService.listNotifications({ mock: false });
-                } catch (err) {
-                    console.warn("Real Parent Notifications API failed, trying mock:", err);
-                    response = await parentService.listNotifications({ mock: true });
-                }
+                const response = await parentService.listNotifications({ mock: false });
                 
                 if (response.success && response.data) {
                     const unreadCount = response.data.filter(n => 
                         n.unread === true || n.is_read === false || n.status === "unread"
                     ).length;
                     
-                    const finalCount = unreadCount || (response.isMock ? 2 : 0);
+                    const finalCount = unreadCount || 0;
                     localStorage.setItem("parent_unread_notifications_count", String(finalCount));
                     window.dispatchEvent(
                         new CustomEvent("parent-notification-count-updated", {

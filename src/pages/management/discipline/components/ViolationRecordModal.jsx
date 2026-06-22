@@ -7,9 +7,6 @@ import { vpDisciplineService } from "../../../../services/pages/management/vp-di
 import { resolveSemesterId } from "../../../../services/shared/schoolYearLookup";
 import "./ViolationRecordModal.css";
 
-// REMOVED: MOCK_STUDENTS - now fetched from API
-// REMOVED: VIOLATION_CATEGORIES - now fetched from API
-
 export default function ViolationRecordModal({ isOpen, onClose, onSuccess, incidents = [], editData = null, selectedSchoolYear, selectedTerm }) {
     const [selectedGrade, setSelectedGrade] = useState("10");
     const [selectedClass, setSelectedClass] = useState("");
@@ -419,4 +416,3 @@ export default function ViolationRecordModal({ isOpen, onClose, onSuccess, incid
         </div>
     );
 }
-

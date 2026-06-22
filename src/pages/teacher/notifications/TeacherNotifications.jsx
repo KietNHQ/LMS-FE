@@ -65,7 +65,6 @@ export default function TeacherNotifications() {
         }
       } catch (error) {
         console.error("Failed to fetch real notifications:", error);
-        // Do not fallback to mock data, let the user know it's empty/error
         setNotifications([]);
       }
     };

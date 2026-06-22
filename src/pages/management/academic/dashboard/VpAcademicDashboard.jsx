@@ -10,18 +10,54 @@ import {
 } from "react-icons/fi";
 import { Modal, Select, Button, Input } from "../../../../components/ui";
 import OperationalAlerts from "./components/OperationalAlerts";
-import { INITIAL_CALENDAR_EVENTS, CALENDAR_EVENT_TYPES } from "../../../../components/common/EventCalendar/eventData";
+import { CALENDAR_EVENT_TYPES } from "../../../../components/common/EventCalendar/eventData";
 import { resolveSemesterId } from "../../../../services/shared/schoolYearLookup";
 import "./VpAcademicDashboard.css";
 
-const LATEST_UPDATES = [
-    { id: 1, type: "Phê duyệt", typeClass: "urgent", title: "03 Đề thi HK2", content: " đang chờ ký duyệt nội dung (Tổ Toán).", time: "15 phút trước", path: "/vp-academic/approvals", urgent: true },
-    { id: 2, type: "Hồ sơ", typeClass: "doc", title: "Tổ Văn đã tải lên ", content: "Kế hoạch dạy học bổ trợ mới.", time: "1 giờ trước", path: "/vp-academic/data-management" },
-    { id: 3, type: "Điểm số", typeClass: "grade", title: "Hệ thống ghi nhận ", content: "12 yêu cầu sửa điểm sau khóa tại khối 10.", time: "3 giờ trước", path: "/vp-academic/grades" },
-    { id: 4, type: "Hệ thống", typeClass: "system", title: "Đã hoàn thành ", content: "Đồng bộ CSDL Sở GD kỳ 1.", time: "Hôm qua", path: "/vp-academic/data-management" },
-    { id: 5, type: "Kỳ thi", typeClass: "exam", title: "Cảnh báo: 05 phòng thi", content: " chưa đủ giám thị coi thi.", time: "Hôm qua", path: "/vp-academic/exams", urgent: true },
-    { id: 6, type: "Hồ sơ", typeClass: "doc", title: "Tổ Lý đã bổ sung ", content: "Danh sách học sinh giỏi cấp cụm.", time: "2 ngày trước", path: "/vp-academic/data-management" },
-];
+const getRows = (payload) => {
+    if (Array.isArray(payload)) return payload;
+    if (Array.isArray(payload?.data)) return payload.data;
+    if (Array.isArray(payload?.data?.requests)) return payload.data.requests;
+    if (Array.isArray(payload?.requests)) return payload.requests;
+    if (Array.isArray(payload?.logs)) return payload.logs;
+    return [];
+};
+
+const formatTime = (value) => {
+    if (!value) return "";
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return "";
+    return date.toLocaleString("vi-VN");
+};
+
+const getAuditMessage = (item = {}) =>
+    item.description ||
+    item.action ||
+    item.message ||
+    item.event ||
+    `${item.tableName || item.table_name || "Hệ thống"} được cập nhật`;
+
+const normalizeAuditLog = (item = {}) => ({
+    id: item.id || `${item.createdAt || item.created_at}-${item.action || ""}`,
+    time: formatTime(item.createdAt || item.created_at || item.timestamp),
+    message: getAuditMessage(item),
+    module: item.tableName || item.table_name || item.module || "Hệ thống",
+    actor: item.userName || item.user_name || item.user?.fullName || item.user?.email || "",
+    status: String(item.action || "").toLowerCase().includes("delete") ? "warning" : "info",
+});
+
+const normalizeUnlockRequest = (item = {}) => ({
+    id: item.id,
+    type: "Phê duyệt",
+    typeClass: "urgent",
+    title: item.title || item.reason || `Yêu cầu mở khóa #${item.id}`,
+    content: item.target_type || item.targetType ? ` (${item.target_type || item.targetType})` : "",
+    time: formatTime(item.created_at || item.createdAt || item.requested_at),
+    path: "/management/approvals",
+    urgent: item.status === "pending",
+    severity: item.status === "pending" ? "high" : "medium",
+    desc: item.reason || item.review_notes || "",
+});
 
 export default function VpAcademicDashboard() {
     const navigate = useNavigate();
@@ -56,6 +92,35 @@ export default function VpAcademicDashboard() {
         staleTime: 5 * 60 * 1000,
     });
 
+    const { data: pendingRequestsRaw = [] } = useQuery({
+        queryKey: ["academic-pending-unlock-requests", resolvedSemesterId],
+        queryFn: async () => {
+            const res = await vpAcademicService.callByKey("get_unlock_requests", {
+                params: { status: "pending", semesterId: resolvedSemesterId, limit: 10 },
+            });
+            return getRows(res);
+        },
+        enabled: Boolean(resolvedSemesterId),
+        staleTime: 60_000,
+    });
+
+    const { data: auditLogsRaw = [] } = useQuery({
+        queryKey: ["academic-audit-logs", filterDate, selectedModule],
+        queryFn: async () => {
+            const params = { limit: 20 };
+            if (filterDate) {
+                params.startDate = filterDate;
+                params.endDate = filterDate;
+            }
+            if (selectedModule !== "Tất cả phân hệ") {
+                params.tableName = selectedModule;
+            }
+            const res = await vpAcademicService.callByKey("get_audit_logs", { params });
+            return getRows(res);
+        },
+        staleTime: 60_000,
+    });
+
     // 2. Tính toán các chỉ số KPI dựa trên dữ liệu trả về
     const primaryStats = useMemo(() => {
         const pending = Number(stats?.pendingCount ?? stats?.pending ?? stats?.waitingCount ?? 0);
@@ -64,12 +129,23 @@ export default function VpAcademicDashboard() {
         const qualityDrop = Number(stats?.declineCount ?? stats?.qualityDropCount ?? 0);
 
         return [
-            { label: "Tiến độ Nhập Điểm", value: progress > 0 ? `${progress}%` : "92.5%", trend: "+2.1%", status: "success", icon: <FiCheckCircle /> },
-            { label: "Lớp/Môn Quá Hạn", value: overdue > 0 ? `${overdue}` : "08", trend: "-2", status: "danger", icon: <FiAlertTriangle /> },
-            { label: "Yêu cầu Chờ Duyệt", value: pending > 0 ? `${pending}` : "05", trend: "+3", status: "warning", icon: <FiUnlock /> },
-            { label: "Sụt giảm Chất lượng", value: qualityDrop > 0 ? `${qualityDrop}` : "03", trend: "+1", status: "danger", icon: <FiTrendingDown /> },
+            { label: "Tiến độ Nhập Điểm", value: `${progress || 0}%`, trend: "", status: "success", icon: <FiCheckCircle /> },
+            { label: "Lớp/Môn Quá Hạn", value: `${overdue || 0}`, trend: "", status: "danger", icon: <FiAlertTriangle /> },
+            { label: "Yêu cầu Chờ Duyệt", value: `${pending || 0}`, trend: "", status: "warning", icon: <FiUnlock /> },
+            { label: "Sụt giảm Chất lượng", value: `${qualityDrop || 0}`, trend: "", status: "danger", icon: <FiTrendingDown /> },
         ];
     }, [stats]);
+
+    const latestUpdates = useMemo(() => pendingRequestsRaw.map(normalizeUnlockRequest), [pendingRequestsRaw]);
+    const auditLogs = useMemo(() => auditLogsRaw.map(normalizeAuditLog), [auditLogsRaw]);
+    const dashboardAlerts = useMemo(() => latestUpdates.map((item) => ({
+        id: item.id,
+        type: "process",
+        title: item.title,
+        desc: item.desc || item.content,
+        severity: item.severity,
+        path: item.path,
+    })), [latestUpdates]);
 
     // Filter event types to only allow "Ngày kiểm tra" for VP Academic
     const ACADEMIC_EVENT_TYPES = CALENDAR_EVENT_TYPES.filter(type => type.label === "Ngày kiểm tra");
@@ -112,7 +188,7 @@ export default function VpAcademicDashboard() {
                 {/* Row 2: Operational Alerts & Latest Updates (Side-by-side) */}
                 <div className="vpa-ops-row animate-slide-up">
                     <div className="vpa-alerts-slot">
-                        <OperationalAlerts />
+                        <OperationalAlerts alerts={dashboardAlerts} />
                     </div>
                     
                     <div className="vpa-updates-slot">
@@ -122,11 +198,17 @@ export default function VpAcademicDashboard() {
                                     <FiActivity className="pulse-icon" />
                                     <h3>Cập nhật & Vấn đề gấp</h3>
                                 </div>
-                                <span className="update-count">5 mới</span>
+                                <span className="update-count">{latestUpdates.length} mới</span>
                             </div>
 
                             <div className="updates-list">
-                                {LATEST_UPDATES.map(item => (
+                                {latestUpdates.length === 0 ? (
+                                    <div className="update-item">
+                                        <div className="update-inner">
+                                            <p>Không có cập nhật gấp từ cơ sở dữ liệu.</p>
+                                        </div>
+                                    </div>
+                                ) : latestUpdates.map(item => (
                                     <div 
                                         key={item.id} 
                                         className={`update-item ${item.urgent ? 'urgent' : ''}`}
@@ -156,21 +238,18 @@ export default function VpAcademicDashboard() {
                             </button>
                         </div>
                         <div className="vpa-audit-row-grid">
-                            <div className="feed-item">
-                                <span className="feed-dot success"></span>
-                                <span className="feed-time">10:15</span>
-                                <span className="feed-msg">GV. Nguyễn Y đã cập nhật điểm kiểm tra miệng lớp <strong>12A1</strong></span>
-                            </div>
-                            <div className="feed-item">
-                                <span className="feed-dot warning"></span>
-                                <span className="feed-time">09:45</span>
-                                <span className="feed-msg">Hệ thống tự động mở khóa nhập điểm lớp <strong>10A2</strong> (theo yêu cầu)</span>
-                            </div>
-                            <div className="feed-item">
-                                <span className="feed-dot info"></span>
-                                <span className="feed-time">08:30</span>
-                                <span className="feed-msg">Đã đồng bộ thành công dữ liệu từ phân hệ <strong>Thời khóa biểu</strong></span>
-                            </div>
+                            {auditLogs.slice(0, 3).length === 0 ? (
+                                <div className="feed-item">
+                                    <span className="feed-dot info"></span>
+                                    <span className="feed-msg">Chưa có nhật ký vận hành từ cơ sở dữ liệu.</span>
+                                </div>
+                            ) : auditLogs.slice(0, 3).map((item) => (
+                                <div key={item.id} className="feed-item">
+                                    <span className={`feed-dot ${item.status}`}></span>
+                                    <span className="feed-time">{item.time}</span>
+                                    <span className="feed-msg">{item.message}</span>
+                                </div>
+                            ))}
                         </div>
                     </div>
                 </div>
@@ -217,84 +296,28 @@ export default function VpAcademicDashboard() {
                             <div className="history-group">
                                 <span className="group-label">Kết quả cho ngày: {filterDate}</span>
                                 <div className="history-list">
-                                    <div className="history-item">
-                                        <div className="h-time">10:15</div>
-                                        <div className="h-dot-container"><div className="h-dot success"></div></div>
-                                        <div className="h-content">
-                                            <p>GV. Nguyễn Y đã cập nhật điểm kiểm tra miệng lớp <strong>12A1</strong></p>
-                                            <span className="h-meta">Phân hệ: Điểm số • Thiết bị: Web Browser (Chrome)</span>
+                                    {auditLogs.length === 0 ? (
+                                        <div className="history-item">
+                                            <div className="h-content">
+                                                <p>Không có nhật ký phù hợp với bộ lọc.</p>
+                                            </div>
                                         </div>
-                                    </div>
-                                    <div className="history-item">
-                                        <div className="h-time">09:45</div>
-                                        <div className="h-dot-container"><div className="h-dot warning"></div></div>
-                                        <div className="h-content">
-                                            <p>Hệ thống tự động mở khóa nhập điểm lớp <strong>10A2</strong> (theo yêu cầu)</p>
-                                            <span className="h-meta">Phân hệ: Hệ thống • Tác nghiệp: Tự động</span>
+                                    ) : auditLogs.map((item) => (
+                                        <div key={item.id} className="history-item">
+                                            <div className="h-time">{item.time}</div>
+                                            <div className="h-dot-container"><div className={`h-dot ${item.status}`}></div></div>
+                                            <div className="h-content">
+                                                <p>{item.message}</p>
+                                                <span className="h-meta">Phân hệ: {item.module}{item.actor ? ` • Người thực hiện: ${item.actor}` : ""}</span>
+                                            </div>
                                         </div>
-                                    </div>
-                                    <div className="history-item">
-                                        <div className="h-time">08:30</div>
-                                        <div className="h-dot-container"><div className="h-dot info"></div></div>
-                                        <div className="h-content">
-                                            <p>Đã đồng bộ thành công dữ liệu từ phân hệ <strong>Thời khóa biểu</strong></p>
-                                            <span className="h-meta">Phân hệ: Thời khóa biểu • Dung lượng: 45KB</span>
-                                        </div>
-                                    </div>
-                                    <div className="history-item">
-                                        <div className="h-time">07:50</div>
-                                        <div className="h-dot-container"><div className="h-dot success"></div></div>
-                                        <div className="h-content">
-                                            <p>GV. Lê Văn A đã nộp báo cáo <strong>Kế hoạch dạy học</strong> tuần 27.</p>
-                                            <span className="h-meta">Phân hệ: Hồ sơ chuyên môn • Trạng thái: Đã nộp</span>
-                                        </div>
-                                    </div>
-                                    <div className="history-item">
-                                        <div className="h-time">07:20</div>
-                                        <div className="h-dot-container"><div className="h-dot info"></div></div>
-                                        <div className="h-content">
-                                            <p>Hệ thống hoàn tất sao lưu <strong>CSDL Học sinh</strong> định kỳ hàng ngày.</p>
-                                            <span className="h-meta">Phân hệ: Hệ thống • Dung lượng: 1.2GB</span>
-                                        </div>
-                                    </div>
-                                    <div className="history-item">
-                                        <div className="h-time">06:45</div>
-                                        <div className="h-dot-container"><div className="h-dot warning"></div></div>
-                                        <div className="h-content">
-                                            <p>Cảnh báo: Phát hiện <strong>05 yêu cầu sửa điểm</strong> vượt quá thời gian quy định.</p>
-                                            <span className="h-meta">Phân hệ: Điểm số • Mức độ: Cần lưu tâm</span>
-                                        </div>
-                                    </div>
-                                    <div className="history-item">
-                                        <div className="h-time">06:00</div>
-                                        <div className="h-dot-container"><div className="h-dot success"></div></div>
-                                        <div className="h-content">
-                                            <p>Tin nhắn: Tổ trưởng tổ Toán đã phê duyệt <strong>Đề cương ôn tập</strong> khối 12.</p>
-                                            <span className="h-meta">Phân hệ: Hồ sơ chuyên môn • Người duyệt: GV. Phạm B</span>
-                                        </div>
-                                    </div>
-                                    <div className="history-item">
-                                        <div className="h-time">05:30</div>
-                                        <div className="h-dot-container"><div className="h-dot info"></div></div>
-                                        <div className="h-content">
-                                            <p>Tự động cập nhật <strong>Danh sách vắng thi</strong> từ phân hệ Khảo thí.</p>
-                                            <span className="h-meta">Phân hệ: Điểm số • Số lượng: 02 HS</span>
-                                        </div>
-                                    </div>
-                                    <div className="history-item">
-                                        <div className="h-time">04:30</div>
-                                        <div className="h-dot-container"><div className="h-dot success"></div></div>
-                                        <div className="h-content">
-                                            <p>Phê duyệt danh sách <strong>Học sinh giỏi</strong> cấp Thành phố.</p>
-                                            <span className="h-meta">Phân hệ: Hồ sơ chuyên môn • Tác nhân: PHT Chuyên môn</span>
-                                        </div>
-                                    </div>
+                                    ))}
                                 </div>
                             </div>
                         </div>
                         
                         <div className="modal-footer-actions">
-                            <Button variant="secondary" onClick={() => console.log("Exporting...")}>
+                            <Button variant="secondary" onClick={() => window.print()}>
                                 Xuất File Excel
                             </Button>
                             <Button variant="primary" onClick={() => setShowHistory(false)} style={{ background: '#0f172a' }}>
@@ -313,7 +336,7 @@ export default function VpAcademicDashboard() {
                         themeClass="theme-academic"
                         userRole="admin"
                         isCompact={false}
-                        initialEvents={INITIAL_CALENDAR_EVENTS}
+                        initialEvents={[]}
                         eventTypes={CALENDAR_EVENT_TYPES}
                         creatableTypes={ACADEMIC_EVENT_TYPES}
                         showTargetSelector={false}

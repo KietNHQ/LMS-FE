@@ -79,7 +79,7 @@ export default function ManagementLeaveRequests() {
         dateFrom: filterDateFrom,
         dateTo: filterDateTo,
         search: searchTerm,
-        mock: false // Will automatically try API and fallback to mock if API is down
+        mock: false
       });
 
       if (res && res.success) {

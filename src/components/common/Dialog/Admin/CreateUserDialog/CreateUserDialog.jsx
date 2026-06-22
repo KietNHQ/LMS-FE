@@ -4,24 +4,10 @@ import { PERMISSIONS, MANAGEMENT_TITLES, PERMISSION_GROUPS } from "../../../../.
 import Select from "../../../../ui/Select/Select";
 import { useCheckPermission } from "../../../../../hooks/useAuth";
 import { classesService } from "../../../../../services/pages/management/classes/classesService";
+import { adminApiService } from "../../../../../services/pages/admin/generated";
 import "./CreateUserDialog.css";
 
 const allRoleOptions = ["Quản lý", "Phụ huynh", "Học sinh", "Giáo viên"];
-
-const SUBJECT_OPTIONS = [
-  { value: "TOAN", label: "Toán" },
-  { value: "VAN", label: "Ngữ văn" },
-  { value: "ANH", label: "Tiếng Anh" },
-  { value: "VL", label: "Vật lý" },
-  { value: "HOA", label: "Hóa học" },
-  { value: "SH", label: "Sinh học" },
-  { value: "TH", label: "Tin học" },
-  { value: "LS", label: "Lịch sử" },
-  { value: "DL", label: "Địa lý" },
-  { value: "GDTC", label: "Giáo dục thể chất" },
-  { value: "CN", label: "Công nghệ" },
-];
-
 
 const roleEmailDomainMap = {
     "Quản trị viên": "thptlocal.edu.vn",
@@ -154,6 +140,7 @@ export default function CreateUserDialog({ mode = "create", title, submitLabel, 
     const [form, setForm] = useState(() => buildFormFromInitialData(initialData, mode, fixedRole || initialData?.role || normalizedRoleOptions[0] || "Học sinh"));
     const [expandedGroups, setExpandedGroups] = useState(["users"]);
     const [realClasses, setRealClasses] = useState([]);
+    const [subjectOptions, setSubjectOptions] = useState([]);
     const [shouldUpdateLinkedStudents, setShouldUpdateLinkedStudents] = useState(false);
     const contentRef = useRef(null);
     const selectedRole = fixedRole || form.role;
@@ -180,6 +167,33 @@ export default function CreateUserDialog({ mode = "create", title, submitLabel, 
             }
         };
         fetchClasses();
+    }, []);
+
+    useEffect(() => {
+        let cancelled = false;
+
+        const fetchSubjects = async () => {
+            try {
+                const response = await adminApiService.get_subjects();
+                const rows = Array.isArray(response?.data) ? response.data : [];
+                const names = Array.from(new Set(rows.map(subject => subject?.name).filter(Boolean)))
+                    .sort((a, b) => a.localeCompare(b, "vi"));
+
+                if (!cancelled) {
+                    setSubjectOptions(names.map(name => ({ value: name, label: name })));
+                }
+            } catch (error) {
+                if (!cancelled) {
+                    setSubjectOptions([]);
+                }
+            }
+        };
+
+        fetchSubjects();
+
+        return () => {
+            cancelled = true;
+        };
     }, []);
 
     // Cuộn lên đầu khi mở hộp thoại hoặc đổi mode/dữ liệu
@@ -352,7 +366,7 @@ export default function CreateUserDialog({ mode = "create", title, submitLabel, 
                                             variant="custom" 
                                             value={form.teacherInfo.subject} 
                                             onChange={e => handleRoleInfoChange("teacherInfo", "subject", e.target.value)} 
-                                            options={SUBJECT_OPTIONS} 
+                                            options={subjectOptions}
                                             placeholder="Chọn môn" 
                                         />
                                     </div>
@@ -499,4 +513,3 @@ export default function CreateUserDialog({ mode = "create", title, submitLabel, 
         </div>
     );
 }
-

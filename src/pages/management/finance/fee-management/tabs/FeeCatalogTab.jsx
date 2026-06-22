@@ -33,13 +33,6 @@ const BANK_OPTIONS = [
     { value: "ACB", label: "ACB" },
 ];
 
-const INITIAL_CATALOG = [
-    { id: 1, code: "HP_CHINH", name: "Học phí chính quy", category: "Tuition", amount: 1200000, nature: "School Revenue", mandatory: true, qrBank: "Vietcombank", qrAccount: "", qrHolder: "", qrTemplate: "", qrImage: "" },
-    { id: 2, code: "AN_TRUA", name: "Tiền ăn bán trú", category: "Service", amount: 35000, nature: "Service Revenue", mandatory: false, qrBank: "Vietcombank", qrAccount: "", qrHolder: "", qrTemplate: "", qrImage: "" },
-    { id: 3, code: "BHYT", name: "Bảo hiểm y tế", category: "Others", amount: 804600, nature: "Collect on behalf", mandatory: true, qrBank: "Vietcombank", qrAccount: "", qrHolder: "", qrTemplate: "", qrImage: "" },
-    { id: 4, code: "DONG_PHUC", name: "Đồng phục học sinh", category: "Others", amount: 650000, nature: "Collect on behalf", mandatory: false, qrBank: "Vietcombank", qrAccount: "", qrHolder: "", qrTemplate: "", qrImage: "" },
-];
-
 const EMPTY_FORM = {
     code: "",
     name: "",

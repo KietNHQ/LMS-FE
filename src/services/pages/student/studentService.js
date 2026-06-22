@@ -208,9 +208,7 @@ const STUDENT_ENDPOINTS = [
 ];
 
 const createEndpointCaller = (endpoint) => async (input = {}) => {
-  const shouldMock = input.mock !== false;
-  
-  console.log(`[studentService] Calling ${endpoint.key} (path: ${endpoint.path}), shouldMock: ${shouldMock}`);
+  const shouldMock = input.mock === true;
 
   if (shouldMock) {
     await wait(input.delayMs ?? DEFAULT_DELAY_MS);

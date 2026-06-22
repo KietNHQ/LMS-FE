@@ -351,7 +351,13 @@ export default function VpAcademicExams() {
 
                         <div className="modal-footer-premium">
                             <Button variant="secondary" onClick={closeDetail}>Đóng</Button>
-                            <Button variant="primary" className="vpa-btn-main" onClick={() => navigate('/management/exams/rooms')}>
+                            <Button
+                                variant="primary"
+                                className="vpa-btn-main"
+                                onClick={() => navigate('/management/exams/rooms', {
+                                    state: { examId: selectedExam.id, examName: selectedExam.title }
+                                })}
+                            >
                                 Xếp phòng
                             </Button>
                         </div>
@@ -478,4 +484,3 @@ export default function VpAcademicExams() {
         </div>
     );
 }
-

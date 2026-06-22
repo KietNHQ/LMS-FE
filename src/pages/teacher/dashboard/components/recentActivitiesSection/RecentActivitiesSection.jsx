@@ -20,15 +20,9 @@ const RecentActivitiesSection = ({ activities: propActivities }) => {
     enabled: !propActivities || propActivities.length === 0,
   });
 
-  const hardcodedLessons = [
-    { title: "Hàm số bậc hai và đồ thị", info: "Tiết 2 • Toán • 10A1", time: "10/04/2026 08:30", status: "published", statusLabel: "Đã đăng" },
-    { title: "Đọc hiểu văn bản nghị luận", info: "Tiết 1 • Ngữ văn • 10A1", time: "09/04/2026 14:15", status: "draft", statusLabel: "Nháp" },
-    { title: "Phương trình quy về bậc hai", info: "Tiết 4 • Toán • 11B2", time: "08/04/2026 10:00", status: "published", statusLabel: "Đã đăng" },
-  ];
-
   const lessonsData = (propActivities && propActivities.length > 0) 
     ? propActivities 
-    : (lessonsResponse?.success ? lessonsResponse.data : null);
+    : (lessonsResponse?.success ? lessonsResponse.data : []);
 
   const lessons = lessonsData && lessonsData.length > 0 
     ? lessonsData.map(l => ({
@@ -38,7 +32,7 @@ const RecentActivitiesSection = ({ activities: propActivities }) => {
         status: l.status === 'published' || l.status === 'Đã xuất bản' || l.status === 'success' ? 'published' : 'draft',
         statusLabel: l.status === 'published' || l.status === 'Đã xuất bản' ? 'Đã đăng' : (l.status === 'draft' || l.status === 'Bản nháp' ? 'Nháp' : 'Xong')
       }))
-    : hardcodedLessons;
+    : [];
 
   const publishedCount = lessons.filter(l => l.status === "published").length;
 
@@ -56,7 +50,9 @@ const RecentActivitiesSection = ({ activities: propActivities }) => {
       </div>
 
       <div className="recent-list-scroll">
-        {lessons.map((lesson, idx) => (
+        {lessons.length === 0 && !isLoading ? (
+          <div className="recent-empty">Chưa có học liệu nào trong tuần này</div>
+        ) : lessons.map((lesson, idx) => (
           <div className="recent-item" key={idx}>
             <div className="recent-left">
               <div className="recent-icon">

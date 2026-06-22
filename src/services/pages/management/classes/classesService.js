@@ -29,7 +29,7 @@ const resolveTeacherId = async (teacherName) => {
 
   const rows = await teachersService.listTeachers();
   const matched = rows.find((row) => normalizeText(row.name) === normalized);
-  return matched?.id;
+  return matched?.teacherId;
 };
 
 const extractGradeNumber = (value) => {
@@ -146,5 +146,3 @@ export const classesService = {
     return axiosClient.delete(`/classes/${id}`);
   },
 };
-
-

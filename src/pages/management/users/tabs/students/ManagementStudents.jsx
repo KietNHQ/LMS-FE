@@ -29,8 +29,12 @@ const getErrorMessage = (error, fallback) => {
 const emptyStudentForm = {
   id: null,          // student table integer ID
   userId: "",        // user UUID
+  studentTableId: null,
+  studentCode: "",
   guardianId: null,  // guardian table integer ID (set on phone lookup)
   name: "",
+  firstName: "",
+  lastName: "",
   email: "",
   className: "10A1",
   academicYear: "",
@@ -44,9 +48,13 @@ const emptyStudentForm = {
 };
 
 const toStudentForm = (student = {}) => ({
-  id: student.id,           // student table integer ID — for linkGuardian
+  id: student.studentTableId || student.id,           // student table integer ID — for linkGuardian
   userId: student.userId || student.id,  // user UUID — for updateStudent
+  studentTableId: student.studentTableId || student.id,
+  studentCode: student.studentCode || student.profile?.studentCode || "",
   name: student.name || "",
+  firstName: student.firstName || student.profile?.firstName || "",
+  lastName: student.lastName || student.profile?.lastName || "",
   email: student.email || "",
   className: student.className || "10A1",
   academicYear: student.academicYear || "",
@@ -684,5 +692,4 @@ export default function ManagementStudents({ onCountChange, schoolYear, term, ha
     </div>
   );
 }
-
 

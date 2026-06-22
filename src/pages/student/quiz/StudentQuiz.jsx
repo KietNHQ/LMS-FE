@@ -9,7 +9,6 @@ import QuizCard from "./components/QuizCard/QuizCard";
 import QuizTakingView from "./components/QuizTakingView/QuizTakingView";
 import ResultSummary from "./components/ResultSummary/ResultSummary";
 
-import { quizList as STUDENT_QUIZZES_MOCK } from "./data/quizData";
 import { SchoolYearTermSelector } from "../../../components/common";
 import { LoadingSpinner } from "../../../components/common";
 import { useSchoolYearTerm } from "../../../hooks/useSchoolYearTerm";
@@ -436,4 +435,3 @@ export default function StudentQuiz() {
         </div>
     );
 }
-

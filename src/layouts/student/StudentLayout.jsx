@@ -82,13 +82,10 @@ export default function StudentLayout() {
                 // 3. Prefetch Thời khóa biểu - KEY MUST MATCH StudentSchedule.jsx
                 queryClient.prefetchQuery({
                     queryKey: ["student-schedule", schoolYear, term],
-                    queryFn: () => {
-                        const hasAuth = !!(localStorage.getItem("accessToken") || sessionStorage.getItem("accessToken"));
-                        return studentService.getStudentScheduleMapped({
-                            mock: !hasAuth,
-                            params: { schoolYear, term }
-                        });
-                    },
+                    queryFn: () => studentService.getStudentScheduleMapped({
+                        mock: false,
+                        params: { schoolYear, term }
+                    }),
                     staleTime: 5 * 60 * 1000,
                 }),
 

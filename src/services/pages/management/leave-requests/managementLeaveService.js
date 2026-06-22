@@ -202,7 +202,8 @@ const saveMockRequests = (data) => {
 export const managementLeaveService = {
   /**
    * Fetch all leave requests matching the given search and filter constraints.
-   * Leverages real backend endpoint with a seamless local storage mock fallback.
+   * Calls the real backend by default. Mock storage is available only when
+   * a caller explicitly passes mock: true.
    */
   getLeaveRequests: async (filters = {}) => {
     const {
@@ -294,8 +295,8 @@ export const managementLeaveService = {
       }
       return data;
     } catch (error) {
-      console.warn("API GET /management/leave-requests failed. Falling back to stateful mock.");
-      return managementLeaveService.getLeaveRequests({ ...filters, mock: true });
+      console.warn("API GET /management/leave-requests failed.", error);
+      throw error;
     }
   },
 
@@ -346,38 +347,7 @@ export const managementLeaveService = {
       });
       return response ?? {};
     } catch (error) {
-      console.warn(`PATCH /management/leave-requests/${id}/approve failed. Trying mock fallback.`);
-      // Fallback to local
-      let list = getMockRequests();
-      const index = list.findIndex((item) => String(item.id) === String(id));
-      if (index !== -1) {
-        const storedUserStr = sessionStorage.getItem("user") || localStorage.getItem("user");
-        let reviewerName = "Ban Giám Hiệu";
-        if (storedUserStr) {
-          try {
-            const user = JSON.parse(storedUserStr);
-            reviewerName = user.fullName || user.username || reviewerName;
-          } catch {}
-        }
-        const now = new Date();
-        const formattedDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")} ${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
-
-        list[index] = {
-          ...list[index],
-          status: "approved",
-          statusLabel: "Đã duyệt",
-          adminNotes: adminNotes || "Đồng ý",
-          reviewedBy: 99,
-          reviewedByName: reviewerName,
-          reviewedAt: formattedDate
-        };
-        saveMockRequests(list);
-        return {
-          success: true,
-          message: "Đã phê duyệt đơn nghỉ phép thành công (Mock Fallback)",
-          data: list[index]
-        };
-      }
+      console.warn(`PATCH /management/leave-requests/${id}/approve failed.`, error);
       throw error;
     }
   },
@@ -428,37 +398,7 @@ export const managementLeaveService = {
       });
       return response ?? {};
     } catch (error) {
-      console.warn(`PATCH /management/leave-requests/${id}/reject failed. Trying mock fallback.`);
-      let list = getMockRequests();
-      const index = list.findIndex((item) => String(item.id) === String(id));
-      if (index !== -1) {
-        const storedUserStr = sessionStorage.getItem("user") || localStorage.getItem("user");
-        let reviewerName = "Ban Giám Hiệu";
-        if (storedUserStr) {
-          try {
-            const user = JSON.parse(storedUserStr);
-            reviewerName = user.fullName || user.username || reviewerName;
-          } catch {}
-        }
-        const now = new Date();
-        const formattedDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")} ${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
-
-        list[index] = {
-          ...list[index],
-          status: "rejected",
-          statusLabel: "Từ chối",
-          adminNotes: adminNotes,
-          reviewedBy: 99,
-          reviewedByName: reviewerName,
-          reviewedAt: formattedDate
-        };
-        saveMockRequests(list);
-        return {
-          success: true,
-          message: "Đã từ chối đơn nghỉ phép thành công (Mock Fallback)",
-          data: list[index]
-        };
-      }
+      console.warn(`PATCH /management/leave-requests/${id}/reject failed.`, error);
       throw error;
     }
   }

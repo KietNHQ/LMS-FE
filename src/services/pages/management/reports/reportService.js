@@ -57,8 +57,8 @@ export async function getReportFilterOptions() {
     teachers: [
       { value: "all", label: "Tất cả giáo viên" },
       ...(Array.isArray(teachers) ? teachers.slice(0, 50).map((t) => ({
-        value: String(t.id),
-        label: t.name || t.fullName || `GV #${t.id}`,
+        value: String(t.teacherId || t.id),
+        label: t.name || t.fullName || `GV #${t.teacherId || t.id}`,
       })) : []),
     ],
   };
@@ -224,13 +224,13 @@ export async function fetchAdminReport(filters = {}) {
   // Teacher data (TeacherTab)
   const teachersList = Array.isArray(teachersData) ? teachersData : [];
   const teacherPerformance = teachersList.map((t) => ({
-    teacher: t.name || t.fullName || `GV #${t.id}`,
+    teacher: t.name || t.fullName || `GV #${t.teacherId || t.id}`,
     score:   t.progress?.averageScore || t.score || 8.0,
   }));
 
   const teacherSubjectAnalysis = teachersList.slice(0, 20).map((t) => ({
-    teacherId:   String(t.id),
-    teacherName: t.name || t.fullName || `GV #${t.id}`,
+    teacherId:   String(t.teacherId || t.id),
+    teacherName: t.name || t.fullName || `GV #${t.teacherId || t.id}`,
     subject:     t.subject || t.subjects?.[0]?.name || "Chưa phân công",
     proficiency: {
       lessonPlans: t.progress?.lessonPlanCompletion || 85,
