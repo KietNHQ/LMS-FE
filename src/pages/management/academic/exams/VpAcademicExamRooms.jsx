@@ -3,7 +3,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { FiArrowLeft, FiGrid, FiUsers, FiHome, FiEdit3, FiPlus } from "react-icons/fi";
 import { Pagination } from "../../../../components/common";
-import { Button, Input, Modal } from "../../../../components/ui";
+import { Button, Input, Modal, Select } from "../../../../components/ui";
 import LoadingSpinner from "../../../../components/common/LoadingSpinner/LoadingSpinner";
 import { toast } from "react-toastify";
 import examService from "../../../../services/pages/management/exam/examService";
@@ -24,6 +24,12 @@ const getExamContext = (locationState) => {
     return context;
 };
 
+const formatDate = (value) => {
+    if (!value) return "—";
+    const date = new Date(value);
+    return Number.isNaN(date.getTime()) ? String(value) : date.toLocaleDateString("vi-VN");
+};
+
 const normalizeRoom = (room) => {
     const supervisors = room.supervisors || [];
     const supervisorNames = supervisors
@@ -36,10 +42,21 @@ const normalizeRoom = (room) => {
         name: room.roomName || room.room_name || room.name || "Phòng thi",
         students: studentCount,
         capacity,
+        subjectName: room.subject?.name || "—",
+        className: room.class?.name || room.class?.className || "Không gắn lớp",
+        examDate: room.examDate || room.exam_date,
+        startTime: room.startTime || room.start_time || "",
+        endTime: room.endTime || room.end_time || "",
         supervisors: supervisorNames,
         status: capacity > 0 && studentCount >= capacity ? "Đã xếp" : "Chưa đủ",
     };
 };
+
+const toSelectOptions = (rows = []) =>
+    rows.map((row) => ({
+        value: row.id,
+        label: row.label || row.name,
+    }));
 
 export default function VpAcademicExamRooms() {
     const navigate = useNavigate();
@@ -47,7 +64,16 @@ export default function VpAcademicExamRooms() {
     const { examId, examName } = useMemo(() => getExamContext(location.state), [location.state]);
     const [currentPage, setCurrentPage] = useState(1);
     const [isRoomModalOpen, setIsRoomModalOpen] = useState(false);
-    const [roomForm, setRoomForm] = useState({ roomName: "", capacity: 30, examDate: "", startTime: "", endTime: "", subjectId: "" });
+    const [roomForm, setRoomForm] = useState({
+        physicalRoomId: "",
+        roomName: "",
+        capacity: "",
+        examDate: "",
+        startTime: "",
+        endTime: "",
+        subjectId: "",
+        classId: "",
+    });
 
     const { data: rooms = [], isLoading, error, refetch } = useQuery({
         queryKey: ["exam-rooms", examId],
@@ -56,7 +82,26 @@ export default function VpAcademicExamRooms() {
         staleTime: 60_000,
     });
 
+    const { data: catalog = { rooms: [], subjects: [], classes: [] }, isLoading: isCatalogLoading } = useQuery({
+        queryKey: ["exam-room-catalog", examId],
+        queryFn: () => examService.getRoomCatalog(examId),
+        enabled: Boolean(examId),
+        staleTime: 5 * 60_000,
+    });
+
     const normalizedRooms = useMemo(() => rooms.map(normalizeRoom), [rooms]);
+    const physicalRooms = catalog.rooms || [];
+    const subjects = catalog.subjects || [];
+    const classes = catalog.classes || [];
+    const roomOptions = useMemo(() => toSelectOptions(physicalRooms), [physicalRooms]);
+    const subjectOptions = useMemo(() => toSelectOptions(subjects), [subjects]);
+    const classOptions = useMemo(
+        () => [
+            { value: "", label: "Không gắn lớp cụ thể" },
+            ...toSelectOptions(classes),
+        ],
+        [classes],
+    );
     const totalPages = Math.ceil(normalizedRooms.length / ITEMS_PER_PAGE) || 1;
     const paginatedRooms = normalizedRooms.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
     const totalStudents = normalizedRooms.reduce((sum, room) => sum + room.students, 0);
@@ -78,7 +123,7 @@ export default function VpAcademicExamRooms() {
             return;
         }
         if (!roomForm.roomName.trim() || !roomForm.examDate || !roomForm.startTime || !roomForm.endTime || !roomForm.subjectId) {
-            toast.warning("Vui lòng nhập đủ tên phòng, ngày thi, giờ thi và mã môn thi.");
+            toast.warning("Vui lòng chọn phòng thi, ngày thi, giờ thi và môn thi.");
             return;
         }
         try {
@@ -86,18 +131,24 @@ export default function VpAcademicExamRooms() {
                 ...roomForm,
                 capacity: Number(roomForm.capacity) || 0,
                 subjectId: Number(roomForm.subjectId),
+                classId: roomForm.classId ? Number(roomForm.classId) : null,
             });
             toast.success("Đã tạo phòng thi.");
             setIsRoomModalOpen(false);
-            setRoomForm({ roomName: "", capacity: 30, examDate: "", startTime: "", endTime: "", subjectId: "" });
+            setRoomForm({
+                physicalRoomId: "",
+                roomName: "",
+                capacity: "",
+                examDate: "",
+                startTime: "",
+                endTime: "",
+                subjectId: "",
+                classId: "",
+            });
             refetch();
         } catch (createError) {
             toast.error(createError?.response?.data?.message || createError?.message || "Không thể tạo phòng thi.");
         }
-    };
-
-    const handleSendNotifications = () => {
-        toast.info("Chưa có API gửi thông báo phân phòng thi cho kỳ thi này.");
     };
 
     return (
@@ -140,9 +191,6 @@ export default function VpAcademicExamRooms() {
                             <span style={{ fontWeight: 800, color: "var(--admin-navy)", fontSize: "1.1rem" }}>Danh sách phòng thi</span>
                         </div>
                         <div style={{ display: "flex", gap: "1rem" }}>
-                            <Button variant="outline" onClick={handleSendNotifications}>
-                                <FiPlus /> Gửi thông báo
-                            </Button>
                             <Button className="vpa-btn-glow" onClick={() => setIsRoomModalOpen(true)}>
                                 <FiPlus /> Tạo phòng thi
                             </Button>
@@ -180,6 +228,18 @@ export default function VpAcademicExamRooms() {
                                         </div>
                                         <div className="room-body">
                                             <div className="body-row">
+                                                <FiGrid /> <span>Môn thi: <strong>{room.subjectName}</strong></span>
+                                            </div>
+                                            <div className="body-row">
+                                                <FiHome /> <span>Phòng vật lý: <strong>{room.name}</strong></span>
+                                            </div>
+                                            <div className="body-row">
+                                                <FiUsers /> <span>Lớp dự thi: <strong>{room.className}</strong></span>
+                                            </div>
+                                            <div className="body-row">
+                                                <FiEdit3 /> <span>Ca thi: <strong>{formatDate(room.examDate)} {room.startTime} - {room.endTime}</strong></span>
+                                            </div>
+                                            <div className="body-row">
                                                 <FiUsers /> <span>Sĩ số: <strong>{room.students}/{room.capacity || "—"} thí sinh</strong></span>
                                             </div>
                                             <div className="body-row proctors">
@@ -210,11 +270,50 @@ export default function VpAcademicExamRooms() {
 
             <Modal open={isRoomModalOpen} onClose={() => setIsRoomModalOpen(false)} title="Tạo phòng thi mới" className="vpa-exam-room-modal">
                 <div className="vpa-room-modal-form">
-                    <Input label="Tên phòng" value={roomForm.roomName} onChange={(e) => setRoomForm({ ...roomForm, roomName: e.target.value })} placeholder="VD: Phòng 101" />
+                    <Select
+                        label="Phòng thi"
+                        variant="custom"
+                        searchable
+                        searchPlaceholder="Tìm phòng thi..."
+                        placeholder={isCatalogLoading ? "Đang tải phòng..." : "Chọn phòng thi"}
+                        options={roomOptions}
+                        value={roomForm.physicalRoomId}
+                        onChange={(event) => {
+                            const physicalRoom = physicalRooms.find((room) => String(room.id) === String(event.target.value));
+                            setRoomForm({
+                                ...roomForm,
+                                physicalRoomId: event.target.value,
+                                roomName: physicalRoom?.name || "",
+                                capacity: physicalRoom?.capacity || roomForm.capacity,
+                            });
+                        }}
+                    />
+                    <p className="room-field-note">
+                        Đây là phòng vật lý từ bảng phòng học. Ví dụ 12A1 ở đây là tên phòng, không phải lớp 12A1.
+                    </p>
                     <div className="form-row-vpa grid-2">
                         <Input label="Sức chứa" type="number" value={roomForm.capacity} onChange={(e) => setRoomForm({ ...roomForm, capacity: e.target.value })} />
-                        <Input label="Mã môn thi" type="number" value={roomForm.subjectId} onChange={(e) => setRoomForm({ ...roomForm, subjectId: e.target.value })} />
+                        <Select
+                            label="Môn thi"
+                            variant="custom"
+                            searchable
+                            searchPlaceholder="Tìm môn thi..."
+                            placeholder={isCatalogLoading ? "Đang tải môn..." : "Chọn môn thi"}
+                            options={subjectOptions}
+                            value={roomForm.subjectId}
+                            onChange={(e) => setRoomForm({ ...roomForm, subjectId: e.target.value })}
+                        />
                     </div>
+                    <Select
+                        label="Lớp dự thi"
+                        variant="custom"
+                        searchable
+                        searchPlaceholder="Tìm lớp..."
+                        placeholder="Không gắn lớp cụ thể"
+                        options={classOptions}
+                        value={roomForm.classId}
+                        onChange={(e) => setRoomForm({ ...roomForm, classId: e.target.value })}
+                    />
                     <div className="form-row-vpa grid-2">
                         <Input label="Ngày thi" type="date" value={roomForm.examDate} onChange={(e) => setRoomForm({ ...roomForm, examDate: e.target.value })} />
                         <Input label="Giờ bắt đầu" type="time" value={roomForm.startTime} onChange={(e) => setRoomForm({ ...roomForm, startTime: e.target.value })} />

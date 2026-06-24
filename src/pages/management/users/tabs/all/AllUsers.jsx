@@ -57,6 +57,10 @@ const getQualificationForSave = (form = {}, subjectCatalogSet = new Set()) => {
     return subjectCatalogSet.has(rawQualification) ? "" : rawQualification;
 };
 
+const normalizeText = (value) => String(value || "").trim().toLocaleLowerCase("vi");
+const compactUnique = (values = []) =>
+    Array.from(new Set(values.filter((value) => value !== undefined && value !== null && value !== "")));
+
 export default function AllUsers({ onCountChange, schoolYear, term, hasPermission, currentUser: propCurrentUser }) {
     const { user: adminUser } = useCheckPermission();
     const [users, setUsers] = useState([]);
@@ -75,6 +79,7 @@ export default function AllUsers({ onCountChange, schoolYear, term, hasPermissio
     const [activeModalMode, setActiveModalMode] = useState(null); // 'view' | 'edit'
     const [selectedUser, setSelectedUser] = useState(null);
     const [allClasses, setAllClasses] = useState([]);
+    const [allClassRows, setAllClassRows] = useState([]);
     const [allTeachers, setAllTeachers] = useState([]);
     const [allStudents, setAllStudents] = useState([]);
     const [allParents, setAllParents] = useState([]);
@@ -128,15 +133,18 @@ export default function AllUsers({ onCountChange, schoolYear, term, hasPermissio
 
     const loadClasses = useCallback(async () => {
         const [classesResult, teachersResult, studentsResult, parentsResult] = await Promise.allSettled([
-            classesService.listClasses(),
+            classesService.listClasses({ schoolYearName: schoolYear }),
             teachersService.listTeachers(),
-            studentsService.listStudents(),
+            studentsService.listStudents({ schoolYearName: schoolYear }),
             parentsService.listParents()
         ]);
 
         if (classesResult.status === "fulfilled") {
-            setAllClasses(Array.from(new Set(classesResult.value.map(classItem => classItem?.name).filter(Boolean))));
+            const rows = classesResult.value || [];
+            setAllClassRows(rows);
+            setAllClasses(Array.from(new Set(rows.map(classItem => classItem?.name).filter(Boolean))));
         } else {
+            setAllClassRows([]);
             console.error("Failed to load classes for detail modals", classesResult.reason);
         }
 
@@ -157,7 +165,7 @@ export default function AllUsers({ onCountChange, schoolYear, term, hasPermissio
         } else {
             console.error("Failed to load parents for detail modals", parentsResult.reason);
         }
-    }, []);
+    }, [schoolYear]);
 
     useEffect(() => {
         loadUsers();
@@ -212,17 +220,23 @@ export default function AllUsers({ onCountChange, schoolYear, term, hasPermissio
     const displayTeachers = useMemo(() => {
         return allTeachers.map((teacher) => {
             const subject = resolveTeacherSubject(teacher);
+            const teacherIds = new Set(compactUnique([teacher.teacherId, ...(teacher.teacherIds || [])]).map(String));
+            const classByTeacherId = allClassRows.find((classItem) => teacherIds.has(String(classItem.homeroomTeacherId || "")));
+            const classByTeacherName = allClassRows.find((classItem) => normalizeText(classItem.teacher) === normalizeText(teacher.name));
+            const homeroomClass = classByTeacherId?.name || classByTeacherName?.name || "";
             return {
                 ...teacher,
                 subject,
+                homeroomClass,
                 profile: {
                     ...(teacher.profile || {}),
                     subject,
                     qualification: teacher.qualification || teacher.profile?.qualification || "",
+                    homeroomClass,
                 },
             };
         });
-    }, [allTeachers, resolveTeacherSubject]);
+    }, [allTeachers, allClassRows, resolveTeacherSubject]);
 
     // Load all system permissions for mapping (same as ManagementManagers)
     useEffect(() => {
@@ -265,8 +279,11 @@ export default function AllUsers({ onCountChange, schoolYear, term, hasPermissio
             let matchYearTerm = true;
             if (schoolYear) {
                 if (user.role === "Học sinh") {
-                    // Nếu là học sinh, khớp năm học
-                    matchYearTerm = user.academicYear === schoolYear || !user.academicYear;
+                    matchYearTerm = allStudents.some((student) =>
+                        student.userId === user.id ||
+                        student.id === user.id ||
+                        student.email === user.email
+                    );
                 } else {
                     // Các role khác: Chỉ hiện nếu đang hoạt động
                     matchYearTerm = user.status === "Hoạt động";
@@ -277,7 +294,7 @@ export default function AllUsers({ onCountChange, schoolYear, term, hasPermissio
 
             return matchSearch && matchQuickRole && matchYearTerm && matchStatus;
         });
-    }, [users, searchValue, quickRole, schoolYear, term, statusFilter]);
+    }, [users, allStudents, searchValue, quickRole, schoolYear, term, statusFilter]);
 
     useEffect(() => {
         onCountChange?.(filteredUsers.length);

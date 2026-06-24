@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import {
     SchoolYearTermSelector,
@@ -19,12 +19,10 @@ import "./VpAcademicExams.css";
 
 export default function VpAcademicExams() {
     const navigate = useNavigate();
+    const queryClient = useQueryClient();
     const { selectedSchoolYear, selectedTerm, handleYearArrow, handleTermChange } = useSchoolYearTerm();
 
-    // Fetch school year and semester IDs
-    const [lookupIds, setLookupIds] = useState({ schoolYearId: null, semesterId: null });
-
-    const { data: lookupData } = useQuery({
+    const { data: lookupIds = { schoolYearId: null, semesterId: null } } = useQuery({
         queryKey: ["school-year-lookup", selectedSchoolYear, selectedTerm],
         queryFn: async () => {
             const [schoolYearId, semesterId] = await Promise.all([
@@ -33,7 +31,6 @@ export default function VpAcademicExams() {
             ]);
             return { schoolYearId, semesterId };
         },
-        onSuccess: (data) => setLookupIds(data),
     });
 
     // Fetch exams from API
@@ -55,28 +52,38 @@ export default function VpAcademicExams() {
     const normalizeExam = (exam) => {
         // Handle API response fields
         const statusMap = {
-            'SCHEDULED': 'success',
-            'PLANNING': 'info',
-            'COMPLETED': 'secondary',
-            'CANCELLED': 'danger',
+            draft: "info",
+            published: "success",
+            completed: "secondary",
+            cancelled: "danger",
+        };
+
+        const statusLabelMap = {
+            draft: "BẢN NHÁP",
+            published: "ĐÃ CÔNG BỐ",
+            completed: "HOÀN TẤT",
+            cancelled: "ĐÃ HỦY",
         };
 
         const typeMap = {
-            'CENTERED': 'Tập trung',
-            'SURVEY': 'Khảo sát',
-            'PRACTICE': 'Thử nghiệm',
-            'GIFTED': 'Bồi dưỡng',
-            'REGULAR': 'Định kỳ',
+            midterm: "Giữa kỳ",
+            final: "Cuối kỳ",
+            quiz: "Kiểm tra",
+            other: "Khác",
         };
+
+        const rawStatus = String(exam.status || exam.state || "draft").toLowerCase();
+        const rawType = String(exam.exam_type || exam.examType || "other").toLowerCase();
 
         return {
             id: exam.id,
             title: exam.title || exam.name || "Kỳ thi",
             date: exam.start_date ? new Date(exam.start_date).toLocaleDateString('vi-VN') : (exam.date || ""),
-            status: exam.status || exam.state || "SẮP TỚI",
-            statusType: statusMap[exam.status] || statusMap[exam.state] || exam.statusType || "info",
+            status: statusLabelMap[rawStatus] || exam.status || "BẢN NHÁP",
+            statusRaw: rawStatus,
+            statusType: statusMap[rawStatus] || exam.statusType || "info",
             candidates: exam.candidates || exam.student_count ? `${exam.candidates || exam.student_count} học sinh` : "—",
-            type: typeMap[exam.exam_type] || exam.examType || exam.type || "Tập trung",
+            type: typeMap[rawType] || exam.examType || exam.type || "Khác",
             duration: exam.duration ? `${exam.duration} phút` : (exam.duration_text || "90 phút"),
             staffArrival: exam.staff_arrival || exam.staffArrival || "07:00",
             startTime: exam.start_time || exam.startTime || "07:30",
@@ -107,10 +114,10 @@ export default function VpAcademicExams() {
     ];
 
     const typeOptions = [
-        { value: "tt", label: "Tập trung toàn trường" },
-        { value: "ks", label: "Khảo sát năng lực" },
-        { value: "tn", label: "Thử nghiệm / Rèn luyện" },
-        { value: "hsg", label: "Bồi dưỡng HSG" },
+        { value: "midterm", label: "Thi giữa kỳ" },
+        { value: "final", label: "Thi cuối kỳ" },
+        { value: "quiz", label: "Kiểm tra / khảo sát" },
+        { value: "other", label: "Khác" },
     ];
 
     const studentCountMap = {
@@ -126,15 +133,32 @@ export default function VpAcademicExams() {
     const [selectedSubjects, setSelectedSubjects] = useState([]);
     const [createFormData, setCreateFormData] = useState({
         title: "",
-        type: "tt",
+        type: "midterm",
         target: "k12",
         candidates: 450,
         startDate: "",
         endDate: "",
         startTime: "07:30",
         duration: "90",
-        staffArrival: "07:00"
+        staffArrival: "07:00",
+        description: "",
     });
+
+    const resetCreateForm = () => {
+        setSelectedSubjects([]);
+        setCreateFormData({
+            title: "",
+            type: "midterm",
+            target: "k12",
+            candidates: 450,
+            startDate: "",
+            endDate: "",
+            startTime: "07:30",
+            duration: "90",
+            staffArrival: "07:00",
+            description: "",
+        });
+    };
 
     const toggleSubject = (sub) => {
         setSelectedSubjects(prev => 
@@ -152,10 +176,76 @@ export default function VpAcademicExams() {
     };
 
     const openCreate = () => {
-        setSelectedSubjects([]);
+        resetCreateForm();
         setIsCreateModalOpen(true);
     }
     const closeCreate = () => setIsCreateModalOpen(false);
+
+    const getTargetLabel = (value) => targetOptions.find((item) => item.value === value)?.label || value;
+
+    const createMutation = useMutation({
+        mutationFn: async () => {
+            if (!lookupIds.schoolYearId || !lookupIds.semesterId) {
+                throw new Error("Không tìm thấy năm học hoặc học kỳ.");
+            }
+            if (!createFormData.title.trim()) {
+                throw new Error("Vui lòng nhập tên kỳ thi.");
+            }
+            if (!createFormData.startDate) {
+                throw new Error("Vui lòng chọn ngày bắt đầu.");
+            }
+
+            const details = [
+                createFormData.description.trim(),
+                selectedSubjects.length ? `Môn thi: ${selectedSubjects.join(", ")}` : "",
+                `Đối tượng: ${getTargetLabel(createFormData.target)}`,
+                `Giờ bắt đầu dự kiến: ${createFormData.startTime}`,
+                `Thời lượng dự kiến: ${createFormData.duration} phút`,
+                `Giáo viên có mặt: ${createFormData.staffArrival}`,
+            ].filter(Boolean).join("\n");
+
+            return examService.createExam({
+                title: createFormData.title.trim(),
+                examType: createFormData.type,
+                schoolYearId: lookupIds.schoolYearId,
+                semesterId: lookupIds.semesterId,
+                startDate: createFormData.startDate,
+                endDate: createFormData.endDate || createFormData.startDate,
+                description: details,
+                status: "draft",
+            });
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["exams"] });
+            toast.success("Đã tạo kỳ thi ở trạng thái bản nháp.");
+            setIsCreateModalOpen(false);
+            resetCreateForm();
+        },
+        onError: (createError) => {
+            toast.error(createError?.response?.data?.message || createError?.message || "Không thể tạo kỳ thi.");
+        },
+    });
+
+    const publishMutation = useMutation({
+        mutationFn: (examId) => examService.publishExam(examId),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["exams"] });
+            queryClient.invalidateQueries({ queryKey: ["school-events"] });
+            toast.success("Đã công bố kỳ thi, thêm vào lịch sự kiện và gửi thông báo.");
+            setIsDetailModalOpen(false);
+        },
+        onError: (publishError) => {
+            toast.error(publishError?.response?.data?.message || publishError?.message || "Không thể công bố kỳ thi.");
+        },
+    });
+
+    const handlePublishExam = () => {
+        if (!selectedExam?.id) return;
+        if (!window.confirm("Công bố kỳ thi sẽ hiển thị trên lịch sự kiện và gửi thông báo cho người dùng. Tiếp tục?")) {
+            return;
+        }
+        publishMutation.mutate(selectedExam.id);
+    };
 
     return (
         <div className="vp-academic-exams">
@@ -351,6 +441,15 @@ export default function VpAcademicExams() {
 
                         <div className="modal-footer-premium">
                             <Button variant="secondary" onClick={closeDetail}>Đóng</Button>
+                            {selectedExam.statusRaw !== "published" && (
+                                <Button
+                                    variant="secondary"
+                                    onClick={handlePublishExam}
+                                    disabled={publishMutation.isPending}
+                                >
+                                    {publishMutation.isPending ? "Đang công bố..." : "Công bố & gửi thông báo"}
+                                </Button>
+                            )}
                             <Button
                                 variant="primary"
                                 className="vpa-btn-main"
@@ -383,7 +482,13 @@ export default function VpAcademicExams() {
                         />
                         <div className="form-group-custom">
                             <label className="ui-label">Mô tả kỳ thi</label>
-                            <textarea className="ui-textarea" placeholder="Nhập mục tiêu hoặc lưu ý..." rows="2"></textarea>
+                            <textarea
+                                className="ui-textarea"
+                                placeholder="Nhập mục tiêu hoặc lưu ý..."
+                                rows="2"
+                                value={createFormData.description}
+                                onChange={e => setCreateFormData({...createFormData, description: e.target.value})}
+                            />
                         </div>
                     </div>
 
@@ -477,7 +582,13 @@ export default function VpAcademicExams() {
 
                     <div className="modal-footer-custom">
                         <Button variant="secondary" onClick={closeCreate}>Hủy bỏ</Button>
-                        <Button variant="primary" onClick={closeCreate}>Khởi tạo kỳ thi</Button>
+                        <Button
+                            variant="primary"
+                            onClick={() => createMutation.mutate()}
+                            disabled={createMutation.isPending}
+                        >
+                            {createMutation.isPending ? "Đang khởi tạo..." : "Khởi tạo kỳ thi"}
+                        </Button>
                     </div>
                 </form>
             </Modal>

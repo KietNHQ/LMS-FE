@@ -20,6 +20,10 @@
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+.grade-list-item.is-comment-graded {
+  grid-template-columns: 30% 1fr 18% 10%;
+}
+
 .grade-list-item:hover {
   border-color: var(--tc-primary-soft);
   background: #f8fafc;
@@ -149,6 +153,33 @@
 .rank-fair { background: #dbeafe; color: #1e40af; }
 .rank-average { background: #f3f4f6; color: #4b5563; }
 .rank-weak { background: #fee2e2; color: #991b1b; }
+.rank-comment-pass { background: #dcfce7; color: #166534; }
+.rank-comment-fail { background: #fee2e2; color: #991b1b; }
+.rank-comment-missing { background: #f1f5f9; color: #475569; }
+
+.grade-list-comment-chip {
+  display: inline-flex;
+  min-width: 112px;
+  justify-content: center;
+  padding: 8px 12px;
+  border-radius: 10px;
+  font-size: 14px;
+}
+
+.grade-list-comment-chip.is-pass {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.grade-list-comment-chip.is-fail {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.grade-list-comment-chip.is-missing {
+  background: #f1f5f9;
+  color: #475569;
+}
 
 .grade-list-action {
   padding: 10px 16px;
@@ -219,10 +250,18 @@
     grid-template-columns: 1fr 1fr 1fr;
     gap: 20px;
   }
+
+  .grade-list-item.is-comment-graded {
+    grid-template-columns: 1fr 1fr;
+  }
   
   .grade-list-item__summary {
     grid-column: span 3;
     justify-content: space-between;
+  }
+
+  .grade-list-item.is-comment-graded .grade-list-item__summary {
+    grid-column: span 2;
   }
 }
 

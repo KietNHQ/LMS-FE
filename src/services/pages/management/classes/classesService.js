@@ -64,6 +64,9 @@ const parseClass = (item = {}) => {
   return {
     id: item.id,
     name,
+    gradeLevelId: item.grade_level_id || item.gradeLevelId || null,
+    schoolYearId: item.school_year_id || item.schoolYearId || null,
+    homeroomTeacherId: item.homeroom_teacher_id || item.homeroomTeacherId || null,
     grade: `Khối ${gradeNumber}`,
     year: item.school_year_name || item.schoolYearName || item.year || "",
     teacher,
@@ -78,17 +81,24 @@ const parseClass = (item = {}) => {
 
 const toApiPayload = async (classData = {}) => {
   const gradeNumber = extractGradeNumber(classData.grade);
-  const [gradeLevelId, schoolYearId, homeroomTeacherId] = await Promise.all([
+  const [gradeLevelId, schoolYearId, resolvedHomeroomTeacherId] = await Promise.all([
     resolveGradeLevelId(gradeNumber),
     resolveSchoolYearId(classData.year),
-    resolveTeacherId(classData.teacher),
+    classData.homeroomTeacherId !== undefined
+      ? Promise.resolve(classData.homeroomTeacherId)
+      : resolveTeacherId(classData.teacher),
   ]);
+  const hasExplicitHomeroomTeacher = classData.homeroomTeacherId !== undefined || normalizeText(classData.teacher) === normalizeText("Chưa phân công");
 
   return {
     className: classData.name,
     ...(gradeLevelId ? { gradeLevelId: toNumber(gradeLevelId) } : {}),
     ...(schoolYearId ? { schoolYearId: toNumber(schoolYearId) } : {}),
-    ...(homeroomTeacherId ? { homeroomTeacherId: toNumber(homeroomTeacherId) } : {}),
+    ...(hasExplicitHomeroomTeacher
+      ? { homeroomTeacherId: resolvedHomeroomTeacherId ? toNumber(resolvedHomeroomTeacherId) : null }
+      : resolvedHomeroomTeacherId
+        ? { homeroomTeacherId: toNumber(resolvedHomeroomTeacherId) }
+        : {}),
     ...(classData.maxStudents ? { maxStudents: toNumber(classData.maxStudents) } : {}),
     status: classData.status || "active",
 

@@ -38,6 +38,7 @@
     --vpa-primary-dark: var(--admin-primary-hover);
     --vpa-accent: #3b82f6; /* Accent blue for interactive elements */
     --vpa-emerald: #10b981; /* Keep for success status, but don't use for branding */
+    --vpa-emerald-dark: #059669;
     --card-shadow: 0 4px 20px rgba(30, 47, 90, 0.08);
     --hover-shadow: 0 10px 30px rgba(30, 47, 90, 0.15);
     animation: vpa-fade-in 0.5s ease-out;
@@ -321,6 +322,18 @@
     color: #3b82f6;
 }
 
+.vpa-class-card.mixed .info-status {
+    color: #d97706;
+}
+
+.vpa-class-card.checking .info-status {
+    color: #64748b;
+}
+
+.vpa-class-card.draft .info-status {
+    color: #64748b;
+}
+
 .vpa-class-card.progress .info-status {
     color: #f59e0b;
 }
@@ -379,6 +392,14 @@
     justify-content: center;
     text-align: center;
     color: var(--admin-text-muted);
+}
+
+.vpa-loading-progress {
+    margin-top: 0.75rem;
+    color: var(--admin-text-muted);
+    font-size: 0.85rem;
+    font-weight: 700;
+    text-align: center;
 }
 
 .empty-glow-icon {
@@ -811,6 +832,16 @@
 .metric-item.good {
     background: #f0fdf4;
     border-color: #22c55e;
+}
+
+.metric-item.normal {
+    background: #eff6ff;
+    border-color: #3b82f6;
+}
+
+.metric-item.missing {
+    background: #f8fafc;
+    border-color: #cbd5e1;
 }
 
 .metric-item.warning {
@@ -1445,4 +1476,103 @@
 .vpa-btn-unlock-confirm:hover {
     background: #b91c1c !important;
     box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3) !important;
+}
+
+@media (max-width: 1280px) {
+    .vpa-grades-grid {
+        grid-template-columns: 280px 1fr;
+    }
+
+    .vpa-analytics-header {
+        align-items: flex-start;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+
+    .ah-right {
+        flex-wrap: wrap;
+        justify-content: flex-start;
+    }
+
+    .vpa-kpi-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .vpa-charts-row {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 900px) {
+    .vpa-grades-grid,
+    .vpa-grades-grid.sidebar-closed {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+
+    .vpa-grades-sidebar {
+        position: relative;
+        top: 0;
+        max-height: none;
+    }
+
+    .sidebar-closed .vpa-grades-sidebar {
+        display: none;
+    }
+
+    .btn-floating-toggle {
+        left: 0;
+        top: 0;
+        transform: none;
+        width: 40px;
+        height: 40px;
+    }
+
+    .section-header,
+    .sh-left {
+        align-items: stretch;
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+
+    .sh-search {
+        width: 100%;
+        border-radius: var(--radius-md);
+    }
+
+    .vpa-table-scroll {
+        overflow-x: auto;
+    }
+
+    .vpa-premium-table {
+        min-width: 720px;
+    }
+}
+
+@media (max-width: 640px) {
+    .vpa-school-year-header,
+    .vpa-analytics-header,
+    .ah-right,
+    .vpa-header-footer {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .vpa-school-year-dropdown,
+    .vpa-btn-icon,
+    .vpa-btn-unlock,
+    .vpa-btn-lock {
+        justify-content: center;
+        width: 100%;
+    }
+
+    .vpa-kpi-grid,
+    .metrics-grid,
+    .modal-subjects-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .gvcn-highlight {
+        width: 100%;
+    }
 }

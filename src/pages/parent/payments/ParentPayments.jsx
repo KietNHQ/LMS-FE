@@ -365,7 +365,7 @@ export default function ParentPayments() {
                 childName: item.childName,
                 invoiceCode: item.invoiceCode || `INV-${item.id}`,
                 semester: item.term || item.title,
-                date: item.paidDate || "--",
+                date: item.paidDate ? formatDateVi(item.paidDate) : "--",
                 amount: formatCurrency(item.finalAmount),
                 method: item.status === "paid" ? "Chuyen khoan QR" : "Chua thanh toan",
                 dueStatus: getDueStatus(item),
@@ -585,7 +585,7 @@ export default function ParentPayments() {
       <tr><td>Hoc phi goc</td><td>${formatCurrency(payment.originalAmount)}</td></tr>
       <tr><td>Giam gia</td><td>${formatCurrency(payment.discountAmount)}</td></tr>
       <tr><td>Tong phai thu</td><td>${formatCurrency(payment.finalAmount)}</td></tr>
-      <tr><td>Ngay thanh toan</td><td>${payment.paidDate}</td></tr>
+      <tr><td>Ngay thanh toan</td><td>${formatDateVi(payment.paidDate)}</td></tr>
       <tr><td>Phuong thuc</td><td>Chuyen khoan QR</td></tr>
     </table>
     <p class="note">Luu y: Chon Save as PDF trong hop thoai in de tai file PDF.</p>
@@ -677,6 +677,7 @@ export default function ParentPayments() {
                         payment={{
                             ...item,
                             deadlineLabel: formatDateVi(item.deadline),
+                            paidDateLabel: item.paidDate ? formatDateVi(item.paidDate) : "--",
                             dueStatus,
                         }}
                         onOpenDiscount={() => openDiscountDialog(item.id)}

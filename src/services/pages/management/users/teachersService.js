@@ -94,6 +94,7 @@ const buildTeacherUpdatePayload = (formData = {}) => {
     qualification,
     primarySubject,
     hireDate: normalizeDate(formData.hireDate || profile.hireDate) || undefined,
+    syncTeachingSubjectAssignments: formData.syncTeachingSubjectAssignments || undefined,
   };
 };
 

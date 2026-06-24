@@ -9,12 +9,29 @@ function getAvatarLetter(name) {
 
 function formatDate(dateString) {
     if (!dateString) return "—";
-    const cleanDate = dateString.slice(0, 10);
-    const parts = cleanDate.split("-");
-    if (parts.length === 3) {
-        return `${parts[2]}/${parts[1]}/${parts[0]}`;
+    const text = String(dateString).trim();
+
+    const isoMatch = text.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (isoMatch) {
+        return `${isoMatch[3]}/${isoMatch[2]}/${isoMatch[1]}`;
     }
-    return cleanDate;
+
+    const slashMatch = text.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+    if (slashMatch) {
+        return `${slashMatch[1].padStart(2, "0")}/${slashMatch[2].padStart(2, "0")}/${slashMatch[3]}`;
+    }
+
+    const date = new Date(text);
+    if (!Number.isNaN(date.getTime())) {
+        return new Intl.DateTimeFormat("vi-VN", {
+            timeZone: "UTC",
+            day: "2-digit",
+            month: "2-digit",
+            year: "numeric",
+        }).format(date);
+    }
+
+    return text;
 }
 
 const getStatusClass = (status) => {

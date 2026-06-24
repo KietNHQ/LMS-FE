@@ -12,15 +12,10 @@ import {
 } from "react-icons/fi";
 import { toast } from "react-toastify";
 import { io } from "socket.io-client";
+import { getSocketBaseUrl } from "../../../../services/shared/http/apiBaseUrl";
 import "./PrincipalApprovals.css";
 
-const getSocketUrl = () => {
-    const apiUrl = import.meta.env.VITE_API_URL || "/api/v1";
-    if (apiUrl.startsWith("/")) {
-        return window.location.origin;
-    }
-    return apiUrl.replace("/api/v1", "");
-};
+const getSocketUrl = getSocketBaseUrl;
 
 const getToken = () => {
     const storedUser = JSON.parse(localStorage.getItem("user") || sessionStorage.getItem("user") || "{}");

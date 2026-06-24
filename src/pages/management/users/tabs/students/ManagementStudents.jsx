@@ -8,6 +8,7 @@ import StudentActionsSection from "./components/studentActionsSection/studentAct
 import StudentListSection from "./components/studentListSection/studentListSection";
 import StudentInformationSection from "./components/studentInformationSection/studentInformationSection";
 import { studentsService, userService } from "../../../../../services/pages/management/users";
+import { classesService } from "../../../../../services/pages/management/classes";
 
 const statusOptions = ["Tất cả trạng thái", "Đang học", "Đình chỉ", "Bảo lưu", "Đã tốt nghiệp"];
 const ITEMS_PER_PAGE = 6;
@@ -47,6 +48,13 @@ const emptyStudentForm = {
   status: "Đang học",
 };
 
+const unassignedTeacherLabel = "Chưa phân công";
+
+const isAssignedTeacherName = (value) => {
+  const normalized = String(value || "").trim();
+  return normalized && normalized !== unassignedTeacherLabel && normalized !== "—" && normalized !== "--";
+};
+
 const toStudentForm = (student = {}) => ({
   id: student.studentTableId || student.id,           // student table integer ID — for linkGuardian
   userId: student.userId || student.id,  // user UUID — for updateStudent
@@ -56,7 +64,7 @@ const toStudentForm = (student = {}) => ({
   firstName: student.firstName || student.profile?.firstName || "",
   lastName: student.lastName || student.profile?.lastName || "",
   email: student.email || "",
-  className: student.className || "10A1",
+  className: student.className || "",
   academicYear: student.academicYear || "",
   gender: student.gender || "Nam",
   dob: student.dob || "",
@@ -65,7 +73,7 @@ const toStudentForm = (student = {}) => ({
   parentEmail: student.parentEmail || "",
   address: student.address || "",
   status: student.status || "Đang học",
-  teacher: student.teacher || "Chưa phân công",
+  teacher: student.teacher || "",
   profile: student.profile || {},
 });
 
@@ -73,6 +81,7 @@ const buildDownloadName = (fallbackName) => fallbackName;
 
 export default function ManagementStudents({ onCountChange, schoolYear, term, hasPermission, currentUser }) {
   const [students, setStudents] = useState([]);
+  const [classTeacherMap, setClassTeacherMap] = useState({});
   const [isLoading, setIsLoading] = useState(false);
   const [loadError, setLoadError] = useState("");
 
@@ -120,15 +129,33 @@ export default function ManagementStudents({ onCountChange, schoolYear, term, ha
     setLoadError("");
 
     try {
-      const rows = await studentsService.listStudents();
-      setStudents(rows);
+      const [studentRows, classRows] = await Promise.all([
+        studentsService.listStudents({ schoolYearName: schoolYear }),
+        classesService.listClasses({ schoolYearName: schoolYear }).catch(() => []),
+      ]);
+      const nextClassTeacherMap = classRows.reduce((map, classItem) => {
+        if (classItem.name && isAssignedTeacherName(classItem.teacher)) {
+          map[classItem.name] = classItem.teacher;
+        }
+        return map;
+      }, {});
+
+      setClassTeacherMap(nextClassTeacherMap);
+      setStudents(
+        studentRows.map((student) => ({
+          ...student,
+          teacher: isAssignedTeacherName(student.teacher)
+            ? student.teacher
+            : nextClassTeacherMap[student.className] || "",
+        }))
+      );
     } catch (error) {
       setStudents([]);
       setLoadError(getErrorMessage(error, "Không thể tải danh sách học sinh."));
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [schoolYear]);
 
   useEffect(() => {
     loadStudents();
@@ -142,7 +169,7 @@ export default function ManagementStudents({ onCountChange, schoolYear, term, ha
   const filteredStudents = useMemo(() => {
     return students.filter((student) => {
       // Lọc theo Năm học
-      const matchYear = !schoolYear || student.academicYear === schoolYear || !student.academicYear;
+      const matchYear = !schoolYear || student.academicYear === schoolYear;
       
       // Lọc theo Học kỳ (Nếu có logic term trong data, hiện tại giả định khớp năm học và đang học)
       const matchTerm = true; // Cần bổ sung logic nếu BE trả về term cụ thể
@@ -249,8 +276,11 @@ export default function ManagementStudents({ onCountChange, schoolYear, term, ha
   };
 
   const getTeacherByClass = (className) => {
-    const matched = students.find((student) => student.className === className && student.teacher);
-    return matched?.teacher || "Chưa phân công";
+    const classTeacher = classTeacherMap[className];
+    if (isAssignedTeacherName(classTeacher)) return classTeacher;
+
+    const matched = students.find((student) => student.className === className && isAssignedTeacherName(student.teacher));
+    return matched?.teacher || unassignedTeacherLabel;
   };
 
   const handleSaveStudentEdit = async () => {
@@ -692,4 +722,3 @@ export default function ManagementStudents({ onCountChange, schoolYear, term, ha
     </div>
   );
 }
-

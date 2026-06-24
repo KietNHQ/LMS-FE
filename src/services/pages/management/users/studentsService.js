@@ -1,5 +1,6 @@
 import axiosClient from "../../../shared/http/axiosClient";
 import { importExportService } from "../../admin/import-export/importExportService";
+import { resolveSchoolYearId } from "../../../shared/schoolYearLookup";
 
 const getPayload = (response) => response?.data ?? response ?? {};
 
@@ -31,7 +32,19 @@ const splitFullName = (name = "") => {
 
 const normalizeDate = (value) => {
   if (!value || value === "—" || value === "--") return null;
-  return String(value).slice(0, 10);
+  const text = String(value).trim();
+  const isoMatch = text.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (isoMatch) return `${isoMatch[1]}-${isoMatch[2]}-${isoMatch[3]}`;
+
+  const slashMatch = text.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if (slashMatch) {
+    return `${slashMatch[3]}-${slashMatch[2].padStart(2, "0")}-${slashMatch[1].padStart(2, "0")}`;
+  }
+
+  const date = new Date(text);
+  if (!Number.isNaN(date.getTime())) return date.toISOString().slice(0, 10);
+
+  return null;
 };
 
 const normalizeGender = (value) => {
@@ -96,10 +109,11 @@ const parseStudent = (item = {}) => {
     lastName: item.surname || profile.lastName || "",
     email: item.email || "",
     gender: item.gender === "F" ? "Nữ" : item.gender === "M" ? "Nam" : profile.gender || "Nam",
-    dob: item.dob || item.birth_date || profile.dob || "",
-    className: item.className || item.current_class_name || profile.className || "10A1",
-    academicYear: item.academicYear || profile.academicYear || "",
-    teacher: item.teacher || profile.teacher || "Chưa phân công",
+    dob: normalizeDate(item.dob || item.birth_date || profile.dob) || "",
+    className: item.className || item.current_class_name || profile.className || "",
+    academicYear: item.academicYear || item.school_year_name || profile.academicYear || "",
+    schoolYearId: item.school_year_id || item.schoolYearId || null,
+    teacher: item.teacher || item.homeroomTeacher || item.homeroom_teacher_name || profile.teacher || profile.homeroomTeacher || "",
     parentName: item.parentName || item.parent_name || profile.parentName || "",
     parentPhone: item.parentPhone || item.parent_phone || profile.parentPhone || "",
     parentEmail: item.parentEmail || item.parent_email || profile.parentEmail || "",
@@ -110,9 +124,19 @@ const parseStudent = (item = {}) => {
 };
 
 export const studentsService = {
-  listStudents: async () => {
+  listStudents: async ({ schoolYearId, schoolYearName } = {}) => {
+    let resolvedSchoolYearId = schoolYearId;
+    if (!resolvedSchoolYearId && schoolYearName) {
+      resolvedSchoolYearId = await resolveSchoolYearId(schoolYearName);
+    }
+
     const response = await requestWithFallback(["/students", "/users"], (basePath) => {
-      const params = { page: 1, limit: 2000, _t: Date.now() };
+      const params = {
+        page: 1,
+        limit: 2000,
+        ...(resolvedSchoolYearId ? { schoolYearId: resolvedSchoolYearId } : {}),
+        _t: Date.now(),
+      };
       if (basePath === "/users") {
         return axiosClient.get(basePath, { params: { ...params, role: "student" } });
       }
@@ -221,4 +245,3 @@ export const studentsService = {
     );
   },
 };
-

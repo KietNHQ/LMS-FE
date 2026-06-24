@@ -37,6 +37,7 @@ LABEL description="LMS Frontend - React, Vite, Nginx"
 LABEL version="1.0.0"
 
 ENV API_UPSTREAM=http://api:3000
+ENV NGINX_RESOLVER=127.0.0.11
 
 COPY nginx.conf.template /etc/nginx/templates/default.conf.template
 COPY --from=build /app/dist /usr/share/nginx/html

@@ -33,6 +33,10 @@ const isIntegerId = (value) => /^\d+$/.test(String(value || ""));
 const compactUnique = (values = []) =>
   Array.from(new Set(values.filter((value) => value !== undefined && value !== null && value !== "")));
 
+const normalizeText = (value) => String(value || "").trim().toLocaleLowerCase("vi");
+
+const toIdSet = (values = []) => new Set(compactUnique(values).map((value) => String(value)));
+
 const normalizeDateValue = (value) => {
   if (!value || value === "—" || value === "--") return "";
   const text = String(value).trim();
@@ -106,6 +110,7 @@ export default function ManagementTeachers({ onCountChange, schoolYear, term, ha
   const [teachers, setTeachers] = useState([]);
   const [subjectCatalog, setSubjectCatalog] = useState([]);
   const [classCatalog, setClassCatalog] = useState([]);
+  const [classRows, setClassRows] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [loadError, setLoadError] = useState("");
 
@@ -168,37 +173,32 @@ export default function ManagementTeachers({ onCountChange, schoolYear, term, ha
     loadTeachers();
   }, [loadTeachers]);
 
+  const loadCatalogs = useCallback(async () => {
+    const [subjectsResult, classesResult] = await Promise.allSettled([
+      adminApiService.get_subjects(),
+      classesService.listClasses({ schoolYearName: schoolYear }),
+    ]);
+
+    if (subjectsResult.status === "fulfilled") {
+      const rows = Array.isArray(subjectsResult.value?.data) ? subjectsResult.value.data : [];
+      setSubjectCatalog(Array.from(new Set(rows.map((subject) => subject?.name).filter(Boolean))));
+    } else {
+      setSubjectCatalog([]);
+    }
+
+    if (classesResult.status === "fulfilled") {
+      const rows = classesResult.value || [];
+      setClassRows(rows);
+      setClassCatalog(Array.from(new Set(rows.map((classItem) => classItem?.name).filter(Boolean))));
+    } else {
+      setClassRows([]);
+      setClassCatalog([]);
+    }
+  }, [schoolYear]);
+
   useEffect(() => {
-    let cancelled = false;
-
-    const loadCatalogs = async () => {
-      const [subjectsResult, classesResult] = await Promise.allSettled([
-        adminApiService.get_subjects(),
-        classesService.listClasses(),
-      ]);
-
-      if (cancelled) return;
-
-      if (subjectsResult.status === "fulfilled") {
-        const rows = Array.isArray(subjectsResult.value?.data) ? subjectsResult.value.data : [];
-        setSubjectCatalog(Array.from(new Set(rows.map((subject) => subject?.name).filter(Boolean))));
-      } else {
-        setSubjectCatalog([]);
-      }
-
-      if (classesResult.status === "fulfilled") {
-        setClassCatalog(Array.from(new Set(classesResult.value.map((classItem) => classItem?.name).filter(Boolean))));
-      } else {
-        setClassCatalog([]);
-      }
-    };
-
     loadCatalogs();
-
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+  }, [loadCatalogs]);
 
   const subjectOptions = useMemo(() => {
     const dataSubjects = teachers.map((teacher) => teacher.subject).filter(Boolean);
@@ -232,17 +232,24 @@ export default function ManagementTeachers({ onCountChange, schoolYear, term, ha
   const displayTeachers = useMemo(() => {
     return teachers.map((teacher) => {
       const subject = resolveTeachingSubject(teacher);
+      const teacherIds = toIdSet([teacher.teacherId, ...(teacher.teacherIds || [])]);
+      const classByTeacherId = classRows.find((classItem) => teacherIds.has(String(classItem.homeroomTeacherId || "")));
+      const classByTeacherName = classRows.find((classItem) => normalizeText(classItem.teacher) === normalizeText(teacher.name));
+      const homeroomClass = classByTeacherId?.name || classByTeacherName?.name || "";
+
       return {
         ...teacher,
         subject,
+        homeroomClass,
         profile: {
           ...(teacher.profile || {}),
           subject,
           qualification: teacher.qualification || teacher.profile?.qualification || "",
+          homeroomClass,
         },
       };
     });
-  }, [teachers, resolveTeachingSubject]);
+  }, [teachers, classRows, resolveTeachingSubject]);
 
   const filteredTeachers = useMemo(() => {
     return displayTeachers.filter((teacher) => {
@@ -606,6 +613,48 @@ export default function ManagementTeachers({ onCountChange, schoolYear, term, ha
     }));
   };
 
+  const syncTeacherHomeroomClass = useCallback(async (form = {}) => {
+    const teacherIds = toIdSet([form.teacherId, ...(form.teacherIds || [])]);
+    const nextHomeroomClass = String(form.homeroomClass || "").trim();
+    const previousHomeroomClasses = classRows.filter((classItem) =>
+      teacherIds.has(String(classItem.homeroomTeacherId || ""))
+    );
+    const updates = [];
+
+    previousHomeroomClasses.forEach((classItem) => {
+      if (classItem.name !== nextHomeroomClass) {
+        updates.push(classesService.updateClass(classItem.id, {
+          ...classItem,
+          teacher: "Chưa phân công",
+          homeroomTeacherId: null,
+        }));
+      }
+    });
+
+    if (nextHomeroomClass) {
+      const targetClass = classRows.find((classItem) => classItem.name === nextHomeroomClass);
+      const teacherId = compactUnique([form.teacherId, ...(form.teacherIds || [])]).find(isIntegerId);
+      if (!targetClass) {
+        throw new Error(`Không tìm thấy lớp ${nextHomeroomClass} trong năm học ${schoolYear}.`);
+      }
+      if (!teacherId) {
+        throw new Error("Không tìm thấy hồ sơ giáo viên để phân công chủ nhiệm.");
+      }
+      if (String(targetClass.homeroomTeacherId || "") !== String(teacherId)) {
+        updates.push(classesService.updateClass(targetClass.id, {
+          ...targetClass,
+          teacher: form.name,
+          homeroomTeacherId: Number(teacherId),
+        }));
+      }
+    }
+
+    if (updates.length > 0) {
+      await Promise.all(updates);
+      await loadCatalogs();
+    }
+  }, [classRows, loadCatalogs, schoolYear]);
+
   const handleSaveTeacherEdit = async () => {
     if (!activeTeacherId) return;
     if (!teacherForm.name.trim() || !teacherForm.dob || !teacherForm.subject.trim()) {
@@ -635,6 +684,7 @@ export default function ManagementTeachers({ onCountChange, schoolYear, term, ha
           qualification,
           primarySubject: subject,
           requireTeacherProfileUpdate: true,
+          syncTeachingSubjectAssignments: true,
           profile: {
             ...(resolvedForm.profile || {}),
             subject,
@@ -648,6 +698,7 @@ export default function ManagementTeachers({ onCountChange, schoolYear, term, ha
 
         try {
           await teachersService.updateTeacher(payload.userId || activeTeacherId, payload);
+          await syncTeacherHomeroomClass(payload);
           await loadTeachers();
           window.alert(`Đã cập nhật giáo viên ${teacherForm.name.trim()} thành công.`);
           handleCloseModal();
@@ -715,9 +766,11 @@ export default function ManagementTeachers({ onCountChange, schoolYear, term, ha
     patchSelectedTeacher(() => updatedTeacher);
 
     try {
-      await teachersService.updateTeacher(updatedTeacher.id, updatedTeacher);
-    } catch {
-      // Keep local view state; teacher detail assignment API can be finalized with BE contract later.
+      await syncTeacherHomeroomClass(updatedTeacher);
+      await loadTeachers();
+    } catch (error) {
+      window.alert(getErrorMessage(error, "Không thể cập nhật lớp chủ nhiệm."));
+      await loadCatalogs();
     }
   };
 

@@ -2,15 +2,10 @@ import React, { useState, useMemo, useEffect, useRef } from "react";
 import { FiSearch, FiSend, FiMessageSquare, FiTrash2 } from "react-icons/fi";
 import { teacherService } from "../../../services/pages/teacher/teacherService";
 import { io } from "socket.io-client";
+import { getSocketBaseUrl } from "../../../services/shared/http/apiBaseUrl";
 import "./TeacherChat.css";
 
-const getSocketUrl = () => {
-    const apiUrl = import.meta.env.VITE_API_URL || "/api/v1";
-    if (apiUrl.startsWith("/")) {
-        return window.location.origin;
-    }
-    return apiUrl.replace("/api/v1", "");
-};
+const getSocketUrl = getSocketBaseUrl;
 
 let socket = null;
 

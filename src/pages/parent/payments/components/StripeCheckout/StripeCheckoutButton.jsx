@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { FiArrowRight, FiCheckCircle, FiLoader, FiShield } from "react-icons/fi";
+import { FiCheckCircle } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
 import stripeService from "../../../../../services/stripeService";
 import "./StripeCheckout.css";
@@ -38,20 +38,12 @@ export default function StripeCheckoutButton({ payment, onSuccess, onError, onBe
   const handleStripeCheckout = async () => {
     setLoading(true);
 
-    // #region agent log
-    fetch('http://127.0.0.1:7327/ingest/2c66a085-4ebf-4354-b3da-5d8073414dc9',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'f2b8a2'},body:JSON.stringify({sessionId:'f2b8a2',runId:'pre-fix',hypothesisId:'H1',location:'StripeCheckoutButton.jsx:handleStripeCheckout:start',message:'stripe button clicked',data:{paymentId:payment?.id,amount:payment?.finalAmount,status:payment?.status},timestamp:Date.now()})}).catch(()=>{});
-    // #endregion
-
     try {
       const response = await stripeService.createCheckoutSession({
         debtId: payment.id,
         description: `${payment.childName} - ${payment.title}`,
         amount: payment.finalAmount,
       });
-
-      // #region agent log
-      fetch('http://127.0.0.1:7327/ingest/2c66a085-4ebf-4354-b3da-5d8073414dc9',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'f2b8a2'},body:JSON.stringify({sessionId:'f2b8a2',runId:'pre-fix',hypothesisId:'H2',location:'StripeCheckoutButton.jsx:handleStripeCheckout:response',message:'checkout session response received',data:{paymentId:payment?.id,hasCheckoutUrl:!!response?.checkoutUrl,hasSessionId:!!response?.sessionId,responseKeys:response?Object.keys(response):[]},timestamp:Date.now()})}).catch(()=>{});
-      // #endregion
 
       if (onBeforeRedirect) {
         onBeforeRedirect(payment, response);
@@ -63,10 +55,6 @@ export default function StripeCheckoutButton({ payment, onSuccess, onError, onBe
       }
       navigate(`/parent/payments/confirm?stripe_status=success&session_id=${encodeURIComponent(response.sessionId)}`);
     } catch (err) {
-      // #region agent log
-      fetch('http://127.0.0.1:7327/ingest/2c66a085-4ebf-4354-b3da-5d8073414dc9',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'f2b8a2'},body:JSON.stringify({sessionId:'f2b8a2',runId:'pre-fix',hypothesisId:'H3',location:'StripeCheckoutButton.jsx:handleStripeCheckout:error',message:'checkout session request failed',data:{paymentId:payment?.id,statusCode:err?.response?.status,errorMessage:err?.response?.data?.message||err?.response?.data?.error||err?.message},timestamp:Date.now()})}).catch(()=>{});
-      // #endregion
-
       const msg = err?.response?.data?.message || err?.response?.data?.error || err?.message || "Lỗi không xác định";
       if (onError) onError(msg);
       setLoading(false);

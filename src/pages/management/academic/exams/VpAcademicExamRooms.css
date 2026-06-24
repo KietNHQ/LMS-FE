@@ -157,6 +157,7 @@
     box-shadow: 0 4px 6px -1px rgba(30, 47, 90, 0.05);
     display: flex;
     flex-direction: column;
+    min-height: 330px;
 }
 
 .room-header {
@@ -194,13 +195,23 @@
 
 .body-row {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     gap: 0.6rem;
     font-size: 0.85rem;
     color: #4d5f82;
+    line-height: 1.35;
 }
 
-.body-row svg { color: #7e8eab; }
+.body-row svg {
+    color: #7e8eab;
+    flex: 0 0 auto;
+    margin-top: 0.08rem;
+}
+
+.body-row strong {
+    color: #1e2f5a;
+    font-weight: 800;
+}
 
 .proctors {
     align-items: flex-start;
@@ -390,6 +401,14 @@
     flex-direction: column;
     gap: 1.25rem;
     padding: 0.5rem 0.25rem;
+}
+
+.room-field-note {
+    margin: -0.75rem 0 0;
+    color: #64748b;
+    font-size: 0.82rem;
+    font-weight: 600;
+    line-height: 1.4;
 }
 
 .form-row-vpa {

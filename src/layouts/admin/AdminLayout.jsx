@@ -113,6 +113,9 @@ export default function AdminLayout() {
     const userName = formatName(userToUse, { fallback: "Quản trị viên" });
     const userEmail = userToUse.email || "";
     const userPermissions = userToUse.permissions || null;
+    const shouldShowPasswordDialog =
+        userToUse?.role !== "admin" &&
+        (userToUse?.requirePasswordChange || userToUse?.require_password_change || forcePasswordChange);
 
     return (
         <div className={`admin-layout ${isCollapsed ? "collapsed" : ""}`}>
@@ -145,7 +148,7 @@ export default function AdminLayout() {
             </main>
 
             {/* MANDATORY PASSWORD CHANGE DIALOG */}
-            {(userToUse.requirePasswordChange || userToUse.require_password_change || forcePasswordChange) && (
+            {shouldShowPasswordDialog && (
                 <ChangePasswordDialog
                     open={true}
                     role="admin"
@@ -158,4 +161,3 @@ export default function AdminLayout() {
         </div>
     );
 }
-

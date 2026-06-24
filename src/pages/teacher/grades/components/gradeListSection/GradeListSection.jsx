@@ -17,6 +17,9 @@ const RANK_LABELS = {
     fair: "Khá",
     average: "Trung bình",
     weak: "Yếu",
+    "comment-pass": "Đạt",
+    "comment-fail": "Chưa đạt",
+    "comment-missing": "Chưa đánh giá",
 };
 
 const ITEMS_PER_PAGE = 5;
@@ -36,6 +39,7 @@ export default function GradeListSection({
     semesterLabel,
     isLocked = false,
     canEdit = true,
+    isCommentGraded = false,
 }) {
     const [searchValue, setSearchValue] = useState("");
     const [currentPage, setCurrentPage] = useState(1);
@@ -50,6 +54,7 @@ export default function GradeListSection({
                 record.name,
                 record.code,
                 record.status,
+                record.evaluation,
                 RANK_LABELS[record.rank] || record.rank,
                 record.average,
             ].join(" "));
@@ -98,7 +103,7 @@ export default function GradeListSection({
         >
             <div className="grade-list-section">
                 {paginatedRecords.map((record, index) => (
-                    <article key={record.id} className="grade-list-item">
+                    <article key={record.id} className={`grade-list-item ${isCommentGraded ? "is-comment-graded" : ""}`}>
                         <button
                             type="button"
                             className={`grade-list-item__info ${isLocked ? 'is-locked-row' : ''}`}
@@ -110,37 +115,48 @@ export default function GradeListSection({
                             <small>{record.status}</small>
                         </button>
 
-                        <div className="grade-list-score">
-                            <span>Thường xuyên</span>
-                            {record.regularScores?.length ? (
-                                <div className="grade-list-regular-list">
-                                    {record.regularScores.map((item, itemIndex) => (
-                                        <span key={`${record.id}-regular-${item.id ?? itemIndex}`} className="grade-list-regular-chip" title={item.label}>
-                                            <strong>{formatScore(item.score)}</strong>
-                                            <small>{item.label}</small>
-                                        </span>
-                                    ))}
+                        {isCommentGraded ? (
+                            <div className="grade-list-score grade-list-comment-result">
+                                <span>Kết quả</span>
+                                <strong className={`grade-list-comment-chip ${record.evaluation === "Đạt" ? "is-pass" : record.evaluation === "Chưa đạt" ? "is-fail" : "is-missing"}`}>
+                                    {record.evaluation || "Chưa đánh giá"}
+                                </strong>
+                            </div>
+                        ) : (
+                            <>
+                                <div className="grade-list-score">
+                                    <span>Thường xuyên</span>
+                                    {record.regularScores?.length ? (
+                                        <div className="grade-list-regular-list">
+                                            {record.regularScores.map((item, itemIndex) => (
+                                                <span key={`${record.id}-regular-${item.id ?? itemIndex}`} className="grade-list-regular-chip" title={item.label}>
+                                                    <strong>{formatScore(item.score)}</strong>
+                                                    <small>{item.label}</small>
+                                                </span>
+                                            ))}
+                                        </div>
+                                    ) : (
+                                        <strong>-</strong>
+                                    )}
                                 </div>
-                            ) : (
-                                <strong>-</strong>
-                            )}
-                        </div>
 
-                        <div className="grade-list-score">
-                            <span>Giữa kỳ</span>
-                            <strong>{formatScore(record.midtermScore)}</strong>
-                        </div>
+                                <div className="grade-list-score">
+                                    <span>Giữa kỳ</span>
+                                    <strong>{formatScore(record.midtermScore)}</strong>
+                                </div>
 
-                        <div className="grade-list-score">
-                            <span>Cuối kỳ</span>
-                            <strong>{formatScore(record.finalScore)}</strong>
-                        </div>
+                                <div className="grade-list-score">
+                                    <span>Cuối kỳ</span>
+                                    <strong>{formatScore(record.finalScore)}</strong>
+                                </div>
+                            </>
+                        )}
 
                         <div className="grade-list-item__summary">
                             <div className="grade-list-averages-row">
                                 <div className="grade-list-score">
-                                    <span>{record.isProvisional ? "HK tạm tính" : "Học kỳ"}</span>
-                                    <strong className="score-hk">{formatScore(record.average)}</strong>
+                                    <span>{isCommentGraded ? "Trạng thái" : record.isProvisional ? "HK tạm tính" : "Học kỳ"}</span>
+                                    <strong className="score-hk">{isCommentGraded ? (record.evaluation ? "Xong" : "Thiếu") : formatScore(record.average)}</strong>
                                 </div>
                             </div>
                             <span className={`grade-list-rank rank-${record.rank}`}>

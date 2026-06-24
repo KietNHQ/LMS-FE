@@ -95,6 +95,8 @@ export const useLogin = () => {
             // Chuẩn hóa permissions trước khi lưu
             const normalizedUser = {
                 ...user,
+                requirePasswordChange: Boolean(user.requirePasswordChange ?? user.require_password_change),
+                require_password_change: Boolean(user.requirePasswordChange ?? user.require_password_change),
                 permissions: normalizePermissions(user.permissions)
             };
             storage.setItem('user', JSON.stringify(normalizedUser));
@@ -208,6 +210,8 @@ export const useGetMe = () => {
             const normalizedUser = {
                 ...user,
                 profile, // Đính kèm profile vào object user để dùng ở FE
+                requirePasswordChange: Boolean(user.requirePasswordChange ?? user.require_password_change),
+                require_password_change: Boolean(user.requirePasswordChange ?? user.require_password_change),
                 permissions: normalizePermissions(user.permissions)
             };
             

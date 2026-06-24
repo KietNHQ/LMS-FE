@@ -7,7 +7,7 @@ import LoadingSpinner from "../../../../components/common/LoadingSpinner/Loading
 import examService from "../../../../services/pages/management/exam/examService";
 import "./VpAcademicExamRoomDetail.css";
 
-const ITEMS_PER_PAGE = 10;
+const ITEMS_PER_PAGE = 50;
 
 const getExamContext = (locationState) => {
     const stored = sessionStorage.getItem("selected_exam_context");

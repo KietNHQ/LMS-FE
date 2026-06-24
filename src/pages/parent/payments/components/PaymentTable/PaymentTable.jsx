@@ -79,7 +79,7 @@ export default function PaymentTable({
             <div className="payment-item-footer">
                 {isPaid ? (
                     <div className="paid-action-wrap">
-                        <p className="paid-date"><FiCheckCircle /> Da thanh toan ngay {payment.paidDate}</p>
+                        <p className="paid-date"><FiCheckCircle /> Da thanh toan ngay {payment.paidDateLabel || payment.paidDate}</p>
                         <button type="button" className="detail-btn" onClick={withStop(onOpenDetail)}>
                             Xem chi tiet
                         </button>

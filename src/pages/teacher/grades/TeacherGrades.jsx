@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect, useCallback, useRef } from "react";
+import { useMemo, useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import Modal from "../../../components/ui/Modal/Modal";
 import { Select } from "../../../components/ui";
@@ -6,22 +6,16 @@ import { PageHeader, SchoolYearTermSelector } from "../../../components/common";
 import { useSchoolYearTerm } from "../../../hooks/useSchoolYearTerm";
 import { teacherGradeService } from "../../../services/pages/teacher/teacherGradeService";
 import { gradeService } from "../../../services/pages/management/grades/gradeService";
-import { dataLockingService } from "../../../services/pages/admin/locking/dataLockingService";
 import { resolveSemesterId, resolveSchoolYearId } from "../../../services/shared/schoolYearLookup";
 import GradeListSection from "./components/gradeListSection/GradeListSection";
 import { FiPlus, FiSave, FiX, FiTrash2, FiLock, FiUnlock, FiSend, FiUser, FiCornerDownLeft } from "react-icons/fi";
 import GradeSummarySection, { GradeSummaryHeader } from "./components/gradeSummarySection/GradeSummarySection";
 import { toast } from "react-toastify";
 import { io } from "socket.io-client";
+import { getSocketBaseUrl } from "../../../services/shared/http/apiBaseUrl";
 import "./TeacherGrades.css";
 
-const getSocketUrl = () => {
-  const apiUrl = import.meta.env.VITE_API_URL || "/api/v1";
-  if (apiUrl.startsWith("/")) {
-    return window.location.origin;
-  }
-  return apiUrl.replace("/api/v1", "");
-};
+const getSocketUrl = getSocketBaseUrl;
 
 const getToken = () => {
   const storedUser = JSON.parse(localStorage.getItem("user") || sessionStorage.getItem("user") || "{}");
@@ -35,6 +29,8 @@ const TABS = [
   { key: "gradebook", label: "Sổ điểm" },
   { key: "students", label: "Học sinh" },
 ];
+const COMMENT_GRADED_CODES = new Set(["GDTC", "NT", "AN", "MT", "NDGDĐP", "NDGDDP", "HĐTNHN", "HDTNHN"]);
+const COMMENT_EVALUATIONS = ["Đạt", "Chưa đạt"];
 
 function round1(value) {
   if (value == null || isNaN(value)) return 0;
@@ -61,7 +57,47 @@ function toScoreNumber(value) {
   return Number.isFinite(numeric) ? numeric : null;
 }
 
-function buildStudentGradeRecords(students = [], gradeRows = [], gradeItems = []) {
+function normalizeText(value) {
+  return String(value || "")
+    .trim()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/đ/g, "d")
+    .replace(/\s+/g, " ");
+}
+
+function normalizeCommentEvaluation(value) {
+  const text = normalizeText(value).replace(/[^a-z0-9]/g, "");
+  if (["dat", "pass", "passed", "true", "1"].includes(text)) return "Đạt";
+  if (["chuadat", "khongdat", "fail", "failed", "false", "0"].includes(text)) return "Chưa đạt";
+  return "";
+}
+
+function toBoolean(value, fallback = false) {
+  if (typeof value === "boolean") return value;
+  if (value === 1 || value === "1") return true;
+  if (value === 0 || value === "0") return false;
+  if (typeof value === "string") {
+    const normalized = value.trim().toLowerCase();
+    if (["true", "t", "yes"].includes(normalized)) return true;
+    if (["false", "f", "no"].includes(normalized)) return false;
+  }
+  return fallback;
+}
+
+function isCommentGradedSubject(subject = {}) {
+  const code = String(subject.subjectCode || subject.subject_code || "")
+    .trim()
+    .toUpperCase();
+  return (
+    toBoolean(subject.isGradedByComment ?? subject.is_graded_by_comment, false) ||
+    toBoolean(subject.is_graded_by_score ?? subject.isGradedByScore, true) === false ||
+    COMMENT_GRADED_CODES.has(code)
+  );
+}
+
+function buildStudentGradeRecords(students = [], gradeRows = [], { isCommentGraded = false } = {}) {
   const rowsByEnrollment = {};
   for (const row of gradeRows) {
     const eid = String(row.student_enrollment_id ?? row.enrollment_id ?? "");
@@ -84,6 +120,33 @@ function buildStudentGradeRecords(students = [], gradeRows = [], gradeItems = []
   return students.map((student = {}) => {
     const enrollmentId = String(student.enrollment_id ?? student.id ?? "");
     const rows = rowsByEnrollment[enrollmentId] || [];
+
+    if (isCommentGraded) {
+      const evaluationRow = rows.find((r) => normalizeCommentEvaluation(r.note)) || rows[0];
+      const evaluation =
+        normalizeCommentEvaluation(evaluationRow?.note) ||
+        (evaluationRow?.score === null || evaluationRow?.score === undefined
+          ? ""
+          : evaluationRow.score >= 5 ? "Đạt" : "Chưa đạt");
+
+      return {
+        id: enrollmentId,
+        enrollmentId,
+        code: student.student_code || student.code || `HS${enrollmentId}`,
+        name: student.full_name || student.name || `${student.surname || ""} ${student.given_name || ""}`.trim() || `Học sinh ${enrollmentId}`,
+        status: evaluation || "Chưa đánh giá",
+        rank: evaluation === "Đạt" ? "comment-pass" : evaluation === "Chưa đạt" ? "comment-fail" : "comment-missing",
+        average: null,
+        isProvisional: !evaluation,
+        isCommentGraded: true,
+        evaluation,
+        regularScores: [],
+        midtermScore: null,
+        finalScore: null,
+        note: rows.map((r) => r.note).find(Boolean) || "",
+        rawGrades: rows,
+      };
+    }
 
     const regularScores = rows
       .filter((r) => r.categoryKey === "regular")
@@ -125,17 +188,6 @@ function buildStudentGradeRecords(students = [], gradeRows = [], gradeItems = []
   });
 }
 
-function dedupeById(list = []) {
-  const seen = new Set();
-  return list.filter((item) => {
-    const key = String(item?.id ?? "");
-    if (!key) return false;
-    if (seen.has(key)) return false;
-    seen.add(key);
-    return true;
-  });
-}
-
 function fmtScore(val) {
   if (val == null) return "—";
   return parseFloat(Number(val).toFixed(1));
@@ -145,17 +197,10 @@ export default function TeacherGrades() {
   const { selectedSchoolYear, selectedTerm, handleYearArrow, handleTermChange } = useSchoolYearTerm();
   const navigate = useNavigate();
 
-  const currentUserId = useMemo(() => {
-    const storedUser = JSON.parse(localStorage.getItem("user") || sessionStorage.getItem("user") || "{}");
-    return storedUser.profile?.id || storedUser.teacherId || storedUser.id || null;
-  }, []);
-
   const [assignments, setAssignments] = useState([]);
   const [selectedClassId, setSelectedClassId] = useState("");
   const [selectedSubjectId, setSelectedSubjectId] = useState("");
-  const [gradeItems, setGradeItems] = useState([]);
   const [students, setStudents] = useState([]);
-  const [gradeRows, setGradeRows] = useState([]);
   const [records, setRecords] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [activeTab, setActiveTab] = useState("gradebook");
@@ -168,6 +213,7 @@ export default function TeacherGrades() {
   const [unlockReason, setUnlockReason] = useState("");
   const [isRetracting, setIsRetracting] = useState(false);
   const [lockStatus, setLockStatus] = useState("draft");
+  const [refreshNonce, setRefreshNonce] = useState(0);
 
   const [studentSemesterAverages, setStudentSemesterAverages] = useState({});
   const [studentConducts, setStudentConducts] = useState({});
@@ -211,6 +257,10 @@ export default function TeacherGrades() {
   const selectedAssignment = useMemo(() => {
     return classSubjects.find((a) => String(a.subjectId) === String(selectedSubjectId));
   }, [classSubjects, selectedSubjectId]);
+  const isSelectedSubjectCommentGraded = useMemo(
+    () => isCommentGradedSubject(selectedAssignment),
+    [selectedAssignment],
+  );
 
   // ---- Reset selections on year/term change ----
   useEffect(() => {
@@ -234,13 +284,16 @@ export default function TeacherGrades() {
       console.log("[TeacherGrades] Socket connected:", socket.id);
     });
 
-    // VP/Principal approved a request the teacher submitted → refresh lock status
-    socket.on("unlock_request:approved", ({ requestId, unlock_expires_at, hours }) => {
-      toast.success(`Yêu cầu mở khóa đã được duyệt! Dữ liệu sẽ mở trong ${hours} giờ.`);
+    socket.on("unlock_request:approved", ({ unlock_expires_at, hours }) => {
+      const message = unlock_expires_at && hours
+        ? `Yêu cầu mở khóa đã được duyệt! Dữ liệu sẽ mở trong ${hours} giờ.`
+        : "Yêu cầu mở khóa đã được duyệt! Điểm đã chuyển về bản nháp.";
+      toast.success(message);
+      setRefreshNonce((value) => value + 1);
     });
 
     // VP/Principal rejected a request the teacher submitted
-    socket.on("unlock_request:rejected", ({ requestId, reason }) => {
+    socket.on("unlock_request:rejected", ({ reason }) => {
       toast.info(`Yêu cầu mở khóa bị từ chối. Lý do: ${reason}`);
     });
 
@@ -255,14 +308,31 @@ export default function TeacherGrades() {
     };
   }, []);
 
+  const gradeRowsFromRecords = useMemo(() => records.flatMap((record) => record.rawGrades || []), [records]);
+
+  const hasFinalizedGrades = useMemo(() => {
+    return gradeRowsFromRecords.some((grade) => grade.status === "finalized");
+  }, [gradeRowsFromRecords]);
+
+  const hasPendingGrades = useMemo(() => {
+    return gradeRowsFromRecords.some((grade) => grade.status === "pending");
+  }, [gradeRowsFromRecords]);
+
   // Check if any finalized grade has an active unlock window
   const hasActiveUnlock = useMemo(() => {
-    return records.some((r) => {
-      if (r.status !== "finalized") return false;
-      if (!r.unlockUntil) return false;
-      return new Date(r.unlockUntil) > new Date();
+    return gradeRowsFromRecords.some((grade) => {
+      if (grade.status !== "finalized") return false;
+      if (!grade.unlockUntil) return false;
+      return new Date(grade.unlockUntil) > new Date();
     });
-  }, [records]);
+  }, [gradeRowsFromRecords]);
+
+  const isAwaitingApproval = lockStatus === "pending" || hasPendingGrades;
+  const needsUnlockRequest =
+    (lockStatus === "finalized" || lockStatus === "mixed" || hasFinalizedGrades) &&
+    !hasActiveUnlock &&
+    !isAwaitingApproval;
+  const isGradebookLocked = isAwaitingApproval || needsUnlockRequest;
 
   const canEdit = useMemo(() => {
     // Must be GVBM to edit
@@ -272,14 +342,14 @@ export default function TeacherGrades() {
     if (lockStatus === "draft") return true;
 
     // Pending: never editable (must retract first)
-    if (lockStatus === "pending") return false;
+    if (isAwaitingApproval) return false;
 
     // Finalized: editable only if has active unlock window
-    if (lockStatus === "finalized") return hasActiveUnlock;
+    if (lockStatus === "finalized" || lockStatus === "mixed" || hasFinalizedGrades) return hasActiveUnlock;
 
     // Any other status: check unlock anyway
     return hasActiveUnlock;
-  }, [lockStatus, selectedAssignment, hasActiveUnlock]);
+  }, [lockStatus, selectedAssignment, hasActiveUnlock, hasFinalizedGrades, isAwaitingApproval]);
 
   // ---- Load assignments when schoolYear/term changes ----
   useEffect(() => {
@@ -289,9 +359,13 @@ export default function TeacherGrades() {
         ...a,
         classId: a.class_id,
         className: a.class_name,
-        subjectId: a.subject_id,
-        subjectName: a.subject_name,
-        semesterId: a.semester_id,
+	        subjectId: a.subject_id,
+	        subjectName: a.subject_name,
+	        subjectCode: a.subject_code,
+	        subjectTemplateName: a.subject_template_name,
+	        isGradedByScore: toBoolean(a.is_graded_by_score ?? a.isGradedByScore, true),
+	        isGradedByComment: toBoolean(a.is_graded_by_comment ?? a.isGradedByComment, false),
+	        semesterId: a.semester_id,
         semesterName: a.semester_name,
         classTeacherSubjectId: a.class_teacher_subject_id,
         role: a.role,
@@ -309,12 +383,12 @@ export default function TeacherGrades() {
   useEffect(() => {
     const fetchGrades = async () => {
       if (!selectedClassId || !selectedSubjectId) {
-        setRecords([]); setGradeRows([]); setGradeItems([]);
+        setRecords([]);
         return;
       }
       const semesterDbId = await resolveSemesterId(selectedSchoolYear, selectedTerm);
       if (!semesterDbId) {
-        setRecords([]); setGradeRows([]); setGradeItems([]);
+        setRecords([]);
         setIsLoading(false);
         return;
       }
@@ -336,9 +410,9 @@ export default function TeacherGrades() {
           const itemIds = new Set(fetchedItems.map((i) => String(i.id)));
           const filteredRows = fetchedRows.filter((r) => itemIds.has(String(r.grade_item_id)));
           setStudents(fetchedStudents);
-          setGradeItems(fetchedItems);
-          setGradeRows(filteredRows);
-          setRecords(buildStudentGradeRecords(fetchedStudents, filteredRows, fetchedItems));
+	          setRecords(buildStudentGradeRecords(fetchedStudents, filteredRows, {
+	            isCommentGraded: isCommentGradedSubject(selectedAssignment),
+	          }));
         } catch (e) {
           console.error("Fetch homeroom grades error:", e);
         } finally {
@@ -361,9 +435,9 @@ export default function TeacherGrades() {
         const itemIds = new Set(fetchedItems.map((i) => String(i.id)));
         const filteredRows = fetchedRows.filter((r) => itemIds.has(String(r.grade_item_id)));
         setStudents(fetchedStudents);
-        setGradeItems(fetchedItems);
-        setGradeRows(filteredRows);
-        setRecords(buildStudentGradeRecords(fetchedStudents, filteredRows, fetchedItems));
+	        setRecords(buildStudentGradeRecords(fetchedStudents, filteredRows, {
+	          isCommentGraded: isCommentGradedSubject(selectedAssignment),
+	        }));
       } catch (e) {
         console.error("Fetch grades error:", e);
         toast.error("Lỗi khi tải dữ liệu điểm.");
@@ -372,7 +446,18 @@ export default function TeacherGrades() {
       }
     };
     fetchGrades();
-  }, [selectedClassId, selectedSubjectId, selectedTerm]);
+  }, [
+    selectedClassId,
+    selectedSubjectId,
+    selectedAssignment,
+    selectedAssignment?.classTeacherSubjectId,
+    selectedAssignment?.subjectCode,
+    selectedAssignment?.isGradedByScore,
+    selectedAssignment?.isGradedByComment,
+    selectedSchoolYear,
+    selectedTerm,
+    refreshNonce,
+  ]);
 
   // ---- Load class students when students tab is active (for homeroom subjects or any class) ----
   useEffect(() => {
@@ -435,7 +520,6 @@ export default function TeacherGrades() {
       // In "all" term, skip class-level (requires both HK1+HK2 IDs) and go per-student.
       let conductMap = {};
       if (hk1SemesterId || hk2SemesterId) {
-        const isAllTerm = selectedTerm === "all";
         try {
           const axiosClient = (await import("../../../services/shared/http/axiosClient")).default;
           const params = {};
@@ -492,36 +576,63 @@ export default function TeacherGrades() {
     };
     fetchStudentExtrasInFlight.current = true;
     fetchStudentExtras().catch(() => { fetchStudentExtrasInFlight.current = false; });
-  }, [selectedClassId, selectedSchoolYear]);
+  }, [selectedClassId, selectedSchoolYear, selectedTerm]);
 
   // ---- Lock status ----
   useEffect(() => {
-    if (!selectedClassId) return;
+    if (!selectedClassId || !selectedSubjectId) {
+      setLockStatus("draft");
+      return;
+    }
     const checkLock = async () => {
       try {
+        const semesterDbId = await resolveSemesterId(selectedSchoolYear, selectedTerm);
+        if (!semesterDbId) {
+          setLockStatus("draft");
+          return;
+        }
         const { teacherService } = await import("../../../services/pages/teacher/teacherService");
-        // Use selectedSubjectId directly for API filter (safe for all subjects)
-        const subjectId = selectedSubjectId || undefined;
+        const params = {
+          classId: selectedClassId,
+          semesterId: semesterDbId,
+        };
+        if (selectedAssignment?.classTeacherSubjectId) {
+          params.classTeacherSubjectId = selectedAssignment.classTeacherSubjectId;
+        } else {
+          params.subjectId = selectedSubjectId;
+        }
         const response = await teacherService.getGradesLockStatus({
-          params: {
-            classId: selectedClassId,
-            subjectId,
-            schoolYear: selectedSchoolYear,
-            term: selectedTerm,
-          },
+          params,
           mock: false,
         });
-        setLockStatus(response.data.status || "draft");
-      } catch {
+        setLockStatus(response?.data?.status || "draft");
+      } catch (error) {
+        console.error("Lock status error:", error);
         setLockStatus("draft");
       }
     };
     checkLock();
-  }, [selectedClassId, selectedSubjectId, selectedAssignment, selectedSchoolYear, selectedTerm]);
+  }, [selectedClassId, selectedSubjectId, selectedAssignment?.classTeacherSubjectId, selectedSchoolYear, selectedTerm, refreshNonce]);
 
   // ---- Summary stats ----
   const summaryStats = useMemo(() => {
     if (!records.length) return { average: 0, passRate: 0, excellentRate: 0, atRiskCount: 0, atRiskStudents: [] };
+    if (isSelectedSubjectCommentGraded) {
+      const evaluated = records.filter((r) => r.evaluation);
+      const passed = records.filter((r) => r.evaluation === "Đạt");
+      const failed = records.filter((r) => r.evaluation === "Chưa đạt");
+      return {
+        average: null,
+        passRate: records.length ? Math.round((passed.length / records.length) * 100) : 0,
+        excellentRate: 0,
+        atRiskCount: failed.length,
+        atRiskStudents: failed,
+        evaluatedCount: evaluated.length,
+        passCount: passed.length,
+        failCount: failed.length,
+        pendingCount: records.length - evaluated.length,
+      };
+    }
     const averages = records.map((r) => r.average).filter((v) => v !== null);
     const totalAvg = averages.length ? averages.reduce((a, b) => a + b, 0) / averages.length : 0;
     const passCount = records.filter((r) => r.average >= 5).length;
@@ -534,7 +645,7 @@ export default function TeacherGrades() {
       atRiskCount: atRiskStudents.length,
       atRiskStudents,
     };
-  }, [records]);
+  }, [records, isSelectedSubjectCommentGraded]);
 
   // ---- Handlers ----
   const openEditDialog = (record) => {
@@ -545,6 +656,7 @@ export default function TeacherGrades() {
         : [{ score: "", gradeItemId: null }],
       midterm: { score: String(record.midtermScore ?? ""), gradeItemId: record.midtermGradeItemId || null },
       final: { score: String(record.finalScore ?? ""), gradeItemId: record.finalGradeItemId || null },
+      evaluation: record.evaluation || "",
       note: record.note || "",
     });
     setEditDialogOpen(true);
@@ -554,7 +666,18 @@ export default function TeacherGrades() {
     try {
       const semesterDbId = await resolveSemesterId(selectedSchoolYear, selectedTerm);
       if (!semesterDbId) { toast.error("Không tìm thấy học kỳ."); return; }
-      const payload = {
+      if (isSelectedSubjectCommentGraded && !editDraft.evaluation) {
+        toast.warning("Vui lòng chọn Đạt hoặc Chưa đạt.");
+        return;
+      }
+
+      const payload = isSelectedSubjectCommentGraded ? {
+        classTeacherSubjectId: selectedAssignment?.classTeacherSubjectId,
+        semesterId: semesterDbId,
+        studentEnrollmentId: editStudentId,
+        evaluation: editDraft.evaluation,
+        note: editDraft.note,
+      } : {
         classTeacherSubjectId: selectedAssignment?.classTeacherSubjectId,
         semesterId: semesterDbId,
         studentEnrollmentId: editStudentId,
@@ -568,6 +691,7 @@ export default function TeacherGrades() {
       if (res && res.success) {
         toast.success("Đã cập nhật điểm thành công!");
         setEditDialogOpen(false);
+        setRefreshNonce((value) => value + 1);
         const [studentsRes, gradeItemsRes, gradesRes] = await Promise.all([
           teacherGradeService.getClassStudents(Number(selectedClassId)),
           teacherGradeService.getGradeItems({ classTeacherSubjectId: selectedAssignment.classTeacherSubjectId, semesterId: semesterDbId }),
@@ -579,9 +703,9 @@ export default function TeacherGrades() {
         const itemIds = new Set(fetchedItems.map((i) => String(i.id)));
         const filteredRows = fetchedRows.filter((r) => itemIds.has(String(r.grade_item_id)));
         setStudents(fetchedStudents);
-        setGradeItems(fetchedItems);
-        setGradeRows(filteredRows);
-        setRecords(buildStudentGradeRecords(fetchedStudents, filteredRows, fetchedItems));
+	        setRecords(buildStudentGradeRecords(fetchedStudents, filteredRows, {
+	          isCommentGraded: isSelectedSubjectCommentGraded,
+	        }));
       } else {
         toast.error("Lỗi khi lưu điểm: " + (res?.error || ""));
       }
@@ -605,6 +729,7 @@ export default function TeacherGrades() {
       if (res?.success) {
         if (res.data?.submittedCount > 0) {
           setLockStatus("pending");
+          setRefreshNonce((value) => value + 1);
           toast.success(`Đã nộp ${res.data?.submittedCount || 0} điểm để phê duyệt!`);
         } else {
           toast.info("Không có điểm nào ở trạng thái bản nháp để nộp.");
@@ -631,6 +756,7 @@ export default function TeacherGrades() {
       if (res?.success) {
         if (res.data?.retractedCount > 0) {
           setLockStatus("draft");
+          setRefreshNonce((value) => value + 1);
           toast.success("Đã thu hồi điểm về bản nháp!");
         } else {
           toast.warning("Không có điểm nào của bạn để thu hồi.");
@@ -683,9 +809,11 @@ export default function TeacherGrades() {
         toast.success(`Đã gửi ${successCount} yêu cầu mở khóa!`);
         setUnlockRequestOpen(false);
         setUnlockReason("");
+        setRefreshNonce((value) => value + 1);
       } else {
         toast.warning(`Đã gửi ${successCount} yêu cầu. ${failCount} yêu cầu thất bại (có thể đã có yêu cầu chờ duyệt).`);
         setUnlockRequestOpen(false);
+        setRefreshNonce((value) => value + 1);
       }
     } catch (e) {
       console.error("Unlock request error:", e);
@@ -729,18 +857,18 @@ export default function TeacherGrades() {
           searchable
         />
         <div className="tg-lock-controls">
-          <span className={`grade-lock-status-badge ${lockStatus === "pending" || (lockStatus === "finalized" && !hasActiveUnlock) ? "is-locked" : "is-draft"}`}>
-            {lockStatus === "pending" ? <><FiLock style={{ marginRight: 6 }} /> Đã nộp (chờ duyệt)</> : lockStatus === "finalized" && !hasActiveUnlock ? <><FiLock style={{ marginRight: 6 }} /> Đã khóa</> : lockStatus === "finalized" && hasActiveUnlock ? <><FiUnlock style={{ marginRight: 6 }} /> Đã mở khóa</> : <><FiUnlock style={{ marginRight: 6 }} /> Bản nháp</>}
+          <span className={`grade-lock-status-badge ${isGradebookLocked ? "is-locked" : "is-draft"}`}>
+            {isAwaitingApproval ? <><FiLock style={{ marginRight: 6 }} /> Đã nộp (chờ duyệt)</> : needsUnlockRequest ? <><FiLock style={{ marginRight: 6 }} /> Đã khóa</> : hasActiveUnlock ? <><FiUnlock style={{ marginRight: 6 }} /> Đã mở khóa</> : <><FiUnlock style={{ marginRight: 6 }} /> Bản nháp</>}
           </span>
-          {lockStatus === "pending" ? (
+          {isAwaitingApproval ? (
             <button className="teacher-grades-action-btn is-draft" onClick={handleRetract} disabled={retractLoading}>
               <FiCornerDownLeft style={{ marginRight: 6 }} /> Thu hồi
             </button>
-          ) : (lockStatus === "finalized" && !hasActiveUnlock) ? (
+          ) : needsUnlockRequest ? (
             <button className="teacher-grades-action-btn is-unlock-request" onClick={() => { setUnlockReason(""); setUnlockRequestOpen(true); }}>
               <FiSend style={{ marginRight: 6 }} /> Yêu cầu mở khóa
             </button>
-          ) : (lockStatus === "finalized" && hasActiveUnlock) ? (
+          ) : hasActiveUnlock ? (
             <button className="teacher-grades-action-btn is-lock" onClick={handleLockGrades} disabled={!canEdit}>
               <FiSend style={{ marginRight: 6 }} /> Nộp điểm
             </button>
@@ -771,11 +899,11 @@ export default function TeacherGrades() {
           {selectedClassId && selectedSubjectId ? (
             <>
               <div className="teacher-grades-top-panel">
-                <div className="teacher-grades-summary-header">
-                  <GradeSummaryHeader subjectLabel={currentSubject.subjectName} />
-                </div>
-                <div className="teacher-grades-summary-row">
-                  <GradeSummarySection stats={summaryStats} onOpenAtRisk={() => setAtRiskDialogOpen(true)} />
+	                <div className="teacher-grades-summary-header">
+	                  <GradeSummaryHeader subjectLabel={currentSubject.subjectName} isCommentGraded={isSelectedSubjectCommentGraded} />
+	                </div>
+	                <div className="teacher-grades-summary-row">
+	                  <GradeSummarySection stats={summaryStats} onOpenAtRisk={() => setAtRiskDialogOpen(true)} isCommentGraded={isSelectedSubjectCommentGraded} />
                 </div>
               </div>
               {isLoading ? (
@@ -787,11 +915,12 @@ export default function TeacherGrades() {
                   <GradeListSection
                     records={records}
                     onOpenEditDialog={openEditDialog}
-                    subjectLabel={currentSubject.subjectName}
-                    semesterLabel={semesterLabel}
-                    isLocked={lockStatus === "pending" || (lockStatus === "finalized" && !hasActiveUnlock)}
-                    canEdit={canEdit}
-                  />
+	                    subjectLabel={currentSubject.subjectName}
+	                    semesterLabel={semesterLabel}
+	                    isLocked={isGradebookLocked}
+	                    canEdit={canEdit}
+	                    isCommentGraded={isSelectedSubjectCommentGraded}
+	                  />
                 </div>
               )}
             </>
@@ -872,33 +1001,54 @@ export default function TeacherGrades() {
           <div className="teacher-grade-edit-meta">
             <span>{currentClass.name}</span><span>{currentSubject.subjectName}</span><span>{semesterLabel}</span>
           </div>
-          <div className="grade-entry-score-block">
-            <div className="grade-entry-score-block__head">
-              <span>Điểm thường xuyên</span>
-              <button className="grade-entry-score-add-btn" disabled={!canEdit} onClick={() => setEditDraft((p) => ({ ...p, regularScores: [...p.regularScores, { score: "", gradeItemId: null }] }))}>
-                <FiPlus />
-              </button>
-            </div>
-            <div className="grade-entry-score-grid">
-              {editDraft.regularScores.map((val, idx) => (
-                <div key={`r-${idx}`} className="grade-entry-field">
-                  <div className="grade-entry-field__label">
-                    <span>TX {idx + 1}</span>
-                    {editDraft.regularScores.length > 1 && (
-                      <button className="grade-entry-delete-btn" disabled={!canEdit} onClick={() => setEditDraft((p) => ({ ...p, regularScores: p.regularScores.filter((_, i) => i !== idx) }))}><FiTrash2 /></button>
-                    )}
-                  </div>
-                  <input type="number" step="0.1" min="0" max="10" readOnly={!canEdit} style={{ background: canEdit ? '' : '#f1f5f9', cursor: canEdit ? '' : 'not-allowed' }} value={val.score} onChange={(e) => {
-                    setEditDraft((p) => ({ ...p, regularScores: p.regularScores.map((r, i) => i === idx ? { ...r, score: e.target.value } : r) }));
-                  }} />
-                </div>
-              ))}
-            </div>
-          </div>
-          <div className="teacher-grade-edit-grid">
-            <div className="teacher-grade-edit-note"><span>Giữa kỳ</span><input type="number" step="0.1" min="0" max="10" readOnly={!canEdit} style={{ background: canEdit ? '' : '#f1f5f9', cursor: canEdit ? '' : 'not-allowed' }} value={editDraft.midterm.score} onChange={(e) => setEditDraft((p) => ({ ...p, midterm: { ...p.midterm, score: e.target.value } }))} /></div>
-            <div className="teacher-grade-edit-note"><span>Cuối kỳ</span><input type="number" step="0.1" min="0" max="10" readOnly={!canEdit} style={{ background: canEdit ? '' : '#f1f5f9', cursor: canEdit ? '' : 'not-allowed' }} value={editDraft.final.score} onChange={(e) => setEditDraft((p) => ({ ...p, final: { ...p.final, score: e.target.value } }))} /></div>
-          </div>
+	          {isSelectedSubjectCommentGraded ? (
+	            <div className="teacher-grade-comment-block">
+	              <span>Kết quả đánh giá</span>
+	              <div className="teacher-grade-comment-options">
+	                {COMMENT_EVALUATIONS.map((option) => (
+	                  <button
+	                    key={option}
+	                    type="button"
+	                    className={`teacher-grade-comment-option ${editDraft.evaluation === option ? "is-selected" : ""} ${option === "Chưa đạt" ? "is-fail" : "is-pass"}`}
+	                    disabled={!canEdit}
+	                    onClick={() => setEditDraft((p) => ({ ...p, evaluation: option, note: option }))}
+	                  >
+	                    {option}
+	                  </button>
+	                ))}
+	              </div>
+	            </div>
+	          ) : (
+	            <>
+	              <div className="grade-entry-score-block">
+	                <div className="grade-entry-score-block__head">
+	                  <span>Điểm thường xuyên</span>
+	                  <button className="grade-entry-score-add-btn" disabled={!canEdit} onClick={() => setEditDraft((p) => ({ ...p, regularScores: [...p.regularScores, { score: "", gradeItemId: null }] }))}>
+	                    <FiPlus />
+	                  </button>
+	                </div>
+	                <div className="grade-entry-score-grid">
+	                  {editDraft.regularScores.map((val, idx) => (
+	                    <div key={`r-${idx}`} className="grade-entry-field">
+	                      <div className="grade-entry-field__label">
+	                        <span>TX {idx + 1}</span>
+	                        {editDraft.regularScores.length > 1 && (
+	                          <button className="grade-entry-delete-btn" disabled={!canEdit} onClick={() => setEditDraft((p) => ({ ...p, regularScores: p.regularScores.filter((_, i) => i !== idx) }))}><FiTrash2 /></button>
+	                        )}
+	                      </div>
+	                      <input type="number" step="0.1" min="0" max="10" readOnly={!canEdit} style={{ background: canEdit ? '' : '#f1f5f9', cursor: canEdit ? '' : 'not-allowed' }} value={val.score} onChange={(e) => {
+	                        setEditDraft((p) => ({ ...p, regularScores: p.regularScores.map((r, i) => i === idx ? { ...r, score: e.target.value } : r) }));
+	                      }} />
+	                    </div>
+	                  ))}
+	                </div>
+	              </div>
+	              <div className="teacher-grade-edit-grid">
+	                <div className="teacher-grade-edit-note"><span>Giữa kỳ</span><input type="number" step="0.1" min="0" max="10" readOnly={!canEdit} style={{ background: canEdit ? '' : '#f1f5f9', cursor: canEdit ? '' : 'not-allowed' }} value={editDraft.midterm.score} onChange={(e) => setEditDraft((p) => ({ ...p, midterm: { ...p.midterm, score: e.target.value } }))} /></div>
+	                <div className="teacher-grade-edit-note"><span>Cuối kỳ</span><input type="number" step="0.1" min="0" max="10" readOnly={!canEdit} style={{ background: canEdit ? '' : '#f1f5f9', cursor: canEdit ? '' : 'not-allowed' }} value={editDraft.final.score} onChange={(e) => setEditDraft((p) => ({ ...p, final: { ...p.final, score: e.target.value } }))} /></div>
+	              </div>
+	            </>
+	          )}
           <div className="teacher-grade-edit-note"><span>Ghi chú</span><textarea rows="3" readOnly={!canEdit} style={{ background: canEdit ? '' : '#f1f5f9', cursor: canEdit ? '' : 'not-allowed' }} value={editDraft.note} onChange={(e) => setEditDraft((p) => ({ ...p, note: e.target.value }))} placeholder="Nhận xét..." /></div>
           <div className="teacher-grade-edit-actions">
             <button className="teacher-grade-edit-btn is-ghost" onClick={() => setEditDialogOpen(false)}><FiX /> Hủy</button>
@@ -913,7 +1063,7 @@ export default function TeacherGrades() {
           {summaryStats.atRiskStudents.map((s) => (
             <div key={s.id} className={`teacher-grade-risk-item ${lockStatus === "pending" || (lockStatus === "finalized" && !hasActiveUnlock) ? "is-locked-cursor" : ""}`} onClick={() => { if (lockStatus === "draft" || (lockStatus === "finalized" && hasActiveUnlock)) { setAtRiskDialogOpen(false); openEditDialog(s); } }}>
               <div><strong>{s.name}</strong><span>{s.code}</span></div>
-              <small>TB: {s.average}</small>
+	              <small>{isSelectedSubjectCommentGraded ? `KQ: ${s.evaluation || "Chưa đánh giá"}` : `TB: ${s.average}`}</small>
             </div>
           ))}
           {summaryStats.atRiskCount === 0 && <p style={{ textAlign: "center", padding: 20, color: "#64748b" }}>Không có học sinh bị cảnh báo.</p>}

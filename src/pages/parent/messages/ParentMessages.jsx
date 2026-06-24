@@ -5,14 +5,9 @@ import ChatWindow from "./components/ChatWindow/ChatWindow";
 import { parentService } from "../../../services/pages/parent/parentService";
 import { io } from "socket.io-client";
 import { PageHeader } from "../../../components/common";
+import { getSocketBaseUrl } from "../../../services/shared/http/apiBaseUrl";
 
-const getSocketUrl = () => {
-  const apiUrl = import.meta.env.VITE_API_URL || "/api/v1";
-  if (apiUrl.startsWith("/")) {
-    return window.location.origin;
-  }
-  return apiUrl.replace("/api/v1", "");
-};
+const getSocketUrl = getSocketBaseUrl;
 
 let socket = null;
 
