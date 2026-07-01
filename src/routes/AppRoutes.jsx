@@ -115,7 +115,7 @@ const TeacherSupport = lazy(() => import("../pages/teacher/support/TeacherSuppor
 const TeacherTeachingClasses = lazy(
   () => import("../pages/teacher/teachingClasses/TeacherTeachingClasses")
 );
-const TeacherBanCanSuLop = lazy(() => import("../pages/teacher/ban-can-su-lop/TeacherBanCanSuLop"));
+const TeacherBanCanSuLop = lazy(() => import("../pages/teacher/class-officials/Teacherclass-officials"));
 const TeacherQuizSubmissions = lazy(
   () => import("../pages/teacher/quiz/submissions/TeacherQuizSubmissions")
 );
@@ -224,8 +224,9 @@ export default function AppRoutes() {
         <Route path="system-log"  element={<AdminSystemLog />} />
         <Route path="classes"       element={<AdminRedirect />} />
         <Route path="classes/*"     element={<AdminRedirect />} />
-        <Route path="quiz"          element={<AdminRedirect />} />
-        <Route path="quiz/*"        element={<AdminRedirect />} />
+        <Route path="quiz"          element={<ManagementQuiz />} />
+        <Route path="quiz/create"   element={<ManagementCreateQuiz />} />
+        <Route path="quiz/:quizId/submissions" element={<ManagementQuizSubmissions />} />
         <Route path="timetable"     element={<AdminRedirect />} />
         <Route path="timetable/*"   element={<AdminRedirect />} />
         <Route path="payment"       element={<AdminRedirect />} />

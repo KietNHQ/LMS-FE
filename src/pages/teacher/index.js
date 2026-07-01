@@ -7,7 +7,7 @@ export { default as TeacherHomeroom } from "./homeroom/TeacherHomeroom";
 export { default as TeacherSchedule } from "./schedule/TeacherSchedule";
 export { default as TeacherNotifications } from "./notifications/TeacherNotifications";
 export { default as TeacherSupport } from "./support/TeacherSupport";
-export { default as TeacherBanCanSuLop } from "./ban-can-su-lop/TeacherBanCanSuLop";
+export { default as TeacherBanCanSuLop } from "./class-officials/Teacherclass-officials";
 
 
 

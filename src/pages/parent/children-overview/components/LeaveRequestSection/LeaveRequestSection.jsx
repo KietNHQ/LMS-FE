@@ -33,11 +33,14 @@ export default function LeaveRequestSection({ requests = [], childId, onSuccess 
         if (!requests || requests.length === 0) return []
         return requests.map((item) => {
             const statusInfo = normalizeStatus(item.statusText || item.status)
+            const startDateVal = item.startDate || item.start_date
+            const endDateVal = item.endDate || item.end_date
+            const approvedByVal = item.reviewed_by_name || item.approvedBy || "—"
             return {
-                id: item.id || `${item.studentId}-${item.startDate}-${Date.now()}-${Math.random()}`,
+                id: item.id || `${item.studentId || item.student_id}-${startDateVal}-${Date.now()}-${Math.random()}`,
                 title: item.title || item.reason || "Đơn xin nghỉ học",
-                date: item.startDate && item.endDate ? `${formatDate(item.startDate)} đến ${formatDate(item.endDate)}` : (item.date || "--"),
-                approvedBy: item.approvedByRole === "teacher" ? "Giáo viên chủ nhiệm" : (item.approvedByRole === "manager" ? "Quản lý trường" : (item.approvedBy || "—")),
+                date: startDateVal && endDateVal ? `${formatDate(startDateVal)} đến ${formatDate(endDateVal)}` : (item.date || "--"),
+                approvedBy: item.approvedByRole === "teacher" ? "Giáo viên chủ nhiệm" : (item.approvedByRole === "manager" ? "Quản lý trường" : approvedByVal),
                 status: statusInfo.key,
                 statusText: item.statusText || statusInfo.text
             }

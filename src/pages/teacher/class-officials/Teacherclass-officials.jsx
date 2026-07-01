@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { teachingClassesData } from "../teachingClasses/data/teachingClassesData";
-import "./TeacherBanCanSuLop.css";
+import "./Teacherclass-officials.css";
 
 const officerTabs = [
   { key: "lop-truong", label: "Lớp trưởng", description: "Người đứng đầu lớp" },

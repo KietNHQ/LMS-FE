@@ -148,8 +148,26 @@ export default function ManagementLayout() {
     const userEmail = userToUse.email || "";
     const userPermissions = userToUse.permissions || null;
 
+    const getThemeClass = (roleStr) => {
+        if (!roleStr) return "";
+        const lowerRole = roleStr.toLowerCase();
+        if (lowerRole === 'admin' || lowerRole === 'quản trị viên' || lowerRole === 'administrator') return 'theme-admin';
+        if (lowerRole === 'hiệu trưởng') return 'theme-principal';
+        if (lowerRole === 'phó ht học vụ') return 'theme-vp_academic';
+        if (lowerRole === 'phó ht nề nếp') return 'theme-vp_discipline';
+        if (lowerRole === 'giáo vụ') return 'theme-academic_staff';
+        if (lowerRole === 'tài chính') return 'theme-finance_staff';
+        if (lowerRole === 'teacher' || lowerRole === 'giáo viên') return 'theme-teacher';
+        if (lowerRole === 'student' || lowerRole === 'học sinh') return 'theme-student';
+        if (lowerRole === 'guardian' || lowerRole === 'parent' || lowerRole === 'phụ huynh') return 'theme-parent';
+        if (['manager', 'management', 'quản lý', 'tổ trưởng bộ môn'].includes(lowerRole)) return 'theme-management';
+        return "";
+    };
+
+    const themeClass = getThemeClass(userToUse?.role);
+
     return (
-        <div className={`management-layout ${isCollapsed ? "collapsed" : ""}`}>
+        <div className={`management-layout ${themeClass} ${isCollapsed ? "collapsed" : ""}`}>
             <Sidebar
                 role="management"
                 user={userToUse}

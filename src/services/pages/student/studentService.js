@@ -205,7 +205,7 @@ const STUDENT_ENDPOINTS = [
 ];
 
 const createEndpointCaller = (endpoint) => async (input = {}) => {
-  const shouldMock = input.mock !== false;
+  const shouldMock = input.mock === true || (input.mock !== false && typeof endpoint.mock === "function");
   
   console.log(`[studentService] Calling ${endpoint.key} (path: ${endpoint.path}), shouldMock: ${shouldMock}`);
 

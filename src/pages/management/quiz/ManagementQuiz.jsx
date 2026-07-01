@@ -167,7 +167,8 @@ export default function ManagementQuiz() {
 
     const handleCreateQuiz = (quizMeta) => {
         handleCloseCreateDialog();
-        navigate("/management/quiz/create", {
+        const prefix = location.pathname.startsWith("/admin") ? "/admin" : "/management";
+        navigate(`${prefix}/quiz/create`, {
             state: {
                 quizMeta,
             },
@@ -175,7 +176,8 @@ export default function ManagementQuiz() {
     };
 
     const handleOpenQuizQuestions = (quiz) => {
-        navigate("/management/quiz/create", {
+        const prefix = location.pathname.startsWith("/admin") ? "/admin" : "/management";
+        navigate(`${prefix}/quiz/create`, {
             state: {
                 quizId: quiz.id,
                 quizMeta: {

@@ -211,7 +211,7 @@ const PARENT_ENDPOINTS = [
 ];
 
 const createEndpointCaller = (endpoint) => async (input = {}) => {
-  const shouldMock = input.mock !== false;
+  const shouldMock = input.mock === true || (input.mock !== false && typeof endpoint.mock === "function");
   if (shouldMock) {
     await wait(input.delayMs ?? DEFAULT_DELAY_MS);
     const data = typeof endpoint.mock === "function" ? endpoint.mock(input) : null;

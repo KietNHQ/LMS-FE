@@ -121,7 +121,7 @@ export default function AdminLayout() {
     const userPermissions = userToUse.permissions || null;
 
     return (
-        <div className={`admin-layout ${isCollapsed ? "collapsed" : ""}`}>
+        <div className={`admin-layout theme-admin ${isCollapsed ? "collapsed" : ""}`}>
             <Sidebar
                 role="admin"
                 user={storedUser}

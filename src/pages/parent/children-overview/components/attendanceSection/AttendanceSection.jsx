@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from "react";
 import "./AttendanceSection.css";
+import { FiCheckCircle, FiAlertCircle, FiXCircle } from "react-icons/fi";
 
 const ChevronIcon = ({ open }) => (
     <svg
@@ -13,9 +14,9 @@ const ChevronIcon = ({ open }) => (
 );
 
 const STATUS_META = {
-    "Có mặt":   { key: "present", color: "present", icon: "✓" },
-    "Vắng mặt": { key: "absent",  color: "absent",  icon: "✗" },
-    "Đi muộn":  { key: "late",    color: "late",    icon: "⏱" },
+    "Có mặt":   { key: "present", color: "present", icon: <FiCheckCircle size={18} style={{ color: "#16a34a" }} /> },
+    "Vắng mặt": { key: "absent",  color: "absent",  icon: <FiXCircle size={18} style={{ color: "#ef4444" }} /> },
+    "Đi muộn":  { key: "late",    color: "late",    icon: <FiAlertCircle size={18} style={{ color: "#d97706" }} /> },
 };
 
 function MonthlyGroupCard({ label, count, records, color, icon }) {
@@ -30,7 +31,7 @@ function MonthlyGroupCard({ label, count, records, color, icon }) {
                 aria-expanded={open}
             >
                 <div className="monthly-group-left">
-                    <span className={`monthly-group-icon ${color}`}>{icon}</span>
+                    <span className={`monthly-group-icon ${color}`} style={{ display: "inline-flex", alignItems: "center", justifyContent: "center" }}>{icon}</span>
                     <span className="monthly-group-label">{label}</span>
                 </div>
                 <div className="monthly-group-right">
@@ -166,14 +167,18 @@ export default function AttendanceSection({ data, compact = false }) {
                     </div>
 
                     <div className="attendance-record-list">
-                        {weeklyRecords.map((item, index) => (
-                            <div key={index} className="attendance-record-item">
-                                <span>{item.day}</span>
-                                <strong className={STATUS_META[item.status]?.color || ""}>
-                                    {item.status}
-                                </strong>
-                            </div>
-                        ))}
+                        {weeklyRecords.map((item, index) => {
+                            const meta = STATUS_META[item.status] || {};
+                            return (
+                                <div key={index} className="attendance-record-item">
+                                    <span>{item.day}</span>
+                                    <strong className={meta.color || ""} style={{ display: "inline-flex", alignItems: "center", gap: "0.35rem" }}>
+                                        {meta.icon}
+                                        {item.status}
+                                    </strong>
+                                </div>
+                            );
+                        })}
                     </div>
                 </>
             )}

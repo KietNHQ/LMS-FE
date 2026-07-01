@@ -127,7 +127,7 @@
   --cal-orange: #f59e0b;
 }
 
-.theme-admin, .theme-principal {
+.theme-admin, .theme-principal, .theme-management {
   --admin-primary: #1e2f5a;
   --sidebar-bg: linear-gradient(180deg, #2b3f6f 0%, #152340 100%);
   --admin-primary-hover: #172547;
