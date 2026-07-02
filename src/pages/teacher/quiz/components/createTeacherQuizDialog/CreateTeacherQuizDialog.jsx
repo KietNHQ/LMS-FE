@@ -7,6 +7,8 @@ import {
     formatDurationLabel,
 } from "../../../../../services/shared/quiz/quizService";
 import teacherService from "../../../../../services/pages/teacher/teacherService";
+import { getCurrentSchoolYear } from "../../../../../utils/dateUtils";
+import { resolveSchoolYearId } from "../../../../../services/shared/schoolYearLookup";
 import "./CreateTeacherQuizDialog.css";
 
 const CURRENT_TEACHER = DEFAULT_PROFILE_BY_ROLE.teacher;
@@ -67,12 +69,18 @@ export default function CreateTeacherQuizDialog({
                 const teacherId = storedUser.profile?.id || storedUser.teacherId || (storedUser.role === 'teacher' ? storedUser.id : null);
                 
                 if (teacherId) {
+                    const currentYearName = getCurrentSchoolYear();
+                    const schoolYearId = await resolveSchoolYearId(currentYearName);
+                    const semesterParams = schoolYearId ? { schoolYearId } : {};
+
                     const [classRes, semesterRes] = await Promise.all([
                         teacherService.getTeacherSubjects({
                             mock: false,
                             pathParams: { id: teacherId },
                         }),
-                        teacherService.listSemesters()
+                        teacherService.listSemesters({
+                            params: semesterParams
+                        })
                     ]);
 
                     if (classRes && classRes.success && Array.isArray(classRes.data)) {
@@ -105,9 +113,24 @@ export default function CreateTeacherQuizDialog({
                         }
                     }
                     if (semesterRes && semesterRes.success && Array.isArray(semesterRes.data)) {
-                        setSemesters(semesterRes.data);
-                        if (!initialValues && semesterRes.data.length > 0) {
-                            setFormData(prev => ({ ...prev, semesterId: semesterRes.data[0].id }));
+                        let filteredSemesters = semesterRes.data;
+                        if (schoolYearId) {
+                            filteredSemesters = semesterRes.data.filter(
+                                s => s.schoolYearId === schoolYearId || s.school_year_id === schoolYearId
+                            );
+                        }
+                        
+                        // Failsafe: Deduplicate semesters by name to ensure no repeats in UI
+                        const seenNames = new Set();
+                        filteredSemesters = filteredSemesters.filter(s => {
+                            if (seenNames.has(s.name)) return false;
+                            seenNames.add(s.name);
+                            return true;
+                        });
+
+                        setSemesters(filteredSemesters);
+                        if (!initialValues && filteredSemesters.length > 0) {
+                            setFormData(prev => ({ ...prev, semesterId: filteredSemesters[0].id }));
                         }
                     }
                 }
@@ -320,13 +343,10 @@ export default function CreateTeacherQuizDialog({
                         className="teacher-create-quiz-dialog__select"
                         id="teacher-quiz-semester"
                         name="teacher-quiz-semester"
-                        options={semesters.map(s => s.name)}
+                        options={semesters.map(s => ({ value: s.id, label: s.name }))}
                         placeholder="Chọn học kỳ"
-                        value={semesters.find(s => s.id === formData.semesterId)?.name || ""}
-                        onChange={(event) => {
-                            const selected = semesters.find(s => s.name === event.target.value);
-                            handleChange("semesterId", selected ? selected.id : "");
-                        }}
+                        value={formData.semesterId}
+                        onChange={(event) => handleChange("semesterId", event.target.value)}
                     />
                 </div>
 
