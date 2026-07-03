@@ -148,7 +148,7 @@ export default function StudentLayout() {
     const userEmail = userToUse.email || "";
 
     return (
-        <div className={`student-layout ${isCollapsed ? "collapsed" : ""}`}>
+        <div className={`student-layout theme-student ${isCollapsed ? "collapsed" : ""}`}>
             <Sidebar
                 role="student"
                 user={userToUse}

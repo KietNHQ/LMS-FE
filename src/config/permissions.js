@@ -54,6 +54,16 @@ export const PERMISSIONS = {
     // 8. Nề nếp
     DISCIPLINE_VIEW: 'discipline:read',
     DISCIPLINE_MANAGE: 'discipline:manage',
+    REWARD_TYPE_VIEW: 'reward_types:read',
+    REWARD_TYPE_MANAGE: 'reward_types:manage',
+    ATTENDANCE_VIEW: 'attendance:read',
+    ATTENDANCE_MANAGE: 'attendance:manage',
+
+    // 8.1. Loại vi phạm
+    VIOLATION_TYPE_VIEW: 'violation_types:read',
+    VIOLATION_TYPE_CREATE: 'violation_types:create',
+    VIOLATION_TYPE_UPDATE: 'violation_types:update',
+    VIOLATION_TYPE_DELETE: 'violation_types:delete',
 
     // 8.1. Hạnh kiểm
     CONDUCT_VIEW: 'conduct:read',

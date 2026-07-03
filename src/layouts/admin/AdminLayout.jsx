@@ -119,7 +119,7 @@ export default function AdminLayout() {
         (userToUse?.requirePasswordChange || userToUse?.require_password_change || forcePasswordChange);
 
     return (
-        <div className={`admin-layout ${isCollapsed ? "collapsed" : ""}`}>
+        <div className={`admin-layout theme-admin ${isCollapsed ? "collapsed" : ""}`}>
             <Sidebar
                 role="admin"
                 user={storedUser}

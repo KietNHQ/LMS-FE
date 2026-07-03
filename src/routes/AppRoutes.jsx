@@ -1,7 +1,16 @@
 import { Suspense, lazy } from "react";
-import { Navigate, Route, Routes } from "react-router-dom";
+import { Navigate, Route, Routes, useLocation } from "react-router-dom";
 import { LoadingAnimationBook } from "../components/common";
 import ProtectedRoute from "../components/common/ProtectedRoute/ProtectedRoute";
+
+const AdminRedirect = () => {
+  const location = useLocation();
+  let targetPath = location.pathname.replace(/^\/admin/, "/management");
+  if (targetPath.startsWith("/management/payment")) {
+    targetPath = targetPath.replace("/management/payment", "/management/finance");
+  }
+  return <Navigate to={targetPath} replace />;
+};
 
 /* AUTH PAGES */
 import Login from "../pages/auth/Login";
@@ -109,7 +118,7 @@ const TeacherSupport = lazy(() => import("../pages/teacher/support/TeacherSuppor
 const TeacherTeachingClasses = lazy(
   () => import("../pages/teacher/teachingClasses/TeacherTeachingClasses")
 );
-const TeacherBanCanSuLop = lazy(() => import("../pages/teacher/ban-can-su-lop/TeacherBanCanSuLop"));
+const TeacherBanCanSuLop = lazy(() => import("../pages/teacher/class-officials/Teacherclass-officials"));
 const TeacherQuizSubmissions = lazy(
   () => import("../pages/teacher/quiz/submissions/TeacherQuizSubmissions")
 );

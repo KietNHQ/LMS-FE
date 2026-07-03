@@ -35,6 +35,7 @@ export default function SidebarItem({ item, onAction, onClick, badgeCount = 0 })
   return (
     <NavLink
       to={item.path}
+      end={item.end}
       className={({ isActive }) =>
         `sidebar-item ${isActive ? "active" : ""}`
       }

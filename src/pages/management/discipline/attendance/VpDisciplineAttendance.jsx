@@ -406,7 +406,7 @@ export default function VpDisciplineAttendance({ isEmbedded = false }) {
         }
 
         const statsRes = await axiosClient.get(`/attendance/class/${selectedClass}/monitoring`, {
-          params: { 
+          params: {
             startDate,
             endDate
           },
@@ -494,6 +494,92 @@ export default function VpDisciplineAttendance({ isEmbedded = false }) {
     const sortedClasses = Array.from(classes).sort();
     return sortedClasses.map(c => ({ value: c, label: c }));
   }, [allRecords, selectedClassLabel]);
+
+  // Fetch attendance data from API
+  useEffect(() => {
+    const fetchAttendanceData = async () => {
+      setIsLoading(true);
+      setError(null);
+
+      try {
+        if (selectedClass === "all") {
+          // If no specific class is selected, clear data
+          setAllRecords([]);
+          setRecords([]);
+          setIsLoading(false);
+          return;
+        }
+
+        const { startDate, endDate } = getWeekDateRange(selectedSchoolYear, selectedTerm, selectedWeek);
+
+        const statsRes = await axiosClient.get(`/attendance/class/${selectedClass}/monitoring`, {
+          params: {
+            startDate,
+            endDate
+          },
+        });
+
+        const violations = statsRes?.data?.data || statsRes?.data || [];
+
+        const transformedRecords = violations.map((violation) => {
+          const vDate = new Date(violation.date);
+          const dayOfWeek = vDate.getDay() === 0 ? 8 : vDate.getDay() + 1; // 2=Thứ 2, ..., 8=CN
+          return {
+            id: violation.id,
+            studentName: violation.studentName || "Unknown",
+            className: selectedClass,
+            week: selectedWeek,
+            dayOfWeek: dayOfWeek.toString(), // string format to match selectedDay
+            reason: violation.reason || "",
+            type: violation.type, // 'excused', 'unexcused', 'late', 'skipping'
+            points: -Math.abs(violation.points || 0),
+            history: [],
+          };
+        });
+
+        setAllRecords(transformedRecords);
+        setRecords(transformedRecords);
+      } catch (err) {
+        console.error("Failed to fetch attendance:", err);
+        setError(err.message || "Không thể tải dữ liệu điểm danh");
+        setRecords([]);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchAttendanceData();
+  }, [selectedClass, selectedTerm, selectedWeek, selectedSchoolYear]);
+
+  const mapViolationToType = (violationName) => {
+    const name = violationName?.toLowerCase() || "";
+    if (name.includes("muộn")) return "late";
+    if (name.includes("không phép") || name.includes("vắng mặt")) return "unexcused";
+    if (name.includes("trốn")) return "skipping";
+    return "unexcused";
+  };
+
+  const mapAttendanceStatus = (status) => {
+    const statusMap = {
+      present: "bonus",
+      absent: "unexcused",
+      late: "late",
+      excused: "excused",
+      permit: "excused",
+    };
+    return statusMap[status] || "unexcused";
+  };
+
+  const calculatePoints = (status) => {
+    const pointMap = {
+      present: 0,
+      absent: -5,
+      late: -2,
+      excused: -1,
+      permit: 0,
+    };
+    return pointMap[status] || 0;
+  };
 
   const classOptions = useMemo(() => {
     const directoryOptions = selectedGrade === "all"
@@ -641,14 +727,14 @@ export default function VpDisciplineAttendance({ isEmbedded = false }) {
              </div>
              <div className="filter-group">
                 <label><FiClock /> Thứ</label>
-                <Select 
-                    variant="custom" 
-                    value={selectedDay} 
-                    onChange={e => setSelectedDay(e.target.value)} 
+                <Select
+                    variant="custom"
+                    value={selectedDay}
+                    onChange={e => setSelectedDay(e.target.value)}
                     options={[
                         { value: 'all', label: 'Cả tuần' },
                         ...DAYS.map(d => ({ value: String(d.id), label: d.label }))
-                    ]} 
+                    ]}
                 />
              </div>
              <div className="filter-group">
@@ -816,8 +902,8 @@ export default function VpDisciplineAttendance({ isEmbedded = false }) {
         </div>
       </div>
 
-      <BonusPointModal 
-        isOpen={isBonusModalOpen} 
+      <BonusPointModal
+        isOpen={isBonusModalOpen}
         onClose={() => setIsBonusModalOpen(false)}
         onSuccess={handleBonusSuccess}
         initialClass={selectedClass === "all" ? "" : selectedClass}

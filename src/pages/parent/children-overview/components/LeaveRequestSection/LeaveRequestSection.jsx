@@ -3,6 +3,16 @@ import "./LeaveRequestSection.css";
 import { parentService } from "../../../../../services/pages/parent/parentService";
 import { formatDateVi } from "../../../../../utils/dateUtils";
 
+const formatDate = (dateString) => {
+    if (!dateString) return "—";
+    const date = new Date(dateString);
+    if (Number.isNaN(date.getTime())) return dateString;
+    const day = String(date.getDate()).padStart(2, "0");
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const year = date.getFullYear();
+    return `${day}/${month}/${year}`;
+};
+
 const statusMap = {
     approved: { key: "approved", text: "Đã duyệt" },
     pending: { key: "pending", text: "Đang chờ" },
@@ -24,6 +34,9 @@ export default function LeaveRequestSection({ requests = [], childId, onSuccess 
         if (!requests || requests.length === 0) return []
         return requests.map((item) => {
             const statusInfo = normalizeStatus(item.statusText || item.status)
+            const startDateVal = item.startDate || item.start_date
+            const endDateVal = item.endDate || item.end_date
+            const approvedByVal = item.reviewed_by_name || item.approvedBy || "—"
             return {
                 id: item.id || `${item.studentId || "student"}-${item.startDate || "start"}-${item.endDate || "end"}-${item.reason || "leave"}`,
                 title: item.title || item.reason || "Đơn xin nghỉ học",
@@ -56,7 +69,7 @@ export default function LeaveRequestSection({ requests = [], childId, onSuccess 
                 mock: false
             })
             if (res?.success) {
-                setSubmitMessage(`Đã gửi đơn xin nghỉ học từ ${formData.startDate} đến ${formData.endDate} thành công!`)
+                setSubmitMessage(`Đã gửi đơn xin nghỉ học từ ${formatDate(formData.startDate)} đến ${formatDate(formData.endDate)} thành công!`)
                 setIsDialogOpen(false)
                 setFormData({ reason: "", startDate: "", endDate: "", note: "" })
                 if (onSuccess) onSuccess()

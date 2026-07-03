@@ -50,6 +50,20 @@ export default function Sidebar({
     return normalizePermissions(rawPerms);
   }, [userPermissions, defaultMockPermissions]);
 
+  const displayRole = useMemo(() => {
+    if (role === "management" && user?.role) {
+      const lower = user.role.toLowerCase();
+      if (lower === 'hiệu trưởng') return 'principal';
+      if (lower === 'phó ht học vụ') return 'vp_academic';
+      if (lower === 'phó ht nề nếp') return 'vp_discipline';
+      if (lower === 'giáo vụ') return 'academic_staff';
+      if (lower === 'tài chính') return 'finance_staff';
+      if (lower === 'admin' || lower === 'quản trị viên' || lower === 'administrator') return 'admin';
+      if (['manager', 'management', 'quản lý', 'tổ trưởng bộ môn'].includes(lower)) return 'management';
+    }
+    return role;
+  }, [role, user?.role]);
+
   // [NEW] Filter danh sách sidebar dựa trên permissions thay vì show toàn bộ theo role
   const items = useMemo(() => {
     const baseItems = sidebarConfig[role] || [];
@@ -93,7 +107,7 @@ export default function Sidebar({
   const prevIsMobileRef = useRef(isMobile);
 
   const roleLabel = useMemo(() => {
-    switch (role) {
+    switch (displayRole) {
       case "management":
         return "Quản lý";
       case "student":
@@ -117,12 +131,12 @@ export default function Sidebar({
       default:
         return "Người dùng";
     }
-  }, [role]);
+  }, [displayRole]);
 
   const displayEmail = useMemo(() => {
     if (userEmail) return userEmail;
 
-    switch (role) {
+    switch (displayRole) {
       case "student":
         return "student@eduvn.edu.vn";
       case "teacher":
@@ -144,7 +158,7 @@ export default function Sidebar({
       default:
         return "user@eduvn.edu.vn";
     }
-  }, [role, userEmail]);
+  }, [displayRole, userEmail]);
 
   const avatarLetter = useMemo(() => {
     const source = userName?.trim?.() || "U";
@@ -330,7 +344,7 @@ export default function Sidebar({
         <aside
             className={[
               "sidebar",
-              roleTheme[role]?.className || `role-${role}`,
+              roleTheme[displayRole]?.className || `role-${displayRole}`,
               isCollapsed ? "collapsed" : "",
               isMobile ? "mobile-mode" : "",
               isMobileOpen ? "mobile-open" : "",

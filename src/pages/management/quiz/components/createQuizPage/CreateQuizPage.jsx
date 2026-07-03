@@ -623,7 +623,8 @@ export default function CreateQuizPage() {
         const savedCard = await saveQuizAndReturnCard({ showSuccessAlert: false });
         if (!savedCard) return;
 
-        navigate("/admin/quiz", {
+        const prefix = location.pathname.startsWith("/admin") ? "/admin" : "/management";
+        navigate(`${prefix}/quiz`, {
             state: {
                 refreshList: true,
             },
@@ -631,11 +632,12 @@ export default function CreateQuizPage() {
     };
 
     const handleCancelCreateQuiz = () => {
+        const prefix = location.pathname.startsWith("/admin") ? "/admin" : "/management";
         // If there are no questions yet, treat cancel as dropping the whole draft.
         if (!quiz.questions.length) {
             setQuiz(createQuizFromMeta(routeQuizMeta));
             resetForm();
-            navigate("/admin/quiz");
+            navigate(`${prefix}/quiz`);
             return;
         }
 
@@ -646,7 +648,7 @@ export default function CreateQuizPage() {
 
         setQuiz(createQuizFromMeta(routeQuizMeta));
         resetForm();
-        navigate("/admin/quiz");
+        navigate(`${prefix}/quiz`);
     };
 
     const handleToggleScrollQuickActions = () => {
@@ -842,7 +844,10 @@ export default function CreateQuizPage() {
                 open={showSetupDialog}
                 title="Tạo bài kiểm tra"
                 submitLabel="Tạo bài kiểm tra"
-                onClose={() => navigate("/admin/quiz")}
+                onClose={() => {
+                    const prefix = location.pathname.startsWith("/admin") ? "/admin" : "/management";
+                    navigate(`${prefix}/quiz`);
+                }}
                 onSubmit={handleSetupQuiz}
                 initialValues={routeQuizMeta}
                 assignmentOptions={assignmentOptions}

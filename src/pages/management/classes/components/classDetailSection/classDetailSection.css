@@ -79,7 +79,7 @@
 
 .class-detail-info {
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 14px;
 }
 
@@ -135,6 +135,26 @@
 .info-item--score-trigger.active {
     border-color: #7f9be0;
     background: #f3f7ff;
+}
+
+.info-item--timetable-trigger {
+    border: 1px solid #d7e2f5;
+    cursor: pointer;
+    background: #fafcff;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.info-item--timetable-trigger:hover {
+    border-color: #9db4ea;
+    box-shadow: 0 8px 18px rgba(52, 88, 196, 0.16);
+    transform: translateY(-1px);
+}
+
+.timetable-btn-text {
+    color: #3458c4;
+    font-size: 16px;
+    font-weight: 800;
+    margin-top: 4px;
 }
 
 /* ============= STUDENTS CARD - UNIFIED ============= */

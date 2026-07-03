@@ -4,6 +4,16 @@ import { StatusBadge } from "../../../../components/common";
 import { formatDateTimeVi, formatDateVi } from "../../../../utils/dateUtils";
 import "./LeaveRequestModal.css"; // We will put modal styles here or in ManagementLeaveRequests.css
 
+const formatDate = (dateString) => {
+  if (!dateString) return "—";
+  const date = new Date(dateString);
+  if (Number.isNaN(date.getTime())) return dateString;
+  const day = String(date.getDate()).padStart(2, "0");
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const year = date.getFullYear();
+  return `${day}/${month}/${year}`;
+};
+
 export default function LeaveRequestDetailModal({ request, onClose, onAction, canApprove }) {
   if (!request) return null;
 

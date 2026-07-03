@@ -724,6 +724,15 @@ export default function TeacherHomeroom() {
                         isLoading={isConductLoading}
                     />
                 )}
+                {activeSection === "conduct" && (
+                    <HomeroomConductSection
+                        classId={classData.id}
+                        selectedSchoolYear={selectedSchoolYear}
+                        selectedTerm={selectedTerm}
+                        conductData={conductData}
+                        isLoading={false}
+                    />
+                )}
             </div>
 
             <HomeroomActionDialog

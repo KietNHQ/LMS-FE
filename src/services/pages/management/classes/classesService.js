@@ -102,6 +102,10 @@ const toApiPayload = async (classData = {}) => {
     ...(classData.maxStudents ? { maxStudents: toNumber(classData.maxStudents) } : {}),
     status: classData.status || "active",
 
+    // Các trường mới
+    ...(classData.max_students != null ? { maxStudents: toNumber(classData.max_students, 40), max_students: toNumber(classData.max_students, 40) } : {}),
+    ...(classData.room != null ? { room: classData.room, classroom: classData.room } : {}),
+
     // Backward-compatible aliases for deployments still using legacy field names.
     class_name: classData.name,
     grade_level_number: toNumber(gradeNumber, 10),

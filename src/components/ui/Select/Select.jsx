@@ -116,7 +116,7 @@ export default function Select({
       <div className={`ui-select ${className}`.trim()}>
         {label ? <label className="ui-select__label">{label}</label> : null}
 
-        <div className="custom-dropdown" ref={customDropdownRef}>
+        <div className={`custom-dropdown ${isOpen ? "is-open" : ""}`} ref={customDropdownRef}>
           <button
             type="button"
             className={`custom-dropdown-trigger ${isOpen ? "open" : ""}`}
