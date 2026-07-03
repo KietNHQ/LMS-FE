@@ -14,6 +14,7 @@ import axiosClient from "../../../../services/shared/http/axiosClient";
 import Select from "../../../../components/ui/Select/Select";
 import { useQuery } from "@tanstack/react-query";
 import { vpDisciplineService } from "../../../../services/pages/management/vp-discipline";
+import { resolveSchoolYearId } from "../../../../services/shared/schoolYearLookup";
 import {
   FiClock,
   FiDownload,
@@ -73,6 +74,7 @@ const toDateInputValue = (value) => {
 export default function VpDisciplineAttendance({ isEmbedded = false }) {
   const [searchParams] = useSearchParams();
   const urlClass = searchParams.get("class");
+  const urlClassName = searchParams.get("className");
   const urlWeek = searchParams.get("week");
   const urlStartDate = searchParams.get("startDate");
   const urlEndDate = searchParams.get("endDate");
@@ -153,6 +155,46 @@ export default function VpDisciplineAttendance({ isEmbedded = false }) {
       return [...defaultOption, ...apiOptions];
   }, [gradeLevelsData]);
 
+  const { data: classesData = [] } = useQuery({
+    queryKey: ["classes-for-attendance", selectedSchoolYear, selectedGrade],
+    queryFn: async () => {
+      if (!selectedSchoolYear) return [];
+      const schoolYearId = await resolveSchoolYearId(selectedSchoolYear);
+      if (!schoolYearId) return [];
+      const res = await vpDisciplineService.callByKey("get_classes", {
+        params: {
+          schoolYearId,
+          gradeLevelId: selectedGrade === "all" ? undefined : parseInt(selectedGrade, 10),
+        },
+      });
+      const payload = res?.data || res || [];
+      return Array.isArray(payload) ? payload : payload?.data || [];
+    },
+    staleTime: 5 * 60_000,
+  });
+
+  const classDirectoryOptions = useMemo(() => {
+    return classesData
+      .map((c) => {
+        const label = c.name || c.class_name || c.className || "";
+        return {
+          value: String(c.id),
+          label,
+          grade: String(c.grade_level || c.gradeLevel || label.slice(0, 2)),
+        };
+      })
+      .filter((item) => item.value && item.label);
+  }, [classesData]);
+
+  const selectedClassLabel = useMemo(() => {
+    if (selectedClass === "all") return "";
+    return (
+      classDirectoryOptions.find((item) => String(item.value) === String(selectedClass))?.label ||
+      urlClassName ||
+      selectedClass
+    );
+  }, [classDirectoryOptions, selectedClass, urlClassName]);
+
   // Fetch attendance records from API
   const [allRecords, setAllRecords] = useState([]);
   const [records, setRecords] = useState([]);
@@ -161,11 +203,26 @@ export default function VpDisciplineAttendance({ isEmbedded = false }) {
 
   useEffect(() => {
     if (urlClass) {
+        const foundClass = classDirectoryOptions.find(
+          (item) =>
+            String(item.value) === String(urlClass) ||
+            item.label === urlClass ||
+            item.label === urlClassName,
+        );
+
+        if (foundClass) {
+          setSelectedClass(foundClass.value);
+          if (["10", "11", "12"].includes(foundClass.grade)) {
+            setSelectedGrade(foundClass.grade);
+          }
+          return;
+        }
+
         setSelectedClass(urlClass);
-        const grade = urlClass.slice(0, 2);
+        const grade = (urlClassName || urlClass).slice(0, 2);
         if (["10", "11", "12"].includes(grade)) setSelectedGrade(grade);
     }
-  }, [urlClass]);
+  }, [classDirectoryOptions, urlClass, urlClassName]);
 
   useEffect(() => {
     const urlPeriodKey = [
@@ -429,24 +486,39 @@ export default function VpDisciplineAttendance({ isEmbedded = false }) {
     toast.success(`Đã chuyển đến tuần ${targetWeek.week} (${formatDateForDisplay(targetWeek.startDate)} - ${formatDateForDisplay(targetWeek.endDate)}).`);
   };
 
-  const classOptions = useMemo(() => {
+  const recordClassOptions = useMemo(() => {
     const classes = new Set(allRecords.map((item) => item.className));
-    if (selectedClass !== "all") {
-      classes.add(selectedClass);
+    if (selectedClassLabel) {
+      classes.add(selectedClassLabel);
     }
     const sortedClasses = Array.from(classes).sort();
     return sortedClasses.map(c => ({ value: c, label: c }));
-  }, [allRecords, selectedClass]);
+  }, [allRecords, selectedClassLabel]);
+
+  const classOptions = useMemo(() => {
+    const directoryOptions = selectedGrade === "all"
+      ? classDirectoryOptions
+      : classDirectoryOptions.filter((item) => item.grade === selectedGrade);
+
+    if (directoryOptions.length > 0) {
+      return directoryOptions;
+    }
+
+    return recordClassOptions;
+  }, [classDirectoryOptions, recordClassOptions, selectedGrade]);
 
   // Weekly Context for KPI calculations (Grade & Class still apply)
   const weeklyRecords = useMemo(() => {
     return records.filter((item) => {
       const matchesWeek = viewMode === "annual" || item.week === selectedWeek;
       const matchesGrade = selectedGrade === "all" || item.className.startsWith(selectedGrade);
-      const matchesClass = selectedClass === "all" || item.className === selectedClass;
+      const matchesClass =
+        selectedClass === "all" ||
+        item.className === selectedClass ||
+        item.className === selectedClassLabel;
       return matchesWeek && matchesGrade && matchesClass;
     });
-  }, [records, selectedWeek, selectedGrade, selectedClass, viewMode]);
+  }, [records, selectedWeek, selectedGrade, selectedClass, selectedClassLabel, viewMode]);
 
   // Dynamic stats derived from weekly context
   const dynamicStats = useMemo(() => {
@@ -722,7 +794,7 @@ export default function VpDisciplineAttendance({ isEmbedded = false }) {
 	                    </div>
 	                  </td>
                   <td>
-                    <StatusBadge status={item.type === 'excused' ? 'resolved' : (item.type === 'late' ? 'warning' : (item.type === 'bonus' ? 'success' : 'critical'))}>
+                    <StatusBadge status={item.type === 'excused' ? 'success' : (item.type === 'late' ? 'warning' : (item.type === 'bonus' ? 'success' : 'critical'))}>
                       {item.type === 'excused' ? 'Có phép' : (item.type === 'late' ? 'Đi muộn' : (item.type === 'skipping' ? 'Trốn học' : (item.type === 'bonus' ? 'Điểm thưởng' : 'Không phép')))}
                     </StatusBadge>
                   </td>
@@ -749,6 +821,10 @@ export default function VpDisciplineAttendance({ isEmbedded = false }) {
         onClose={() => setIsBonusModalOpen(false)}
         onSuccess={handleBonusSuccess}
         initialClass={selectedClass === "all" ? "" : selectedClass}
+        initialClassName={selectedClassLabel}
+        rewardDate={dateRange.startDate}
+        selectedSchoolYear={selectedSchoolYear}
+        selectedTerm={selectedTerm}
       />
     </div>
   );

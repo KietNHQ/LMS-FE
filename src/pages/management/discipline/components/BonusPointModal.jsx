@@ -9,7 +9,25 @@ import Select from "../../../../components/ui/Select/Select";
 import { vpDisciplineService } from "../../../../services/pages/management/vp-discipline";
 import "./BonusPointModal.css";
 
-export default function BonusPointModal({ isOpen, onClose, onSuccess, initialClass = "all", selectedSchoolYear, selectedTerm }) {
+const toDateInputValue = (value = new Date()) => {
+    const date = value instanceof Date ? value : new Date(value);
+    if (Number.isNaN(date.getTime())) return "";
+    const year = date.getFullYear();
+    const month = `${date.getMonth() + 1}`.padStart(2, "0");
+    const day = `${date.getDate()}`.padStart(2, "0");
+    return `${year}-${month}-${day}`;
+};
+
+export default function BonusPointModal({
+    isOpen,
+    onClose,
+    onSuccess,
+    initialClass = "all",
+    initialClassName = "",
+    rewardDate = "",
+    selectedSchoolYear,
+    selectedTerm
+}) {
     const [targetType, setTargetType] = useState("collective"); // 'collective' or 'individual'
     const [selectedGrade, setSelectedGrade] = useState("10");
     const [selectedClass, setSelectedClass] = useState("");
@@ -83,11 +101,12 @@ export default function BonusPointModal({ isOpen, onClose, onSuccess, initialCla
         return apiStudents.map(s => ({
             id: s.id || s.student_id || s.enrollmentId || s.studentEnrollmentId,
             name: s.name || s.full_name || s.studentName || "",
-            class: s.class_name || s.className || s.class || "",
+            class: s.class_name || s.className || s.class || initialClassName || "",
+            classId: s.class_id || s.classId || selectedClass,
             grade: s.grade || s.grade_level || s.gradeLevel || selectedGrade,
-            enrollmentId: s.enrollmentId || s.studentEnrollmentId || s.id,
+            enrollmentId: s.enrollmentId || s.enrollment_id || s.studentEnrollmentId || s.id,
         }));
-    }, [apiStudents, selectedGrade]);
+    }, [apiStudents, initialClassName, selectedClass, selectedGrade]);
 
     // Build reward categories from API data
     const rewardCategories = useMemo(() => {
@@ -137,9 +156,12 @@ export default function BonusPointModal({ isOpen, onClose, onSuccess, initialCla
     // Initialize/Sync
     useEffect(() => {
         if (isOpen) {
-            if (initialClass !== "all") {
+            if (initialClass && initialClass !== "all") {
                 setSelectedClass(initialClass);
-                setSelectedGrade(initialClass.slice(0, 2));
+                const grade = (initialClassName || initialClass).slice(0, 2);
+                if (["10", "11", "12"].includes(grade)) {
+                    setSelectedGrade(grade);
+                }
             } else {
                 setSelectedGrade(gradeOptions[0]?.value || "10");
                 setSelectedClass("");
@@ -150,7 +172,7 @@ export default function BonusPointModal({ isOpen, onClose, onSuccess, initialCla
             setCustomPoints("");
             setComment("");
         }
-    }, [isOpen, initialClass, rewardCategories, gradeOptions]);
+    }, [isOpen, initialClass, initialClassName, rewardCategories, gradeOptions]);
 
     // Update category when rewardTypes load
     useEffect(() => {
@@ -169,13 +191,30 @@ export default function BonusPointModal({ isOpen, onClose, onSuccess, initialCla
     }, [selectedCategory, selectedReasonKey, rewardCategories]);
 
     const classOptions = useMemo(() => {
-        const classes = [...new Set(students.filter(s => s.grade === selectedGrade).map(s => s.class))];
-        return classes.map(c => ({ value: c, label: c }));
-    }, [selectedGrade, students]);
+        const classesById = new Map();
+        students
+            .filter(s => s.grade === selectedGrade || !selectedGrade)
+            .forEach((s) => {
+                const value = String(s.classId || selectedClass || "");
+                const label = s.class || initialClassName || value;
+                if (value && label) {
+                    classesById.set(value, { value, label });
+                }
+            });
+
+        if (initialClass && initialClass !== "all") {
+            classesById.set(String(initialClass), {
+                value: String(initialClass),
+                label: initialClassName || String(initialClass),
+            });
+        }
+
+        return Array.from(classesById.values()).sort((a, b) => a.label.localeCompare(b.label));
+    }, [initialClass, initialClassName, selectedClass, selectedGrade, students]);
 
     const studentOptions = useMemo(() => {
         return students
-            .filter(s => s.class === selectedClass)
+            .filter(s => String(s.classId || s.class) === String(selectedClass))
             .map(s => ({ value: s.id, label: `${s.name} (${s.id})` }));
     }, [selectedClass, students]);
 
@@ -201,7 +240,12 @@ export default function BonusPointModal({ isOpen, onClose, onSuccess, initialCla
         const cat = rewardCategories.find(c => c.id === selectedCategory);
         const item = cat?.items.find(i => i.key === selectedReasonKey);
         const student = students.find(s => s.id === selectedStudentId);
-        const points = parseInt(customPoints) || 0;
+        const points = parseInt(customPoints, 10) || 0;
+        const resolvedRewardDate = toDateInputValue(rewardDate || new Date());
+        const selectedClassLabel =
+            classOptions.find((option) => String(option.value) === String(selectedClass))?.label ||
+            initialClassName ||
+            selectedClass;
 
         try {
             if (targetType === "individual") {
@@ -211,23 +255,49 @@ export default function BonusPointModal({ isOpen, onClose, onSuccess, initialCla
                         studentEnrollmentId: student?.enrollmentId || selectedStudentId,
                         rewardTypeId: selectedReasonKey,
                         semesterId: semesterId,
-                        points: points,
+                        pointsEarned: points,
+                        date: resolvedRewardDate,
                         notes: comment,
                     },
                 });
                 toast.success(`Đã cộng ${points} điểm thưởng cá nhân cho ${student?.name}!`);
             } else {
-                // Post collective/class bonus
-                await vpDisciplineService.callByKey("post_discipline_rewards", {
-                    body: {
-                        classId: selectedClass,
-                        rewardTypeId: selectedReasonKey,
-                        semesterId: semesterId,
-                        points: points,
-                        notes: comment,
-                    },
-                });
-                toast.success(`Đã cộng ${points} điểm thưởng tập thể cho lớp ${selectedClass}!`);
+                const classStudents = students.filter(
+                    (s) => String(s.classId || s.class) === String(selectedClass),
+                );
+
+                if (classStudents.length === 0) {
+                    toast.error("Không tìm thấy học sinh trong lớp để cộng điểm tập thể.");
+                    return;
+                }
+
+                const results = await Promise.allSettled(
+                    classStudents.map((targetStudent) =>
+                        vpDisciplineService.callByKey("post_discipline_rewards", {
+                            body: {
+                                studentEnrollmentId: targetStudent.enrollmentId || targetStudent.id,
+                                rewardTypeId: selectedReasonKey,
+                                semesterId,
+                                pointsEarned: points,
+                                date: resolvedRewardDate,
+                                notes: comment || `Điểm thưởng tập thể lớp ${selectedClassLabel}`,
+                            },
+                        }),
+                    ),
+                );
+                const successCount = results.filter((result) => result.status === "fulfilled").length;
+                const failedCount = results.length - successCount;
+
+                if (successCount === 0) {
+                    toast.error("Không thể cộng điểm thưởng tập thể. Vui lòng thử lại.");
+                    return;
+                }
+
+                if (failedCount > 0) {
+                    toast.warning(`Đã cộng điểm cho ${successCount}/${results.length} học sinh lớp ${selectedClassLabel}.`);
+                } else {
+                    toast.success(`Đã cộng ${points} điểm thưởng tập thể cho ${results.length} học sinh lớp ${selectedClassLabel}!`);
+                }
             }
 
             onClose();

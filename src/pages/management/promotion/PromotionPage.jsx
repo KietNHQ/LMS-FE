@@ -160,7 +160,8 @@ export default function PromotionPage() {
       return res || null;
     },
     enabled: Boolean(selectedClass && hk1Id && hk2Id),
-    staleTime: 60_000,
+    staleTime: 0,
+    refetchInterval: 5000,
   });
 
   const { data: promotionData, isLoading, refetch } = useQuery({
@@ -171,7 +172,8 @@ export default function PromotionPage() {
       return res || null;
     },
     enabled: Boolean(selectedClass && hk1Id && hk2Id),
-    staleTime: 60_000,
+    staleTime: 0,
+    refetchInterval: 5000,
   });
 
   const promoteMutation = useMutation({

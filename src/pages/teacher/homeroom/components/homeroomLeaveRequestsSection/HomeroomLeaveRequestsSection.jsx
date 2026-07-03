@@ -1,22 +1,38 @@
-import React, { useState, useEffect } from "react";
+import React, { useCallback, useMemo, useState, useEffect } from "react";
 import { teacherService } from "../../../../../services/pages/teacher/teacherService";
 import { toast } from "react-toastify";
 import { FiCheck, FiX, FiAlertCircle, FiClock, FiFileText, FiMessageCircle } from "react-icons/fi";
+import { formatDateTimeVi, formatDateVi } from "../../../../../utils/dateUtils";
 import "./HomeroomLeaveRequestsSection.css";
 
-export default function HomeroomLeaveRequestsSection({ classId }) {
+export default function HomeroomLeaveRequestsSection({ classId, dateFrom = "", dateTo = "" }) {
     const [requests, setRequests] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const [filterStatus, setFilterStatus] = useState("all");
+    const [filterDateFrom, setFilterDateFrom] = useState("");
+    const [filterDateTo, setFilterDateTo] = useState("");
     const [feedbackInput, setFeedbackInput] = useState({});
     const [activeActionId, setActiveActionId] = useState(null); // ID of request being approved/rejected to show feedback box
     const [actionType, setActionType] = useState(""); // 'approved' or 'rejected'
 
-    const fetchLeaveRequests = async () => {
+    const effectiveDateFrom = filterDateFrom || dateFrom;
+    const effectiveDateTo = filterDateTo || dateTo;
+
+    const fetchLeaveRequests = useCallback(async () => {
+        if (!classId) {
+            setRequests([]);
+            setIsLoading(false);
+            return;
+        }
+
         try {
             setIsLoading(true);
             const res = await teacherService.getClassLeaveRequests({
                 pathParams: { classId },
+                params: {
+                    date_from: effectiveDateFrom || undefined,
+                    date_to: effectiveDateTo || undefined
+                },
                 mock: false // Use real API
             });
             if (res.success && res.data) {
@@ -30,11 +46,11 @@ export default function HomeroomLeaveRequestsSection({ classId }) {
         } finally {
             setIsLoading(false);
         }
-    };
+    }, [classId, effectiveDateFrom, effectiveDateTo]);
 
     useEffect(() => {
         fetchLeaveRequests();
-    }, [classId]);
+    }, [fetchLeaveRequests]);
 
     const handleActionClick = (id, type) => {
         setActiveActionId(id);
@@ -73,10 +89,17 @@ export default function HomeroomLeaveRequestsSection({ classId }) {
         }
     };
 
-    const filteredRequests = requests.filter(req => {
-        if (filterStatus === "all") return true;
-        return req.status === filterStatus;
-    });
+    const requestCounts = useMemo(() => ({
+        all: requests.length,
+        pending: requests.filter(r => r.status === "pending").length,
+        approved: requests.filter(r => r.status === "approved").length,
+        rejected: requests.filter(r => r.status === "rejected").length
+    }), [requests]);
+
+    const filteredRequests = useMemo(() => {
+        if (filterStatus === "all") return requests;
+        return requests.filter(req => req.status === filterStatus);
+    }, [requests, filterStatus]);
 
     const getStatusBadge = (status) => {
         switch (status) {
@@ -103,30 +126,61 @@ export default function HomeroomLeaveRequestsSection({ classId }) {
                         className={`status-tab-btn ${filterStatus === "all" ? "active" : ""}`}
                         onClick={() => setFilterStatus("all")}
                     >
-                        Tất cả ({requests.length})
+                        Tất cả ({requestCounts.all})
                     </button>
                     <button
                         type="button"
                         className={`status-tab-btn ${filterStatus === "pending" ? "active" : ""}`}
                         onClick={() => setFilterStatus("pending")}
                     >
-                        Chờ duyệt ({requests.filter(r => r.status === "pending").length})
+                        Chờ duyệt ({requestCounts.pending})
                     </button>
                     <button
                         type="button"
                         className={`status-tab-btn ${filterStatus === "approved" ? "active" : ""}`}
                         onClick={() => setFilterStatus("approved")}
                     >
-                        Đã duyệt ({requests.filter(r => r.status === "approved").length})
+                        Đã duyệt ({requestCounts.approved})
                     </button>
                     <button
                         type="button"
                         className={`status-tab-btn ${filterStatus === "rejected" ? "active" : ""}`}
                         onClick={() => setFilterStatus("rejected")}
                     >
-                        Từ chối ({requests.filter(r => r.status === "rejected").length})
+                        Từ chối ({requestCounts.rejected})
                     </button>
                 </div>
+            </div>
+
+            <div className="leave-requests-filters">
+                <label>
+                    Từ ngày
+                    <input
+                        type="date"
+                        value={filterDateFrom}
+                        onChange={(event) => setFilterDateFrom(event.target.value)}
+                    />
+                </label>
+                <label>
+                    Đến ngày
+                    <input
+                        type="date"
+                        value={filterDateTo}
+                        onChange={(event) => setFilterDateTo(event.target.value)}
+                    />
+                </label>
+                {(filterDateFrom || filterDateTo) && (
+                    <button
+                        type="button"
+                        className="leave-requests-clear-filter"
+                        onClick={() => {
+                            setFilterDateFrom("");
+                            setFilterDateTo("");
+                        }}
+                    >
+                        Xóa lọc ngày
+                    </button>
+                )}
             </div>
 
             {isLoading ? (
@@ -162,7 +216,7 @@ export default function HomeroomLeaveRequestsSection({ classId }) {
                                 <div className="info-item date">
                                     <span className="info-label"><FiClock /> Thời gian nghỉ:</span>
                                     <span className="info-value text-highlight">
-                                        {req.startDate} đến {req.endDate}
+                                        {formatDateVi(req.startDate)} đến {formatDateVi(req.endDate)}
                                     </span>
                                 </div>
                                 
@@ -171,17 +225,27 @@ export default function HomeroomLeaveRequestsSection({ classId }) {
                                     <span className="info-value">{req.reason}</span>
                                 </div>
 
-                                {req.note && (
+                                {req.notes && (
                                     <div className="info-item note">
                                         <span className="info-label"><FiMessageCircle /> Ghi chú từ phụ huynh:</span>
-                                        <span className="info-value text-muted">"{req.note}"</span>
+                                        <span className="info-value text-muted">"{req.notes}"</span>
                                     </div>
                                 )}
 
-                                {req.feedback && (
+                                {req.adminNotes && (
                                     <div className="info-item feedback-received">
                                         <span className="info-label">Phản hồi của GV:</span>
-                                        <span className="info-value italic-value">"{req.feedback}"</span>
+                                        <span className="info-value italic-value">"{req.adminNotes}"</span>
+                                    </div>
+                                )}
+
+                                {req.reviewedByName && (
+                                    <div className="info-item feedback-received">
+                                        <span className="info-label">Người xử lý:</span>
+                                        <span className="info-value">
+                                            {req.reviewedByName}
+                                            {req.reviewedAt ? ` • ${formatDateTimeVi(req.reviewedAt)}` : ""}
+                                        </span>
                                     </div>
                                 )}
                             </div>

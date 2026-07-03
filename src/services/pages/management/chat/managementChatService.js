@@ -54,6 +54,13 @@ const managementChatService = {
   },
 
   /**
+   * Recall one message sent by the current user.
+   */
+  deleteMessage: async (messageId) => {
+    return axiosClient.delete(`${MANAGEMENT_CHAT_ENDPOINT}/messages/${messageId}`);
+  },
+
+  /**
    * Delete a conversation.
    */
   deleteConversation: async (conversationId) => {

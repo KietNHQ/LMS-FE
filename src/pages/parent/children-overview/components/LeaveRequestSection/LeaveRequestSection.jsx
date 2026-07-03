@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from "react";
 import "./LeaveRequestSection.css";
 import { parentService } from "../../../../../services/pages/parent/parentService";
+import { formatDateVi } from "../../../../../utils/dateUtils";
 
 const statusMap = {
     approved: { key: "approved", text: "Đã duyệt" },
@@ -24,9 +25,11 @@ export default function LeaveRequestSection({ requests = [], childId, onSuccess 
         return requests.map((item) => {
             const statusInfo = normalizeStatus(item.statusText || item.status)
             return {
-                id: item.id || `${item.studentId}-${item.startDate}-${Date.now()}-${Math.random()}`,
+                id: item.id || `${item.studentId || "student"}-${item.startDate || "start"}-${item.endDate || "end"}-${item.reason || "leave"}`,
                 title: item.title || item.reason || "Đơn xin nghỉ học",
-                date: item.startDate && item.endDate ? `${item.startDate} đến ${item.endDate}` : (item.date || "--"),
+                date: item.startDate && item.endDate
+                    ? `${formatDateVi(item.startDate)} đến ${formatDateVi(item.endDate)}`
+                    : (item.date ? formatDateVi(item.date, item.date) : "--"),
                 approvedBy: item.approvedByRole === "teacher" ? "Giáo viên chủ nhiệm" : (item.approvedByRole === "manager" ? "Quản lý trường" : (item.approvedBy || "—")),
                 status: statusInfo.key,
                 statusText: item.statusText || statusInfo.text

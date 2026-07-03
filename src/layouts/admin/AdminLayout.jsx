@@ -39,6 +39,7 @@ export default function AdminLayout() {
             import("../../pages/admin/dashboard/AdminDashboard");
             import("../../pages/management/users/ManagementUsers");
             import("../../pages/management/notifications/ManagementNotifications");
+            import("../../pages/management/chat/ManagementChat");
             import("../../pages/admin/audit-log/AdminAuditLog");
             import("../../pages/admin/system-log/AdminSystemLog");
         };

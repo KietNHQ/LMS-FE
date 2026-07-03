@@ -2,8 +2,7 @@ import React, { useMemo, useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import teacherService from "../../../services/pages/teacher/teacherService";
-import { gradeService } from "../../../services/pages/management/grades/gradeService";
-import { resolveSemesterId } from "../../../services/shared/schoolYearLookup";
+import { resolveSemester, resolveSemesterId } from "../../../services/shared/schoolYearLookup";
 import { PageHeader, SchoolYearTermSelector } from "../../../components/common";
 import HomeroomOverviewSection from "./components/homeroomOverviewSection/HomeroomOverviewSection";
 import HomeroomStudentsSection from "./components/homeroomStudentsSection/HomeroomStudentsSection";
@@ -16,12 +15,30 @@ import { FiUsers, FiAward, FiCalendar, FiInfo } from "react-icons/fi";
 import { toast } from "react-toastify";
 import "./TeacherHomeroom.css";
 import { formatName } from "../../../utils/nameUtils";
+import { toDateOnlyString } from "../../../utils/dateUtils";
 
 
 const officerRoleConfig = {
     monitor: { label: "Lớp trưởng", field: "monitor" },
     viceMonitor: { label: "Phó học tập", field: "viceMonitor" },
     secretary: { label: "Bí thư", field: "secretary" },
+};
+
+const normalizeConductLevel = (level) => {
+    const value = String(level || "").trim();
+    if (!value || value === "null") return null;
+    const normalized = {
+        "Xuất sắc": "Tốt",
+        EXCELLENT: "Tốt",
+        GOOD: "Khá",
+        PASS: "Đạt",
+        FAIL: "Chưa đạt",
+        "Trung bình": "Đạt",
+        Yếu: "Chưa đạt",
+        Kém: "Chưa đạt",
+    };
+    if (normalized[value]) return normalized[value];
+    return value;
 };
 
 export default function TeacherHomeroom() {
@@ -33,6 +50,7 @@ export default function TeacherHomeroom() {
     // Xử lý chuyển tab từ URL params
     const [initialViewMode, setInitialViewMode] = useState("info");
     const [hkSemesterIds, setHkSemesterIds] = useState({ hk1: null, hk2: null });
+    const [leaveDateRange, setLeaveDateRange] = useState({ dateFrom: "", dateTo: "" });
     useEffect(() => {
         const params = new URLSearchParams(location.search);
         const tab = params.get("tab");
@@ -62,6 +80,25 @@ export default function TeacherHomeroom() {
         resolve();
         return () => { cancelled = true; };
     }, [selectedSchoolYear]);
+
+    useEffect(() => {
+        let cancelled = false;
+        const resolve = async () => {
+            try {
+                const semester = await resolveSemester(selectedSchoolYear, selectedTerm);
+                if (!cancelled) {
+                    setLeaveDateRange({
+                        dateFrom: toDateOnlyString(semester?.start_date || semester?.startDate),
+                        dateTo: toDateOnlyString(semester?.end_date || semester?.endDate),
+                    });
+                }
+            } catch {
+                if (!cancelled) setLeaveDateRange({ dateFrom: "", dateTo: "" });
+            }
+        };
+        resolve();
+        return () => { cancelled = true; };
+    }, [selectedSchoolYear, selectedTerm]);
 
     const storedUser = JSON.parse(localStorage.getItem("user") || sessionStorage.getItem("user") || "{}");
     const teacherId = storedUser.profile?.id || storedUser.teacherId;
@@ -219,92 +256,45 @@ export default function TeacherHomeroom() {
     });
 
     // Load conduct summary for homeroom class
-    const { data: conductData } = useQuery({
-        queryKey: ["teacher-homeroom-conduct", classData?.id, selectedTerm, hkSemesterIds],
+    const { data: conductData, isLoading: isConductLoading } = useQuery({
+        queryKey: ["teacher-homeroom-conduct", classData?.id, selectedSchoolYear, hkSemesterIds.hk1, hkSemesterIds.hk2],
         queryFn: async () => {
             if (!classData?.id) return null;
-
-            const students = classData.students || [];
-
-            // Per-student classifySemester for the selected term
             const hk1Id = hkSemesterIds.hk1;
             const hk2Id = hkSemesterIds.hk2;
+            if (!hk1Id || !hk2Id) return null;
 
-            // Determine which semester IDs to fetch based on term
-            const semesterIdsToFetch = [];
-            if (selectedTerm === "hk1" || selectedTerm === "all") {
-                if (hk1Id) semesterIdsToFetch.push({ key: "hk1", id: hk1Id });
-            }
-            if (selectedTerm === "hk2" || selectedTerm === "all") {
-                if (hk2Id) semesterIdsToFetch.push({ key: "hk2", id: hk2Id });
-            }
+            const res = await teacherService.getConductClassSummary({
+                pathParams: { classId: classData.id },
+                params: { hk1SemesterId: hk1Id, hk2SemesterId: hk2Id },
+            });
+            const payload = res?.data || res || {};
+            const students = (payload.students || []).map((student) => ({
+                ...student,
+                hk1Level: normalizeConductLevel(student.hk1Level),
+                hk2Level: normalizeConductLevel(student.hk2Level),
+                annualLevel: normalizeConductLevel(student.annualLevel),
+            }));
 
-            if (semesterIdsToFetch.length === 0) return null;
-
-            const conductRows = await Promise.all(
-                students.map(async (student) => {
-                    const enrollmentId = String(student.id || student.enrollment_id || "");
-                    if (!enrollmentId) return null;
-
-                    const results = await Promise.all(
-                        semesterIdsToFetch.map(async ({ key, id }) => {
-                            try {
-                                const res = await gradeService.classifySemester({ enrollmentId, semesterId: id });
-                                return {
-                                    key,
-                                    level: res?.data?.conduct?.level || res?.description || null,
-                                };
-                            } catch {
-                                return { key, level: null };
-                            }
-                        })
-                    );
-
-                    const row = {
-                        enrollmentId,
-                        studentName: student.full_name || student.name || "—",
-                        studentCode: student.student_code || student.code || student.studentCode || "—",
-                    };
-                    for (const r of results) {
-                        row[r.key + "Level"] = r.level;
-                    }
-                    // annualLevel = hk2Level when both are available
-                    if (hk1Id && hk2Id) {
-                        const hk1Res = results.find((r) => r.key === "hk1");
-                        const hk2Res = results.find((r) => r.key === "hk2");
-                        row.annualLevel = hk2Res?.level || hk1Res?.level || null;
-                    } else if (hk2Id) {
-                        const hk2Res = results.find((r) => r.key === "hk2");
-                        row.annualLevel = hk2Res?.level || null;
-                    } else {
-                        const hk1Res = results.find((r) => r.key === "hk1");
-                        row.annualLevel = hk1Res?.level || null;
-                    }
-                    return row;
-                })
-            );
-
-            const validRows = conductRows.filter(Boolean);
-
-            // Build stats
-            const stats = { total: validRows.length };
-            for (const key of ["hk1Levels", "hk2Levels", "annualLevels"]) {
-                stats[key] = { "Tốt": 0, "Khá": 0, "Đạt": 0, "Chưa đạt": 0, null: 0 };
-            }
-            const levelKey = { Tốt: "Tốt", Khá: "Khá", Đạt: "Đạt", "Chưa đạt": "Chưa đạt" };
-            for (const row of validRows) {
-                const countStat = (map, level) => {
-                    if (map[level] !== undefined) map[level]++;
-                    else map.null++;
+            const stats = {
+                total: students.length,
+                hk1Levels: { "Tốt": 0, "Khá": 0, "Đạt": 0, "Chưa đạt": 0, null: 0 },
+                hk2Levels: { "Tốt": 0, "Khá": 0, "Đạt": 0, "Chưa đạt": 0, null: 0 },
+                annualLevels: { "Tốt": 0, "Khá": 0, "Đạt": 0, "Chưa đạt": 0, null: 0 },
+            };
+            for (const student of students) {
+                const increment = (map, level) => {
+                    const key = map[level] !== undefined ? level : "null";
+                    map[key] += 1;
                 };
-                if (row.hk1Level) countStat(stats.hk1Levels, levelKey[row.hk1Level] || row.hk1Level);
-                if (row.hk2Level) countStat(stats.hk2Levels, levelKey[row.hk2Level] || row.hk2Level);
-                if (row.annualLevel) countStat(stats.annualLevels, levelKey[row.annualLevel] || row.annualLevel);
+                increment(stats.hk1Levels, student.hk1Level);
+                increment(stats.hk2Levels, student.hk2Level);
+                increment(stats.annualLevels, student.annualLevel);
             }
 
-            return { students: validRows, stats };
+            return { students, stats };
         },
-        enabled: Boolean(classData?.id),
+        enabled: Boolean(classData?.id && hkSemesterIds.hk1 && hkSemesterIds.hk2),
         staleTime: 60_000,
     });
 
@@ -719,7 +709,11 @@ export default function TeacherHomeroom() {
                     />
                 )}
                 {activeSection === "leave" && (
-                    <HomeroomLeaveRequestsSection classId={classData.id} />
+                    <HomeroomLeaveRequestsSection
+                        classId={classData.id}
+                        dateFrom={leaveDateRange.dateFrom}
+                        dateTo={leaveDateRange.dateTo}
+                    />
                 )}
                 {activeSection === "conduct" && (
                     <HomeroomConductSection
@@ -727,7 +721,7 @@ export default function TeacherHomeroom() {
                         selectedSchoolYear={selectedSchoolYear}
                         selectedTerm={selectedTerm}
                         conductData={conductData}
-                        isLoading={false}
+                        isLoading={isConductLoading}
                     />
                 )}
             </div>

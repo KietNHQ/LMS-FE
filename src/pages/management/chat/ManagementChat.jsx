@@ -238,6 +238,27 @@ export default function ManagementChat() {
     }
   };
 
+  const handleDeleteMessage = async (messageId) => {
+    if (!selectedConversation?.id || !messageId || String(messageId).startsWith("temp-")) return;
+
+    const previousMessages = messages;
+    setMessages((prev) => prev.filter((msg) => String(msg.id) !== String(messageId)));
+
+    try {
+      const response = await managementChatService.deleteMessage(messageId);
+      if (response?.success === false) {
+        setMessages(previousMessages);
+        toast.error(response.error || "Không thể thu hồi tin nhắn");
+        return;
+      }
+      toast.success("Đã thu hồi tin nhắn");
+    } catch (error) {
+      console.error("Failed to recall message:", error);
+      setMessages(previousMessages);
+      toast.error(error?.response?.data?.error || "Không thể thu hồi tin nhắn");
+    }
+  };
+
   const handleSelectConversation = (target) => {
     if (target.isConversation) {
       setSelectedConversation({
@@ -375,6 +396,7 @@ export default function ManagementChat() {
                     {messages.map((msg, idx) => {
                       const isMe = msg.user_id === currentUserId || msg.sender_id === currentUserId;
                       const senderName = msg.sender_name || msg.senderName || "Người dùng";
+                      const canDelete = isMe && msg.id && !String(msg.id).startsWith("temp-");
                       const showAvatar = !isMe && (
                         idx === 0 || messages[idx - 1]?.user_id !== msg.user_id
                       );
@@ -396,6 +418,17 @@ export default function ManagementChat() {
                                 ? new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
                                 : ""}
                             </span>
+                            {canDelete && (
+                              <button
+                                type="button"
+                                className="msg-delete-btn"
+                                onClick={() => handleDeleteMessage(msg.id)}
+                                aria-label="Thu hồi tin nhắn"
+                                title="Thu hồi tin nhắn"
+                              >
+                                <FiTrash2 />
+                              </button>
+                            )}
                           </div>
                         </div>
                       );

@@ -33,6 +33,7 @@ const ManagementBonusPoints = lazy(() => import("../pages/management/discipline/
 const ManagementPeriodClosing = lazy(() => import("../pages/management/discipline/period-closing/VpDisciplinePeriodClosing"));
 const ManagementClassDeductionLogs = lazy(() => import("../pages/management/discipline/class-deduction-logs/VpClassDeductionLogs"));
 const ManagementCompetition = lazy(() => import("../pages/management/competition/index.js"));
+const ManagementConductRating = lazy(() => import("../pages/management/discipline/conduct/VpDisciplineConduct"));
 const ManagementGrades = lazy(() => import("../pages/management/academic/grades/VpAcademicGrades"));
 const ManagementQuiz = lazy(() => import("../pages/management/quiz/ManagementQuiz"));
 const ManagementCreateQuiz = lazy(() => import("../pages/management/quiz/create/ManagementCreateQuiz"));
@@ -95,6 +96,7 @@ const TeacherStudentGradeDetail = lazy(() => import("../pages/teacher/grades/Stu
 const TeacherHomeroom = lazy(
   () => import("../pages/teacher/homeroom/TeacherHomeroom")
 );
+const TeacherConductRating = lazy(() => import("../pages/teacher/conduct-rating/TeacherConductRating"));
 const TeacherLessons = lazy(() => import("../pages/teacher/lessons/TeacherLessons"));
 const TeacherQuiz = lazy(() => import("../pages/teacher/quiz/TeacherQuiz"));
 const TeacherCreateQuiz = lazy(
@@ -213,6 +215,8 @@ export default function AppRoutes() {
         <Route path="dashboard"     element={<AdminDashboard />} />
         <Route path="users"         element={<AdminUsers />} />
         <Route path="notifications" element={<AdminNotifications />} />
+        <Route path="chat"          element={<ManagementChat />} />
+        <Route path="messages"      element={<Navigate to="chat" replace />} />
         <Route path="audit-log"   element={<AdminAuditLog />} />
         <Route path="system-log"  element={<AdminSystemLog />} />
         <Route path="classes"       element={<Navigate to="/management/classes" replace />} />
@@ -247,6 +251,7 @@ export default function AppRoutes() {
         <Route path="discipline/period-closing" element={<ManagementPeriodClosing />} />
         <Route path="discipline/class-deduction-logs/:classId" element={<ManagementClassDeductionLogs />} />
         <Route path="competition"  element={<ManagementCompetition />} />
+        <Route path="conduct-rating" element={<ManagementConductRating />} />
         <Route path="grades"       element={<ManagementGrades />} />
         <Route path="quiz"         element={<ManagementQuiz />} />
         <Route path="quiz/create"  element={<ManagementCreateQuiz />} />
@@ -309,6 +314,7 @@ export default function AppRoutes() {
         <Route path="teaching-classes/:classId" element={<TeacherTeachingClassDetail />} />
         <Route path="ban-can-su-lop" element={<TeacherBanCanSuLop />} />
         <Route path="homeroom"         element={<TeacherHomeroom />} />
+        <Route path="conduct-rating"   element={<TeacherConductRating />} />
         <Route path="lessons"          element={<TeacherLessons />} />
         <Route path="grades"           element={<TeacherGrades />} />
         <Route path="grades/student/:enrollmentId" element={<TeacherStudentGradeDetail />} />
@@ -341,5 +347,3 @@ export default function AppRoutes() {
     </Routes>
   );
 }
-
-

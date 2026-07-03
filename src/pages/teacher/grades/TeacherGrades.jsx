@@ -498,8 +498,12 @@ export default function TeacherGrades() {
       const studentGPAPromises = freshStudents.map(async (student) => {
         const enrollmentId = student.enrollment_id || student.id;
         const [hk1Res, hk2Res] = await Promise.all([
-          gradeService.calculateSemesterGPA({ enrollmentId, semesterId: 1, schoolYearId }).catch(() => null),
-          gradeService.calculateSemesterGPA({ enrollmentId, semesterId: 2, schoolYearId }).catch(() => null),
+          hk1SemesterId
+            ? gradeService.calculateSemesterGPA({ enrollmentId, semesterId: hk1SemesterId, schoolYearId }).catch(() => null)
+            : null,
+          hk2SemesterId
+            ? gradeService.calculateSemesterGPA({ enrollmentId, semesterId: hk2SemesterId, schoolYearId }).catch(() => null)
+            : null,
         ]);
         const hk1GPA = hk1Res?.gpa != null ? round1(hk1Res.gpa) : null;
         const hk2GPA = hk2Res?.gpa != null ? round1(hk2Res.gpa) : null;
@@ -549,8 +553,12 @@ export default function TeacherGrades() {
           const enrollmentId = String(student.enrollment_id || student.id);
           try {
             const [hk1Res, hk2Res] = await Promise.all([
-              gradeService.classifySemester({ enrollmentId, semesterId: 1 }).catch(() => null),
-              gradeService.classifySemester({ enrollmentId, semesterId: 2 }).catch(() => null),
+              hk1SemesterId
+                ? gradeService.classifySemester({ enrollmentId, semesterId: hk1SemesterId }).catch(() => null)
+                : null,
+              hk2SemesterId
+                ? gradeService.classifySemester({ enrollmentId, semesterId: hk2SemesterId }).catch(() => null)
+                : null,
             ]);
             conductMap[enrollmentId] = {
               hk1: hk1Res?.data?.conduct?.level || hk1Res?.description || null,

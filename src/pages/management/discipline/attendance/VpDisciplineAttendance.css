@@ -411,13 +411,13 @@
 }
 
 .points-indicator.plus {
-    color: var(--admin-primary);
-    background: var(--admin-primary-soft);
+    color: #166534;
+    background: #ecfdf3;
 }
 
 .points-indicator.minus {
-    color: var(--admin-text-secondary);
-    background: #eef2ff;
+    color: #991b1b;
+    background: #fef2f2;
 }
 
 .td-day-badge {
@@ -445,9 +445,9 @@
 .vp-attendance .common-status-badge.status-success,
 .vp-attendance .common-status-badge.status-completed,
 .vp-attendance .common-status-badge.status-resolved {
-    color: var(--admin-primary);
-    background: var(--admin-primary-soft);
-    border-color: var(--admin-border);
+    color: #166534;
+    background: #ecfdf3;
+    border-color: #bbf7d0;
 }
 
 .vp-attendance .common-status-badge.status-warning,
@@ -461,9 +461,9 @@
 .vp-attendance .common-status-badge.status-critical,
 .vp-attendance .common-status-badge.status-error,
 .vp-attendance .common-status-badge.status-rejected {
-    color: var(--admin-text-secondary);
-    background: #eef2ff;
-    border-color: var(--admin-border);
+    color: #991b1b;
+    background: #fef2f2;
+    border-color: #fecaca;
 }
 
 .btn-add-bonus {

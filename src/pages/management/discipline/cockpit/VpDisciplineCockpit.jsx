@@ -16,6 +16,7 @@ const TABS = [
 export default function VpDisciplineCockpit() {
     const [searchParams, setSearchParams] = useSearchParams();
     const selectedClass = searchParams.get("class");
+    const selectedClassName = searchParams.get("className") || selectedClass;
     const activeTab = searchParams.get("tab") || "attendance";
     const { selectedSchoolYear, selectedTerm, handleYearArrow, handleTermChange } = useSchoolYearTerm();
 
@@ -42,7 +43,7 @@ export default function VpDisciplineCockpit() {
                                 <FiArrowLeft />
                             </button>
                         )}
-                        <span>{selectedClass ? `Lớp ${selectedClass}` : "Tổng Hợp Thi Đua & Nề Nếp"}</span>
+                        <span>{selectedClass ? `Lớp ${selectedClassName}` : "Tổng Hợp Thi Đua & Nề Nếp"}</span>
                     </div>
                 }
                 actions={
@@ -59,8 +60,8 @@ export default function VpDisciplineCockpit() {
                     <div className="cockpit-ranking-view animate-fade-in">
                         <VpDisciplineCompetition 
                             isEmbedded={true} 
-                            onClassClick={(className, periodParams = {}) => setSearchParams({
-                                class: className,
+                            onClassClick={(classRef, periodParams = {}) => setSearchParams({
+                                class: String(classRef),
                                 tab: "attendance",
                                 ...periodParams,
                             })}

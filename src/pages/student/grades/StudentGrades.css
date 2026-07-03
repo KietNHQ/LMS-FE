@@ -299,6 +299,51 @@
 .blue { color: #2563ff; }
 .green { color: #16a34a; }
 
+.grades-year-summary {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 16px;
+    margin: -4px 0 24px;
+}
+
+.grades-year-summary-card {
+    background: #ffffff;
+    border: 1px solid #dde6f4;
+    border-radius: 14px;
+    padding: 16px;
+    box-shadow: 0 8px 20px rgba(24, 39, 75, 0.04);
+    min-height: 96px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 6px;
+}
+
+.grades-year-summary-card span {
+    color: #64748b;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.grades-year-summary-card strong {
+    color: #16233b;
+    font-size: 18px;
+    font-weight: 800;
+    line-height: 1.25;
+}
+
+.grades-year-summary-card small {
+    color: #64748b;
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1.4;
+}
+
+.grades-year-summary-card.award {
+    border-color: #facc15;
+    background: #fffbeb;
+}
+
 /* ===== TABLE ===== */
 .grades-table {
     background: #ffffff;
@@ -645,6 +690,10 @@
         grid-template-columns: 1fr;
     }
 
+    .grades-year-summary {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
     .detail-panels,
     .year-summary-card {
         grid-template-columns: 1fr;
@@ -658,6 +707,10 @@
 
     .grades-title {
         font-size: 26px;
+    }
+
+    .grades-year-summary {
+        grid-template-columns: 1fr;
     }
 
     .grades-toolbar {

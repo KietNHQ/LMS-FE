@@ -168,8 +168,8 @@ export default function ChatWindow({
                                             type="button"
                                             className="message-delete-btn"
                                             onClick={() => onDeleteMessage?.(item.id)}
-                                            aria-label="Xóa tin nhắn"
-                                            title="Xóa tin nhắn"
+                                            aria-label="Thu hồi tin nhắn"
+                                            title="Thu hồi tin nhắn"
                                         >
                                             <FiTrash2 />
                                         </button>

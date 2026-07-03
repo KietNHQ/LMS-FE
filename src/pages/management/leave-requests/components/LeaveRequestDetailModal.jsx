@@ -1,6 +1,7 @@
 import React from "react";
-import { FiX, FiCheck, FiClock, FiAlertCircle } from "react-icons/fi";
+import { FiX, FiCheck, FiClock } from "react-icons/fi";
 import { StatusBadge } from "../../../../components/common";
+import { formatDateTimeVi, formatDateVi } from "../../../../utils/dateUtils";
 import "./LeaveRequestModal.css"; // We will put modal styles here or in ManagementLeaveRequests.css
 
 export default function LeaveRequestDetailModal({ request, onClose, onAction, canApprove }) {
@@ -61,11 +62,11 @@ export default function LeaveRequestDetailModal({ request, onClose, onAction, ca
             <div className="mlr-detail-grid">
               <div className="detail-item">
                 <span className="detail-label">Ngày bắt đầu:</span>
-                <span className="detail-value">{request.startDate}</span>
+                <span className="detail-value">{formatDateVi(request.startDate)}</span>
               </div>
               <div className="detail-item">
                 <span className="detail-label">Ngày kết thúc:</span>
-                <span className="detail-value">{request.endDate}</span>
+                <span className="detail-value">{formatDateVi(request.endDate)}</span>
               </div>
               <div className="detail-item">
                 <span className="detail-label">Tổng số ngày:</span>
@@ -112,7 +113,7 @@ export default function LeaveRequestDetailModal({ request, onClose, onAction, ca
                 </div>
                 <div className="detail-item">
                   <span className="detail-label">Thời gian duyệt:</span>
-                  <span className="detail-value text-muted">{request.reviewedAt}</span>
+                  <span className="detail-value text-muted">{formatDateTimeVi(request.reviewedAt)}</span>
                 </div>
               </div>
               {request.adminNotes && (

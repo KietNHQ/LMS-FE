@@ -105,6 +105,7 @@ export const sidebarConfig = {
         { label: "Xếp Lớp & Lên Lớp", icon: FiTrendingUp,   path: "/management/promotion" },
         { label: "Rèn Luyện Hè",      icon: FiSun,           path: "/management/summer-training" },
         { label: "Thi Đua",            icon: FiStar,          path: "/management/competition",  requiredPermissions: [PERMISSIONS.DISCIPLINE_VIEW] },
+        { label: "Đánh Giá Hạnh Kiểm", icon: FiUserCheck,     path: "/management/conduct-rating", requiredPermissions: [PERMISSIONS.CONDUCT_VIEW, PERMISSIONS.CONDUCT_UPDATE, PERMISSIONS.CONDUCT_FINALIZE] },
         { label: "Bài Kiểm Tra",       icon: FiFileText,      path: "/management/quiz",         requiredPermissions: [PERMISSIONS.QUIZ_VIEW] },
         { label: "Kỳ Thi",             icon: FiCalendar,      path: "/management/exams",        requiredPermissions: [PERMISSIONS.EXAM_VIEW] },
         { label: "Thời Khóa Biểu",    icon: FiCalendar,      path: "/management/timetable",   requiredPermissions: [PERMISSIONS.TIMETABLE_VIEW] },
@@ -124,6 +125,7 @@ export const sidebarConfig = {
         { label: "Quản Lý Tài Khoản",  icon: LuUserCog,          path: "/admin/users",           requiredPermissions: [PERMISSIONS.USER_VIEW] },
         { label: "Nhật Ký Phân Quyền", icon: FiShield,           path: "/admin/audit-log",       requiredPermissions: [PERMISSIONS.AUDIT_LOG_VIEW] },
         { label: "Log Hệ Thống",       icon: FiActivity,         path: "/admin/system-log",      requiredPermissions: [PERMISSIONS.SYSTEM_LOG_VIEW] },
+        { label: "Trò chuyện",         icon: FiMessageSquare,    path: "/admin/chat" },
         { label: "Thông Báo",          icon: FiBell,             path: "/admin/notifications" },
     ],
 
@@ -131,6 +133,7 @@ export const sidebarConfig = {
         { label: "Trang chủ", icon: FiGrid, path: "/teacher/dashboard" },
         { label: "Lớp Giảng Dạy", icon: FiBookOpen, path: "/teacher/teaching-classes" },
         { label: "Lớp Chủ Nhiệm", icon: FiHome, path: "/teacher/homeroom" },
+        { label: "Đánh Giá Hạnh Kiểm", icon: FiUserCheck, path: "/teacher/conduct-rating" },
         { label: "Bài Học", icon: FiClipboard, path: "/teacher/lessons" },
         { label: "Quản Lý Điểm", icon: FiAward, path: "/teacher/grades" },
         { label: "Bài Kiểm Tra", icon: FiFileText, path: "/teacher/quiz" },

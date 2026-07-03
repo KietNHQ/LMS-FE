@@ -58,6 +58,10 @@ export const vpDisciplineService = {
       body: { conductLevel },
     }),
   submitConduct: (classId, semesterId) =>
+    axiosClient.post(`/conduct/class/${classId}/submit`, { semesterId }, {
+      timeout: 60000,
+    }),
+  finalizeConduct: (classId, semesterId) =>
     axiosClient.post(`/conduct/class/${classId}/finalize`, { semesterId }, {
       timeout: 60000,
     }),
@@ -104,7 +108,6 @@ export const vpDisciplineService = {
 };
 
 export default vpDisciplineService;
-
 
 
 

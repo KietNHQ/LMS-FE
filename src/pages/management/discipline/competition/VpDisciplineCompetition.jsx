@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { PageHeader, WeekPicker, Pagination } from "../../../../components/common";
 import DisciplineHeaderActions from "../components/DisciplineHeaderActions";
 import { useSchoolYearTerm } from "../../../../hooks/useSchoolYearTerm";
@@ -21,34 +21,41 @@ import {
     parseGradeFromClass,
 } from "../../../../utils/competitionUtils";
 import { exportRankingToExcel } from "../../../../utils/rankingExportUtils";
+import { resolveSchoolYearId, resolveSemesterId } from "../../../../services/shared/schoolYearLookup";
 import { toast } from "react-toastify";
 import "./VpDisciplineCompetition.css";
 
 const ITEMS_PER_PAGE = 6;
 const TOTAL_COMPETITION_WEEKS = 35;
 
+const toNumber = (value, fallback = 0) => {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : fallback;
+};
+
 function mapRanking(r) {
     const grade = parseGradeFromClass(r.className || r.class_name);
+    const rawTrend = `${r.trend || "stable"}`.toLowerCase();
     return {
-        rank: r.rank || 0,
+        rank: toNumber(r.rank, 0),
         classId: r.classId || r.class_id,
         class: r.className || r.class_name || "",
         homeroom: r.homeroomTeacher || r.homeroomTeacherName || r.homeroom_teacher_name || "",
-        points: r.currentScore ?? r.avgScore ?? r.avgDisciplineScore ?? r.avg_discipline_score ?? r.totalPoints ?? 0,
+        points: toNumber(r.currentScore ?? r.avgScore ?? r.avgDisciplineScore ?? r.avg_discipline_score ?? r.totalPoints, 0),
         rawScore: r.baseScore ?? r.rawScore ?? r.raw_score ?? null,
-        bonusPoints: r.bonusPoints ?? r.bonus_points ?? 0,
-        penaltyPoints: r.deductedPoints ?? r.penaltyPoints ?? r.penalty_points ?? 0,
+        bonusPoints: toNumber(r.bonusPoints ?? r.bonus_points, 0),
+        penaltyPoints: toNumber(r.deductedPoints ?? r.penaltyPoints ?? r.penalty_points, 0),
         normalizedScore: r.normalizedScore ?? r.normalized_score ?? null,
-        trend: r.trend || "stable",
+        trend: rawTrend,
         previousRank: r.previousRank ?? r.previous_rank ?? null,
-        rankChange: r.rankChange ?? r.rank_change ?? 0,
+        rankChange: toNumber(r.rankChange ?? r.rank_change, 0),
         violationBreakdown: r.violationBreakdown ?? r.violation_breakdown ?? null,
         rewardBreakdown: r.rewardBreakdown ?? r.reward_breakdown ?? null,
         attendance: null,
         conduct: "",
-        studentCount: r.totalStudents ?? r.studentCount ?? r.student_count ?? 0,
+        studentCount: toNumber(r.totalStudents ?? r.studentCount ?? r.student_count, 0),
         grade,
-        isNew: r.trend === "NEW" || (r.isNew ?? r.is_new ?? false),
+        isNew: rawTrend === "new" || (r.isNew ?? r.is_new ?? false),
     };
 }
 
@@ -72,6 +79,12 @@ function buildViolationTooltip(breakdown) {
 
 export default function VpDisciplineCompetition({ isEmbedded = false, onClassClick }) {
     const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
+    const urlWeek = Number(searchParams.get("week"));
+    const hasUrlWeek = Number.isFinite(urlWeek) && urlWeek > 0;
+    const urlSchoolYear = searchParams.get("schoolYear");
+    const urlTerm = searchParams.get("term");
+    const urlDate = searchParams.get("date");
     const {
         selectedSchoolYear,
         selectedTerm,
@@ -79,13 +92,18 @@ export default function VpDisciplineCompetition({ isEmbedded = false, onClassCli
         handleTermChange,
         setSelectedSchoolYear,
     } = useSchoolYearTerm();
-    const [selectedWeek, setSelectedWeek] = useState(1);
-    const [selectedDate, setSelectedDate] = useState("");
+    const [selectedWeek, setSelectedWeek] = useState(() => (hasUrlWeek ? urlWeek : 1));
+    const [selectedDate, setSelectedDate] = useState(urlDate || "");
     const [selectedGrade, setSelectedGrade] = useState("all");
     const [searchTerm, setSearchTerm] = useState("");
     const [currentPage, setCurrentPage] = useState(1);
     const [normalizeBySize, setNormalizeBySize] = useState(false);
     const [isExporting, setIsExporting] = useState(false);
+    const selectedTermKey =
+        typeof selectedTerm === "string"
+            ? selectedTerm
+            : selectedTerm?.key || selectedTerm?.id || "";
+    const selectedTermLabel = selectedTermKey === "hk2" ? "Học kỳ 2" : "Học kỳ 1";
 
     const { startDate, endDate } = useMemo(
         () => getWeekDateRange(selectedSchoolYear, selectedTerm, selectedWeek),
@@ -105,6 +123,20 @@ export default function VpDisciplineCompetition({ isEmbedded = false, onClassCli
             return res?.data || [];
         },
         staleTime: 10 * 60_000,
+    });
+
+    const { data: semesterId } = useQuery({
+        queryKey: ["competition-semester-id", selectedSchoolYear, selectedTermKey],
+        queryFn: () => resolveSemesterId(selectedSchoolYear, selectedTermKey),
+        enabled: Boolean(selectedSchoolYear && selectedTermKey),
+        staleTime: 5 * 60_000,
+    });
+
+    const { data: schoolYearId } = useQuery({
+        queryKey: ["competition-school-year-id", selectedSchoolYear],
+        queryFn: () => resolveSchoolYearId(selectedSchoolYear),
+        enabled: Boolean(selectedSchoolYear),
+        staleTime: 5 * 60_000,
     });
 
     // Build grade options from API
@@ -128,13 +160,14 @@ export default function VpDisciplineCompetition({ isEmbedded = false, onClassCli
     }, [gradeLevelsData]);
 
     const { data: rankingResult, isLoading, isError } = useQuery({
-        queryKey: ["discipline-rankings", startDate, endDate, selectedTerm?.id, normalizeBySize],
+        queryKey: ["discipline-rankings", startDate, endDate, schoolYearId, semesterId, normalizeBySize],
         queryFn: async () => {
             const res = await vpDisciplineService.callByKey("get_discipline_class_rankings", {
                 params: {
                     startDate,
                     endDate,
-                    semesterId: selectedTerm?.id,
+                    schoolYearId: schoolYearId || undefined,
+                    semesterId: semesterId || undefined,
                     normalizeBySize,
                     week: selectedWeek,
                 },
@@ -184,6 +217,39 @@ export default function VpDisciplineCompetition({ isEmbedded = false, onClassCli
         setCurrentPage(1);
     }, [selectedWeek, selectedGrade, searchTerm, normalizeBySize]);
 
+    useEffect(() => {
+        if (urlSchoolYear && urlSchoolYear !== selectedSchoolYear && setSelectedSchoolYear) {
+            setSelectedSchoolYear(urlSchoolYear);
+        }
+    }, [selectedSchoolYear, setSelectedSchoolYear, urlSchoolYear]);
+
+    useEffect(() => {
+        if (urlTerm && urlTerm !== selectedTermKey) {
+            handleTermChange(urlTerm);
+        }
+    }, [handleTermChange, selectedTermKey, urlTerm]);
+
+    useEffect(() => {
+        if (hasUrlWeek) {
+            setSelectedWeek(urlWeek);
+        }
+    }, [hasUrlWeek, urlWeek]);
+
+    useEffect(() => {
+        if (urlDate) {
+            setSelectedDate(urlDate);
+        }
+    }, [urlDate]);
+
+    useEffect(() => {
+        if (hasUrlWeek) return;
+        if (selectedTermKey === "hk1" && selectedWeek > 18) {
+            setSelectedWeek(1);
+        } else if (selectedTermKey === "hk2" && selectedWeek <= 18) {
+            setSelectedWeek(19);
+        }
+    }, [hasUrlWeek, selectedTermKey, selectedWeek]);
+
     const handleDateJump = (value) => {
         setSelectedDate(value);
         if (!value) return;
@@ -210,7 +276,7 @@ export default function VpDisciplineCompetition({ isEmbedded = false, onClassCli
             }
         }
 
-        if (targetTerm !== selectedTerm) {
+        if (targetTerm !== selectedTermKey) {
             handleTermChange(targetTerm);
         }
 
@@ -283,11 +349,16 @@ export default function VpDisciplineCompetition({ isEmbedded = false, onClassCli
 
 	const handleClassClick = (classItem) => {
 	    const periodParams = getCurrentPeriodParams();
+        const classRef = classItem.classId || classItem.class;
 	    if (onClassClick) {
-	        onClassClick(classItem.class, periodParams);
+	        onClassClick(classRef, {
+                ...periodParams,
+                className: classItem.class,
+            });
 	    } else {
 	        const query = new URLSearchParams({
-	            class: classItem.class,
+	            class: String(classRef),
+                className: classItem.class,
 	            tab: "attendance",
 	            ...periodParams,
 	        });
@@ -295,13 +366,22 @@ export default function VpDisciplineCompetition({ isEmbedded = false, onClassCli
 	    }
 	};
 
+    const goToClassLogs = (classItem) => {
+        const classRef = classItem.classId || classItem.class;
+        const query = new URLSearchParams({
+            className: classItem.class || "",
+            ...getCurrentPeriodParams(),
+        });
+        navigate(`/management/discipline/class-deduction-logs/${encodeURIComponent(String(classRef))}?${query.toString()}`);
+    };
+
     const handleExportExcel = async () => {
         if (!rankedWithTies.length) return;
         setIsExporting(true);
         try {
             await exportRankingToExcel(rankedWithTies, {
                 schoolYear: selectedSchoolYear,
-                term: selectedTerm?.name || "",
+                term: selectedTermLabel,
                 week: selectedWeek,
                 normalizeBySize,
             });
@@ -498,7 +578,7 @@ export default function VpDisciplineCompetition({ isEmbedded = false, onClassCli
                                                     className="btn-view-details"
                                                     onClick={(e) => {
                                                         e.stopPropagation();
-                                                        navigate(`/management/discipline/class-deduction-logs/${item.classId || item.class}`);
+                                                        goToClassLogs(item);
                                                     }}
                                                     title="Xem chi tiết"
                                                 >
@@ -527,7 +607,7 @@ export default function VpDisciplineCompetition({ isEmbedded = false, onClassCli
                             <h4><FiTrendingUp /> Biểu Dương</h4>
                             <div className="highlight-list">
                                 {commendationClasses.slice(0, 4).map((cls) => (
-                                    <div key={cls.classId || cls.class} className="h-item" onClick={() => navigate(`/management/discipline/class-deduction-logs/${cls.classId || cls.class}`)}>
+                                    <div key={cls.classId || cls.class} className="h-item" onClick={() => goToClassLogs(cls)}>
                                         <div className="h-icon">
                                             <Trophy size={20} className="icon-gold" />
                                         </div>
@@ -544,7 +624,7 @@ export default function VpDisciplineCompetition({ isEmbedded = false, onClassCli
                             <h4><FiTrendingDown /> Cần Khắc Phục</h4>
                             <div className="highlight-list">
                                 {improvementClasses.map((cls) => (
-                                    <div key={cls.classId || cls.class} className="h-item" onClick={() => navigate(`/management/discipline/class-deduction-logs/${cls.classId || cls.class}`)}>
+                                    <div key={cls.classId || cls.class} className="h-item" onClick={() => goToClassLogs(cls)}>
                                         <div className="h-icon"><TrendingDown size={20} className="icon-danger" /></div>
                                         <div className="h-info">
                                             <strong>Lớp {cls.class}</strong>

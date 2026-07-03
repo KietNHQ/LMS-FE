@@ -512,8 +512,8 @@ export default function TeacherChat() {
                                                         type="button"
                                                         className="msg-delete-btn"
                                                         onClick={() => handleDeleteMessage(item.id)}
-                                                        aria-label="Xóa tin nhắn"
-                                                        title="Xóa tin nhắn"
+                                                        aria-label="Thu hồi tin nhắn"
+                                                        title="Thu hồi tin nhắn"
                                                     >
                                                         <FiTrash2 />
                                                     </button>

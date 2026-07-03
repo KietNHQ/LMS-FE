@@ -35,3 +35,58 @@ export const shiftSchoolYear = (yearRange, direction) => {
   return `${start + delta}-${end + delta}`;
 };
 
+const DATE_PART_PATTERN = /^(\d{4})-(\d{2})-(\d{2})/;
+
+export const toDateOnlyString = (value, fallback = "") => {
+  if (!value) return fallback;
+
+  if (typeof value === "string") {
+    const match = value.match(DATE_PART_PATTERN);
+    if (match) return match[0];
+  }
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return fallback;
+
+  const year = date.getFullYear();
+  const month = `${date.getMonth() + 1}`.padStart(2, "0");
+  const day = `${date.getDate()}`.padStart(2, "0");
+  return `${year}-${month}-${day}`;
+};
+
+export const formatDateVi = (value, fallback = "-") => {
+  if (!value) return fallback;
+
+  if (typeof value === "string") {
+    const match = value.match(DATE_PART_PATTERN);
+    if (match) {
+      const [, year, month, day] = match;
+      return `${day}/${month}/${year}`;
+    }
+  }
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return fallback;
+
+  return new Intl.DateTimeFormat("vi-VN", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric"
+  }).format(date);
+};
+
+export const formatDateTimeVi = (value, fallback = "-") => {
+  if (!value) return fallback;
+
+  const normalizedValue = typeof value === "string" ? value.replace(" ", "T") : value;
+  const date = new Date(normalizedValue);
+  if (Number.isNaN(date.getTime())) return fallback;
+
+  return new Intl.DateTimeFormat("vi-VN", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit"
+  }).format(date);
+};

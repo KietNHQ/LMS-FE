@@ -204,6 +204,43 @@
     text-align: right;
 }
 
+.homeroom-parent-chat .msg-delete-btn {
+    position: absolute;
+    top: 50%;
+    right: calc(100% + 8px);
+    width: 28px;
+    height: 28px;
+    border: 1px solid #dbe3ef;
+    border-radius: 999px;
+    background: #ffffff;
+    color: #0d9488;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(-50%);
+    transition: opacity 0.16s ease, transform 0.16s ease, color 0.16s ease;
+    box-shadow: 0 8px 18px rgba(15, 23, 42, 0.12);
+}
+
+.homeroom-parent-chat .msg-delete-btn svg {
+    width: 14px;
+    height: 14px;
+}
+
+.homeroom-parent-chat .msg-me:hover .msg-delete-btn,
+.homeroom-parent-chat .msg-delete-btn:focus-visible {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.homeroom-parent-chat .msg-delete-btn:hover {
+    color: #dc2626;
+    transform: translateY(-50%) scale(1.05);
+}
+
 .chat-input-wrapper {
     padding: 1rem 1.5rem;
     border-top: 1px solid #f1f5f9;
@@ -270,5 +307,13 @@
     }
     .parent-info, .parent-search, .parent-list-header span {
         display: none;
+    }
+
+    .homeroom-parent-chat .msg-delete-btn {
+        right: calc(100% + 4px);
+        width: 26px;
+        height: 26px;
+        opacity: 1;
+        pointer-events: auto;
     }
 }

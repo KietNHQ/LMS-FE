@@ -15,6 +15,33 @@ const calculateDays = (start, end) => {
   }
 };
 
+const toDateOnlyTime = (value) => {
+  if (!value) return null;
+  const match = String(value).match(/^(\d{4})-(\d{2})-(\d{2})/);
+  const date = match
+    ? new Date(`${match[1]}-${match[2]}-${match[3]}T00:00:00.000Z`)
+    : new Date(value);
+  if (Number.isNaN(date.getTime())) return null;
+  date.setUTCHours(0, 0, 0, 0);
+  return date.getTime();
+};
+
+const matchesDateRange = (item, dateFrom, dateTo) => {
+  let from = toDateOnlyTime(dateFrom);
+  let to = toDateOnlyTime(dateTo);
+  if (from !== null && to !== null && from > to) {
+    [from, to] = [to, from];
+  }
+
+  const start = toDateOnlyTime(item.startDate);
+  const end = toDateOnlyTime(item.endDate);
+  if (start === null || end === null) return true;
+
+  if (from !== null && end < from) return false;
+  if (to !== null && start > to) return false;
+  return true;
+};
+
 // Initial stateful mock data if localStorage is empty
 const INITIAL_MOCK_DATA = [
   {
@@ -243,15 +270,7 @@ export const managementLeaveService = {
         list = list.filter((item) => String(item.classId) === String(classId));
       }
 
-      // Filter by Date From
-      if (dateFrom) {
-        list = list.filter((item) => new Date(item.startDate) >= new Date(dateFrom));
-      }
-
-      // Filter by Date To
-      if (dateTo) {
-        list = list.filter((item) => new Date(item.endDate) <= new Date(dateTo));
-      }
+      list = list.filter((item) => matchesDateRange(item, dateFrom, dateTo));
 
       // Pagination
       const total = list.length;
@@ -291,6 +310,8 @@ export const managementLeaveService = {
           studentCode: req.student?.studentCode || "",
           className: req.student?.className || "",
           guardianName: req.guardian?.fullName || "",
+          note: req.notes ?? req.note ?? "",
+          notes: req.notes ?? req.note ?? "",
         }));
       }
       return data;
@@ -316,7 +337,9 @@ export const managementLeaveService = {
           try {
             const user = JSON.parse(storedUserStr);
             reviewerName = user.fullName || user.username || reviewerName;
-          } catch {}
+          } catch {
+            reviewerName = "Ban Giám Hiệu";
+          }
         }
 
         const now = new Date();
@@ -367,7 +390,9 @@ export const managementLeaveService = {
           try {
             const user = JSON.parse(storedUserStr);
             reviewerName = user.fullName || user.username || reviewerName;
-          } catch {}
+          } catch {
+            reviewerName = "Ban Giám Hiệu";
+          }
         }
 
         const now = new Date();
