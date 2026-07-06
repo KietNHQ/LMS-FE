@@ -22,7 +22,7 @@
     height: 4rem;
     border-radius: 50%;
     background: linear-gradient(135deg, #a67cff, #7c4dff);
-    color: #ffffff;
+    color: #ffffff !important;
     display: flex;
     align-items: center;
     justify-content: center;
