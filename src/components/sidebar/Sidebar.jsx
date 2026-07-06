@@ -78,6 +78,8 @@ export default function Sidebar({
     });
   }, [role, permissionsToCheck]);
 
+  const allPaths = useMemo(() => items.map((i) => i.path).filter(Boolean), [items]);
+
   const getIsMobile = () => window.innerWidth <= MOBILE_BREAKPOINT;
   const getIsAtTop = () => window.scrollY <= 16;
 
@@ -452,6 +454,7 @@ export default function Sidebar({
                           item={item}
                           badgeCount={getNotificationBadgeCount(item.path)}
                           onClick={handleCloseMobileMenu}
+                          allPaths={allPaths}
                       />
                   ))}
                 </nav>
@@ -492,6 +495,7 @@ export default function Sidebar({
                             key={`${item.path || item.label}-${index}`}
                             item={item}
                             badgeCount={getNotificationBadgeCount(item.path)}
+                            allPaths={allPaths}
                         />
                     ))}
                   </nav>
