@@ -35,7 +35,8 @@ import {
     FiMap,
     FiHash,
     FiSun,
-    FiLock
+    FiLock,
+    FiShoppingBag
 } from "react-icons/fi";
 import { LuUserCog } from "react-icons/lu";
 import { FaChalkboardTeacher } from "react-icons/fa";
@@ -97,16 +98,18 @@ export const sidebarConfig = {
         { label: "Trang chủ",          icon: FiGrid,          path: "/management/dashboard" },
         { label: "Người Dùng",         icon: LuUserCog,       path: "/management/users",        requiredPermissions: [PERMISSIONS.USER_VIEW] },
         { label: "Lớp Học",           icon: FiBookOpen,      path: "/management/classes",      requiredPermissions: [PERMISSIONS.CLASS_VIEW] },
+        { label: "  Xếp Lớp Đầu Năm", icon: FiUsers,        path: "/management/classes/xeplop", requiredPermissions: [PERMISSIONS.CLASS_VIEW] },
         { label: "Quản Lý Điểm Số",    icon: FiAward,         path: "/management/grades",      requiredPermissions: [PERMISSIONS.GRADE_VIEW] },
-        { label: "NỀ Nếp & Kỷ Luật", icon: FiAlertTriangle, path: "/management/discipline",   requiredPermissions: [PERMISSIONS.DISCIPLINE_VIEW], end: true },
+        { label: "NỀ Nếp & Kỷ Luật", icon: FiAlertTriangle, path: "/management/discipline",   requiredPermissions: [PERMISSIONS.DISCIPLINE_VIEW] },
         { label: "  Khóa sổ thi đua", icon: FiLock, path: "/management/discipline/period-closing", requiredPermissions: [PERMISSIONS.DISCIPLINE_VIEW] },
         { label: "Xếp Lớp & Lên Lớp", icon: FiTrendingUp,   path: "/management/promotion" },
         { label: "Rèn Luyện Hè",      icon: FiSun,           path: "/management/summer-training" },
         { label: "Thi Đua",            icon: FiStar,          path: "/management/competition",  requiredPermissions: [PERMISSIONS.DISCIPLINE_VIEW] },
+        { label: "Đánh Giá Hạnh Kiểm", icon: FiUserCheck,     path: "/management/conduct-rating", requiredPermissions: [PERMISSIONS.CONDUCT_VIEW, PERMISSIONS.CONDUCT_UPDATE, PERMISSIONS.CONDUCT_FINALIZE] },
         { label: "Bài Kiểm Tra",       icon: FiFileText,      path: "/management/quiz",         requiredPermissions: [PERMISSIONS.QUIZ_VIEW] },
         { label: "Kỳ Thi",             icon: FiCalendar,      path: "/management/exams",        requiredPermissions: [PERMISSIONS.EXAM_VIEW] },
         { label: "Thời Khóa Biểu",    icon: FiCalendar,      path: "/management/timetable",   requiredPermissions: [PERMISSIONS.TIMETABLE_VIEW] },
-        { label: "Học Phí & Tài Chính",icon: FiCreditCard,    path: "/management/finance",     requiredPermissions: [PERMISSIONS.FINANCE_TUITION_VIEW], end: true },
+        { label: "Học Phí & Tài Chính",icon: FiCreditCard,    path: "/management/finance",     requiredPermissions: [PERMISSIONS.FINANCE_TUITION_VIEW] },
         { label: "  Công nợ chi tiết",  icon: FiAlertCircle,  path: "/management/finance/debts",    requiredPermissions: [PERMISSIONS.FINANCE_TUITION_VIEW] },
         { label: "  Doanh thu",          icon: FiTrendingUp,   path: "/management/finance/revenue",   requiredPermissions: [PERMISSIONS.FINANCE_TUITION_VIEW] },
         { label: "  Lịch sử TT",         icon: FiBarChart2,   path: "/management/finance/payment-history", requiredPermissions: [PERMISSIONS.FINANCE_TUITION_VIEW] },
@@ -122,6 +125,7 @@ export const sidebarConfig = {
         { label: "Quản Lý Tài Khoản",  icon: LuUserCog,          path: "/admin/users",           requiredPermissions: [PERMISSIONS.USER_VIEW] },
         { label: "Nhật Ký Phân Quyền", icon: FiShield,           path: "/admin/audit-log",       requiredPermissions: [PERMISSIONS.AUDIT_LOG_VIEW] },
         { label: "Log Hệ Thống",       icon: FiActivity,         path: "/admin/system-log",      requiredPermissions: [PERMISSIONS.SYSTEM_LOG_VIEW] },
+        { label: "Trò chuyện",         icon: FiMessageSquare,    path: "/admin/chat" },
         { label: "Thông Báo",          icon: FiBell,             path: "/admin/notifications" },
     ],
 
@@ -129,6 +133,7 @@ export const sidebarConfig = {
         { label: "Trang chủ", icon: FiGrid, path: "/teacher/dashboard" },
         { label: "Lớp Giảng Dạy", icon: FiBookOpen, path: "/teacher/teaching-classes" },
         { label: "Lớp Chủ Nhiệm", icon: FiHome, path: "/teacher/homeroom" },
+        { label: "Đánh Giá Hạnh Kiểm", icon: FiUserCheck, path: "/teacher/conduct-rating" },
         { label: "Bài Học", icon: FiClipboard, path: "/teacher/lessons" },
         { label: "Quản Lý Điểm", icon: FiAward, path: "/teacher/grades" },
         { label: "Bài Kiểm Tra", icon: FiFileText, path: "/teacher/quiz" },

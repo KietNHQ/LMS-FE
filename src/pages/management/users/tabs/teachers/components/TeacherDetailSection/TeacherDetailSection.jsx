@@ -7,6 +7,14 @@ function toPercent(value) {
 	return `${Math.max(0, Math.min(100, Math.round(value)))}%`;
 }
 
+function normalizeText(value) {
+	return String(value || "").trim().toLocaleLowerCase("vi");
+}
+
+function isQualificationText(value) {
+	return ["cử nhân", "cu nhan", "thạc sĩ", "thac si", "tiến sĩ", "tien si"].includes(normalizeText(value));
+}
+
 export default function TeacherDetailSection({
 	teacher,
 	classOptions,
@@ -44,6 +52,15 @@ export default function TeacherDetailSection({
 		averageScore: 0,
 		pendingLessonPlans: 0,
 	};
+	const rawSubject =
+		teacher.subjects ||
+		teacher.assignedSubjects ||
+		teacher.subject ||
+		teacher.profile?.subject ||
+		"";
+	const qualification = teacher.qualification || teacher.profile?.qualification || "";
+	const teachingSubject = isQualificationText(rawSubject) ? "" : rawSubject;
+	const subjectSummary = teachingSubject || "Chưa có môn dạy";
 
 	return (
 		<div className="teacher-detail-overlay" onClick={onClose}>
@@ -53,7 +70,7 @@ export default function TeacherDetailSection({
 						<div className="teacher-detail-avatar">{teacher.name.charAt(0).toUpperCase()}</div>
 						<div>
 							<h2>{teacher.name}</h2>
-							<p className="teacher-detail-subject">{teacher.subject} • {teacher.email}</p>
+							<p className="teacher-detail-subject">{subjectSummary} • {teacher.email}</p>
 						</div>
 					</div>
 					<button className="teacher-detail-close" onClick={onClose} aria-label="Đóng">
@@ -69,6 +86,16 @@ export default function TeacherDetailSection({
 						<div className="teacher-detail-row">
 							<span>Giáo viên</span>
 							<strong>{teacher.name}</strong>
+						</div>
+
+						<div className="teacher-detail-row">
+							<span>Môn dạy</span>
+							<strong>{subjectSummary}</strong>
+						</div>
+
+						<div className="teacher-detail-row">
+							<span>Trình độ</span>
+							<strong>{qualification || "—"}</strong>
 						</div>
 
 						<div className="teacher-detail-control">
@@ -214,5 +241,4 @@ export default function TeacherDetailSection({
 		</div>
 	);
 }
-
 

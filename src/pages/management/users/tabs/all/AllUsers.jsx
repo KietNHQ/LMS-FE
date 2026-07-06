@@ -7,7 +7,9 @@ import UsersSearchFilterSort from "./components/usersSearchFilterSort/usersSearc
 import UserDetailSection from "./components/userDetailSection/userDetailSection";
 import { CreateUserDialog, Pagination, LoadingSpinner, ConfirmationModal } from "../../../../../components/common";
 import { useCheckPermission } from "../../../../../hooks/useAuth";
-import { userService, studentsService, parentsService, permissionService } from "../../../../../services/pages/management/users";
+import { userService, teachersService, studentsService, parentsService, permissionService } from "../../../../../services/pages/management/users";
+import { classesService } from "../../../../../services/pages/management/classes";
+import { adminApiService } from "../../../../../services/pages/admin/generated";
 
 // Detail Section Imports
 import TeacherInformationSection from "../teachers/components/teacherInformationSection/teacherInformationSection";
@@ -49,6 +51,16 @@ const buildDownloadFilename = (headers = {}) => {
     }
 };
 
+const getQualificationForSave = (form = {}, subjectCatalogSet = new Set()) => {
+    const rawQualification = String(form.qualification ?? form.profile?.qualification ?? "").trim();
+
+    return subjectCatalogSet.has(rawQualification) ? "" : rawQualification;
+};
+
+const normalizeText = (value) => String(value || "").trim().toLocaleLowerCase("vi");
+const compactUnique = (values = []) =>
+    Array.from(new Set(values.filter((value) => value !== undefined && value !== null && value !== "")));
+
 export default function AllUsers({ onCountChange, schoolYear, term, hasPermission, currentUser: propCurrentUser }) {
     const { user: adminUser } = useCheckPermission();
     const [users, setUsers] = useState([]);
@@ -67,8 +79,11 @@ export default function AllUsers({ onCountChange, schoolYear, term, hasPermissio
     const [activeModalMode, setActiveModalMode] = useState(null); // 'view' | 'edit'
     const [selectedUser, setSelectedUser] = useState(null);
     const [allClasses, setAllClasses] = useState([]);
+    const [allClassRows, setAllClassRows] = useState([]);
+    const [allTeachers, setAllTeachers] = useState([]);
     const [allStudents, setAllStudents] = useState([]);
     const [allParents, setAllParents] = useState([]);
+    const [subjectCatalog, setSubjectCatalog] = useState([]);
 
     const [statusTarget, setStatusTarget] = useState(null);
     const [currentPage, setCurrentPage] = useState(1);
@@ -117,24 +132,111 @@ export default function AllUsers({ onCountChange, schoolYear, term, hasPermissio
     }, []);
 
     const loadClasses = useCallback(async () => {
-        try {
-            const [students, parents] = await Promise.all([
-                studentsService.listStudents(),
-                parentsService.listParents()
-            ]);
-            setAllStudents(students);
-            setAllParents(parents);
-            const classes = Array.from(new Set(students.map(s => s.className).filter(Boolean)));
-            setAllClasses(classes);
-        } catch (err) {
-            console.error("Failed to load classes for detail modals", err);
+        const [classesResult, teachersResult, studentsResult, parentsResult] = await Promise.allSettled([
+            classesService.listClasses({ schoolYearName: schoolYear }),
+            teachersService.listTeachers(),
+            studentsService.listStudents({ schoolYearName: schoolYear }),
+            parentsService.listParents()
+        ]);
+
+        if (classesResult.status === "fulfilled") {
+            const rows = classesResult.value || [];
+            setAllClassRows(rows);
+            setAllClasses(Array.from(new Set(rows.map(classItem => classItem?.name).filter(Boolean))));
+        } else {
+            setAllClassRows([]);
+            console.error("Failed to load classes for detail modals", classesResult.reason);
         }
-    }, []);
+
+        if (teachersResult.status === "fulfilled") {
+            setAllTeachers(teachersResult.value);
+        } else {
+            console.error("Failed to load teachers for detail modals", teachersResult.reason);
+        }
+
+        if (studentsResult.status === "fulfilled") {
+            setAllStudents(studentsResult.value);
+        } else {
+            console.error("Failed to load students for detail modals", studentsResult.reason);
+        }
+
+        if (parentsResult.status === "fulfilled") {
+            setAllParents(parentsResult.value);
+        } else {
+            console.error("Failed to load parents for detail modals", parentsResult.reason);
+        }
+    }, [schoolYear]);
 
     useEffect(() => {
         loadUsers();
         loadClasses();
     }, [loadUsers, loadClasses]);
+
+    useEffect(() => {
+        let cancelled = false;
+
+        const loadSubjectCatalog = async () => {
+            try {
+                const response = await adminApiService.get_subjects();
+                const rows = Array.isArray(response?.data) ? response.data : [];
+                const names = rows.map(subject => subject?.name).filter(Boolean);
+
+                if (!cancelled) {
+                    setSubjectCatalog(Array.from(new Set(names)));
+                }
+            } catch (error) {
+                if (!cancelled) {
+                    setSubjectCatalog([]);
+                }
+            }
+        };
+
+        loadSubjectCatalog();
+
+        return () => {
+            cancelled = true;
+        };
+    }, []);
+
+    const editableSubjectOptions = useMemo(() => {
+        return [...subjectCatalog].sort((a, b) => a.localeCompare(b, "vi"));
+    }, [subjectCatalog]);
+
+    const subjectCatalogSet = useMemo(() => new Set(subjectCatalog), [subjectCatalog]);
+
+    const resolveTeacherSubject = useCallback((teacher = {}) => {
+        const assignedSubject =
+            teacher.subjects ||
+            teacher.assignedSubjects ||
+            teacher.subject ||
+            teacher.profile?.subject ||
+            "";
+        if (assignedSubject) return assignedSubject;
+
+        const qualification = teacher.qualification || teacher.profile?.qualification || "";
+        return subjectCatalogSet.has(qualification) ? qualification : "";
+    }, [subjectCatalogSet]);
+
+    const displayTeachers = useMemo(() => {
+        return allTeachers.map((teacher) => {
+            const subject = resolveTeacherSubject(teacher);
+            const teacherIds = new Set(compactUnique([teacher.teacherId, ...(teacher.teacherIds || [])]).map(String));
+            const classByTeacherId = allClassRows.find((classItem) => teacherIds.has(String(classItem.homeroomTeacherId || "")));
+            const classByTeacherName = allClassRows.find((classItem) => normalizeText(classItem.teacher) === normalizeText(teacher.name));
+            const homeroomClass = classByTeacherId?.name || classByTeacherName?.name || "";
+            return {
+                ...teacher,
+                subject,
+                homeroomClass,
+                profile: {
+                    ...(teacher.profile || {}),
+                    subject,
+                    qualification: teacher.qualification || teacher.profile?.qualification || "",
+                    homeroomClass,
+                },
+            };
+        });
+    }, [allTeachers, allClassRows, resolveTeacherSubject]);
 
     // Load all system permissions for mapping (same as ManagementManagers)
     useEffect(() => {
@@ -177,8 +279,11 @@ export default function AllUsers({ onCountChange, schoolYear, term, hasPermissio
             let matchYearTerm = true;
             if (schoolYear) {
                 if (user.role === "Học sinh") {
-                    // Nếu là học sinh, khớp năm học
-                    matchYearTerm = user.academicYear === schoolYear || !user.academicYear;
+                    matchYearTerm = allStudents.some((student) =>
+                        student.userId === user.id ||
+                        student.id === user.id ||
+                        student.email === user.email
+                    );
                 } else {
                     // Các role khác: Chỉ hiện nếu đang hoạt động
                     matchYearTerm = user.status === "Hoạt động";
@@ -189,7 +294,7 @@ export default function AllUsers({ onCountChange, schoolYear, term, hasPermissio
 
             return matchSearch && matchQuickRole && matchYearTerm && matchStatus;
         });
-    }, [users, searchValue, quickRole, schoolYear, term, statusFilter]);
+    }, [users, allStudents, searchValue, quickRole, schoolYear, term, statusFilter]);
 
     useEffect(() => {
         onCountChange?.(filteredUsers.length);
@@ -426,8 +531,26 @@ export default function AllUsers({ onCountChange, schoolYear, term, hasPermissio
             onConfirm: async () => {
                 closeConfirm();
                 try {
-                    // 1. Update basic user info
-                    await userService.updateUser(id, formData);
+                    if (formData.role === "Giáo viên") {
+                        const subject = formData.subject || formData.profile?.subject || "";
+                        const qualification = getQualificationForSave(formData, subjectCatalogSet);
+
+                        await teachersService.updateTeacher(id, {
+                            ...formData,
+                            userId: formData.userId || id,
+                            requireTeacherProfileUpdate: true,
+                            qualification,
+                            primarySubject: subject,
+                            profile: {
+                                ...(formData.profile || {}),
+                                subject,
+                                primarySubject: subject,
+                                qualification,
+                            },
+                        });
+                    } else {
+                        await userService.updateUser(id, formData);
+                    }
                     
                     // 2. Link Guardian if it's a student and guardianId is present
                     if (formData.role === "Học sinh" && formData.guardianId) {
@@ -580,6 +703,25 @@ export default function AllUsers({ onCountChange, schoolYear, term, hasPermissio
                     }
                 };
             }
+        } else if (user.role === "Giáo viên") {
+            const teacherData = displayTeachers.find(t => t.userId === user.id || t.id === user.id || t.email === user.email);
+            if (teacherData) {
+                enriched = {
+                    ...enriched,
+                    ...teacherData,
+                    role: "Giáo viên",
+                    id: user.id,
+                    userId: user.id,
+                    teacherId: teacherData.teacherId,
+                    teacherIds: teacherData.teacherIds || (teacherData.teacherId ? [teacherData.teacherId] : []),
+                    profile: {
+                        ...(enriched.profile || {}),
+                        ...(teacherData.profile || {}),
+                        subject: teacherData.subject || teacherData.profile?.subject || enriched.profile?.subject || "",
+                        qualification: teacherData.qualification || teacherData.profile?.qualification || "",
+                    },
+                };
+            }
         }
         return enriched;
     };
@@ -655,6 +797,7 @@ export default function AllUsers({ onCountChange, schoolYear, term, hasPermissio
                     mode={activeModalMode}
                     formData={selectedUser}
                     classOptions={allClasses}
+                    subjectOptions={editableSubjectOptions}
                     onChange={(field, val) => setSelectedUser(prev => ({ ...prev, [field]: val }))}
                     onClose={handleCloseModal}
                     onSubmit={() => handleSaveEdit(selectedUser)}
@@ -923,4 +1066,3 @@ export default function AllUsers({ onCountChange, schoolYear, term, hasPermissio
         </div>
     );
 }
-

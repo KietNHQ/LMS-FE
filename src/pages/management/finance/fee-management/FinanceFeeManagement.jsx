@@ -53,85 +53,28 @@ export default function FinanceFeeManagement() {
     const loadStats = useCallback(async () => {
         setIsLoading(true);
         try {
-            const [summaryRes, invoicesRes] = await Promise.allSettled([
-                financeService.getDebtSummary({
-                    params: {
-                        schoolYearId: selectedSchoolYear?.id,
-                        semesterId: selectedTerm?.id,
-                    },
-                }),
-                financeService.getAllInvoices({
-                    params: {
-                        schoolYearId: selectedSchoolYear?.id,
-                        semesterId: selectedTerm?.id,
-                        limit: 1000,
-                    },
-                }),
-            ]);
-
-            let totalCollected = 0;
-            let totalDebt = 0;
-            let overdueCount = 0;
-            let unpaidCount = 0;
-            let overdueAmount = 0;
-            const unpaidStudents = new Set();
-            const overdueStudents = new Set();
-
-            // Try to get from debt summary
-            if (summaryRes.status === "fulfilled" && summaryRes.value?.success) {
-                const d = summaryRes.value.data || {};
-                totalCollected += parseFloat(d.totalCollected || d.collected || 0);
-                totalDebt += parseFloat(d.totalDebt || d.remaining || 0);
-                overdueCount += Number(d.overdueCount || 0);
-                overdueAmount += parseFloat(d.overdueAmount || 0);
-            }
-
-            // Derive from invoices
-            let invoiceRows = [];
-            if (invoicesRes.status === "fulfilled" && invoicesRes.value?.success) {
-                const raw = invoicesRes.value.data;
-                invoiceRows = Array.isArray(raw) ? raw : raw?.items || raw?.data || [];
-            }
-
-            invoiceRows.forEach((inv) => {
-                const amount = parseFloat(
-                    inv.total_amount || inv.amount || inv.expected_amount || inv.total || 0
-                );
-                const paid = parseFloat(
-                    inv.paid_amount || inv.amount_paid || 0
-                );
-                const remaining = Math.max(0, amount - paid);
-                totalCollected += paid;
-                totalDebt += remaining;
-                const sid = inv.student_id;
-                if (remaining > 0) {
-                    unpaidStudents.add(sid);
-                    if (remaining === amount) unpaidCount++;
-                }
-                // overdue: check due_date
-                if (inv.due_date) {
-                    const due = new Date(inv.due_date);
-                    const now = new Date();
-                    if (due < now && remaining > 0) {
-                        overdueStudents.add(sid);
-                        overdueCount++;
-                        overdueAmount += remaining;
-                    }
-                }
+            console.log("[FinanceFeeMgmt] loadStats called with:", { schoolYearId: selectedSchoolYear, semesterId: selectedTerm });
+            const res = await financeService.getDebtSummary({
+                params: {
+                    schoolYearId: selectedSchoolYear,
+                    semesterId: selectedTerm,
+                },
             });
+            console.log("[FinanceFeeMgmt] summaryRes:", JSON.stringify(res, null, 2));
 
-            // Deduplicate counts
-            unpaidCount = unpaidStudents.size;
-            overdueCount = overdueStudents.size;
-
-            const total = totalCollected + totalDebt;
-            const collectionRate = total > 0 ? Math.round((totalCollected / total) * 100) : 0;
+            const d = res?.data || {};
+            const totalAmount = parseFloat(d.totalAmount || d.totalDebt || 0);
+            const totalCollected = parseFloat(d.totalCollected || 0);
+            const overdueAmount = parseFloat(d.overdueDebtAmount || d.overdueAmount || 0);
+            const overdueCount = Number(d.overdueCount || 0);
+            const byStatus = d.byStatus || {};
+            const unpaidCount = Number(byStatus.unpaid || 0) + Number(byStatus.partial || 0);
 
             setStats({
-                totalCharged: formatCompact(total),
+                totalCharged: formatCompact(totalAmount),
                 totalCollected: formatCompact(totalCollected),
-                collectionRate: `${collectionRate}%`,
-                pendingAmount: formatCompact(totalDebt),
+                collectionRate: `${d.collectionRate || 0}%`,
+                pendingAmount: formatCompact(totalAmount - totalCollected),
                 overdueAmount: formatCompact(overdueAmount),
                 unpaidCount,
                 overdueCount,
@@ -141,7 +84,7 @@ export default function FinanceFeeManagement() {
         } finally {
             setIsLoading(false);
         }
-    }, [selectedSchoolYear?.id, selectedTerm?.id]);
+    }, [selectedSchoolYear, selectedTerm]);
 
     useEffect(() => { loadStats(); }, [loadStats]);
 

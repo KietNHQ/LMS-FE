@@ -1,0 +1,35 @@
+.btn-vnpay-checkout {
+  background: #0a8f54;
+  color: #ffffff;
+  border: none;
+  border-radius: 0.875rem;
+  padding: 0.6875rem 1.125rem;
+  cursor: pointer;
+  font-size: clamp(0.8125rem, 0.78rem + 0.15vw, 0.875rem);
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  transition:
+    background 0.2s ease,
+    transform 0.2s ease,
+    opacity 0.2s ease;
+}
+
+.btn-vnpay-checkout:hover:not(:disabled) {
+  background: #087947;
+}
+
+.btn-vnpay-checkout:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.btn-vnpay-checkout:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.btn-vnpay-checkout svg {
+  flex-shrink: 0;
+}

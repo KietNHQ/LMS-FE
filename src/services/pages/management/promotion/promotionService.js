@@ -24,7 +24,7 @@ export const getClassPromotionSummary = async (classId, hk1SemesterId, hk2Semest
   const response = await axiosClient.get(`/promotion/class/${classId}/summary`, {
     params: { hk1SemesterId, hk2SemesterId, page, limit },
   });
-  return response;
+  return response.data || null;
 };
 
 /**
@@ -34,11 +34,18 @@ export const getClassPromotionSummary = async (classId, hk1SemesterId, hk2Semest
  * @param {number} hk1SemesterId - ID học kỳ 1
  * @param {number} hk2SemesterId - ID học kỳ 2
  */
-export const bulkPromote = async (classId, schoolYearId, hk1SemesterId, hk2SemesterId) => {
+export const bulkPromote = async (
+  classId,
+  schoolYearId,
+  hk1SemesterId,
+  hk2SemesterId,
+  enrollmentIds = [],
+) => {
   const response = await axiosClient.post(`/promotion/class/${classId}/bulk-promote`, {
     schoolYearId,
     hk1SemesterId,
     hk2SemesterId,
+    enrollmentIds,
   });
   return response;
 };
@@ -49,6 +56,19 @@ export const bulkPromote = async (classId, schoolYearId, hk1SemesterId, hk2Semes
  */
 export const singlePromote = async (enrollmentId) => {
   const response = await axiosClient.post(`/promotion/student/${enrollmentId}/single-promote`);
+  return response;
+};
+
+/**
+ * Xét lên lớp THỦ CÔNG cho một học sinh — bypass summer training và conditional status.
+ * @param {number} enrollmentId - ID ghi danh
+ * @param {string} reason       - Lý do override (bắt buộc)
+ */
+export const manualPromote = async (enrollmentId, reason) => {
+  const response = await axiosClient.post(
+    `/promotion/student/${enrollmentId}/manual-promote`,
+    { reason },
+  );
   return response;
 };
 
@@ -112,6 +132,7 @@ export const promotionService = {
   getClassPromotionSummary,
   bulkPromote,
   singlePromote,
+  manualPromote,
   getLockStatus,
   getFinanceCheck,
   graduateClass,

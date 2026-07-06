@@ -5,11 +5,9 @@ import ChatWindow from "./components/ChatWindow/ChatWindow";
 import { parentService } from "../../../services/pages/parent/parentService";
 import { io } from "socket.io-client";
 import { PageHeader } from "../../../components/common";
+import { getSocketBaseUrl } from "../../../services/shared/http/apiBaseUrl";
 
-const getSocketUrl = () => {
-  const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:3000/api/v1";
-  return apiUrl.replace("/api/v1", "");
-};
+const getSocketUrl = getSocketBaseUrl;
 
 let socket = null;
 
@@ -294,6 +292,13 @@ const ParentMessages = () => {
       });
     });
 
+    socket.on("message_deleted", ({ conversationId, messageId }) => {
+      const activeTeacher = selectedTeacherRef.current;
+      if (activeTeacher && String(activeTeacher.conversationId) === String(conversationId)) {
+        setMessages(prev => prev.filter(m => String(m.id) !== String(messageId)));
+      }
+    });
+
     return () => {
       if (socket) {
         socket.disconnect();
@@ -356,6 +361,26 @@ const ParentMessages = () => {
     }
   };
 
+  const handleDeleteMessage = async (messageId) => {
+    if (!messageId || String(messageId).startsWith("temp-")) return;
+
+    const previousMessages = messages;
+    setMessages(prev => prev.filter(m => String(m.id) !== String(messageId)));
+
+    try {
+      const res = await parentService.deleteMessage({
+        pathParams: { messageId },
+        mock: false,
+      });
+      if (res && res.success === false) {
+        setMessages(previousMessages);
+      }
+    } catch (err) {
+      console.error("Error deleting message:", err);
+      setMessages(previousMessages);
+    }
+  };
+
   return (
     <div className="parent-messages theme-parent">
       <PageHeader 
@@ -383,6 +408,7 @@ const ParentMessages = () => {
           inputValue={inputValue}
           onInputChange={setInputValue}
           onSend={handleSendMessage}
+          onDeleteMessage={handleDeleteMessage}
           isSending={isSending}
           currentUserId={currentUserId}
         />

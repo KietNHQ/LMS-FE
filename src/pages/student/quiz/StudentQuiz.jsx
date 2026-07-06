@@ -9,7 +9,6 @@ import QuizCard from "./components/QuizCard/QuizCard";
 import QuizTakingView from "./components/QuizTakingView/QuizTakingView";
 import ResultSummary from "./components/ResultSummary/ResultSummary";
 
-import { quizList as STUDENT_QUIZZES_MOCK } from "./data/quizData";
 import { SchoolYearTermSelector } from "../../../components/common";
 import { LoadingSpinner } from "../../../components/common";
 import { useSchoolYearTerm } from "../../../hooks/useSchoolYearTerm";
@@ -20,6 +19,48 @@ const ITEMS_PER_PAGE = 4;
 function getCurrentStudentId() {
     const storedUser = JSON.parse(localStorage.getItem("user") || sessionStorage.getItem("user") || "{}");
     return storedUser?.profile?.id || storedUser?.id || null;
+}
+
+function getApiErrorMessage(error, fallback = "Lỗi khi nộp bài") {
+    const payload = error?.response?.data || error;
+
+    if (Array.isArray(payload?.details) && payload.details.length > 0) {
+        return payload.details
+            .map((detail) => detail?.message)
+            .filter(Boolean)
+            .join("\n") || fallback;
+    }
+
+    return payload?.message || payload?.error || error?.message || fallback;
+}
+
+function isAlreadySubmittedError(error) {
+    const message = getApiErrorMessage(error, "").toLowerCase();
+    return message.includes("already submitted") || message.includes("đã nộp");
+}
+
+function normalizeQuizAnswer(question, answer) {
+    const questionType = String(
+        question?.type || question?.questionType || question?.question_type || ""
+    ).toLowerCase();
+
+    if (questionType === "essay") {
+        return {
+            questionId: Number(question.id),
+            answerId: null,
+            essayAnswer: typeof answer === "string" ? answer : "",
+        };
+    }
+
+    const selectedAnswer = question?.quiz_answers?.find(
+        (item) => item.answer_text === answer || item.answerText === answer
+    );
+
+    return {
+        questionId: Number(question.id),
+        answerId: selectedAnswer?.id ? Number(selectedAnswer.id) : null,
+        essayAnswer: null,
+    };
 }
 
 export default function StudentQuiz() {
@@ -191,21 +232,12 @@ export default function StudentQuiz() {
     const handleSubmitQuiz = async (quiz, answers) => {
         try {
             setLoading(true);
-            const responses = Object.entries(answers).map(([qId, ans]) => ({
-                questionId: parseInt(qId),
-                answerId: (() => {
-                    const question = quiz.questions.find(q => q.id === parseInt(qId));
-                    const questionType = String(question?.type || question?.questionType || question?.question_type || "").toLowerCase();
-                    if (questionType === "essay") return undefined;
-                    return question?.quiz_answers?.find(a => a.answer_text === ans)?.id;
-                })(),
-                essayAnswer: (() => {
-                    const question = quiz.questions.find(q => q.id === parseInt(qId));
-                    const questionType = String(question?.type || question?.questionType || question?.question_type || "").toLowerCase();
-                    if (questionType !== "essay") return undefined;
-                    return typeof ans === "string" ? ans : undefined;
-                })()
-            }));
+            const responses = Object.entries(answers)
+                .map(([qId, ans]) => {
+                    const question = quiz.questions.find(q => Number(q.id) === Number(qId));
+                    return question ? normalizeQuizAnswer(question, ans) : null;
+                })
+                .filter(Boolean);
 
             const response = await studentService.submitQuiz({
                 pathParams: { attemptId: quiz.attemptId },
@@ -258,11 +290,23 @@ export default function StudentQuiz() {
                 setSelectedQuiz(null);
                 fetchQuizzes(); // Refresh list to show 'done' status
             } else {
-                alert(response.message || "Lỗi khi nộp bài");
+                if (isAlreadySubmittedError(response)) {
+                    alert("Bài làm đã được nộp trước đó.");
+                    setSelectedQuiz(null);
+                    await fetchQuizzes();
+                    return;
+                }
+                alert(getApiErrorMessage(response));
             }
         } catch (err) {
             console.error("Submit quiz error:", err);
-            alert("Lỗi khi nộp bài");
+            if (isAlreadySubmittedError(err)) {
+                alert("Bài làm đã được nộp trước đó.");
+                setSelectedQuiz(null);
+                await fetchQuizzes();
+                return;
+            }
+            alert(getApiErrorMessage(err));
         } finally {
             setLoading(false);
         }
@@ -391,6 +435,3 @@ export default function StudentQuiz() {
         </div>
     );
 }
-
-
-

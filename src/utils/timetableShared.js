@@ -7,6 +7,28 @@ export const WEEK_DAYS = [
   { key: "Saturday", label: "Thứ 7" },
 ];
 
+export const ISO_WEEK_DAY_KEYS = [
+  "Monday",
+  "Tuesday",
+  "Wednesday",
+  "Thursday",
+  "Friday",
+  "Saturday",
+  "Sunday",
+];
+
+const DAY_KEY_TO_JS_DAY = {
+  Sunday: 0,
+  Monday: 1,
+  Tuesday: 2,
+  Wednesday: 3,
+  Thursday: 4,
+  Friday: 5,
+  Saturday: 6,
+};
+
+const TIMETABLE_CALENDAR_COLORS = ["teal", "blue", "purple", "orange", "red"];
+
 export const PERIOD_SLOTS = [
   { period: 1, start: "07:00", end: "07:45" },
   { period: 2, start: "07:50", end: "08:35" },
@@ -166,6 +188,174 @@ export function getStartOfIsoWeek(inputDate = new Date()) {
   return date;
 }
 
+export function formatLocalDateKey(dateValue) {
+  const date = new Date(dateValue);
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+export function normalizeTermKey(term) {
+  const value = String(term || "").trim().toLowerCase();
+  if (value === "1" || value === "hk1" || value === "học kỳ 1" || value === "hoc ky 1") {
+    return "hk1";
+  }
+  if (value === "2" || value === "hk2" || value === "học kỳ 2" || value === "hoc ky 2") {
+    return "hk2";
+  }
+  return value || "hk1";
+}
+
+export function getTermDateRange(schoolYear, term) {
+  const startYear = Number.parseInt(String(schoolYear || "").split("-")[0], 10);
+  const baseYear = Number.isFinite(startYear) ? startYear : new Date().getFullYear();
+  const normalizedTerm = normalizeTermKey(term);
+
+  if (normalizedTerm === "hk2") {
+    return {
+      startDate: new Date(baseYear + 1, 1, 1),
+      endDate: new Date(baseYear + 1, 5, 30),
+    };
+  }
+
+  return {
+    startDate: new Date(baseYear, 8, 1),
+    endDate: new Date(baseYear + 1, 0, 31),
+  };
+}
+
+function resolveDayKey(value) {
+  if (ISO_WEEK_DAY_KEYS.includes(value)) {
+    return value;
+  }
+
+  const dayNumber = Number(value);
+  if (!Number.isFinite(dayNumber)) {
+    return "Monday";
+  }
+
+  if (dayNumber === 1) return "Sunday";
+  if (dayNumber >= 2 && dayNumber <= 7) return ISO_WEEK_DAY_KEYS[dayNumber - 2];
+  if (dayNumber === 8) return "Sunday";
+  if (dayNumber === 0) return "Sunday";
+
+  return "Monday";
+}
+
+function stableColorFromText(text) {
+  const value = String(text || "");
+  const hash = value.split("").reduce((sum, char) => sum + char.charCodeAt(0), 0);
+  return TIMETABLE_CALENDAR_COLORS[hash % TIMETABLE_CALENDAR_COLORS.length];
+}
+
+export function normalizeTimetableLesson(rawLesson = {}, index = 0) {
+  const subjectKey = rawLesson.subjectKey || rawLesson.subjectCode || rawLesson.subject_code || "";
+  const subjectName =
+    rawLesson.subject ||
+    rawLesson.subjectName ||
+    rawLesson.subject_name ||
+    SUBJECT_DISPLAY[subjectKey] ||
+    subjectKey ||
+    "Môn học";
+  const periodStart = Number(
+    rawLesson.periodStart ??
+      rawLesson.period_number ??
+      rawLesson.periodNumber ??
+      rawLesson.period ??
+      1,
+  );
+  const periodEnd = Number(
+    rawLesson.periodEnd ??
+      rawLesson.period_end ??
+      rawLesson.periodNumberEnd ??
+      rawLesson.period_number_end ??
+      rawLesson.period_number ??
+      rawLesson.period ??
+      periodStart,
+  );
+  const day = resolveDayKey(rawLesson.day ?? rawLesson.dayOfWeek ?? rawLesson.day_of_week);
+  const startSlot = PERIOD_BY_ID[periodStart];
+  const endSlot = PERIOD_BY_ID[periodEnd] || startSlot;
+
+  return {
+    id: rawLesson.id || `lesson-${index}`,
+    day,
+    jsDay: DAY_KEY_TO_JS_DAY[day],
+    periodStart,
+    periodEnd,
+    subject: subjectName,
+    subjectKey,
+    teacher: rawLesson.teacher || rawLesson.teacherName || rawLesson.teacher_name || "Chưa phân công",
+    room: rawLesson.room || rawLesson.roomName || rawLesson.room_name || "—",
+    classId: rawLesson.classId || rawLesson.class_id || null,
+    className: rawLesson.className || rawLesson.class_name || "",
+    status: rawLesson.status || "normal",
+    mode: rawLesson.mode || "offline",
+    note: rawLesson.note || rawLesson.notes || "",
+    color: rawLesson.color || SUBJECT_COLOR_MAP[subjectKey] || stableColorFromText(subjectName),
+    start: rawLesson.start || rawLesson.start_time || startSlot?.start || "",
+    end: rawLesson.end || rawLesson.end_time || endSlot?.end || "",
+  };
+}
+
+function getFirstWeekdayOnOrAfter(startDate, jsDay) {
+  const date = new Date(startDate);
+  const diff = (jsDay - date.getDay() + 7) % 7;
+  date.setDate(date.getDate() + diff);
+  return date;
+}
+
+function buildTimetableEventContent(lesson, { includeClassName = true, includeTeacher = true } = {}) {
+  const parts = [];
+  if (includeClassName && lesson.className) parts.push(`Lớp ${lesson.className}`);
+  parts.push(`Tiết ${lesson.periodStart}${lesson.periodEnd > lesson.periodStart ? `-${lesson.periodEnd}` : ""}`);
+  if (lesson.room && lesson.room !== "—") parts.push(`Phòng ${lesson.room}`);
+  if (includeTeacher && lesson.teacher) parts.push(`GV ${lesson.teacher}`);
+  return parts.join(" • ");
+}
+
+export function mapTimetableLessonsToCalendarEvents(lessons = [], options = {}) {
+  const {
+    schoolYear,
+    term,
+    sourceLabel = "Thời khóa biểu",
+    defaultColor = "purple",
+    includeClassName = true,
+    includeTeacher = true,
+  } = options;
+  const { startDate, endDate } = getTermDateRange(schoolYear, term);
+
+  return (Array.isArray(lessons) ? lessons : [])
+    .map((lesson, index) => normalizeTimetableLesson(lesson, index))
+    .flatMap((lesson) => {
+      const firstDate = getFirstWeekdayOnOrAfter(startDate, lesson.jsDay);
+      const events = [];
+      const cursor = new Date(firstDate);
+
+      while (cursor <= endDate) {
+        const dateKey = formatLocalDateKey(cursor);
+        events.push({
+          id: `timetable-${lesson.id}-${dateKey}`,
+          date: dateKey,
+          endDate: dateKey,
+          title: lesson.subject,
+          content: buildTimetableEventContent(lesson, { includeClassName, includeTeacher }),
+          color: defaultColor || lesson.color || "purple",
+          createdBy: sourceLabel,
+          createdRole: "Tự đồng bộ",
+          target: lesson.classId ? String(lesson.classId) : "all",
+          source: "timetable",
+          lessonId: lesson.id,
+          classId: lesson.classId,
+        });
+        cursor.setDate(cursor.getDate() + 7);
+      }
+
+      return events;
+    });
+}
+
 export function shiftWeek(weekStart, offset) {
   const result = new Date(weekStart);
   result.setDate(result.getDate() + offset * 7);
@@ -295,4 +485,3 @@ export function getPeriodRangeLabel(periodStart, periodEnd = periodStart) {
   if (!startSlot || !endSlot) return "";
   return `${startSlot.start} - ${endSlot.end}`;
 }
-

@@ -142,6 +142,13 @@
 }
 
 /* ===== Star button (shared) ===== */
+.teacher-notification-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
 .notif-star-box {
   cursor: pointer;
   width: 34px;
@@ -160,7 +167,24 @@
   padding: 0;
 }
 
-.notif-star-box:hover {
+.notif-hide-box {
+  cursor: pointer;
+  width: 34px;
+  height: 34px;
+  border: 1px solid #dbe4f5;
+  border-radius: 10px;
+  background: #ffffff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #9aa3b2;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+  padding: 0;
+}
+
+.notif-star-box:hover,
+.notif-hide-box:hover {
   border-color: #9ee3dc;
   background: #f8fdff;
   transform: scale(1.05);
@@ -179,4 +203,3 @@
   border-left: 4px solid #f59e0b;
   background: #fffdf0;
 }
-

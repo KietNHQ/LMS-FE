@@ -43,6 +43,27 @@ export const getWeekDateRange = (schoolYear, term, week) => {
   };
 };
 
+const parseLocalDate = (value) => {
+  if (!value) return null;
+
+  if (value instanceof Date) {
+    if (Number.isNaN(value.getTime())) return null;
+    return new Date(value.getFullYear(), value.getMonth(), value.getDate());
+  }
+
+  if (typeof value === "string") {
+    const matched = value.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if (matched) {
+      const [, year, month, day] = matched;
+      return new Date(Number(year), Number(month) - 1, Number(day));
+    }
+  }
+
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return null;
+  return new Date(parsed.getFullYear(), parsed.getMonth(), parsed.getDate());
+};
+
 /**
  * Format date to YYYY-MM-DD string
  * @param {Date} date
@@ -53,6 +74,67 @@ export const formatDate = (date) => {
   const month = `${date.getMonth() + 1}`.padStart(2, "0");
   const day = `${date.getDate()}`.padStart(2, "0");
   return `${year}-${month}-${day}`;
+};
+
+export const formatDateForDisplay = (value) => {
+  const date = parseLocalDate(value);
+  if (!date) return "";
+
+  const day = `${date.getDate()}`.padStart(2, "0");
+  const month = `${date.getMonth() + 1}`.padStart(2, "0");
+  const year = date.getFullYear();
+  return `${day}/${month}/${year}`;
+};
+
+export const getSchoolYearForDate = (value) => {
+  const date = parseLocalDate(value);
+  if (!date) return "";
+
+  const year = date.getFullYear();
+  const month = date.getMonth() + 1;
+  return month >= 8 ? `${year}-${year + 1}` : `${year - 1}-${year}`;
+};
+
+export const getTermForDate = (schoolYear, value) => {
+  const date = parseLocalDate(value);
+  if (!date) return "";
+
+  const [startRaw, endRaw] = `${schoolYear || ""}`.split("-");
+  const startYear = Number(startRaw);
+  const endYear = Number(endRaw);
+  const year = date.getFullYear();
+  const month = date.getMonth() + 1;
+
+  if (Number.isFinite(startYear) && year === startYear && month >= 8) {
+    return "hk1";
+  }
+  if (Number.isFinite(endYear) && year === endYear && month <= 7) {
+    return "hk2";
+  }
+  return "";
+};
+
+export const getWeekForDate = (
+  schoolYear,
+  term,
+  value,
+  totalWeeks = 35,
+) => {
+  const targetDate = parseLocalDate(value);
+  if (!targetDate) return null;
+
+  for (let week = 1; week <= totalWeeks; week += 1) {
+    const range = getWeekDateRange(schoolYear, term, week);
+    const weekStart = parseLocalDate(range.startDate);
+    const weekEnd = parseLocalDate(range.endDate);
+
+    if (!weekStart || !weekEnd) continue;
+    if (targetDate >= weekStart && targetDate <= weekEnd) {
+      return { week, ...range };
+    }
+  }
+
+  return null;
 };
 
 /**

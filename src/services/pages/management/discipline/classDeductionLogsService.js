@@ -73,7 +73,7 @@ export const classDeductionLogsService = {
    * @param {string} [endDate]
    */
   getClassDisciplineSummary: (classId, startDate, endDate) => {
-    return scopedApi.callByKey("get_discipline_class_by_classid_discipline_scores", {
+    return scopedApi.callByKey("get_discipline_class_by_classid_scores_summary", {
       pathParams: { classId },
       params: { startDate, endDate },
     });

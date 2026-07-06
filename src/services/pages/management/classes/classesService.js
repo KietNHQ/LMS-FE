@@ -1,7 +1,5 @@
 import axiosClient from "../../../shared/http/axiosClient";
 import {
-  getGradeLevelNumber,
-  getSchoolYearName,
   resolveGradeLevelId,
   resolveSchoolYearId,
   getGradeLevelFilterOptions,
@@ -31,7 +29,7 @@ const resolveTeacherId = async (teacherName) => {
 
   const rows = await teachersService.listTeachers();
   const matched = rows.find((row) => normalizeText(row.name) === normalized);
-  return matched?.id;
+  return matched?.teacherId;
 };
 
 const extractGradeNumber = (value) => {
@@ -66,6 +64,9 @@ const parseClass = (item = {}) => {
   return {
     id: item.id,
     name,
+    gradeLevelId: item.grade_level_id || item.gradeLevelId || null,
+    schoolYearId: item.school_year_id || item.schoolYearId || null,
+    homeroomTeacherId: item.homeroom_teacher_id || item.homeroomTeacherId || null,
     grade: `Khối ${gradeNumber}`,
     year: item.school_year_name || item.schoolYearName || item.year || "",
     teacher,
@@ -74,22 +75,31 @@ const parseClass = (item = {}) => {
     subjects,
     color: getColorByGrade(gradeNumber),
     status: item.status || "active",
+    maxStudents: toNumber(item.max_students ?? item.maxStudents),
   };
 };
 
 const toApiPayload = async (classData = {}) => {
   const gradeNumber = extractGradeNumber(classData.grade);
-  const [gradeLevelId, schoolYearId, homeroomTeacherId] = await Promise.all([
+  const [gradeLevelId, schoolYearId, resolvedHomeroomTeacherId] = await Promise.all([
     resolveGradeLevelId(gradeNumber),
     resolveSchoolYearId(classData.year),
-    resolveTeacherId(classData.teacher),
+    classData.homeroomTeacherId !== undefined
+      ? Promise.resolve(classData.homeroomTeacherId)
+      : resolveTeacherId(classData.teacher),
   ]);
+  const hasExplicitHomeroomTeacher = classData.homeroomTeacherId !== undefined || normalizeText(classData.teacher) === normalizeText("Chưa phân công");
 
   return {
     className: classData.name,
     ...(gradeLevelId ? { gradeLevelId: toNumber(gradeLevelId) } : {}),
     ...(schoolYearId ? { schoolYearId: toNumber(schoolYearId) } : {}),
-    ...(homeroomTeacherId ? { homeroomTeacherId: toNumber(homeroomTeacherId) } : {}),
+    ...(hasExplicitHomeroomTeacher
+      ? { homeroomTeacherId: resolvedHomeroomTeacherId ? toNumber(resolvedHomeroomTeacherId) : null }
+      : resolvedHomeroomTeacherId
+        ? { homeroomTeacherId: toNumber(resolvedHomeroomTeacherId) }
+        : {}),
+    ...(classData.maxStudents ? { maxStudents: toNumber(classData.maxStudents) } : {}),
     status: classData.status || "active",
 
     // Các trường mới
@@ -111,8 +121,18 @@ export const classesService = {
   getGradeLevelFilterOptions,
 
   listClasses: async ({ schoolYearId, schoolYearName, gradeLevelId, search } = {}) => {
-    const resolvedSchoolYearId =
-      schoolYearId ?? (schoolYearName ? await resolveSchoolYearId(schoolYearName) : undefined);
+    let resolvedSchoolYearId = schoolYearId;
+    if (!resolvedSchoolYearId && schoolYearName) {
+      resolvedSchoolYearId = await resolveSchoolYearId(schoolYearName);
+    }
+    // If schoolYearId is a string name (e.g. "2025-2026"), resolve it to numeric ID
+    if (resolvedSchoolYearId && typeof resolvedSchoolYearId === "string" && isNaN(Number(resolvedSchoolYearId))) {
+      resolvedSchoolYearId = await resolveSchoolYearId(resolvedSchoolYearId);
+    }
+
+    if (typeof resolvedSchoolYearId === "number" && isNaN(resolvedSchoolYearId)) {
+      resolvedSchoolYearId = undefined;
+    }
 
     const params = {
       page: 1,
@@ -140,7 +160,3 @@ export const classesService = {
     return axiosClient.delete(`/classes/${id}`);
   },
 };
-
-
-
-

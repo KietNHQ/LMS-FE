@@ -242,6 +242,18 @@
     transition: all 0.2s;
 }
 
+.req-card-actions button:disabled {
+    cursor: not-allowed;
+    opacity: 0.65;
+    transform: none;
+}
+
+.btn-inline {
+    flex: 0 0 auto !important;
+    margin-top: 1rem;
+    padding: 0.75rem 1.25rem !important;
+}
+
 .btn-approve-log {
     background: #10b981 !important;
     color: #fff !important;
@@ -356,6 +368,11 @@
     border-radius: 20px;
 }
 
+.empty-vpa.is-error .empty-icon-wrapper {
+    background: #fef2f2;
+    color: #ef4444;
+}
+
 .empty-icon-wrapper {
     width: 80px;
     height: 80px;
@@ -386,4 +403,11 @@
     display: flex;
     align-items: center;
     gap: 0.5rem;
+}
+
+.history-empty {
+    padding: 1rem 0 1.5rem;
+    color: var(--admin-text-muted);
+    font-size: 0.9rem;
+    font-weight: 600;
 }

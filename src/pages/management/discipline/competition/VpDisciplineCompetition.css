@@ -126,6 +126,28 @@
     font-weight: 500;
 }
 
+.comp-date-jump-group {
+    min-width: 168px;
+}
+
+.comp-date-jump-input {
+    height: 38px;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 10px;
+    background: #ffffff;
+    color: var(--admin-text-primary);
+    font-size: 0.85rem;
+    font-weight: 600;
+    padding: 0 0.75rem;
+    outline: none;
+    transition: all 0.2s;
+}
+
+.comp-date-jump-input:focus {
+    border-color: var(--admin-primary);
+    box-shadow: 0 0 0 3px var(--admin-primary-soft);
+}
+
 .dm-primary-actions-compact {
     display: flex;
     gap: 0.75rem;
@@ -178,6 +200,7 @@
     display: flex;
     flex-direction: column;
     min-height: 100%;
+    min-width: 0;
 }
 
 .comp-leaderboard-panel .panel-header {
@@ -203,7 +226,7 @@
 
 /* Rank Table Premium */
 .rank-table-premium-wrap { width: 100%; overflow-x: auto; }
-.rank-table-premium { width: 100%; border-collapse: collapse; }
+.rank-table-premium { width: 100%; min-width: 920px; border-collapse: collapse; }
 
 .rank-table-premium-wrap {
     flex: 1;
@@ -513,8 +536,42 @@
 }
 
 @media (max-width: 768px) {
+    .comp-stats-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .dm-filters-complex,
+    .dm-primary-actions-compact {
+        width: 100%;
+    }
+
+    .filter-group,
+    .comp-date-jump-group,
+    .dm-primary-actions-compact > *,
+    .btn-export-reports,
+    .normalize-toggle {
+        width: 100%;
+    }
+
+    .dm-primary-actions-compact {
+        flex-direction: column;
+    }
+
+    .comp-search-box,
+    .comp-date-jump-input {
+        width: 100%;
+    }
+
+    .comp-leaderboard-panel .panel-header {
+        padding: 1.1rem 1rem;
+    }
+
     .comp-pagination-row {
         padding: 1rem;
+    }
+
+    .highlight-card {
+        padding: 1.1rem;
     }
 }
 

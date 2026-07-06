@@ -55,7 +55,6 @@ const PERIOD_LABELS = {
 export default function FinanceRevenue() {
     const { selectedSchoolYear, selectedTerm, handleYearArrow, handleTermChange } = useSchoolYearTerm();
     const [revenueData, setRevenueData] = useState([]);
-    const [invoiceData, setInvoiceData] = useState([]);
     const [debtSummary, setDebtSummary] = useState(null);
     const [isLoading, setIsLoading] = useState(false);
     const [periodView, setPeriodView] = useState("semester"); // 'semester' | 'month'
@@ -64,24 +63,17 @@ export default function FinanceRevenue() {
     const loadData = useCallback(async () => {
         setIsLoading(true);
         try {
-            const [revRes, invRes, sumRes] = await Promise.allSettled([
+            const [revRes, sumRes] = await Promise.allSettled([
                 financeService.getRevenueReport({
                     params: {
-                        schoolYearId: selectedSchoolYear?.id,
-                        semesterId: selectedTerm?.id,
-                    },
-                }),
-                financeService.getAllInvoices({
-                    params: {
-                        schoolYearId: selectedSchoolYear?.id,
-                        semesterId: selectedTerm?.id,
-                        limit: 1000,
+                        schoolYearId: selectedSchoolYear,
+                        semesterId: selectedTerm,
                     },
                 }),
                 financeService.getDebtSummary({
                     params: {
-                        schoolYearId: selectedSchoolYear?.id,
-                        semesterId: selectedTerm?.id,
+                        schoolYearId: selectedSchoolYear,
+                        semesterId: selectedTerm,
                     },
                 }),
             ]);
@@ -93,13 +85,6 @@ export default function FinanceRevenue() {
                 setRevenueData(rows);
             }
 
-            if (invRes.status === "fulfilled" && invRes.value?.success) {
-                const rows = Array.isArray(invRes.value.data)
-                    ? invRes.value.data
-                    : invRes.value.data?.items || [];
-                setInvoiceData(rows);
-            }
-
             if (sumRes.status === "fulfilled" && sumRes.value?.success) {
                 setDebtSummary(sumRes.value.data);
             }
@@ -108,68 +93,46 @@ export default function FinanceRevenue() {
         } finally {
             setIsLoading(false);
         }
-    }, [selectedSchoolYear?.id, selectedTerm?.id]);
+    }, [selectedSchoolYear, selectedTerm]);
 
     useEffect(() => { loadData(); }, [loadData]);
 
-    // Compute fee breakdown from invoices
-    const feeBreakdown = useMemo(() => {
-        const map = {};
-        invoiceData.forEach((inv) => {
-            const feeId = inv.fee_id || inv.fee_definition_id || 0;
-            const feeName = inv.fee_name || inv.description || "Khoản thu";
-            if (!map[feeId]) {
-                map[feeId] = { name: feeName, total: 0, collected: 0, debt: 0 };
-            }
-            // Try multiple field name variants
-            const amount = parseFloat(
-                inv.total_amount || inv.amount || inv.total || inv.expected_amount || 0
-            );
-            const paid = parseFloat(
-                inv.paid_amount || inv.amount_paid || inv.amount || 0
-            );
-            map[feeId].total += amount;
-            map[feeId].collected += paid;
-            map[feeId].debt += Math.max(0, amount - paid);
-        });
-        return Object.values(map).sort((a, b) => b.total - a.total);
-    }, [invoiceData]);
-
-    // Revenue by period
-    const periodRevenue = useMemo(() => {
-        if (revenueData.length > 0) {
-            return revenueData.map((item) => ({
-                name: item.period || item.label || item.month || "N/A",
-                revenue: item.totalCollected || item.revenue || item.collected || 0,
-                debt: item.totalDebt || item.debt || 0,
-            }));
-        }
-        // Fallback: derive from invoice data grouped by month
-        const byMonth = {};
-        invoiceData.forEach((inv) => {
-            const d = new Date(inv.due_date || inv.created_at || Date.now());
-            const key = `T${d.getMonth() + 1}`;
-            if (!byMonth[key]) byMonth[key] = { name: key, revenue: 0, debt: 0 };
-            const paid = parseFloat(inv.paid_amount || inv.amount_paid || inv.amount || 0);
-            const total = parseFloat(inv.total_amount || inv.amount || inv.total || 0);
-            byMonth[key].revenue += paid;
-            byMonth[key].debt += Math.max(0, total - paid);
-        });
-        return Object.values(byMonth).sort((a, b) => a.name.localeCompare(b.name));
-    }, [revenueData, invoiceData]);
-
-    // Overall stats
+    // Overall stats — from debt summary API
     const stats = useMemo(() => {
-        const totalCollected = feeBreakdown.reduce((s, f) => s + f.collected, 0);
-        const totalDebt = feeBreakdown.reduce((s, f) => s + f.debt, 0);
-        const total = totalCollected + totalDebt;
+        if (!debtSummary) return { totalCollected: 0, totalDebt: 0, total: 0, collectionRate: 0 };
+        const totalAmount = parseFloat(debtSummary.totalAmount || debtSummary.totalDebt || 0);
+        const totalCollected = parseFloat(debtSummary.totalCollected || 0);
+        const totalDebt = totalAmount - totalCollected;
         return {
             totalCollected,
             totalDebt,
-            total,
-            collectionRate: total > 0 ? Math.round((totalCollected / total) * 100) : 0,
+            total: totalAmount,
+            collectionRate: debtSummary.collectionRate || (totalAmount > 0 ? Math.round((totalCollected / totalAmount) * 100) : 0),
         };
-    }, [feeBreakdown]);
+    }, [debtSummary]);
+
+    // Fee breakdown from revenue report
+    const feeBreakdown = useMemo(() => {
+        return revenueData.map((item) => {
+            const totalAmount = parseFloat(item.totalAmount || 0);
+            const totalCollected = parseFloat(item.totalCollected || item.revenue || item.collected || 0);
+            return {
+                name: item.period || item.label || item.feeName || "Khoản thu",
+                total: totalAmount,
+                collected: totalCollected,
+                debt: Math.max(0, totalAmount - totalCollected),
+            };
+        });
+    }, [revenueData]);
+
+    // Period revenue chart from revenue report
+    const periodRevenue = useMemo(() => {
+        return revenueData.map((item) => ({
+            name: item.period || "N/A",
+            revenue: parseFloat(item.totalCollected || 0),
+            debt: parseFloat(item.totalAmount || 0) - parseFloat(item.totalCollected || 0),
+        }));
+    }, [revenueData]);
 
     const pieData = feeBreakdown.map((f, i) => ({
         name: f.name,

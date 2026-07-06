@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState, useRef } from "react";
-import { FiPlus, FiSearch, FiEdit2, FiTrash2, FiKey, FiUnlock, FiShield, FiX, FiUserX, FiUserCheck, FiMoreHorizontal, FiEye } from "react-icons/fi";
+import { FiPlus, FiSearch, FiEdit2, FiTrash2, FiShield, FiUserX, FiUserCheck, FiMoreHorizontal, FiEye } from "react-icons/fi";
 import { PERMISSIONS } from "../../../../../config/permissions";
 import { Pagination, CreateUserDialog, ConfirmationModal } from "../../../../../components/common";
 import { userService, permissionService } from "../../../../../services/pages/management/users";
@@ -23,24 +23,10 @@ const MANAGEMENT_ROLES = [
     { value: "Khác",         label: "Khác (Tùy chỉnh)" },
 ];
 
-const ROLE_META = {
-    "Quản trị viên": { label: "Quản trị hệ thống", cssClass: "admin",        icon: "⚙️" },
-    "Quản lý":       { label: "Cán bộ Quản lý",   cssClass: "admin",        icon: "🛡️" },
-    "Hiệu trưởng":  { label: "Hiệu trưởng",        cssClass: "principal",    icon: "🏫" },
-    "Phó HT học vụ":{ label: "Phó HT Học vụ",      cssClass: "vp-academic",  icon: "📚" },
-    "Phó HT nề nếp":{ label: "Phó HT Nề nếp",      cssClass: "vp-discipline",icon: "⚖️" },
-    "Tài chính":    { label: "Tài chính",            cssClass: "finance",     icon: "💰" },
-    "Tổ trưởng bộ môn": { label: "Tổ trưởng bộ môn",  cssClass: "dept-head",   icon: "👔" },
-};
-
 const getErrorMessage = (error, fallback) => {
     const msg = error?.response?.data?.message || error?.response?.data?.error;
     return msg || fallback;
 };
-
-const getRoleMeta = (role) => ROLE_META[role] || { label: role || "Quản lý", cssClass: "default", icon: "👤" };
-
-const getAvatarInitial = (name = "") => name.trim().charAt(0).toUpperCase() || "A";
 
 const formatDate = (dateString) => {
     if (!dateString) return "—";
@@ -55,7 +41,7 @@ const formatDate = (dateString) => {
 const emptyForm = { name: "", email: "", phone: "", role: "Quản lý", status: "Hoạt động", dob: "" };
 
 /* ─────────────────────────────────────────────────── */
-export default function ManagementManagers({ onCountChange, schoolYear, term, hasPermission, currentUser }) {
+export default function ManagementManagers({ onCountChange, schoolYear, hasPermission }) {
     const [managers, setManagers]         = useState([]);
     const [isLoading, setIsLoading]       = useState(false);
     const [loadError, setLoadError]       = useState("");
@@ -75,7 +61,6 @@ export default function ManagementManagers({ onCountChange, schoolYear, term, ha
     // Modals
     const [createOpen, setCreateOpen]     = useState(false);
     const [formData, setFormData]         = useState(emptyForm);
-    const [isSaving, setIsSaving]         = useState(false);
 
     const [activeModalMode, setActiveModalMode] = useState(null); // 'view' | 'edit'
     const [activeManagerId, setActiveManagerId] = useState(null);
@@ -101,7 +86,6 @@ export default function ManagementManagers({ onCountChange, schoolYear, term, ha
 
     const [openMenuId, setOpenMenuId] = useState(null);
     const menuRef = useRef(null);
-    const [allSystemPermissions, setAllSystemPermissions] = useState([]);
     const [permissionMap, setPermissionMap] = useState({}); // key -> id mapping
     const [permissionRevMap, setPermissionRevMap] = useState({}); // id -> key mapping
 
@@ -116,11 +100,14 @@ export default function ManagementManagers({ onCountChange, schoolYear, term, ha
         setIsLoading(true);
         setLoadError("");
         try {
-            const result = await userService.listUsers({ page: 1, limit: 500 });
-            const adminRows = (result.items || []).filter(
-                (u) => u.role === "Quản trị viên" || u.role === "Quản lý"
-            );
-            setManagers(adminRows);
+            const [adminsResult, managersResult] = await Promise.all([
+                userService.listUsers({ page: 1, limit: 100, role: "admin" }),
+                userService.listUsers({ page: 1, limit: 100, role: "manager" }),
+            ]);
+            setManagers([
+                ...(adminsResult.items || []),
+                ...(managersResult.items || []),
+            ]);
         } catch (err) {
             setLoadError(getErrorMessage(err, "Không thể tải danh sách quản lý."));
             setManagers([]);
@@ -136,7 +123,6 @@ export default function ManagementManagers({ onCountChange, schoolYear, term, ha
         const fetchAllPermissions = async () => {
             try {
                 const perms = await permissionService.getAllPermissions({ limit: 1000 });
-                setAllSystemPermissions(perms);
                 
                 // Create map: "resource:action" -> id AND id -> "resource:action"
                 const map = {};
@@ -192,7 +178,7 @@ export default function ManagementManagers({ onCountChange, schoolYear, term, ha
 
             return matchSearch && matchRole && isActiveInTerm && matchStatus;
         });
-    }, [managers, searchValue, roleFilter, schoolYear, term, statusFilter]);
+    }, [managers, searchValue, roleFilter, schoolYear, statusFilter]);
 
     useEffect(() => { onCountChange?.(filtered.length); }, [filtered.length, onCountChange]);
 
@@ -273,7 +259,6 @@ export default function ManagementManagers({ onCountChange, schoolYear, term, ha
 
     /* ── Handlers ── */
     const handleCreate = async (formData) => {
-        setIsSaving(true);
         try {
             // Map permissions to IDs if present
             const updatedFormData = { ...formData };
@@ -297,8 +282,6 @@ export default function ManagementManagers({ onCountChange, schoolYear, term, ha
             window.alert(`Đã tạo thành công tài khoản quản lý: ${formData.name}.`);
         } catch (err) {
             window.alert(getErrorMessage(err, "Không thể tạo tài khoản quản lý."));
-        } finally {
-            setIsSaving(false);
         }
     };
 
@@ -401,53 +384,6 @@ export default function ManagementManagers({ onCountChange, schoolYear, term, ha
         });
     };
 
-    const handleResetPassword = async (user) => {
-        if (!user) return;
-        
-        const isSelf = user.id === currentUser?.id || user.email === currentUser?.email;
-        setAuthPasswordInput("");
-        setNewPasswordInput("");
-
-        setConfirmConfig({
-            isOpen: true,
-            title: "Xác minh quyền Quản lý",
-            message: isSelf 
-                ? `Thiết lập mật khẩu mới cho chính bạn (${user.name}):`
-                : `Xác nhận đặt lại mật khẩu cho ${user.name}. Hệ thống sẽ tự sinh mật khẩu mới.`,
-            confirmLabel: "Đặt lại mật khẩu",
-            variant: "primary",
-            showNewPassword: isSelf,
-            onConfirm: async () => {
-                try {
-                    let targetNewPassword = "";
-                    if (isSelf) {
-                        if (!newPasswordInput.trim()) {
-                            window.alert("Vui lòng nhập mật khẩu mới.");
-                            return;
-                        }
-                        targetNewPassword = newPasswordInput;
-                    } else {
-                        targetNewPassword = Math.random().toString(36).slice(-10);
-                    }
-
-                    await userService.resetPassword(user.id, { 
-                        authPassword: authPasswordInput, 
-                        newPassword: targetNewPassword 
-                    });
-                    
-                    closeConfirm();
-                    if (isSelf) {
-                        window.alert("Đã đổi mật khẩu của bạn thành công.");
-                    } else {
-                        window.alert(`Đặt lại mật khẩu thành công cho ${user.name}.\nMật khẩu mới là: ${targetNewPassword}`);
-                    }
-                } catch (error) {
-                    window.alert(getErrorMessage(error, "Xác thực Quản lý thất bại hoặc lỗi hệ thống."));
-                }
-            }
-        });
-    };
-
     const handleSelectRow = (userId) => {
         setSelectedUserIds(prev => 
             prev.includes(userId) 
@@ -512,7 +448,6 @@ export default function ManagementManagers({ onCountChange, schoolYear, term, ha
             variant: "primary",
             onConfirm: async () => {
                 closeConfirm();
-                setIsSaving(true);
                 try {
                     // 1. Update basic user info
                     await userService.updateUser(id, payload);
@@ -538,8 +473,6 @@ export default function ManagementManagers({ onCountChange, schoolYear, term, ha
                     window.alert("Đã cập nhật tài khoản quản lý và quyền hạn thành công.");
                 } catch (err) {
                     window.alert(getErrorMessage(err, "Không thể cập nhật tài khoản."));
-                } finally {
-                    setIsSaving(false);
                 }
             }
         });
@@ -855,4 +788,3 @@ export default function ManagementManagers({ onCountChange, schoolYear, term, ha
         </div>
     );
 }
-

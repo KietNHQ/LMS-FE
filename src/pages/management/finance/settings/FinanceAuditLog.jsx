@@ -24,29 +24,31 @@ import { financeService } from "../../../../services/pages/management/finance";
 import "./FinanceAuditLog.css";
 
 
-const ACTION_OPTIONS = [
-    { value: "all", label: "Tất cả hành động" },
-    { value: "Xóa biên lai", label: "Xóa biên lai" },
-    { value: "Cập nhật biểu phí", label: "Cập nhật biểu phí" },
-    { value: "Duyệt miễn giảm", label: "Duyệt miễn giảm" },
-    { value: "Ký phát hành hóa đơn", label: "Ký phát hành hóa đơn" },
-    { value: "Khóa sổ công nợ", label: "Khóa sổ công nợ" },
-    { value: "Xuất báo cáo", label: "Xuất báo cáo" },
-    { value: "Thay đổi quyền truy cập", label: "Thay đổi quyền truy cập" },
-    { value: "Đối chiếu thanh toán", label: "Đối chiếu thanh toán" },
-];
+const ACTION_LABELS = {
+    insert: "Tạo mới",
+    create: "Tạo mới",
+    update: "Cập nhật",
+    delete: "Xóa",
+    restore: "Khôi phục",
+    approve: "Duyệt",
+    reject: "Từ chối",
+    pay: "Ghi nhận thanh toán",
+    payment: "Ghi nhận thanh toán",
+    export: "Xuất báo cáo",
+};
 
-const MODULE_OPTIONS = [
-    { value: "all", label: "Tất cả phân hệ" },
-    { value: "Thu phí", label: "Thu phí" },
-    { value: "Học phí", label: "Học phí" },
-    { value: "Miễn giảm", label: "Miễn giảm" },
-    { value: "Hóa đơn", label: "Hóa đơn" },
-    { value: "Công nợ", label: "Công nợ" },
-    { value: "Báo cáo cuối ngày", label: "Báo cáo cuối ngày" },
-    { value: "Phân quyền", label: "Phân quyền" },
-    { value: "Thanh toán", label: "Thanh toán" },
-];
+const MODULE_LABELS = {
+    fees: "Học phí",
+    fee_notices: "Thông báo thu phí",
+    fee_exemptions: "Miễn giảm",
+    invoices: "Hóa đơn",
+    student_debts: "Công nợ",
+    debts: "Công nợ",
+    school_bank_accounts: "Tài khoản ngân hàng",
+    payments: "Thanh toán",
+    audit_logs: "Nhật ký kiểm toán",
+    system_configs: "Cấu hình hệ thống",
+};
 
 const SEVERITY_OPTIONS = [
     { value: "all", label: "Tất cả mức độ" },
@@ -96,6 +98,99 @@ function getSeverityLabel(severity) {
     }
 }
 
+function toKey(value) {
+    return `${value ?? ""}`.trim();
+}
+
+function toDisplayLabel(value) {
+    const text = toKey(value);
+    if (!text) return "Không xác định";
+
+    return text
+        .replace(/_/g, " ")
+        .replace(/\s+/g, " ")
+        .trim()
+        .replace(/\b\w/g, (char) => char.toUpperCase());
+}
+
+function stringifyAuditValue(value) {
+    if (value === null || value === undefined || value === "") return "Không có dữ liệu";
+    if (typeof value === "string") return value;
+    try {
+        return JSON.stringify(value, null, 2);
+    } catch {
+        return String(value);
+    }
+}
+
+function getRowsFromAuditResponse(response) {
+    if (Array.isArray(response)) return response;
+    if (Array.isArray(response?.logs)) return response.logs;
+    if (Array.isArray(response?.data)) return response.data;
+    if (Array.isArray(response?.data?.logs)) return response.data.logs;
+    if (Array.isArray(response?.items)) return response.items;
+    return [];
+}
+
+function getSeverityForAudit(actionKey) {
+    const action = actionKey.toLowerCase();
+    if (["delete", "restore"].includes(action)) return "critical";
+    if (["update", "approve", "reject"].includes(action)) return "high";
+    if (["insert", "create"].includes(action)) return "medium";
+    return "low";
+}
+
+function normalizeAuditLog(row = {}) {
+    const actionKey = toKey(row.action).toLowerCase();
+    const moduleKey = toKey(row.table_name || row.entity_type || row.module).toLowerCase();
+    const timestamp = row.performed_at || row.timestamp || row.created_at || new Date().toISOString();
+    const actor = row.user_name || row.performed_by_name || row.actor || row.user_email || row.performed_by || "Không xác định";
+    const recordId = row.record_id || row.entity_id || row.entityId || "";
+
+    return {
+        id: row.id,
+        timestamp,
+        actor,
+        userName: actor,
+        role: row.role || row.user_role || row.user_email || "Người dùng hệ thống",
+        actionKey,
+        action: ACTION_LABELS[actionKey] || toDisplayLabel(actionKey),
+        category: row.description || row.category || MODULE_LABELS[moduleKey] || toDisplayLabel(moduleKey),
+        moduleKey,
+        module: MODULE_LABELS[moduleKey] || toDisplayLabel(moduleKey),
+        entityId: recordId ? `${moduleKey || "record"}#${recordId}` : moduleKey || "Không xác định",
+        reason: row.description || "Không có ghi chú",
+        detail: row.changed_fields?.length
+            ? `Trường thay đổi: ${row.changed_fields.join(", ")}`
+            : "Không có chi tiết trường thay đổi",
+        outcome: row.status || "Thành công",
+        severity: row.severity || getSeverityForAudit(actionKey),
+        before: stringifyAuditValue(row.old_data || row.old_values || row.before),
+        after: stringifyAuditValue(row.new_data || row.new_values || row.after),
+        location: row.location || "Không ghi nhận",
+        ip: row.ip_address || row.ip || "Không ghi nhận",
+        tags: [
+            row.action,
+            row.table_name || row.entity_type,
+            ...(row.changed_fields || []),
+        ].filter(Boolean),
+    };
+}
+
+function buildDynamicOptions(rows, key, allLabel, labelKey = key) {
+    const seen = new Set();
+    const options = [{ value: "all", label: allLabel }];
+
+    rows.forEach((row) => {
+        const value = toKey(row[key]);
+        if (!value || seen.has(value)) return;
+        seen.add(value);
+        options.push({ value, label: row[labelKey] || toDisplayLabel(value) });
+    });
+
+    return options;
+}
+
 function downloadTextFile(filename, content, mimeType = "text/plain;charset=utf-8") {
     const blob = new Blob([content], { type: mimeType });
     const url = URL.createObjectURL(blob);
@@ -130,14 +225,18 @@ export default function FinanceAuditLog() {
                 },
             });
 
-            if (res?.success && res.data) {
-                setAuditLogs(res.data);
-                if (res.data.length > 0) {
-                    setSelectedLogId(res.data[0].id);
-                }
+            const rows = getRowsFromAuditResponse(res).map(normalizeAuditLog);
+
+            setAuditLogs(rows);
+            if (rows.length > 0) {
+                setSelectedLogId((current) => current || rows[0].id);
+            } else {
+                setSelectedLogId(null);
             }
         } catch (error) {
             console.error("Error fetching audit logs:", error);
+            setAuditLogs([]);
+            setSelectedLogId(null);
         } finally {
             setIsLoading(false);
         }
@@ -162,6 +261,16 @@ export default function FinanceAuditLog() {
         return { total, critical, highRisk, modules, staff, recent };
     }, [auditLogs]);
 
+    const actionOptions = useMemo(
+        () => buildDynamicOptions(auditLogs, "actionKey", "Tất cả hành động", "action"),
+        [auditLogs],
+    );
+
+    const moduleOptions = useMemo(
+        () => buildDynamicOptions(auditLogs, "moduleKey", "Tất cả phân hệ", "module"),
+        [auditLogs],
+    );
+
     const filteredLogs = useMemo(() => {
         const keyword = searchTerm.trim().toLowerCase();
 
@@ -179,8 +288,8 @@ export default function FinanceAuditLog() {
             ].join(" ").toLowerCase();
 
             const matchesSearch = keyword.length === 0 || searchable.includes(keyword);
-            const matchesAction = actionFilter === "all" || item.action === actionFilter;
-            const matchesModule = moduleFilter === "all" || item.module === moduleFilter;
+            const matchesAction = actionFilter === "all" || item.actionKey === actionFilter;
+            const matchesModule = moduleFilter === "all" || item.moduleKey === moduleFilter;
             const matchesSeverity = severityFilter === "all" || item.severity === severityFilter;
 
             return matchesSearch && matchesAction && matchesModule && matchesSeverity;
@@ -388,7 +497,7 @@ export default function FinanceAuditLog() {
                     <label className="audit-select">
                         <span><FiFilter /> Hành động</span>
                         <select value={actionFilter} onChange={(event) => handleActionChange(event.target.value)}>
-                            {ACTION_OPTIONS.map((option) => (
+                            {actionOptions.map((option) => (
                                 <option key={option.value} value={option.value}>{option.label}</option>
                             ))}
                         </select>
@@ -397,7 +506,7 @@ export default function FinanceAuditLog() {
                     <label className="audit-select">
                         <span><FiTarget /> Phân hệ</span>
                         <select value={moduleFilter} onChange={(event) => handleModuleChange(event.target.value)}>
-                            {MODULE_OPTIONS.map((option) => (
+                            {moduleOptions.map((option) => (
                                 <option key={option.value} value={option.value}>{option.label}</option>
                             ))}
                         </select>
@@ -625,4 +734,3 @@ export default function FinanceAuditLog() {
         </div>
     );
 }
-

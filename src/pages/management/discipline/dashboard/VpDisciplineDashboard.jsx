@@ -10,7 +10,7 @@ import axiosClient from "../../../../services/shared/http/axiosClient";
 import { FiAlertTriangle, FiUsers, FiClock, FiAward, FiBarChart2, FiArrowRight } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { INITIAL_CALENDAR_EVENTS, CALENDAR_EVENT_TYPES } from "../../../../components/common/EventCalendar/eventData";
+import { CALENDAR_EVENT_TYPES } from "../../../../components/common/EventCalendar/eventData";
 import "./VpDisciplineDashboard.css";
 
 const STATUS_LABELS = { open: "Mở", in_progress: "Đang xử lý", resolved: "Đã giải quyết", closed: "Đóng" };
@@ -111,9 +111,8 @@ export default function VpDisciplineDashboard() {
         staleTime: 60_000,
     });
 
-    // Gộp violation events vào calendar
     const calendarEvents = useMemo(() => {
-        return [...INITIAL_CALENDAR_EVENTS, ...violationEvents];
+        return violationEvents;
     }, [violationEvents]);
 
     // Fetch grade levels from API
@@ -532,4 +531,3 @@ export default function VpDisciplineDashboard() {
         </div>
     );
 }
-

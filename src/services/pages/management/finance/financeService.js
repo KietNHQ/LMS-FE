@@ -1,5 +1,6 @@
 import axiosClient from "../../../shared/http/axiosClient";
 import { createScopedApiService } from "../../admin/generated/createScopedApiService";
+import { resolveSemesterId, resolveGradeLevelId } from "../../../shared/schoolYearLookup";
 
 const FINANCE_MODULES = [
   "dashboard",
@@ -56,8 +57,25 @@ const resolveSchoolYearId = async (schoolYearName) => {
 const wrapSchoolYearParams = async (params) => {
   if (!params) return params;
   const result = { ...params };
-  if (params.schoolYearId) {
-    result.schoolYearId = await resolveSchoolYearId(params.schoolYearId);
+  const syName = params.schoolYearId;
+  if (syName !== undefined && syName !== null) {
+    const resolvedId = await resolveSchoolYearId(syName);
+    result.schoolYearId = resolvedId ?? 0;
+  }
+  const semId = params.semesterId;
+  if (semId !== undefined && semId !== null) {
+    if (typeof semId === "string") {
+      const resolvedSemId = await resolveSemesterId(syName, semId);
+      result.semesterId = resolvedSemId ?? 0;
+    }
+  }
+  const gradeVal = params.grade;
+  if (gradeVal !== undefined && gradeVal !== null) {
+    const gradeLevelId = await resolveGradeLevelId(gradeVal);
+    if (gradeLevelId) {
+      result.gradeLevelId = gradeLevelId;
+    }
+    delete result.grade;
   }
   return result;
 };
@@ -135,6 +153,7 @@ export const financeService = {
     body: input.body || {},
   }),
   getPaymentHistory: (input) => scopedApi.callByKey("get_fees_payments", input),
+  getPaymentStats: (input) => axiosClient.get("/fees/payments/stats", input),
   // Notification methods
   getNotifications: (input) => scopedApi.callByKey("get_notifications", input),
   createNotification: (input) => scopedApi.callByKey("post_notifications", input),

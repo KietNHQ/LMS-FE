@@ -100,7 +100,6 @@ const loadSchoolYears = async () => {
   if (!token) return [];
   try {
     const payload = await axiosClient.get("/school-years");
-    console.log("[loadSchoolYears] payload:", payload, "rows:", getRows(payload));
     return getRows(payload);
   } catch {
     return [];
@@ -113,20 +112,35 @@ const loadSemesters = async (schoolYearId) => {
     const payload = await axiosClient.get("/semesters", {
       params: { schoolYearId },
     });
-    console.log("[loadSemesters] payload:", payload, "rows:", getRows(payload));
-    return getRows(payload);
+    const rows = getRows(payload);
+    // Cache under the shared semesters key + also per-schoolYear sub-key
+    lookupCache.semesters.rows = rows;
+    lookupCache.semesters.key = schoolYearId;
+    lookupCache.semesters.ts = Date.now();
+    return rows;
   } catch {
     return [];
   }
 };
+
+export function clearSchoolYearCache() {
+  lookupCache.schoolYears = { ts: 0, rows: [] };
+}
 
 export async function resolveSchoolYearId(schoolYearName) {
   if (!schoolYearName) return undefined;
   if (typeof schoolYearName === "number") return schoolYearName;
   const rows = await getCachedRows("schoolYears", loadSchoolYears);
   const target = normalizeText(schoolYearName);
-  console.log("[resolveSchoolYearId] schoolYearName:", schoolYearName, "target:", target, "rows count:", rows.length, "rows:", rows);
-  const matched = rows.find((row) => normalizeText(getSchoolYearName(row)) === target);
+  const currentYear = rows.find(
+    (row) =>
+      (row.is_current || row.isCurrent) &&
+      normalizeText(getSchoolYearName(row)) === target
+  );
+  if (currentYear) return currentYear.id;
+  const matched = rows.find(
+    (row) => normalizeText(getSchoolYearName(row)) === target
+  );
   return matched?.id;
 }
 
@@ -151,23 +165,31 @@ export async function resolveCurrentTermKey(schoolYearName) {
 
 export async function resolveSemesterId(schoolYearName, termKey) {
   const schoolYearId = await resolveSchoolYearId(schoolYearName);
-  console.log("[resolveSemesterId]", { schoolYearName, termKey, schoolYearId });
   if (!schoolYearId || !termKey) return undefined;
 
-  const cacheKey = `semesters:${schoolYearId}`;
-  let semesters = lookupCache.semesters.rows;
+  // Use shared semesters cache with schoolYearId key
+  const now = Date.now();
+  const cached = lookupCache.semesters;
   if (
-    lookupCache.semesters.key !== schoolYearId ||
-    semesters.length === 0 ||
-    Date.now() - lookupCache.semesters.ts > LOOKUP_CACHE_TTL
+    cached.key === schoolYearId &&
+    cached.rows.length > 0 &&
+    now - cached.ts < LOOKUP_CACHE_TTL
   ) {
-    semesters = await loadSemesters(schoolYearId);
-    lookupCache.semesters = { ts: Date.now(), rows: semesters, key: schoolYearId };
+    const termLabel = termKey === "hk1" ? "học kỳ 1" : "học kỳ 2";
+    const matched = cached.rows.find((row) =>
+      normalizeText(row.name || "").includes(termLabel)
+    );
+    return matched?.id;
   }
-  console.log("[resolveSemesterId] semesters:", semesters);
+
+  // Load and cache
+  const semesters = await loadSemesters(schoolYearId);
+  lookupCache.semesters = { ts: now, rows: semesters, key: schoolYearId };
 
   const termLabel = termKey === "hk1" ? "học kỳ 1" : "học kỳ 2";
-  const matched = semesters.find((row) => normalizeText(row.name || "").includes(termLabel));
+  const matched = semesters.find((row) =>
+    normalizeText(row.name || "").includes(termLabel)
+  );
   return matched?.id;
 }
 

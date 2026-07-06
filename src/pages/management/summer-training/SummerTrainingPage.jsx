@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { useSearchParams } from "react-router-dom";
-import { PageHeader, EmptyState } from "../../../components/common";
+import { PageHeader, EmptyState, SchoolYearTermSelector } from "../../../components/common";
 import { useSchoolYearTerm } from "../../../hooks/useSchoolYearTerm";
 import Select from "../../../components/ui/Select/Select";
 import {
@@ -11,6 +11,7 @@ import { toast } from "react-toastify";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { summerTrainingService } from "../../../services/pages/management/summerTraining/summerTrainingService";
 import { classesService } from "../../../services/pages/management/classes/classesService";
+import { resolveSchoolYearId } from "../../../services/shared/schoolYearLookup";
 import "./SummerTrainingPage.css";
 
 const TRAINING_STATUS = {
@@ -18,6 +19,11 @@ const TRAINING_STATUS = {
   in_progress: { bg: "bg-blue-100", text: "text-blue-700", border: "border-blue-300", label: "Đang rèn luyện", icon: FiPlay },
   completed: { bg: "bg-emerald-100", text: "text-emerald-700", border: "border-emerald-300", label: "Hoàn thành", icon: FiCheckCircle },
   not_completed: { bg: "bg-red-100", text: "text-red-700", border: "border-red-300", label: "Không hoàn thành", icon: FiXCircle },
+};
+
+const normalizeTrainingStatus = (status) => {
+  if (status === "enrolled") return "not_started";
+  return status || "not_started";
 };
 
 const mapStudentData = (s) => ({
@@ -29,15 +35,15 @@ const mapStudentData = (s) => ({
   annualGpa: s.annualGpa ?? s.annual_gpa ?? s.gpa ?? null,
   currentConduct: s.currentConduct || s.current_conduct || s.conduct || "",
   targetConduct: s.targetConduct || s.target_conduct || "Tốt",
-  daysAttended: s.daysAttended ?? s.days_attended ?? s.days ?? 0,
-  status: s.status || "not_started",
+  daysAttended: s.daysAttended ?? s.days_attended ?? s.attendance_days ?? s.days ?? 0,
+  status: normalizeTrainingStatus(s.status || s.completion_status),
   note: s.note || s.notes || "",
 });
 
 export default function SummerTrainingPage() {
   const [searchParams] = useSearchParams();
   const urlClass = searchParams.get("class");
-  const { selectedSchoolYear } = useSchoolYearTerm();
+  const { selectedSchoolYear, selectedTerm, handleYearArrow, handleTermChange } = useSchoolYearTerm();
   const queryClient = useQueryClient();
 
   const [selectedGrade, setSelectedGrade] = useState("10");
@@ -77,9 +83,9 @@ export default function SummerTrainingPage() {
   const classOptions = useMemo(() => {
     if (!classesData) return [];
     return classesData.map((c) => ({
-      value: c.id || c.name || c.class_name || "",
+      value: String(c.id || c.name || c.class_name || ""),
       label: c.name || c.class_name || "",
-      grade: String((c.name || "").slice(0, 2)),
+      grade: String((c.name || c.class_name || "").slice(0, 2)),
     }));
   }, [classesData]);
 
@@ -89,19 +95,27 @@ export default function SummerTrainingPage() {
   }, [classOptions, selectedGrade]);
 
   const { data: trainingData, isLoading, refetch } = useQuery({
-    queryKey: ["summer-training-summary", selectedClass, currentPage],
+    queryKey: ["summer-training-summary", selectedClass, selectedSchoolYear, currentPage],
     queryFn: async () => {
       if (!selectedClass) return null;
-      const res = await summerTrainingService.getSummerTrainingSummary(selectedClass, currentPage, ITEMS_PER_PAGE);
+      const schoolYearId = await resolveSchoolYearId(selectedSchoolYear);
+      const res = await summerTrainingService.getSummerTrainingSummary(
+        selectedClass, currentPage, ITEMS_PER_PAGE, schoolYearId
+      );
       return res || null;
     },
-    enabled: Boolean(selectedClass),
+    enabled: Boolean(selectedClass && selectedSchoolYear),
     staleTime: 60_000,
   });
 
   const startTrainingMutation = useMutation({
     mutationFn: async (enrollmentId) => {
-      await summerTrainingService.enrollConditionalStudents(selectedSchoolYear);
+      // Resolve string school year name to numeric ID
+      let syId = selectedSchoolYear;
+      if (typeof syId === "string" && isNaN(Number(syId))) {
+        syId = await resolveSchoolYearId(syId);
+      }
+      await summerTrainingService.enrollConditionalStudents(syId);
     },
     onSuccess: () => {
       toast.success("Đã bắt đầu rèn luyện hè.");
@@ -155,7 +169,13 @@ export default function SummerTrainingPage() {
 
   const studentList = useMemo(() => {
     if (!trainingData?.students) return [];
-    let list = trainingData.students.map(mapStudentData);
+    let list = trainingData.students.map((student) => {
+      const mapped = mapStudentData(student);
+      if (!mapped.className) {
+        mapped.className = trainingData.class_name || trainingData.className || "";
+      }
+      return mapped;
+    });
     if (searchTerm) {
       const term = searchTerm.toLowerCase();
       list = list.filter((s) =>
@@ -168,10 +188,7 @@ export default function SummerTrainingPage() {
 
   const totalPages = useMemo(() => trainingData?.totalPages ?? 1, [trainingData]);
   const effectivePage = Math.min(currentPage, totalPages);
-  const paginatedStudents = useMemo(() => {
-    const start = (effectivePage - 1) * ITEMS_PER_PAGE;
-    return studentList.slice(start, start + ITEMS_PER_PAGE);
-  }, [studentList, effectivePage]);
+  const paginatedStudents = studentList;
 
   const goPrevPage = () => setCurrentPage((prev) => Math.max(1, prev - 1));
   const goNextPage = () => setCurrentPage((prev) => Math.min(totalPages, prev + 1));
@@ -179,9 +196,10 @@ export default function SummerTrainingPage() {
   const stats = useMemo(() => {
     const total = trainingData?.total ?? 0;
     if (!total) return { total: 0, completed: 0, inProgress: 0, notStarted: 0, rate: 0 };
-    const completed = studentList.filter((s) => s.status === "completed").length;
-    const inProgress = studentList.filter((s) => s.status === "in_progress").length;
-    const notStarted = studentList.filter((s) => s.status === "not_started").length;
+    const backendStats = trainingData?.stats || {};
+    const completed = backendStats.completed ?? studentList.filter((s) => s.status === "completed").length;
+    const inProgress = backendStats.in_progress ?? studentList.filter((s) => s.status === "in_progress").length;
+    const notStarted = backendStats.enrolled ?? studentList.filter((s) => s.status === "not_started").length;
     const rate = total > 0 ? Math.round((completed / total) * 100) : 0;
     return { total, completed, inProgress, notStarted, rate };
   }, [studentList, trainingData]);
@@ -224,11 +242,42 @@ export default function SummerTrainingPage() {
     }
   };
 
+  const handleEnrollAndCompleteAll = async () => {
+    try {
+      let syId = selectedSchoolYear;
+      if (typeof syId === "string" && isNaN(Number(syId))) {
+        syId = await resolveSchoolYearId(syId);
+      }
+      // Step 1: Ghi danh tất cả HS có điều kiện
+      await summerTrainingService.enrollConditionalStudents(syId);
+      queryClient.invalidateQueries(["summer-training-summary"]);
+      // Step 2: Hoàn thành tất cả HS đang ở trạng thái enrolled/in_progress trong danh sách hiện tại
+      const toComplete = studentList.filter(
+        (s) => s.status === "enrolled" || s.status === "in_progress" || s.status === "not_started"
+      );
+      for (const student of toComplete) {
+        await summerTrainingService.completeSummerTraining(student.enrollmentId, true, 21);
+      }
+      queryClient.invalidateQueries(["summer-training-summary"]);
+      toast.success(`Đã ghi danh và hoàn thành rèn luyện hè cho ${toComplete.length} học sinh.`);
+    } catch {
+      toast.error("Không thể hoàn thành rèn luyện hè.");
+    }
+  };
+
   return (
     <div className="summer-training-page">
       <PageHeader
         title="Rèn Luyện Hè"
         subtitle="Quản lý danh sách và theo dõi rèn luyện hè cho học sinh"
+        actions={
+          <SchoolYearTermSelector
+            selectedSchoolYear={selectedSchoolYear}
+            selectedTerm={selectedTerm}
+            onYearChange={handleYearArrow}
+            showTerm={false}
+          />
+        }
       />
 
       {/* Stats Grid */}
@@ -272,8 +321,9 @@ export default function SummerTrainingPage() {
               variant="custom"
               value={selectedGrade}
               onChange={(e) => {
-                setSelectedGrade(e.target.value);
-                const firstClass = filteredClassOptions.find((c) => !e.target.value || e.target.value === "all" || c.grade === e.target.value);
+                const nextGrade = e.target.value;
+                setSelectedGrade(nextGrade);
+                const firstClass = classOptions.find((c) => !nextGrade || nextGrade === "all" || c.grade === nextGrade);
                 if (firstClass) setSelectedClass(firstClass.value);
               }}
               options={[
@@ -298,12 +348,22 @@ export default function SummerTrainingPage() {
               type="text"
               placeholder="Tên hoặc mã HS..."
               value={searchTerm}
-              onChange={(e) => {
+                onChange={(e) => {
                 setSearchTerm(e.target.value);
                 setCurrentPage(1);
               }}
             />
           </div>
+        </div>
+        <div className="summer-actions">
+          <button
+            className="btn-enroll-all"
+            onClick={handleEnrollAndCompleteAll}
+            disabled={!selectedClass || startTrainingMutation.isPending}
+          >
+            <FiSun />
+            Ghi danh & Hoàn thành tất cả
+          </button>
         </div>
       </div>
 

@@ -31,6 +31,21 @@ export const PERMISSIONS = {
     QUIZ_VIEW: 'quiz:read',
     QUIZ_MANAGE: 'quiz:manage',
 
+    // 6.1. Phòng học
+    ROOMS_VIEW: 'rooms:read',
+    ROOMS_MANAGE: 'rooms:manage',
+
+    // 6.2. Môn học
+    SUBJECTS_VIEW: 'subjects:read',
+    SUBJECTS_MANAGE: 'subjects:manage',
+
+    // 6.3. Báo cáo
+    REPORT_VIEW: 'reports:read',
+
+    // 6.4. Phê duyệt
+    APPROVAL_REQUEST: 'approvals:request',
+    APPROVAL_PROCESS: 'approvals:process',
+
     // 7. Thời khóa biểu
     TIMETABLE_VIEW: 'timetable:read',
     TIMETABLE_MANAGE: 'timetable:manage',
@@ -49,6 +64,27 @@ export const PERMISSIONS = {
     VIOLATION_TYPE_CREATE: 'violation_types:create',
     VIOLATION_TYPE_UPDATE: 'violation_types:update',
     VIOLATION_TYPE_DELETE: 'violation_types:delete',
+
+    // 8.1. Hạnh kiểm
+    CONDUCT_VIEW: 'conduct:read',
+    CONDUCT_CREATE: 'conduct:create',
+    CONDUCT_UPDATE: 'conduct:update',
+    CONDUCT_SUBMIT: 'conduct:submit',
+    CONDUCT_FINALIZE: 'conduct:finalize',
+
+    // 8.2. Loại vi phạm
+    VIOLATION_TYPE_VIEW: 'violation_types:read',
+    VIOLATION_TYPE_CREATE: 'violation_types:create',
+    VIOLATION_TYPE_UPDATE: 'violation_types:update',
+    VIOLATION_TYPE_DELETE: 'violation_types:delete',
+
+    // 8.3. Khen thưởng
+    REWARD_TYPE_VIEW: 'reward_types:read',
+    REWARD_TYPE_MANAGE: 'reward_types:manage',
+
+    // 8.4. Điểm danh
+    ATTENDANCE_VIEW: 'attendance:read',
+    ATTENDANCE_MANAGE: 'attendance:manage',
 
     // 9. Nghỉ phép
     LEAVE_REQUESTS_VIEW: 'leave_requests:read',
@@ -156,11 +192,7 @@ export const PERMISSIONS = {
     BACKUP_RESTORE: 'backup:restore',
     SYSTEM_LOG_VIEW: 'system_logs:read',
 
-    // 24. Môn học & Phòng học
-    SUBJECTS_VIEW: 'subjects:read',
-    SUBJECTS_MANAGE: 'subjects:manage',
-    ROOMS_VIEW: 'rooms:read',
-    ROOMS_MANAGE: 'rooms:manage',
+    // 29. Tòa nhà (deprecated — xóa feature)
 };
 
 export const MANAGEMENT_TITLES = [
@@ -173,8 +205,11 @@ export const MANAGEMENT_TITLES = [
     ] },
     { label: "Phó hiệu trưởng (Nề nếp)", value: "vp_discipline", permissions: [
         PERMISSIONS.USER_VIEW, PERMISSIONS.DISCIPLINE_VIEW, PERMISSIONS.DISCIPLINE_MANAGE,
+        PERMISSIONS.CONDUCT_VIEW, PERMISSIONS.CONDUCT_CREATE, PERMISSIONS.CONDUCT_UPDATE, PERMISSIONS.CONDUCT_SUBMIT, PERMISSIONS.CONDUCT_FINALIZE,
         PERMISSIONS.VIOLATION_TYPE_VIEW, PERMISSIONS.VIOLATION_TYPE_CREATE, PERMISSIONS.VIOLATION_TYPE_UPDATE, PERMISSIONS.VIOLATION_TYPE_DELETE,
-        PERMISSIONS.REWARD_TYPE_VIEW, PERMISSIONS.NOTIFICATION_VIEW,
+        PERMISSIONS.REWARD_TYPE_VIEW, PERMISSIONS.REWARD_TYPE_MANAGE,
+        PERMISSIONS.NOTIFICATION_VIEW,
+        PERMISSIONS.ATTENDANCE_VIEW, PERMISSIONS.ATTENDANCE_MANAGE,
         PERMISSIONS.LEAVE_REQUESTS_VIEW, PERMISSIONS.LEAVE_REQUESTS_APPROVE
     ] },
     { label: "Giáo vụ", value: "academic_staff", permissions: [
@@ -301,17 +336,22 @@ export const PERMISSION_GROUPS = [
         permissions: [
             { id: PERMISSIONS.DISCIPLINE_VIEW, label: "Xem nề nếp" },
             { id: PERMISSIONS.DISCIPLINE_MANAGE, label: "Quản lý nề nếp" },
+            { id: PERMISSIONS.CONDUCT_VIEW, label: "Xem hạnh kiểm" },
+            { id: PERMISSIONS.CONDUCT_CREATE, label: "Tạo hạnh kiểm" },
+            { id: PERMISSIONS.CONDUCT_UPDATE, label: "Sửa hạnh kiểm" },
+            { id: PERMISSIONS.CONDUCT_SUBMIT, label: "Nộp hạnh kiểm" },
+            { id: PERMISSIONS.CONDUCT_FINALIZE, label: "Phê duyệt hạnh kiểm" },
             { id: PERMISSIONS.VIOLATION_TYPE_VIEW, label: "Xem loại vi phạm" },
             { id: PERMISSIONS.VIOLATION_TYPE_CREATE, label: "Tạo loại vi phạm" },
             { id: PERMISSIONS.VIOLATION_TYPE_UPDATE, label: "Sửa loại vi phạm" },
             { id: PERMISSIONS.VIOLATION_TYPE_DELETE, label: "Xóa loại vi phạm" },
             { id: PERMISSIONS.REWARD_TYPE_VIEW, label: "Xem khen thưởng" },
             { id: PERMISSIONS.REWARD_TYPE_MANAGE, label: "Quản lý khen thưởng" },
+            { id: PERMISSIONS.ATTENDANCE_VIEW, label: "Xem điểm danh" },
+            { id: PERMISSIONS.ATTENDANCE_MANAGE, label: "Quản lý điểm danh" },
             { id: PERMISSIONS.LEAVE_REQUESTS_VIEW, label: "Xem đơn nghỉ phép" },
             { id: PERMISSIONS.LEAVE_REQUESTS_APPROVE, label: "Phê duyệt đơn nghỉ phép" },
             { id: PERMISSIONS.LEAVE_REQUESTS_MANAGE, label: "Quản lý đơn nghỉ phép" },
-            { id: PERMISSIONS.ATTENDANCE_VIEW, label: "Xem điểm danh" },
-            { id: PERMISSIONS.ATTENDANCE_MANAGE, label: "Quản lý điểm danh" },
         ]
     },
     {

@@ -15,19 +15,68 @@ import * as XLSX from "xlsx";
 import axiosClient from "../../../shared/http/axiosClient";
 import { vpDisciplineService } from "./vpDisciplineService";
 
-const getPayload = (response) => response?.data ?? response ?? {};
+const getPayload = (response) => response ?? {};
+
+const getRows = (payload) => {
+  if (Array.isArray(payload)) return payload;
+  if (Array.isArray(payload?.data)) return payload.data;
+  if (Array.isArray(payload?.students)) return payload.students;
+  if (Array.isArray(payload?.items)) return payload.items;
+  return [];
+};
+
+const buildEnrollmentFromStudent = (student = {}) => {
+  const enrollmentId = student.enrollment_id || student.enrollmentId;
+  if (!enrollmentId) return null;
+
+  return {
+    id: enrollmentId,
+    enrollment_id: enrollmentId,
+    school_year_id: student.school_year_id || student.schoolYearId || null,
+    schoolYearId: student.school_year_id || student.schoolYearId || null,
+    class_id: student.class_id || student.classId || null,
+    classId: student.class_id || student.classId || null,
+    class_name: student.class_name || student.className || null,
+    className: student.class_name || student.className || null,
+    status: student.enrollment_status || student.status || null,
+  };
+};
+
+const normalizeStudent = (student = {}) => {
+  const fallbackEnrollment = buildEnrollmentFromStudent(student);
+  const enrollments = Array.isArray(student.enrollments)
+    ? student.enrollments
+    : fallbackEnrollment
+      ? [fallbackEnrollment]
+      : [];
+
+  return {
+    ...student,
+    student_code: student.student_code || student.studentCode || student.code || "",
+    surname: student.surname || student.lastName || "",
+    given_name: student.given_name || student.givenName || student.firstName || "",
+    className: student.className || student.class_name || fallbackEnrollment?.className || "",
+    schoolYearId: student.schoolYearId || student.school_year_id || fallbackEnrollment?.schoolYearId || null,
+    enrollment_id: student.enrollment_id || student.enrollmentId || fallbackEnrollment?.id || null,
+    enrollments,
+  };
+};
 
 export const vpTranscriptService = {
   /**
    * Lấy danh sách học sinh để chọn (tìm kiếm)
    */
-  searchStudents: async (keyword = "") => {
+  searchStudents: async (keyword = "", { schoolYearId, limit = 20 } = {}) => {
     try {
       const response = await axiosClient.get("/students", {
-        params: keyword ? { search: keyword } : {},
+        params: {
+          page: 1,
+          limit,
+          ...(keyword ? { search: keyword } : {}),
+          ...(schoolYearId ? { schoolYearId } : {}),
+        },
       });
-      const students = getPayload(response);
-      return Array.isArray(students) ? students : [];
+      return getRows(getPayload(response)).map(normalizeStudent);
     } catch (err) {
       console.warn("[vpTranscriptService] searchStudents failed:", err);
       return [];
@@ -55,16 +104,77 @@ export const vpTranscriptService = {
   getTranscriptData: async (enrollmentId, opts = {}) => {
     const { schoolYearId, hk1SemesterId, hk2SemesterId } = opts;
 
+    // Normalize semester IDs — FE may pass string like "hk1", convert to numeric
+    const normalizedHk1 = typeof hk1SemesterId === "string" && !isNaN(Number(hk1SemesterId))
+      ? Number(hk1SemesterId)
+      : hk1SemesterId;
+    const normalizedHk2 = typeof hk2SemesterId === "string" && !isNaN(Number(hk2SemesterId))
+      ? Number(hk2SemesterId)
+      : hk2SemesterId;
+
     const [reportCard, conduct] = await Promise.allSettled([
       vpTranscriptService.getReportCard(enrollmentId, { schoolYearId }),
-      hk1SemesterId && hk2SemesterId
-        ? vpDisciplineService.getStudentAnnualConduct(enrollmentId, hk1SemesterId, hk2SemesterId)
+      normalizedHk1 && normalizedHk2
+        ? vpDisciplineService.getStudentAnnualConduct(enrollmentId, normalizedHk1, normalizedHk2)
         : Promise.resolve(null),
     ]);
 
+    const rawReportCard = reportCard.status === "fulfilled" ? reportCard.value : null;
+
+    // Normalize BE response: BE year-report returns grades.semester1/semester2
+    // FE expects semesters array — transform to match preview table expectation
+    let normalizedSemesters = [];
+    if (rawReportCard?.grades) {
+      if (rawReportCard.grades.semester1) {
+        normalizedSemesters.push({
+          semesterId: 1,
+          semesterName: "Học kỳ I",
+          averageScore: rawReportCard.grades.semester1.gpa ?? null,
+          classification: rawReportCard.grades.semester1.classification ?? null,
+          subjects: (rawReportCard.grades.semester1.results || []).map((r) => ({
+            ...r,
+            averageScore: r.averageScore ?? r.avgScore ?? null,
+            average_score: r.averageScore ?? r.avgScore ?? null,
+          })),
+        });
+      }
+      if (rawReportCard.grades.semester2) {
+        normalizedSemesters.push({
+          semesterId: 2,
+          semesterName: "Học kỳ II",
+          averageScore: rawReportCard.grades.semester2.gpa ?? null,
+          classification: rawReportCard.grades.semester2.classification ?? null,
+          subjects: (rawReportCard.grades.semester2.results || []).map((r) => ({
+            ...r,
+            averageScore: r.averageScore ?? r.avgScore ?? null,
+            average_score: r.averageScore ?? r.avgScore ?? null,
+          })),
+        });
+      }
+    }
+
+    const enhancedReportCard = rawReportCard
+      ? {
+          ...rawReportCard,
+          semesters: normalizedSemesters,
+          yearlyAverage:
+            rawReportCard.yearlyAverage ??
+            rawReportCard.yearGPA ??
+            rawReportCard.grades?.gpa ??
+            null,
+          yearlyClassification:
+            rawReportCard.yearlyClassification ??
+            rawReportCard.academicClassification?.level ??
+            rawReportCard.academicClassification?.description ??
+            "",
+        }
+      : null;
+
     const data = {
-      reportCard: reportCard.status === "fulfilled" ? reportCard.value : null,
-      conduct: conduct.status === "fulfilled" ? conduct.value : null,
+      reportCard: enhancedReportCard,
+      conduct: conduct.status === "fulfilled"
+        ? (conduct.value?.data || conduct.value || null)
+        : null,
     };
 
     return data;

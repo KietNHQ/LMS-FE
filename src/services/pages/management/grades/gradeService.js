@@ -104,13 +104,13 @@ export const gradeService = {
       ...(semesterId ? { semesterId } : {}),
     };
     const response = await axiosClient.get(`/grades/lock-status`, { params });
-    return getPayload(response);
+    return response;
   },
 
   // Rút lại điểm đã chốt (mở khóa) — gọi từng grade một
   retractGrade: async (gradeId, { notes } = {}) => {
     const response = await axiosClient.post(`/grades/retract/${gradeId}`, { notes });
-    return getPayload(response);
+    return response;
   },
 
   // Chốt tất cả điểm lớp (VP/Principal gọi)
@@ -120,7 +120,7 @@ export const gradeService = {
       semesterId,
       notes,
     });
-    return getPayload(response);
+    return response;
   },
 
   // Mở khóa tất cả điểm lớp (VP/Principal gọi) — FINALIZED → DRAFT
@@ -130,7 +130,7 @@ export const gradeService = {
       semesterId,
       notes,
     });
-    return getPayload(response);
+    return response;
   },
 };
 

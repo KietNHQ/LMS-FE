@@ -5,14 +5,18 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
   display: flex;
   flex-direction: column;
-  height: 100%;
+  min-height: 340px;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .quiz-management-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 12px;
   margin-bottom: 15px;
+  flex-wrap: wrap;
 }
 
 .quiz-management-header .teacher-dashboard-title {
@@ -21,6 +25,8 @@
 
 .quiz-list-scroll {
   flex: 1;
+  min-height: 0;
+  max-height: 320px;
   overflow-y: auto;
   padding-right: 5px;
 }
@@ -38,8 +44,10 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 12px;
   padding: 12px 0;
   border-bottom: 1px solid #f1f5f9;
+  min-width: 0;
 }
 
 .teacher-dashboard-quiz-item:last-child {
@@ -51,6 +59,7 @@
   font-size: 14px;
   margin: 0;
   color: #1e293b;
+  overflow-wrap: anywhere;
 }
 
 .teacher-dashboard-quiz-item span {
@@ -58,6 +67,7 @@
   color: #64748b;
   margin-top: 2px;
   display: block;
+  overflow-wrap: anywhere;
 }
 
 .quiz-icon {
@@ -76,6 +86,11 @@
   display: flex;
   align-items: center;
   gap: 12px;
+  min-width: 0;
+}
+
+.quiz-left > div:last-child {
+  min-width: 0;
 }
 
 .status {

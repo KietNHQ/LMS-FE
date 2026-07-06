@@ -239,6 +239,9 @@ const teacherEndpointRegistry = [
     mock: false
   },
   { key: "get_notifications", method: "GET", path: "/notifications/my", module: "notifications", mock: false },
+  { key: "put_notifications_my_read_all", method: "PUT", path: "/notifications/my/read-all", module: "notifications", mock: false },
+  { key: "put_notifications_my_by_id_read", method: "PUT", path: "/notifications/my/:id/read", module: "notifications", mock: false },
+  { key: "patch_notifications_my_by_id_toggle_important", method: "PATCH", path: "/notifications/my/:id/toggle-important", module: "notifications", mock: false },
   // Leave Requests - Real API endpoints (no mock)
   { key: "get_class_leave_requests", method: "GET", path: "/leave-requests/classes/:classId/leave-requests", module: "leave" },
   { key: "get_approved_leaves_by_date", method: "GET", path: "/leave-requests/classes/:classId/leave-requests/approved-on-date", module: "leave" },
@@ -327,6 +330,7 @@ const teacherEndpointRegistry = [
   { key: "post_human_conversations_by_parentid_messages", method: "POST", path: "/chat/human/parent/:parentId/message", module: "chat" },
   { key: "post_human_conversations_by_conversationid_read", method: "POST", path: "/chat/human/read/:conversationId", module: "chat" },
   { key: "send_human_message", method: "POST", path: "/chat/human/message", module: "chat" },
+  { key: "delete_human_message", method: "DELETE", path: "/chat/human/messages/:messageId", module: "chat" },
   { key: "get_faqs", method: "GET", path: "/support/faqs", module: "support", mock: () => ([]) },
   { key: "post_ai_chat", method: "POST", path: "/support/ai/chat", module: "support" },
   { key: "post_attendance", method: "POST", path: "/teachers/attendance", module: "teacher", mock: (input) => input.body },
@@ -338,6 +342,7 @@ const teacherEndpointRegistry = [
   { key: "get_teaching_days", method: "GET", path: "/teachers/classes/:classId/teaching-days", module: "teacher", mock: false },
   { key: "get_homeroom_classes", method: "GET", path: "/teachers/:id/homeroom-classes", module: "teacher", mock: false },
   { key: "get_academic_summary", method: "GET", path: "/classes/:id/academic-summary", module: "classes", mock: false },
+  { key: "get_conduct_summary_class", method: "GET", path: "/conduct-summary/class/:classId/summary", module: "conduct", mock: false },
   { key: "patch_class_officers", method: "PATCH", path: "/classes/:id/officers", module: "classes" },
   { key: "post_class_broadcast", method: "POST", path: "/notifications/class/:id/broadcast", module: "notifications", mock: false },
   { key: "get_consolidated_homeroom", method: "GET", path: "/teachers/:id/homeroom-dashboard", module: "teacher" },
@@ -351,7 +356,7 @@ const teacherEndpointRegistry = [
 
 const createEndpointCaller = (endpoint) => {
   return async (input = {}) => {
-    const shouldMock = input.mock === true || (input.mock !== false && typeof endpoint.mock === "function");
+    const shouldMock = input.mock === true;
     if (shouldMock) {
       await wait(input.delayMs ?? DEFAULT_DELAY_MS);
       const data = typeof endpoint.mock === "function" ? endpoint.mock(input) : null;
@@ -438,6 +443,9 @@ export const teacherService = {
   createSchoolEvent: (input) => endpointCallers.post_school_events(input),
   listQuizzes: (input) => endpointCallers.get_quizzes(input),
   getNotifications: (input) => endpointCallers.get_notifications(input),
+  markAllNotificationsRead: (input) => endpointCallers.put_notifications_my_read_all(input),
+  markNotificationRead: (input) => endpointCallers.put_notifications_my_by_id_read(input),
+  toggleNotificationImportant: (input) => endpointCallers.patch_notifications_my_by_id_toggle_important(input),
   getClassLeaveRequests: (input) => endpointCallers.get_class_leave_requests(input),
   getApprovedLeavesByDate: (input) => endpointCallers.get_approved_leaves_by_date(input),
   updateLeaveRequestStatus: (input) => endpointCallers.patch_leave_request_status(input),
@@ -457,14 +465,14 @@ export const teacherService = {
   getChatMessages: (input) => endpointCallers.get_chat_messages(input),
   sendMessage: (input) => endpointCallers.post_chat_message(input),
   startHumanChat: (input) => endpointCallers.start_human_chat(input),
-  getHumanMessages: (input) => endpointCallers.get_human_messages(input),
   getHumanConversations: (input) => endpointCallers.get_human_conversations(input),
   getHumanConversationsByClassId: (input) => endpointCallers.get_human_conversations_by_classid(input),
   getClassParents: (input) => endpointCallers.get_human_class_parents(input),
-  getHumanMessagesByConversationId: (input) => endpointCallers.get_human_conversations_by_conversationid_messages(input),
+  getHumanMessages: (input) => endpointCallers.get_human_conversations_by_conversationid_messages(input),
   sendMessageToParent: (input) => endpointCallers.post_human_conversations_by_parentid_messages(input),
   markChatAsRead: (input) => endpointCallers.post_human_conversations_by_conversationid_read(input),
   sendHumanMessage: (input) => endpointCallers.send_human_message(input),
+  deleteHumanMessage: (input) => endpointCallers.delete_human_message(input),
   getFaqs: (input) => endpointCallers.get_faqs(input),
   aiChat: (input) => endpointCallers.post_ai_chat(input),
   saveAttendance: (input) => endpointCallers.post_attendance(input),
@@ -476,6 +484,7 @@ export const teacherService = {
   getTeachingDays: (input) => endpointCallers.get_teaching_days(input),
   getHomeroomClasses: (input) => endpointCallers.get_homeroom_classes(input),
   getAcademicSummary: (input) => endpointCallers.get_academic_summary(input),
+  getConductClassSummary: (input) => endpointCallers.get_conduct_summary_class(input),
   assignOfficers: (input) => endpointCallers.patch_class_officers(input),
   broadcastToClass: (input) => endpointCallers.post_class_broadcast(input),
   getClassDetails: (input) => endpointCallers.get_classes_by_id(input),

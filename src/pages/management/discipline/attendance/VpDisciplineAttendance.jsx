@@ -1,6 +1,12 @@
-import { useMemo, useState, useEffect } from "react";
+import { useMemo, useState, useEffect, useRef } from "react";
 import { useSearchParams } from "react-router-dom";
-import { getWeekDateRange } from "../../../../utils/competitionUtils";
+import {
+  formatDateForDisplay,
+  getSchoolYearForDate,
+  getTermForDate,
+  getWeekDateRange,
+  getWeekForDate,
+} from "../../../../utils/competitionUtils";
 import { PageHeader, WeekPicker, StatusBadge, Pagination, LoadingSpinner } from "../../../../components/common";
 import DisciplineHeaderActions from "../components/DisciplineHeaderActions";
 import { useSchoolYearTerm } from "../../../../hooks/useSchoolYearTerm";
@@ -8,6 +14,7 @@ import axiosClient from "../../../../services/shared/http/axiosClient";
 import Select from "../../../../components/ui/Select/Select";
 import { useQuery } from "@tanstack/react-query";
 import { vpDisciplineService } from "../../../../services/pages/management/vp-discipline";
+import { resolveSchoolYearId } from "../../../../services/shared/schoolYearLookup";
 import {
   FiClock,
   FiDownload,
@@ -31,12 +38,60 @@ const DAYS = [
     { id: 7, label: "Thứ 7" },
 ];
 
+const TOTAL_ATTENDANCE_WEEKS = 35;
+
+const getSchoolYearDateRange = (schoolYear) => {
+  const [startRaw, endRaw] = `${schoolYear || ""}`.split("-");
+  const startYear = Number(startRaw);
+  const endYear = Number(endRaw);
+
+  if (!Number.isFinite(startYear) || !Number.isFinite(endYear)) {
+    return {};
+  }
+
+  return {
+    startDate: `${startYear}-08-01`,
+    endDate: `${endYear}-07-31`,
+  };
+};
+
+const toDateInputValue = (value) => {
+  if (!value) return "";
+  if (typeof value === "string") {
+    const matched = value.match(/^(\d{4}-\d{2}-\d{2})/);
+    if (matched) return matched[1];
+  }
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+
+  const year = date.getFullYear();
+  const month = `${date.getMonth() + 1}`.padStart(2, "0");
+  const day = `${date.getDate()}`.padStart(2, "0");
+  return `${year}-${month}-${day}`;
+};
+
 export default function VpDisciplineAttendance({ isEmbedded = false }) {
   const [searchParams] = useSearchParams();
   const urlClass = searchParams.get("class");
-  const { selectedSchoolYear, selectedTerm, handleYearArrow, handleTermChange } = useSchoolYearTerm();
+  const urlClassName = searchParams.get("className");
+  const urlWeek = searchParams.get("week");
+  const urlStartDate = searchParams.get("startDate");
+  const urlEndDate = searchParams.get("endDate");
+  const urlDate = searchParams.get("date");
+  const urlSchoolYear = searchParams.get("schoolYear");
+  const urlTerm = searchParams.get("term");
+  const {
+    selectedSchoolYear,
+    selectedTerm,
+    handleYearArrow,
+    handleTermChange,
+    setSelectedSchoolYear,
+  } = useSchoolYearTerm();
 
-  const [selectedWeek, setSelectedWeek] = useState(12);
+  const [viewMode, setViewMode] = useState("weekly");
+  const [selectedWeek, setSelectedWeek] = useState(1);
+  const [selectedDate, setSelectedDate] = useState("");
   const [selectedDay, setSelectedDay] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedGrade, setSelectedGrade] = useState("all");
@@ -44,7 +99,31 @@ export default function VpDisciplineAttendance({ isEmbedded = false }) {
   const [typeFilter, setTypeFilter] = useState("all");
   const [isBonusModalOpen, setIsBonusModalOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
+  const [dateJumpRange, setDateJumpRange] = useState(null);
+  const autoJumpKeyRef = useRef("");
+  const appliedUrlPeriodRef = useRef("");
   const itemsPerPage = 10;
+  const selectedTermKey =
+    typeof selectedTerm === "string"
+      ? selectedTerm
+      : selectedTerm?.key || selectedTerm?.id || "";
+
+  const dateRange = useMemo(() => {
+    if (dateJumpRange && viewMode === "weekly") {
+      return dateJumpRange;
+    }
+    if (viewMode === "annual") {
+      return getSchoolYearDateRange(selectedSchoolYear);
+    }
+    return getWeekDateRange(selectedSchoolYear, selectedTerm, selectedWeek);
+  }, [dateJumpRange, selectedSchoolYear, selectedTerm, selectedWeek, viewMode]);
+
+  const weekRangeLabel = useMemo(() => {
+    if (!dateRange.startDate || !dateRange.endDate) return "";
+    return `${formatDateForDisplay(dateRange.startDate)} - ${formatDateForDisplay(dateRange.endDate)}`;
+  }, [dateRange]);
+
+  const activePeriodLabel = viewMode === "annual" ? "Cả năm" : `Tuần ${selectedWeek}`;
 
   // Fetch grade levels from API
   const { data: gradeLevelsData = [] } = useQuery({
@@ -76,6 +155,46 @@ export default function VpDisciplineAttendance({ isEmbedded = false }) {
       return [...defaultOption, ...apiOptions];
   }, [gradeLevelsData]);
 
+  const { data: classesData = [] } = useQuery({
+    queryKey: ["classes-for-attendance", selectedSchoolYear, selectedGrade],
+    queryFn: async () => {
+      if (!selectedSchoolYear) return [];
+      const schoolYearId = await resolveSchoolYearId(selectedSchoolYear);
+      if (!schoolYearId) return [];
+      const res = await vpDisciplineService.callByKey("get_classes", {
+        params: {
+          schoolYearId,
+          gradeLevelId: selectedGrade === "all" ? undefined : parseInt(selectedGrade, 10),
+        },
+      });
+      const payload = res?.data || res || [];
+      return Array.isArray(payload) ? payload : payload?.data || [];
+    },
+    staleTime: 5 * 60_000,
+  });
+
+  const classDirectoryOptions = useMemo(() => {
+    return classesData
+      .map((c) => {
+        const label = c.name || c.class_name || c.className || "";
+        return {
+          value: String(c.id),
+          label,
+          grade: String(c.grade_level || c.gradeLevel || label.slice(0, 2)),
+        };
+      })
+      .filter((item) => item.value && item.label);
+  }, [classesData]);
+
+  const selectedClassLabel = useMemo(() => {
+    if (selectedClass === "all") return "";
+    return (
+      classDirectoryOptions.find((item) => String(item.value) === String(selectedClass))?.label ||
+      urlClassName ||
+      selectedClass
+    );
+  }, [classDirectoryOptions, selectedClass, urlClassName]);
+
   // Fetch attendance records from API
   const [allRecords, setAllRecords] = useState([]);
   const [records, setRecords] = useState([]);
@@ -84,11 +203,297 @@ export default function VpDisciplineAttendance({ isEmbedded = false }) {
 
   useEffect(() => {
     if (urlClass) {
+        const foundClass = classDirectoryOptions.find(
+          (item) =>
+            String(item.value) === String(urlClass) ||
+            item.label === urlClass ||
+            item.label === urlClassName,
+        );
+
+        if (foundClass) {
+          setSelectedClass(foundClass.value);
+          if (["10", "11", "12"].includes(foundClass.grade)) {
+            setSelectedGrade(foundClass.grade);
+          }
+          return;
+        }
+
         setSelectedClass(urlClass);
-        const grade = urlClass.slice(0, 2);
+        const grade = (urlClassName || urlClass).slice(0, 2);
         if (["10", "11", "12"].includes(grade)) setSelectedGrade(grade);
     }
-  }, [urlClass]);
+  }, [classDirectoryOptions, urlClass, urlClassName]);
+
+  useEffect(() => {
+    const urlPeriodKey = [
+      urlClass || "",
+      urlWeek || "",
+      urlStartDate || "",
+      urlEndDate || "",
+      urlDate || "",
+      urlSchoolYear || "",
+      urlTerm || "",
+    ].join("|");
+
+    if (!urlWeek && !urlStartDate && !urlEndDate && !urlDate) {
+      appliedUrlPeriodRef.current = "";
+      return;
+    }
+
+    if (appliedUrlPeriodRef.current === urlPeriodKey) return;
+    appliedUrlPeriodRef.current = urlPeriodKey;
+
+    const weekNumber = Number(urlWeek);
+    const nextSelectedDate = urlDate || urlStartDate || "";
+
+    if (urlSchoolYear && urlSchoolYear !== selectedSchoolYear && setSelectedSchoolYear) {
+      setSelectedSchoolYear(urlSchoolYear);
+    }
+
+    if (urlTerm && urlTerm !== selectedTermKey) {
+      handleTermChange(urlTerm);
+    }
+
+    if (Number.isFinite(weekNumber) && weekNumber > 0) {
+      setSelectedWeek(weekNumber);
+    }
+
+    if (nextSelectedDate) {
+      setSelectedDate(nextSelectedDate);
+    }
+
+    if (urlStartDate && urlEndDate) {
+      setDateJumpRange({
+        startDate: urlStartDate,
+        endDate: urlEndDate,
+      });
+    } else if (Number.isFinite(weekNumber) && weekNumber > 0) {
+      setDateJumpRange(null);
+    }
+
+    setViewMode("weekly");
+  }, [
+    handleTermChange,
+    selectedSchoolYear,
+    selectedTermKey,
+    setSelectedSchoolYear,
+    urlClass,
+    urlDate,
+    urlEndDate,
+    urlSchoolYear,
+    urlStartDate,
+    urlTerm,
+    urlWeek,
+  ]);
+
+  useEffect(() => {
+    const shouldAutoJump =
+      urlClass &&
+      selectedClass !== "all" &&
+      !urlWeek &&
+      !urlStartDate &&
+      !urlEndDate &&
+      !urlDate &&
+      !selectedDate &&
+      viewMode === "weekly" &&
+      !dateJumpRange;
+
+    if (!shouldAutoJump) return;
+
+    const jumpKey = `${selectedClass}|${selectedSchoolYear}`;
+    if (autoJumpKeyRef.current === jumpKey) return;
+
+    const { startDate, endDate } = getSchoolYearDateRange(selectedSchoolYear);
+    if (!startDate || !endDate) return;
+
+    let cancelled = false;
+    autoJumpKeyRef.current = jumpKey;
+
+    const autoJumpToLatestViolation = async () => {
+      try {
+        const statsRes = await axiosClient.get(`/attendance/class/${selectedClass}/monitoring`, {
+          params: { startDate, endDate },
+        });
+        if (cancelled) return;
+
+	        const violations = statsRes?.data?.data || statsRes?.data || [];
+	        const latestViolation = [...violations]
+	          .filter((violation) => {
+	            const hasDate = toDateInputValue(violation.date);
+	            const hasDeduction = Number(violation.points || 0) < 0;
+	            return hasDate && hasDeduction && violation.type !== "excused";
+	          })
+	          .sort((a, b) => {
+            const bTime = new Date(`${toDateInputValue(b.date)}T00:00:00`).getTime();
+            const aTime = new Date(`${toDateInputValue(a.date)}T00:00:00`).getTime();
+            return bTime - aTime;
+          })[0];
+
+        const latestDate = toDateInputValue(latestViolation?.date);
+        if (!latestDate) return;
+
+        const targetSchoolYear = getSchoolYearForDate(latestDate);
+        const targetTerm = getTermForDate(targetSchoolYear, latestDate);
+        const targetWeek = getWeekForDate(
+          targetSchoolYear,
+          targetTerm,
+          latestDate,
+          TOTAL_ATTENDANCE_WEEKS,
+        );
+
+        if (!targetSchoolYear || !targetTerm || !targetWeek) return;
+
+        if (targetSchoolYear !== selectedSchoolYear && setSelectedSchoolYear) {
+          setSelectedSchoolYear(targetSchoolYear);
+        }
+        if (targetTerm !== selectedTermKey) {
+          handleTermChange(targetTerm);
+        }
+
+        setSelectedDate(latestDate);
+        setSelectedWeek(targetWeek.week);
+        setDateJumpRange({
+          startDate: targetWeek.startDate,
+          endDate: targetWeek.endDate,
+        });
+      } catch (err) {
+        console.warn("Failed to auto-jump to latest attendance violation:", err);
+      }
+    };
+
+    autoJumpToLatestViolation();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [
+	    dateJumpRange,
+	    handleTermChange,
+	    selectedClass,
+	    selectedDate,
+	    selectedSchoolYear,
+	    selectedTermKey,
+    setSelectedSchoolYear,
+    urlClass,
+    urlDate,
+    urlEndDate,
+    urlStartDate,
+    urlWeek,
+    viewMode,
+  ]);
+
+  // Fetch attendance data from API
+  useEffect(() => {
+    const fetchAttendanceData = async () => {
+      setIsLoading(true);
+      setError(null);
+
+      try {
+        if (selectedClass === "all") {
+          // If no specific class is selected, clear data
+          setAllRecords([]);
+          setRecords([]);
+          setIsLoading(false);
+          return;
+        }
+
+        const { startDate, endDate } = dateRange;
+        if (!startDate || !endDate) {
+          setAllRecords([]);
+          setRecords([]);
+          setIsLoading(false);
+          return;
+        }
+
+        const statsRes = await axiosClient.get(`/attendance/class/${selectedClass}/monitoring`, {
+          params: {
+            startDate,
+            endDate
+          },
+        });
+
+        const violations = statsRes?.data?.data || statsRes?.data || [];
+
+        const transformedRecords = violations.map((violation) => {
+          const vDate = new Date(violation.date);
+          const dayOfWeek = vDate.getDay() === 0 ? 8 : vDate.getDay() + 1; // 2=Thứ 2, ..., 8=CN
+          return {
+            id: violation.id,
+            studentName: violation.studentName || "Unknown",
+            studentCode: violation.studentCode,
+            className: violation.className || selectedClass,
+            date: violation.date,
+            dateLabel: formatDateForDisplay(violation.date),
+            week: selectedWeek,
+            dayOfWeek: dayOfWeek.toString(), // string format to match selectedDay
+            reason: violation.reason || "",
+            type: violation.type, // 'excused', 'unexcused', 'late', 'skipping'
+            points: -Math.abs(violation.points || 0),
+            history: [],
+          };
+        });
+
+        setAllRecords(transformedRecords);
+        setRecords(transformedRecords);
+      } catch (err) {
+        console.error("Failed to fetch attendance:", err);
+        setError(err.message || "Không thể tải dữ liệu điểm danh");
+        setRecords([]);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchAttendanceData();
+  }, [selectedClass, selectedWeek, dateRange]);
+
+  const handleDateJump = (value) => {
+    setSelectedDate(value);
+    if (!value) return;
+
+    const targetSchoolYear = getSchoolYearForDate(value);
+    const targetTerm = getTermForDate(targetSchoolYear, value);
+    const targetWeek = getWeekForDate(
+      targetSchoolYear,
+      targetTerm,
+      value,
+      TOTAL_ATTENDANCE_WEEKS,
+    );
+
+    if (!targetSchoolYear || !targetTerm || !targetWeek) {
+      toast.warning("Ngày này không nằm trong lịch tuần chuyên cần.");
+      return;
+    }
+
+    if (targetSchoolYear !== selectedSchoolYear) {
+      if (setSelectedSchoolYear) {
+        setSelectedSchoolYear(targetSchoolYear);
+      } else {
+        toast.info(`Ngày đã chọn thuộc năm học ${targetSchoolYear}.`);
+      }
+    }
+
+    if (targetTerm !== selectedTermKey) {
+      handleTermChange(targetTerm);
+    }
+
+    setViewMode("weekly");
+    setSelectedWeek(targetWeek.week);
+    setDateJumpRange({
+      startDate: targetWeek.startDate,
+      endDate: targetWeek.endDate,
+    });
+    toast.success(`Đã chuyển đến tuần ${targetWeek.week} (${formatDateForDisplay(targetWeek.startDate)} - ${formatDateForDisplay(targetWeek.endDate)}).`);
+  };
+
+  const recordClassOptions = useMemo(() => {
+    const classes = new Set(allRecords.map((item) => item.className));
+    if (selectedClassLabel) {
+      classes.add(selectedClassLabel);
+    }
+    const sortedClasses = Array.from(classes).sort();
+    return sortedClasses.map(c => ({ value: c, label: c }));
+  }, [allRecords, selectedClassLabel]);
 
   // Fetch attendance data from API
   useEffect(() => {
@@ -108,7 +513,7 @@ export default function VpDisciplineAttendance({ isEmbedded = false }) {
         const { startDate, endDate } = getWeekDateRange(selectedSchoolYear, selectedTerm, selectedWeek);
 
         const statsRes = await axiosClient.get(`/attendance/class/${selectedClass}/monitoring`, {
-          params: { 
+          params: {
             startDate,
             endDate
           },
@@ -177,19 +582,29 @@ export default function VpDisciplineAttendance({ isEmbedded = false }) {
   };
 
   const classOptions = useMemo(() => {
-    const classes = Array.from(new Set(allRecords.map((item) => item.className))).sort();
-    return classes.map(c => ({ value: c, label: c }));
-  }, [allRecords]);
+    const directoryOptions = selectedGrade === "all"
+      ? classDirectoryOptions
+      : classDirectoryOptions.filter((item) => item.grade === selectedGrade);
+
+    if (directoryOptions.length > 0) {
+      return directoryOptions;
+    }
+
+    return recordClassOptions;
+  }, [classDirectoryOptions, recordClassOptions, selectedGrade]);
 
   // Weekly Context for KPI calculations (Grade & Class still apply)
   const weeklyRecords = useMemo(() => {
     return records.filter((item) => {
-      const matchesWeek = item.week === selectedWeek;
+      const matchesWeek = viewMode === "annual" || item.week === selectedWeek;
       const matchesGrade = selectedGrade === "all" || item.className.startsWith(selectedGrade);
-      const matchesClass = selectedClass === "all" || item.className === selectedClass;
+      const matchesClass =
+        selectedClass === "all" ||
+        item.className === selectedClass ||
+        item.className === selectedClassLabel;
       return matchesWeek && matchesGrade && matchesClass;
     });
-  }, [records, selectedWeek, selectedGrade, selectedClass]);
+  }, [records, selectedWeek, selectedGrade, selectedClass, selectedClassLabel, viewMode]);
 
   // Dynamic stats derived from weekly context
   const dynamicStats = useMemo(() => {
@@ -222,7 +637,7 @@ export default function VpDisciplineAttendance({ isEmbedded = false }) {
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [selectedWeek, selectedDay, selectedGrade, selectedClass, typeFilter, searchTerm]);
+  }, [selectedWeek, selectedDay, selectedGrade, selectedClass, typeFilter, searchTerm, viewMode]);
 
   const paginatedRecords = useMemo(() => {
     const startIndex = (currentPage - 1) * itemsPerPage;
@@ -243,8 +658,8 @@ export default function VpDisciplineAttendance({ isEmbedded = false }) {
     const wb = XLSX.utils.book_new();
     const ws = XLSX.utils.json_to_sheet(filteredRecords);
     XLSX.utils.book_append_sheet(wb, ws, "Attendance");
-    XLSX.writeFile(wb, `Attendance_Week_${selectedWeek}.xlsx`);
-    toast.success("Đã xuất báo cáo chuyên cần tuần.");
+    XLSX.writeFile(wb, `Attendance_${viewMode === "annual" ? selectedSchoolYear : `Week_${selectedWeek}`}.xlsx`);
+    toast.success(`Đã xuất báo cáo chuyên cần ${viewMode === "annual" ? "cả năm" : "tuần"}.`);
   };
 
   return (
@@ -268,18 +683,58 @@ export default function VpDisciplineAttendance({ isEmbedded = false }) {
           <div className="dm-filters-complex">
              <div className="filter-group">
                 <label><FiCalendar /> Tuần</label>
-                <WeekPicker value={selectedWeek} onChange={setSelectedWeek} />
+                <WeekPicker
+                  value={selectedWeek}
+                  onChange={(week) => {
+                    setDateJumpRange(null);
+                    setViewMode("weekly");
+                    setSelectedWeek(week);
+                  }}
+                  totalWeeks={TOTAL_ATTENDANCE_WEEKS}
+                  rangeLabel={viewMode === "weekly" ? weekRangeLabel : undefined}
+                />
+             </div>
+             <div className="filter-group att-date-jump-group">
+                <label><FiCalendar /> Chọn ngày</label>
+                <input
+                  className="att-date-jump-input"
+                  type="date"
+                  value={selectedDate}
+                  onChange={(e) => handleDateJump(e.target.value)}
+                />
+             </div>
+             <div className="filter-group att-view-mode-group">
+                <label><FiLayers /> Chế độ xem</label>
+                <div className="att-view-mode-toggle">
+                  <button
+                    type="button"
+                    className={viewMode === "weekly" ? "active" : ""}
+                    onClick={() => {
+                      setDateJumpRange(null);
+                      setViewMode("weekly");
+                    }}
+                  >
+                    Tuần
+                  </button>
+                  <button
+                    type="button"
+                    className={viewMode === "annual" ? "active" : ""}
+                    onClick={() => setViewMode("annual")}
+                  >
+                    Cả năm
+                  </button>
+                </div>
              </div>
              <div className="filter-group">
                 <label><FiClock /> Thứ</label>
-                <Select 
-                    variant="custom" 
-                    value={selectedDay} 
-                    onChange={e => setSelectedDay(e.target.value)} 
+                <Select
+                    variant="custom"
+                    value={selectedDay}
+                    onChange={e => setSelectedDay(e.target.value)}
                     options={[
                         { value: 'all', label: 'Cả tuần' },
                         ...DAYS.map(d => ({ value: String(d.id), label: d.label }))
-                    ]} 
+                    ]}
                 />
              </div>
              <div className="filter-group">
@@ -345,28 +800,28 @@ export default function VpDisciplineAttendance({ isEmbedded = false }) {
               <div className="stat-card-content">
                 <span className="stat-label">Vắng có phép</span>
                 <span className="stat-value">{dynamicStats.excused}</span>
-                <span className="stat-sub">Tuần {selectedWeek}</span>
+                <span className="stat-sub">{activePeriodLabel}</span>
               </div>
             </div>
             <div className="att-stat-card">
               <div className="stat-card-content">
                 <span className="stat-label">Vắng không phép</span>
                 <span className="stat-value danger">{dynamicStats.unexcused}</span>
-                <span className="stat-sub">Trừ điểm nặng</span>
+                <span className="stat-sub">{activePeriodLabel}</span>
               </div>
             </div>
             <div className="att-stat-card">
               <div className="stat-card-content">
                 <span className="stat-label">Đi muộn</span>
                 <span className="stat-value warning">{dynamicStats.late}</span>
-                <span className="stat-sub">Vi phạm tiết đầu</span>
+                <span className="stat-sub">{activePeriodLabel}</span>
               </div>
             </div>
             <div className="att-stat-card">
               <div className="stat-card-content">
                 <span className="stat-label">Trốn học / Bỏ tiết</span>
                 <span className="stat-value danger">{dynamicStats.skipping}</span>
-                <span className="stat-sub">Cần xử lý gấp</span>
+                <span className="stat-sub">{activePeriodLabel}</span>
               </div>
             </div>
             <div className="att-stat-card primary">
@@ -375,9 +830,9 @@ export default function VpDisciplineAttendance({ isEmbedded = false }) {
                 <span className="stat-value">{dynamicStats.totalPoints > 0 ? `+${dynamicStats.totalPoints}` : dynamicStats.totalPoints}đ</span>
                 <span className="stat-sub">
                     {selectedDay === 'all' ? (
-                        <span className="rank-badge-mini">{records.length} học sinh</span>
+                        <span className="rank-badge-mini">{activePeriodLabel}</span>
                     ) : (
-                        "Toàn tuần"
+                        activePeriodLabel
                     )}
                 </span>
               </div>
@@ -416,13 +871,16 @@ export default function VpDisciplineAttendance({ isEmbedded = false }) {
                 <tr key={item.id}>
                   <td><strong>{item.studentName}</strong></td>
                   <td className="th-center"><span className="class-badge-v2">{item.className}</span></td>
+	                  <td>
+	                    <div className="td-date-stack">
+	                      <span className="td-day-badge">
+	                          {String(item.dayOfWeek) === "0" ? "Tuần" : `Thứ ${item.dayOfWeek}`}
+	                      </span>
+	                      {item.dateLabel && <span className="td-date-text">{item.dateLabel}</span>}
+	                    </div>
+	                  </td>
                   <td>
-                    <span className="td-day-badge">
-                        {item.dayOfWeek === 0 ? "Tuần" : `Thứ ${item.dayOfWeek}`}
-                    </span>
-                  </td>
-                  <td>
-                    <StatusBadge status={item.type === 'excused' ? 'resolved' : (item.type === 'late' ? 'warning' : (item.type === 'bonus' ? 'success' : 'critical'))}>
+                    <StatusBadge status={item.type === 'excused' ? 'success' : (item.type === 'late' ? 'warning' : (item.type === 'bonus' ? 'success' : 'critical'))}>
                       {item.type === 'excused' ? 'Có phép' : (item.type === 'late' ? 'Đi muộn' : (item.type === 'skipping' ? 'Trốn học' : (item.type === 'bonus' ? 'Điểm thưởng' : 'Không phép')))}
                     </StatusBadge>
                   </td>
@@ -444,13 +902,16 @@ export default function VpDisciplineAttendance({ isEmbedded = false }) {
         </div>
       </div>
 
-      <BonusPointModal 
-        isOpen={isBonusModalOpen} 
+      <BonusPointModal
+        isOpen={isBonusModalOpen}
         onClose={() => setIsBonusModalOpen(false)}
         onSuccess={handleBonusSuccess}
         initialClass={selectedClass === "all" ? "" : selectedClass}
+        initialClassName={selectedClassLabel}
+        rewardDate={dateRange.startDate}
+        selectedSchoolYear={selectedSchoolYear}
+        selectedTerm={selectedTerm}
       />
     </div>
   );
 }
-

@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from "react";
 import "./ChatWindow.css";
-import { FiUsers, FiSend } from "react-icons/fi";
+import { FiTrash2, FiUsers, FiSend } from "react-icons/fi";
 
 // Group messages by date
 const groupMessagesByDate = (messages) => {
@@ -36,6 +36,7 @@ export default function ChatWindow({
     inputValue,
     onInputChange,
     onSend,
+    onDeleteMessage,
     isSending = false,
     currentUserId = null
 }) {
@@ -94,7 +95,8 @@ export default function ChatWindow({
 
                         // Determine if this is my message by comparing user_id
                         const msgUserId = item.user_id || item.userId;
-                        const isMyMessage = currentUserId && msgUserId === currentUserId || item.from === 'me' || item.role === 'parent';
+                        const isMyMessage = (currentUserId && String(msgUserId) === String(currentUserId)) || item.from === 'me' || item.role === 'parent';
+                        const canDelete = isMyMessage && item.id && !String(item.id).startsWith("temp-");
                         // Get sender name from API response
                         const senderName = item.user_full_name || item.senderName || "";
 
@@ -160,6 +162,17 @@ export default function ChatWindow({
                                                 minute: "2-digit"
                                             })}
                                         </span>
+                                    )}
+                                    {canDelete && (
+                                        <button
+                                            type="button"
+                                            className="message-delete-btn"
+                                            onClick={() => onDeleteMessage?.(item.id)}
+                                            aria-label="Thu hồi tin nhắn"
+                                            title="Thu hồi tin nhắn"
+                                        >
+                                            <FiTrash2 />
+                                        </button>
                                     )}
                                 </div>
                             </div>

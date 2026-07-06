@@ -3,6 +3,7 @@ export { default as ParentChildrenOverview } from "./children-overview/ParentChi
 export { default as ParentNotifications } from "./notifications/ParentNotifications";
 export { default as ParentMessages } from "./messages/ParentMessages";
 export { default as ParentPayments } from "./payments/ParentPayments";
+export { default as PaymentConfirm } from "./payments/PaymentConfirm";
 export { default as ParentSupport } from "./support/ParentSupport";
 
 

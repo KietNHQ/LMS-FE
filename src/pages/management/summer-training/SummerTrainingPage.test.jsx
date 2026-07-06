@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { render, screen, act, waitFor } from '@testing-library/react'
+import { render, screen, act, waitFor, fireEvent } from '@testing-library/react'
 import { createMemoryRouter, RouterProvider } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 
@@ -38,6 +38,7 @@ vi.mock('../../../services/pages/management/classes/classesService', () => ({
 
 vi.mock('../../../services/shared/schoolYearLookup', () => ({
   resolveSemesterId: vi.fn().mockResolvedValue(1),
+  resolveSchoolYearId: vi.fn().mockResolvedValue(2),
 }))
 
 import SummerTrainingPage from './SummerTrainingPage.jsx'
@@ -127,6 +128,77 @@ describe('SummerTrainingPage', () => {
     }, { timeout: 5000 })
   })
 
+  it('renders backend-shaped summer training rows', async () => {
+    mockGetSummerTrainingSummary.mockResolvedValue({
+      students: [{
+        enrollment_id: 364,
+        student_code: 'STU-10D',
+        student_name: 'Tran Bao',
+        class_name: '10D',
+        attendance_days: 7,
+        completion_status: 'completed',
+      }],
+      total: 1,
+      totalPages: 1,
+    })
+
+    await renderPage('97')
+
+    await waitFor(() => {
+      expect(screen.getByText('Tran Bao')).toBeInTheDocument()
+    }, { timeout: 5000 })
+    expect(screen.getByText('STU-10D')).toBeInTheDocument()
+    expect(screen.getByText('10D')).toBeInTheDocument()
+    expect(screen.getByText('7 / 21 ngày')).toBeInTheDocument()
+    expect(screen.getByText('Hoàn thành')).toBeInTheDocument()
+  })
+
+  it('renders server-paginated page rows without slicing them again', async () => {
+    mockGetSummerTrainingSummary.mockImplementation((_classId, page) => {
+      if (page === 2) {
+        return Promise.resolve({
+          students: [{
+            enrollment_id: 501,
+            student_code: 'STU-P2',
+            student_name: 'Page Two Student',
+            class_name: '11D',
+            attendance_days: 21,
+            completion_status: 'completed',
+          }],
+          total: 11,
+          totalPages: 2,
+        })
+      }
+
+      return Promise.resolve({
+        students: Array.from({ length: 10 }, (_, index) => ({
+          enrollment_id: 400 + index,
+          student_code: `STU-P1-${index}`,
+          student_name: `Page One Student ${index + 1}`,
+          class_name: '11D',
+          attendance_days: 21,
+          completion_status: 'completed',
+        })),
+        total: 11,
+        totalPages: 2,
+      })
+    })
+
+    await renderPage('101')
+
+    await waitFor(() => {
+      expect(screen.getByText('Page One Student 1')).toBeInTheDocument()
+    }, { timeout: 5000 })
+
+    const nextButton = screen.getAllByRole('button').at(-1)
+    fireEvent.click(nextButton)
+
+    await waitFor(() => {
+      expect(mockGetSummerTrainingSummary).toHaveBeenLastCalledWith('101', 2, 10, 2)
+      expect(screen.getByText('Page Two Student')).toBeInTheDocument()
+    }, { timeout: 5000 })
+  })
+
   it('renders stats cards with correct numbers', async () => {
     await renderPage()
     await waitFor(() => {
@@ -182,5 +254,6 @@ describe('SummerTrainingPage', () => {
     expect(lastCall[0]).toBe('10A1') // classId
     expect(lastCall[1]).toBe(1) // page
     expect(lastCall[2]).toBe(10) // limit
+    expect(lastCall[3]).toBe(2) // schoolYearId
   })
 })

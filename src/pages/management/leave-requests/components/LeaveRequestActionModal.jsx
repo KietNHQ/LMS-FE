@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { FiCheck, FiX, FiInfo } from "react-icons/fi";
+import { formatDateVi } from "../../../../utils/dateUtils";
 import "./LeaveRequestModal.css";
 
 export default function LeaveRequestActionModal({
@@ -10,9 +11,10 @@ export default function LeaveRequestActionModal({
   onConfirm,
   onCancel
 }) {
+  const [error, setError] = useState("");
+
   if (!request) return null;
   const isApprove = actionType === "approved";
-  const [error, setError] = useState("");
 
   const handleConfirmClick = () => {
     if (!isApprove && !notes.trim()) {
@@ -42,7 +44,7 @@ export default function LeaveRequestActionModal({
             </div>
             <div className="summary-row">
               <span className="summary-label">Nghỉ từ:</span>
-              <span className="summary-value font-semibold">{request.startDate} → {request.endDate} ({request.totalDays} ngày)</span>
+              <span className="summary-value font-semibold">{formatDateVi(request.startDate)} → {formatDateVi(request.endDate)} ({request.totalDays} ngày)</span>
             </div>
             <div className="summary-row">
               <span className="summary-label">Lý do nghỉ:</span>

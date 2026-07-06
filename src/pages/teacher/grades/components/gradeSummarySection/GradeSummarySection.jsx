@@ -1,16 +1,47 @@
 import "./GradeSummarySection.css";
 
-export function GradeSummaryHeader({ subjectLabel }) {
+export function GradeSummaryHeader({ subjectLabel, isCommentGraded = false }) {
     return (
         <div className="grade-summary-section__header">
-            <h3>Tổng quan điểm số</h3>
+            <h3>{isCommentGraded ? "Tổng quan đánh giá" : "Tổng quan điểm số"}</h3>
             <span className="grade-summary-subject-badge">Môn: {subjectLabel || "---"}</span>
         </div>
     );
 }
 
-export default function GradeSummarySection({ stats, onOpenAtRisk }) {
-    const summaryCards = [
+export default function GradeSummarySection({ stats, onOpenAtRisk, isCommentGraded = false }) {
+    const summaryCards = isCommentGraded ? [
+        {
+            key: "evaluated",
+            label: "Đã đánh giá",
+            value: stats?.evaluatedCount || 0,
+            tone: "teacher",
+            helperText: "Học sinh đã có kết quả"
+        },
+        {
+            key: "passRate",
+            label: "Tỷ lệ đạt",
+            value: `${stats?.passRate || 0}%`,
+            tone: "success",
+            helperText: `${stats?.passCount || 0} học sinh Đạt`
+        },
+        {
+            key: "fail",
+            label: "Chưa đạt",
+            value: stats?.failCount || 0,
+            tone: "danger",
+            isClickable: (stats?.failCount || 0) > 0,
+            onClick: onOpenAtRisk,
+            helperText: (stats?.failCount || 0) > 0 ? "Bấm để xem danh sách" : "Không có học sinh"
+        },
+        {
+            key: "pending",
+            label: "Chưa đánh giá",
+            value: stats?.pendingCount || 0,
+            tone: "teacher",
+            helperText: "Cần hoàn tất trước khi nộp"
+        },
+    ] : [
         {
             key: "average",
             label: "Điểm trung bình lớp",

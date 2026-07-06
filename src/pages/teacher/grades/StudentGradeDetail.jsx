@@ -57,6 +57,46 @@ function getRankClass(rank) {
     return "weak";
 }
 
+function normalizeSemesterGrade(semester = {}) {
+    const breakdown = semester.breakdown || {};
+    return {
+        ...semester,
+        breakdown: {
+            ...breakdown,
+            regularGrades: breakdown.regularGrades ?? semester.regularGrades ?? [],
+            midtermScore: breakdown.midtermScore ?? semester.midtermScore ?? null,
+            finalScore: breakdown.finalScore ?? semester.finalScore ?? null,
+        },
+    };
+}
+
+function formatSummaryScore(value) {
+    const numeric = Number(value);
+    return Number.isFinite(numeric) ? numeric.toFixed(2) : "—";
+}
+
+function normalizeYearSummary(rawSummary, subjectGrades) {
+    const validYearScores = subjectGrades
+        .map((subject) => Number(subject.yearAvg))
+        .filter((score) => Number.isFinite(score));
+    const fallbackAverage = validYearScores.length
+        ? round2(validYearScores.reduce((sum, score) => sum + score, 0) / validYearScores.length)
+        : null;
+    const overallGpa = rawSummary?.overallGpa ?? fallbackAverage;
+    const honor = rawSummary?.honor || {};
+    const honorTitle = honor.honorTitle || (honor.qualifies && honor.honor ? `Học sinh ${honor.honor}` : null);
+
+    return {
+        overallGpa,
+        academicLevel: rawSummary?.academic?.level || (overallGpa != null ? getAcademicRank(overallGpa) : "—"),
+        conductLevel: rawSummary?.conduct?.level || "—",
+        honorTitle: honorTitle || "Chưa đạt danh hiệu",
+        scoreSubjectCount: rawSummary?.scoreSubjectCount ?? validYearScores.length,
+        subjectsAbove8: rawSummary?.subjectsAbove8 ?? validYearScores.filter((score) => score >= 8).length,
+        subjectsAbove9: rawSummary?.subjectsAbove9 ?? validYearScores.filter((score) => score >= 9).length,
+    };
+}
+
 export default function StudentGradeDetail() {
     const { enrollmentId } = useParams();
     const navigate = useNavigate();
@@ -64,6 +104,7 @@ export default function StudentGradeDetail() {
 
     const [student, setStudent] = useState(null);
     const [subjectGrades, setSubjectGrades] = useState([]);
+    const [yearSummary, setYearSummary] = useState(null);
     const [activeTab, setActiveTab] = useState("hk1");
     const [openSubjectId, setOpenSubjectId] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
@@ -71,6 +112,7 @@ export default function StudentGradeDetail() {
     useEffect(() => {
         const fetchData = async () => {
             setIsLoading(true);
+            setYearSummary(null);
             try {
                 // Fetch both teaching assignments AND homeroom class
                 const [assignmentsRes, teachingClassesRes] = await Promise.all([
@@ -115,6 +157,7 @@ export default function StudentGradeDetail() {
                 }
 
                 if (!foundStudent) {
+                    setSubjectGrades([]);
                     setIsLoading(false);
                     return;
                 }
@@ -158,11 +201,12 @@ export default function StudentGradeDetail() {
                         s.hk1Avg ?? s.hk1?.averageScore ?? 0,
                         s.hk2Avg ?? s.hk2?.averageScore ?? 0
                     ),
-                    hk1: s.hk1 || {},
-                    hk2: s.hk2 || {},
+                    hk1: normalizeSemesterGrade(s.hk1),
+                    hk2: normalizeSemesterGrade(s.hk2),
                 }));
 
                 setSubjectGrades(processed);
+                setYearSummary(normalizeYearSummary(wrapper.yearSummary, processed));
             } catch (e) {
                 console.error("Error fetching student grades:", e);
             } finally {
@@ -176,12 +220,15 @@ export default function StudentGradeDetail() {
     }, [enrollmentId, selectedSchoolYear, selectedTerm]);
 
     const overallAvg = useMemo(() => {
+        const summaryAverage = Number(yearSummary?.overallGpa);
+        if (Number.isFinite(summaryAverage)) return round2(summaryAverage);
         const valid = subjectGrades.filter((g) => g.yearAvg != null);
         if (!valid.length) return 0;
         return round2(valid.reduce((a, b) => a + b.yearAvg, 0) / valid.length);
-    }, [subjectGrades]);
+    }, [subjectGrades, yearSummary]);
 
-    const rankLabel = getAcademicRank(overallAvg);
+    const rankLabel = yearSummary?.academicLevel || getAcademicRank(overallAvg);
+    const isTopRank = rankLabel === "Tốt" || rankLabel === "Giỏi";
 
     return (
         <div className="grades-page">
@@ -243,11 +290,11 @@ export default function StudentGradeDetail() {
                             </div>
                         </div>
                         <div className="grades-card">
-                            <div className={`grades-card-icon ${rankLabel === "Giỏi" ? "icon-gold" : "icon-silver"}`}>
-                                {rankLabel === "Giỏi" ? <BiTrophy /> : <BiMedal />}
+                            <div className={`grades-card-icon ${isTopRank ? "icon-gold" : "icon-silver"}`}>
+                                {isTopRank ? <BiTrophy /> : <BiMedal />}
                             </div>
                             <div className="grades-card-content">
-                                <h2 className={rankLabel === "Giỏi" ? "rank-good-text" : "rank-fair-text"}>{rankLabel}</h2>
+                                <h2 className={isTopRank ? "rank-good-text" : "rank-fair-text"}>{rankLabel}</h2>
                                 <p>Xếp loại học lực</p>
                             </div>
                         </div>
@@ -259,6 +306,26 @@ export default function StudentGradeDetail() {
                                 <h2 className="green">{subjectGrades.length}</h2>
                                 <p>Số môn học</p>
                             </div>
+                        </div>
+                    </div>
+
+                    <div className="grades-year-summary">
+                        <div className="grades-year-summary-card">
+                            <span>TB tất cả môn cả năm</span>
+                            <strong>{formatSummaryScore(yearSummary?.overallGpa ?? overallAvg)}</strong>
+                        </div>
+                        <div className="grades-year-summary-card">
+                            <span>Học lực cả năm</span>
+                            <strong>{rankLabel}</strong>
+                        </div>
+                        <div className="grades-year-summary-card">
+                            <span>Hạnh kiểm cả năm</span>
+                            <strong>{yearSummary?.conductLevel || "—"}</strong>
+                        </div>
+                        <div className="grades-year-summary-card award">
+                            <span>Danh hiệu cuối năm</span>
+                            <strong>{yearSummary?.honorTitle || "Chưa đạt danh hiệu"}</strong>
+                            <small>{yearSummary?.subjectsAbove9 ?? 0}/{yearSummary?.scoreSubjectCount ?? subjectGrades.length} môn từ 9.0; {yearSummary?.subjectsAbove8 ?? 0}/{yearSummary?.scoreSubjectCount ?? subjectGrades.length} môn từ 8.0</small>
                         </div>
                     </div>
 
@@ -331,12 +398,19 @@ export default function StudentGradeDetail() {
 }
 
 function SubjectDetail({ subject }) {
+    const formatDetailScore = (value) => {
+        if (value === null || value === undefined || value === "") return "—";
+        const numeric = Number(value);
+        if (!Number.isFinite(numeric)) return "—";
+        return numeric.toFixed(1);
+    };
+
     const renderRegularGrades = (regularGrades = []) => {
         if (!regularGrades || regularGrades.length === 0) return <strong>—</strong>;
         return (
             <div className="regular-grades-list">
                 {regularGrades.map((g, idx) => (
-                    <span key={idx} className="grade-chip">{`KT TX lần ${idx + 1}: ${g}`}</span>
+                    <span key={idx} className="grade-chip">{`KT TX lần ${idx + 1}: ${formatDetailScore(g)}`}</span>
                 ))}
             </div>
         );
@@ -358,11 +432,11 @@ function SubjectDetail({ subject }) {
                     </div>
                     <div className="detail-item">
                         <span>Giữa kỳ</span>
-                        <strong>{hk1Breakdown.midtermScore ?? "—"}</strong>
+                        <strong>{formatDetailScore(hk1Breakdown.midtermScore)}</strong>
                     </div>
                     <div className="detail-item">
                         <span>Cuối kỳ</span>
-                        <strong>{hk1Breakdown.finalScore ?? "—"}</strong>
+                        <strong>{formatDetailScore(hk1Breakdown.finalScore)}</strong>
                     </div>
                     <div className="detail-divider" />
                     <div className="detail-item detail-average">
@@ -378,11 +452,11 @@ function SubjectDetail({ subject }) {
                     </div>
                     <div className="detail-item">
                         <span>Giữa kỳ</span>
-                        <strong>{hk2Breakdown.midtermScore ?? "—"}</strong>
+                        <strong>{formatDetailScore(hk2Breakdown.midtermScore)}</strong>
                     </div>
                     <div className="detail-item">
                         <span>Cuối kỳ</span>
-                        <strong>{hk2Breakdown.finalScore ?? "—"}</strong>
+                        <strong>{formatDetailScore(hk2Breakdown.finalScore)}</strong>
                     </div>
                     <div className="detail-divider" />
                     <div className="detail-item detail-average">

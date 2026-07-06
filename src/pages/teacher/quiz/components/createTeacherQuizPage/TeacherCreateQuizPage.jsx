@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { FiArrowLeft, FiDownload, FiMenu, FiPlus, FiUpload, FiX } from "react-icons/fi";
+import { FiArrowLeft, FiDownload, FiMenu, FiPlus, FiSave, FiUpload, FiX } from "react-icons/fi";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Modal } from "../../../../../components/ui";
 import CreateEditQuizSection from "../createEditQuizSection/CreateEditQuizSection";
@@ -40,6 +40,28 @@ const getQuestionScoreValue = (score) => {
 
 const getTotalScore = (questions = []) =>
     questions.reduce((sum, item) => sum + getQuestionScoreValue(item.score), 0);
+
+const buildQuestionOptions = (question = {}) => {
+    if (question.type === "essay") return [];
+
+    const answers = question.answers || {};
+    return ["A", "B", "C", "D"]
+        .filter((key) => String(answers[key] || "").trim())
+        .map((key) => ({
+            text: String(answers[key]).trim(),
+            isCorrect: question.correctAnswer === key,
+        }));
+};
+
+const buildQuestionUpdatePayload = (question = {}) => ({
+    question: String(question.question || "").trim(),
+    type: question.type || "multiple-choice",
+    score: Number(question.score) || 0.25,
+    questionImage: question.questionImage || "",
+    options: buildQuestionOptions(question),
+    correctAnswer: question.correctAnswer,
+    order: question.order,
+});
 
 const normalizeQuestionTypeFromApi = (questionType) => {
     if (questionType === "multiple_choice") return "multiple-choice";
@@ -85,6 +107,42 @@ const mapQuestionFromApiToView = (apiQuestion) => {
 
 const creationCache = {};
 
+const normalizeId = (value) => {
+    if (value === undefined || value === null || value === "") return "";
+    return String(value);
+};
+
+const getTeacherSubjectName = (assignment = {}) =>
+    assignment.subjects?.[0]?.name || assignment.subject_name || assignment.subject_display_name || "";
+
+const getTeacherSubjectSemesterId = (assignment = {}) =>
+    normalizeId(
+        assignment.class_teacher_subject_semester_id ??
+        assignment.classTeacherSubjectSemesterId ??
+        assignment.semester_id ??
+        assignment.semesterId
+    );
+
+const getTeacherSubjectSchoolYearId = (assignment = {}) =>
+    normalizeId(
+        assignment.class_teacher_subject_school_year_id ??
+        assignment.classTeacherSubjectSchoolYearId ??
+        assignment.school_year_id ??
+        assignment.schoolYearId
+    );
+
+const assignmentMatchesQuizMeta = (assignment = {}, quizMeta = {}) => {
+    const semesterId = normalizeId(quizMeta.semesterId);
+    const schoolYearId = normalizeId(quizMeta.schoolYearId);
+
+    if ((assignment.class_name || assignment.className) !== quizMeta.className) return false;
+    if (getTeacherSubjectName(assignment) !== quizMeta.subject) return false;
+    if (semesterId && getTeacherSubjectSemesterId(assignment) !== semesterId) return false;
+    if (schoolYearId && getTeacherSubjectSchoolYearId(assignment) !== schoolYearId) return false;
+
+    return true;
+};
+
 export default function TeacherCreateQuizPage() {
     const location = useLocation();
     const navigate = useNavigate();
@@ -108,10 +166,11 @@ export default function TeacherCreateQuizPage() {
     const [showAddQuestionForm, setShowAddQuestionForm] = useState(false);
     const [animatedQuestionId, setAnimatedQuestionId] = useState(null);
     const [moveDirection, setMoveDirection] = useState(null);
-    const [savedQuizCardPayload, setSavedQuizCardPayload] = useState(null);
     const [showScrollQuickActions, setShowScrollQuickActions] = useState(false);
     const [isScrollQuickActionsOpen, setIsScrollQuickActionsOpen] = useState(false);
     const [pendingDeleteQuestionId, setPendingDeleteQuestionId] = useState(null);
+    const [dirtyQuestionIds, setDirtyQuestionIds] = useState(() => new Set());
+    const [isSavingQuestionDrafts, setIsSavingQuestionDrafts] = useState(false);
 
     const reorderAnimationTimeoutRef = useRef(null);
     const excelInputRef = useRef(null);
@@ -167,8 +226,7 @@ export default function TeacherCreateQuizPage() {
                             });
                             if (teacherSubs && teacherSubs.success && Array.isArray(teacherSubs.data)) {
                                 const matched = teacherSubs.data.find(
-                                    a => a.class_name === routeQuizMeta.className &&
-                                         (a.subjects?.[0]?.name === routeQuizMeta.subject || a.subject_name === routeQuizMeta.subject)
+                                    (assignment) => assignmentMatchesQuizMeta(assignment, routeQuizMeta)
                                 );
                                 if (matched) {
                                     targetCtsId = matched.class_teacher_subject_id || matched.id;
@@ -179,8 +237,16 @@ export default function TeacherCreateQuizPage() {
                     
                     if (!targetCtsId) {
                         // Ultimate fallback: check listClassTeacherSubjects
-                        const assignments = await quizService.listClassTeacherSubjects();
-                        const matched = assignments.find((item) => item.className === routeQuizMeta.className);
+                        const assignments = await quizService.listClassTeacherSubjects({
+                            ...(routeQuizMeta.schoolYearId ? { schoolYearId: routeQuizMeta.schoolYearId } : {}),
+                            ...(routeQuizMeta.semesterId ? { semesterId: routeQuizMeta.semesterId } : {}),
+                        });
+                        const matched = assignments.find((item) =>
+                            item.className === routeQuizMeta.className &&
+                            item.subject === routeQuizMeta.subject &&
+                            (!routeQuizMeta.schoolYearId || normalizeId(item.schoolYearId) === normalizeId(routeQuizMeta.schoolYearId)) &&
+                            (!routeQuizMeta.semesterId || normalizeId(item.semesterId) === normalizeId(routeQuizMeta.semesterId))
+                        );
                         if (matched) {
                             targetCtsId = matched.value;
                         }
@@ -193,7 +259,13 @@ export default function TeacherCreateQuizPage() {
                     const durationMin = parseDurationMinutes(routeQuizMeta.duration);
                     
                     // Create quiz on backend with caching to prevent StrictMode duplicates
-                    const cacheKey = `${routeQuizMeta.title}_${routeQuizMeta.className}_${routeQuizMeta.subject}`;
+                    const cacheKey = [
+                        routeQuizMeta.title,
+                        routeQuizMeta.className,
+                        routeQuizMeta.subject,
+                        routeQuizMeta.schoolYearId || "",
+                        routeQuizMeta.semesterId || "",
+                    ].join("_");
                     let response;
                     if (creationCache[cacheKey]) {
                         response = await creationCache[cacheKey];
@@ -207,6 +279,7 @@ export default function TeacherCreateQuizPage() {
                             assessmentType: routeQuizMeta.assessmentType || "none",
                             gradingMode: routeQuizMeta.gradingMode,
                             semesterId: routeQuizMeta.semesterId,
+                            isSynchronous: routeQuizMeta.isSynchronous || false,
                             isPublished: false,
                         });
                         try {
@@ -255,7 +328,7 @@ export default function TeacherCreateQuizPage() {
         };
 
         initializeQuiz();
-    }, [routeQuizMeta?.id, routeQuizMeta]);
+    }, [location.state, navigate, routeQuizMeta]);
 
     useEffect(() => {
         const mainScrollContainer = document.querySelector(".teacher-layout__main");
@@ -285,6 +358,7 @@ export default function TeacherCreateQuizPage() {
     }, []);
 
     const activeQuiz = useMemo(() => quiz, [quiz]);
+    const hasUnsavedQuestionDrafts = dirtyQuestionIds.size > 0;
 
     const handleChangeQuestion = (value) => {
         setFormData((prev) => ({ ...prev, question: value }));
@@ -412,28 +486,41 @@ export default function TeacherCreateQuizPage() {
     const handleAddOrUpdateQuestion = async () => {
         if (!validateForm()) return;
 
-        const apiOptions = questionType === "multiple-choice" ? ["A", "B", "C", "D"]
-            .filter(key => formData.answers[key].trim())
-            .map(key => ({
-                text: formData.answers[key].trim(),
-                isCorrect: formData.correctAnswer === key
-            })) : [];
-
         try {
-            let savedQuestion;
             const nextOrder = quiz.questions.length + 1;
+            const mappedQuestion = {
+                type: questionType,
+                question: formData.question.trim(),
+                questionImage: formData.questionImage || "",
+                answers: { ...formData.answers },
+                correctAnswer: formData.correctAnswer,
+                score: Number(formData.score) || 0.25,
+            };
+
             if (editingQuestionId) {
-                // Update existing question in-place to preserve its order_num and position
-                const response = await quizService.updateQuestion(quiz.id, editingQuestionId, {
-                    question: formData.question.trim(),
-                    type: questionType,
-                    score: Number(formData.score) || 0.25,
-                    questionImage: formData.questionImage || "",
-                    options: apiOptions,
-                    correctAnswer: formData.correctAnswer,
+                setQuiz((prev) => ({
+                    ...prev,
+                    questions: prev.questions.map((item) =>
+                        item.id === editingQuestionId
+                            ? {
+                                ...item,
+                                ...mappedQuestion,
+                                isDirty: true,
+                            }
+                            : item
+                    ),
+                }));
+                setDirtyQuestionIds((prev) => {
+                    const next = new Set(prev);
+                    next.add(editingQuestionId);
+                    return next;
                 });
-                savedQuestion = response.data?.data || response.data || response;
+                toast.info("Đã cập nhật bản nháp. Bấm Lưu thay đổi để lưu lên hệ thống.");
             } else {
+                const apiOptions = buildQuestionOptions({
+                    ...mappedQuestion,
+                    type: questionType,
+                });
                 const response = await quizService.addQuestion(quiz.id, {
                     question: formData.question.trim(),
                     type: questionType,
@@ -443,28 +530,21 @@ export default function TeacherCreateQuizPage() {
                     correctAnswer: formData.correctAnswer,
                     order: nextOrder,
                 });
-                savedQuestion = response.data?.data || response.data || response;
+                const savedQuestion = response.data?.data || response.data || response;
+
+                const mappedSaved = {
+                    id: savedQuestion.id,
+                    ...mappedQuestion,
+                    order: savedQuestion.order_num ?? savedQuestion.order ?? nextOrder,
+                };
+
+                setQuiz((prev) => ({
+                    ...prev,
+                    questions: [...prev.questions, { ...mappedSaved, order: nextOrder }],
+                }));
+                toast.success("Thêm câu hỏi thành công.");
             }
 
-            const mappedSaved = {
-                id: savedQuestion.id,
-                type: questionType,
-                question: formData.question.trim(),
-                questionImage: formData.questionImage || "",
-                answers: { ...formData.answers },
-                correctAnswer: formData.correctAnswer,
-                score: Number(formData.score) || 0.25,
-                order: savedQuestion.order_num ?? savedQuestion.order ?? nextOrder,
-            };
-
-            setQuiz((prev) => {
-                const nextQuestions = editingQuestionId
-                    ? prev.questions.map((item) => (item.id === editingQuestionId ? mappedSaved : item))
-                    : [...prev.questions, { ...mappedSaved, order: nextOrder }];
-                return { ...prev, questions: nextQuestions };
-            });
-
-            toast.success(editingQuestionId ? "Cập nhật câu hỏi thành công." : "Thêm câu hỏi thành công.");
             resetForm();
         } catch (err) {
             console.error("Save question error:", err);
@@ -474,6 +554,42 @@ export default function TeacherCreateQuizPage() {
                 errorMsg = `${errorMsg}:\n${detailMsgs}`;
             }
             alert(`Lỗi: ${errorMsg}`);
+        }
+    };
+
+    const handleSaveQuestionDrafts = async () => {
+        if (!hasUnsavedQuestionDrafts || isSavingQuestionDrafts) return;
+
+        const dirtyIds = [...dirtyQuestionIds];
+        const dirtyQuestions = quiz.questions.filter((item) => dirtyIds.includes(item.id));
+
+        if (!dirtyQuestions.length) {
+            setDirtyQuestionIds(new Set());
+            return;
+        }
+
+        setIsSavingQuestionDrafts(true);
+        try {
+            await Promise.all(
+                dirtyQuestions.map((item) =>
+                    quizService.updateQuestion(quiz.id, item.id, buildQuestionUpdatePayload(item))
+                )
+            );
+
+            setQuiz((prev) => ({
+                ...prev,
+                questions: prev.questions.map((item) =>
+                    dirtyIds.includes(item.id) ? { ...item, isDirty: false } : item
+                ),
+            }));
+            setDirtyQuestionIds(new Set());
+            toast.success(`Đã lưu ${dirtyQuestions.length} câu hỏi.`);
+        } catch (err) {
+            console.error("Save question drafts error:", err);
+            const errorMsg = err.response?.data?.error || err.message || "Không thể lưu thay đổi câu hỏi.";
+            toast.error(errorMsg);
+        } finally {
+            setIsSavingQuestionDrafts(false);
         }
     };
 
@@ -514,6 +630,11 @@ export default function TeacherCreateQuizPage() {
             if (editingQuestionId === pendingDeleteQuestionId) {
                 resetForm();
             }
+            setDirtyQuestionIds((prev) => {
+                const next = new Set(prev);
+                next.delete(pendingDeleteQuestionId);
+                return next;
+            });
             toast.success("Xoá câu hỏi thành công.");
         } catch (err) {
             console.error("Delete question error:", err);
@@ -642,6 +763,8 @@ export default function TeacherCreateQuizPage() {
                 ...prev,
                 questions: mappedQuestions
             }));
+            setDirtyQuestionIds(new Set());
+            resetForm();
             
             const responseData = response?.data || response;
             const importedCount = responseData?.data?.imported ?? responseData?.imported ?? 0;
@@ -691,6 +814,7 @@ export default function TeacherCreateQuizPage() {
                 assessmentType: quizMeta.assessmentType || "none",
                 gradingMode: quizMeta.gradingMode,
                 semesterId: quizMeta.semesterId,
+                isSynchronous: quizMeta.isSynchronous || false,
                 isPublished: false,
             });
 
@@ -717,6 +841,11 @@ export default function TeacherCreateQuizPage() {
     };
 
     const handleBackToQuizList = () => {
+        if (hasUnsavedQuestionDrafts) {
+            toast.warning("Bạn còn câu hỏi chưa lưu. Bấm Lưu thay đổi trước khi quay lại.");
+            return;
+        }
+
         if (!validateQuizBeforeSave()) {
             return;
         }
@@ -724,6 +853,13 @@ export default function TeacherCreateQuizPage() {
     };
 
     const handleCancelCreateQuiz = () => {
+        if (
+            hasUnsavedQuestionDrafts &&
+            !window.confirm("Bạn còn câu hỏi chưa lưu. Huỷ bây giờ sẽ mất các thay đổi này. Tiếp tục huỷ?")
+        ) {
+            return;
+        }
+
         navigate("/teacher/quiz");
     };
 
@@ -734,6 +870,11 @@ export default function TeacherCreateQuizPage() {
     const handleQuickActionBack = () => {
         setIsScrollQuickActionsOpen(false);
         handleBackToQuizList();
+    };
+
+    const handleQuickActionSave = () => {
+        setIsScrollQuickActionsOpen(false);
+        handleSaveQuestionDrafts();
     };
 
     const handleQuickActionCancel = () => {
@@ -772,6 +913,22 @@ export default function TeacherCreateQuizPage() {
                 </div>
 
                 <div className="teacher-create-quiz__header-actions">
+                    <button
+                        type="button"
+                        className="teacher-create-quiz__save-btn"
+                        onClick={handleSaveQuestionDrafts}
+                        disabled={!hasUnsavedQuestionDrafts || isSavingQuestionDrafts}
+                    >
+                        <FiSave aria-hidden="true" />
+                        <span>
+                            {isSavingQuestionDrafts
+                                ? "Đang lưu..."
+                                : hasUnsavedQuestionDrafts
+                                    ? `Lưu thay đổi (${dirtyQuestionIds.size})`
+                                    : "Đã lưu"}
+                        </span>
+                    </button>
+
                     <button
                         type="button"
                         className="teacher-create-quiz__cancel-btn"
@@ -827,6 +984,7 @@ export default function TeacherCreateQuizPage() {
                         onScoreChange={handleScoreChange}
                         onCancel={resetForm}
                         onSubmit={handleAddOrUpdateQuestion}
+                        submitLabel="Cập nhật bản nháp"
                     />
                 )}
             />
@@ -865,6 +1023,15 @@ export default function TeacherCreateQuizPage() {
                 <div className={`teacher-create-quiz__floating-actions ${isScrollQuickActionsOpen ? "open" : ""}`.trim()}>
                     {isScrollQuickActionsOpen ? (
                         <div className="teacher-create-quiz__floating-panel">
+                            <button
+                                type="button"
+                                className="teacher-create-quiz__floating-save"
+                                onClick={handleQuickActionSave}
+                                disabled={!hasUnsavedQuestionDrafts || isSavingQuestionDrafts}
+                            >
+                                <FiSave aria-hidden="true" />
+                                <span>{hasUnsavedQuestionDrafts ? `Lưu thay đổi (${dirtyQuestionIds.size})` : "Đã lưu"}</span>
+                            </button>
                             <button type="button" onClick={handleQuickActionBack}>
                                 <FiArrowLeft aria-hidden="true" />
                                 <span>Quay lại</span>

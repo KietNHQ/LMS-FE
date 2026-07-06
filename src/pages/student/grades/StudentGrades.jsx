@@ -2,7 +2,7 @@ import React, { useMemo, useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { FiChevronDown } from "react-icons/fi";
 import { useSchoolYearTerm } from "../../../hooks/useSchoolYearTerm";
-import { resolveSemesterId } from "../../../services/shared/schoolYearLookup";
+import { resolveSchoolYearId, resolveSemesterId } from "../../../services/shared/schoolYearLookup";
 import {
     BiTrendingUp,
     BiTrendingDown,
@@ -87,6 +87,33 @@ function getTrend(hk1Avg, hk2Avg) {
     return "same";
 }
 
+function formatSummaryScore(value) {
+    const numeric = Number(value);
+    return Number.isFinite(numeric) ? numeric.toFixed(2) : "—";
+}
+
+function normalizeYearSummary(rawSummary, gradesData, conductSummary) {
+    const validYearScores = gradesData
+        .map((subject) => Number(subject.yearAvg))
+        .filter((score) => Number.isFinite(score));
+    const fallbackAverage = validYearScores.length
+        ? round2(validYearScores.reduce((sum, score) => sum + score, 0) / validYearScores.length)
+        : null;
+    const overallGpa = rawSummary?.overallGpa ?? fallbackAverage;
+    const honor = rawSummary?.honor || {};
+    const honorTitle = honor.honorTitle || (honor.qualifies && honor.honor ? `Học sinh ${honor.honor}` : null);
+
+    return {
+        overallGpa,
+        academicLevel: rawSummary?.academic?.level || (overallGpa != null ? getAcademicRank(overallGpa) : "—"),
+        conductLevel: rawSummary?.conduct?.level || conductSummary?.annualLevel || "—",
+        honorTitle: honorTitle || "Chưa đạt danh hiệu",
+        scoreSubjectCount: rawSummary?.scoreSubjectCount ?? validYearScores.length,
+        subjectsAbove8: rawSummary?.subjectsAbove8 ?? validYearScores.filter((score) => score >= 8).length,
+        subjectsAbove9: rawSummary?.subjectsAbove9 ?? validYearScores.filter((score) => score >= 9).length,
+    };
+}
+
 const subjectIconMap = {
     toán: FaSquareRootAlt,
     "vật lý": FaAtom,
@@ -120,6 +147,12 @@ export default function StudentGrades() {
 
     // Fall back to context values if no local state yet
     const effectiveSchoolYear = selectedSchoolYear ?? syFromCtx;
+    const { data: effectiveSchoolYearId } = useQuery({
+        queryKey: ["school-year-id", effectiveSchoolYear],
+        queryFn: () => resolveSchoolYearId(effectiveSchoolYear),
+        enabled: !!effectiveSchoolYear,
+        staleTime: 5 * 60 * 1000,
+    });
 
     // Fetch school years
     const { data: schoolYears = [] } = useQuery({
@@ -145,58 +178,69 @@ export default function StudentGrades() {
     }, [schoolYears, selectedSchoolYear, syFromCtx]);
 
     const selectedSchoolYearLabel = useMemo(() => {
-        const matched = schoolYears.find((sy) => sy.id === selectedSchoolYear);
+        const matched = schoolYears.find((sy) => (
+            String(sy.id) === String(selectedSchoolYear) ||
+            sy.name === selectedSchoolYear ||
+            sy.school_year_name === selectedSchoolYear ||
+            sy.schoolYearName === selectedSchoolYear
+        ));
         return matched?.name || matched?.school_year_name || matched?.schoolYearName || matched?.year || "năm học này";
     }, [schoolYears, selectedSchoolYear]);
 
     // Use TanStack Query for grades
-    const { data: gradesData = [], isLoading } = useQuery({
-        queryKey: ["student-grades", studentId, effectiveSchoolYear],
+    const { data: gradeSummaryPayload = null, isLoading } = useQuery({
+        queryKey: ["student-grades", studentId, effectiveSchoolYearId],
         queryFn: async () => {
-            if (!studentId) return [];
+            if (!studentId || !effectiveSchoolYearId) return null;
             try {
                 const response = await studentService.getStudentGradeSummary({ 
                     pathParams: { id: studentId },
                     mock: false,
-                    params: { schoolYear: effectiveSchoolYear },
+                    params: { schoolYear: effectiveSchoolYearId },
                 });
                 
                 if (response.success && response.data) {
-                    return processGradesData(response.data);
+                    return response.data;
                 }
             } catch {
                 console.warn("Failed to fetch grades, using empty state.");
             }
-            return [];
+            return null;
         },
-        enabled: !!studentId && !!effectiveSchoolYear,
+        enabled: !!studentId && !!effectiveSchoolYearId,
         staleTime: 10 * 60 * 1000,
     });
 
+    const gradesData = useMemo(
+        () => processGradesData(gradeSummaryPayload),
+        [gradeSummaryPayload],
+    );
+    const studentRecordId = gradeSummaryPayload?.studentId || studentId;
+
     // Resolve semester IDs for conduct API
     const { data: hk1SemesterId } = useQuery({
-        queryKey: ["semester-id", effectiveSchoolYear, "hk1"],
-        queryFn: () => resolveSemesterId(effectiveSchoolYear, "hk1"),
-        enabled: !!effectiveSchoolYear,
+        queryKey: ["semester-id", effectiveSchoolYearId, "hk1"],
+        queryFn: () => resolveSemesterId(effectiveSchoolYearId, "hk1"),
+        enabled: !!effectiveSchoolYearId,
         staleTime: 5 * 60 * 1000,
     });
 
     const { data: hk2SemesterId } = useQuery({
-        queryKey: ["semester-id", effectiveSchoolYear, "hk2"],
-        queryFn: () => resolveSemesterId(effectiveSchoolYear, "hk2"),
-        enabled: !!effectiveSchoolYear,
+        queryKey: ["semester-id", effectiveSchoolYearId, "hk2"],
+        queryFn: () => resolveSemesterId(effectiveSchoolYearId, "hk2"),
+        enabled: !!effectiveSchoolYearId,
         staleTime: 5 * 60 * 1000,
     });
 
     // Fetch conduct summary
     const { data: conductSummary } = useQuery({
-        queryKey: ["student-conduct-summary", studentId, hk1SemesterId, hk2SemesterId],
+        queryKey: ["student-conduct-summary", studentRecordId, hk1SemesterId, hk2SemesterId, effectiveSchoolYearId],
         queryFn: async () => {
-            if (!studentId || !hk1SemesterId || !hk2SemesterId) return null;
+            if (!studentRecordId || !hk1SemesterId || !hk2SemesterId) return null;
             try {
                 const response = await studentService.getConductSummary({
-                    pathParams: { id: studentId },
-                    params: { hk1SemesterId, hk2SemesterId },
+                    pathParams: { id: studentRecordId },
+                    params: { hk1SemesterId, hk2SemesterId, schoolYearId: effectiveSchoolYearId },
                     mock: false,
                 });
                 return response?.success ? response.data : null;
@@ -204,18 +248,18 @@ export default function StudentGrades() {
                 return null;
             }
         },
-        enabled: !!studentId && !!hk1SemesterId && !!hk2SemesterId,
+        enabled: !!studentRecordId && !!hk1SemesterId && !!hk2SemesterId,
         staleTime: 5 * 60 * 1000,
     });
 
     // Fetch discipline scores
     const { data: disciplineScores } = useQuery({
-        queryKey: ["student-discipline-scores", studentId, hk1SemesterId],
+        queryKey: ["student-discipline-scores", studentRecordId, hk1SemesterId],
         queryFn: async () => {
-            if (!studentId || !hk1SemesterId) return null;
+            if (!studentRecordId || !hk1SemesterId) return null;
             try {
                 const response = await studentService.getDisciplineScores({
-                    pathParams: { id: studentId },
+                    pathParams: { id: studentRecordId },
                     params: { semesterId: hk1SemesterId },
                     mock: false,
                 });
@@ -224,12 +268,18 @@ export default function StudentGrades() {
                 return null;
             }
         },
-        enabled: !!studentId && !!hk1SemesterId,
+        enabled: !!studentRecordId && !!hk1SemesterId,
         staleTime: 5 * 60 * 1000,
     });
 
+    const yearSummary = useMemo(
+        () => normalizeYearSummary(gradeSummaryPayload?.yearSummary, gradesData, conductSummary),
+        [conductSummary, gradeSummaryPayload, gradesData],
+    );
+
     function processGradesData(data) {
-            if (Array.isArray(data)) {
+        if (!data) return [];
+        if (Array.isArray(data)) {
             return data.map(subject => {
                 const hk1Avg = calculateSemesterAverage(subject.hk1);
                 const hk2Avg = calculateSemesterAverage(subject.hk2);
@@ -273,6 +323,14 @@ export default function StudentGrades() {
 
     const summaryStats = useMemo(() => {
         if (gradesData.length === 0 || activeTab === "conduct") return { avg: 0, rank: "—", count: 0 };
+        if (activeTab === "year" && Number.isFinite(Number(yearSummary.overallGpa))) {
+            const avg = round2(Number(yearSummary.overallGpa));
+            return {
+                avg,
+                rank: yearSummary.academicLevel || getAcademicRank(avg),
+                count: gradesData.length,
+            };
+        }
 
         const total = gradesData.reduce((sum, s) => {
             if (activeTab === "hk1") return sum + (s.hk1Avg || 0);
@@ -286,7 +344,9 @@ export default function StudentGrades() {
             rank: getAcademicRank(avg),
             count: gradesData.length
         };
-    }, [gradesData, activeTab]);
+    }, [gradesData, activeTab, yearSummary]);
+
+    const isTopSummaryRank = summaryStats.rank === "Tốt" || summaryStats.rank === "Giỏi";
 
     return (
         <div className="grades-page">
@@ -325,6 +385,7 @@ export default function StudentGrades() {
                     </div>
 
                     {activeTab !== "conduct" && (
+                    <>
                     <div className="grades-stats">
                         <div className="grades-card">
                             <div className="grades-card-icon icon-blue">
@@ -337,11 +398,11 @@ export default function StudentGrades() {
                         </div>
 
                         <div className="grades-card">
-                            <div className={`grades-card-icon ${summaryStats.rank === "Giỏi" ? "icon-gold" : "icon-silver"}`}>
-                                {summaryStats.rank === "Giỏi" ? <BiTrophy /> : <BiMedal />}
+                            <div className={`grades-card-icon ${isTopSummaryRank ? "icon-gold" : "icon-silver"}`}>
+                                {isTopSummaryRank ? <BiTrophy /> : <BiMedal />}
                             </div>
                             <div className="grades-card-content">
-                                <h2 className={summaryStats.rank === "Giỏi" ? "rank-good-text" : "rank-fair-text"}>
+                                <h2 className={isTopSummaryRank ? "rank-good-text" : "rank-fair-text"}>
                                     {summaryStats.rank}
                                 </h2>
                                 <p>Xếp loại học lực</p>
@@ -358,6 +419,26 @@ export default function StudentGrades() {
                             </div>
                         </div>
                     </div>
+                    <div className="grades-year-summary">
+                        <div className="grades-year-summary-card">
+                            <span>TB tất cả môn cả năm</span>
+                            <strong>{formatSummaryScore(yearSummary.overallGpa)}</strong>
+                        </div>
+                        <div className="grades-year-summary-card">
+                            <span>Học lực cả năm</span>
+                            <strong>{yearSummary.academicLevel}</strong>
+                        </div>
+                        <div className="grades-year-summary-card">
+                            <span>Hạnh kiểm cả năm</span>
+                            <strong>{yearSummary.conductLevel}</strong>
+                        </div>
+                        <div className="grades-year-summary-card award">
+                            <span>Danh hiệu cuối năm</span>
+                            <strong>{yearSummary.honorTitle}</strong>
+                            <small>{yearSummary.subjectsAbove9}/{yearSummary.scoreSubjectCount} môn từ 9.0; {yearSummary.subjectsAbove8}/{yearSummary.scoreSubjectCount} môn từ 8.0</small>
+                        </div>
+                    </div>
+                    </>
                     )}
 
                     {activeTab === "conduct" ? (

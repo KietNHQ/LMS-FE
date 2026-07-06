@@ -6,17 +6,123 @@
  */
 
 import { useEffect, useMemo, useState } from "react";
-import { FiDownload, FiFileText, FiSearch, FiCheckCircle, FiUsers } from "react-icons/fi";
+import { FiDownload, FiFileText, FiSearch, FiCheckCircle, FiUsers,
+  FiAward as FiGraduation, FiXCircle as FiGradFail
+} from "react-icons/fi";
 import { toast } from "react-toastify";
 import { vpTranscriptService } from "../../../../services/pages/management/vp-discipline/vpTranscriptService";
 import { classesService } from "../../../../services/pages/management/classes/classesService";
 import { studentsService } from "../../../../services/pages/management/users/studentsService";
 import { useSchoolYearTerm } from "../../../../hooks/useSchoolYearTerm";
+import { resolveSchoolYearId, resolveSemesterId } from "../../../../services/shared/schoolYearLookup";
 import PageHeader from "../../../../components/common/PageHeader/PageHeader";
 import "./VpTranscriptExport.css";
 
+const getStudentName = (student = {}) => (
+  [student.surname || student.lastName || "", student.given_name || student.givenName || student.firstName || ""]
+    .filter(Boolean)
+    .join(" ") ||
+  student.full_name ||
+  student.fullName ||
+  student.name ||
+  "—"
+);
+
+const buildFlatEnrollment = (student = {}) => {
+  const enrollmentId = student.enrollment_id || student.enrollmentId;
+  if (!enrollmentId) return null;
+  return {
+    id: enrollmentId,
+    enrollment_id: enrollmentId,
+    school_year_id: student.school_year_id || student.schoolYearId || null,
+    schoolYearId: student.school_year_id || student.schoolYearId || null,
+    class_id: student.class_id || student.classId || null,
+    classId: student.class_id || student.classId || null,
+    class_name: student.class_name || student.className || null,
+    className: student.class_name || student.className || null,
+    status: student.enrollment_status || student.status || null,
+  };
+};
+
+const getStudentEnrollments = (student = {}) => {
+  if (Array.isArray(student.enrollments) && student.enrollments.length > 0) {
+    return student.enrollments;
+  }
+  const fallback = buildFlatEnrollment(student);
+  return fallback ? [fallback] : [];
+};
+
+const resolveStudentEnrollment = (student, schoolYearId) => {
+  const enrollments = getStudentEnrollments(student);
+  if (!enrollments.length) return null;
+  return (
+    enrollments.find(
+      (e) =>
+        String(e.school_year_id || e.schoolYearId || "") === String(schoolYearId || "") &&
+        ["active", "studying", "Đang học"].includes(e.status || student?.status)
+    ) ||
+    enrollments.find(
+      (e) => String(e.school_year_id || e.schoolYearId || "") === String(schoolYearId || "")
+    ) ||
+    enrollments[0]
+  );
+};
+
+const toDisplayScore = (value) => {
+  const numeric = Number(value);
+  return Number.isFinite(numeric) ? numeric.toFixed(1) : "—";
+};
+
+const calculateYearSubjectScore = (hk1, hk2) => {
+  const sem1 = Number(hk1);
+  const sem2 = Number(hk2);
+  if (Number.isFinite(sem1) && Number.isFinite(sem2)) {
+    return Math.round(((sem1 + sem2 * 2) / 3) * 10) / 10;
+  }
+  if (Number.isFinite(sem2)) return sem2;
+  if (Number.isFinite(sem1)) return sem1;
+  return null;
+};
+
 export default function VpTranscriptExport() {
   const { selectedSchoolYear, selectedTerm, handleTermChange } = useSchoolYearTerm();
+
+  // Keep a resolved numeric schoolYearId in sync with selectedSchoolYear string
+  const [resolvedSyId, setResolvedSyId] = useState(null);
+  const [resolvedSemesterIds, setResolvedSemesterIds] = useState({ hk1: null, hk2: null });
+
+  useEffect(() => {
+    if (!selectedSchoolYear) {
+      setResolvedSyId(null);
+      return;
+    }
+    if (typeof selectedSchoolYear === "number") {
+      setResolvedSyId(selectedSchoolYear);
+      return;
+    }
+    resolveSchoolYearId(selectedSchoolYear).then(setResolvedSyId);
+  }, [selectedSchoolYear]);
+
+  useEffect(() => {
+    let cancelled = false;
+    const loadSemesterIds = async () => {
+      if (!selectedSchoolYear) {
+        setResolvedSemesterIds({ hk1: null, hk2: null });
+        return;
+      }
+      const [hk1, hk2] = await Promise.all([
+        resolveSemesterId(selectedSchoolYear, "hk1"),
+        resolveSemesterId(selectedSchoolYear, "hk2"),
+      ]);
+      if (!cancelled) {
+        setResolvedSemesterIds({ hk1: hk1 || null, hk2: hk2 || null });
+      }
+    };
+    loadSemesterIds();
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedSchoolYear]);
 
   // ── Mode toggle: 'search' = single student, 'class' = class mode ──
   const [exportMode, setExportMode] = useState("search"); // "search" | "class"
@@ -51,14 +157,21 @@ export default function VpTranscriptExport() {
 
   // Search students when keyword changes (debounced)
   useEffect(() => {
-    if (!searchKeyword.trim()) {
+    if (exportMode !== "search") {
+      setStudents([]);
+      return;
+    }
+    if (selectedStudent && !searchKeyword.trim()) {
       setStudents([]);
       return;
     }
     const timer = setTimeout(async () => {
       setIsSearching(true);
       try {
-        const results = await vpTranscriptService.searchStudents(searchKeyword);
+        const results = await vpTranscriptService.searchStudents(searchKeyword.trim(), {
+          schoolYearId: resolvedSyId,
+          limit: searchKeyword.trim() ? 20 : 30,
+        });
         setStudents(Array.isArray(results) ? results.slice(0, 20) : []);
       } catch {
         setStudents([]);
@@ -67,42 +180,41 @@ export default function VpTranscriptExport() {
       }
     }, 400);
     return () => clearTimeout(timer);
-  }, [searchKeyword]);
+  }, [exportMode, resolvedSyId, searchKeyword, selectedStudent]);
 
-  // Load classes when school year changes or switching to class mode
+  // Load classes when school year or grade filter changes
   useEffect(() => {
     if (exportMode !== "class") return;
+    const params = {};
+    if (plFilter) params.gradeLevelId = parseInt(plFilter, 10);
     classesService
-      .listClasses({ schoolYearId: selectedSchoolYear, limit: 500 })
+      .listClasses({ schoolYearId: resolvedSyId, limit: 500, ...params })
       .then(setClasses)
       .catch(() => setClasses([]));
-  }, [exportMode, selectedSchoolYear]);
+  }, [exportMode, resolvedSyId, plFilter]);
 
-  // Load class students when a class is selected
+  // Load class students when a class or resolved school year ID changes
   useEffect(() => {
-    if (!selectedClassId) {
+    if (!selectedClassId || !resolvedSyId) {
       setClassStudents([]);
       setSelectedClassStudentIds(new Set());
       return;
     }
     setIsLoadingClass(true);
     studentsService
-      .getClassStudents(selectedClassId)
+      .getClassStudents(selectedClassId, { schoolYearId: resolvedSyId })
       .then((rows) => {
         setClassStudents(rows);
         setSelectedClassStudentIds(new Set(rows.map((s) => s.id)));
       })
       .catch(() => setClassStudents([]))
       .finally(() => setIsLoadingClass(false));
-  }, [selectedClassId]);
+  }, [selectedClassId, resolvedSyId]);
 
   const handleSelectStudent = (student) => {
     setSelectedStudent(student);
     setTranscriptData(null);
-    const enrollment = student.enrollments?.find(
-      (e) => e.school_year_id === selectedSchoolYear || e.schoolYearId === selectedSchoolYear
-    ) || student.enrollments?.[0];
-    setSelectedEnrollment(enrollment || null);
+    setSelectedEnrollment(resolveStudentEnrollment(student, resolvedSyId));
     setStudents([]);
     setSearchKeyword("");
   };
@@ -143,11 +255,7 @@ export default function VpTranscriptExport() {
     let failCount = 0;
 
     for (const student of selected) {
-      const enrollment = student.enrollments?.find(
-        (e) =>
-          String(e.school_year_id) === String(selectedSchoolYear) ||
-          String(e.schoolYearId) === String(selectedSchoolYear)
-      ) || student.enrollments?.[0];
+      const enrollment = resolveStudentEnrollment(student, resolvedSyId);
 
       if (!enrollment?.id) {
         failCount++;
@@ -156,12 +264,12 @@ export default function VpTranscriptExport() {
 
       try {
         const data = await vpTranscriptService.getTranscriptData(enrollment.id, {
-          schoolYearId: selectedSchoolYear,
-          hk1SemesterId: selectedTerm === "all" ? null : selectedTerm,
-          hk2SemesterId: selectedTerm === "all" ? null : selectedTerm,
+          schoolYearId: resolvedSyId,
+          hk1SemesterId: resolvedSemesterIds.hk1,
+          hk2SemesterId: resolvedSemesterIds.hk2,
         });
-        const studentName = [student.surname || "", student.given_name || ""].filter(Boolean).join(" ");
-        const className = enrollment?.class_name || student.className || "";
+        const studentName = getStudentName(student);
+        const className = enrollment?.class_name || enrollment?.className || student.className || "";
         vpTranscriptService.exportTranscriptExcel(data, {
           studentName,
           className,
@@ -191,9 +299,9 @@ export default function VpTranscriptExport() {
     setIsLoadingData(true);
     try {
       const data = await vpTranscriptService.getTranscriptData(selectedEnrollment.id, {
-        schoolYearId: selectedSchoolYear,
-        hk1SemesterId: selectedTerm === "all" ? null : selectedTerm,
-        hk2SemesterId: selectedTerm === "all" ? null : selectedTerm,
+        schoolYearId: resolvedSyId,
+        hk1SemesterId: resolvedSemesterIds.hk1,
+        hk2SemesterId: resolvedSemesterIds.hk2,
       });
       setTranscriptData(data);
       toast.success("Đã tải dữ liệu học bạ.");
@@ -209,13 +317,8 @@ export default function VpTranscriptExport() {
     if (!transcriptData || !selectedStudent) return;
     setIsExportingExcel(true);
     try {
-      const studentName = [
-        selectedStudent.surname || selectedStudent.given_name || "",
-        selectedStudent.given_name || "",
-      ]
-        .filter(Boolean)
-        .join(" ");
-      const className = selectedEnrollment?.class_name || selectedStudent.className || "";
+      const studentName = getStudentName(selectedStudent);
+      const className = selectedEnrollment?.class_name || selectedEnrollment?.className || selectedStudent.className || "";
       vpTranscriptService.exportTranscriptExcel(transcriptData, {
         studentName,
         className,
@@ -237,7 +340,7 @@ export default function VpTranscriptExport() {
       await vpTranscriptService.exportTranscriptPDF(
         selectedEnrollment.id,
         selectedStudent.id,
-        selectedSchoolYear
+        resolvedSyId
       );
       toast.success("Đã bắt đầu tải PDF học bạ.");
     } catch (err) {
@@ -290,14 +393,15 @@ export default function VpTranscriptExport() {
     }
 
     allSubjects.forEach((val) => rows.push(val));
+    rows.forEach((row) => {
+      row.yearScore = row.yearScore ?? calculateYearSubjectScore(row.hk1Score, row.hk2Score);
+    });
     return rows;
   }, [transcriptData]);
 
   const reportCard = transcriptData?.reportCard;
-  const studentName = selectedStudent
-    ? [selectedStudent.surname || "", selectedStudent.given_name || ""].filter(Boolean).join(" ")
-    : "";
-  const className = selectedEnrollment?.class_name || selectedStudent?.className || "";
+  const studentName = selectedStudent ? getStudentName(selectedStudent) : "";
+  const className = selectedEnrollment?.class_name || selectedEnrollment?.className || selectedStudent?.className || "";
 
   return (
     <div className="vp-transcript-export vp-discipline-layout">
@@ -392,6 +496,18 @@ export default function VpTranscriptExport() {
           {/* Student table */}
           {isLoadingClass && <p className="transcript-loading-msg">Đang tải danh sách học sinh...</p>}
 
+          {!resolvedSyId && (
+            <p className="transcript-no-data">
+              Vui lòng chọn năm học để tải danh sách học sinh.
+            </p>
+          )}
+
+          {resolvedSyId && selectedClassId && classStudents.length === 0 && !isLoadingClass && (
+            <p className="transcript-no-data">
+              Lớp này chưa có học sinh hoặc chưa có dữ liệu đăng ký học tập cho năm học đã chọn.
+            </p>
+          )}
+
           {classStudents.length > 0 && (
             <>
               <div className="class-student-table-toolbar">
@@ -429,15 +545,8 @@ export default function VpTranscriptExport() {
                   </thead>
                   <tbody>
                     {classStudents.map((s) => {
-                      const enrollment = s.enrollments?.find(
-                        (e) =>
-                          String(e.school_year_id) === String(selectedSchoolYear) ||
-                          String(e.schoolYearId) === String(selectedSchoolYear)
-                      ) || s.enrollments?.[0];
-                      const name =
-                        [s.surname || "", s.given_name || ""].filter(Boolean).join(" ") ||
-                        s.name ||
-                        "—";
+                      const enrollment = resolveStudentEnrollment(s, resolvedSyId);
+                      const name = getStudentName(s);
                       return (
                         <tr key={s.id}>
                           <td>
@@ -455,7 +564,7 @@ export default function VpTranscriptExport() {
                               s.gradeLevelName ||
                               "—"}
                           </td>
-                          <td>{enrollment?.class_name || s.className || "—"}</td>
+                          <td>{enrollment?.class_name || enrollment?.className || s.className || "—"}</td>
                           <td>
                             <span className={`status-badge status-${s.status === "active" ? "active" : "inactive"}`}>
                               {s.status === "active" ? "Đang học" : s.status || "—"}
@@ -588,6 +697,55 @@ export default function VpTranscriptExport() {
                     </div>
                   </div>
 
+                  {/* Graduation Eligibility Badge — only for Grade 12 */}
+                  {reportCard?.graduationCheck && (
+                    <div className="graduation-check-section">
+                      <div className={`graduation-badge ${reportCard.graduationCheck.canGraduate ? "pass" : "fail"}`}>
+                        <div className="graduation-badge-icon">
+                          {reportCard.graduationCheck.canGraduate
+                            ? <FiGradPass size={24} />
+                            : <FiGradFail size={24} />}
+                        </div>
+                        <div className="graduation-badge-content">
+                          <div className="graduation-badge-title">
+                            {reportCard.graduationCheck.canGraduate
+                              ? "Đủ điều kiện công nhận tốt nghiệp"
+                              : "Chưa đủ điều kiện tốt nghiệp"}
+                          </div>
+                          {reportCard.graduationCheck.graduationScore != null && (
+                            <div className="graduation-score">
+                              Điểm học bạ: <strong>{reportCard.graduationScore.graduationScore}</strong>
+                              {reportCard.graduationScore.graduationScoreDetail && (
+                                <span className="graduation-score-detail">
+                                  {" "}(L10: {reportCard.graduationScore.graduationScoreDetail.avg10 ?? "—"} ×1 + L11: {reportCard.graduationScore.graduationScoreDetail.avg11 ?? "—"} ×2 + L12: {reportCard.graduationScore.graduationScoreDetail.avg12 ?? "—"} ×3) / 6
+                                </span>
+                              )}
+                            </div>
+                          )}
+                          {reportCard.graduationCheck.conditions && (
+                            <div className="graduation-conditions">
+                              <span className={`condition-chip ${reportCard.graduationCheck.conditions.minimumScore?.passed ? "pass" : "fail"}`}>
+                                TB ≥ 5.0: {reportCard.graduationCheck.conditions.minimumScore?.passed ? "✓" : "✗"}
+                              </span>
+                              <span className={`condition-chip ${reportCard.graduationCheck.conditions.noFailedSubjects?.passed ? "pass" : "fail"}`}>
+                                Không điểm liệt: {reportCard.graduationCheck.conditions.noFailedSubjects?.passed ? "✓" : "✗"}
+                              </span>
+                              <span className={`condition-chip ${reportCard.graduationCheck.conditions.sixSubjectsAbove5?.passed ? "pass" : "fail"}`}>
+                                ≥6 môn ≥ 5.0 ({reportCard.graduationCheck.conditions.sixSubjectsAbove5?.count}/{reportCard.graduationCheck.conditions.sixSubjectsAbove5?.required}): {reportCard.graduationCheck.conditions.sixSubjectsAbove5?.passed ? "✓" : "✗"}
+                              </span>
+                              <span className={`condition-chip ${reportCard.graduationCheck.conditions.conduct?.passed ? "pass" : "fail"}`}>
+                                HKĐ ≥ Đạt: {reportCard.graduationCheck.conditions.conduct?.passed ? "✓" : "✗"}
+                              </span>
+                              <span className={`condition-chip ${reportCard.graduationCheck.conditions.attendance?.passed ? "pass" : "fail"}`}>
+                                Vắng &lt; 45 ngày: {reportCard.graduationCheck.conditions.attendance?.passed ? "✓" : "✗"}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
                   {/* PL2 Preview Table */}
                   {previewRows.length > 0 && (
                     <div className="transcript-preview-table-wrapper">
@@ -606,9 +764,9 @@ export default function VpTranscriptExport() {
                             <tr key={`preview-${row.studentId || row.enrollmentId || idx}`}>
                               <td>{idx + 1}</td>
                               <td>{row.name}</td>
-                              <td>{row.hk1Score !== null ? Number(row.hk1Score).toFixed(1) : "—"}</td>
-                              <td>{row.hk2Score !== null ? Number(row.hk2Score).toFixed(1) : "—"}</td>
-                              <td>{row.yearScore !== null ? Number(row.yearScore).toFixed(1) : "—"}</td>
+                              <td>{toDisplayScore(row.hk1Score)}</td>
+                              <td>{toDisplayScore(row.hk2Score)}</td>
+                              <td>{toDisplayScore(row.yearScore)}</td>
                             </tr>
                           ))}
                         </tbody>

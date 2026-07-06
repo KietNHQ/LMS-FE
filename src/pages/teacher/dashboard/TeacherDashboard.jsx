@@ -48,7 +48,7 @@ const TeacherDashboard = () => {
   }, [dashboardResponse]);
 
   const calendarEvents = React.useMemo(() => {
-    return (dashboardData?.schoolEvents || []).map((event) => ({
+    const schoolEvents = (dashboardData?.schoolEvents || []).map((event) => ({
       date: event.date ? new Date(event.date).toISOString().slice(0, 10) : undefined,
       endDate: event.endDate ? new Date(event.endDate).toISOString().slice(0, 10) : undefined,
       title: event.title,
@@ -58,6 +58,8 @@ const TeacherDashboard = () => {
       createdRole: event.createdRole || "",
       target: "all",
     }));
+
+    return schoolEvents;
   }, [dashboardData?.schoolEvents]);
 
   const calendarTargetOptions = React.useMemo(() => {
@@ -130,6 +132,7 @@ const TeacherDashboard = () => {
                 isCompact={true}
                 currentUser={dashboardData?.teacherName || "Giáo viên"}
                 eventTypes={CALENDAR_EVENT_TYPES}
+                creatableTypes={CALENDAR_EVENT_TYPES}
                 initialEvents={calendarEvents}
                 selectedSchoolYear={selectedSchoolYear}
                 selectedTerm={selectedTerm}
@@ -183,7 +186,5 @@ const TeacherDashboard = () => {
 };
 
 export default TeacherDashboard;
-
-
 
 

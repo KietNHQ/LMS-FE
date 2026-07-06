@@ -86,6 +86,49 @@
 	margin-top: 2px;
 }
 
+.weekly-day-markers {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 3px;
+	min-height: 10px;
+	margin-top: 5px;
+}
+
+.weekly-day-marker {
+	width: 7px;
+	height: 7px;
+	border-radius: 999px;
+	background: #3b82f6;
+	box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.95), 0 1px 2px rgba(15, 23, 42, 0.18);
+	flex: 0 0 auto;
+}
+
+.weekly-day-marker.marker-teal { background: #0d9488; }
+.weekly-day-marker.marker-blue { background: #3b82f6; }
+.weekly-day-marker.marker-purple { background: #a855f7; }
+.weekly-day-marker.marker-orange { background: #f97316; }
+.weekly-day-marker.marker-pink { background: #ec4899; }
+.weekly-day-marker.marker-emerald,
+.weekly-day-marker.marker-green { background: #16a34a; }
+.weekly-day-marker.marker-indigo { background: #6366f1; }
+.weekly-day-marker.marker-amber { background: #f59e0b; }
+.weekly-day-marker.marker-cyan { background: #06b6d4; }
+.weekly-day-marker.marker-rose,
+.weekly-day-marker.marker-red { background: #ef4444; }
+.weekly-day-marker.marker-slate { background: #64748b; }
+.weekly-day-marker.marker-sky { background: #0ea5e9; }
+.weekly-day-marker.marker-violet { background: #8b5cf6; }
+.weekly-day-marker.marker-fuchsia { background: #d946ef; }
+.weekly-day-marker.marker-brown { background: #92400e; }
+
+.weekly-day-marker-count {
+	font-size: 9px;
+	font-weight: 800;
+	color: #64748b;
+	line-height: 1;
+}
+
 .today-badge {
 	display: inline-block;
 	margin-top: 4px;
@@ -360,6 +403,180 @@
 .color-pink .lesson-room {
 	background: #fce7f3;
 	color: #db2777;
+}
+
+.color-emerald,
+.color-green {
+	background: #ecfdf5;
+	border-left-color: #10b981;
+}
+
+.color-emerald .lesson-subject,
+.color-green .lesson-subject {
+	color: #047857;
+}
+
+.color-emerald .lesson-extra svg,
+.color-green .lesson-extra svg {
+	color: #6ee7b7;
+}
+
+.color-emerald .lesson-room,
+.color-green .lesson-room {
+	background: #d1fae5;
+	color: #047857;
+}
+
+.color-indigo {
+	background: #eef2ff;
+	border-left-color: #6366f1;
+}
+
+.color-indigo .lesson-subject {
+	color: #4338ca;
+}
+
+.color-indigo .lesson-extra svg {
+	color: #a5b4fc;
+}
+
+.color-indigo .lesson-room {
+	background: #e0e7ff;
+	color: #4338ca;
+}
+
+.color-amber {
+	background: #fffbeb;
+	border-left-color: #f59e0b;
+}
+
+.color-amber .lesson-subject {
+	color: #b45309;
+}
+
+.color-amber .lesson-extra svg {
+	color: #fcd34d;
+}
+
+.color-amber .lesson-room {
+	background: #fef3c7;
+	color: #b45309;
+}
+
+.color-cyan,
+.color-sky {
+	background: #ecfeff;
+	border-left-color: #06b6d4;
+}
+
+.color-cyan .lesson-subject,
+.color-sky .lesson-subject {
+	color: #0e7490;
+}
+
+.color-cyan .lesson-extra svg,
+.color-sky .lesson-extra svg {
+	color: #67e8f9;
+}
+
+.color-cyan .lesson-room,
+.color-sky .lesson-room {
+	background: #cffafe;
+	color: #0e7490;
+}
+
+.color-rose,
+.color-red {
+	background: #fff1f2;
+	border-left-color: #f43f5e;
+}
+
+.color-rose .lesson-subject,
+.color-red .lesson-subject {
+	color: #be123c;
+}
+
+.color-rose .lesson-extra svg,
+.color-red .lesson-extra svg {
+	color: #fda4af;
+}
+
+.color-rose .lesson-room,
+.color-red .lesson-room {
+	background: #ffe4e6;
+	color: #be123c;
+}
+
+.color-slate {
+	background: #f8fafc;
+	border-left-color: #64748b;
+}
+
+.color-slate .lesson-subject {
+	color: #334155;
+}
+
+.color-slate .lesson-extra svg {
+	color: #94a3b8;
+}
+
+.color-slate .lesson-room {
+	background: #e2e8f0;
+	color: #475569;
+}
+
+.color-violet {
+	background: #f5f3ff;
+	border-left-color: #8b5cf6;
+}
+
+.color-violet .lesson-subject {
+	color: #6d28d9;
+}
+
+.color-violet .lesson-extra svg {
+	color: #c4b5fd;
+}
+
+.color-violet .lesson-room {
+	background: #ede9fe;
+	color: #6d28d9;
+}
+
+.color-fuchsia {
+	background: #fdf4ff;
+	border-left-color: #d946ef;
+}
+
+.color-fuchsia .lesson-subject {
+	color: #a21caf;
+}
+
+.color-fuchsia .lesson-extra svg {
+	color: #f0abfc;
+}
+
+.color-fuchsia .lesson-room {
+	background: #fae8ff;
+	color: #a21caf;
+}
+
+.color-brown {
+	background: #fff7ed;
+	border-left-color: #92400e;
+}
+
+.color-brown .lesson-subject {
+	color: #78350f;
+}
+
+.color-brown .lesson-extra svg {
+	color: #fbbf24;
+}
+
+.color-brown .lesson-room {
+	background: #ffedd5;
+	color: #78350f;
 }
 
 @media (max-width: 1200px) {

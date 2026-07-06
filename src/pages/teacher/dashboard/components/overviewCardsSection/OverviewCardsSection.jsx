@@ -9,7 +9,7 @@ const OverviewCardsSection = ({ stats }) => {
   const cards = [
     {
       title: "Lớp đang dạy",
-      value: stats?.totalTeachingClasses ?? 3,
+      value: stats?.totalTeachingClasses ?? 0,
       icon: <School />,
       color: "#10b981",
       bg: "#d1fae5",
@@ -25,7 +25,7 @@ const OverviewCardsSection = ({ stats }) => {
     },
     {
       title: "Điểm nề nếp & chuyên cần",
-      value: stats?.attendanceScore ?? "9.5/10",
+      value: stats?.attendanceScore ?? stats?.attendanceRate ?? "—",
       icon: <BookOpen />,
       color: "#8b5cf6",
       bg: "#ede9fe",

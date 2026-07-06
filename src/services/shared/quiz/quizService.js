@@ -165,6 +165,18 @@ const mapAssignmentOption = (item = {}) => {
     const subject = item.subject_display_name || item.subject_name || "";
     const className = item.class_name || "";
     const teacherName = item.teacher_name || "";
+    const semesterId =
+        item.class_teacher_subject_semester_id ??
+        item.classTeacherSubjectSemesterId ??
+        item.semester_id ??
+        item.semesterId ??
+        null;
+    const schoolYearId =
+        item.class_teacher_subject_school_year_id ??
+        item.classTeacherSubjectSchoolYearId ??
+        item.school_year_id ??
+        item.schoolYearId ??
+        null;
 
     return {
         value: item.id,
@@ -173,6 +185,15 @@ const mapAssignmentOption = (item = {}) => {
         className,
         grade: extractGradeFromClassName(className),
         teacherName,
+        semesterId,
+        semesterName: item.semester_name || item.semesterName || "",
+        schoolYearId,
+        schoolYearName:
+            item.school_year_name ||
+            item.school_year ||
+            item.schoolYearName ||
+            item.schoolYear ||
+            "",
         raw: item,
     };
 };
@@ -222,6 +243,7 @@ const mapApiQuizToView = (quiz = {}) => {
         passScore: quiz.pass_score ?? quiz.passScore ?? null,
         startDate: quiz.start_date || quiz.startDate || null,
         endDate: quiz.end_date || quiz.endDate || null,
+        isSynchronous: Boolean(quiz.is_synchronous ?? quiz.isSynchronous),
         raw: quiz,
     };
 };
@@ -249,6 +271,7 @@ const normalizeCreatePayload = (quizData = {}) => {
         }),
         durationMinutes,
         maxAttempts: toNumber(quizData.maxAttempts ?? quizData.max_attempts) || 1,
+        semesterId: toNumber(quizData.semesterId ?? quizData.semester_id) || null,
         passScore:
             quizData.passScore === "" || quizData.passScore == null
                 ? null
@@ -259,6 +282,7 @@ const normalizeCreatePayload = (quizData = {}) => {
                 : quizData.status
                     ? quizData.status === "open"
                     : false,
+        isSynchronous: Boolean(quizData.isSynchronous ?? false),
         startDate: quizData.startDate || null,
         endDate: quizData.endDate || null,
     };
@@ -308,6 +332,10 @@ const normalizeUpdatePayload = (quizData = {}) => {
                 : quizData.status
                     ? quizData.status === "open"
                     : undefined,
+        isSynchronous:
+            typeof quizData.isSynchronous === "boolean"
+                ? quizData.isSynchronous
+                : undefined,
         startDate:
             quizData.startDate === undefined ? undefined : (quizData.startDate || null),
         endDate: quizData.endDate === undefined ? undefined : (quizData.endDate || null),
@@ -611,4 +639,3 @@ export function buildFinalScore({ autoScore = 0, essayScore = 0 }) {
     const total = Number(autoScore || 0) + Number(essayScore || 0);
     return Number(Math.min(10, total).toFixed(2));
 }
-

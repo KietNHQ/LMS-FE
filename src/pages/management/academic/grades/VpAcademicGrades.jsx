@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import axiosClient from "../../../../services/shared/http/axiosClient";
 import { PageHeader, SchoolYearTermSelector, Pagination, LoadingSpinner } from "../../../../components/common";
@@ -9,15 +9,15 @@ import { studentsService } from "../../../../services/pages/management/users/stu
 import { gradeService } from "../../../../services/pages/management/grades/gradeService";
 import notificationService from "../../../../services/pages/management/notifications/notificationService";
 import {
-    FiCheckCircle, FiClock, FiAlertCircle, FiLock,
-    FiDownload, FiEye, FiAlertTriangle, FiSearch,
-    FiFilter, FiMail, FiBarChart2, FiTrendingUp, FiUsers, FiActivity, FiArrowUpRight, FiX, FiUserCheck, FiExternalLink,
-    FiChevronLeft, FiChevronRight, FiMenu, FiUnlock, FiRefreshCw
+    FiClock, FiAlertCircle, FiLock,
+    FiAlertTriangle, FiSearch,
+    FiMail, FiBarChart2, FiTrendingUp, FiUsers, FiActivity, FiUserCheck, FiExternalLink,
+    FiChevronLeft, FiChevronRight, FiUnlock, FiRefreshCw
 } from "react-icons/fi";
 import { toast } from "react-toastify";
 import { Modal, Button, Select, Input } from "../../../../components/ui";
 import {
-    ResponsiveContainer, LineChart, Line, XAxis, YAxis,
+    ResponsiveContainer, XAxis, YAxis,
     CartesianGrid, Tooltip, AreaChart, Area
 } from "recharts";
 import "./VpAcademicGrades.css";
@@ -40,6 +40,126 @@ const scoreTrend = (sem1Avg, sem2Avg) => {
 
 const toScore = (v) => (v != null ? parseFloat(parseFloat(v).toFixed(2)) : null);
 
+const EMPTY_LOCK_STATUS = {
+    status: "draft",
+    totalGrades: 0,
+    finalizedCount: 0,
+    pendingCount: 0,
+    draftCount: 0,
+    finalizedGradeIds: [],
+    byTeacher: [],
+};
+
+const unwrapApiData = (payload) => {
+    if (payload && typeof payload === "object" && Object.prototype.hasOwnProperty.call(payload, "success") && Object.prototype.hasOwnProperty.call(payload, "data")) {
+        return payload.data;
+    }
+    return payload;
+};
+
+const normalizeLockStatus = (payload) => {
+    const data = unwrapApiData(payload) || {};
+    return {
+        ...EMPTY_LOCK_STATUS,
+        ...data,
+        status: data.status || EMPTY_LOCK_STATUS.status,
+        totalGrades: Number(data.totalGrades || data.total_grades || 0),
+        finalizedCount: Number(data.finalizedCount || data.finalized_count || 0),
+        pendingCount: Number(data.pendingCount || data.pending_count || 0),
+        draftCount: Number(data.draftCount || data.draft_count || 0),
+        finalizedGradeIds: Array.isArray(data.finalizedGradeIds) ? data.finalizedGradeIds : [],
+        byTeacher: Array.isArray(data.byTeacher) ? data.byTeacher : [],
+    };
+};
+
+const getMutationData = (payload) => unwrapApiData(payload) || {};
+const isMutationSuccess = (payload) => payload?.success !== false;
+
+const mapWithConcurrency = async (items, limit, mapper) => {
+    const results = new Array(items.length);
+    let nextIndex = 0;
+
+    const workers = Array.from({ length: Math.min(limit, items.length) }, async () => {
+        while (nextIndex < items.length) {
+            const currentIndex = nextIndex;
+            nextIndex += 1;
+            results[currentIndex] = await mapper(items[currentIndex], currentIndex);
+        }
+    });
+
+    await Promise.all(workers);
+    return results;
+};
+
+const getTermConduct = (reportCard, term) => {
+    const conduct = reportCard?.conductClassification;
+    const termConduct = term === "hk1" ? conduct?.semester1 : conduct?.semester2;
+    return termConduct?.level || termConduct?.description || conduct?.level || conduct?.description || null;
+};
+
+const getStudentDisplayCode = (student = {}) =>
+    student.studentCode || student.student_code || student.id || student.enrollmentId || "—";
+
+const normalizeStudentReport = (student, reportCard, selectedTerm) => {
+    const card = unwrapApiData(reportCard) || {};
+    const hk1 = card?.grades?.semester1;
+    const hk2 = card?.grades?.semester2;
+    const hk1Gpa = toScore(card.hk1GPA ?? hk1?.gpa);
+    const hk2Gpa = toScore(card.hk2GPA ?? hk2?.gpa);
+    const yearGpa = toScore(card.yearGPA ?? card?.grades?.gpa ?? (hk1Gpa != null && hk2Gpa != null ? (hk1Gpa + 2 * hk2Gpa) / 3 : hk2Gpa ?? hk1Gpa));
+    const currentGpa = selectedTerm === "hk1" ? hk1Gpa : hk2Gpa;
+
+    return {
+        id: getStudentDisplayCode(student),
+        name: student.name || `${student.surname || ""} ${student.givenName || ""}`.trim() || "—",
+        enrollmentId: student.enrollmentId || student.enrollment_id || student.id,
+        avg: currentGpa,
+        conduct: getTermConduct(card, selectedTerm),
+        hk1Gpa,
+        hk2Gpa,
+        yearGpa,
+        yearIsComplete: hk1Gpa != null && hk2Gpa != null,
+        subjects: {
+            hk1: Array.isArray(hk1?.results) ? hk1.results : [],
+            hk2: Array.isArray(hk2?.results) ? hk2.results : [],
+        },
+    };
+};
+
+const buildSubjectPerformance = (studentRows, selectedTerm) => {
+    const subjectMap = new Map();
+
+    const addScore = (subjectName, termKey, score) => {
+        if (!subjectName || score == null) return;
+        if (!subjectMap.has(subjectName)) {
+            subjectMap.set(subjectName, { hk1Sum: 0, hk1Count: 0, hk2Sum: 0, hk2Count: 0 });
+        }
+        const entry = subjectMap.get(subjectName);
+        entry[`${termKey}Sum`] += Number(score);
+        entry[`${termKey}Count`] += 1;
+    };
+
+    studentRows.forEach((student) => {
+        ["hk1", "hk2"].forEach((termKey) => {
+            (student.subjects?.[termKey] || []).forEach((result) => {
+                if (result.isGradedByScore === false) return;
+                addScore(result.subjectName, termKey, result.averageScore);
+            });
+        });
+    });
+
+    return Array.from(subjectMap.entries())
+        .map(([sub, entry]) => {
+            const hk1Avg = entry.hk1Count > 0 ? entry.hk1Sum / entry.hk1Count : null;
+            const hk2Avg = entry.hk2Count > 0 ? entry.hk2Sum / entry.hk2Count : null;
+            const avg = selectedTerm === "hk1" ? hk1Avg : hk2Avg;
+            const diff = hk1Avg != null && hk2Avg != null ? hk2Avg - hk1Avg : 0;
+            const trend = diff > 0.15 ? "up" : diff < -0.15 ? "down" : "stable";
+            return { sub, avg: toScore(avg), status: gradeColor(avg), trend };
+        })
+        .sort((a, b) => (a.sub || "").localeCompare(b.sub || "", "vi"));
+};
+
 // ── CUSTOM COMPONENT ──────────────────────────────────────────────
 
 export default function VpAcademicGrades() {
@@ -61,11 +181,13 @@ export default function VpAcademicGrades() {
 
     const [classesLoading, setClassesLoading] = useState(true);
     const [classDetailLoading, setClassDetailLoading] = useState(false);
+    const [classDetailProgress, setClassDetailProgress] = useState({ loaded: 0, total: 0 });
     const [classDetail, setClassDetail] = useState(null); // { students, gpa, trend, subjectPerf, auditLogs, semester1Gpa }
     const [isSendingRemind, setIsSendingRemind] = useState(false);
     const [isRefreshing, setIsRefreshing] = useState(false);
     const [classLockStatus, setClassLockStatus] = useState("draft"); // draft | pending | finalized
     const [classLockStatusMap, setClassLockStatusMap] = useState({}); // classId -> status
+    const [lockStatusMapLoading, setLockStatusMapLoading] = useState(false);
     const [isUnlockModalOpen, setIsUnlockModalOpen] = useState(false);
     const [isUnlocking, setIsUnlocking] = useState(false);
     const [isLocking, setIsLocking] = useState(false);
@@ -73,6 +195,7 @@ export default function VpAcademicGrades() {
 
     const itemsPerPage = 5;
     const queryClient = useQueryClient();
+    const detailRequestRef = useRef(0);
 
     const { data: lockStatusData } = useQuery({
         queryKey: ["grade-lock-status", selectedClass?.id, selectedSchoolYear, selectedTerm],
@@ -84,6 +207,7 @@ export default function VpAcademicGrades() {
             return res;
         },
         enabled: !!selectedClass?.id,
+        staleTime: 15 * 1000,
     });
 
     const { data: schoolYearsData = [] } = useQuery({
@@ -97,29 +221,31 @@ export default function VpAcademicGrades() {
     });
 
     useEffect(() => {
-        if (lockStatusData?.data) {
-            const d = lockStatusData.data;
-            setClassLockStatus(d.status || "draft");
-            setFinalizedGradeIds(Array.isArray(d.finalizedGradeIds) ? d.finalizedGradeIds : []);
-            if (selectedClass?.id) {
-                setClassLockStatusMap(prev => ({ ...prev, [selectedClass.id]: d.status || "draft" }));
-            }
-        } else {
+        if (!lockStatusData) {
             setClassLockStatus("draft");
             setFinalizedGradeIds([]);
+            return;
+        }
+        const d = normalizeLockStatus(lockStatusData);
+        setClassLockStatus(d.status);
+        setFinalizedGradeIds(d.finalizedGradeIds);
+        if (selectedClass?.id) {
+            setClassLockStatusMap(prev => ({ ...prev, [selectedClass.id]: d.status }));
         }
     }, [lockStatusData, selectedClass?.id]);
 
-    // ── Debug logging ──────────────────────────────────────────────────────────
-    useEffect(() => {
-        console.log("[VP Grades DEBUG]", {
-            classLockStatus,
-            finalizedGradeIds,
-            finalizedCount: lockStatusData?.data?.finalizedCount,
-            totalGrades: lockStatusData?.data?.totalGrades,
-            rawLockStatusData: lockStatusData,
-        });
-    }, [classLockStatus, finalizedGradeIds, lockStatusData]);
+    const refreshSelectedLockStatus = useCallback(async () => {
+        if (!selectedClass?.id) return EMPTY_LOCK_STATUS;
+        const semId = await resolveSemesterId(selectedSchoolYear, selectedTerm);
+        if (!semId) return EMPTY_LOCK_STATUS;
+        const response = await gradeService.getLockStatus({ classId: selectedClass.id, semesterId: semId });
+        const status = normalizeLockStatus(response);
+        setClassLockStatus(status.status);
+        setFinalizedGradeIds(status.finalizedGradeIds);
+        setClassLockStatusMap(prev => ({ ...prev, [selectedClass.id]: status.status }));
+        queryClient.setQueryData(["grade-lock-status", selectedClass.id, selectedSchoolYear, selectedTerm], status);
+        return status;
+    }, [queryClient, selectedClass?.id, selectedSchoolYear, selectedTerm]);
 
     // Batch unlock (VP uses unlockClassGrades API)
     const handleUnlockClassGrades = async () => {
@@ -133,8 +259,11 @@ export default function VpAcademicGrades() {
                 semesterId: semId,
                 notes: "VP mở khóa chỉnh sửa điểm",
             });
-            if (res?.success) {
-                toast.success(`Đã mở khóa ${res.data?.unlockedCount || finalizedGradeIds.length} điểm!`);
+            const data = getMutationData(res);
+            if (isMutationSuccess(res)) {
+                toast.success(`Đã mở khóa ${data.unlockedCount || finalizedGradeIds.length} điểm!`);
+                await refreshSelectedLockStatus();
+                if (selectedClass) await loadClassDetail(selectedClass);
             } else {
                 toast.error(res?.error || "Không thể mở khóa điểm.");
             }
@@ -161,8 +290,11 @@ export default function VpAcademicGrades() {
                 semesterId: semId,
                 notes: "VP chốt điểm lớp",
             });
-            if (res?.success) {
-                toast.success(`Đã chốt ${res.data?.finalizedCount || 0} điểm!`);
+            const data = getMutationData(res);
+            if (isMutationSuccess(res)) {
+                toast.success(`Đã chốt ${data.finalizedCount || 0} điểm!`);
+                await refreshSelectedLockStatus();
+                if (selectedClass) await loadClassDetail(selectedClass);
             } else {
                 toast.error(res?.error || "Không thể chốt điểm.");
             }
@@ -179,6 +311,10 @@ export default function VpAcademicGrades() {
     useEffect(() => {
         let cancelled = false;
         setClassesLoading(true);
+        setClasses([]);
+        setSelectedClass(null);
+        setClassDetail(null);
+        setClassLockStatusMap({});
         classesService.listClasses({ schoolYearName: selectedSchoolYear })
             .then(rows => {
                 if (!cancelled) setClasses(rows);
@@ -188,48 +324,103 @@ export default function VpAcademicGrades() {
         return () => { cancelled = true; };
     }, [selectedSchoolYear]);
 
+    useEffect(() => {
+        if (classesLoading) return;
+        if (classes.length === 0) {
+            setSelectedClass(null);
+            return;
+        }
+
+        const stillExists = selectedClass && classes.some((cls) => String(cls.id) === String(selectedClass.id));
+        if (!stillExists) {
+            setSelectedClass(classes[0]);
+        }
+    }, [classes, classesLoading, selectedClass?.id]);
+
+    useEffect(() => {
+        if (!classes.length) {
+            setClassLockStatusMap({});
+            return undefined;
+        }
+
+        let cancelled = false;
+        const loadSidebarLockStatuses = async () => {
+            setLockStatusMapLoading(true);
+            try {
+                const semId = await resolveSemesterId(selectedSchoolYear, selectedTerm);
+                if (!semId) return;
+                const entries = await mapWithConcurrency(classes, 6, async (cls) => {
+                    try {
+                        const response = await gradeService.getLockStatus({ classId: cls.id, semesterId: semId });
+                        return [cls.id, normalizeLockStatus(response).status];
+                    } catch {
+                        return [cls.id, "draft"];
+                    }
+                });
+                if (!cancelled) {
+                    setClassLockStatusMap(Object.fromEntries(entries));
+                }
+            } finally {
+                if (!cancelled) setLockStatusMapLoading(false);
+            }
+        };
+
+        loadSidebarLockStatuses();
+        return () => { cancelled = true; };
+    }, [classes, selectedSchoolYear, selectedTerm]);
+
     // ── Load detail for selected class ─────────────────────────────
     const loadClassDetail = useCallback(async (cls) => {
         if (!cls?.id) return;
+        const requestId = detailRequestRef.current + 1;
+        detailRequestRef.current = requestId;
         setClassDetailLoading(true);
         setClassDetail(null);
+        setClassDetailProgress({ loaded: 0, total: 0 });
 
         try {
-            const [semesterId, schoolYearId] = await Promise.all([
-                resolveSemesterId(selectedSchoolYear, selectedTerm),
+            const [schoolYearId] = await Promise.all([
                 resolveSchoolYearId(selectedSchoolYear),
             ]);
-            const semValue = semesterId || (selectedTerm === "hk1" ? 1 : 2);
-
-            // Load students + GPA in parallel
             const studentsRaw = await studentsService.getClassStudents(cls.id, { schoolYearId }).catch(() => []);
             const studentsArr = Array.isArray(studentsRaw) ? studentsRaw : [];
 
-            const studentGpas = await Promise.all(
-                studentsArr.map(async (st) => {
-                    const enrollmentId = st.enrollmentId || st.id;
-                    const gpaRes = await gradeService.calculateSemesterGPA({ enrollmentId, semesterId: semValue }).catch(() => null);
-                    const classifyRes = await gradeService.classifySemester({ enrollmentId, semesterId: semValue }).catch(() => null);
-                    const conductRes = classifyRes?.data?.conduct;
+            if (requestId !== detailRequestRef.current) return;
+            setClassDetailProgress({ loaded: 0, total: studentsArr.length });
 
-                    const [hk1Res, hk2Res] = await Promise.all([
-                        gradeService.calculateSemesterGPA({ enrollmentId, semesterId: 1 }).catch(() => null),
-                        gradeService.calculateSemesterGPA({ enrollmentId, semesterId: 2 }).catch(() => null),
-                    ]);
+            if (studentsArr.length === 0) {
+                setClassDetail({
+                    students: [],
+                    gpa: null,
+                    gpaCount: 0,
+                    trend: "0.0",
+                    subjectPerf: [],
+                    semester1Gpa: null,
+                });
+                return;
+            }
 
-                    return {
-                        id: st.studentCode || st.id,
-                        name: st.name || `${st.surname || ""} ${st.givenName || ""}`.trim(),
-                        enrollmentId,
-                        avg: gpaRes?.gpa != null ? toScore(gpaRes.gpa) : null,
-                        conduct: conductRes?.level || conductRes?.description || null,
-                        hk1Gpa: hk1Res?.gpa != null ? toScore(hk1Res.gpa) : null,
-                        hk2Gpa: hk2Res?.gpa != null ? toScore(hk2Res.gpa) : null,
-                        yearIsComplete: gpaRes?.yearIsComplete ?? null,
-                        math: null, lit: null, eng: null, phy: null,
-                    };
-                })
-            );
+            const studentGpas = await mapWithConcurrency(studentsArr, 6, async (st) => {
+                const enrollmentId = st.enrollmentId || st.enrollment_id || st.id;
+                let reportCard = null;
+                try {
+                    reportCard = await gradeService.getReportCard(enrollmentId, { schoolYearId });
+                } catch (err) {
+                    console.warn("[VP Grades] Failed to load report card", { enrollmentId, err });
+                } finally {
+                    if (requestId === detailRequestRef.current) {
+                        setClassDetailProgress((prev) => ({
+                            ...prev,
+                            loaded: Math.min(prev.loaded + 1, prev.total || studentsArr.length),
+                            total: prev.total || studentsArr.length,
+                        }));
+                    }
+                }
+
+                return normalizeStudentReport(st, reportCard, selectedTerm);
+            });
+
+            if (requestId !== detailRequestRef.current) return;
 
             // Class GPA = average of student GPAs
             const gpaValues = studentGpas.map(s => s.avg).filter(v => v != null);
@@ -238,50 +429,18 @@ export default function VpAcademicGrades() {
                 : null;
 
             // Trend: compare with other semester
-            const otherSem = selectedTerm === "hk1" ? 2 : 1;
             let trend = "0.0";
-            if (gpaValues.length > 0 && schoolYearId) {
-                const otherStudentGpas = await Promise.all(
-                    studentsArr.map(async (st) => {
-                        const enrollmentId = st.enrollmentId || st.id;
-                        const r = await gradeService.calculateSemesterGPA({ enrollmentId, semesterId: otherSem }).catch(() => null);
-                        return r?.gpa != null ? toScore(r.gpa) : null;
-                    })
-                );
-                const otherVals = otherStudentGpas.filter(v => v != null);
-                const otherGpa = otherVals.length > 0
-                    ? otherVals.reduce((a, b) => a + b, 0) / otherVals.length
-                    : null;
-                if (otherGpa != null && classGpa != null) {
-                    trend = scoreTrend(otherGpa, classGpa);
-                }
+            const otherVals = studentGpas
+                .map((s) => selectedTerm === "hk1" ? s.hk2Gpa : s.hk1Gpa)
+                .filter(v => v != null);
+            const otherGpa = otherVals.length > 0
+                ? otherVals.reduce((a, b) => a + b, 0) / otherVals.length
+                : null;
+            if (otherGpa != null && classGpa != null) {
+                trend = scoreTrend(otherGpa, classGpa);
             }
 
-            // Subject performance: aggregate subject-level scores from student results
-            const subjectMap = {};
-            await Promise.all(
-                studentsArr.slice(0, 10).map(async (st) => {
-                    const enrollmentId = st.enrollmentId || st.id;
-                    const gpaRes = await gradeService.calculateSemesterGPA({ enrollmentId, semesterId: semValue }).catch(() => null);
-                    if (gpaRes?.results) {
-                        gpaRes.results.forEach(r => {
-                            if (!r.isGradedByScore) return;
-                            if (!subjectMap[r.subjectName]) {
-                                subjectMap[r.subjectName] = { sum: 0, count: 0 };
-                            }
-                            if (r.averageScore != null) {
-                                subjectMap[r.subjectName].sum += r.averageScore;
-                                subjectMap[r.subjectName].count++;
-                            }
-                        });
-                    }
-                })
-            );
-
-            const subjectPerf = Object.entries(subjectMap).map(([sub, { sum, count }]) => {
-                const avg = count > 0 ? toScore(sum / count) : null;
-                return { sub, avg, status: gradeColor(avg), trend: "stable" };
-            });
+            const subjectPerf = buildSubjectPerformance(studentGpas, selectedTerm);
 
             setClassDetail({
                 students: studentGpas,
@@ -292,25 +451,27 @@ export default function VpAcademicGrades() {
                 semester1Gpa: null,
             });
         } catch (err) {
+            if (requestId !== detailRequestRef.current) return;
             console.error("Failed to load class detail:", err);
             toast.error("Không thể tải chi tiết lớp");
         } finally {
-            setClassDetailLoading(false);
+            if (requestId === detailRequestRef.current) {
+                setClassDetailLoading(false);
+            }
         }
     }, [selectedSchoolYear, selectedTerm]);
 
     useEffect(() => {
-        let cancelled = false;
         if (selectedClass) {
-            loadClassDetail(selectedClass).then(() => { cancelled; });
+            loadClassDetail(selectedClass);
         }
-        return () => { cancelled = true; };
     }, [selectedClass, loadClassDetail]);
 
     // Reset pagination when tab or class changes
     useEffect(() => { setCurrentPage(1); }, [activeTableTab, selectedClass, studentSearch]);
 
     // ── Derived data ────────────────────────────────────────────────
+    const currentLockStats = normalizeLockStatus(lockStatusData);
     const filteredClasses = classes.filter(c => {
         const gradeNum = (c.grade || "").replace(/\D/g, "");
         const matchesGrade = filterGrade === "all" || gradeNum === filterGrade;
@@ -337,6 +498,9 @@ export default function VpAcademicGrades() {
     const upSubjects = (classDetail?.subjectPerf || []).filter(s => s.trend === "up");
     const downSubjects = (classDetail?.subjectPerf || []).filter(s => s.trend === "down");
     const summarySubjects = [...upSubjects.slice(0, 2), ...downSubjects.slice(0, 2)];
+    const visibleSubjectMetrics = summarySubjects.length > 0
+        ? summarySubjects
+        : classDetail?.subjectPerf?.slice(0, 6) || [];
 
     // Class status derived from GPA progress
     const selectedClassWithDetail = selectedClass
@@ -509,9 +673,11 @@ export default function VpAcademicGrades() {
                             </div>
                         ) : (
                             filteredClasses.map(cls => {
-                                const lockStatus = classLockStatusMap[cls.id] || "draft";
+                                const lockStatus = classLockStatusMap[cls.id] || (lockStatusMapLoading ? "checking" : "draft");
                                 const lockLabel = lockStatus === "finalized" ? "Đã chốt"
                                     : lockStatus === "pending" ? "Chờ duyệt"
+                                    : lockStatus === "mixed" ? "Trộn lẫn"
+                                    : lockStatus === "checking" ? "Đang kiểm tra"
                                     : "Bản nháp";
                                 return (
                                     <div
@@ -531,6 +697,8 @@ export default function VpAcademicGrades() {
                                                 <div className="info-status">
                                                     {lockStatus === "finalized" && <FiLock />}
                                                     {lockStatus === "pending" && <FiClock />}
+                                                    {lockStatus === "mixed" && <FiAlertTriangle />}
+                                                    {lockStatus === "checking" && <FiRefreshCw className="spin" />}
                                                     {lockStatus === "draft" && <FiActivity />}
                                                     <span>{lockLabel}</span>
                                                 </div>
@@ -568,6 +736,11 @@ export default function VpAcademicGrades() {
                     ) : classDetailLoading ? (
                         <div className="layout-loading-wrapper">
                             <LoadingSpinner size="lg" label="Đang đồng bộ dữ liệu học vụ..." role="admin" />
+                            {classDetailProgress.total > 0 && (
+                                <div className="vpa-loading-progress">
+                                    Đã tải {classDetailProgress.loaded}/{classDetailProgress.total} học bạ
+                                </div>
+                            )}
                         </div>
                     ) : (
                         <div className="vpa-analytics-container animate-fade-in">
@@ -576,9 +749,10 @@ export default function VpAcademicGrades() {
                                 <div className="ah-left">
                                     <div className="class-title-large">
                                         <h2>Chi tiết Học vụ: Lớp {selectedClassWithDetail.name}</h2>
-                                        <span className={`status-badge ${classLockStatus === "finalized" ? "locked" : classLockStatus === "pending" ? "pending" : classLockStatus === "draft" ? "progress" : "missing"}`}>
+                                        <span className={`status-badge ${classLockStatus === "finalized" ? "locked" : classLockStatus === "pending" || classLockStatus === "mixed" ? "pending" : classLockStatus === "draft" ? "progress" : "missing"}`}>
                                             {classLockStatus === "finalized" ? "Đã chốt"
                                                 : classLockStatus === "pending" ? "Chờ duyệt"
+                                                : classLockStatus === "mixed" ? "Trộn lẫn"
                                                 : classLockStatus === "draft" ? "Bản nháp"
                                                 : "Chưa rõ"}
                                         </span>
@@ -607,19 +781,20 @@ export default function VpAcademicGrades() {
                                         <FiRefreshCw className={isRefreshing ? "spin" : ""} />
                                         {isRefreshing ? "Đang tải..." : "Làm mới"}
                                     </button>
-                                    <span className={`vpa-lock-status-badge ${classLockStatus === "finalized" ? "badge-finalized" : classLockStatus === "pending" ? "badge-pending" : "badge-draft"}`}>
+                                    <span className={`vpa-lock-status-badge ${classLockStatus === "finalized" ? "badge-finalized" : classLockStatus === "pending" || classLockStatus === "mixed" ? "badge-pending" : "badge-draft"}`}>
                                         {classLockStatus === "finalized" ? "Điểm đã khóa"
                                             : classLockStatus === "pending" ? "Đang chờ khóa"
+                                            : classLockStatus === "mixed" ? "Có điểm nháp/chờ duyệt/đã khóa"
                                             : "Điểm đang ở chế độ nháp"}
                                     </span>
-                                    {classLockStatus === "finalized" && finalizedGradeIds.length > 0 && (
+                                    {currentLockStats.finalizedCount > 0 && (
                                         <button className="vpa-btn-unlock" onClick={() => setIsUnlockModalOpen(true)}>
-                                            <FiUnlock /> Mở khóa điểm
+                                            <FiUnlock /> Mở khóa ({currentLockStats.finalizedCount})
                                         </button>
                                     )}
-                                    {classLockStatus === "pending" && (
+                                    {currentLockStats.pendingCount > 0 && (
                                         <button className="vpa-btn-lock" onClick={handleLockAllClassGrades} disabled={isLocking}>
-                                            <FiLock /> {isLocking ? "Đang chốt..." : "Khóa điểm"}
+                                            <FiLock /> {isLocking ? "Đang chốt..." : `Khóa điểm (${currentLockStats.pendingCount})`}
                                         </button>
                                     )}
                                     <Button variant="outline" className="vpa-btn-icon" onClick={handleOpenRemindModal}><FiMail /> Nhắc GV</Button>
@@ -638,7 +813,7 @@ export default function VpAcademicGrades() {
                                 <div className="vpa-kpi-card">
                                     <div className="kpi-icon navy"><FiTrendingUp /></div>
                                     <div className="kpi-data">
-                                        <span className="kpi-label">GPA Trung Bình</span>
+                                        <span className="kpi-label">GPA {selectedTerm === "hk1" ? "Học kỳ 1" : "Học kỳ 2"}</span>
                                         <div className="kpi-value-row">
                                             <h3>{classDetail?.gpa ?? "—"}</h3>
                                             {classDetail?.gpa != null && (
@@ -717,18 +892,19 @@ export default function VpAcademicGrades() {
                                         </div>
                                     </div>
                                     <div className="metrics-grid custom-scrollbar">
-                                        {(summarySubjects.length > 0 ? summarySubjects : classDetail?.subjectPerf?.slice(0, 6) || []).map((s, i) => (
-                                            <div key={i} className={`metric-item ${s.status}`}>
-                                                <div className="m-left">
-                                                    <span className="m-sub">{s.sub}</span>
-                                                    <span className="m-avg">{s.avg ?? "—"}</span>
+                                        {visibleSubjectMetrics.length > 0 ? (
+                                            visibleSubjectMetrics.map((s, i) => (
+                                                <div key={i} className={`metric-item ${s.status}`}>
+                                                    <div className="m-left">
+                                                        <span className="m-sub">{s.sub}</span>
+                                                        <span className="m-avg">{s.avg ?? "—"}</span>
+                                                    </div>
+                                                    <div className={`m-trend ${s.trend}`}>
+                                                        {s.trend === "up" ? "▲" : s.trend === "down" ? "▼" : "●"}
+                                                    </div>
                                                 </div>
-                                                <div className={`m-trend ${s.trend}`}>
-                                                    {s.trend === "up" ? "▲" : s.trend === "down" ? "▼" : "●"}
-                                                </div>
-                                            </div>
-                                        ))}
-                                        {students.length === 0 && (
+                                            ))
+                                        ) : (
                                             <div style={{ color: "var(--admin-text-muted)", fontSize: "0.8rem", padding: "1rem" }}>Chưa có dữ liệu môn học</div>
                                         )}
                                     </div>
@@ -783,7 +959,7 @@ export default function VpAcademicGrades() {
                                                 </tr>
                                             ) : (
                                                 paginatedData.map((s, i) => (
-                                                    <tr key={i}>
+                                                    <tr key={s.enrollmentId || i}>
                                                         <td className="td-student">
                                                             <div className="st-info">
                                                                 <strong>{s.name}</strong>
@@ -791,25 +967,15 @@ export default function VpAcademicGrades() {
                                                             </div>
                                                         </td>
                                                         <td className={`sc-cell ${s.hk1Gpa != null && s.hk1Gpa < 5 ? 'danger' : ''}`}>
-                                                            {s.hk1Gpa != null ? (
-                                                                <>
-                                                                    {s.hk1Gpa}
-                                                                    {!s.yearIsComplete && <small className="gpa-provisional">(Tạm tính)</small>}
-                                                                </>
-                                                            ) : "—"}
+                                                            {s.hk1Gpa != null ? s.hk1Gpa : "—"}
                                                         </td>
                                                         <td className={`sc-cell ${s.hk2Gpa != null && s.hk2Gpa < 5 ? 'danger' : ''}`}>
-                                                            {s.hk2Gpa != null ? (
-                                                                <>
-                                                                    {s.hk2Gpa}
-                                                                    {!s.yearIsComplete && <small className="gpa-provisional">(Tạm tính)</small>}
-                                                                </>
-                                                            ) : "—"}
+                                                            {s.hk2Gpa != null ? s.hk2Gpa : "—"}
                                                         </td>
-                                                        <td className={`sc-cell ${s.avg != null && s.avg < 5 ? 'danger' : ''}`}>
-                                                            {s.avg != null ? (
+                                                        <td className={`sc-cell ${s.yearGpa != null && s.yearGpa < 5 ? 'danger' : ''}`}>
+                                                            {s.yearGpa != null ? (
                                                                 <>
-                                                                    {s.avg}
+                                                                    {s.yearGpa}
                                                                     {!s.yearIsComplete && <small className="gpa-provisional">(Tạm tính)</small>}
                                                                 </>
                                                             ) : "—"}

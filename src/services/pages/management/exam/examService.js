@@ -34,26 +34,64 @@ const examService = {
         return response;
     },
 
+    listRooms: async (examId) => {
+        if (!examId) return [];
+        const response = await axiosClient.get(`${EXAM_ENDPOINTS.BASE}/${examId}/rooms`);
+        return getRows(response);
+    },
+
+    getRoom: async (examId, roomId) => {
+        if (!examId || !roomId) return null;
+        const response = await axiosClient.get(`${EXAM_ENDPOINTS.BASE}/${examId}/rooms/${roomId}`);
+        return response?.data || response || null;
+    },
+
+    getRoomCatalog: async (examId) => {
+        const response = await axiosClient.get(`${EXAM_ENDPOINTS.BASE}/catalog`, {
+            params: examId ? { examId } : undefined,
+        });
+        return response?.data || response || { rooms: [], subjects: [], classes: [] };
+    },
+
+    createRoom: async (examId, roomData = {}) => {
+        const payload = {
+            room_name: roomData.roomName,
+            capacity: roomData.capacity,
+            exam_date: roomData.examDate,
+            start_time: roomData.startTime,
+            end_time: roomData.endTime,
+            subject_id: roomData.subjectId,
+            class_id: roomData.classId || null,
+        };
+        const response = await axiosClient.post(`${EXAM_ENDPOINTS.BASE}/${examId}/rooms`, payload);
+        return response;
+    },
+
     /**
      * Create a new exam
      * @param {Object} examData
      */
     createExam: async (examData = {}) => {
         const payload = {
-            title: examData.title,
+            name: examData.name || examData.title,
             semester_id: examData.semesterId,
             school_year_id: examData.schoolYearId,
             start_date: examData.startDate,
-            end_date: examData.endDate,
-            start_time: examData.startTime,
-            duration: examData.duration,
-            staff_arrival: examData.staffArrival,
-            exam_type: examData.examType,
-            target: examData.target,
-            subject_ids: examData.subjectIds,
+            end_date: examData.endDate || examData.startDate,
+            exam_type: examData.examType || "other",
             description: examData.description,
+            status: examData.status || "draft",
         };
         const response = await axiosClient.post(EXAM_ENDPOINTS.BASE, payload);
+        return response;
+    },
+
+    /**
+     * Publish an exam so it appears on calendars and sends notifications.
+     * @param {string} examId
+     */
+    publishExam: async (examId) => {
+        const response = await axiosClient.post(`${EXAM_ENDPOINTS.BASE}/${examId}/publish`);
         return response;
     },
 
@@ -75,7 +113,7 @@ const examService = {
             subject_ids: examData.subjectIds,
             description: examData.description,
         };
-        const response = await axiosClient.put(`${EXAM_ENDPOINTS.BASE}/${examId}`, payload);
+        const response = await axiosClient.patch(`${EXAM_ENDPOINTS.BASE}/${examId}`, payload);
         return response;
     },
 

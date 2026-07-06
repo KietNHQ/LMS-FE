@@ -5,6 +5,13 @@ const USER_BASE_ENDPOINTS = ["/users", "/auth/users"];
 const roleToApi = {
   "Quản trị viên": "admin",
   "Quản lý": "manager",
+  "Hiệu trưởng": "manager",
+  "Phó HT học vụ": "manager",
+  "Phó HT nề nếp": "manager",
+  "Giáo vụ": "manager",
+  "Tài chính": "manager",
+  "Tổ trưởng bộ môn": "manager",
+  "Khác": "manager",
   "Giáo viên": "teacher",
   "Học sinh": "student",
   "Phụ huynh": "guardian",
@@ -69,7 +76,11 @@ const requestWithEndpointFallback = async (builder) => {
 };
 
 const mapApiUserToView = (user = {}) => {
-  const roleLabel = roleFromApi[user.role] || user.role || "Học sinh";
+  const managerTitle = user.managerTitle || user.manager_title || user.profile?.title || null;
+  const roleLabel =
+    user.role === "manager" && managerTitle
+      ? managerTitle
+      : roleFromApi[user.role] || user.role || "Học sinh";
   let fullName = user.fullName || user.name || user.full_name || "";
   const rawDob = user.dob || user.birthDate || user.birth_date;
 
@@ -95,7 +106,11 @@ const mapApiUserToView = (user = {}) => {
     dob: rawDob ? `${rawDob}`.slice(0, 10) : "",
     avatar: getInitial(fullName),
     color: getColorByRole(roleLabel),
-    profile: user.profile || {},
+    position: managerTitle,
+    profile: {
+      ...(user.profile || {}),
+      title: managerTitle || user.profile?.title,
+    },
   };
 };
 
@@ -126,7 +141,12 @@ const buildCreatePayload = (formData = {}) => {
   } else if (role === "guardian") {
     payload.occupation = profile.occupation || null;
     payload.studentIds = profile.studentIds || [];
-  } else if (role === "manager" || role === "admin") {
+  } else if (role === "manager") {
+    payload.managerTitle = profile.title || formData.role || null;
+    payload.title = payload.managerTitle;
+    payload.permissions = profile.permission_ids || profile.permissions || [];
+  } else if (role === "admin") {
+    payload.managerTitle = null;
     payload.title = profile.title || null;
     payload.permissions = profile.permission_ids || profile.permissions || [];
   }
@@ -147,6 +167,10 @@ const buildUpdatePayload = (formData = {}) => {
     birthDate: dob || undefined,
     status: statusToApi[formData.status] || undefined,
     gender: formData.profile?.gender || undefined,
+    managerTitle:
+      roleToApi[formData.role] === "manager"
+        ? formData.profile?.title || formData.position || formData.role
+        : undefined,
     permissions: formData.permission_ids || formData.permissions || formData.profile?.permissions || undefined,
   };
 };
@@ -213,10 +237,10 @@ export const userService = {
     );
   },
 
-  resetPassword: async (userId, { adminPassword, newPassword }) => {
+  resetPassword: async (userId, { adminPassword, authPassword, newPassword }) => {
     return requestWithEndpointFallback((basePath) =>
       axiosClient.post(`${basePath}/${userId}/reset-password`, {
-        adminPassword,
+        adminPassword: adminPassword || authPassword,
         newPassword,
       })
     );
@@ -248,5 +272,3 @@ export const userService = {
   },
 
 };
-
-

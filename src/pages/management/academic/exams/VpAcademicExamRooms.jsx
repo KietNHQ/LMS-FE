@@ -1,173 +1,154 @@
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { FiArrowLeft, FiGrid, FiClock, FiUsers, FiHome, FiEdit3, FiInfo, FiPlus } from "react-icons/fi";
+import { useMemo, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import { FiArrowLeft, FiGrid, FiUsers, FiHome, FiEdit3, FiPlus } from "react-icons/fi";
 import { Pagination } from "../../../../components/common";
-import { Modal, Button, Input, Select } from "../../../../components/ui";
+import { Button, Input, Modal, Select } from "../../../../components/ui";
+import LoadingSpinner from "../../../../components/common/LoadingSpinner/LoadingSpinner";
 import { toast } from "react-toastify";
+import examService from "../../../../services/pages/management/exam/examService";
 import "./VpAcademicExamRooms.css";
+
+const ITEMS_PER_PAGE = 8;
+
+const getExamContext = (locationState) => {
+    const stored = sessionStorage.getItem("selected_exam_context");
+    const parsedStored = stored ? JSON.parse(stored) : {};
+    const context = {
+        examId: locationState?.examId || parsedStored.examId || null,
+        examName: locationState?.examName || parsedStored.examName || "",
+    };
+    if (context.examId) {
+        sessionStorage.setItem("selected_exam_context", JSON.stringify(context));
+    }
+    return context;
+};
+
+const formatDate = (value) => {
+    if (!value) return "—";
+    const date = new Date(value);
+    return Number.isNaN(date.getTime()) ? String(value) : date.toLocaleDateString("vi-VN");
+};
+
+const normalizeRoom = (room) => {
+    const supervisors = room.supervisors || [];
+    const supervisorNames = supervisors
+        .map((item) => item.teacher?.fullName || item.teacherName || item.fullName)
+        .filter(Boolean);
+    const studentCount = Number(room.studentCount ?? room.student_count ?? room.students ?? 0);
+    const capacity = Number(room.capacity ?? 0);
+    return {
+        id: room.id,
+        name: room.roomName || room.room_name || room.name || "Phòng thi",
+        students: studentCount,
+        capacity,
+        subjectName: room.subject?.name || "—",
+        className: room.class?.name || room.class?.className || "Không gắn lớp",
+        examDate: room.examDate || room.exam_date,
+        startTime: room.startTime || room.start_time || "",
+        endTime: room.endTime || room.end_time || "",
+        supervisors: supervisorNames,
+        status: capacity > 0 && studentCount >= capacity ? "Đã xếp" : "Chưa đủ",
+    };
+};
+
+const toSelectOptions = (rows = []) =>
+    rows.map((row) => ({
+        value: row.id,
+        label: row.label || row.name,
+    }));
 
 export default function VpAcademicExamRooms() {
     const navigate = useNavigate();
-    const [activeTab, setActiveTab] = useState("rooms");
+    const location = useLocation();
+    const { examId, examName } = useMemo(() => getExamContext(location.state), [location.state]);
     const [currentPage, setCurrentPage] = useState(1);
     const [isRoomModalOpen, setIsRoomModalOpen] = useState(false);
-    const [selectedRoom, setSelectedRoom] = useState(null);
-    const [roomForm, setRoomForm] = useState({ name: '', students: 30, subject: 'all', supervisor1: '', supervisor2: '' });
-    const itemsPerPage = 8;
+    const [roomForm, setRoomForm] = useState({
+        physicalRoomId: "",
+        roomName: "",
+        capacity: "",
+        examDate: "",
+        startTime: "",
+        endTime: "",
+        subjectId: "",
+        classId: "",
+    });
 
-    const SUBJECTS_LIST = [
-        { value: 'all', label: 'Tất cả môn' },
-        { value: 'Toán', label: 'Toán học' },
-        { value: 'Vật lý', label: 'Vật lý' },
-        { value: 'Hóa học', label: 'Hóa học' },
-        { value: 'Ngữ văn', label: 'Ngữ văn' },
-        { value: 'Lịch sử', label: 'Lịch sử' },
-    ];
+    const { data: rooms = [], isLoading, error, refetch } = useQuery({
+        queryKey: ["exam-rooms", examId],
+        queryFn: () => examService.listRooms(examId),
+        enabled: Boolean(examId),
+        staleTime: 60_000,
+    });
 
-    const SUPERVISORS_LIST = [
-        { value: 'Nguyễn Văn A', label: '[Toán] Nguyễn Văn A' },
-        { value: 'Trần Thị B', label: '[Toán] Trần Thị B' },
-        { value: 'Lê Văn C', label: '[Vật lý] Lê Văn C' },
-        { value: 'Phạm Thị D', label: '[Vật lý] Phạm Thị D' },
-        { value: 'Hoàng Văn E', label: '[Hóa học] Hoàng Văn E' },
-        { value: 'Vũ Thị F', label: '[Hóa học] Vũ Thị F' },
-        { value: 'Đặng Văn G', label: '[Ngữ văn] Đặng Văn G' },
-        { value: 'Bùi Thị H', label: '[Ngữ văn] Bùi Thị H' },
-        { value: 'Ngô Văn I', label: '[Lịch sử] Ngô Văn I' },
-        { value: 'Lý Thị K', label: '[Lịch sử] Lý Thị K' },
-    ].sort((a, b) => a.label.localeCompare(b.label));
+    const { data: catalog = { rooms: [], subjects: [], classes: [] }, isLoading: isCatalogLoading } = useQuery({
+        queryKey: ["exam-room-catalog", examId],
+        queryFn: () => examService.getRoomCatalog(examId),
+        enabled: Boolean(examId),
+        staleTime: 5 * 60_000,
+    });
 
-    const rooms = [
-        { id: "P01", name: "Phòng 101", students: 30, supervisors: ["Nguyễn Văn A", "Trần Thị B"], status: "Đã xếp" },
-        { id: "P02", name: "Phòng 102", students: 30, supervisors: ["Lê Văn C", "Phạm Thị D"], status: "Đã xếp" },
-        { id: "P03", name: "Phòng 103", students: 30, supervisors: ["Hoàng Văn E", "Vũ Thị F"], status: "Đã xếp" },
-        { id: "P04", name: "Phòng 104", students: 25, supervisors: ["Đặng Văn G", "Bùi Thị H"], status: "Chưa đủ" },
-        { id: "P05", name: "Phòng 201", students: 30, supervisors: ["Ngô Văn I", "Lý Thị K"], status: "Đã xếp" },
-        { id: "P06", name: "Phòng 202", students: 30, supervisors: ["Phan Văn L", "Đỗ Thị M"], status: "Đã xếp" },
-        { id: "P07", name: "Phòng 203", students: 30, supervisors: ["Trương Văn N", "Lâm Thị O"], status: "Đã xếp" },
-        { id: "P08", name: "Phòng 204", students: 30, supervisors: ["Hồ Văn P", "Dương Thị Q"], status: "Đã xếp" },
-        { id: "P09", name: "Phòng 301", students: 30, supervisors: ["Phí Văn R", "Mai Thị S"], status: "Đã xếp" },
-        { id: "P10", name: "Phòng 302", students: 30, supervisors: ["Võ Văn T", "Đoàn Thị U"], status: "Đã xếp" },
-        { id: "P11", name: "Phòng 303", students: 30, supervisors: ["Tôn Văn V", "Lý Thị X"], status: "Đã xếp" },
-        { id: "P12", name: "Phòng 304", students: 30, supervisors: ["Châu Văn Y", "Trịnh Thị Z"], status: "Đã xếp" },
-        { id: "P13", name: "Phòng 401", students: 30, supervisors: ["Đinh Văn Â", "Mạc Thị Ă"], status: "Đã xếp" },
-        { id: "P14", name: "Phòng 402", students: 30, supervisors: ["Lư Văn Ê", "Tào Thị Ô"], status: "Đã xếp" },
-        { id: "P15", name: "Phòng 403", students: 30, supervisors: ["Thạch Văn Ơ", "Lại Thị Ư"], status: "Chưa xếp" },
-    ];
+    const normalizedRooms = useMemo(() => rooms.map(normalizeRoom), [rooms]);
+    const physicalRooms = catalog.rooms || [];
+    const subjects = catalog.subjects || [];
+    const classes = catalog.classes || [];
+    const roomOptions = useMemo(() => toSelectOptions(physicalRooms), [physicalRooms]);
+    const subjectOptions = useMemo(() => toSelectOptions(subjects), [subjects]);
+    const classOptions = useMemo(
+        () => [
+            { value: "", label: "Không gắn lớp cụ thể" },
+            ...toSelectOptions(classes),
+        ],
+        [classes],
+    );
+    const totalPages = Math.ceil(normalizedRooms.length / ITEMS_PER_PAGE) || 1;
+    const paginatedRooms = normalizedRooms.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
+    const totalStudents = normalizedRooms.reduce((sum, room) => sum + room.students, 0);
+    const totalSupervisors = normalizedRooms.reduce((sum, room) => sum + room.supervisors.length, 0);
 
     const stats = [
-        { label: "Tổng số phòng", value: "15", icon: <FiHome />, color: "#34d399" },
-        { label: "Cán bộ coi thi", value: "30", icon: <FiUsers />, color: "#3b82f6" },
-        { label: "Tổng thí sinh", value: "450", icon: <FiUsers />, color: "#8b5cf6" },
+        { label: "Tổng số phòng", value: normalizedRooms.length, icon: <FiHome />, color: "#34d399" },
+        { label: "Cán bộ coi thi", value: totalSupervisors, icon: <FiUsers />, color: "#3b82f6" },
+        { label: "Tổng thí sinh", value: totalStudents, icon: <FiUsers />, color: "#8b5cf6" },
     ];
 
-    const filteredSupervisors = (() => {
-        const assignedSupervisors = new Set(rooms.flatMap(r => r.supervisors));
-        const list = roomForm.subject !== 'all' 
-            ? SUPERVISORS_LIST.filter(s => s.label.includes(`[${roomForm.subject}]`))
-            : SUPERVISORS_LIST;
-            
-        return list.map(s => ({
-            ...s,
-            label: assignedSupervisors.has(s.value) ? `${s.label} - (Đang bận)` : s.label,
-            disabled: assignedSupervisors.has(s.value) // Optional: disable if your component supports it
-        }));
-    })();
-
-    const handleRandomizeSupervisors = () => {
-        const assignedSupervisors = new Set(rooms.flatMap(r => r.supervisors));
-        const available = filteredSupervisors.filter(s => !assignedSupervisors.has(s.value));
-
-        if (available.length < 2) {
-            toast.warn(`Không đủ giám thị rảnh của môn ${roomForm.subject === 'all' ? 'này' : roomForm.subject} để chọn ngẫu nhiên! (Cần 2 người)`);
-            return;
-        }
-
-        const shuffled = [...available].sort(() => 0.5 - Math.random());
-        setRoomForm(prev => ({
-            ...prev,
-            supervisor1: shuffled[0].value,
-            supervisor2: shuffled[1].value
-        }));
-        toast.info("Đã chọn ngẫu nhiên 2 giám thị chưa có lịch coi thi.");
+    const openRoom = (roomId) => {
+        navigate(`/management/exams/rooms/${roomId}`, { state: { examId, examName } });
     };
 
-    const handleOpenRoomModal = (room = null) => {
-        if (room) {
-            setSelectedRoom(room);
-            setRoomForm({
-                name: room.name,
-                students: room.students,
-                subject: 'all',
-                supervisor1: room.supervisors[0] || '',
-                supervisor2: room.supervisors[1] || ''
+    const handleSaveRoom = async () => {
+        if (!examId) {
+            toast.error("Vui lòng chọn kỳ thi trước khi tạo phòng.");
+            return;
+        }
+        if (!roomForm.roomName.trim() || !roomForm.examDate || !roomForm.startTime || !roomForm.endTime || !roomForm.subjectId) {
+            toast.warning("Vui lòng chọn phòng thi, ngày thi, giờ thi và môn thi.");
+            return;
+        }
+        try {
+            await examService.createRoom(examId, {
+                ...roomForm,
+                capacity: Number(roomForm.capacity) || 0,
+                subjectId: Number(roomForm.subjectId),
+                classId: roomForm.classId ? Number(roomForm.classId) : null,
             });
-        } else {
-            setSelectedRoom(null);
-            setRoomForm({ name: '', students: 30, subject: 'all', supervisor1: '', supervisor2: '' });
+            toast.success("Đã tạo phòng thi.");
+            setIsRoomModalOpen(false);
+            setRoomForm({
+                physicalRoomId: "",
+                roomName: "",
+                capacity: "",
+                examDate: "",
+                startTime: "",
+                endTime: "",
+                subjectId: "",
+                classId: "",
+            });
+            refetch();
+        } catch (createError) {
+            toast.error(createError?.response?.data?.message || createError?.message || "Không thể tạo phòng thi.");
         }
-        setIsRoomModalOpen(true);
-    };
-
-    const handleSaveRoom = () => {
-        if (!roomForm.name.trim()) {
-            toast.warning("Vui lòng nhập tên phòng thi!");
-            return;
-        }
-
-        const isDuplicate = rooms.some(r => 
-            r.name.toLowerCase() === roomForm.name.toLowerCase() && 
-            r.id !== selectedRoom?.id
-        );
-
-        if (isDuplicate) {
-            toast.error(`Tên "${roomForm.name}" đã tồn tại. Vui lòng chọn tên khác!`);
-            return;
-        }
-
-        const action = selectedRoom ? "Cập nhật" : "Tạo mới";
-        toast.success(`${action} phòng thi thành công!`);
-        setIsRoomModalOpen(false);
-    };
-
-    const totalPages = Math.ceil(rooms.length / itemsPerPage);
-    const paginatedRooms = rooms.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
-
-    const schedule = [
-        { time: "07:30 - 09:30", subject: "Toán học", date: "25/11/2026", type: "Tự luận", status: "Sẵn sàng" },
-        { time: "14:00 - 15:30", subject: "Ngữ văn", date: "25/11/2026", type: "Tự luận", status: "Sẵn sàng" },
-        { time: "08:00 - 09:00", subject: "Tiếng Anh", date: "26/11/2026", type: "Trắc nghiệm", status: "Chưa chốt" },
-        { time: "14:00 - 15:30", subject: "Vật lý", date: "26/11/2026", type: "Trắc nghiệm", status: "Chưa chốt" },
-    ];
-
-    const handleSendNotifications = () => {
-        const incompleteRooms = rooms.filter(r => r.status !== 'Đã xếp');
-        
-        if (incompleteRooms.length > 0) {
-            toast.error(
-                <div>
-                    <strong>Cảnh báo:</strong> Có {incompleteRooms.length} phòng chưa hoàn tất (Chưa đủ sĩ số hoặc chưa có giám thị). 
-                    Vui lòng hoàn thiện xếp phòng trước khi gửi thông báo!
-                </div>,
-                { autoClose: 5000 }
-            );
-            return;
-        }
-
-        const newNotif = {
-            id: Date.now(),
-            title: "Thông báo Lịch thi & Phân phòng thi",
-            desc: "Hệ thống đã hoàn tất việc phân phòng và gán giám thị cho kỳ thi 'Thi Giữa Học Kỳ II - Môn Toán - Khối 12'. Đề nghị các giáo viên coi thi và học sinh theo dõi lịch chi tiết.",
-            type: "directive",
-            isRead: true,
-            time: "Vừa xong",
-            audience: "all_teachers"
-        };
-
-        const existing = JSON.parse(localStorage.getItem('vpa_notifications') || '[]');
-        localStorage.setItem('vpa_notifications', JSON.stringify([newNotif, ...existing]));
-
-        toast.success("Đã gửi thông báo lịch thi và phòng thi chi tiết cho toàn bộ 450 học sinh & 30 giám thị!");
     };
 
     return (
@@ -178,182 +159,166 @@ export default function VpAcademicExamRooms() {
                 </button>
                 <div className="header-info">
                     <h1>Phân phòng & Lịch thi</h1>
-                    <span className="exam-name">Thi Giữa Học Kỳ II - Môn Toán - Khối 12</span>
+                    <span className="exam-name">{examName || "Chưa chọn kỳ thi"}</span>
                 </div>
             </div>
 
-            <div className="vpa-rooms-stats">
-                {stats.map((stat, i) => (
-                    <div key={i} className="stat-card">
-                        <div className="stat-icon" style={{ backgroundColor: stat.color + '20', color: stat.color }}>
-                            {stat.icon}
+            {!examId ? (
+                <div className="vpa-empty-state">
+                    <FiGrid />
+                    <h3>Chưa có kỳ thi được chọn</h3>
+                    <p>Vui lòng mở từ trang danh sách kỳ thi để xem phòng thi thực tế.</p>
+                </div>
+            ) : (
+                <>
+                    <div className="vpa-rooms-stats">
+                        {stats.map((stat) => (
+                            <div key={stat.label} className="stat-card">
+                                <div className="stat-icon" style={{ backgroundColor: `${stat.color}20`, color: stat.color }}>
+                                    {stat.icon}
+                                </div>
+                                <div className="stat-details">
+                                    <span className="label">{stat.label}</span>
+                                    <span className="value">{stat.value}</span>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+
+                    <div className="vpa-rooms-tabs" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem" }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+                            <FiGrid style={{ color: "var(--admin-primary)", fontSize: "1.25rem" }} />
+                            <span style={{ fontWeight: 800, color: "var(--admin-navy)", fontSize: "1.1rem" }}>Danh sách phòng thi</span>
                         </div>
-                        <div className="stat-details">
-                            <span className="label">{stat.label}</span>
-                            <span className="value">{stat.value}</span>
+                        <div style={{ display: "flex", gap: "1rem" }}>
+                            <Button className="vpa-btn-glow" onClick={() => setIsRoomModalOpen(true)}>
+                                <FiPlus /> Tạo phòng thi
+                            </Button>
                         </div>
                     </div>
-                ))}
-            </div>
 
-            <div className="vpa-rooms-tabs" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                    <FiGrid style={{ color: 'var(--admin-primary)', fontSize: '1.25rem' }} />
-                    <span style={{ fontWeight: 800, color: 'var(--admin-navy)', fontSize: '1.1rem' }}>Danh sách phòng thi</span>
-                </div>
-                <div style={{ display: 'flex', gap: '1rem' }}>
-                    <Button 
-                        variant="outline" 
-                        onClick={handleSendNotifications} 
-                        style={{ 
-                            borderColor: '#3b82f6', 
-                            color: '#3b82f6', 
-                            borderRadius: '8px',
-                            background: '#fff',
-                            boxShadow: '0 2px 4px rgba(59, 130, 246, 0.1)',
-                            fontWeight: 700,
-                            transition: 'all 0.2s ease'
-                        }}
-                        onMouseEnter={(e) => {
-                            e.currentTarget.style.background = '#eff6ff';
-                            e.currentTarget.style.boxShadow = '0 4px 8px rgba(59, 130, 246, 0.15)';
-                            e.currentTarget.style.transform = 'translateY(-1px)';
-                        }}
-                        onMouseLeave={(e) => {
-                            e.currentTarget.style.background = '#fff';
-                            e.currentTarget.style.boxShadow = '0 2px 4px rgba(59, 130, 246, 0.1)';
-                            e.currentTarget.style.transform = 'translateY(0)';
-                        }}
-                    >
-                        <FiPlus /> Gửi thông báo
-                    </Button>
-                    <Button className="vpa-btn-glow" onClick={() => handleOpenRoomModal()} style={{ borderRadius: '8px' }}>
-                        <FiPlus /> Tạo phòng thi
-                    </Button>
-                </div>
-            </div>
-
-            <div className="vpa-rooms-content">
-                <div className="rooms-grid">
-                    {paginatedRooms.map((room, i) => (
-                        <div 
-                            key={i} 
-                            className="room-card" 
-                            onClick={() => navigate(`/management/exams/rooms/${room.id}`)}
-                            style={{ cursor: 'pointer', transition: 'all 0.2s' }}
-                            onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-2px)'}
-                            onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
-                        >
-                            <div className="room-header">
-                                <h3>{room.name}</h3>
-                                <span className={`status-pill ${room.status === 'Đã xếp' ? 'ok' : 'warn'}`}>
-                                    {room.status}
-                                </span>
+                    <div className="vpa-rooms-content">
+                        {isLoading ? (
+                            <div className="vpa-empty-state">
+                                <LoadingSpinner size="lg" label="Đang tải phòng thi..." />
                             </div>
-                            <div className="room-body">
-                                <div className="body-row">
-                                    <FiUsers /> <span>Sĩ số: <strong>{room.students} thí sinh</strong></span>
-                                </div>
-                                <div className="body-row proctors">
-                                    <FiEdit3 /> 
-                                    <div className="proctor-list">
-                                        <span>Giám thị:</span>
-                                        {room.supervisors.map((s, idx) => <strong key={idx}>{s}</strong>)}
+                        ) : error ? (
+                            <div className="vpa-empty-state">
+                                <h3>Không thể tải phòng thi</h3>
+                                <p>{error.message || "Vui lòng thử lại sau."}</p>
+                            </div>
+                        ) : paginatedRooms.length === 0 ? (
+                            <div className="vpa-empty-state">
+                                <FiGrid />
+                                <h3>Chưa có phòng thi</h3>
+                                <p>Kỳ thi này chưa có phòng thi nào trong cơ sở dữ liệu.</p>
+                            </div>
+                        ) : (
+                            <div className="rooms-grid">
+                                {paginatedRooms.map((room) => (
+                                    <div
+                                        key={room.id}
+                                        className="room-card"
+                                        onClick={() => openRoom(room.id)}
+                                        style={{ cursor: "pointer", transition: "all 0.2s" }}
+                                    >
+                                        <div className="room-header">
+                                            <h3>{room.name}</h3>
+                                            <span className={`status-pill ${room.status === "Đã xếp" ? "ok" : "warn"}`}>{room.status}</span>
+                                        </div>
+                                        <div className="room-body">
+                                            <div className="body-row">
+                                                <FiGrid /> <span>Môn thi: <strong>{room.subjectName}</strong></span>
+                                            </div>
+                                            <div className="body-row">
+                                                <FiHome /> <span>Phòng vật lý: <strong>{room.name}</strong></span>
+                                            </div>
+                                            <div className="body-row">
+                                                <FiUsers /> <span>Lớp dự thi: <strong>{room.className}</strong></span>
+                                            </div>
+                                            <div className="body-row">
+                                                <FiEdit3 /> <span>Ca thi: <strong>{formatDate(room.examDate)} {room.startTime} - {room.endTime}</strong></span>
+                                            </div>
+                                            <div className="body-row">
+                                                <FiUsers /> <span>Sĩ số: <strong>{room.students}/{room.capacity || "—"} thí sinh</strong></span>
+                                            </div>
+                                            <div className="body-row proctors">
+                                                <FiEdit3 />
+                                                <div className="proctor-list">
+                                                    <span>Giám thị:</span>
+                                                    {room.supervisors.length > 0
+                                                        ? room.supervisors.map((name) => <strong key={name}>{name}</strong>)
+                                                        : <strong>Chưa phân công</strong>}
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div className="room-footer">
+                                            <button className="btn-action-small" type="button">Xem chi tiết</button>
+                                        </div>
                                     </div>
-                                </div>
+                                ))}
                             </div>
-                            <div className="room-footer">
-                                <button 
-                                     className="btn-action-small" 
-                                     onClick={(e) => {
-                                         e.stopPropagation();
-                                         navigate(`/management/exams/rooms/${room.id}`);
-                                     }}
-                                 >
-                                     Điều chỉnh
-                                 </button>
+                        )}
+                        {totalPages > 1 && (
+                            <div style={{ marginTop: "2rem", display: "flex", justifyContent: "center" }}>
+                                <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} />
                             </div>
-                        </div>
-                    ))}
-                </div>
-                {totalPages > 1 && (
-                    <div style={{ marginTop: '2rem', display: 'flex', justifyContent: 'center' }}>
-                        <Pagination 
-                            currentPage={currentPage}
-                            totalPages={totalPages}
-                            onPageChange={setCurrentPage}
-                        />
+                        )}
                     </div>
-                )}
-            </div>
-            <Modal 
-                open={isRoomModalOpen} 
-                onClose={() => setIsRoomModalOpen(false)}
-                title={selectedRoom ? "Điều chỉnh phòng thi" : "Tạo phòng thi mới"}
-                className="vpa-exam-room-modal"
-            >
+                </>
+            )}
+
+            <Modal open={isRoomModalOpen} onClose={() => setIsRoomModalOpen(false)} title="Tạo phòng thi mới" className="vpa-exam-room-modal">
                 <div className="vpa-room-modal-form">
-                    <div className="form-group-vpa">
-                        <Input 
-                            label="Tên phòng" 
-                            value={roomForm.name}
-                            onChange={(e) => setRoomForm({...roomForm, name: e.target.value})}
-                            placeholder="VD: Phòng 101"
-                        />
-                    </div>
-
-                    <div className="form-row-vpa filter-row">
-                        <div className="filter-select-wrap">
-                            <Select 
-                                label="Lọc giám thị theo môn"
-                                options={SUBJECTS_LIST}
-                                value={roomForm.subject}
-                                onChange={(e) => setRoomForm({...roomForm, subject: e.target.value, supervisor1: '', supervisor2: ''})}
-                            />
-                        </div>
-                        <Button 
-                            variant="outline" 
-                            className="vpa-btn-random"
-                            onClick={handleRandomizeSupervisors} 
-                        >
-                            <FiUsers /> <span>Chọn ngẫu nhiên</span>
-                        </Button>
-                    </div>
-
+                    <Select
+                        label="Phòng thi"
+                        variant="custom"
+                        searchable
+                        searchPlaceholder="Tìm phòng thi..."
+                        placeholder={isCatalogLoading ? "Đang tải phòng..." : "Chọn phòng thi"}
+                        options={roomOptions}
+                        value={roomForm.physicalRoomId}
+                        onChange={(event) => {
+                            const physicalRoom = physicalRooms.find((room) => String(room.id) === String(event.target.value));
+                            setRoomForm({
+                                ...roomForm,
+                                physicalRoomId: event.target.value,
+                                roomName: physicalRoom?.name || "",
+                                capacity: physicalRoom?.capacity || roomForm.capacity,
+                            });
+                        }}
+                    />
+                    <p className="room-field-note">
+                        Đây là phòng vật lý từ bảng phòng học. Ví dụ 12A1 ở đây là tên phòng, không phải lớp 12A1.
+                    </p>
                     <div className="form-row-vpa grid-2">
-                        <div className="select-col">
-                            <Select 
-                                label="Giám thị 1"
-                                variant="custom"
-                                searchable={true}
-                                searchPlaceholder="Tìm tên..."
-                                options={filteredSupervisors}
-                                value={roomForm.supervisor1}
-                                onChange={(e) => setRoomForm({...roomForm, supervisor1: e.target.value})}
-                            />
-                        </div>
-                        <div className="select-col">
-                            <Select 
-                                label="Giám thị 2"
-                                variant="custom"
-                                searchable={true}
-                                searchPlaceholder="Tìm tên..."
-                                options={filteredSupervisors}
-                                value={roomForm.supervisor2}
-                                onChange={(e) => setRoomForm({...roomForm, supervisor2: e.target.value})}
-                            />
-                        </div>
-                    </div>
-
-                    <div className="form-group-vpa">
-                        <Input 
-                            label="Số lượng thí sinh" 
-                            type="number"
-                            value={roomForm.students}
-                            onChange={(e) => setRoomForm({...roomForm, students: parseInt(e.target.value) || 0})}
+                        <Input label="Sức chứa" type="number" value={roomForm.capacity} onChange={(e) => setRoomForm({ ...roomForm, capacity: e.target.value })} />
+                        <Select
+                            label="Môn thi"
+                            variant="custom"
+                            searchable
+                            searchPlaceholder="Tìm môn thi..."
+                            placeholder={isCatalogLoading ? "Đang tải môn..." : "Chọn môn thi"}
+                            options={subjectOptions}
+                            value={roomForm.subjectId}
+                            onChange={(e) => setRoomForm({ ...roomForm, subjectId: e.target.value })}
                         />
                     </div>
-
+                    <Select
+                        label="Lớp dự thi"
+                        variant="custom"
+                        searchable
+                        searchPlaceholder="Tìm lớp..."
+                        placeholder="Không gắn lớp cụ thể"
+                        options={classOptions}
+                        value={roomForm.classId}
+                        onChange={(e) => setRoomForm({ ...roomForm, classId: e.target.value })}
+                    />
+                    <div className="form-row-vpa grid-2">
+                        <Input label="Ngày thi" type="date" value={roomForm.examDate} onChange={(e) => setRoomForm({ ...roomForm, examDate: e.target.value })} />
+                        <Input label="Giờ bắt đầu" type="time" value={roomForm.startTime} onChange={(e) => setRoomForm({ ...roomForm, startTime: e.target.value })} />
+                    </div>
+                    <Input label="Giờ kết thúc" type="time" value={roomForm.endTime} onChange={(e) => setRoomForm({ ...roomForm, endTime: e.target.value })} />
                     <div className="modal-footer-vpa">
                         <Button variant="outline" onClick={() => setIsRoomModalOpen(false)}>Hủy</Button>
                         <Button primary className="vpa-btn-glow" onClick={handleSaveRoom}>Lưu thông tin</Button>
@@ -363,4 +328,3 @@ export default function VpAcademicExamRooms() {
         </div>
     );
 }
-

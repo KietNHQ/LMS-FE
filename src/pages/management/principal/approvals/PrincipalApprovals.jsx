@@ -12,12 +12,11 @@ import {
 } from "react-icons/fi";
 import { toast } from "react-toastify";
 import { io } from "socket.io-client";
+import { getSocketBaseUrl } from "../../../../services/shared/http/apiBaseUrl";
+import { formatDateTimeVi, formatDateVi } from "../../../../utils/dateUtils";
 import "./PrincipalApprovals.css";
 
-const getSocketUrl = () => {
-    const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:3000/api/v1";
-    return apiUrl.replace("/api/v1", "");
-};
+const getSocketUrl = getSocketBaseUrl;
 
 const getToken = () => {
     const storedUser = JSON.parse(localStorage.getItem("user") || sessionStorage.getItem("user") || "{}");
@@ -130,7 +129,6 @@ export default function PrincipalApprovals() {
   const [activeSection, setActiveSection] = useState("all");
   const [activeStatus, setActiveStatus] = useState("pending");
   const [searchTerm, setSearchTerm] = useState("");
-  const [items, setItems] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedItem, setSelectedItem] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -139,10 +137,10 @@ export default function PrincipalApprovals() {
   const [unlockApproveModal, setUnlockApproveModal] = useState({ open: false, request: null, hours: 1, notes: "" });
   const [unlockPage, setUnlockPage] = useState(1);
   const [unlockGradeLevel, setUnlockGradeLevel] = useState(null);
+  const [gradeApprovalGradeLevel, setGradeApprovalGradeLevel] = useState(null);
   const unlockPageSize = 10;
-  const [gradeApprovals, setGradeApprovals] = useState([]);
-  const [gradeApprovalsLoading, setGradeApprovalsLoading] = useState(false);
   const [selectedGradeApprovals, setSelectedGradeApprovals] = useState([]);
+  const queryClient = useQueryClient();
 
   const itemsPerPage = 6;
   const sectionLabel = selectedTerm === "hk1" ? "Học kỳ 1" : "Học kỳ 2";
@@ -152,10 +150,29 @@ export default function PrincipalApprovals() {
     queryFn: () => managementLeaveService.getLeaveRequests({ status: activeStatus, limit: 100 }),
   });
 
-  // Map API response to WORK_ITEMS shape
-  useEffect(() => {
-    if (!leaveResponse?.data) return;
-    const mappedLeaves = leaveResponse.data.map(req => ({
+  const { data: gradeApprovalsResponse, isFetching: gradeApprovalsLoading } = useQuery({
+    queryKey: ["principal-grade-approvals", activeSection, selectedTerm, gradeApprovalGradeLevel, activeStatus],
+    queryFn: () => teacherService.getPendingGradeApprovals({
+      params: {
+        semesterId: selectedTerm === "hk1" ? 1 : 2,
+        gradeLevelId: gradeApprovalGradeLevel || undefined,
+        status: activeStatus === "all" ? undefined : activeStatus,
+      },
+      mock: false,
+    }),
+    enabled: activeSection === "grades" || activeSection === "all",
+  });
+
+  const gradeApprovals = useMemo(() => {
+    if (gradeApprovalsResponse?.success && Array.isArray(gradeApprovalsResponse?.data?.items)) {
+      return gradeApprovalsResponse.data.items;
+    }
+    return [];
+  }, [gradeApprovalsResponse]);
+
+  const items = useMemo(() => {
+    const leaveRequests = Array.isArray(leaveResponse?.data) ? leaveResponse.data : [];
+    const mappedLeaves = leaveRequests.map(req => ({
       id: String(req.id),
       section: "leave",
       sectionLabel: "Đơn xin phép",
@@ -163,8 +180,8 @@ export default function PrincipalApprovals() {
       reference: `#LR-${String(req.id).slice(0, 6).toUpperCase()}`,
       requester: `Phụ huynh ${req.guardianName || ""}`,
       summary: `Lý do: ${req.reason}`,
-      description: `Học sinh: ${req.studentName || req.student?.fullName || ""}\nMã HS: ${req.studentCode || ""}\nLớp: ${req.className || ""}\nThời gian nghỉ: Từ ${req.startDate} đến ${req.endDate}\nSố ngày: ${req.totalDays || 1}\nLý do: ${req.reason}\n\nGhi chú phụ huynh: ${req.note || "Không có"}\n\nÝ kiến BGH: ${req.adminNotes || "Chưa có"}\nNgười duyệt: ${req.reviewedByName || "Chưa xử lý"}\nLúc: ${req.reviewedAt || ""}`,
-      time: req.createdAt ? new Date(req.createdAt).toLocaleDateString("vi-VN") : "Hôm nay",
+      description: `Học sinh: ${req.studentName || req.student?.fullName || ""}\nMã HS: ${req.studentCode || ""}\nLớp: ${req.className || ""}\nThời gian nghỉ: Từ ${formatDateVi(req.startDate)} đến ${formatDateVi(req.endDate)}\nSố ngày: ${req.totalDays || 1}\nLý do: ${req.reason}\n\nGhi chú phụ huynh: ${req.note || req.notes || "Không có"}\n\nÝ kiến BGH: ${req.adminNotes || "Chưa có"}\nNgười duyệt: ${req.reviewedByName || "Chưa xử lý"}\nLúc: ${formatDateTimeVi(req.reviewedAt, "")}`,
+      time: req.createdAt ? formatDateVi(req.createdAt) : "Hôm nay",
       dueAt: "Sớm nhất",
       priority: req.status === "pending" ? "Cao" : "Trung bình",
       status: req.status || "pending",
@@ -188,12 +205,9 @@ export default function PrincipalApprovals() {
         gradeId: g.gradeId,
       }))
     );
-    
-    setItems([...mappedLeaves, ...mappedGrades]);
-    setCurrentPage(1);
-  }, [leaveResponse, gradeApprovals]);
 
-  const queryClient = useQueryClient();
+    return [...mappedLeaves, ...mappedGrades];
+  }, [leaveResponse, gradeApprovals]);
 
   // ---- Socket.IO: listen for new unlock requests from teachers ----
   useEffect(() => {
@@ -299,31 +313,6 @@ export default function PrincipalApprovals() {
     ? (activeStatus === "all" ? undefined : activeStatus)
     : undefined;
 
-  // Reset page when status filter changes
-  useEffect(() => { setUnlockPage(1); }, [activeStatus, unlockGradeLevel]);
-
-  // ─── Grade Approvals (Chuyên môn) ────────────────────────────────────────
-  const [gradeApprovalGradeLevel, setGradeApprovalGradeLevel] = useState(null);
-
-  useEffect(() => {
-    if (activeSection !== "grades" && activeSection !== "all") return;
-    setGradeApprovalsLoading(true);
-    teacherService.getPendingGradeApprovals({
-      params: {
-        semesterId: selectedTerm === "hk1" ? 1 : 2,
-        gradeLevelId: gradeApprovalGradeLevel || undefined,
-        status: activeStatus === "all" ? undefined : activeStatus,
-      },
-      mock: false,
-    }).then(res => {
-      if (res?.success && res?.data?.items) {
-        setGradeApprovals(res.data.items);
-      } else {
-        setGradeApprovals([]);
-      }
-    }).catch(() => setGradeApprovals([])).finally(() => setGradeApprovalsLoading(false));
-  }, [activeSection, selectedTerm, gradeApprovalGradeLevel, activeStatus]);
-
   const handleApproveGradeBatch = async () => {
     if (selectedGradeApprovals.length === 0) {
       toast.warning("Chọn ít nhất một điểm để duyệt");
@@ -337,22 +326,8 @@ export default function PrincipalApprovals() {
       if (res?.success) {
         toast.success(res.message || "Đã duyệt chốt điểm");
         setSelectedGradeApprovals([]);
-        // Refresh
         setGradeApprovalGradeLevel(null);
-        setGradeApprovalsLoading(true);
-        teacherService.getPendingGradeApprovals({
-          params: {
-            semesterId: selectedTerm === "hk1" ? 1 : 2,
-            gradeLevelId: gradeApprovalGradeLevel || undefined,
-          },
-          mock: false,
-        }).then(res => {
-          if (res?.success && res?.data?.items) {
-            setGradeApprovals(res.data.items);
-          } else {
-            setGradeApprovals([]);
-          }
-        }).catch(() => setGradeApprovals([])).finally(() => setGradeApprovalsLoading(false));
+        queryClient.invalidateQueries({ queryKey: ["principal-grade-approvals"] });
       } else {
         toast.error(res?.error || "Lỗi khi duyệt điểm");
       }
@@ -516,6 +491,7 @@ export default function PrincipalApprovals() {
             onChange={(e) => {
               setActiveSection(e.target.value);
               setCurrentPage(1);
+              setUnlockPage(1);
             }}
             className="filter-dropdown"
             placeholder="Luồng công việc"
@@ -527,6 +503,7 @@ export default function PrincipalApprovals() {
             onChange={(e) => {
               setActiveStatus(e.target.value);
               setCurrentPage(1);
+              setUnlockPage(1);
             }}
             className="filter-dropdown"
             placeholder="Trạng thái"
@@ -751,7 +728,10 @@ export default function PrincipalApprovals() {
               <select
                 className="filter-dropdown"
                 value={unlockGradeLevel || ""}
-                onChange={(e) => setUnlockGradeLevel(e.target.value ? Number(e.target.value) : null)}
+                onChange={(e) => {
+                  setUnlockGradeLevel(e.target.value ? Number(e.target.value) : null);
+                  setUnlockPage(1);
+                }}
                 style={{ minWidth: '150px' }}
               >
                 <option value="">Tất cả khối lớp</option>
@@ -1045,4 +1025,3 @@ export default function PrincipalApprovals() {
     </div>
   );
 }
-

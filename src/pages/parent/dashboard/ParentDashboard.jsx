@@ -1,5 +1,5 @@
 import "./ParentDashboard.css";
-import { useState, useEffect, useMemo } from "react";
+import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 
 import { PageHeader, SchoolYearTermSelector, LoadingSpinner } from "../../../components/common";
@@ -11,8 +11,61 @@ import { CALENDAR_EVENT_TYPES } from "../../../components/common/EventCalendar/e
 import UpcomingSchedule from "./components/UpcomingSchedule/UpcomingSchedule";
 import { useSchoolYearTerm } from "../../../hooks/useSchoolYearTerm";
 import { parentService } from "../../../services/pages/parent/parentService";
+import { resolveSchoolYearId, resolveSemesterId } from "../../../services/shared/schoolYearLookup";
+import { getRows, transformParentGradesData } from "../shared/parentGradeUtils";
 
 const defaultChildrenData = [];
+
+const buildFullName = (child = {}) =>
+  child.name ||
+  child.fullName ||
+  [child.surname, child.given_name || child.givenName].filter(Boolean).join(" ").trim() ||
+  "Chưa có thông tin";
+
+const normalizeChild = (child = {}, selectedSchoolYear) => {
+  const name = buildFullName(child);
+  return {
+    ...child,
+    id: child.id ?? child.student_id ?? child.studentId,
+    studentId: child.studentId || child.student_id || child.id,
+    studentCode: child.studentCode || child.student_code || child.code || child.id,
+    name,
+    classId: child.classId || child.class_id || child.currentClassId || child.current_class_id || null,
+    className: child.className || child.class_name || "Chưa xếp lớp",
+    homeroomTeacher: child.homeroomTeacher || child.teacherName || child.teacher_name || "Chưa phân công",
+    schoolYear: child.schoolYear || child.school_year_name || selectedSchoolYear,
+  };
+};
+
+const EVENT_TYPE_TO_COLOR = {
+  holiday: "red",
+  exam: "blue",
+  test: "blue",
+  examination: "blue",
+  school_event: "teal",
+  "school-event": "teal",
+  class_event: "teal",
+  "class-event": "teal",
+  day_off: "orange",
+  dayoff: "orange",
+  no_school: "orange",
+};
+
+const normalizeEventColor = (eventType) => {
+  const normalized = `${eventType || ""}`.trim().toLowerCase();
+  return EVENT_TYPE_TO_COLOR[normalized] || "teal";
+};
+
+const normalizeCalendarColor = (event = {}) => {
+  const rawColor = `${event.color || ""}`.trim().toLowerCase();
+  const allowedColors = ["blue", "red", "orange", "teal", "purple", "emerald"];
+
+  if (allowedColors.includes(rawColor)) {
+    return rawColor;
+  }
+
+  return normalizeEventColor(event.eventType || event.event_type || event.type);
+};
 
 export default function ParentDashboard() {
   const { selectedSchoolYear, selectedTerm, handleYearArrow, handleTermChange } = useSchoolYearTerm();
@@ -29,29 +82,31 @@ export default function ParentDashboard() {
     // API trả về: { success: true, data: [...children] }
     // Mapper đã chạy nên response.data = mapped array
     const data = childrenResponse?.data || [];
-    console.log("[DEBUG] childrenList:", data);
-    return Array.isArray(data) ? data : [];
-  }, [childrenResponse]);
+    return Array.isArray(data) ? data.map((child) => normalizeChild(child, selectedSchoolYear)) : [];
+  }, [childrenResponse, selectedSchoolYear]);
 
-  // Tự động chọn đứa con đầu tiên nếu chưa chọn
-  useEffect(() => {
-    if (childrenList.length > 0 && !selectedChildId) {
-      setSelectedChildId(childrenList[0].id || childrenList[0].studentId);
-    }
-  }, [childrenList, selectedChildId]);
+  const effectiveSelectedChildId = useMemo(
+    () => selectedChildId || childrenList[0]?.id || childrenList[0]?.studentId || null,
+    [childrenList, selectedChildId]
+  );
 
   // 2. Lấy điểm của đứa con đang chọn
   const { data: gradesResponse, isLoading: isLoadingGrades } = useQuery({
-    queryKey: ["child-grades", selectedChildId],
-    queryFn: () => parentService.getChildGrades({
-      pathParams: { childId: selectedChildId },
-      mock: false
-    }),
-    enabled: !!selectedChildId,
+    queryKey: ["child-grades", effectiveSelectedChildId, selectedSchoolYear, selectedTerm],
+    queryFn: async () => {
+      const schoolYearId = await resolveSchoolYearId(selectedSchoolYear);
+
+      return parentService.getChildGrades({
+        pathParams: { childId: effectiveSelectedChildId },
+        params: {
+          ...(schoolYearId ? { school_year_id: schoolYearId } : {}),
+        },
+        mock: false
+      });
+    },
+    enabled: !!effectiveSelectedChildId,
     staleTime: 5 * 60 * 1000,
   });
-
-  console.log("[DEBUG] gradesResponse:", gradesResponse);
 
   // 3. Lấy thông báo để đếm số chưa đọc
   const { data: notificationsResponse } = useQuery({
@@ -63,13 +118,22 @@ export default function ParentDashboard() {
   // 4. Lấy sự kiện hệ thống cho lịch
   const { data: systemEventsResponse } = useQuery({
     queryKey: ["system-events", selectedSchoolYear, selectedTerm],
-    queryFn: () => parentService.getSystemEvents({
-      params: {
-        schoolYearId: selectedSchoolYear,
-        semesterId: selectedTerm,
-      },
-      mock: false
-    }),
+    queryFn: async () => {
+      const [schoolYearId, semesterId] = await Promise.all([
+        resolveSchoolYearId(selectedSchoolYear),
+        resolveSemesterId(selectedSchoolYear, selectedTerm),
+      ]);
+
+      return parentService.getSystemEvents({
+        params: {
+          // Semester IDs are globally unique; using semester only also supports
+          // legacy events whose school_year_id is empty but semester_id is set.
+          ...(semesterId ? { semesterId } : {}),
+          ...(!semesterId && schoolYearId ? { schoolYearId } : {}),
+        },
+        mock: false
+      });
+    },
     enabled: !!selectedSchoolYear,
     staleTime: 10 * 60 * 1000,
   });
@@ -80,7 +144,11 @@ export default function ParentDashboard() {
       id: event.id,
       title: event.title,
       date: event.date,
-      type: event.eventType || event.type || "other",
+      endDate: event.endDate,
+      type: normalizeEventColor(event.eventType || event.event_type || event.type),
+      color: normalizeCalendarColor(event),
+      content: event.description || event.content || "",
+      createdBy: event.createdBy || event.created_by || "",
     }));
   }, [systemEventsResponse]);
 
@@ -107,20 +175,21 @@ export default function ParentDashboard() {
   }, [notificationsResponse]);
 
   const selectedChild = useMemo(() => {
-    const child = childrenList.find(c => (c.id || c.studentId) === selectedChildId) || childrenList[0];
+    const child = childrenList.find(c => String(c.id || c.studentId) === String(effectiveSelectedChildId)) || childrenList[0];
     if (child && gradesResponse?.success) {
-      return { ...gradesResponse.data, ...child, gradesBySemester: gradesResponse.data };
+      const groupedGrades = transformParentGradesData(getRows(gradesResponse));
+      return { ...child, gradesBySemester: groupedGrades };
     }
     return child;
-  }, [childrenList, selectedChildId, gradesResponse]);
+  }, [childrenList, effectiveSelectedChildId, gradesResponse]);
 
-  const isLoading = isLoadingChildren || (!!selectedChildId && isLoadingGrades);
+  const isLoading = isLoadingChildren || (!!effectiveSelectedChildId && isLoadingGrades);
 
   const calculateAverage = (subjects) => {
     if (!subjects || !Array.isArray(subjects) || subjects.length === 0) return 0;
-    const valid = subjects.filter(s => s.score != null && !isNaN(s.score));
+    const valid = subjects.filter(s => s.average != null && !isNaN(s.average));
     if (valid.length === 0) return 0;
-    const total = valid.reduce((sum, s) => sum + Number(s.score), 0);
+    const total = valid.reduce((sum, s) => sum + Number(s.average), 0);
     return (total / valid.length).toFixed(2);
   };
 
@@ -135,7 +204,7 @@ export default function ParentDashboard() {
       
       <ChildSwitcher
         childrenList={childrenList.length > 0 ? childrenList : defaultChildrenData}
-        selectedChildId={selectedChildId}
+        selectedChildId={effectiveSelectedChildId}
         onSelect={setSelectedChildId}
         extraControl={
           <SchoolYearTermSelector

@@ -5,6 +5,7 @@ export default function NotificationList({
   notifications,
   onOpen,
   onToggleImportant,
+  onHide,
   getClassLabel,
 }) {
   return (
@@ -15,6 +16,7 @@ export default function NotificationList({
           item={item}
           onOpen={onOpen}
           onToggleImportant={onToggleImportant}
+          onHide={onHide}
           getClassLabel={getClassLabel}
         />
       ))}
@@ -25,5 +27,4 @@ export default function NotificationList({
     </div>
   );
 }
-
 

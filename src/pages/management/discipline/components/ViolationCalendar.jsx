@@ -4,7 +4,7 @@ import { createPortal } from "react-dom";
 import { FiChevronLeft, FiChevronRight, FiX, FiUser, FiAlertTriangle, FiClock, FiCheckCircle } from "react-icons/fi";
 import { vpDisciplineService } from "../../../../services/pages/management/vp-discipline/vpDisciplineService";
 import { resolveSemesterId } from "../../../../services/shared/schoolYearLookup";
-import { getWeekDateObjects } from "../../../../components/common/WeekPicker/WeekPicker";
+import { getWeekDateObjects } from "../../../../components/common/WeekPicker/weekPickerUtils";
 import StatusBadge from "../../../../components/common/StatusBadge/StatusBadge.jsx";
 import "./ViolationCalendar.css";
 

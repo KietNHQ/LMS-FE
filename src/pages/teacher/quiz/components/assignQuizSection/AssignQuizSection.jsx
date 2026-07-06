@@ -22,6 +22,7 @@ export default function AssignQuizSection({
                                               onScoreChange,
                                               onCancel,
                                               onSubmit,
+                                              submitLabel,
                                           }) {
     const canSwitchQuestionType = typeof onChangeQuestionType === "function";
     const canUploadQuestionImage = typeof onChangeQuestionImage === "function";
@@ -259,7 +260,7 @@ export default function AssignQuizSection({
                 </button>
 
                 <button type="button" className="submit-btn" onClick={onSubmit}>
-                    {editingQuestionId ? "Cập nhật câu hỏi" : "Thêm câu hỏi"}
+                    {submitLabel || (editingQuestionId ? "Cập nhật câu hỏi" : "Thêm câu hỏi")}
                 </button>
             </div>
         </section>

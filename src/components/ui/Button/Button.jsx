@@ -10,6 +10,7 @@ export default function Button({
   loading = false,
   className = "",
   disabled = false,
+  primary, // intentionally extracted — do NOT pass to DOM
   ...props
 }) {
   const finalClassName = [

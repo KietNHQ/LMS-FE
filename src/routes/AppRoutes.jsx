@@ -33,6 +33,7 @@ const ManagementDashboard = lazy(() => import("../pages/management/dashboard/ind
 const ManagementUsers = lazy(() => import("../pages/management/users/ManagementUsers"));
 const ManagementClasses = lazy(() => import("../pages/management/classes/ManagementClasses"));
 const ManagementClassDetail = lazy(() => import("../pages/management/classes/components/classDetailSection/classDetailSection"));
+const ClassAssignment = lazy(() => import("../pages/management/classes/ClassAssignment"));
 const ManagementAcademicDashboard = lazy(() => import("../pages/management/academic/dashboard/VpAcademicDashboard"));
 const ManagementDiscipline = lazy(() => import("../pages/management/discipline/index.js"));
 const ManagementDisciplineReports = lazy(() => import("../pages/management/discipline/ManagementDisciplineReports"));
@@ -41,6 +42,7 @@ const ManagementBonusPoints = lazy(() => import("../pages/management/discipline/
 const ManagementPeriodClosing = lazy(() => import("../pages/management/discipline/period-closing/VpDisciplinePeriodClosing"));
 const ManagementClassDeductionLogs = lazy(() => import("../pages/management/discipline/class-deduction-logs/VpClassDeductionLogs"));
 const ManagementCompetition = lazy(() => import("../pages/management/competition/index.js"));
+const ManagementConductRating = lazy(() => import("../pages/management/discipline/conduct/VpDisciplineConduct"));
 const ManagementGrades = lazy(() => import("../pages/management/academic/grades/VpAcademicGrades"));
 const ManagementQuiz = lazy(() => import("../pages/management/quiz/ManagementQuiz"));
 const ManagementCreateQuiz = lazy(() => import("../pages/management/quiz/create/ManagementCreateQuiz"));
@@ -103,6 +105,7 @@ const TeacherStudentGradeDetail = lazy(() => import("../pages/teacher/grades/Stu
 const TeacherHomeroom = lazy(
   () => import("../pages/teacher/homeroom/TeacherHomeroom")
 );
+const TeacherConductRating = lazy(() => import("../pages/teacher/conduct-rating/TeacherConductRating"));
 const TeacherLessons = lazy(() => import("../pages/teacher/lessons/TeacherLessons"));
 const TeacherQuiz = lazy(() => import("../pages/teacher/quiz/TeacherQuiz"));
 const TeacherCreateQuiz = lazy(
@@ -141,6 +144,7 @@ const ParentNotifications = lazy(
 );
 const ParentMessages = lazy(() => import("../pages/parent/messages/ParentMessages"));
 const ParentPayments = lazy(() => import("../pages/parent/payments/ParentPayments"));
+const PaymentConfirm = lazy(() => import("../pages/parent/payments/PaymentConfirm"));
 const ParentSupport = lazy(() => import("../pages/parent/support/ParentSupport"));
 
 /**
@@ -220,21 +224,17 @@ export default function AppRoutes() {
         <Route path="dashboard"     element={<AdminDashboard />} />
         <Route path="users"         element={<AdminUsers />} />
         <Route path="notifications" element={<AdminNotifications />} />
+        <Route path="chat"          element={<ManagementChat />} />
+        <Route path="messages"      element={<Navigate to="chat" replace />} />
         <Route path="audit-log"   element={<AdminAuditLog />} />
         <Route path="system-log"  element={<AdminSystemLog />} />
-        <Route path="classes"       element={<AdminRedirect />} />
-        <Route path="classes/*"     element={<AdminRedirect />} />
-        <Route path="quiz"          element={<ManagementQuiz />} />
-        <Route path="quiz/create"   element={<ManagementCreateQuiz />} />
-        <Route path="quiz/:quizId/submissions" element={<ManagementQuizSubmissions />} />
-        <Route path="timetable"     element={<AdminRedirect />} />
-        <Route path="timetable/*"   element={<AdminRedirect />} />
-        <Route path="payment"       element={<AdminRedirect />} />
-        <Route path="payment/*"     element={<AdminRedirect />} />
-        <Route path="competition"   element={<AdminRedirect />} />
-        <Route path="competition/*" element={<AdminRedirect />} />
-        <Route path="reports"       element={<AdminRedirect />} />
-        <Route path="reports/*"     element={<AdminRedirect />} />
+        <Route path="classes"       element={<Navigate to="/management/classes" replace />} />
+        <Route path="classes/*"     element={<Navigate to="/management/classes" replace />} />
+        <Route path="quiz"          element={<Navigate to="/management/quiz" replace />} />
+        <Route path="timetable"     element={<Navigate to="/management/timetable" replace />} />
+        <Route path="payment"       element={<Navigate to="/management/finance" replace />} />
+        <Route path="competition"   element={<Navigate to="/management/competition" replace />} />
+        <Route path="reports"       element={<Navigate to="/management/reports" replace />} />
       </Route>
 
 
@@ -249,6 +249,7 @@ export default function AppRoutes() {
         <Route path="dashboard"    element={<ManagementDashboard />} />
         <Route path="users"        element={<ManagementUsers />} />
         <Route path="classes"      element={<ManagementClasses />} />
+        <Route path="classes/xeplop" element={<ClassAssignment />} />
         <Route path="classes/:classId" element={<ManagementClassDetail />} />
         <Route path="academic"    element={<Navigate to="academic/dashboard" replace />} />
         <Route path="academic/dashboard" element={<ManagementAcademicDashboard />} />
@@ -259,6 +260,7 @@ export default function AppRoutes() {
         <Route path="discipline/period-closing" element={<ManagementPeriodClosing />} />
         <Route path="discipline/class-deduction-logs/:classId" element={<ManagementClassDeductionLogs />} />
         <Route path="competition"  element={<ManagementCompetition />} />
+        <Route path="conduct-rating" element={<ManagementConductRating />} />
         <Route path="grades"       element={<ManagementGrades />} />
         <Route path="quiz"         element={<ManagementQuiz />} />
         <Route path="quiz/create"  element={<ManagementCreateQuiz />} />
@@ -321,6 +323,7 @@ export default function AppRoutes() {
         <Route path="teaching-classes/:classId" element={<TeacherTeachingClassDetail />} />
         <Route path="ban-can-su-lop" element={<TeacherBanCanSuLop />} />
         <Route path="homeroom"         element={<TeacherHomeroom />} />
+        <Route path="conduct-rating"   element={<TeacherConductRating />} />
         <Route path="lessons"          element={<TeacherLessons />} />
         <Route path="grades"           element={<TeacherGrades />} />
         <Route path="grades/student/:enrollmentId" element={<TeacherStudentGradeDetail />} />
@@ -346,11 +349,10 @@ export default function AppRoutes() {
             <Route path="notifications" element={<ParentNotifications />} />
             <Route path="messages" element={<ParentMessages />} />
             <Route path="payments" element={<ParentPayments />} />
+            <Route path="payments/confirm" element={<PaymentConfirm />} />
             <Route path="support" element={<ParentSupport />} />
         </Route>
 
     </Routes>
   );
 }
-
-

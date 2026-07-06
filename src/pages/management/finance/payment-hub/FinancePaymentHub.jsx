@@ -100,7 +100,7 @@ export default function FinancePaymentHub() {
 
     useEffect(() => {
         fetchDebts();
-    }, [selectedSchoolYear?.id, selectedTerm?.id]);
+    }, [selectedSchoolYear, selectedTerm]);
 
     const getAgingType = (debt) => {
         if (!debt.due_date && !debt.dueDate) return "aging-8-30";

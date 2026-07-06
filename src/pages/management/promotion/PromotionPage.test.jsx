@@ -43,6 +43,7 @@ vi.mock('../../../services/pages/management/classes/classesService', () => ({
 
 vi.mock('../../../services/shared/schoolYearLookup', () => ({
   resolveSemesterId: mockResolveSemesterId,
+  resolveSchoolYearId: vi.fn((value) => value),
 }))
 
 import PromotionPage from './PromotionPage.jsx'
@@ -57,7 +58,7 @@ const mockStudents = [
     enrollmentId: 101, studentId: 1001, studentCode: 'HS001',
     studentName: 'Nguyen Van A', annualGpa: 8.5,
     hk1Conduct: 'Tot', hk2Conduct: 'Tot', annualConduct: 'Tot',
-    absentDays: 2, status: 'promoted', canPromote: true,
+    absentDays: 2, status: 'promoted', enrollmentStatus: 'active', canPromote: true,
   },
   {
     enrollmentId: 102, studentId: 1002, studentCode: 'HS002',
@@ -208,6 +209,6 @@ describe('PromotionPage', () => {
     const calls = mockGetClassPromotionSummary.mock.calls
     const lastCall = calls[calls.length - 1]
     expect(lastCall[3]).toBe(1) // page
-    expect(lastCall[4]).toBe(10) // limit
+    expect(lastCall[4]).toBe(100) // limit
   })
 })

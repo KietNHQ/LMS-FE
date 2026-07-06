@@ -6,9 +6,8 @@
 import { useState, useEffect, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { 
-    FiStar, FiAward, FiUsers, FiFilter, FiDownload, 
-    FiPlus, FiEdit2, FiTrash2, FiChevronLeft, FiChevronRight,
-    FiCheck, FiX, FiInfo, FiTrendingUp, FiHeart, FiZap, FiFileText
+    FiStar, FiAward, FiUsers, FiFilter,
+    FiPlus, FiCheck, FiX, FiTrendingUp, FiFileText
 } from "react-icons/fi";
 import { toast } from "react-toastify";
 import { useSchoolYearTerm } from "../../../../hooks/useSchoolYearTerm";
@@ -17,7 +16,7 @@ import Select from "../../../../components/ui/Select/Select";
 import Pagination from "../../../../components/ui/Pagination/Pagination";
 import vpBonusPointService from "../../../../services/pages/management/vp-discipline/vpBonusPointService";
 import { vpDisciplineService } from "../../../../services/pages/management/vp-discipline";
-import { resolveSemesterId } from "../../../../services/shared/schoolYearLookup";
+import { resolveSchoolYearId, resolveSemesterId } from "../../../../services/shared/schoolYearLookup";
 import "./VpBonusPoints.css";
 
 const CATEGORY_LABELS = {
@@ -34,8 +33,29 @@ const CATEGORY_COLORS = {
     CERTIFICATE: "#8b5cf6",
 };
 
+const getRows = (payload) => {
+    if (Array.isArray(payload)) return payload;
+    if (Array.isArray(payload?.data)) return payload.data;
+    if (Array.isArray(payload?.students)) return payload.students;
+    if (Array.isArray(payload?.data?.students)) return payload.data.students;
+    return [];
+};
+
+const getSummary = (payload) => payload?.summary || payload?.data?.summary || null;
+
+const toNumber = (value, fallback = 0) => {
+    const numeric = Number(value);
+    return Number.isFinite(numeric) ? numeric : fallback;
+};
+
 export default function VpBonusPoints() {
     const { selectedSchoolYear, selectedTerm, handleYearArrow, handleTermChange } = useSchoolYearTerm();
+
+    const { data: schoolYearId } = useQuery({
+        queryKey: ["school-year-id", selectedSchoolYear],
+        queryFn: () => resolveSchoolYearId(selectedSchoolYear),
+        enabled: Boolean(selectedSchoolYear),
+    });
     
     // Resolve semesterId for API calls
     const { data: semesterId } = useQuery({
@@ -70,16 +90,30 @@ export default function VpBonusPoints() {
         notes: "",
     });
 
+    const selectedClassSummary = useQuery({
+        queryKey: ["bonus-class-summary", selectedClass, schoolYearId, semesterId],
+        queryFn: async () => {
+            const res = await vpBonusPointService.getClassBonusPointsSummary(selectedClass, {
+                schoolYearId,
+                semesterId,
+            });
+            return res?.data || res;
+        },
+        enabled: Boolean(selectedClass && selectedClass !== "all" && schoolYearId),
+        staleTime: 30_000,
+    });
+
     // Fetch classes from API
     const { data: classesData = [] } = useQuery({
         queryKey: ["classes-for-bonus", selectedSchoolYear, selectedGrade],
         queryFn: async () => {
             const res = await vpDisciplineService.callByKey("get_classes", {
-                params: { schoolYearId: selectedSchoolYear, gradeLevelId: selectedGrade === "all" ? undefined : parseInt(selectedGrade) },
+                params: { schoolYearId, gradeLevelId: selectedGrade === "all" ? undefined : parseInt(selectedGrade) },
             });
             return res?.data || [];
         },
         select: (data) => (Array.isArray(data) ? data : data?.data || []),
+        enabled: Boolean(schoolYearId),
         staleTime: 5 * 60_000,
     });
 
@@ -108,12 +142,7 @@ export default function VpBonusPoints() {
     const gradeOptions = useMemo(() => {
         const defaultOption = [{ value: "all", label: "Tất cả khối" }];
         if (!gradeLevelsData.length) {
-            return [
-                { value: "all", label: "Tất cả khối" },
-                { value: "10", label: "Khối 10" },
-                { value: "11", label: "Khối 11" },
-                { value: "12", label: "Khối 12" },
-            ];
+            return defaultOption;
         }
         const apiOptions = gradeLevelsData
             .map(gl => ({
@@ -144,21 +173,54 @@ export default function VpBonusPoints() {
 
     // Transform API students
     const apiFormattedStudents = useMemo(() => {
-        return apiStudents.map(s => ({
+        const classBonusRows = getRows(selectedClassSummary.data);
+        const bonusByEnrollmentId = new Map(
+            classBonusRows.map((row) => [
+                String(row.enrollment_id || row.enrollmentId || row.id),
+                row,
+            ])
+        );
+
+        return apiStudents.map(s => {
+            const enrollmentId = s.enrollmentId || s.studentEnrollmentId || s.enrollment_id || s.id;
+            const bonusRow = bonusByEnrollmentId.get(String(enrollmentId));
+            return ({
             id: s.id || s.student_id || s.enrollmentId,
-            enrollmentId: s.enrollmentId || s.studentEnrollmentId || s.id,
+            enrollmentId,
             studentCode: s.student_code || s.code || s.id || "",
             name: s.name || s.full_name || s.studentName || "",
             className: s.class_name || s.className || s.class || "",
             grade: s.grade || s.grade_level || s.gradeLevel || "",
-            totalBonus: 0,
-        }));
-    }, [apiStudents]);
+            totalBonus: toNumber(bonusRow?.total_bonus_points || bonusRow?.totalBonus),
+            bonusCount: toNumber(bonusRow?.bonus_count || bonusRow?.bonusCount),
+            });
+        });
+    }, [apiStudents, selectedClassSummary.data]);
+
+    useEffect(() => {
+        setStudents(apiFormattedStudents);
+    }, [apiFormattedStudents]);
+
+    useEffect(() => {
+        const summaryFromApi = getSummary(selectedClassSummary.data);
+        if (summaryFromApi) {
+            setClassSummary(summaryFromApi);
+            return;
+        }
+
+        const totalAwards = apiFormattedStudents.reduce((sum, student) => sum + toNumber(student.bonusCount), 0);
+        const totalPoints = apiFormattedStudents.reduce((sum, student) => sum + toNumber(student.totalBonus), 0);
+        setClassSummary({
+            totalStudents: apiFormattedStudents.length,
+            totalAwards,
+            totalPoints,
+        });
+    }, [apiFormattedStudents, selectedClassSummary.data]);
 
     // Load data
     useEffect(() => {
         loadData();
-    }, [selectedSchoolYear, selectedTerm]);
+    }, [selectedSchoolYear, selectedTerm, apiFormattedStudents]);
 
     const loadData = async () => {
         setIsLoading(true);
@@ -167,41 +229,24 @@ export default function VpBonusPoints() {
             const rulesResponse = await vpBonusPointService.getBonusPointRules();
             if (rulesResponse?.rules) {
                 setRules(rulesResponse.rules);
+            } else if (rulesResponse?.data?.rules) {
+                setRules(rulesResponse.data.rules);
             } else if (Array.isArray(rulesResponse)) {
                 setRules(rulesResponse);
             } else {
-                setRules(getDefaultRules());
+                setRules([]);
             }
             
-            // Use API students if available, otherwise empty
             setStudents(apiFormattedStudents);
-            
-            // Mock class summary until API available
-            setClassSummary({
-                totalStudents: apiFormattedStudents.length,
-                totalAwards: 0,
-                totalPoints: 0,
-            });
         } catch (error) {
             console.error("Failed to load bonus points data:", error);
-            setRules(getDefaultRules());
             setStudents([]);
-            toast.error("Không thể tải dữ liệu. Sử dụng dữ liệu mặc định.");
+            setClassSummary({ totalStudents: 0, totalAwards: 0, totalPoints: 0 });
+            toast.error("Không thể tải dữ liệu điểm cộng.");
         } finally {
             setIsLoading(false);
         }
     };
-
-    const getDefaultRules = () => [
-        { code: "OLYMPIC_CLUB", name_vi: "Tham gia CLB Olympic", category: "CLUB", per_semester: 0.1, max_per_year: 0.2 },
-        { code: "SPORTS_TRAINING", name_vi: "Tập luyện thể thao", category: "CLUB", per_semester: 0.1, max_per_year: 0.2 },
-        { code: "ARTS_CLUB", name_vi: "Tham gia CLB văn nghệ", category: "CLUB", per_semester: 0.1, max_per_year: 0.2 },
-        { code: "VOLUNTEER_WORK", name_vi: "Hoạt động tình nguyện", category: "VOLUNTEER", per_year: 0.2, max_per_year: 0.2 },
-        { code: "COMPETITION_PROVINCE", name_vi: "Giải thưởng cấp Tỉnh/TP", category: "COMPETITION", flat_amount: 0.2, max_per_year: 0.5 },
-        { code: "COMPETITION_NATIONAL", name_vi: "Giải thưởng cấp Quốc gia", category: "COMPETITION", flat_amount: 0.3, max_per_year: 0.5 },
-        { code: "COMPETITION_INTERNATIONAL", name_vi: "Giải thưởng cấp Quốc tế", category: "COMPETITION", flat_amount: 0.5, max_per_year: 0.5 },
-        { code: "CERTIFICATE_SPECIAL", name_vi: "Chứng chỉ đặc biệt", category: "CERTIFICATE", flat_amount: 0.2, max_per_year: 0.3 },
-    ];
 
     // Filter students
     const filteredStudents = useMemo(() => {

@@ -9,32 +9,17 @@ import { parentService } from "../../../services/pages/parent/parentService";
 import PaymentSummaryCard from "./components/PaymentSummaryCard/PaymentSummaryCard";
 import PaymentTable from "./components/PaymentTable/PaymentTable";
 import InvoiceHistory from "./components/InvoiceHistory/InvoiceHistory";
+import StripeStatusChecker from "./components/StripeCheckout/StripeStatusChecker";
 import StatusBadge from "../../../components/common/StatusBadge/StatusBadge";
 import {
-    PAYMENT_STORAGE_KEYS,
     buildBreakdownFromItems,
     formatDateVi,
     formatVnd,
     getDueStatus,
-    loadJson,
     mapFeeCategory,
     normalizeDate,
     roundMoney,
-    saveJson,
 } from "../../../services/shared/payment/paymentShared";
-
-const BANK_INFO = {
-    accountNumber: "0000000000",
-    accountName: "CONG TY GIA LAP EDUVN DEMO",
-    bankName: "NGAN HANG DEMO",
-    bin: "970422",
-};
-
-const DISCOUNT_RULES = {
-    GIAM10: { type: "percent", value: 10 },
-    PHUHUYNH5: { type: "percent", value: 5 },
-    FIX500: { type: "fixed", value: 500000 },
-};
 
 function formatCurrency(amount) {
     return formatVnd(roundMoney(amount));
@@ -46,6 +31,62 @@ function getToday() {
 
 function normalizeSchoolYearKey(value = "") {
     return String(value).replace(/\s+/g, "").trim();
+}
+
+function getSchoolYearValue(value) {
+    if (value && typeof value === "object") {
+        return value.label || value.name || value.id || "";
+    }
+    return value || "";
+}
+
+function getRows(payload) {
+    if (Array.isArray(payload)) return payload;
+    if (Array.isArray(payload?.data)) return payload.data;
+    if (Array.isArray(payload?.items)) return payload.items;
+    if (Array.isArray(payload?.accounts)) return payload.accounts;
+    return [];
+}
+
+function getInvoiceRows(response) {
+    const responseData = response?.data || response || {};
+    if (Array.isArray(responseData.invoices)) return responseData.invoices;
+    if (Array.isArray(responseData)) return responseData;
+
+    for (const value of Object.values(responseData)) {
+        if (Array.isArray(value)) return value;
+    }
+
+    return [];
+}
+
+function normalizeBankAccount(account = {}) {
+    return {
+        id: account.id,
+        bankName: account.bank_name || account.bankName || "",
+        accountNumber: account.account_number || account.accountNumber || "",
+        accountName: account.account_holder || account.accountHolder || account.account_name || "",
+        bin: account.bin || account.bank_bin || account.bankBin || "",
+        isActive: account.is_active ?? account.isActive ?? true,
+    };
+}
+
+function buildPaymentQrUrl(bankAccount, amount, transferNote) {
+    if (!bankAccount?.accountNumber || !bankAccount?.accountName) return "";
+
+    if (bankAccount.bin) {
+        return `https://img.vietqr.io/image/${bankAccount.bin}-${bankAccount.accountNumber}-compact2.png?amount=${amount}&addInfo=${encodeURIComponent(transferNote)}&accountName=${encodeURIComponent(bankAccount.accountName)}`;
+    }
+
+    const qrPayload = [
+        bankAccount.bankName,
+        `STK: ${bankAccount.accountNumber}`,
+        bankAccount.accountName,
+        `So tien: ${amount}`,
+        `Noi dung: ${transferNote}`,
+    ].filter(Boolean).join(" | ");
+
+    return `https://api.qrserver.com/v1/create-qr-code/?size=260x260&data=${encodeURIComponent(qrPayload)}`;
 }
 
 // Derive school year from due date (format: "2025-2026" for Sep 2025 - Aug 2026)
@@ -80,40 +121,61 @@ function deriveSemester(dueDate) {
     }
 }
 
-function getFallbackPayments() {
-    return [];
-}
+/**
+ * Map a raw backend invoice row to the frontend payment shape.
+ * Used by both the initial fetch and the sync effect.
+ */
+function mapBackendInvoiceToPayment(inv) {
+    const dueDate = inv.due_date || inv.fee_due_date || "";
+    const schoolYear = inv.school_year_name
+        || deriveSchoolYear(dueDate)
+        || (inv.school_year_id ? String(inv.school_year_id) : "");
 
-function upgradeLegacySingleChildDemoData(list) {
-    const normalizedList = Array.isArray(list) ? list : [];
-    const isLegacySingleChildDemo =
-        normalizedList.length > 0
-        && normalizedList.length <= 2
-        && normalizedList.every((item) => item.childName === "Nguyen Van B" && item.className === "10A1")
-        && normalizedList.every((item) => !item.namespace);
+    const semester = inv.semester_name
+        || (inv.semester_id ? `Học kỳ ${inv.semester_id}` : null)
+        || deriveSemester(dueDate);
 
-    if (!isLegacySingleChildDemo) return normalizedList;
+    const amount = parseFloat(inv.amount || 0);
+    const discountAmount = parseFloat(inv.discount_amount || 0);
+    const rawPaidAmount = parseFloat(inv.paid_amount || 0);
+    const finalAmount = Math.max(amount - discountAmount, 0);
+    const isPaid = inv.status === "paid";
+    const paidAmount = isPaid && rawPaidAmount === 0 ? finalAmount : rawPaidAmount;
 
-    const existingInvoiceCodes = new Set(normalizedList.map((item) => item.invoiceCode));
-    const childTwoRecords = getFallbackPayments().filter((item) => item.childName === "Nguyen Thi Ngoc Ha");
-    const merged = [
-        ...normalizedList,
-        ...childTwoRecords.filter((item) => !existingInvoiceCodes.has(item.invoiceCode)),
-    ];
-
-    return normalizePaymentList(merged);
+    return {
+        id: inv.id,
+        title: inv.fee_name || "Học phí",
+        term: semester,
+        schoolYear,
+        grade: "",
+        className: inv.class_name || "",
+        childName: inv.student_name || "",
+        deadline: dueDate,
+        feeItems: [],
+        description: inv.description || "",
+        discountCode: inv.discount_code || "",
+        discountAmount,
+        status: inv.status || "unpaid",
+        paidDate: inv.paid_date || "",
+        paidAmount,
+        invoiceCode: inv.invoice_no || inv.invoice_code || "",
+        amount,
+        feeAmount: parseFloat(inv.fee_amount || 0),
+        feeId: inv.fee_id,
+        studentId: inv.student_id,
+        finalAmount,
+        originalAmount: amount,
+        breakdown: [
+            { key: "original", label: "Số tiền gốc", amount },
+            { key: "deduction", label: "Giảm giá", amount: discountAmount },
+            { key: "total", label: "Tổng cộng", amount: finalAmount },
+            { key: "paid", label: "Đã thanh toán", amount: paidAmount },
+            { key: "remaining", label: "Còn lại", amount: Math.max(finalAmount - paidAmount, 0) },
+        ],
+    };
 }
 
 function recomputePayment(record) {
-    console.log("💳 recomputePayment input:", {
-        id: record.id,
-        title: record.title,
-        amount: record.amount,
-        feeAmount: record.feeAmount,
-        feeItems: record.feeItems,
-        paidAmount: record.paidAmount
-    });
-
     const feeSummary = {
         tuition: 0,
         boarding: 0,
@@ -142,13 +204,6 @@ function recomputePayment(record) {
     // Nếu không có feeItems, dùng trực tiếp amount từ backend
     const hasItems = Array.isArray(record.feeItems) && record.feeItems.length > 0;
     const effectiveAmount = hasItems ? payableBeforePaid : roundMoney(record.amount || record.feeAmount || 0);
-
-    console.log("💳 recomputePayment result:", {
-        feeSummary,
-        payableBeforePaid,
-        effectiveAmount,
-        paidAmount
-    });
 
     const breakdown = hasItems
         ? buildBreakdownFromItems(record.feeItems || [], paidAmount).map((item) => {
@@ -186,14 +241,11 @@ function normalizePaymentList(list) {
 
 export default function ParentPayments() {
     const { selectedSchoolYear, selectedTerm, handleYearArrow, handleTermChange } = useSchoolYearTerm();
-    const [paymentList, setPaymentList] = useState(() => {
-        const stored = loadJson(PAYMENT_STORAGE_KEYS.PARENT_RECORDS, []);
-        const initial = stored.length ? stored : getFallbackPayments();
-        const normalized = normalizePaymentList(initial);
-        const upgraded = upgradeLegacySingleChildDemoData(normalized);
-        saveJson(PAYMENT_STORAGE_KEYS.PARENT_RECORDS, upgraded);
-        return upgraded;
-    });
+    const [paymentList, setPaymentList] = useState([]);
+    const [isLoadingPayments, setIsLoadingPayments] = useState(true);
+    const [paymentLoadError, setPaymentLoadError] = useState("");
+    const [bankAccounts, setBankAccounts] = useState([]);
+    const [bankLoadError, setBankLoadError] = useState("");
 
     const [selectedPaymentId, setSelectedPaymentId] = useState(null);
     const [selectedDetailId, setSelectedDetailId] = useState(null);
@@ -207,121 +259,27 @@ export default function ParentPayments() {
 
     const selectedPayment = paymentList.find((item) => item.id === selectedPaymentId) || null;
     const selectedDetailPayment = paymentList.find((item) => item.id === selectedDetailId) || null;
+    const selectedBankAccount = useMemo(
+        () => bankAccounts.find((account) => account.isActive) || bankAccounts[0] || null,
+        [bankAccounts],
+    );
 
     // Fetch payments from API on component mount
     useEffect(() => {
         const fetchPayments = async () => {
+            setIsLoadingPayments(true);
+            setPaymentLoadError("");
             try {
                 const response = await parentService.listPayments({ mock: false });
-                console.log("💳 Parent Payments API Response:", response);
-
-                // Backend returns: { success: true, data: { invoices: [...], summary: {...} } }
-                // Axios interceptor đã unwrap outer wrapper nên response = { success: true, data: { invoices, summary } }
-                const responseData = response.data || {};
-                console.log("💳 response.data keys:", Object.keys(responseData));
-                console.log("💳 response.data:", responseData);
-
-                // Backend trả về data.invoices là array
-                let paymentArray = [];
-
-                // Thử tìm invoices array
-                if (Array.isArray(responseData.invoices)) {
-                    paymentArray = responseData.invoices;
-                    console.log("💳 Found invoices array:", paymentArray.length);
-                }
-                // Hoặc data là array trực tiếp
-                else if (Array.isArray(responseData)) {
-                    paymentArray = responseData;
-                    console.log("💳 data is array:", paymentArray.length);
-                }
-                // Thử tìm bất kỳ array nào trong data
-                else {
-                    const dataKeys = Object.keys(responseData);
-                    for (const key of dataKeys) {
-                        const value = responseData[key];
-                        if (Array.isArray(value)) {
-                            console.log(`💳 Found array at key "${key}":`, value);
-                            paymentArray = value;
-                            break;
-                        }
-                    }
-                }
-
-                console.log("💳 Final paymentArray:", paymentArray);
-
-                if (paymentArray.length > 0) {
-                    console.log("💳 Sample raw invoice from API:", JSON.stringify(paymentArray[0], null, 2));
-
-                    // Map backend fields to FE expected format
-                    const mappedPayments = paymentArray.map(inv => {
-                        const dueDate = inv.due_date || inv.fee_due_date || "";
-                        const schoolYear = inv.school_year_name 
-                            || deriveSchoolYear(dueDate) 
-                            || (inv.school_year_id ? String(inv.school_year_id) : "");
-                        
-                        // Derive semester from due date if not provided
-                        const semester = inv.semester_name 
-                            || (inv.semester_id ? `Học kỳ ${inv.semester_id}` : null)
-                            || deriveSemester(dueDate);
-                        
-                        const amount = parseFloat(inv.amount || 0);
-                        const discountAmount = parseFloat(inv.discount_amount || 0);
-                        const rawPaidAmount = parseFloat(inv.paid_amount || 0);
-                        const finalAmount = Math.max(amount - discountAmount, 0);
-                        // Fix: if status is "paid" but paid_amount is 0, show full amount as paid
-                        const isPaid = inv.status === "paid";
-                        const paidAmount = isPaid && rawPaidAmount === 0 ? finalAmount : rawPaidAmount;
-                        
-                        return {
-                            id: inv.id,
-                            title: inv.fee_name || "Học phí",
-                            term: semester,
-                            schoolYear,
-                            grade: "",
-                            className: inv.class_name || "",
-                            childName: inv.student_name || "",
-                            deadline: dueDate,
-                            feeItems: [],
-                            description: inv.description || "",
-                            discountCode: inv.discount_code || "",
-                            discountAmount,
-                            status: inv.status || "unpaid",
-                            paidDate: inv.paid_date || "",
-                            paidAmount,
-                            invoiceCode: inv.invoice_no || inv.invoice_code || "",
-                            amount,
-                            feeAmount: parseFloat(inv.fee_amount || 0),
-                            feeId: inv.fee_id,
-                            studentId: inv.student_id,
-                            // Computed fields
-                            finalAmount,
-                            originalAmount: amount,
-                            breakdown: [
-                                { key: "original", label: "Số tiền gốc", amount },
-                                { key: "deduction", label: "Giảm giá", amount: discountAmount },
-                                { key: "total", label: "Tổng cộng", amount: finalAmount },
-                                { key: "paid", label: "Đã thanh toán", amount: paidAmount },
-                                { key: "remaining", label: "Còn lại", amount: Math.max(finalAmount - paidAmount, 0) },
-                            ],
-                        };
-                    });
-
-                    console.log("💳 Mapped payments sample:", mappedPayments[0]);
-                    console.log("💳 All mapped schoolYears:", mappedPayments.map(p => p.schoolYear));
-
-                    setPaymentList(mappedPayments);
-                    return;
-                }
+                const paymentArray = getInvoiceRows(response);
+                setPaymentList(normalizePaymentList(paymentArray.map(mapBackendInvoiceToPayment)));
             } catch (err) {
-                console.error("❌ Error fetching parent payments:", err);
-            }
-
-            // Fallback to localStorage if API fails
-            const stored = loadJson(PAYMENT_STORAGE_KEYS.PARENT_RECORDS, []);
-            if (stored.length) {
-                setPaymentList(normalizePaymentList(stored));
-            } else {
-                setPaymentList(normalizePaymentList(getFallbackPayments()));
+                console.error("Error fetching parent payments:", err);
+                setPaymentList([]);
+                setPaymentLoadError("Không thể tải dữ liệu học phí từ hệ thống.");
+                toast.error("Không thể tải dữ liệu học phí.");
+            } finally {
+                setIsLoadingPayments(false);
             }
         };
 
@@ -329,23 +287,46 @@ export default function ParentPayments() {
     }, []);
 
     useEffect(() => {
-        const handleSync = () => {
-            const stored = loadJson(PAYMENT_STORAGE_KEYS.PARENT_RECORDS, []);
-            if (stored.length) {
-                setPaymentList(normalizePaymentList(stored));
+        const fetchBankAccounts = async () => {
+            try {
+                const response = await parentService.listBankAccounts({
+                    params: { isActive: true },
+                    mock: false,
+                });
+                const accounts = getRows(response).map(normalizeBankAccount);
+                setBankAccounts(accounts);
+                setBankLoadError("");
+            } catch (error) {
+                console.warn("Failed to load school bank accounts.", error);
+                setBankAccounts([]);
+                setBankLoadError("Chưa lấy được tài khoản ngân hàng từ hệ thống.");
+            }
+        };
+
+        fetchBankAccounts();
+    }, []);
+
+    useEffect(() => {
+        const handleSync = async () => {
+            try {
+                const response = await parentService.listPayments({ mock: false });
+                const invoices = getInvoiceRows(response);
+                setPaymentList(normalizePaymentList(invoices.map(mapBackendInvoiceToPayment)));
+            } catch (error) {
+                console.error("Failed to sync parent payments from API:", error);
             }
         };
 
         window.addEventListener("admin-payment-records-updated", handleSync);
-        return () => window.removeEventListener("admin-payment-records-updated", handleSync);
+        window.addEventListener("parent-payment-confirmed", handleSync);
+        return () => {
+            window.removeEventListener("admin-payment-records-updated", handleSync);
+            window.removeEventListener("parent-payment-confirmed", handleSync);
+        };
     }, []);
 
     const childOptions = useMemo(
-        () => {
-            const options = ["all", ...Array.from(new Set(paymentList.map((item) => item.childName)))];
-            console.log("💳 [DEBUG] childOptions:", options);
-            return options;
-        },
+        () => ["all", ...Array.from(new Set(paymentList.map((item) => item.childName).filter(Boolean)))],
         [paymentList]
     );
     const termOptions = useMemo(
@@ -358,10 +339,7 @@ export default function ParentPayments() {
     );
 
     const filteredPaymentList = useMemo(() => {
-        const selectedYearKey = normalizeSchoolYearKey(selectedSchoolYear);
-        console.log("💳 [DEBUG] selectedSchoolYear:", selectedSchoolYear, "normalized:", selectedYearKey);
-        console.log("💳 [DEBUG] childFilter:", childFilter);
-        console.log("💳 [DEBUG] paymentList sample:", paymentList.slice(0, 3).map(p => ({ id: p.id, childName: p.childName, schoolYear: p.schoolYear })));
+        const selectedYearKey = normalizeSchoolYearKey(getSchoolYearValue(selectedSchoolYear));
 
         const filtered = paymentList.filter((item) => {
             const itemYearKey = normalizeSchoolYearKey(item.schoolYear);
@@ -370,11 +348,9 @@ export default function ParentPayments() {
             const termPass = termFilter === "all" || item.term === termFilter || item.title === termFilter;
             const monthPass = monthFilter === "all" || item.month === monthFilter;
             const schoolYearPass = !selectedYearKey || itemYearKey === selectedYearKey;
-            console.log("💳 [DEBUG] item:", item.id, "schoolYear:", item.schoolYear, "normalized:", itemYearKey, "match:", schoolYearPass);
             return childPass && termPass && monthPass && schoolYearPass;
         });
 
-        console.log("💳 [DEBUG] filteredPaymentList count:", filtered.length);
         return filtered.sort((a, b) => {
             const aTime = new Date(a.deadline).getTime();
             const bTime = new Date(b.deadline).getTime();
@@ -389,7 +365,7 @@ export default function ParentPayments() {
                 childName: item.childName,
                 invoiceCode: item.invoiceCode || `INV-${item.id}`,
                 semester: item.term || item.title,
-                date: item.paidDate || "--",
+                date: item.paidDate ? formatDateVi(item.paidDate) : "--",
                 amount: formatCurrency(item.finalAmount),
                 method: item.status === "paid" ? "Chuyen khoan QR" : "Chua thanh toan",
                 dueStatus: getDueStatus(item),
@@ -474,7 +450,7 @@ export default function ParentPayments() {
         setSelectedDetailId(paymentId);
     };
 
-    const applyDiscountCode = () => {
+    const applyDiscountCode = async () => {
         if (!selectedPayment) return;
 
         const normalizedCode = discountCodeInput.trim().toUpperCase();
@@ -483,33 +459,45 @@ export default function ParentPayments() {
             return;
         }
 
-        const rule = DISCOUNT_RULES[normalizedCode];
-        if (!rule) {
-            setDiscountError("Mã giảm giá không hợp lệ hoặc đã hết hạn.");
-            return;
-        }
+        try {
+            const response = await parentService.applyDiscountCode({
+                body: {
+                    invoiceId: selectedPayment.id,
+                    discountCode: normalizedCode,
+                },
+                mock: false,
+            });
 
-        const discountAmount =
-            rule.type === "percent"
-                ? Math.round((selectedPayment.originalAmount * rule.value) / 100)
-                : rule.value;
+            const discountAmount = Number(
+                response?.data?.discountAmount
+                ?? response?.data?.discount_amount
+                ?? response?.discountAmount
+                ?? response?.discount_amount
+                ?? 0,
+            );
 
-        const appliedDiscount = Math.min(roundMoney(discountAmount), selectedPayment.originalAmount);
+            if (!discountAmount) {
+                setDiscountError("Hệ thống chưa trả về số tiền giảm giá cho mã này.");
+                return;
+            }
 
-        setPaymentList((prev) => {
-            const next = prev.map((item) => {
+            const appliedDiscount = Math.min(roundMoney(discountAmount), selectedPayment.originalAmount);
+
+            setPaymentList((prev) => prev.map((item) => {
                 if (item.id !== selectedPayment.id) return item;
                 return recomputePayment({
                     ...item,
                     discountCode: normalizedCode,
                     discountAmount: appliedDiscount,
                 });
-            });
-            saveJson(PAYMENT_STORAGE_KEYS.PARENT_RECORDS, next);
-            return next;
-        });
+            }));
 
-        setIsDiscountDialogOpen(false);
+            setIsDiscountDialogOpen(false);
+        } catch (error) {
+            console.error("Failed to apply discount code:", error);
+            setDiscountError(error?.response?.data?.error || error?.message || "Không thể áp dụng mã giảm giá.");
+            return;
+        }
     };
 
     const transferNote = selectedPayment
@@ -517,11 +505,15 @@ export default function ParentPayments() {
         : "";
 
     const qrUrl = selectedPayment
-        ? `https://img.vietqr.io/image/${BANK_INFO.bin}-${BANK_INFO.accountNumber}-compact2.png?amount=${selectedPayment.finalAmount}&addInfo=${encodeURIComponent(transferNote)}&accountName=${encodeURIComponent(BANK_INFO.accountName)}`
+        ? buildPaymentQrUrl(selectedBankAccount, selectedPayment.finalAmount, transferNote)
         : "";
 
     const confirmPaid = async () => {
         if (!selectedPayment) return;
+        if (!selectedBankAccount) {
+            toast.error("Chưa có tài khoản ngân hàng để xác nhận chuyển khoản.");
+            return;
+        }
 
         setIsQrDialogOpen(false);
 
@@ -539,29 +531,24 @@ export default function ParentPayments() {
 
         toast.success("Đã ghi nhận thanh toán thành công. Nhà trường sẽ xác nhận trong thời gian sớm nhất.");
 
-        const paidDate = getToday();
-        setPaymentList((prev) => {
-            const next = prev.map((item) => {
+        setPaymentList((prev) =>
+            prev.map((item) => {
                 if (item.id !== selectedPayment.id) return item;
                 // Use data from API response if available, otherwise fall back to computed values
                 const apiData = apiResponse?.data;
-                console.log("💳 confirmPaid apiResponse:", JSON.stringify(apiResponse, null, 2));
                 const status = apiData?.status || "paid";
                 const paidAmount = apiData?.paid_amount !== undefined
                     ? parseFloat(apiData.paid_amount)
                     : item.finalAmount;
                 const paidDate = apiData?.paid_date || getToday();
-                console.log("💳 confirmPaid computed values:", { status, paidAmount, paidDate, itemStatus: item.status });
                 return recomputePayment({
                     ...item,
                     status,
                     paidDate,
                     paidAmount,
                 });
-            });
-            saveJson(PAYMENT_STORAGE_KEYS.PARENT_RECORDS, next);
-            return next;
-        });
+            })
+        );
 
         // Dispatch event so admin-side payment hub can reflect the update
         window.dispatchEvent(new CustomEvent("parent-payment-confirmed", {
@@ -598,7 +585,7 @@ export default function ParentPayments() {
       <tr><td>Hoc phi goc</td><td>${formatCurrency(payment.originalAmount)}</td></tr>
       <tr><td>Giam gia</td><td>${formatCurrency(payment.discountAmount)}</td></tr>
       <tr><td>Tong phai thu</td><td>${formatCurrency(payment.finalAmount)}</td></tr>
-      <tr><td>Ngay thanh toan</td><td>${payment.paidDate}</td></tr>
+      <tr><td>Ngay thanh toan</td><td>${formatDateVi(payment.paidDate)}</td></tr>
       <tr><td>Phuong thuc</td><td>Chuyen khoan QR</td></tr>
     </table>
     <p class="note">Luu y: Chon Save as PDF trong hop thoai in de tai file PDF.</p>
@@ -660,6 +647,10 @@ export default function ParentPayments() {
                 ))}
             </div>
 
+            {paymentLoadError ? (
+                <p className="dialog-error-text">{paymentLoadError}</p>
+            ) : null}
+
             <section className="payment-case-section">
                 <h3>Các trường hợp đóng tiền</h3>
                 <div className="payment-case-grid">
@@ -674,7 +665,11 @@ export default function ParentPayments() {
             </section>
 
             <div className="payment-table-list">
-                {filteredPaymentList.map((item) => {
+                {isLoadingPayments ? (
+                    <p className="dialog-helper-text">Đang tải dữ liệu học phí...</p>
+                ) : filteredPaymentList.length === 0 ? (
+                    <p className="dialog-helper-text">Không có hóa đơn phù hợp với bộ lọc hiện tại.</p>
+                ) : filteredPaymentList.map((item) => {
                     const dueStatus = getDueStatus(item);
                     return (
                     <PaymentTable
@@ -682,12 +677,25 @@ export default function ParentPayments() {
                         payment={{
                             ...item,
                             deadlineLabel: formatDateVi(item.deadline),
+                            paidDateLabel: item.paidDate ? formatDateVi(item.paidDate) : "--",
                             dueStatus,
                         }}
                         onOpenDiscount={() => openDiscountDialog(item.id)}
                         onOpenPayment={() => openQrDialog(item.id)}
                         onExportPdf={() => exportPdf(item)}
                         onOpenDetail={() => openDetailDialog(item.id)}
+                        onStripeSuccess={() => {}}
+                        onBeforeStripeRedirect={(payment) => {
+                            setSelectedPaymentId(payment.id);
+                            setIsQrDialogOpen(false);
+                        }}
+                        onStripeError={(msg) => toast.error(msg)}
+                        onVnpaySuccess={() => {}}
+                        onBeforeVnpayRedirect={(payment) => {
+                            setSelectedPaymentId(payment.id);
+                            setIsQrDialogOpen(false);
+                        }}
+                        onVnpayError={(msg) => toast.error(msg)}
                     />
                 );
                 })}
@@ -702,7 +710,7 @@ export default function ParentPayments() {
             >
                 <div className="parent-payment-dialog-content">
                     <p className="dialog-helper-text">
-                        Mã đang hỗ trợ: <strong>GIAM10</strong>, <strong>PHUHUYNH5</strong>, <strong>FIX500</strong>
+                        Mã giảm giá sẽ được kiểm tra từ hệ thống tài chính.
                     </p>
 
                     <input
@@ -736,23 +744,36 @@ export default function ParentPayments() {
             >
                 {selectedPayment ? (
                     <div className="parent-payment-dialog-content">
-                        <div className="qr-wrap">
-                            <img src={qrUrl} alt="QR thanh toán" className="qr-image" />
-                        </div>
+                        {selectedBankAccount && qrUrl ? (
+                            <>
+                                <div className="qr-wrap">
+                                    <img src={qrUrl} alt="QR thanh toán" className="qr-image" />
+                                </div>
 
-                        <div className="qr-payment-meta">
-                            <p><strong>Ngân hàng:</strong> {BANK_INFO.bankName}</p>
-                            <p><strong>STK:</strong> {BANK_INFO.accountNumber}</p>
-                            <p><strong>Tên tài khoản:</strong> {BANK_INFO.accountName}</p>
-                            <p><strong>Số tiền:</strong> {formatCurrency(selectedPayment.finalAmount)}</p>
-                            <p><strong>Nội dung CK:</strong> {transferNote}</p>
-                        </div>
+                                <div className="qr-payment-meta">
+                                    <p><strong>Ngân hàng:</strong> {selectedBankAccount.bankName || "--"}</p>
+                                    <p><strong>STK:</strong> {selectedBankAccount.accountNumber}</p>
+                                    <p><strong>Tên tài khoản:</strong> {selectedBankAccount.accountName}</p>
+                                    <p><strong>Số tiền:</strong> {formatCurrency(selectedPayment.finalAmount)}</p>
+                                    <p><strong>Nội dung CK:</strong> {transferNote}</p>
+                                </div>
+                            </>
+                        ) : (
+                            <p className="dialog-error-text">
+                                {bankLoadError || "Chưa có tài khoản ngân hàng đang hoạt động để tạo QR thanh toán."}
+                            </p>
+                        )}
 
                         <div className="dialog-action-row">
                             <button type="button" className="dialog-btn ghost" onClick={() => setIsQrDialogOpen(false)}>
                                 Đóng
                             </button>
-                            <button type="button" className="dialog-btn primary" onClick={confirmPaid}>
+                            <button
+                                type="button"
+                                className="dialog-btn primary"
+                                onClick={confirmPaid}
+                                disabled={!selectedBankAccount}
+                            >
                                 Tôi đã chuyển khoản
                             </button>
                         </div>
@@ -811,9 +832,8 @@ export default function ParentPayments() {
                     </div>
                 ) : null}
             </Modal>
+
+            <StripeStatusChecker onStatusUpdate={() => {}} />
         </div>
     );
 }
-
-
-

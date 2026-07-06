@@ -1,5 +1,4 @@
-import { useState, useEffect } from "react";
-import { useSearchParams, useNavigate } from "react-router-dom";
+import { useSearchParams } from "react-router-dom";
 import { PageHeader } from "../../../components/common";
 import DisciplineHeaderActions from "../components/DisciplineHeaderActions";
 import { useSchoolYearTerm } from "../../../hooks/useSchoolYearTerm";
@@ -16,13 +15,25 @@ const TABS = [
 
 export default function VpDisciplineCockpit() {
     const [searchParams, setSearchParams] = useSearchParams();
-    const navigate = useNavigate();
     const selectedClass = searchParams.get("class");
+    const selectedClassName = searchParams.get("className");
     const activeTab = searchParams.get("tab") || "attendance";
     const { selectedSchoolYear, selectedTerm, handleYearArrow, handleTermChange } = useSchoolYearTerm();
 
+    const updateParams = (updates = {}) => {
+        const nextParams = new URLSearchParams(searchParams);
+        Object.entries(updates).forEach(([key, value]) => {
+            if (value === undefined || value === null || value === "") {
+                nextParams.delete(key);
+            } else {
+                nextParams.set(key, String(value));
+            }
+        });
+        setSearchParams(nextParams);
+    };
+
     const setTab = (tab) => {
-        setSearchParams({ class: selectedClass, tab });
+        updateParams({ class: selectedClass, tab });
     };
 
     return (
@@ -31,11 +42,11 @@ export default function VpDisciplineCockpit() {
                 title={
                     <div className="cockpit-title-row">
                         {selectedClass && (
-                            <button className="btn-back-square-title" onClick={() => setSearchParams({})}>
+                            <button className="btn-back-square-title" onClick={() => updateParams({ class: "", className: "", tab: "" })}>
                                 <FiArrowLeft />
                             </button>
                         )}
-                        <span>{selectedClass ? `Lớp ${selectedClass}` : "Tổng Hợp Thi Đua & Nề Nếp"}</span>
+                        <span>{selectedClass ? `Lớp ${selectedClassName || selectedClass}` : "Tổng Hợp Thi Đua & Nề Nếp"}</span>
                     </div>
                 }
                 actions={
@@ -52,7 +63,11 @@ export default function VpDisciplineCockpit() {
                 <div className="cockpit-ranking-view animate-fade-in">
                     <VpDisciplineCompetition 
                         isEmbedded={true} 
-                        onClassClick={(className) => setSearchParams({ class: className, tab: 'attendance' })}
+                        onClassClick={(className, params = {}) => updateParams({
+                            ...params,
+                            class: className,
+                            tab: "attendance",
+                        })}
                     />
                 </div>
             ) : (
@@ -86,4 +101,3 @@ export default function VpDisciplineCockpit() {
         </div>
     );
 }
-

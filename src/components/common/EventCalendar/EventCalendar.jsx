@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useCallback, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import { FiPlus, FiChevronLeft, FiChevronRight } from "react-icons/fi";
 import Select from "../../ui/Select/Select";
@@ -34,6 +34,7 @@ const monthNames = [
 ];
 
 const dayNames = ["CN", "T2", "T3", "T4", "T5", "T6", "T7"];
+const MAX_DAY_DOTS = 5;
 
 const getDaysInMonth = (date) => new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
 const getFirstDayOfMonth = (date) => new Date(date.getFullYear(), date.getMonth(), 1).getDay();
@@ -55,6 +56,28 @@ const normalizeDateInput = (value, fallbackYear, fallbackMonth) => {
   return new Date(fallbackYear, fallbackMonth, dayNumber);
 };
 
+const getTermAnchorDate = (selectedSchoolYear, selectedTerm, fallbackDate) => {
+  const currentYearStr = selectedSchoolYear ? selectedSchoolYear.split("-")[0] : String(fallbackDate.getFullYear());
+  const targetYear = parseInt(currentYearStr, 10);
+  const term = typeof selectedTerm === "string" ? selectedTerm.toLowerCase() : selectedTerm;
+
+  let targetMonth;
+  if (term === 1 || term === "hk1" || term === "học kỳ 1") {
+    targetMonth = 8; // September
+  } else if (term === 2 || term === "hk2" || term === "học kỳ 2") {
+    targetMonth = 1; // February
+  } else {
+    targetMonth = fallbackDate.getMonth();
+  }
+
+  if (Number.isNaN(targetYear)) {
+    return new Date(fallbackDate.getFullYear(), targetMonth, 1);
+  }
+
+  const yearToSet = (term === 2 || term === "hk2" || term === "học kỳ 2") ? targetYear + 1 : targetYear;
+  return new Date(yearToSet, targetMonth, 1);
+};
+
 const EventCalendar = ({
   title = "Lịch Sự Kiện",
   initialDate,
@@ -72,9 +95,21 @@ const EventCalendar = ({
   targetOptions = [],
   onAddEvent,
 }) => {
-  const today = initialDate || new Date();
-  const [currentDate, setCurrentDate] = useState(today);
-  const [events, setEvents] = useState(initialEvents);
+  const today = useMemo(() => initialDate || new Date(), [initialDate]);
+  const termAnchorDate = useMemo(
+    () => getTermAnchorDate(selectedSchoolYear, selectedTerm, today),
+    [selectedSchoolYear, selectedTerm, today],
+  );
+  const termAnchorKey = `${termAnchorDate.getFullYear()}-${termAnchorDate.getMonth()}-${selectedSchoolYear}-${selectedTerm}`;
+  const [calendarCursor, setCalendarCursor] = useState({ key: termAnchorKey, monthOffset: 0 });
+  const activeMonthOffset = calendarCursor.key === termAnchorKey ? calendarCursor.monthOffset : 0;
+  const currentDate = useMemo(
+    () => new Date(termAnchorDate.getFullYear(), termAnchorDate.getMonth() + activeMonthOffset, 1),
+    [activeMonthOffset, termAnchorDate],
+  );
+  const canUseLocalEvents = !onAddEvent && (rolePolicy?.canCreate ?? DEFAULT_POLICY.canCreate);
+  const [localEvents, setLocalEvents] = useState(() => initialEvents || DEFAULT_EVENTS);
+  const events = canUseLocalEvents ? localEvents : (initialEvents || DEFAULT_EVENTS);
   const [modalMode, setModalMode] = useState(null);
   const [selectedDay, setSelectedDay] = useState(null);
   const [selectedEvent, setSelectedEvent] = useState(null);
@@ -88,34 +123,6 @@ const EventCalendar = ({
     target: "all",
     color: (creatableTypes || eventTypes)[0]?.value || "blue",
   });
-
-  useEffect(() => {
-    if (initialEvents) setEvents(initialEvents);
-  }, [initialEvents]);
-
-  // Jump to first month of term when it changes
-    useEffect(() => {
-    const now = new Date();
-    const currentYearStr = selectedSchoolYear ? selectedSchoolYear.split("-")[0] : String(now.getFullYear());
-    const targetYear = parseInt(currentYearStr, 10);
-    
-    let targetMonth;
-    // Handle both display names and internal state keys
-    const term = typeof selectedTerm === 'string' ? selectedTerm.toLowerCase() : selectedTerm;
-    
-    if (term === 1 || term === "hk1" || term === "học kỳ 1") {
-      targetMonth = 8; // September
-    } else if (term === 2 || term === "hk2" || term === "học kỳ 2") {
-      targetMonth = 1; // February
-    } else {
-      targetMonth = now.getMonth();
-    }
-    
-    if (!isNaN(targetYear)) {
-      const yearToSet = (term === 2 || term === "hk2" || term === "học kỳ 2") ? targetYear + 1 : targetYear;
-      setCurrentDate(new Date(yearToSet, targetMonth, 1));
-    }
-  }, [selectedTerm, selectedSchoolYear]);
 
   // Check if current month visible in picker is in the active term
   const isMonthInActiveTerm = useMemo(() => {
@@ -151,7 +158,14 @@ const EventCalendar = ({
     days.push(i);
   }
 
-  const getEventRange = (event) => {
+  const moveMonth = (delta) => {
+    setCalendarCursor((prev) => {
+      const monthOffset = prev.key === termAnchorKey ? prev.monthOffset : 0;
+      return { key: termAnchorKey, monthOffset: monthOffset + delta };
+    });
+  };
+
+  const getEventRange = useCallback((event) => {
     const startDate = normalizeDateInput(event.date ?? event.startDay, currentDate.getFullYear(), currentDate.getMonth());
     const endDate = normalizeDateInput(event.endDate ?? event.endDay ?? event.date ?? event.startDay, currentDate.getFullYear(), currentDate.getMonth()) || startDate;
 
@@ -162,7 +176,7 @@ const EventCalendar = ({
     const start = startDate <= endDate ? startDate : endDate;
     const end = startDate <= endDate ? endDate : startDate;
     return { startDate: start, endDate: end };
-  };
+  }, [currentDate]);
 
   const getEventDisplayDate = (event) => {
     if (isIsoDateString(event?.date)) {
@@ -198,7 +212,7 @@ const EventCalendar = ({
       }
     });
     return map;
-  }, [events, currentDate]);
+  }, [events, currentDate, getEventRange]);
 
   const toCurrentMonthDate = (day) => {
     const year = currentDate.getFullYear();
@@ -318,13 +332,7 @@ const EventCalendar = ({
     if (onAddEvent) {
       onAddEvent(nextEvent);
     } else {
-      setEvents((prevEvents) => {
-        const filtered = prevEvents.filter((item) => {
-          const range = getEventRange(item);
-          return !(normalizedStartDay <= range.endDay && normalizedEndDay >= range.startDay);
-        });
-        return [...filtered, nextEvent];
-      });
+      setLocalEvents((prevEvents) => [...prevEvents, nextEvent]);
     }
 
     setNewEvent({
@@ -349,7 +357,7 @@ const EventCalendar = ({
       return;
     }
 
-    setEvents((prevEvents) => prevEvents.filter((item) => item !== selectedEvent));
+    setLocalEvents((prevEvents) => prevEvents.filter((item) => item !== selectedEvent));
     closeModal();
   };
 
@@ -389,14 +397,14 @@ const EventCalendar = ({
       </div>
 
       <div className="event-calendar__nav">
-        <button onClick={() => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1))} className="event-calendar__btn-nav">
+        <button onClick={() => moveMonth(-1)} className="event-calendar__btn-nav">
           <FiChevronLeft size={18} />
         </button>
         <div className="event-calendar__month-year">
           {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
           {!isMonthInActiveTerm && <span className="month-year__warning"> (Ngoài kỳ học)</span>}
         </div>
-        <button onClick={() => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1))} className="event-calendar__btn-nav">
+        <button onClick={() => moveMonth(1)} className="event-calendar__btn-nav">
           <FiChevronRight size={18} />
         </button>
       </div>
@@ -419,7 +427,7 @@ const EventCalendar = ({
                 <div className="event-calendar__day-number">{day}</div>
                 {eventsByDate[day] && (
                   <div className="event-calendar__events-dots">
-                    {eventsByDate[day].map((event, idx) => (
+                    {eventsByDate[day].slice(0, MAX_DAY_DOTS).map((event, idx) => (
                       <div
                         key={`${day}-${idx}`}
                         className={`event-calendar__dot event-calendar__event--${event.color}`}
@@ -430,6 +438,14 @@ const EventCalendar = ({
                         }}
                       ></div>
                     ))}
+                    {eventsByDate[day].length > MAX_DAY_DOTS && (
+                      <span
+                        className="event-calendar__dot-count"
+                        title={`${eventsByDate[day].length - MAX_DAY_DOTS} sự kiện khác`}
+                      >
+                        +{eventsByDate[day].length - MAX_DAY_DOTS}
+                      </span>
+                    )}
                   </div>
                 )}
               </>
@@ -674,5 +690,3 @@ const EventCalendar = ({
 };
 
 export default EventCalendar;
-
-

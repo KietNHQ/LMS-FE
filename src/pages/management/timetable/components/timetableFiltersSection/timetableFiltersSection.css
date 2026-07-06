@@ -200,6 +200,25 @@
     margin-left: 0.25rem;
 }
 
+.tt-input-field--readonly .tt-building-badge {
+    height: 2.85rem;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 1rem;
+    background: #f8fafc;
+    padding: 0 1rem;
+    font-weight: 700;
+    color: #1e2f5a;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.95rem;
+}
+
+.tt-input-field--readonly .tt-building-badge svg {
+    color: #64748b;
+    flex-shrink: 0;
+}
+
 
 .tt-week-input {
     width: 100%;

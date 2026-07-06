@@ -1,7 +1,8 @@
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { PageHeader, SchoolYearTermSelector } from "../../../../components/common";
 import { useSchoolYearTerm } from "../../../../hooks/useSchoolYearTerm";
 import { financeService } from "../../../../services/pages/management/finance";
+import { resolveSchoolYearId, resolveSemesterId } from "../../../../services/shared/schoolYearLookup";
 import {
     FiCalendar,
     FiCheckCircle,
@@ -20,8 +21,18 @@ const METHOD_LABELS = {
     cash: "Tiền mặt",
     bank_transfer: "Chuyển khoản",
     online: "Thanh toán online",
+    vnpay: "VNPAY",
+    stripe: "Stripe",
     other: "Khác",
 };
+
+const ONLINE_METHODS = new Set(["online", "vnpay", "stripe"]);
+
+function matchesMethodFilter(method, filter) {
+    if (filter === "all") return true;
+    if (filter === "online") return ONLINE_METHODS.has(method);
+    return method === filter;
+}
 
 const formatCurrency = (v) =>
     typeof v === "number"
@@ -43,7 +54,10 @@ export default function FinancePaymentHistory() {
     const { selectedSchoolYear, selectedTerm, handleYearArrow, handleTermChange } = useSchoolYearTerm();
     const [stats, setStats] = useState({ totalAmount: 0, byMethod: {}, count: 0 });
     const [totalRecords, setTotalRecords] = useState(0);
-    const [isLoading, setIsLoading] = useState(false);
+    const [paginatedRows, setPaginatedRows] = useState([]);
+    const [isStatsLoading, setIsStatsLoading] = useState(false);
+    const [isDataLoading, setIsDataLoading] = useState(false);
+    const isLoading = isStatsLoading || isDataLoading;
     const [searchQuery, setSearchQuery] = useState("");
     const [methodFilter, setMethodFilter] = useState("all");
     const [statusFilter, setStatusFilter] = useState("all");
@@ -51,143 +65,105 @@ export default function FinancePaymentHistory() {
     const [page, setPage] = useState(1);
     const PAGE_SIZE = 10;
 
-    // Load stats from payment history data
-    const loadStats = useCallback(async () => {
-        setIsLoading(true);
-        try {
-            const payRes = await financeService.getPaymentHistory({
-                params: {
-                    schoolYearId: selectedSchoolYear?.id,
-                    semesterId: selectedTerm?.id,
-                    limit: 1000, // Get enough data for stats
-                },
-            });
+    // Resolved IDs — updated whenever schoolYear/term settles (debounced)
+    const [resolvedIds, setResolvedIds] = useState({ schoolYearId: undefined, semesterId: undefined });
+    const isFetchingRef = useRef(false);
 
-            if (payRes?.success) {
-                const payments = Array.isArray(payRes.data) ? payRes.data : payRes.data?.items || [];
-                const byMethod = {};
-                let totalAmount = 0;
+    // Debounce ID resolution — waits for selectedSchoolYear/term to settle
+    useEffect(() => {
+        let timer;
+        const resolve = async () => {
+            clearTimeout(timer);
+            timer = setTimeout(async () => {
+                const syId = await resolveSchoolYearId(selectedSchoolYear);
+                const semId = await resolveSemesterId(selectedSchoolYear, selectedTerm);
+                setResolvedIds({ schoolYearId: syId, semesterId: semId });
+            }, 150);
+        };
+        resolve();
+        return () => clearTimeout(timer);
+    }, [selectedSchoolYear, selectedTerm]);
 
-                payments.forEach((p) => {
-                    const method = p.payment_method || "other";
-                    byMethod[method] = (byMethod[method] || 0) + parseFloat(p.amount || 0);
-                    totalAmount += parseFloat(p.amount || 0);
-                });
+    // Single effect: fetch stats + page data when resolvedIds changes
+    // Uses ref to prevent re-entrancy (no setState in here to avoid extra re-renders)
+    useEffect(() => {
+        const { schoolYearId: syId, semesterId: semId } = resolvedIds;
+        if (!syId || !semId) return;
+        if (isFetchingRef.current) return;
+        isFetchingRef.current = true;
 
-                setStats({ totalAmount, byMethod, count: payments.length });
-            }
-        } catch (err) {
-            console.error("[FinancePaymentHistory] loadStats error:", err);
-            setStats({ totalAmount: 0, byMethod: {}, count: 0 });
-        } finally {
-            setIsLoading(false);
-        }
-    }, [selectedSchoolYear?.id, selectedTerm?.id]);
+        const fetchAll = async () => {
+            setIsStatsLoading(true);
+            setIsDataLoading(true);
+            setPage(1);
+            try {
+                const [statsRes, payRes] = await Promise.all([
+                    financeService.getPaymentStats({ params: { schoolYearId: syId, semesterId: semId } }),
+                    financeService.getPaymentHistory({ params: { schoolYearId: syId, semesterId: semId, page: 1, limit: PAGE_SIZE } }),
+                ]);
 
-    // Load paginated data
-    const loadPage = useCallback(async (pageNum) => {
-        setIsLoading(true);
-        try {
-            const [payRes, invRes] = await Promise.allSettled([
-                financeService.getPaymentHistory({
-                    params: {
-                        schoolYearId: selectedSchoolYear?.id,
-                        semesterId: selectedTerm?.id,
-                        page: pageNum,
-                        limit: PAGE_SIZE,
-                    },
-                }),
-                financeService.getAllInvoices({
-                    params: {
-                        schoolYearId: selectedSchoolYear?.id,
-                        semesterId: selectedTerm?.id,
-                        page: pageNum,
-                        limit: PAGE_SIZE,
-                    },
-                }),
-            ]);
-
-            const payRows = payRes.status === "fulfilled" && payRes.value?.success
-                ? (Array.isArray(payRes.value.data) ? payRes.value.data : payRes.value.data?.items || [])
-                : [];
-            const invRows = invRes.status === "fulfilled" && invRes.value?.success
-                ? (Array.isArray(invRes.value.data) ? invRes.value.data : invRes.value.data?.items || [])
-                : [];
-
-            const records = [];
-            payRows.forEach((p) => {
-                records.push({
-                    id: p.id,
-                    source: "payment",
-                    studentId: p.student_id,
-                    studentName: p.student_name || p.student_given_name
-                        ? `${p.student_surname || ""} ${p.student_given_name || ""}`.trim()
-                        : "-",
-                    studentCode: p.student_code || p.student_id,
-                    amount: parseFloat(p.amount || p.amount_paid || p.paid_amount || 0),
-                    method: p.payment_method || p.method || "cash",
-                    date: p.paid_date || p.payment_date || p.paid_at || p.created_at,
-                    ref: p.transaction_ref || p.reference || "",
-                    note: p.payment_note || p.note || "",
-                    feeName: p.fee_name || p.description || "-",
-                    status: "completed",
-                    invoiceId: p.invoice_id,
-                });
-            });
-
-            invRows.forEach((inv) => {
-                if (inv.paid_amount && parseFloat(inv.paid_amount) > 0) {
-                    records.push({
-                        id: `inv-${inv.id}`,
-                        source: "invoice",
-                        studentId: inv.student_id,
-                        studentName: inv.student_name || inv.student_given_name
-                            ? `${inv.student_surname || ""} ${inv.student_given_name || ""}`.trim()
-                            : "-",
-                        studentCode: inv.student_code || `HS${inv.student_id}`,
-                        amount: parseFloat(inv.paid_amount || inv.amount_paid || 0),
-                        method: inv.payment_method || "other",
-                        date: inv.paid_date || inv.paid_at || inv.last_payment_date || inv.updated_at,
-                        ref: inv.transaction_ref || "",
-                        note: inv.payment_note || "",
-                        feeName: inv.fee_name || "-",
-                        status: "completed",
-                        invoiceId: inv.id,
-                    });
+                if (statsRes?.success && statsRes.data) {
+                    const d = statsRes.data;
+                    setStats({ totalAmount: d.totalAmount || d.total_collected || 0, byMethod: d.byMethod || {}, count: d.totalCount || 0 });
+                } else {
+                    setStats({ totalAmount: 0, byMethod: {}, count: 0 });
                 }
-            });
 
-            // Dedup: same debt can appear from both endpoints (both call get_fees_invoices_all)
-            const seen = new Set();
-            const deduped = records.filter((r) => {
-                const key = `${r.id}-${r.amount}-${r.date}`;
-                if (seen.has(key)) return false;
-                seen.add(key);
-                return true;
-            });
+                const payRows = payRes?.success && Array.isArray(payRes.data) ? payRes.data : [];
+                const total = payRes?.pagination?.total || 0;
+                setPaginatedRows(payRows.map((p) => ({
+                    id: p.id, source: "payment", studentId: p.student_id,
+                    studentName: p.student_name || p.student?.fullName || "-",
+                    studentCode: p.student_code || `HS${p.student_id}`,
+                    amount: parseFloat(p.paid_amount || p.amount || 0),
+                    method: p.payment_method || "cash",
+                    date: p.paid_date || p.payment_date || p.created_at,
+                    ref: p.transaction_ref || "", note: p.payment_note || "",
+                    feeName: p.fee_name || p.description || "-",
+                    status: p.status === "paid" ? "completed" : (p.status || "completed"),
+                    invoiceId: p.invoice_id,
+                })).sort((a, b) => new Date(b.date) - new Date(a.date)));
+                setTotalRecords(total);
+            } catch (err) {
+                setStats({ totalAmount: 0, byMethod: {}, count: 0 });
+                setPaginatedRows([]);
+                setTotalRecords(0);
+            } finally {
+                setIsStatsLoading(false);
+                setIsDataLoading(false);
+                isFetchingRef.current = false;
+            }
+        };
 
-            const sorted = deduped.sort((a, b) => new Date(b.date) - new Date(a.date));
-            setPaginatedRows(sorted);
+        fetchAll();
+    }, [resolvedIds]);
 
-            // Use total from just the first successful response — both endpoints return same data
-            const firstTotal = payRes.status === "fulfilled" && payRes.value?.success
-                ? (payRes.value.data?.pagination?.total || payRes.value.data?.items?.length || 0)
-                : (invRes.status === "fulfilled" && invRes.value?.success
-                    ? (invRes.value.data?.pagination?.total || invRes.value.data?.items?.length || 0)
-                    : 0);
-            setTotalRecords(firstTotal);
-        } catch (err) {
-            console.error("[FinancePaymentHistory] loadPage error:", err);
-        } finally {
-            setIsLoading(false);
-        }
-    }, [selectedSchoolYear?.id, selectedTerm?.id]);
-
-    const [paginatedRows, setPaginatedRows] = useState([]);
-
-    useEffect(() => { loadStats(); }, [selectedSchoolYear?.id, selectedTerm?.id]);
-    useEffect(() => { setPage(1); }, [searchQuery, methodFilter, statusFilter]);
-    useEffect(() => { loadPage(page); }, [page, loadPage]);
+    // Pagination: fetch a new page when page changes (but not on initial resolvedIds reset to 1)
+    useEffect(() => {
+        const { schoolYearId: syId, semesterId: semId } = resolvedIds;
+        if (!syId || !semId || page <= 1) return;
+        setIsDataLoading(true);
+        financeService.getPaymentHistory({ params: { schoolYearId: syId, semesterId: semId, page, limit: PAGE_SIZE } })
+            .then((payRes) => {
+                const payRows = payRes?.success && Array.isArray(payRes.data) ? payRes.data : [];
+                const total = payRes?.pagination?.total || 0;
+                setPaginatedRows(payRows.map((p) => ({
+                    id: p.id, source: "payment", studentId: p.student_id,
+                    studentName: p.student_name || p.student?.fullName || "-",
+                    studentCode: p.student_code || `HS${p.student_id}`,
+                    amount: parseFloat(p.paid_amount || p.amount || 0),
+                    method: p.payment_method || "cash",
+                    date: p.paid_date || p.payment_date || p.created_at,
+                    ref: p.transaction_ref || "", note: p.payment_note || "",
+                    feeName: p.fee_name || p.description || "-",
+                    status: p.status === "paid" ? "completed" : (p.status || "completed"),
+                    invoiceId: p.invoice_id,
+                })).sort((a, b) => new Date(b.date) - new Date(a.date)));
+                setTotalRecords(total);
+            })
+            .catch(() => {})
+            .finally(() => setIsDataLoading(false));
+    }, [page, resolvedIds]);
 
     // Filter the paginated rows (client-side filter on server-paginated result)
     const displayData = useMemo(() => {
@@ -198,7 +174,7 @@ export default function FinancePaymentHistory() {
                 || p.studentCode.toLowerCase().includes(query)
                 || p.ref.toLowerCase().includes(query)
                 || p.feeName.toLowerCase().includes(query);
-            const methodMatch = methodFilter === "all" || p.method === methodFilter;
+            const methodMatch = matchesMethodFilter(p.method, methodFilter);
             const statusMatch = statusFilter === "all" || p.status === statusFilter;
             return searchMatch && methodMatch && statusMatch;
         });
@@ -281,10 +257,30 @@ export default function FinancePaymentHistory() {
                     <option value="completed">Hoàn thành</option>
                     <option value="pending">Đang xử lý</option>
                 </select>
-                <button className="btn-secondary" onClick={loadPage.bind(null, page)} disabled={isLoading}>
+                <button className="btn-secondary" onClick={() => {
+                    const { schoolYearId: syId, semesterId: semId } = resolvedIds;
+                    if (!syId || !semId) return;
+                    setIsDataLoading(true);
+                    financeService.getPaymentHistory({ params: { schoolYearId: syId, semesterId: semId, page, limit: PAGE_SIZE } })
+                        .then((payRes) => {
+                            const payRows = payRes?.success && Array.isArray(payRes.data) ? payRes.data : [];
+                            setPaginatedRows(payRows.map((p) => ({
+                                id: p.id, source: "payment", studentId: p.student_id,
+                                studentName: p.student_name || "-",
+                                studentCode: p.student_code || `HS${p.student_id}`,
+                                amount: parseFloat(p.paid_amount || 0),
+                                method: p.payment_method || "cash",
+                                date: p.paid_date || "",
+                                ref: p.transaction_ref || "", note: p.payment_note || "",
+                                feeName: p.fee_name || "-",
+                                status: p.status === "paid" ? "completed" : (p.status || "completed"),
+                            })).sort((a, b) => new Date(b.date) - new Date(a.date)));
+                        })
+                        .finally(() => setIsDataLoading(false));
+                }} disabled={isLoading}>
                     <FiRefreshCw className={isLoading ? "spin" : ""} />
                 </button>
-                <button className="btn-primary" onClick={handleExport}>
+                <button className="btn-primary ph-export-csv-btn" onClick={handleExport}>
                     <FiDownload /> Xuất CSV
                 </button>
             </div>

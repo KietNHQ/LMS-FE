@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useEffect, useRef } from "react";
-import { FiSearch, FiSend, FiUsers, FiMessageSquare } from "react-icons/fi";
+import { FiSearch, FiSend, FiUsers, FiMessageSquare, FiTrash2 } from "react-icons/fi";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { toast } from "react-toastify";
 import { teacherService } from "../../../../../services/pages/teacher";
 import "./HomeroomParentChatSection.css";
 
@@ -110,6 +111,30 @@ const HomeroomParentChatSection = ({ data }) => {
                 queryKey: ["homeroom-parent-messages", selectedConversation?.id],
             });
             setInputValue("");
+        },
+    });
+
+    const deleteMessageMutation = useMutation({
+        mutationFn: (messageId) =>
+            teacherService.deleteHumanMessage({
+                pathParams: { messageId },
+                mock: false,
+            }),
+        onSuccess: () => {
+            queryClient.invalidateQueries({
+                queryKey: ["homeroom-parent-messages", selectedConversation?.id],
+            });
+            queryClient.invalidateQueries({
+                queryKey: ["homeroom-class-conversations", classId],
+            });
+            toast.success("Đã thu hồi tin nhắn");
+        },
+        onError: (error) => {
+            toast.error(
+                error?.response?.data?.error ||
+                    error?.response?.data?.message ||
+                    "Không thể thu hồi tin nhắn",
+            );
         },
     });
 
@@ -271,6 +296,7 @@ const HomeroomParentChatSection = ({ data }) => {
                                 apiMessages.map((msg) => {
                                     const currentUserId = getCurrentUserId();
                                     const isMe = msg.user_id === currentUserId;
+                                    const canDelete = isMe && msg.id && !deleteMessageMutation.isPending;
                                     return (
                                         <div
                                             key={msg.id}
@@ -287,6 +313,19 @@ const HomeroomParentChatSection = ({ data }) => {
                                                     minute: "2-digit",
                                                 })}
                                             </span>
+                                            {canDelete && (
+                                                <button
+                                                    type="button"
+                                                    className="msg-delete-btn"
+                                                    onClick={() =>
+                                                        deleteMessageMutation.mutate(msg.id)
+                                                    }
+                                                    aria-label="Thu hồi tin nhắn"
+                                                    title="Thu hồi tin nhắn"
+                                                >
+                                                    <FiTrash2 />
+                                                </button>
+                                            )}
                                         </div>
                                     );
                                 })

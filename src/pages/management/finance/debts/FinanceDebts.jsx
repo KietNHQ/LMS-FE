@@ -79,8 +79,9 @@ export default function FinanceDebts() {
         setIsLoading(true);
         try {
             const res = await financeService.getDebtSummary({
-                params: { schoolYearId: selectedSchoolYear?.id, semesterId: selectedTerm?.id },
+                params: { schoolYearId: selectedSchoolYear, semesterId: selectedTerm },
             });
+            console.log("[FinanceDebts] summary response:", JSON.stringify(res, null, 2));
             if (res?.success) {
                 const d = res.data || {};
                 setStats({
@@ -101,19 +102,19 @@ export default function FinanceDebts() {
         } finally {
             setIsLoading(false);
         }
-    }, [selectedSchoolYear?.id, selectedTerm?.id]);
+    }, [selectedSchoolYear, selectedTerm]);
 
     // Load paginated data
     const loadPage = useCallback(async (pageNum) => {
         setIsLoading(true);
         try {
             const res = await financeService.listDebts({
-                params: { schoolYearId: selectedSchoolYear?.id, semesterId: selectedTerm?.id, page: pageNum, limit: PAGE_SIZE },
+                params: { schoolYearId: selectedSchoolYear, semesterId: selectedTerm, page: pageNum, limit: PAGE_SIZE },
             });
             if (res?.success) {
                 const rows = Array.isArray(res.data) ? res.data : res.data?.items || [];
                 setPaginatedDebts(rows);
-                const total = res.data?.pagination?.total || rows.length;
+                const total = res.pagination?.total || res.data?.pagination?.total || rows.length;
                 setTotalRecords(total);
             }
         } catch (err) {
@@ -121,11 +122,11 @@ export default function FinanceDebts() {
         } finally {
             setIsLoading(false);
         }
-    }, [selectedSchoolYear?.id, selectedTerm?.id]);
+    }, [selectedSchoolYear, selectedTerm]);
 
     const [paginatedDebts, setPaginatedDebts] = useState([]);
 
-    useEffect(() => { loadStats(); }, [selectedSchoolYear?.id, selectedTerm?.id]);
+    useEffect(() => { loadStats(); }, [selectedSchoolYear, selectedTerm]);
     useEffect(() => { setPage(1); }, [searchQuery, statusFilter, priorityFilter]);
     useEffect(() => { loadPage(page); }, [page, loadPage]);
 

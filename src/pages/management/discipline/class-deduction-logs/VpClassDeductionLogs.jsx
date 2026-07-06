@@ -1,19 +1,27 @@
-import { useState, useMemo, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useState, useMemo } from "react";
+import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { PageHeader, Pagination, EmptyState } from "../../../../components/common";
 import DisciplineHeaderActions from "../components/DisciplineHeaderActions";
 import { useSchoolYearTerm } from "../../../../hooks/useSchoolYearTerm";
 import { classDeductionLogsService } from "../../../../services/pages/management/discipline/classDeductionLogsService";
+import { shiftSchoolYear } from "../../../../utils/dateUtils";
 import {
   FiAward, FiAlertTriangle, FiSearch, FiArrowLeft,
   FiTrendingUp, FiTrendingDown, FiMinus, FiCalendar,
-  FiFilter, FiDownload, FiChevronRight
+  FiFilter
 } from "react-icons/fi";
-import { getWeekDateRange } from "../../../../utils/competitionUtils";
+import {
+  formatDateForDisplay,
+  getSchoolYearForDate,
+  getTermForDate,
+  getWeekDateRange,
+  getWeekForDate,
+} from "../../../../utils/competitionUtils";
 import "./VpClassDeductionLogs.css";
 
 const ITEMS_PER_PAGE = 15;
+const TOTAL_COMPETITION_WEEKS = 35;
 
 const STATUS_LABELS = {
   pending: "Chờ duyệt",
@@ -36,7 +44,7 @@ function mapViolation(v) {
     className: v.class_name || v.className || "",
     violationType: v.violation_name || v.violation_type || v.violationType || "",
     violationTypeId: v.violation_type_id || v.violationTypeId,
-    severity: v.severity || v.level || "low",
+    severity: v.severity || v.violation_severity || v.level || "low",
     pointsDeducted: v.points_deducted || v.pointsDeducted || 0,
     date: v.date || v.recorded_at || "",
     status: v.status || "pending",
@@ -55,7 +63,7 @@ function mapReward(r) {
     className: r.class_name || r.className || "",
     rewardType: r.reward_name || r.reward_type || r.rewardType || "",
     rewardTypeId: r.reward_type_id || r.rewardTypeId,
-    pointsAdded: r.points_added || r.pointsAdded || 0,
+    pointsAdded: r.points_earned || r.points_added || r.pointsAdded || 0,
     date: r.date || r.recorded_at || "",
     status: r.status || "pending",
     verifiedBy: r.verified_by_name || r.verifiedBy || "",
@@ -66,29 +74,44 @@ function mapReward(r) {
 export default function VpClassDeductionLogs() {
   const { classId } = useParams();
   const navigate = useNavigate();
-  const { selectedSchoolYear, selectedTerm, handleYearArrow, handleTermChange } = useSchoolYearTerm();
-  const [selectedWeek, setSelectedWeek] = useState(1);
+  const [searchParams] = useSearchParams();
+  const {
+    selectedSchoolYear,
+    selectedTerm,
+    handleTermChange,
+    setSelectedSchoolYear,
+  } = useSchoolYearTerm();
+  const [periodSchoolYear, setPeriodSchoolYear] = useState(
+    () => searchParams.get("schoolYear") || selectedSchoolYear,
+  );
+  const [periodTerm, setPeriodTerm] = useState(
+    () => searchParams.get("term") || selectedTerm,
+  );
+  const getInitialWeek = () => {
+    const week = Number(searchParams.get("week"));
+    if (Number.isFinite(week) && week > 0) return week;
+    return periodTerm === "hk2" ? 19 : 1;
+  };
+  const [selectedWeek, setSelectedWeek] = useState(() => {
+    return getInitialWeek();
+  });
   const [activeTab, setActiveTab] = useState("violations"); // "violations" | "rewards"
 
+  // Compute date range from week
+  const dateRange = useMemo(
+    () => getWeekDateRange(periodSchoolYear, periodTerm, selectedWeek),
+    [periodSchoolYear, periodTerm, selectedWeek],
+  );
+
   // Filter states
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
+  const [startDate, setStartDate] = useState(() => searchParams.get("startDate") || dateRange.startDate || "");
+  const [endDate, setEndDate] = useState(() => searchParams.get("endDate") || dateRange.endDate || "");
+  const [selectedDate, setSelectedDate] = useState(() => searchParams.get("date") || "");
   const [violationTypeId, setViolationTypeId] = useState("all");
   const [rewardTypeId, setRewardTypeId] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
   const [studentSearch, setStudentSearch] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-
-  // Compute date range from week
-  const dateRange = useMemo(
-    () => getWeekDateRange(selectedSchoolYear, selectedTerm, selectedWeek),
-    [selectedSchoolYear, selectedTerm, selectedWeek],
-  );
-
-  useEffect(() => {
-    if (dateRange.startDate) setStartDate(dateRange.startDate);
-    if (dateRange.endDate) setEndDate(dateRange.endDate);
-  }, [dateRange]);
 
   // Fetch violation types
   const { data: violationTypesData = [] } = useQuery({
@@ -150,7 +173,7 @@ export default function VpClassDeductionLogs() {
       });
       return {
         data: res?.data || res || [],
-        total: res?.total || res?.totalCount || (Array.isArray(res?.data) ? res.data.length : 0),
+        total: res?.pagination?.total || res?.total || res?.totalCount || (Array.isArray(res?.data) ? res.data.length : 0),
       };
     },
     enabled: Boolean(classId && activeTab === "violations"),
@@ -177,7 +200,7 @@ export default function VpClassDeductionLogs() {
       });
       return {
         data: res?.data || res || [],
-        total: res?.total || res?.totalCount || (Array.isArray(res?.data) ? res.data.length : 0),
+        total: res?.pagination?.total || res?.total || res?.totalCount || (Array.isArray(res?.data) ? res.data.length : 0),
       };
     },
     enabled: Boolean(classId && activeTab === "rewards"),
@@ -219,9 +242,9 @@ export default function VpClassDeductionLogs() {
     }
     return {
       baseScore: summaryData.base_score ?? summaryData.baseScore ?? 100,
-      totalBonus: summaryData.total_bonus ?? summaryData.totalBonus ?? 0,
-      totalDeduction: summaryData.total_deduction ?? summaryData.totalDeduction ?? 0,
-      netScore: summaryData.net_score ?? summaryData.netScore ?? 100,
+      totalBonus: summaryData.total_bonus ?? summaryData.totalBonus ?? summaryData.totalRewardPoints ?? 0,
+      totalDeduction: summaryData.total_deduction ?? summaryData.totalDeduction ?? summaryData.totalViolationPoints ?? 0,
+      netScore: summaryData.net_score ?? summaryData.netScore ?? summaryData.finalScore ?? summaryData.avgDisciplineScore ?? 100,
     };
   }, [summaryData]);
 
@@ -234,6 +257,10 @@ export default function VpClassDeductionLogs() {
   const totalPages = Math.max(1, Math.ceil(totalItems / ITEMS_PER_PAGE));
 
   const handleResetFilters = () => {
+    const range = getWeekDateRange(periodSchoolYear, periodTerm, selectedWeek);
+    setStartDate(range.startDate || "");
+    setEndDate(range.endDate || "");
+    setSelectedDate("");
     setViolationTypeId("all");
     setRewardTypeId("all");
     setStatusFilter("all");
@@ -243,6 +270,71 @@ export default function VpClassDeductionLogs() {
 
   const handleBack = () => {
     navigate(-1);
+  };
+
+  const applyPeriodRange = (schoolYear, term, week) => {
+    const range = getWeekDateRange(schoolYear, term, week);
+    setStartDate(range.startDate || "");
+    setEndDate(range.endDate || "");
+    setSelectedDate("");
+    setCurrentPage(1);
+  };
+
+  const handlePeriodYearChange = (direction) => {
+    const nextSchoolYear = shiftSchoolYear(periodSchoolYear, direction);
+    setPeriodSchoolYear(nextSchoolYear);
+    if (setSelectedSchoolYear) {
+      setSelectedSchoolYear(nextSchoolYear);
+    }
+    applyPeriodRange(nextSchoolYear, periodTerm, selectedWeek);
+  };
+
+  const handlePeriodTermChange = (term) => {
+    const fallbackWeek = term === "hk2" ? 19 : 1;
+    setPeriodTerm(term);
+    setSelectedWeek(fallbackWeek);
+    handleTermChange(term);
+    applyPeriodRange(periodSchoolYear, term, fallbackWeek);
+  };
+
+  const handleDateJump = (value) => {
+    setSelectedDate(value);
+    if (!value) return;
+
+    const targetSchoolYear = getSchoolYearForDate(value);
+    const targetTerm = getTermForDate(targetSchoolYear, value);
+    const targetWeek = getWeekForDate(targetSchoolYear, targetTerm, value, TOTAL_COMPETITION_WEEKS);
+
+    if (!targetSchoolYear || !targetTerm || !targetWeek) {
+      setStartDate(value);
+      setEndDate(value);
+      setCurrentPage(1);
+      return;
+    }
+
+    if (setSelectedSchoolYear) {
+      setSelectedSchoolYear(targetSchoolYear);
+    }
+    handleTermChange(targetTerm);
+    setPeriodSchoolYear(targetSchoolYear);
+    setPeriodTerm(targetTerm);
+    setSelectedWeek(targetWeek.week);
+    setStartDate(targetWeek.startDate);
+    setEndDate(targetWeek.endDate);
+    setCurrentPage(1);
+  };
+
+  const goToConductRating = () => {
+    const query = new URLSearchParams({
+      class: String(classId),
+      tab: "conduct",
+      schoolYear: periodSchoolYear || "",
+      term: periodTerm || "",
+      week: String(selectedWeek),
+      startDate: startDate || "",
+      endDate: endDate || "",
+    });
+    navigate(`/management/competition?${query.toString()}`);
   };
 
   return (
@@ -255,11 +347,14 @@ export default function VpClassDeductionLogs() {
             <button className="cdl-back-btn" onClick={handleBack}>
               <FiArrowLeft /> Quay lại
             </button>
+            <button className="cdl-back-btn" onClick={goToConductRating}>
+              <FiAward /> Đánh giá hạnh kiểm
+            </button>
             <DisciplineHeaderActions
-              selectedSchoolYear={selectedSchoolYear}
-              selectedTerm={selectedTerm}
-              onYearChange={handleYearArrow}
-              onTermChange={handleTermChange}
+              selectedSchoolYear={periodSchoolYear}
+              selectedTerm={periodTerm}
+              onYearChange={handlePeriodYearChange}
+              onTermChange={handlePeriodTermChange}
             />
           </div>
         }
@@ -332,6 +427,15 @@ export default function VpClassDeductionLogs() {
 
       {/* Filter Bar */}
       <div className="cdl-filter-bar">
+        <div className="cdl-filter-group">
+          <label><FiCalendar /> Chọn ngày</label>
+          <input
+            type="date"
+            value={selectedDate}
+            onChange={(e) => handleDateJump(e.target.value)}
+          />
+        </div>
+
         <div className="cdl-filter-group">
           <label><FiCalendar /> Từ ngày</label>
           <input
@@ -425,7 +529,7 @@ export default function VpClassDeductionLogs() {
             </h3>
             <p>
               {startDate && endDate
-                ? `Từ ${startDate} đến ${endDate}`
+                ? `Từ ${formatDateForDisplay(startDate)} đến ${formatDateForDisplay(endDate)}`
                 : `Tuần ${selectedWeek}`}
               {classId && ` • Lớp ${classId}`}
             </p>
@@ -464,7 +568,7 @@ export default function VpClassDeductionLogs() {
                   <tbody>
                     {violations.map((v) => (
                       <tr key={v.id}>
-                        <td>{v.date}</td>
+                        <td>{formatDateForDisplay(v.date) || "—"}</td>
                         <td>
                           <div className="cdl-student-profile">
                             <div className="cdl-student-avatar">
@@ -513,7 +617,7 @@ export default function VpClassDeductionLogs() {
                   <tbody>
                     {rewards.map((r) => (
                       <tr key={r.id}>
-                        <td>{r.date}</td>
+                        <td>{formatDateForDisplay(r.date) || "—"}</td>
                         <td>
                           <div className="cdl-student-profile">
                             <div className="cdl-student-avatar">

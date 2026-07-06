@@ -1,9 +1,8 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useMemo } from "react";
 import PersonRoundedIcon from "@mui/icons-material/PersonRounded";
 import AccessTimeRoundedIcon from "@mui/icons-material/AccessTimeRounded";
 import "./StudentWeeklyScheduleSection.css";
-import { getStartOfIsoWeek, STATUS_META, SUBJECT_COLOR_MAP } from "../../../../../utils/timetableShared";
-import { studentService } from "../../../../../services/pages/student/studentService";
+import { getStartOfIsoWeek, ISO_WEEK_DAY_KEYS, STATUS_META } from "../../../../../utils/timetableShared";
 
 const DAY_NAMES = ["Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6", "Thứ 7", "CN"];
 const PERIOD_TIME = {
@@ -38,14 +37,12 @@ function isToday(date) {
 
 export default function StudentWeeklyScheduleSection({ 
   weekOffset, 
-  studentId, 
   onSelectDay, 
   onLessonSelect,
   lessons = [],
   isLoading = false,
   error = null,
   sessionView = "morning",
-  setSessionView,
   selectedSubject = "Tất cả"
 }) {
   const days = getWeekDates(weekOffset);
@@ -55,8 +52,16 @@ export default function StudentWeeklyScheduleSection({
     return lessons.filter((l) => l.subject === selectedSubject);
   }, [lessons, selectedSubject]);
 
+  const dayLessonMarkers = useMemo(() => (
+    ISO_WEEK_DAY_KEYS.map((dayKey) => (
+      filteredLessons
+        .filter((lesson) => lesson.day === dayKey)
+        .sort((a, b) => a.periodStart - b.periodStart)
+    ))
+  ), [filteredLessons]);
+
   const getCellLesson = (dayIdx, period) => {
-    const dayKey = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"][dayIdx];
+    const dayKey = ISO_WEEK_DAY_KEYS[dayIdx];
     return filteredLessons.find((l) => l.day === dayKey && l.periodStart <= period && l.periodEnd >= period) || null;
   };
 
@@ -104,18 +109,32 @@ export default function StudentWeeklyScheduleSection({
             <tr>
               <th className="period-col">Thời gian</th>
               {days.map((date, idx) => (
-                <th
-                  key={idx}
-                  className={`day-header ${isToday(date) ? "today-col" : ""}`}
-                  onClick={() => onSelectDay && onSelectDay(idx)}
-                >
-                  <span className="day-name">{DAY_NAMES[idx]}</span>
-                  <span className="day-date">
-                    {date.toLocaleDateString("vi-VN", { day: "2-digit", month: "2-digit" })}
+              <th
+                key={idx}
+                className={`day-header ${isToday(date) ? "today-col" : ""}`}
+                onClick={() => onSelectDay && onSelectDay(idx)}
+              >
+                <span className="day-name">{DAY_NAMES[idx]}</span>
+                <span className="day-date">
+                  {date.toLocaleDateString("vi-VN", { day: "2-digit", month: "2-digit" })}
+                </span>
+                {dayLessonMarkers[idx]?.length > 0 && (
+                  <span className="weekly-day-markers" aria-label={`${dayLessonMarkers[idx].length} tiết học`}>
+                    {dayLessonMarkers[idx].slice(0, 4).map((lesson) => (
+                      <span
+                        key={`${lesson.id}-${lesson.periodStart}-${lesson.periodEnd}`}
+                        className={`weekly-day-marker marker-${lesson.color || "blue"}`}
+                        title={`${lesson.subject} • Tiết ${lesson.periodStart}${lesson.periodEnd > lesson.periodStart ? `-${lesson.periodEnd}` : ""}`}
+                      />
+                    ))}
+                    {dayLessonMarkers[idx].length > 4 && (
+                      <span className="weekly-day-marker-count">+{dayLessonMarkers[idx].length - 4}</span>
+                    )}
                   </span>
-                  {isToday(date) && <span className="today-badge">Hôm nay</span>}
-                </th>
-              ))}
+                )}
+                {isToday(date) && <span className="today-badge">Hôm nay</span>}
+              </th>
+            ))}
             </tr>
           </thead>
           <tbody>
@@ -170,4 +189,3 @@ export default function StudentWeeklyScheduleSection({
     </div>
   );
 }
-

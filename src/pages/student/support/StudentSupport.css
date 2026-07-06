@@ -88,6 +88,11 @@
   border: 1px solid transparent;
 }
 
+.student-chat-content {
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
 .student-chat-message.is-bot {
   align-self: flex-start;
   background: #ffffff;
@@ -111,6 +116,82 @@
   font-size: 10px;
   color: #7f9bd1;
   margin-top: 4px;
+}
+
+.student-chat-category {
+  margin-top: 6px;
+  font-size: 10px;
+  font-weight: 700;
+  color: #0c53d5;
+  background: #eaf1ff;
+  padding: 2px 8px;
+  border-radius: 8px;
+  display: inline-block;
+}
+
+.student-chat-related {
+  margin-top: 4px;
+  font-size: 11px;
+  color: #667da9;
+  font-style: italic;
+}
+
+.student-chat-quick-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  padding: 10px 14px;
+  background: linear-gradient(180deg, #f2f6ff 0%, #ffffff 100%);
+  border-top: 1px solid #d6e4ff;
+}
+
+.student-quick-action-label {
+  grid-column: 1 / -1;
+  font-size: 11px;
+  font-weight: 800;
+  color: #667da9;
+}
+
+.student-quick-action-group {
+  min-width: 0;
+  border: 1px solid #d6e4ff;
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 8px;
+}
+
+.student-quick-action-group-title {
+  display: block;
+  margin-bottom: 6px;
+  color: #0c53d5;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.student-quick-action-buttons {
+  display: grid;
+  gap: 6px;
+}
+
+.student-chat-quick-actions button {
+  width: 100%;
+  min-height: 32px;
+  padding: 6px 10px;
+  background: #f2f6ff;
+  border: 1px solid #d6e4ff;
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #0c53d5;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.2s ease;
+}
+
+.student-chat-quick-actions button:hover {
+  background: #eaf1ff;
+  border-color: #8fb3f4;
+  transform: translateY(-1px);
 }
 
 .student-chat-input {
@@ -162,6 +243,13 @@
   box-shadow: 0 10px 18px rgba(12, 83, 213, 0.24);
 }
 
+.student-chat-input button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
 .student-support-footer {
   margin-top: 0;
   padding-top: 12px;
@@ -188,5 +276,9 @@
 
   .student-support-chat {
     min-height: 240px;
+  }
+
+  .student-chat-quick-actions {
+    grid-template-columns: 1fr;
   }
 }

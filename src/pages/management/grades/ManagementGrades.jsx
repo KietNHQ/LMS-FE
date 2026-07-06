@@ -20,6 +20,7 @@ export default function ManagementGrades() {
   const [students, setStudents] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isCalculating, setIsCalculating] = useState(false);
+  const [refreshNonce, setRefreshNonce] = useState(0);
 
   // Lock status
   const [lockStatus, setLockStatus] = useState({
@@ -81,6 +82,14 @@ export default function ManagementGrades() {
     };
     fetchLockStatus();
     return () => { isMounted = false; };
+  }, [selectedClassId, selectedSchoolYear, selectedTerm, refreshNonce]);
+
+  useEffect(() => {
+    if (!selectedClassId) return;
+    const intervalId = window.setInterval(() => {
+      setRefreshNonce((value) => value + 1);
+    }, 5000);
+    return () => window.clearInterval(intervalId);
   }, [selectedClassId, selectedSchoolYear, selectedTerm]);
 
   // Load students & grades
@@ -88,7 +97,8 @@ export default function ManagementGrades() {
     if (!selectedClassId) return;
     let isMounted = true;
     const fetchClassGrades = async () => {
-      setIsLoading(true);
+      const showInitialLoader = students.length === 0;
+      if (showInitialLoader) setIsLoading(true);
       try {
         const schoolYearId = await resolveSchoolYearId(selectedSchoolYear);
         const semester1Id = await resolveSemesterId(selectedSchoolYear, "hk1");
@@ -141,13 +151,13 @@ export default function ManagementGrades() {
       } catch (err) {
         console.error("Failed to load class grades:", err);
       } finally {
-        if (isMounted) setIsLoading(false);
+        if (isMounted && showInitialLoader) setIsLoading(false);
       }
     };
 
     fetchClassGrades();
     return () => { isMounted = false; };
-  }, [selectedClassId, selectedSchoolYear, selectedTerm]);
+  }, [selectedClassId, selectedSchoolYear, selectedTerm, refreshNonce]);
 
   // Report Card
   const handleOpenReportCard = async (student) => {
@@ -405,7 +415,7 @@ export default function ManagementGrades() {
       {/* Control Actions Bar */}
       <div className="mg-actions-row">
         <button
-          onClick={() => window.location.reload()}
+          onClick={() => setRefreshNonce((value) => value + 1)}
           disabled={isCalculating || students.length === 0}
           className="mg-btn-calc"
         >

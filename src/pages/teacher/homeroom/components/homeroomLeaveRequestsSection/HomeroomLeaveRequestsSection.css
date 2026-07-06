@@ -74,6 +74,57 @@
     box-shadow: 0 4px 12px rgba(15, 118, 110, 0.2);
 }
 
+.leave-requests-filters {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 0.75rem;
+    margin: -0.75rem 0 1.5rem;
+}
+
+.leave-requests-filters label {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: #64748b;
+}
+
+.leave-requests-filters input {
+    min-width: 150px;
+    height: 38px;
+    border: 1px solid rgba(15, 118, 110, 0.16);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.78);
+    color: #334155;
+    font-size: 0.86rem;
+    font-weight: 600;
+    padding: 0 0.7rem;
+    outline: none;
+}
+
+.leave-requests-filters input:focus {
+    border-color: var(--hr-accent-text, #0f766e);
+    box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.1);
+}
+
+.leave-requests-clear-filter {
+    height: 38px;
+    border: 1px solid rgba(15, 118, 110, 0.18);
+    border-radius: 8px;
+    background: rgba(15, 118, 110, 0.06);
+    color: var(--hr-accent-text, #0f766e);
+    cursor: pointer;
+    font-size: 0.82rem;
+    font-weight: 700;
+    padding: 0 0.85rem;
+}
+
+.leave-requests-clear-filter:hover {
+    background: rgba(15, 118, 110, 0.12);
+}
+
 .leave-requests-loading {
     display: flex;
     flex-direction: column;
@@ -432,4 +483,16 @@
 .btn-confirm.rejected:hover {
     background: #b91c1c;
     box-shadow: 0 2px 6px rgba(220, 38, 38, 0.2);
+}
+
+@media (max-width: 640px) {
+    .leave-requests-filters {
+        align-items: stretch;
+    }
+
+    .leave-requests-filters label,
+    .leave-requests-filters input,
+    .leave-requests-clear-filter {
+        width: 100%;
+    }
 }

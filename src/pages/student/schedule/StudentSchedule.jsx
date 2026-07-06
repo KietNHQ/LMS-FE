@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import StudentWeeklyScheduleSection from "./components/StudentWeeklyScheduleSection/StudentWeeklyScheduleSection";
 import StudentScheduleFilterSection from "./components/StudentScheduleFilterSection/StudentScheduleFilterSection";
@@ -26,9 +26,8 @@ export default function StudentSchedule() {
   const { data: lessons = [], isLoading, error } = useQuery({
     queryKey: ["student-schedule", selectedSchoolYear, selectedTerm],
     queryFn: async () => {
-      const hasAuth = !!(localStorage.getItem("accessToken") || sessionStorage.getItem("accessToken"));
       const result = await studentService.getStudentScheduleMapped({
-        mock: !hasAuth,
+        mock: false,
         params: { schoolYear: selectedSchoolYear, term: selectedTerm }
       });
       return result;

@@ -141,7 +141,7 @@ const ClassStudentsSection = ({ classId, students, readOnly = false, isStudentVi
   // --- Effects ---
   useEffect(() => {
     if (selectedDateLatestReview) {
-      let snapshot = selectedDateLatestReview.attendanceSnapshot ? { ...selectedDateLatestReview.attendanceSnapshot } : {};
+      let snapshot = { ...selectedDateLatestReview.attendanceSnapshot } || {};
       
       // Nếu không có dữ liệu điểm danh chi tiết từ BE (chưa có trong snapshot),
       // fallback đánh dấu 'Có mặt' (true) cho tất cả học sinh để giao diện không bị trắng trơn.
@@ -811,14 +811,22 @@ const ClassStudentsSection = ({ classId, students, readOnly = false, isStudentVi
     console.log("Drafted studentReviews:", JSON.parse(JSON.stringify(studentReviews)));
     console.log("Compiled studentReports to send:", JSON.parse(JSON.stringify(studentReports)));
 
-    let finalPeriodId = currentSchedule?.periodId || currentSchedule?.id || null;
-    if (selectedLessonPeriod && selectedLessonPeriod.toString().startsWith("new_")) {
-      const parts = selectedLessonPeriod.split("_");
-      finalPeriodId = parseInt(parts[1], 10);
-    } else if (selectedLessonPeriod && !isNaN(parseInt(selectedLessonPeriod))) {
+    let finalPeriodId = null;
+
+    if (selectedLessonPeriod && !selectedLessonPeriod.toString().startsWith("new_") && !isNaN(parseInt(selectedLessonPeriod))) {
        const existingReview = lessonReviews.find(r => r.id === selectedLessonPeriod);
-       if (existingReview && existingReview.periodId) {
-          finalPeriodId = existingReview.periodId;
+       if (existingReview) {
+          finalPeriodId = existingReview.period_id || existingReview.periodId || null;
+       }
+    } else if (selectedLessonPeriod && selectedLessonPeriod.toString().startsWith("new_")) {
+       const parts = selectedLessonPeriod.split("_");
+       const pNum = parseInt(parts[1], 10);
+       
+       if (currentSchedule && getLessonPeriodNumber(currentSchedule) === pNum) {
+           finalPeriodId = currentSchedule.period_id || currentSchedule.periodId || null;
+       } else {
+           // Keep null for ad-hoc or unmatched lessons to prevent sending periodNumber as periods.id
+           finalPeriodId = null;
        }
     }
 

@@ -227,7 +227,7 @@
 }
 
 .fee-stat-card.stat-neutral .fee-stat-icon {
-    background: color-mix(in srgb, var(--fee-text-secondary) 10%, #ffffff);
+    background: #eef2ff;
 }
 
 .fee-stat-card.stat-success {
@@ -302,9 +302,9 @@
 
 .fin-fee__tab.active,
 .fee-tab.active {
-    color: color-mix(in srgb, var(--fee-primary) 82%, #1f2937);
+    color: #312e81;
     border-bottom-color: var(--fee-primary);
-    background: color-mix(in srgb, var(--fee-primary-soft) 70%, #ffffff);
+    background: #eef2ff;
     font-weight: 800;
     box-shadow: 0 2px 6px rgba(67, 56, 202, 0.08);
 }
@@ -382,20 +382,20 @@
 .fee-input:focus {
     border-color: var(--fee-primary);
     background: #ffffff;
-    box-shadow: 0 0 0 4px color-mix(in srgb, var(--fee-primary) 18%, transparent);
+    box-shadow: 0 0 0 4px rgba(67, 56, 202, 0.18);
     transform: translateY(-2px);
 }
 
 .btn-primary {
-    background: color-mix(in srgb, var(--fee-primary) 78%, #ffffff);
+    background: #4338ca;
     color: #ffffff;
-    border: 2px solid color-mix(in srgb, var(--fee-primary) 68%, #ffffff);
+    border: 2px solid #3730a3;
     padding: 0.65rem 1.5rem;
     border-radius: 0.75rem;
     font-weight: 800;
     font-size: 0.85rem;
     cursor: pointer;
-    box-shadow: 0 3px 8px color-mix(in srgb, var(--fee-primary) 20%, transparent);
+    box-shadow: 0 3px 8px rgba(67, 56, 202, 0.2);
     display: inline-flex;
     align-items: center;
     gap: 0.6rem;
@@ -423,9 +423,9 @@
 
 .btn-primary:hover {
     transform: translateY(-2px);
-    box-shadow: 0 6px 14px color-mix(in srgb, var(--fee-primary) 24%, transparent);
-    background: color-mix(in srgb, var(--fee-primary-hover) 82%, #ffffff);
-    border-color: color-mix(in srgb, var(--fee-primary-hover) 70%, #ffffff);
+    box-shadow: 0 6px 14px rgba(67, 56, 202, 0.24);
+    background: #3730a3;
+    border-color: #312e81;
 }
 
 .btn-primary:active {
@@ -451,8 +451,8 @@
 
 .btn-secondary:hover {
     background: #ffffff;
-    border-color: color-mix(in srgb, var(--fee-primary) 58%, #ffffff);
-    color: color-mix(in srgb, var(--fee-primary) 82%, #374151);
+    border-color: #6366f1;
+    color: #4338ca;
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
 }
@@ -472,9 +472,9 @@
 }
 
 .btn-icon:hover {
-    background: var(--fee-primary-soft);
-    color: color-mix(in srgb, var(--fee-primary) 82%, #374151);
-    border-color: color-mix(in srgb, var(--fee-primary) 58%, #ffffff);
+    background: #eef2ff;
+    color: #4338ca;
+    border-color: #818cf8;
     transform: scale(1.05);
 }
 
@@ -509,20 +509,20 @@
 }
 
 .fee-action-btn.invoice:hover {
-    border-color: color-mix(in srgb, var(--fee-primary) 58%, #ffffff);
-    background: var(--fee-primary-soft);
-    color: color-mix(in srgb, var(--fee-primary) 82%, #374151);
+    border-color: #6366f1;
+    background: #eef2ff;
+    color: #4338ca;
 }
 
 .fee-action-btn.collect {
-    border-color: color-mix(in srgb, var(--fee-primary) 20%, #ffffff);
-    background: color-mix(in srgb, var(--fee-primary) 7%, #ffffff);
-    color: color-mix(in srgb, var(--fee-primary) 78%, #374151);
+    border-color: rgba(67, 56, 202, 0.2);
+    background: rgba(67, 56, 202, 0.07);
+    color: rgba(67, 56, 202, 0.78);
 }
 
 .fee-action-btn.collect:hover {
-    border-color: color-mix(in srgb, var(--fee-primary) 58%, #ffffff);
-    background: color-mix(in srgb, var(--fee-primary) 12%, #ffffff);
+    border-color: #6366f1;
+    background: rgba(67, 56, 202, 0.12);
 }
 
 /* ── TABLE ── */
@@ -575,8 +575,8 @@
 }
 
 .fee-table tbody tr:hover {
-    background: color-mix(in srgb, var(--fee-primary-soft) 34%, #ffffff);
-    box-shadow: inset 0 0 0 1px var(--fee-border);
+    background: rgba(67, 56, 202, 0.05);
+    box-shadow: inset 0 0 0 1px #e0e7ff;
 }
 
 .fee-table tbody tr:hover td {
@@ -865,6 +865,60 @@
     box-shadow: none;
 }
 
+/* ── WIZARD: ĐỐI TƯỢNG + HẠN CHÓT ── */
+.wizard-due-date-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-bottom: 1rem;
+    padding: 1rem;
+    background: #f8fafc;
+    border: 1px solid var(--fee-border);
+    border-radius: 0.75rem;
+}
+
+.wizard-field-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+}
+
+.wizard-field-label {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--fee-text-primary);
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+.wizard-semester-select {
+    width: 100%;
+}
+
+.wizard-date-hint {
+    font-size: 0.72rem;
+    color: var(--fee-text-muted);
+    font-weight: 600;
+}
+
+.wizard-due-info {
+    margin-top: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+    background: var(--fee-primary-soft);
+    border: 1px solid var(--fee-border-strong);
+    border-radius: 0.65rem;
+    font-size: 0.85rem;
+    color: var(--fee-text-secondary);
+}
+
+.wizard-due-info strong {
+    color: var(--fee-text-primary);
+}
+
 /* ── WIZARD: TẠO ĐỢT THU ── */
 .wizard-stepper {
     display: grid;
@@ -956,7 +1010,7 @@
 
 .wizard-fee-card.selected {
     border-color: var(--fee-primary);
-    background: color-mix(in srgb, var(--fee-primary-soft) 80%, #ffffff);
+    background: rgba(67, 56, 202, 0.12);
 }
 
 .wizard-fee-card input {
@@ -1134,7 +1188,7 @@
 }
 
 .p-stat strong.primary {
-    color: color-mix(in srgb, var(--fee-primary) 82%, #374151);
+    color: #4338ca;
 }
 
 .wizard-footer {
@@ -1191,7 +1245,7 @@
 
 .fee-action-btn:hover {
     transform: translateY(-1px) scale(1.04);
-    box-shadow: 0 4px 10px color-mix(in srgb, var(--fee-primary) 14%, transparent);
+    box-shadow: 0 4px 10px rgba(67, 56, 202, 0.14);
 }
 
 .fee-action-btn:active {
@@ -1219,7 +1273,7 @@
 .wizard-fee-card.selected,
 .wizard-target-btn.active,
 .wizard-chip {
-    box-shadow: 0 0 0 1px color-mix(in srgb, var(--fee-primary) 18%, transparent), 0 4px 10px color-mix(in srgb, var(--fee-primary) 7%, transparent);
+    box-shadow: 0 0 0 1px rgba(67, 56, 202, 0.18), 0 4px 10px rgba(67, 56, 202, 0.07);
 }
 
 .wizard-review-card {
@@ -1350,11 +1404,11 @@
 
     0%,
     100% {
-        box-shadow: 0 0 0 0 color-mix(in srgb, var(--fee-primary) 28%, transparent);
+        box-shadow: 0 0 0 0 rgba(67, 56, 202, 0.28);
     }
 
     50% {
-        box-shadow: 0 0 0 8px color-mix(in srgb, var(--fee-primary) 0%, transparent);
+        box-shadow: 0 0 0 8px rgba(67, 56, 202, 0);
     }
 }
 

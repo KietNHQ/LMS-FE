@@ -62,7 +62,6 @@
     letter-spacing: -0.025em !important;
     margin: 0 !important;
     line-height: 1.2 !important;
-    white-space: nowrap !important;
 }
 
 /* ── COCKPIT TABS (ROLE-BASED & PREMIUM) ── */
@@ -150,14 +149,35 @@
 
 /* Responsive */
 @media (max-width: 768px) {
-    .cockpit-tabs-nav {
+    .vp-cockpit .common-page-header__title-container {
+        align-items: flex-start !important;
+    }
+
+    .cockpit-title-row {
+        min-width: 0;
+    }
+
+    .btn-back-square-title {
+        width: 38px;
+        height: 38px;
+    }
+
+    .vp-cockpit .common-page-header h1 {
+        font-size: 1.25rem !important;
+        overflow-wrap: anywhere;
+    }
+
+    .cockpit-hub__tabs {
         width: 100%;
         overflow-x: auto;
+        margin-bottom: 1rem;
+        padding: 0;
     }
     
-    .cockpit-tab-item {
-        flex: 1;
+    .cockpit-hub__tab {
+        flex: 1 0 max-content;
         justify-content: center;
         white-space: nowrap;
+        padding: 0.7rem 1rem;
     }
 }

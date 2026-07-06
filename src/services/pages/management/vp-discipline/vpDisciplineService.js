@@ -58,10 +58,20 @@ export const vpDisciplineService = {
       body: { conductLevel },
     }),
   submitConduct: (classId, semesterId) =>
-    axiosClient.post(`/conduct/class/${classId}/finalize`, { semesterId }),
-  finalizeConductSemester: (semesterId) =>
-    scopedApi.callByKey("post_conduct_finalize_semester", {
-      body: { semesterId },
+    axiosClient.post(`/conduct/class/${classId}/submit`, { semesterId }, {
+      timeout: 60000,
+    }),
+  finalizeConduct: (classId, semesterId) =>
+    axiosClient.post(`/conduct/class/${classId}/finalize`, { semesterId }, {
+      timeout: 60000,
+    }),
+  unlockConduct: (classId, semesterId) =>
+    axiosClient.post(`/conduct/class/${classId}/unlock`, { semesterId }, {
+      timeout: 60000,
+    }),
+  submitConductSemester: (semesterId) =>
+    axiosClient.post(`/conduct/finalize-semester`, { semesterId }, {
+      timeout: 60000,
     }),
   getPendingCompensations: (input = {}) =>
     scopedApi.callByKey("get_discipline_pending", input),
@@ -98,7 +108,6 @@ export const vpDisciplineService = {
 };
 
 export default vpDisciplineService;
-
 
 
 

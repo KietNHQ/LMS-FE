@@ -1,7 +1,10 @@
 import axios from "axios";
+import { getApiBaseUrl } from "./apiBaseUrl";
+
+const API_BASE_URL = getApiBaseUrl();
 
 const axiosClient = axios.create({
-  baseURL: import.meta.env.VITE_API_URL,
+  baseURL: API_BASE_URL,
   headers: {
     "Content-Type": "application/json",
   },
@@ -138,7 +141,7 @@ axiosClient.interceptors.response.use(
         }
 
         const res = await axios.post(
-          `${import.meta.env.VITE_API_URL}/auth/refresh`,
+          `${API_BASE_URL}/auth/refresh`,
           { refreshToken },
         );
 

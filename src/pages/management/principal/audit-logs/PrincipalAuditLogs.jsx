@@ -1,58 +1,117 @@
-import { useState, useMemo } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { PageHeader, SchoolYearTermSelector, Pagination } from "../../../../components/common";
 import Select from "../../../../components/ui/Select/Select";
 import { useSchoolYearTerm } from "../../../../hooks/useSchoolYearTerm";
+import { adminApiService } from "../../../../services/pages/admin";
 import { 
   FiSearch, FiActivity, FiShield, FiAlertOctagon, 
-  FiClock, FiUser, FiInfo, FiSlash 
+  FiUser, FiSlash, FiRefreshCw
 } from "react-icons/fi";
 import "./PrincipalAuditLogs.css";
 
-const MOCK_LOGS = [
-  { id: "LOG01", user: "GV_Toan_01", name: "Nguyễn Văn A", role: "Teacher", action: "UPDATE", module: "Quản lý điểm", details: "Sửa điểm 15p môn Toán lớp 10A1 (Kỳ 1)", timestamp: "15/10/2026 14:30:00" },
-  { id: "LOG02", user: "SA_Admin", name: "Trần Quản Trị", role: "Admin", action: "CREATE", module: "Người Dùng", details: "Tạo mới tài khoản Giáo viên bộ môn (Lý - Tổ Tự Nhiên)", timestamp: "15/10/2026 09:15:00" },
-  { id: "LOG03", user: "admin_truong", name: "Hiệu Trưởng", role: "Admin", action: "DELETE", module: "Phê duyệt", details: "Từ chối đề xuất ngân sách Hoạt động hè", timestamp: "15/10/2026 09:10:00" },
-  { id: "LOG04", user: "KT_Ngoc_01", name: "Lê Ngọc", role: "Admin", action: "CREATE", module: "Tài chính", details: "Lập hóa đơn học phí khối 10 tháng 10", timestamp: "14/10/2026 16:45:00" },
-  { id: "LOG05", user: "GV_Van_02", name: "Bùi Thị B", role: "Teacher", action: "UPDATE", module: "Nề nếp", details: "Cập nhật vi phạm HS lớp 11A2", timestamp: "14/10/2026 10:20:00" },
-  { id: "LOG06", user: "admin_truong", name: "Hiệu Trưởng", role: "Admin", action: "UPDATE", module: "Cấu hình", details: "Thay đổi thời gian ca học buổi chiều", timestamp: "14/10/2026 08:30:00" },
-  { id: "LOG07", user: "KT_Ngoc_01", name: "Lê Ngọc", role: "Admin", action: "UPDATE", module: "Tài chính", details: "Nghị quyết thu học phí bổ sung kỳ 1", timestamp: "13/10/2026 15:20:00" },
-  { id: "LOG08", user: "GV_Toan_01", name: "Nguyễn Văn A", role: "Teacher", action: "LOGIN", module: "Hệ thống", details: "Đăng nhập thành công từ địa chỉ IP 14.232.x.x", timestamp: "13/10/2026 07:10:00" },
-];
+const getRows = (payload) => {
+  if (Array.isArray(payload)) return payload;
+  if (Array.isArray(payload?.logs)) return payload.logs;
+  if (Array.isArray(payload?.data)) return payload.data;
+  if (Array.isArray(payload?.data?.logs)) return payload.data.logs;
+  if (Array.isArray(payload?.items)) return payload.items;
+  return [];
+};
 
-const ROLE_OPTIONS = [
-  { value: "All", label: "Tất cả vai trò" },
-  { value: "Admin", label: "Quản trị / Hiệu trưởng" },
-  { value: "Teacher", label: "Giáo viên" },
-  { value: "Student", label: "Học sinh / Phụ huynh" },
-];
+const formatLabel = (value) => {
+  const text = `${value || ""}`.trim();
+  if (!text) return "Không xác định";
+  return text.replace(/_/g, " ").replace(/\b\w/g, (char) => char.toUpperCase());
+};
 
-const ACTION_OPTIONS = [
-  { value: "All", label: "Tất cả hành động" },
-  { value: "CREATE", label: "Thêm mới (Create)" },
-  { value: "UPDATE", label: "Cập nhật (Update)" },
-  { value: "DELETE", label: "Xóa dữ liệu (Delete)" },
-  { value: "LOGIN", label: "Đăng nhập (System)" },
-];
+const formatTimestamp = (value) => {
+  if (!value) return { date: "Không ghi nhận", time: "" };
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return { date: String(value), time: "" };
+  return {
+    date: date.toLocaleDateString("vi-VN"),
+    time: date.toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit", second: "2-digit" }),
+  };
+};
+
+const normalizeLog = (row = {}) => {
+  const action = `${row.action || row.operation || row.event || "UNKNOWN"}`.toUpperCase();
+  const module = row.table_name || row.entity_type || row.module || row.resource || "Hệ thống";
+  const actor = row.performed_by_name || row.user_name || row.actor || row.user_email || row.performed_by || "Không xác định";
+  const user = row.performed_by || row.user || row.user_email || actor;
+  const changedFields = Array.isArray(row.changed_fields) ? row.changed_fields.join(", ") : "";
+
+  return {
+    id: row.id || `${action}-${row.record_id || row.entity_id || row.performed_at || Math.random()}`,
+    user,
+    name: actor,
+    role: row.role || row.user_role || row.performed_by_role || row.target_user_role || "System",
+    action,
+    module: formatLabel(module),
+    details: row.description || row.details || changedFields || "Không có chi tiết thay đổi",
+    timestamp: row.performed_at || row.timestamp || row.created_at || row.updated_at,
+  };
+};
+
+const buildOptions = (rows, key, allLabel) => {
+  const seen = new Set();
+  const options = [{ value: "All", label: allLabel }];
+  rows.forEach((row) => {
+    const value = row[key];
+    if (!value || seen.has(value)) return;
+    seen.add(value);
+    options.push({ value, label: formatLabel(value) });
+  });
+  return options;
+};
 
 export default function PrincipalAuditLogs() {
   const { selectedSchoolYear, selectedTerm, handleYearArrow, handleTermChange } = useSchoolYearTerm();
+  const [logs, setLogs] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterRole, setFilterRole] = useState("All");
   const [filterAction, setFilterAction] = useState("All");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 6;
 
+  const fetchLogs = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      const response = await adminApiService.callByKey("get_audit_logs", {
+        params: {
+          limit: 200,
+          schoolYearId: selectedSchoolYear?.id || selectedSchoolYear,
+          semesterId: selectedTerm?.id || selectedTerm,
+        },
+      });
+      setLogs(getRows(response).map(normalizeLog));
+    } catch (error) {
+      console.error("Failed to fetch principal audit logs:", error);
+      setLogs([]);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [selectedSchoolYear, selectedTerm]);
+
+  useEffect(() => {
+    fetchLogs();
+  }, [fetchLogs]);
+
   const metrics = useMemo(() => {
     return {
-      total: MOCK_LOGS.length,
-      critical: MOCK_LOGS.filter(l => l.action === "DELETE").length,
-      activeToday: new Set(MOCK_LOGS.map(l => l.user)).size,
-      updates: MOCK_LOGS.filter(l => l.action === "UPDATE").length
+      total: logs.length,
+      critical: logs.filter(l => l.action === "DELETE").length,
+      activeToday: new Set(logs.map(l => l.user)).size,
+      updates: logs.filter(l => l.action === "UPDATE").length
     };
-  }, []);
+  }, [logs]);
+
+  const roleOptions = useMemo(() => buildOptions(logs, "role", "Tất cả vai trò"), [logs]);
+  const actionOptions = useMemo(() => buildOptions(logs, "action", "Tất cả hành động"), [logs]);
 
   const filteredLogs = useMemo(() => {
-    return MOCK_LOGS.filter(log => {
+    return logs.filter(log => {
       const matchSearch = 
         log.user.toLowerCase().includes(searchTerm.toLowerCase()) || 
         log.details.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -64,7 +123,7 @@ export default function PrincipalAuditLogs() {
       
       return matchSearch && matchRole && matchAction;
     });
-  }, [searchTerm, filterRole, filterAction]);
+  }, [logs, searchTerm, filterRole, filterAction]);
 
   const totalPages = Math.ceil(filteredLogs.length / itemsPerPage);
   const visibleLogs = useMemo(() => {
@@ -122,7 +181,7 @@ export default function PrincipalAuditLogs() {
           <div className="filter-item">
             <Select 
               variant="custom"
-              options={ROLE_OPTIONS}
+              options={roleOptions}
               value={filterRole}
               onChange={(e) => { setFilterRole(e.target.value); setCurrentPage(1); }}
               placeholder="Vai trò"
@@ -131,18 +190,26 @@ export default function PrincipalAuditLogs() {
           <div className="filter-item">
             <Select 
               variant="custom"
-              options={ACTION_OPTIONS}
+              options={actionOptions}
               value={filterAction}
               onChange={(e) => { setFilterAction(e.target.value); setCurrentPage(1); }}
               placeholder="Hành động"
             />
           </div>
+          <button type="button" className="audit-refresh-btn" onClick={fetchLogs} disabled={isLoading}>
+            <FiRefreshCw /> Làm mới
+          </button>
         </div>
       </div>
 
       <div className="audit-table-container">
         <div className="table-wrapper">
-          {visibleLogs.length === 0 ? (
+          {isLoading ? (
+            <div className="empty-state">
+              <FiRefreshCw />
+              <p>Đang tải nhật ký từ hệ thống...</p>
+            </div>
+          ) : visibleLogs.length === 0 ? (
             <div className="empty-state">
               <FiSlash />
               <p>Không tìm thấy bản ghi nhật ký nào phù hợp.</p>
@@ -160,7 +227,7 @@ export default function PrincipalAuditLogs() {
               </thead>
               <tbody>
                 {visibleLogs.map((log) => {
-                  const [date, time] = log.timestamp.split(" ");
+                  const { date, time } = formatTimestamp(log.timestamp);
                   return (
                     <tr key={log.id}>
                       <td>
@@ -214,4 +281,3 @@ export default function PrincipalAuditLogs() {
     </div>
   );
 }
-

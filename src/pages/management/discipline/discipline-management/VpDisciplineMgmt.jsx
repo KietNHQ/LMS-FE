@@ -1,7 +1,7 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useMemo } from "react";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { PageHeader, WeekPicker, Pagination, StatusBadge, LoadingSpinner } from "../../../../components/common";
-import { getWeekDateObjects } from "../../../../components/common/WeekPicker/WeekPicker";
+import { getWeekDateObjects } from "../../../../components/common/WeekPicker/weekPickerUtils";
 import { useSchoolYearTerm } from "../../../../hooks/useSchoolYearTerm";
 import { normalizePermissions } from "../../../../hooks/useAuth";
 import Select from "../../../../components/ui/Select/Select";
@@ -16,38 +16,35 @@ import { vpDisciplineService } from "../../../../services/pages/management/vp-di
 import { resolveSemesterId, resolveSchoolYearId } from "../../../../services/shared/schoolYearLookup";
 import "./VpDisciplineMgmt.css";
 
+const getCanViewLeaveRequests = () => {
+    try {
+        const isPersistent = localStorage.getItem("isPersistent") === "true";
+        const userStr = sessionStorage.getItem("user") || (isPersistent ? localStorage.getItem("user") : null);
+        if (!userStr) return false;
+
+        const user = JSON.parse(userStr);
+        const perms = normalizePermissions(user.permissions || []);
+        const role = user.role?.toLowerCase() || "";
+        return perms.includes("leave_requests:read") || perms.includes("leave_requests:manage") || role === "admin" || role === "principal";
+    } catch (e) {
+        console.warn("Failed to check permissions in VpDisciplineMgmt", e);
+        return false;
+    }
+};
+
 export default function VpDisciplineMgmt() {
     const { selectedSchoolYear, selectedTerm, handleYearArrow, handleTermChange } = useSchoolYearTerm();
     const queryClient = useQueryClient();
-    const [isLoading, setIsLoading] = useState(true);
-    const [isRecordModalOpen, setIsRecordModalOpen] = useState(false);
     const [isHandleModalOpen, setIsHandleModalOpen] = useState(false);
     const [selectedIncident, setSelectedIncident] = useState(null);
     const [editingIncident, setEditingIncident] = useState(null);
     const [hiddenIncidents, setHiddenIncidents] = useState(new Set());
     const [isViolationModalOpen, setIsViolationModalOpen] = useState(false);
-    const [searchTerm, setSearchTerm] = useState("");
     
     // Tab Navigation States
     const [activeTab, setActiveTab] = useState("discipline");
-    const [canViewLeaveRequests, setCanViewLeaveRequests] = useState(false);
+    const [canViewLeaveRequests] = useState(getCanViewLeaveRequests);
     const [disciplineView, setDisciplineView] = useState("table"); // "table" | "calendar"
-
-    useEffect(() => {
-        try {
-            const isPersistent = localStorage.getItem("isPersistent") === "true";
-            const userStr = sessionStorage.getItem("user") || (isPersistent ? localStorage.getItem("user") : null);
-            if (userStr) {
-                const user = JSON.parse(userStr);
-                const perms = normalizePermissions(user.permissions || []);
-                const role = user.role?.toLowerCase() || "";
-                const hasPerm = perms.includes("leave_requests:read") || perms.includes("leave_requests:manage") || role === "admin" || role === "principal";
-                setCanViewLeaveRequests(hasPerm);
-            }
-        } catch (e) {
-            console.warn("Failed to check permissions in VpDisciplineMgmt", e);
-        }
-    }, []);
     
     // Filter States
     const [selectedGrade, setSelectedGrade] = useState("all");
@@ -196,7 +193,7 @@ export default function VpDisciplineMgmt() {
         }
     };
 
-    const handleAddIncident = (newInc, isEdit = false) => {
+    const handleAddIncident = () => {
         // Mutation is handled by ViolationRecordModal; just refresh the list
         invalidateIncidents();
         setEditingIncident(null);
@@ -310,13 +307,7 @@ export default function VpDisciplineMgmt() {
         };
     }, [classesData, selectedGrade]);
 
-    const isDataLoading = isIncidentsLoading || isLoading;
-
-    useEffect(() => {
-        setIsLoading(true);
-        const timer = setTimeout(() => setIsLoading(false), 300);
-        return () => clearTimeout(timer);
-    }, [selectedSchoolYear, selectedTerm, selectedWeek, selectedGrade, selectedClass]);
+    const isDataLoading = isIncidentsLoading;
 
     const getOccurrenceCount = (studentName, currentIncidentId, allIncidents) => {
         const studentHistory = allIncidents
@@ -555,7 +546,10 @@ export default function VpDisciplineMgmt() {
                 </>
             ) : (
                 <div className="leave-requests-wrapper">
-                    <ManagementLeaveRequests />
+                    <ManagementLeaveRequests
+                        selectedSchoolYear={selectedSchoolYear}
+                        selectedTerm={selectedTerm}
+                    />
                 </div>
             )}
             <ViolationRecordModal
@@ -577,4 +571,3 @@ export default function VpDisciplineMgmt() {
         </div>
     );
 }
-

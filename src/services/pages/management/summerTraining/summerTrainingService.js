@@ -1,16 +1,18 @@
 import axiosClient from "../../../shared/http/axiosClient";
 
+const unwrapData = (response) => response?.data ?? response;
+
 /**
  * Lấy tổng kết rèn luyện hè của một lớp
  * @param {number} classId - ID lớp
  * @param {number} [page=1] - Trang hiện tại
  * @param {number} [limit=10] - Số items per page
  */
-export const getSummerTrainingSummary = async (classId, page = 1, limit = 10) => {
+export const getSummerTrainingSummary = async (classId, page = 1, limit = 10, schoolYearId) => {
   const response = await axiosClient.get(`/summer-training/class/${classId}/summary`, {
-    params: { page, limit },
+    params: { page, limit, schoolYearId },
   });
-  return response;
+  return unwrapData(response);
 };
 
 /**
@@ -18,10 +20,12 @@ export const getSummerTrainingSummary = async (classId, page = 1, limit = 10) =>
  * @param {number} schoolYearId - ID năm học
  */
 export const enrollConditionalStudents = async (schoolYearId) => {
-  const response = await axiosClient.post(`/summer-training/enroll-conditional`, {
-    schoolYearId,
-  });
-  return response;
+  const response = await axiosClient.post(
+    `/summer-training/enroll-conditional`,
+    { schoolYearId },
+    { params: { schoolYearId } },
+  );
+  return unwrapData(response);
 };
 
 /**
@@ -33,9 +37,9 @@ export const enrollConditionalStudents = async (schoolYearId) => {
 export const completeSummerTraining = async (enrollmentId, upgradeConduct = false, daysAttended = 0) => {
   const response = await axiosClient.post(`/summer-training/approve/${enrollmentId}`, {
     upgradeConduct,
-    daysAttended,
+    attendanceDays: daysAttended,
   });
-  return response;
+  return unwrapData(response);
 };
 
 /**
@@ -45,9 +49,9 @@ export const completeSummerTraining = async (enrollmentId, upgradeConduct = fals
  */
 export const recordAttendance = async (enrollmentId, days) => {
   const response = await axiosClient.post(`/summer-training/record-attendance/${enrollmentId}`, {
-    days,
+    attendanceDays: days,
   });
-  return response;
+  return unwrapData(response);
 };
 
 export const summerTrainingService = {

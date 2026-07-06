@@ -116,50 +116,59 @@ const PARENT_NOTIFICATIONS_MOCK = [
   { id: 4, title: "Họp phụ huynh", content: "Nhà trường tổ chức họp phụ huynh", date: "2025-01-20", unread: true, class: "parent", important: true },
 ];
 
-const PARENT_PAYMENTS_MOCK = [
-  {
-    id: 1,
-    title: "Học phí HK1",
-    term: "Học kỳ 1",
-    schoolYear: "2025-2026",
-    grade: "Khối 10",
-    className: "10A1",
-    childName: "Nguyễn Minh Tuấn",
-    deadline: "2025-09-30",
-    feeItems: [
-      { id: "f-1", name: "Học phí", note: "Bắt buộc", amount: 3800000 },
-      { id: "f-2", name: "Bán trú", note: "Bắt buộc", amount: 700000 },
-    ],
-    description: "Khoản thu học kỳ 1 được tạo từ danh mục thu của nhà trường.",
-    discountCode: "",
-    discountAmount: 0,
-    status: "paid",
-    paidDate: "2025-09-25",
-    paidAmount: 4500000,
-    invoiceCode: "INV-HK1-2025-10A1-01",
-  },
-  {
-    id: 2,
-    title: "Học phí HK2",
-    term: "Học kỳ 2",
-    schoolYear: "2025-2026",
-    grade: "Khối 12",
-    className: "12A2",
-    childName: "Nguyễn Thị Ngọc Hà",
-    deadline: "2026-02-28",
-    feeItems: [
-      { id: "f-5", name: "Học phí", note: "Bắt buộc", amount: 4200000 },
-      { id: "f-6", name: "Bán trú", note: "Bắt buộc", amount: 800000 },
-    ],
-    description: "Khoản thu học kỳ 2 cho học sinh lớp 12A2.",
-    discountCode: "GIAM10",
-    discountAmount: 500000,
-    status: "unpaid",
-    paidDate: "",
-    paidAmount: 0,
-    invoiceCode: "INV-HK2-2026-12A2-01",
-  },
-];
+const IMPORTANT_PRIORITIES = new Set(["high", "urgent", "important"]);
+
+const extractRows = (payload) => {
+  if (Array.isArray(payload)) return payload;
+  if (Array.isArray(payload?.data)) return payload.data;
+  if (Array.isArray(payload?.items)) return payload.items;
+  if (Array.isArray(payload?.notifications)) return payload.notifications;
+  return [];
+};
+
+const normalizeNotification = (item = {}) => {
+  const priority = String(item.priority ?? "").toLowerCase();
+
+  return {
+    ...item,
+    id: item.id,
+    title: item.title || "Thông báo",
+    content: item.content || item.summary || "",
+    date:
+      item.sent_at ||
+      item.sentAt ||
+      item.created_at ||
+      item.createdAt ||
+      item.date ||
+      new Date().toISOString(),
+    unread:
+      item.unread !== undefined
+        ? Boolean(item.unread)
+        : item.is_read !== undefined
+          ? !item.is_read
+          : true,
+    important:
+      item.important !== undefined
+        ? Boolean(item.important)
+        : item.is_important !== undefined
+          ? Boolean(item.is_important)
+          : IMPORTANT_PRIORITIES.has(priority),
+    class:
+      item.class ||
+      item.targetClass ||
+      item.target_class ||
+      item.target_type ||
+      "parent",
+  };
+};
+
+const normalizeNotificationListResponse = (payload) => ({
+  success: payload?.success ?? true,
+  data: extractRows(payload).map(normalizeNotification),
+  unreadCount: payload?.unreadCount,
+  pagination: payload?.pagination ?? null,
+  message: payload?.message ?? "",
+});
 
 const PARENT_FAQS_MOCK = [
   { category: "Học tập", question: "Làm sao để theo dõi kết quả học tập của con?", answer: "Bạn mở mục Tổng quan con em hoặc Điểm số để xem chi tiết theo học kỳ.", popularity: 96 },
@@ -174,7 +183,7 @@ const PARENT_ENDPOINTS = [
   { key: "get_parent_dashboard", method: "GET", path: "/guardians/me/children", module: "dashboard", mock: false },
   { key: "get_parent_children", method: "GET", path: "/guardians/me/children", module: "children", mock: false },
   { key: "get_parent_child_by_id", method: "GET", path: "/guardians/me/children/:childId", module: "children", mock: false },
-  { key: "get_parent_child_grades", method: "GET", path: "/students/:childId/grades", module: "children", mock: false },
+  { key: "get_parent_child_grades", method: "GET", path: "/guardians/me/children/:childId/grades", module: "children", mock: false },
   { key: "get_parent_child_attendance", method: "GET", path: "/guardians/me/children/:childId/attendance", module: "children", mock: false },
   { key: "get_parent_child_schedule", method: "GET", path: "/guardians/me/children/:childId/schedule", module: "children", mock: false },
   // Teachers: list of homeroom teachers for all children
@@ -187,12 +196,15 @@ const PARENT_ENDPOINTS = [
   { key: "post_parent_start_conversation", method: "POST", path: "/chat/human/start", module: "messages", mock: false },
   // Human chat: send a message (in existing conversation)
   { key: "post_parent_send_message", method: "POST", path: "/chat/human/message", module: "messages", mock: false },
+  // Human chat: delete one message sent by current user
+  { key: "delete_parent_message", method: "DELETE", path: "/chat/human/messages/:messageId", module: "messages", mock: false },
   { key: "get_parent_notifications", method: "GET", path: "/guardians/me/notifications", module: "notifications", mock: false },
   { key: "patch_parent_notifications_mark_all_read", method: "PATCH", path: "/guardians/me/notifications/mark-all-read", module: "notifications", mock: false },
   { key: "patch_parent_notifications_by_id_read", method: "PATCH", path: "/guardians/me/notifications/:id/read", module: "notifications", mock: false },
   { key: "patch_parent_notifications_by_id_toggle", method: "PATCH", path: "/guardians/me/notifications/:id/toggle-important", module: "notifications", mock: false },
   { key: "get_parent_payments", method: "GET", path: "/guardians/me/payments", module: "payments", mock: false },
   { key: "get_parent_payments_by_id", method: "GET", path: "/guardians/me/payments/:id", module: "payments", mock: false },
+  { key: "get_school_bank_accounts", method: "GET", path: "/school-bank-accounts", module: "payments", mock: false },
   { key: "get_parent_system_events", method: "GET", path: "/school-events", module: "dashboard", mock: false },
   { key: "post_parent_payments_by_id_pay", method: "POST", path: "/guardians/me/payments/:id/pay", module: "payments", mock: false },
   { key: "post_parent_payments_apply_discount", method: "POST", path: "/guardians/me/payments/apply-discount", module: "payments", mock: false },
@@ -211,7 +223,7 @@ const PARENT_ENDPOINTS = [
 ];
 
 const createEndpointCaller = (endpoint) => async (input = {}) => {
-  const shouldMock = input.mock === true || (input.mock !== false && typeof endpoint.mock === "function");
+  const shouldMock = input.mock === true;
   if (shouldMock) {
     await wait(input.delayMs ?? DEFAULT_DELAY_MS);
     const data = typeof endpoint.mock === "function" ? endpoint.mock(input) : null;
@@ -227,6 +239,19 @@ const createEndpointCaller = (endpoint) => async (input = {}) => {
       config: input.config,
     }),
   );
+};
+
+const callNotificationList = async (input) => {
+  if (input?.mock === true) {
+    await wait(input?.delayMs ?? DEFAULT_DELAY_MS);
+    return normalizeNotificationListResponse({
+      success: true,
+      data: PARENT_NOTIFICATIONS_MOCK,
+    });
+  }
+
+  const response = await endpointCallers.get_parent_notifications(input);
+  return normalizeNotificationListResponse(response);
 };
 
 const endpointCallers = Object.fromEntries(PARENT_ENDPOINTS.map((endpoint) => [endpoint.key, createEndpointCaller(endpoint)]));
@@ -271,14 +296,16 @@ export const parentService = {
   startHumanChat: (input) => endpointCallers.post_parent_start_conversation(input),
   // Human chat: send a message (in existing conversation)
   sendMessage: (input) => endpointCallers.post_parent_send_message(input),
+  deleteMessage: (input) => endpointCallers.delete_parent_message(input),
   // Deprecated: keep for backwards compat, maps to getConversations
   listMessages: (input) => endpointCallers.get_parent_conversations(input),
-  listNotifications: (input) => endpointCallers.get_parent_notifications(input),
+  listNotifications: (input) => callNotificationList(input),
   markAllNotificationsRead: (input) => endpointCallers.patch_parent_notifications_mark_all_read(input),
   markNotificationRead: (input) => endpointCallers.patch_parent_notifications_by_id_read(input),
   toggleNotificationImportant: (input) => endpointCallers.patch_parent_notifications_by_id_toggle(input),
   listPayments: (input) => endpointCallers.get_parent_payments(input),
   getPaymentById: (input) => endpointCallers.get_parent_payments_by_id(input),
+  listBankAccounts: (input) => endpointCallers.get_school_bank_accounts(input),
   getSystemEvents: (input) => endpointCallers.get_parent_system_events(input),
   payInvoice: (input) => endpointCallers.post_parent_payments_by_id_pay(input),
   applyDiscountCode: (input) => endpointCallers.post_parent_payments_apply_discount(input),
@@ -293,5 +320,3 @@ export const parentService = {
 };
 
 export default parentService;
-
-

@@ -7,25 +7,16 @@ import { Pagination, StatusBadge, LoadingSpinner, PageHeader } from "../../../co
 import LeaveRequestDetailModal from "./components/LeaveRequestDetailModal";
 import LeaveRequestActionModal from "./components/LeaveRequestActionModal";
 import { normalizePermissions } from "../../../hooks/useAuth";
+import { resolveSemester } from "../../../services/shared/schoolYearLookup";
+import { formatDateTimeVi, formatDateVi, toDateOnlyString } from "../../../utils/dateUtils";
 import "./ManagementLeaveRequests.css";
 
-const formatDate = (dateString) => {
-  if (!dateString) return "—";
-  const date = new Date(dateString);
-  if (Number.isNaN(date.getTime())) return dateString;
-  const day = String(date.getDate()).padStart(2, "0");
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const year = date.getFullYear();
-  return `${day}/${month}/${year}`;
-};
-
-export default function ManagementLeaveRequests() {
+export default function ManagementLeaveRequests({ selectedSchoolYear, selectedTerm }) {
   // State
   const [requests, setRequests] = useState([]);
   const [classes, setClasses] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
-  const [totalItems, setTotalItems] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
 
   // Modals state
@@ -41,6 +32,8 @@ export default function ManagementLeaveRequests() {
   const [filterClass, setFilterClass] = useState("all");
   const [filterDateFrom, setFilterDateFrom] = useState("");
   const [filterDateTo, setFilterDateTo] = useState("");
+  const [termDateRange, setTermDateRange] = useState({ dateFrom: "", dateTo: "" });
+  const [isTermRangeLoading, setIsTermRangeLoading] = useState(false);
 
   // Pagination stats
   const itemsPerPage = 10;
@@ -64,6 +57,43 @@ export default function ManagementLeaveRequests() {
 
   const canApprove = userPermissions.includes("leave_requests:approve") || userPermissions.includes("leave_requests:manage");
 
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadTermDateRange = async () => {
+      if (!selectedSchoolYear || !selectedTerm) {
+        if (isMounted) setTermDateRange({ dateFrom: "", dateTo: "" });
+        if (isMounted) setIsTermRangeLoading(false);
+        return;
+      }
+
+      try {
+        setIsTermRangeLoading(true);
+        const semester = await resolveSemester(selectedSchoolYear, selectedTerm);
+        if (!isMounted) return;
+        setTermDateRange({
+          dateFrom: toDateOnlyString(semester?.start_date || semester?.startDate),
+          dateTo: toDateOnlyString(semester?.end_date || semester?.endDate),
+        });
+      } catch (err) {
+        console.warn("Failed to resolve leave request semester date range.", err);
+        if (isMounted) setTermDateRange({ dateFrom: "", dateTo: "" });
+      } finally {
+        if (isMounted) setIsTermRangeLoading(false);
+      }
+    };
+
+    loadTermDateRange();
+    setCurrentPage(1);
+
+    return () => {
+      isMounted = false;
+    };
+  }, [selectedSchoolYear, selectedTerm]);
+
+  const effectiveDateFrom = filterDateFrom || termDateRange.dateFrom;
+  const effectiveDateTo = filterDateTo || termDateRange.dateTo;
+
   // Fetch Class list for filter dropdown on mount
   useEffect(() => {
     const fetchClasses = async () => {
@@ -79,6 +109,11 @@ export default function ManagementLeaveRequests() {
 
   // Fetch data when filters or page change
   const fetchData = useCallback(async () => {
+    if (isTermRangeLoading) {
+      setIsLoading(true);
+      return;
+    }
+
     setIsLoading(true);
     try {
       const res = await managementLeaveService.getLeaveRequests({
@@ -86,20 +121,18 @@ export default function ManagementLeaveRequests() {
         limit: itemsPerPage,
         status: filterStatus,
         classId: filterClass,
-        dateFrom: filterDateFrom,
-        dateTo: filterDateTo,
+        dateFrom: effectiveDateFrom,
+        dateTo: effectiveDateTo,
         search: searchTerm,
-        mock: false // Will automatically try API and fallback to mock if API is down
+        mock: false
       });
 
       if (res && res.success) {
         setRequests(res.data || []);
         if (res.pagination) {
-          setTotalItems(res.pagination.total_items || res.pagination.total || 0);
           setTotalPages(res.pagination.total_pages || 1);
         } else {
           // fallback if mock returned direct list without wrapper (should be wrapped in service already)
-          setTotalItems(res.data.length);
           setTotalPages(Math.ceil(res.data.length / itemsPerPage) || 1);
         }
       }
@@ -109,7 +142,7 @@ export default function ManagementLeaveRequests() {
     } finally {
       setIsLoading(false);
     }
-  }, [currentPage, filterStatus, filterClass, filterDateFrom, filterDateTo, searchTerm]);
+  }, [currentPage, filterStatus, filterClass, effectiveDateFrom, effectiveDateTo, searchTerm, isTermRangeLoading]);
 
   useEffect(() => {
     fetchData();
@@ -119,11 +152,17 @@ export default function ManagementLeaveRequests() {
   const [stats, setStats] = useState({ total: 0, pending: 0, approved: 0, rejected: 0 });
   const fetchStatsRef = useRef(null);
   fetchStatsRef.current = async () => {
+    if (isTermRangeLoading) return;
+
     try {
       // Query everything without pagination and filters to show global totals
       const allRes = await managementLeaveService.getLeaveRequests({
         page: 1,
         limit: 1000,
+        classId: filterClass,
+        dateFrom: effectiveDateFrom,
+        dateTo: effectiveDateTo,
+        search: searchTerm,
         mock: false
       });
       if (allRes && allRes.success) {
@@ -142,7 +181,7 @@ export default function ManagementLeaveRequests() {
 
   useEffect(() => {
     fetchStatsRef.current();
-  }, [requests.length]); // Refreshes when requests count changes
+  }, [requests, filterClass, effectiveDateFrom, effectiveDateTo, searchTerm, isTermRangeLoading]); // Refreshes when scoped filters change
 
   // Action handlers
   const handleViewDetail = (req) => {
@@ -346,7 +385,7 @@ export default function ManagementLeaveRequests() {
                     <td className="guardian-name-val">{req.guardianName}</td>
                     <td>
                       <div className="date-duration-cell">
-                        <span className="date-range-text">{formatDate(req.startDate)} → {formatDate(req.endDate)}</span>
+                        <span className="date-range-text">{formatDateVi(req.startDate)} → {formatDateVi(req.endDate)}</span>
                         <span className="duration-pill">{req.totalDays} ngày</span>
                       </div>
                     </td>
@@ -365,7 +404,7 @@ export default function ManagementLeaveRequests() {
                       {req.reviewedByName ? (
                         <div className="reviewed-by-info">
                           <span className="reviewer-name">{req.reviewedByName}</span>
-                          <span className="reviewer-time">{req.reviewedAt}</span>
+                          <span className="reviewer-time">{formatDateTimeVi(req.reviewedAt)}</span>
                         </div>
                       ) : (
                         <span className="no-reviewer">-</span>

@@ -39,6 +39,7 @@ export default function AdminLayout() {
             import("../../pages/admin/dashboard/AdminDashboard");
             import("../../pages/management/users/ManagementUsers");
             import("../../pages/management/notifications/ManagementNotifications");
+            import("../../pages/management/chat/ManagementChat");
             import("../../pages/admin/audit-log/AdminAuditLog");
             import("../../pages/admin/system-log/AdminSystemLog");
         };
@@ -72,13 +73,7 @@ export default function AdminLayout() {
             try {
                 const { adminApiService } = await import("../../services/pages/admin/generated/adminApiService");
 
-                let response;
-                try {
-                    response = await adminApiService.get_notifications({ mock: false });
-                } catch (err) {
-                    console.warn("Real Admin Notifications API failed, trying mock:", err);
-                    response = await adminApiService.get_notifications({ mock: true });
-                }
+                const response = await adminApiService.get_notifications({ mock: false });
 
                 if (response.success) {
                     const data = response.data || [];
@@ -86,7 +81,7 @@ export default function AdminLayout() {
                         n.unread === true || n.is_read === false || n.status === "unread"
                     ).length : 0;
 
-                    const finalCount = unreadCount || (response.isMock ? 5 : 0);
+                    const finalCount = unreadCount || 0;
                     localStorage.setItem("admin_unread_notifications_count", String(finalCount));
                     window.dispatchEvent(
                         new CustomEvent("admin-notification-count-updated", {
@@ -119,6 +114,9 @@ export default function AdminLayout() {
     const userName = formatName(userToUse, { fallback: "Quản trị viên" });
     const userEmail = userToUse.email || "";
     const userPermissions = userToUse.permissions || null;
+    const shouldShowPasswordDialog =
+        userToUse?.role !== "admin" &&
+        (userToUse?.requirePasswordChange || userToUse?.require_password_change || forcePasswordChange);
 
     return (
         <div className={`admin-layout theme-admin ${isCollapsed ? "collapsed" : ""}`}>
@@ -151,7 +149,7 @@ export default function AdminLayout() {
             </main>
 
             {/* MANDATORY PASSWORD CHANGE DIALOG */}
-            {(userToUse.requirePasswordChange || userToUse.require_password_change || forcePasswordChange) && (
+            {shouldShowPasswordDialog && (
                 <ChangePasswordDialog
                     open={true}
                     role="admin"
@@ -164,5 +162,3 @@ export default function AdminLayout() {
         </div>
     );
 }
-
-

@@ -14,8 +14,8 @@ export default function ClassListSection({ classes, onView, onEdit, onDelete, on
     return (
         <div className="class-list-grid">
             {classes.map((item) => (
-                <article 
-                    className="class-list-card" 
+                <article
+                    className="class-list-card"
                     key={item.id}
                     onClick={() => onView(item)}
                     style={{ cursor: "pointer" }}
@@ -47,26 +47,26 @@ export default function ClassListSection({ classes, onView, onEdit, onDelete, on
 
                     <div className="class-list-card__meta">
                         <div className="meta-row">
-              <span className="meta-left">
-                <PiStudent />
-                Học sinh
-              </span>
-                            <strong>{item.students}</strong>
+                            <span className="meta-left">
+                                <PiStudent />
+                                Học sinh
+                            </span>
+                            <strong>{item.students}{item.maxStudents ? `/${item.maxStudents}` : ""}</strong>
                         </div>
 
                         <div className="meta-row">
-              <span className="meta-left">
-                <PiStudent />
-                Đã đóng học phí
-              </span>
+                            <span className="meta-left">
+                                <PiStudent />
+                                Đã đóng học phí
+                            </span>
                             <strong>{item.paidStudents ?? 0}/{item.students}</strong>
                         </div>
 
                         <div className="meta-row">
-              <span className="meta-left">
-                <FiBookOpen />
-                Môn học
-              </span>
+                            <span className="meta-left">
+                                <FiBookOpen />
+                                Môn học
+                            </span>
                             <strong>{item.subjects.length}</strong>
                         </div>
                     </div>

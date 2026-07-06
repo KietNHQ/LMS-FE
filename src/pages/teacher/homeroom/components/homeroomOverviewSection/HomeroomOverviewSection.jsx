@@ -127,7 +127,7 @@ export default function HomeroomOverviewSection({
 
             {/* Bottom row: Existing elements properly styled */}
             <div className="overview-container">
-                {/* Mốc tiết học - Teacher's own lesson markers */}
+                {/* Mốc tiết học - Homeroom class lesson markers */}
                 {lessonMarkers && lessonMarkers.length > 0 && (
                     <div className="overview-card lesson-markers-card modern-shadow">
                         <div className="card-header">
@@ -301,4 +301,3 @@ export default function HomeroomOverviewSection({
         </div>
     );
 }
-

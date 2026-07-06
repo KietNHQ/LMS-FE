@@ -1,4 +1,4 @@
-import { Bell, Star } from "lucide-react";
+import { Bell, EyeOff, Star } from "lucide-react";
 import "./NotificationItem.css";
 
 function formatNotificationDate(rawDate) {
@@ -7,7 +7,7 @@ function formatNotificationDate(rawDate) {
     return date.toLocaleDateString("vi-VN");
 }
 
-export default function NotificationItem({ item, onOpen, onToggleImportant }) {
+export default function NotificationItem({ item, onOpen, onToggleImportant, onHide }) {
     const displayDate = formatNotificationDate(item.date);
 
     return (
@@ -28,19 +28,33 @@ export default function NotificationItem({ item, onOpen, onToggleImportant }) {
                 </div>
             </div>
 
-            <button
-                type="button"
-                className="star-box"
-                onClick={() => onToggleImportant(item.id)}
-                aria-label={item.important ? "Bỏ đánh dấu" : "Đánh dấu quan trọng"}
-                title={item.important ? "Bỏ đánh dấu" : "Đánh dấu quan trọng"}
-            >
-                <Star
-                    className={item.important ? "star-active" : "star"}
-                    fill={item.important ? "currentColor" : "none"}
-                />
-            </button>
+            <div className="notification-card-actions">
+                <button
+                    type="button"
+                    className="star-box"
+                    onClick={() => onToggleImportant(item.id)}
+                    aria-label={item.important ? "Bỏ đánh dấu" : "Đánh dấu quan trọng"}
+                    title={item.important ? "Bỏ đánh dấu" : "Đánh dấu quan trọng"}
+                >
+                    <Star
+                        className={item.important ? "star-active" : "star"}
+                        fill={item.important ? "currentColor" : "none"}
+                    />
+                </button>
+
+                <button
+                    type="button"
+                    className="notification-hide-box"
+                    onClick={(event) => {
+                        event.stopPropagation();
+                        onHide(item);
+                    }}
+                    aria-label="Ẩn thông báo"
+                    title="Ẩn thông báo"
+                >
+                    <EyeOff size={18} />
+                </button>
+            </div>
         </div>
     );
 }
-
