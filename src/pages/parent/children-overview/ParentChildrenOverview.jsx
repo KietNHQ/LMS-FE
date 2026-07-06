@@ -75,7 +75,7 @@ const buildAverageScores = (gradesBySemester) => {
     }
 }
 
-const normalizeChild = (child, selectedSchoolYear, gradesBySemester) => {
+const normalizeChild = (child, selectedSchoolYear, gradesBySemester, index = 0) => {
     const name = buildFullName(child)
     return {
         ...child,
@@ -88,7 +88,7 @@ const normalizeChild = (child, selectedSchoolYear, gradesBySemester) => {
         parentName: child.parentName || child.guardianName || "Phụ huynh",
         homeroomTeacher: child.homeroomTeacher || child.teacherName || "Chưa phân công",
         avatarLetter: child.avatarLetter || name.charAt(0),
-        avatarColor: child.avatarColor || "linear-gradient(135deg, #2563eb, #14b8a6)",
+        avatarColor: child.avatarColor || getAvatarColor(child.id || index),
         averageScores: child.averageScores || buildAverageScores(gradesBySemester),
     }
 }
@@ -278,8 +278,8 @@ export default function ParentChildrenOverview() {
         const fetchChildren = async () => {
             try {
                 const res = await childrenOverviewService.listChildren({ mock: false })
-                const children = getRows(res).map((child) =>
-                    normalizeChild(child, selectedSchoolYear, { hk1: [], hk2: [], year: [] })
+                const children = getRows(res).map((child, idx) =>
+                    normalizeChild(child, selectedSchoolYear, { hk1: [], hk2: [], year: [] }, idx)
                 )
                 if (children.length > 0) {
                     setChildrenList(children)
@@ -401,10 +401,6 @@ export default function ParentChildrenOverview() {
                     setUpcomingEvents([])
                 }
 
-                const currentChild = childrenList.find(c => String(c.id) === String(selectedChildId))
-                if (currentChild) {
-                    setChildData(normalizeChild(currentChild, selectedSchoolYear, grouped))
-                }
             } catch (err) {
                 console.error("Error fetching child data:", err)
                 setGradesBySemester({ hk1: [], hk2: [], year: [] })
@@ -478,15 +474,6 @@ export default function ParentChildrenOverview() {
 
         fetchConductData()
     }, [selectedChildId, selectedSchoolYear])
-
-    useEffect(() => {
-        if (selectedChildId && childrenList.length > 0) {
-            const currentChild = childrenList.find(c => String(c.id) === String(selectedChildId))
-            if (currentChild && !childData) {
-                setChildData(normalizeChild(currentChild, selectedSchoolYear, gradesBySemester))
-            }
-        }
-    }, [childrenList, selectedChildId, selectedSchoolYear, gradesBySemester, childData])
 
     const buildAttendanceSummary = (records) => {
         const base = { present: 0, absent: 0, late: 0, excused: 0 }
@@ -626,8 +613,8 @@ export default function ParentChildrenOverview() {
                                             schedule={scheduleData}
                                             events={calendarEvents}
                                             compact
-                                            classNameValue={childData.className}
-                                            classIdValue={childData.classId}
+                                            classNameValue={childHeaderData.className}
+                                            classIdValue={childHeaderData.classId}
                                             scheduleError={scheduleError}
                                         />
                                         <LeaveRequestSection
@@ -649,8 +636,8 @@ export default function ParentChildrenOverview() {
                                     key={`calendar-${selectedChildId}-${selectedTerm}`}
                                     schedule={scheduleData}
                                     events={calendarEvents}
-                                    classNameValue={childData.className}
-                                    classIdValue={childData.classId}
+                                    classNameValue={childHeaderData.className}
+                                    classIdValue={childHeaderData.classId}
                                     scheduleError={scheduleError}
                                 />
                             )}

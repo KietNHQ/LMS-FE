@@ -59,7 +59,7 @@
     width: 2.4rem;
     height: 2.4rem;
     border-radius: 50%;
-    color: #ffffff;
+    color: #ffffff !important;
     display: flex;
     align-items: center;
     justify-content: center;
