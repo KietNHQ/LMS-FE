@@ -173,6 +173,111 @@
     display: flex;
     gap: 0.75rem;
     align-items: center;
+    flex-wrap: wrap;
+}
+
+.dm-primary-actions-compact button:disabled,
+.conduct-unlock-actions button:disabled {
+    opacity: 0.58;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+.conduct-lock-status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    min-height: 38px;
+    padding: 0.45rem 0.75rem;
+    border-radius: 999px;
+    border: 1px solid #cbd5e1;
+    background: #ffffff;
+    color: #475569;
+    font-size: 0.82rem;
+    font-weight: 800;
+    white-space: nowrap;
+}
+
+.conduct-lock-status-badge.is-draft {
+    background: #ecfdf5;
+    border-color: #bbf7d0;
+    color: #047857;
+}
+
+.conduct-lock-status-badge.is-pending {
+    background: #fffbeb;
+    border-color: #fde68a;
+    color: #92400e;
+}
+
+.conduct-lock-status-badge.is-finalized {
+    background: #eff6ff;
+    border-color: #bfdbfe;
+    color: #1d4ed8;
+}
+
+.conduct-unlock-modal {
+    max-width: 520px;
+}
+
+.conduct-unlock-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.conduct-unlock-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.conduct-unlock-meta span {
+    display: inline-flex;
+    align-items: center;
+    min-height: 30px;
+    padding: 0.35rem 0.65rem;
+    border-radius: 999px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    color: #475569;
+    font-size: 0.8rem;
+    font-weight: 700;
+}
+
+.conduct-unlock-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+    color: var(--admin-text-primary);
+    font-size: 0.86rem;
+    font-weight: 800;
+}
+
+.conduct-unlock-field textarea {
+    width: 100%;
+    min-height: 110px;
+    padding: 0.8rem 0.9rem;
+    border-radius: 10px;
+    border: 1.5px solid #cbd5e1;
+    resize: vertical;
+    color: var(--admin-text-primary);
+    font: inherit;
+    font-weight: 500;
+    outline: none;
+}
+
+.conduct-unlock-field textarea:focus {
+    border-color: #2563eb;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+}
+
+.conduct-unlock-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.75rem;
+    flex-wrap: wrap;
 }
 
 

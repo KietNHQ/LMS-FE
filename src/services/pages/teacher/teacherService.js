@@ -310,6 +310,20 @@ const teacherEndpointRegistry = [
     module: "grades",
     mock: false
   },
+  {
+    key: "get_pending_conduct_approvals",
+    method: "GET",
+    path: "/conduct/pending-approvals",
+    module: "conduct",
+    mock: false
+  },
+  {
+    key: "post_conduct_finalize_class",
+    method: "POST",
+    path: "/conduct/class/:classId/finalize",
+    module: "conduct",
+    mock: false
+  },
   { key: "teacher_upsert_grades", method: "POST", path: "/grades/teacher-upsert", module: "grades", mock: false },
   { key: "get_grade_items", method: "GET", path: "/grade-items", module: "grades", mock: false },
   { 
@@ -461,6 +475,8 @@ export const teacherService = {
   getGradesLockStatus: (input) => endpointCallers.get_grades_lock_status(input),
   getPendingGradeApprovals: (input) => endpointCallers.get_pending_grade_approvals(input),
   approveGradeBatch: (input) => endpointCallers.post_grades_approve_batch(input),
+  getPendingConductApprovals: (input) => endpointCallers.get_pending_conduct_approvals(input),
+  finalizeConductClass: (input) => endpointCallers.post_conduct_finalize_class(input),
   getChatContacts: (input) => endpointCallers.get_chat_contacts(input),
   getChatMessages: (input) => endpointCallers.get_chat_messages(input),
   sendMessage: (input) => endpointCallers.post_chat_message(input),

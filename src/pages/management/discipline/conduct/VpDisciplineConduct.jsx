@@ -4,19 +4,32 @@ import { PageHeader, Pagination, EmptyState } from "../../../../components/commo
 import DisciplineHeaderActions from "../components/DisciplineHeaderActions";
 import { useSchoolYearTerm } from "../../../../hooks/useSchoolYearTerm";
 import Select from "../../../../components/ui/Select/Select";
+import Modal from "../../../../components/ui/Modal/Modal";
 import {
     FiAlertCircle, FiCheckCircle, FiSave, FiSearch,
-    FiLayers, FiTrendingUp, FiHome,
+    FiLayers, FiTrendingUp, FiHome, FiLock, FiUnlock, FiSend, FiX,
 } from "react-icons/fi";
 import { toast } from "react-toastify";
 import { useQuery } from "@tanstack/react-query";
+import { io } from "socket.io-client";
 import { vpDisciplineService } from "../../../../services/pages/management/vp-discipline";
 import { resolveSemesterId, resolveSchoolYearId } from "../../../../services/shared/schoolYearLookup";
+import { getSocketBaseUrl } from "../../../../services/shared/http/apiBaseUrl";
 import { getWeekDateRange } from "../../../../utils/competitionUtils";
 import "./VpDisciplineConduct.css";
 
 const ITEMS_PER_PAGE = 10;
 const DEFAULT_WEEK = 1;
+const LOCKED_CONDUCT_STATUSES = new Set(["pending", "finalized"]);
+
+const getToken = () => {
+    try {
+        const storedUser = JSON.parse(localStorage.getItem("user") || sessionStorage.getItem("user") || "{}");
+        return storedUser?.accessToken || sessionStorage.getItem("accessToken") || localStorage.getItem("accessToken") || "";
+    } catch {
+        return sessionStorage.getItem("accessToken") || localStorage.getItem("accessToken") || "";
+    }
+};
 
 function mapStudentScore(s) {
     return {
@@ -30,6 +43,8 @@ function mapStudentScore(s) {
         violationPoints: s.violationPoints ?? s.violation_points ?? 0,
         violationCount: s.violationCount ?? s.violation_count ?? 0,
         disciplineScore: s.disciplineScore ?? s.discipline_score ?? 100,
+        grade: s.grade || s.conductLevel || s.conduct_level || "",
+        conductStatus: s.conductStatus || s.conduct_status || null,
     };
 }
 
@@ -61,6 +76,10 @@ export default function VpDisciplineConduct({
     const [currentPage, setCurrentPage] = useState(1);
     const [conductGrades, setConductGrades] = useState({});
     const [disciplineScoreSnapshot, setDisciplineScoreSnapshot] = useState({});
+    const [unlockRequestOpen, setUnlockRequestOpen] = useState(false);
+    const [unlockReason, setUnlockReason] = useState("");
+    const [unlockRequestSending, setUnlockRequestSending] = useState(false);
+    const [conductRefreshNonce, setConductRefreshNonce] = useState(0);
 
     useEffect(() => {
         if (!fixedClassId) return;
@@ -99,7 +118,7 @@ export default function VpDisciplineConduct({
             }))
             .sort((a, b) => parseInt(a.value) - parseInt(b.value));
     }, [gradeLevelsData]);
-    const [viewMode, setViewMode] = useState("weekly"); // "weekly" | "annual"
+    const [viewMode, setViewMode] = useState(() => (hasUrlWeek ? "weekly" : "annual")); // "weekly" | "annual"
     const [hk1Id, setHk1Id] = useState(null);
     const [hk2Id, setHk2Id] = useState(null);
 
@@ -240,7 +259,7 @@ export default function VpDisciplineConduct({
         });
     }, [scoresData, disciplineScoreSnapshot]);
     const { data: annualData, isLoading: annualLoading, refetch: refetchAnnual } = useQuery({
-        queryKey: ["conduct-class-summary", selectedClass, hk1Id, hk2Id],
+        queryKey: ["conduct-class-summary", selectedClass, hk1Id, hk2Id, conductRefreshNonce],
         queryFn: async () => {
             if (!selectedClass || !hk1Id || !hk2Id) return null;
             const res = await vpDisciplineService.getConductClassSummary(
@@ -254,14 +273,99 @@ export default function VpDisciplineConduct({
         staleTime: 60_000,
     });
 
+    useEffect(() => {
+        if (!isTeacherMode) return undefined;
+        const token = getToken();
+        if (!token) return undefined;
+
+        const socket = io(getSocketBaseUrl(), {
+            auth: { token },
+            transports: ["websocket", "polling"],
+            reconnection: true,
+        });
+
+        socket.on("unlock_request:approved", (payload = {}) => {
+            if (payload.target_type && payload.target_type !== "conduct") return;
+            toast.success("Yêu cầu mở khóa hạnh kiểm đã được duyệt. Dữ liệu đã chuyển về bản nháp.");
+            setUnlockRequestOpen(false);
+            setUnlockReason("");
+            setConductRefreshNonce((value) => value + 1);
+            refetchAnnual();
+        });
+
+        socket.on("unlock_request:rejected", (payload = {}) => {
+            if (payload.target_type && payload.target_type !== "conduct") return;
+            toast.info(`Yêu cầu mở khóa hạnh kiểm bị từ chối. Lý do: ${payload.reason || "Không có ghi chú"}`);
+        });
+
+        return () => {
+            socket.off("unlock_request:approved");
+            socket.off("unlock_request:rejected");
+            socket.disconnect();
+        };
+    }, [isTeacherMode, refetchAnnual]);
+
+    const currentConductByEnrollment = useMemo(() => {
+        const students = annualData?.students || [];
+        const isHk2 = selectedTerm === "hk2";
+        return new Map(students.map((student) => [
+            String(student.enrollmentId),
+            {
+                level: isHk2 ? student.hk2Level : student.hk1Level,
+                status: isHk2 ? student.hk2Status : student.hk1Status,
+            },
+        ]));
+    }, [annualData, selectedTerm]);
+
+    const currentSemesterId = selectedTerm === "hk2" ? hk2Id : hk1Id;
+
+    const currentTermConductRows = useMemo(() => {
+        const students = annualData?.students || [];
+        const isHk2 = selectedTerm === "hk2";
+        return students.map((student) => ({
+            enrollmentId: student.enrollmentId,
+            status: isHk2 ? student.hk2Status : student.hk1Status,
+            level: isHk2 ? student.hk2Level : student.hk1Level,
+        }));
+    }, [annualData, selectedTerm]);
+
+    const pendingConductRows = useMemo(
+        () => currentTermConductRows.filter((row) => row.status === "pending"),
+        [currentTermConductRows],
+    );
+
+    const finalizedConductRows = useMemo(
+        () => currentTermConductRows.filter((row) => row.status === "finalized"),
+        [currentTermConductRows],
+    );
+
+    const lockedConductRowCount = pendingConductRows.length + finalizedConductRows.length;
+    const editableConductRowCount = Math.max(0, currentTermConductRows.length - lockedConductRowCount);
+    const teacherHasPendingConduct = isTeacherMode && pendingConductRows.length > 0;
+    const teacherHasFinalizedConduct = isTeacherMode && finalizedConductRows.length > 0;
+    const teacherConductActionsDisabled = isTeacherMode && currentTermConductRows.length > 0 && editableConductRowCount === 0;
+    const teacherConductStatus = teacherHasPendingConduct ? "pending" : teacherHasFinalizedConduct ? "finalized" : "draft";
+    const teacherConductStatusLabel = teacherConductStatus === "pending"
+        ? "Đã nộp, chờ duyệt"
+        : teacherConductStatus === "finalized"
+            ? "Đã khóa"
+            : "Bản nháp";
+
     const studentList = useMemo(() => {
         if (!scoresData) return [];
-        return scoresData.filter((s) => {
+        return scoresData.map((student) => {
+            const savedConduct = currentConductByEnrollment.get(String(student.enrollmentId));
+            return {
+                ...student,
+                grade: savedConduct?.level ?? student.grade ?? "",
+                conductStatus: savedConduct?.status ?? student.conductStatus ?? null,
+            };
+        }).filter((s) => {
             const matchesSearch = s.studentName.toLowerCase().includes(searchTerm.toLowerCase()) ||
                 (s.studentCode || "").toLowerCase().includes(searchTerm.toLowerCase());
             return matchesSearch;
         });
-    }, [scoresData, searchTerm]);
+    }, [currentConductByEnrollment, scoresData, searchTerm]);
 
     const annualStudentList = useMemo(() => {
         const students = annualData?.students || [];
@@ -458,6 +562,80 @@ export default function VpDisciplineConduct({
         }
     };
 
+    const handleSendConductUnlockRequest = async () => {
+        const reason = unlockReason.trim();
+        if (!reason) {
+            toast.warning("Nhập lý do yêu cầu mở khóa.");
+            return;
+        }
+        if (reason.length < 10) {
+            toast.warning("Lý do phải có ít nhất 10 ký tự.");
+            return;
+        }
+        if (!currentSemesterId) {
+            toast.error("Không tìm thấy học kỳ hiện tại.");
+            return;
+        }
+
+        const targets = finalizedConductRows.filter((row) => row.enrollmentId);
+        if (targets.length === 0) {
+            if (pendingConductRows.length > 0) {
+                toast.info("Hạnh kiểm đang chờ quản lý duyệt, chưa cần gửi yêu cầu mở khóa.");
+            } else {
+                toast.info("Không có hạnh kiểm đã khóa để yêu cầu mở khóa.");
+            }
+            return;
+        }
+
+        setUnlockRequestSending(true);
+        try {
+            const batchSize = 5;
+            let successCount = 0;
+            let failCount = 0;
+
+            for (let index = 0; index < targets.length; index += batchSize) {
+                const batch = targets.slice(index, index + batchSize);
+                const results = await Promise.allSettled(
+                    batch.map((row) => vpDisciplineService.requestUnlock({
+                        enrollmentId: row.enrollmentId,
+                        semesterId: currentSemesterId,
+                        targetType: "conduct",
+                        reason,
+                    })),
+                );
+
+                results.forEach((result) => {
+                    const value = result.status === "fulfilled" ? result.value : null;
+                    const failed = result.status === "rejected"
+                        || value?.error
+                        || value?.success === false
+                        || value?.data?.success === false;
+                    if (failed) failCount += 1;
+                    else successCount += 1;
+                });
+            }
+
+            if (successCount > 0) {
+                setUnlockRequestOpen(false);
+                setUnlockReason("");
+                setConductRefreshNonce((value) => value + 1);
+            }
+
+            if (successCount > 0 && failCount === 0) {
+                toast.success(`Đã gửi ${successCount} yêu cầu mở khóa hạnh kiểm.`);
+            } else if (successCount > 0) {
+                toast.warning(`Đã gửi ${successCount} yêu cầu. ${failCount} yêu cầu thất bại hoặc đã chờ duyệt.`);
+            } else {
+                toast.error("Không gửi được yêu cầu mở khóa. Có thể các học sinh này đã có yêu cầu chờ duyệt.");
+            }
+        } catch (error) {
+            console.error(error);
+            toast.error("Lỗi khi gửi yêu cầu mở khóa hạnh kiểm.");
+        } finally {
+            setUnlockRequestSending(false);
+        }
+    };
+
     // TT22-aligned suggest grade based on base score and attendance rate
     const suggestGrade = (baseScore, attendanceRate = 100) => {
         if (baseScore >= 95 && attendanceRate >= 98) return "Tốt";
@@ -512,8 +690,8 @@ export default function VpDisciplineConduct({
             const isHK1 = selectedTerm === "hk1";
             const status = isHK1 ? student.hk1Status : student.hk2Status;
             
-            // Bỏ qua học sinh đã được chốt (finalized)
-            if (status === "finalized") return;
+            // Bỏ qua học sinh đã nộp/chốt.
+            if (LOCKED_CONDUCT_STATUSES.has(status)) return;
 
             const key = student.enrollmentId + "__" + currentSemesterId;
             const currentVal = conductGrades[key] || (isHK1 ? student.hk1Level : student.hk2Level);
@@ -658,16 +836,44 @@ export default function VpDisciplineConduct({
 
                 {viewMode === "annual" && (
                     <div className="dm-primary-actions-compact">
-                        <button className="btn-outline" style={{ display: "flex", alignItems: "center", gap: "0.5rem", padding: "0.5rem 1rem", borderRadius: "0.5rem", border: "1px solid #cbd5e1", background: "white" }} onClick={handleApplySuggestions}>
+                        {isTeacherMode && (
+                            <span className={`conduct-lock-status-badge is-${teacherConductStatus}`}>
+                                {teacherConductStatus === "draft" ? <FiUnlock /> : <FiLock />}
+                                {teacherConductStatusLabel}
+                            </span>
+                        )}
+                        <button
+                            className="btn-outline"
+                            style={{ display: "flex", alignItems: "center", gap: "0.5rem", padding: "0.5rem 1rem", borderRadius: "0.5rem", border: "1px solid #cbd5e1", background: "white" }}
+                            onClick={handleApplySuggestions}
+                            disabled={teacherConductActionsDisabled}
+                        >
                             <FiTrendingUp /> Áp dụng Đề xuất
                         </button>
-                        <button className="btn-save-draft" onClick={handleSave}>
+                        <button className="btn-save-draft" onClick={handleSave} disabled={teacherConductActionsDisabled}>
                             <FiSave /> Lưu Bản Nháp
                         </button>
                         {isTeacherMode ? (
-                            <button className="btn-add-violation-premium" style={{ width: "auto" }} onClick={handleSubmitForApproval}>
-                                <FiCheckCircle /> Nộp Duyệt
-                            </button>
+                            <>
+                                <button
+                                    className="btn-add-violation-premium"
+                                    style={{ width: "auto" }}
+                                    onClick={handleSubmitForApproval}
+                                    disabled={teacherConductActionsDisabled}
+                                >
+                                    <FiCheckCircle /> Nộp Duyệt
+                                </button>
+                                {teacherHasFinalizedConduct && (
+                                    <button
+                                        className="btn-warning-premium"
+                                        style={{ width: "auto" }}
+                                        onClick={() => setUnlockRequestOpen(true)}
+                                        disabled={unlockRequestSending}
+                                    >
+                                        <FiSend /> Yêu cầu mở khóa
+                                    </button>
+                                )}
+                            </>
                         ) : (
                             <>
                                 <button className="btn-warning-premium" style={{ width: "auto" }} onClick={handleUnlock}>
@@ -792,7 +998,7 @@ export default function VpDisciplineConduct({
                                                                         value={hk1Val}
                                                                         onChange={(e) => setConductGrades((prev) => ({ ...prev, [hk1Key]: e.target.value }))}
                                                                         options={GRADE_OPTIONS}
-                                                                        disabled={student.hk1Status === "finalized"}
+                                                                        disabled={LOCKED_CONDUCT_STATUSES.has(student.hk1Status)}
                                                                     />
                                                                 </div>
                                                             </td>
@@ -811,7 +1017,7 @@ export default function VpDisciplineConduct({
                                                                         value={hk2Val}
                                                                         onChange={(e) => setConductGrades((prev) => ({ ...prev, [hk2Key]: e.target.value }))}
                                                                         options={GRADE_OPTIONS}
-                                                                        disabled={student.hk2Status === "finalized"}
+                                                                        disabled={LOCKED_CONDUCT_STATUSES.has(student.hk2Status)}
                                                                     />
                                                                 </div>
                                                             </td>
@@ -895,6 +1101,7 @@ export default function VpDisciplineConduct({
                                                                 value={currentGrade}
                                                                 onChange={(e) => handleGradeChange(s.enrollmentId, e.target.value)}
                                                                 options={GRADE_OPTIONS}
+                                                                disabled={LOCKED_CONDUCT_STATUSES.has(s.conductStatus)}
                                                             />
                                                         </div>
                                                     </td>
@@ -918,6 +1125,51 @@ export default function VpDisciplineConduct({
                     </>
                 )}
             </div>
+
+            <Modal
+                open={unlockRequestOpen}
+                title="Yêu cầu mở khóa hạnh kiểm"
+                onClose={() => {
+                    if (!unlockRequestSending) setUnlockRequestOpen(false);
+                }}
+                className="conduct-unlock-modal"
+            >
+                <div className="conduct-unlock-form">
+                    <div className="conduct-unlock-meta">
+                        <span>{fixedClassName || classOptions.find((c) => c.value === selectedClass)?.label || selectedClass || "Lớp"}</span>
+                        <span>{selectedTerm === "hk2" ? "Học kỳ II" : "Học kỳ I"}</span>
+                        <span>{finalizedConductRows.length} học sinh đã khóa</span>
+                    </div>
+                    <label className="conduct-unlock-field">
+                        <span>Lý do yêu cầu mở khóa</span>
+                        <textarea
+                            rows={4}
+                            value={unlockReason}
+                            onChange={(event) => setUnlockReason(event.target.value)}
+                            placeholder="Nhập lý do chi tiết để quản lý xem xét..."
+                            disabled={unlockRequestSending}
+                        />
+                    </label>
+                    <div className="conduct-unlock-actions">
+                        <button
+                            type="button"
+                            className="btn-save-draft"
+                            onClick={() => setUnlockRequestOpen(false)}
+                            disabled={unlockRequestSending}
+                        >
+                            <FiX /> Hủy
+                        </button>
+                        <button
+                            type="button"
+                            className="btn-add-violation-premium"
+                            onClick={handleSendConductUnlockRequest}
+                            disabled={unlockRequestSending}
+                        >
+                            <FiSend /> {unlockRequestSending ? "Đang gửi..." : "Gửi yêu cầu"}
+                        </button>
+                    </div>
+                </div>
+            </Modal>
         </div>
     );
 }

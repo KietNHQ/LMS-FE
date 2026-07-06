@@ -4,9 +4,10 @@ import { createMemoryRouter, RouterProvider } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 
 // Define mocks with vi.hoisted to avoid hoisting issues
-const { mockGetDisciplineSummary, mockCallByKey } = vi.hoisted(() => ({
+const { mockGetDisciplineSummary, mockCallByKey, mockGetConductClassSummary } = vi.hoisted(() => ({
   mockGetDisciplineSummary: vi.fn(),
   mockCallByKey: vi.fn(),
+  mockGetConductClassSummary: vi.fn(),
 }))
 
 // Mock SchoolYearContext first since useSchoolYearTerm depends on it
@@ -26,6 +27,8 @@ vi.mock('../../../../services/pages/management/vp-discipline/vpDisciplineService
     createDiscipline: vi.fn().mockResolvedValue({}),
     updateDiscipline: vi.fn().mockResolvedValue({}),
     callByKey: mockCallByKey,
+    getConductClassSummary: mockGetConductClassSummary,
+    requestUnlock: vi.fn().mockResolvedValue({ data: { success: true } }),
   },
 }))
 
@@ -97,13 +100,16 @@ describe('VpDisciplineConduct', () => {
     mockCallByKey.mockResolvedValue({
       data: mockStudents,
     })
+    mockGetConductClassSummary.mockResolvedValue({
+      data: { students: [], stats: { total: 0 } },
+    })
   })
 
   afterEach(() => {
     vi.restoreAllMocks()
   })
 
-  const renderPage = async (classId = '10A1') => {
+  const renderPage = async (classId = '10A1', { week = 1 } = {}) => {
     const routes = [
       {
         path: '/discipline-conduct',
@@ -111,7 +117,7 @@ describe('VpDisciplineConduct', () => {
       },
     ]
     const router = createMemoryRouter(routes, {
-      initialEntries: [`/discipline-conduct?class=${classId}`],
+      initialEntries: [`/discipline-conduct?class=${classId}${week ? `&week=${week}` : ''}`],
     })
     
     await act(async () => {
