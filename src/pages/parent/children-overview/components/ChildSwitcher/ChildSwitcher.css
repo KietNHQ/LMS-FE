@@ -110,13 +110,26 @@
     .child-switcher {
         padding: 0.85rem 1rem;
         gap: 0.75rem;
+        flex-direction: column;
+        align-items: flex-start;
     }
 
     .child-switcher-list {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        width: 100%;
+        padding: 2px 2px 6px 2px;
         gap: 0.5rem;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+    }
+
+    .child-switcher-list::-webkit-scrollbar {
+        display: none;
     }
 
     .child-switcher-item {
+        flex-shrink: 0;
         padding: 0.55rem 0.85rem 0.55rem 0.65rem;
     }
 }

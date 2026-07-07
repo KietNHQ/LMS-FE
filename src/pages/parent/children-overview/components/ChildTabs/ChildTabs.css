@@ -35,3 +35,26 @@
 .child-tab-btn.active:hover {
     transform: translateY(-0.08rem);
 }
+
+@media (max-width: 48rem) {
+    .child-tabs {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        width: 100%;
+        padding: 4px 2px 8px 2px;
+        gap: 0.5rem;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+    }
+    
+    .child-tabs::-webkit-scrollbar {
+        display: none;
+    }
+
+    .child-tab-btn {
+        flex-shrink: 0;
+        padding: 0.55rem 0.85rem;
+        font-size: 0.82rem;
+        border-radius: 0.75rem;
+    }
+}

@@ -394,7 +394,7 @@ const ParentMessages = () => {
         }
       />
 
-      <div className="messages-layout">
+      <div className={`messages-layout ${selectedTeacher ? "chat-active" : ""}`}>
         <ConversationList
           teacherList={teacherList}
           selectedTeacher={selectedTeacher}
@@ -411,6 +411,7 @@ const ParentMessages = () => {
           onDeleteMessage={handleDeleteMessage}
           isSending={isSending}
           currentUserId={currentUserId}
+          onBack={() => setSelectedTeacher(null)}
         />
       </div>
     </div>

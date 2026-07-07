@@ -1,6 +1,6 @@
 import "./ParentSupport.css";
 import { useState, useRef, useEffect } from "react";
-import { FaPaperPlane, FaRegClock, FaRobot, FaTicketAlt } from "react-icons/fa";
+import { FaPaperPlane, FaRegClock, FaRobot, FaTicketAlt, FaTimes } from "react-icons/fa";
 import FAQList from "./components/FAQList/FAQList";
 import SupportContact from "./components/SupportContact/SupportContact";
 import SupportHeader from "./components/SupportHeader/SupportHeader";
@@ -334,6 +334,7 @@ export default function ParentSupport() {
   const [isTyping, setIsTyping] = useState(false);
   const [showQuickActions, setShowQuickActions] = useState(true);
   const [sendingTicketId, setSendingTicketId] = useState(null);
+  const [isChatOpen, setIsChatOpen] = useState(false);
   const chatBodyRef = useRef(null);
 
   // Fetch FAQs from API
@@ -359,7 +360,7 @@ export default function ParentSupport() {
     if (chatBodyRef.current) {
       chatBodyRef.current.scrollTop = chatBodyRef.current.scrollHeight;
     }
-  }, [chatMessages]);
+  }, [chatMessages, isTyping, showQuickActions]);
 
   const searchSupportIntent = (query) => {
     const normalizedQuery = normalizeText(query);
@@ -600,17 +601,31 @@ export default function ParentSupport() {
           groupedFaqs={groupedFaqs}
           keyword={faqSearch}
           onKeywordChange={setFaqSearch}
+          onOpenChat={() => setIsChatOpen(true)}
         />
 
-        <div className="parent-support-chat">
+        <div className={`parent-chat-backdrop ${isChatOpen ? "is-visible" : ""}`} onClick={() => setIsChatOpen(false)} />
+
+        <div className={`parent-support-chat ${isChatOpen ? "is-open" : ""}`}>
           <div className="parent-chat-header">
             <h4>
               <FaRobot /> Trợ lý LMS
             </h4>
 
-            <span className="parent-chat-status">
-              <FaRegClock /> Trực tuyến
-            </span>
+            <div className="parent-chat-header-actions-wrapper">
+              <span className="parent-chat-status">
+                <FaRegClock /> Trực tuyến
+              </span>
+              <button
+                type="button"
+                className="parent-chat-close-btn"
+                onClick={() => setIsChatOpen(false)}
+                title="Đóng trợ lý"
+                aria-label="Đóng trợ lý"
+              >
+                <FaTimes />
+              </button>
+            </div>
           </div>
 
           <div className="parent-chat-body" ref={chatBodyRef}>
@@ -694,25 +709,25 @@ export default function ParentSupport() {
                 </div>
               </div>
             )}
-          </div>
 
-          {showQuickActions && (
-            <div className="parent-chat-quick-actions">
-              <span className="quick-action-label">Chọn nhanh:</span>
-              {QUICK_ACTION_GROUPS.map((group) => (
-                <div className="quick-action-group" key={group.category}>
-                  <span className="quick-action-group-title">{group.category}</span>
-                  <div className="quick-action-buttons">
-                    {group.actions.map((action) => (
-                      <button key={action} type="button" onClick={() => handleSendMessage(action)}>
-                        {action}
-                      </button>
-                    ))}
+            {showQuickActions && (
+              <div className="parent-chat-quick-actions">
+                <span className="quick-action-label">Chọn nhanh:</span>
+                {QUICK_ACTION_GROUPS.map((group) => (
+                  <div className="quick-action-group" key={group.category}>
+                    <span className="quick-action-group-title">{group.category}</span>
+                    <div className="quick-action-buttons">
+                      {group.actions.map((action) => (
+                        <button key={action} type="button" onClick={() => handleSendMessage(action)}>
+                          {action}
+                        </button>
+                      ))}
+                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
-          )}
+                ))}
+              </div>
+            )}
+          </div>
 
           <div className="parent-chat-input">
             <input

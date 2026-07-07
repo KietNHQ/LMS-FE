@@ -804,3 +804,66 @@
   border-radius: 50%;
   box-shadow: 0 0 6px currentColor;
 }
+
+@media (max-width: 576px) {
+  .event-calendar {
+    padding: 12px;
+    gap: 12px;
+  }
+  
+  .event-calendar__header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  
+  .event-calendar__title {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .event-calendar__nav {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .event-calendar__month-year {
+    font-size: 14px;
+  }
+
+  .event-calendar__weekdays {
+    gap: 4px;
+    margin-bottom: 4px;
+  }
+
+  .event-calendar__weekday {
+    font-size: 11px;
+    padding: 4px 0;
+  }
+
+  .event-calendar__grid {
+    gap: 4px;
+  }
+
+  .event-calendar__day {
+    padding: 4px 2px;
+    border-radius: 6px;
+  }
+  
+  .event-calendar--compact .event-calendar__day {
+    min-height: 40px;
+  }
+  
+  .event-calendar__day-number {
+    font-size: 11px;
+  }
+  
+  .event-calendar__legend {
+    gap: 8px 12px;
+    padding-top: 8px;
+  }
+  
+  .event-calendar__legend-item {
+    font-size: 12px;
+  }
+}

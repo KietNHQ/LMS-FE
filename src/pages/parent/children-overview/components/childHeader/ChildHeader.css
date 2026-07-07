@@ -149,21 +149,46 @@
     .child-header-card {
         padding: 1rem;
         border-radius: 1rem;
+        gap: 1rem;
+    }
+
+    .child-avatar {
+        width: 3.25rem;
+        height: 3.25rem;
+        font-size: 1.15rem;
+    }
+
+    .child-info {
+        gap: 0.35rem;
+    }
+
+    .child-info-top h2 {
+        font-size: 1.1rem;
+    }
+
+    .child-meta,
+    .child-extra {
+        font-size: 0.82rem;
+        gap: 0.4rem 0.65rem;
     }
 
     .child-header-stats {
         grid-template-columns: repeat(3, minmax(0, 1fr));
-        gap: 0.65rem;
+        gap: 0.4rem;
     }
 
     .child-stat-box {
-        padding: 0.85rem 0.65rem;
-        min-height: 5rem;
+        padding: 0.6rem 0.4rem;
+        min-height: 4rem;
+        border-radius: 0.75rem;
+        gap: 0.2rem;
     }
-}
 
-@media (max-width: 30rem) {
-    .child-header-stats {
-        grid-template-columns: 1fr;
+    .child-stat-box span {
+        font-size: 0.72rem;
+    }
+
+    .child-stat-box strong {
+        font-size: 1rem;
     }
 }

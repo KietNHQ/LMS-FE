@@ -242,4 +242,14 @@
   .dialog-box {
     width: 95%;
   }
+
+  .dialog-content {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 14px 16px;
+  }
+
+  .score-table {
+    min-width: 480px;
+  }
 }

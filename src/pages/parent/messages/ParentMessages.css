@@ -55,3 +55,32 @@
     background: #fef3c7;
     color: #d97706;
 }
+
+@media (max-width: 768px) {
+    .parent-messages {
+        padding: 8px 10px 14px;
+        height: calc(100dvh - 64px);
+    }
+    
+    .messages-layout {
+        position: relative;
+        width: 100%;
+        gap: 0;
+    }
+
+    .messages-layout.chat-active .conversation-wrapper {
+        display: none;
+    }
+
+    .messages-layout:not(.chat-active) .parent-chat-window {
+        display: none;
+    }
+
+    .conversation-wrapper,
+    .parent-chat-window {
+        width: 100% !important;
+        min-width: 0 !important;
+        max-width: 100% !important;
+        border-radius: 12px !important;
+    }
+}
