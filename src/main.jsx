@@ -35,6 +35,46 @@ import 'react-toastify/dist/ReactToastify.css';
     }
 })();
 
+// [DEPLOYMENT] Handle chunk load & CSS preloading errors (e.g. after a new deployment)
+(function() {
+    const handleChunkError = (message) => {
+        const isChunkLoadError = /Loading chunk|Failed to fetch dynamically imported module|ChunkLoadError|Unable to preload CSS/.test(message || '');
+        if (isChunkLoadError) {
+            console.warn("Chunk/CSS load error detected, forcing page reload:", message);
+            const hasReloaded = sessionStorage.getItem('chunk-error-reloaded') === 'true';
+            if (!hasReloaded) {
+                sessionStorage.setItem('chunk-error-reloaded', 'true');
+                window.location.reload();
+            }
+        }
+    };
+
+    window.addEventListener('vite:preloadError', (event) => {
+        console.warn("Vite preload error detected, reloading page...", event);
+        event.preventDefault();
+        const hasReloaded = sessionStorage.getItem('chunk-error-reloaded') === 'true';
+        if (!hasReloaded) {
+            sessionStorage.setItem('chunk-error-reloaded', 'true');
+            window.location.reload();
+        }
+    });
+
+    window.addEventListener('error', (event) => {
+        handleChunkError(event.message);
+    }, true);
+
+    window.addEventListener('unhandledrejection', (event) => {
+        handleChunkError(event.reason?.message || event.reason);
+    });
+
+    // Reset the reload flag after 5 seconds of successful run to prevent infinite reload loops
+    if (sessionStorage.getItem('chunk-error-reloaded') === 'true') {
+        setTimeout(() => {
+            sessionStorage.removeItem('chunk-error-reloaded');
+        }, 5000);
+    }
+})();
+
 const queryClient = new QueryClient({
     defaultOptions: {
         queries: {
