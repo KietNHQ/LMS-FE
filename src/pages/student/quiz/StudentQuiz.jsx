@@ -132,9 +132,13 @@ export default function StudentQuiz() {
                         dueDate: q.dueDate || (q.end_date ? new Date(q.end_date).toLocaleDateString("vi-VN") : "Không thời hạn"),
                         status,
                         type: q.type || (q.quiz_type === "exam" ? "Bài thi" : q.quiz_type === "practice" ? "Luyện tập" : "Bài tập"),
+                        assessmentType: q.assessmentType || q.assessment_type || "thường xuyên",
+                        isSynchronous: q.isSynchronous || q.is_synchronous || false,
                         questionsCount: q.questionsCount || q._count?.questions || 0,
-                        score: q.score ?? latestAttempt?.total_score ?? latestAttempt?.totalScore ?? null,
+                        score: (q.isSynchronous || q.is_synchronous || String(q.assessmentType || q.assessment_type).toLowerCase().includes("định kỳ") || String(q.assessmentType || q.assessment_type).toLowerCase().includes("summative") || String(q.assessmentType || q.assessment_type).toLowerCase().includes("thi tập trung")) ? null : (q.score ?? latestAttempt?.total_score ?? latestAttempt?.totalScore ?? null),
+                        attemptId: q.attemptId || latestAttempt?.id,
                         questions: normalizedQuestions,
+                        raw: q,
                     };
                 });
                 setQuizzes(mappedQuizzes);
@@ -272,12 +276,15 @@ export default function StudentQuiz() {
                 const finalScore = Number(
                     attempt.total_score ?? attempt.totalScore ?? attempt.score ?? autoScore + manualScore
                 );
+                const isSummative = quiz.isSynchronous || String(quiz.assessmentType).toLowerCase().includes("định kỳ") || String(quiz.assessmentType).toLowerCase().includes("summative") || String(quiz.assessmentType).toLowerCase().includes("thi tập trung");
+                
                 setQuizResult({
                     quizTitle: quiz.title,
-                    score: isPendingReview ? null : finalScore,
+                    score: isPendingReview || isSummative ? null : finalScore,
                     autoScore,
                     manualScore,
                     pendingReview: isPendingReview,
+                    hideDetails: isSummative,
                     correctCount,
                     total: objectiveQuestions.length || quiz.questions.length,
                     answers,
@@ -307,6 +314,70 @@ export default function StudentQuiz() {
                 return;
             }
             alert(getApiErrorMessage(err));
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleReviewQuiz = async (quiz) => {
+        try {
+            setLoading(true);
+            if (!quiz.attemptId) {
+                alert("Không tìm thấy thông tin bài làm.");
+                return;
+            }
+            const response = await studentService.getQuizAttemptById({
+                pathParams: { attemptId: quiz.attemptId },
+                mock: false
+            });
+
+            if (response.success) {
+                const attempt = response.data?.attempt || response.data || {};
+                const questions = attempt.quizzes?.quiz_questions || response.data?.questions || quiz.questions;
+                const objectiveQuestions = questions.filter(q => String(q.question_type || q.type).toLowerCase() !== "essay");
+                const hasEssayQuestions = questions.length > objectiveQuestions.length;
+                const isPendingReview = hasEssayQuestions || attempt.status === "pending_review";
+                const autoScore = Number(attempt.score_auto ?? attempt.scoreAuto ?? 0);
+                const manualScore = Number(attempt.score_manual ?? attempt.scoreManual ?? 0);
+                const finalScore = Number(attempt.total_score ?? attempt.totalScore ?? attempt.score ?? autoScore + manualScore);
+                
+                const answersMap = {};
+                let correctCount = 0;
+                (attempt.quiz_responses || response.data?.responses || []).forEach(r => {
+                    if (r.quiz_answers) answersMap[r.question_id || r.questionId] = r.quiz_answers.answer_text || r.quiz_answers.answerText;
+                    else if (r.essay_answer || r.essayAnswer) answersMap[r.question_id || r.questionId] = r.essay_answer || r.essayAnswer;
+                    
+                    if (r.is_correct || r.isCorrect) correctCount++;
+                });
+
+                const isSummative = quiz.isSynchronous || String(quiz.assessmentType).toLowerCase().includes("định kỳ") || String(quiz.assessmentType).toLowerCase().includes("summative") || String(quiz.assessmentType).toLowerCase().includes("thi tập trung");
+
+                setQuizResult({
+                    quizTitle: quiz.title,
+                    score: isPendingReview || isSummative ? null : finalScore,
+                    autoScore,
+                    manualScore,
+                    pendingReview: isPendingReview,
+                    hideDetails: isSummative,
+                    correctCount,
+                    total: objectiveQuestions.length || questions.length,
+                    answers: answersMap,
+                    questions: questions.map((question) => ({
+                        ...question,
+                        correctAnswer: (question.quiz_answers || []).find((answer) => answer.is_correct || answer.isCorrect)?.answer_text || question.correctAnswer || "",
+                        text: question.question_text || question.text || "",
+                        type: question.question_type || question.type || "multiple_choice",
+                        options: (question.quiz_answers || question.answers || []).map(a => a.answer_text || a.answerText || a),
+                        questionImage: question.questionImage || "",
+                    })),
+                    attempt,
+                });
+            } else {
+                alert(getApiErrorMessage(response, "Không thể tải chi tiết bài làm"));
+            }
+        } catch (err) {
+            console.error("Review quiz error:", err);
+            alert("Lỗi khi tải chi tiết bài làm");
         } finally {
             setLoading(false);
         }
@@ -372,6 +443,7 @@ export default function StudentQuiz() {
                                         key={quiz.id}
                                         quiz={quiz}
                                         onStart={handleStartQuiz}
+                                        onReview={handleReviewQuiz}
                                     />
                                 ))}
                             </div>

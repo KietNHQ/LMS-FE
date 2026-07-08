@@ -85,7 +85,7 @@ function getStatusInfo(status) {
     }
 }
 
-export default function QuizCard({ quiz, onStart }) {
+export default function QuizCard({ quiz, onStart, onReview }) {
     const statusInfo = getStatusInfo(quiz.status);
 
     return (
@@ -102,7 +102,7 @@ export default function QuizCard({ quiz, onStart }) {
                         <span>{statusInfo.label}</span>
                     </div>
 
-                    {quiz.score !== undefined && quiz.status === "done" && (
+                    {quiz.score !== undefined && quiz.score !== null && quiz.status === "done" && (
                         <div className="quiz-card-score">Điểm: {quiz.score}</div>
                     )}
                 </div>
@@ -139,8 +139,8 @@ export default function QuizCard({ quiz, onStart }) {
                         Vào làm bài
                     </Button>
                 ) : quiz.status === "done" ? (
-                    <Button className="quiz-card-btn ghost" variant="secondary" disabled>
-                        Đã nộp
+                    <Button className="quiz-card-btn ghost" variant="secondary" onClick={() => onReview && onReview(quiz)}>
+                        Xem lại bài
                     </Button>
                 ) : quiz.status === "upcoming" ? (
                     <Button className="quiz-card-btn ghost" variant="secondary" disabled>

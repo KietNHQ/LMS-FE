@@ -20,26 +20,29 @@ export default function ResultSummary({ result, onBack }) {
                                 <BiTrophy />
                             </div>
                             <div>
-                                <span>{isPendingReview ? "Kết quả bài nộp" : "Kết quả bài làm"}</span>
-                                <h1>{scoreLabel}</h1>
-                                <p>{subtitle}</p>
+                                <span>{isPendingReview || result.hideDetails ? "Kết quả bài nộp" : "Kết quả bài làm"}</span>
+                                {(!result.hideDetails || result.score !== null) && <h1>{scoreLabel}</h1>}
+                                {result.hideDetails && <h2>{result.quizTitle}</h2>}
+                                <p>{result.hideDetails ? "Nộp bài thành công! Chi tiết bài làm và đáp án hiện đang tạm ẩn đối với bài kiểm tra này." : subtitle}</p>
                             </div>
                         </div>
                     </div>
 
-                    <div className="result-summary-list">
-                        {result.questions.map((question, index) => (
-                            <QuestionItem
-                                key={question.id}
-                                question={question}
-                                index={index}
-                                selectedAnswer={result.answers[question.id]}
-                                onChoose={() => {}}
-                                disabled
-                                showResult
-                            />
-                        ))}
-                    </div>
+                    {!result.hideDetails && (
+                        <div className="result-summary-list">
+                            {result.questions.map((question, index) => (
+                                <QuestionItem
+                                    key={question.id}
+                                    question={question}
+                                    index={index}
+                                    selectedAnswer={result.answers[question.id] || result.answers[String(question.id)]}
+                                    onChoose={() => {}}
+                                    disabled
+                                    showResult
+                                />
+                            ))}
+                        </div>
+                    )}
                 </div>
 
                 <aside className="result-summary-sticky-actions">
