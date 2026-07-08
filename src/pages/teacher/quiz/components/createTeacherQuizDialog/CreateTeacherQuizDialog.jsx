@@ -650,19 +650,7 @@ export default function CreateTeacherQuizDialog({
                     )}
                 </div>
 
-                <div className="teacher-create-quiz-dialog__field teacher-create-quiz-dialog__field--half">
-                    <Select
-                        label="Học kỳ"
-                        variant="custom"
-                        className="teacher-create-quiz-dialog__select"
-                        id="teacher-quiz-semester"
-                        name="teacher-quiz-semester"
-                        options={semesters.map(s => ({ value: s.id, label: s.name }))}
-                        placeholder="Chọn học kỳ"
-                        value={formData.semesterId}
-                        onChange={(event) => handleChange("semesterId", event.target.value)}
-                    />
-                </div>
+
 
                 <div className="teacher-create-quiz-dialog__field teacher-create-quiz-dialog__field--half">
                     <Select

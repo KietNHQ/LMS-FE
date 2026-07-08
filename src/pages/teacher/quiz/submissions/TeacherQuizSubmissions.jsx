@@ -27,6 +27,7 @@ function normalizeQuestion(question = {}) {
             answers.find((answer) => answer.isCorrect || answer.is_correct)?.answerText ||
             answers.find((answer) => answer.isCorrect || answer.is_correct)?.answer_text ||
             "",
+        points: Number(question.points || question.score || 0),
         essayMaxScore: Number(question.points || question.score || 0),
     };
 }

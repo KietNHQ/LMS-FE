@@ -4,7 +4,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import "./ManagementClasses.css";
 
 import ClassListSection from "./components/classListSection/classListSection";
-import ClassInfoSection from "./components/classInfoSection/classInfoSection";
+import ClassInfoSection from "./components/classInfoSection/ClassInfoSection";
 import { SchoolYearTermSelector, PageHeader, Pagination, LoadingSpinner } from "../../../components/common";
 import { useSchoolYearTerm } from "../../../hooks/useSchoolYearTerm";
 import { classesService } from "../../../services/pages/management/classes";
