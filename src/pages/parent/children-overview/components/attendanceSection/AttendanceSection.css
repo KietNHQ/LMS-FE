@@ -546,6 +546,43 @@
         gap: 0.35rem;
     }
 
+    .attendance-period-switch {
+        width: 100%;
+    }
+    
+    .attendance-switch-btn {
+        flex: 1;
+        text-align: center;
+        padding: 0.45rem 0.55rem;
+        font-size: 0.82rem;
+    }
+    
+    .month-year-picker {
+        width: 100%;
+        justify-content: space-between;
+        gap: 0.4rem;
+        padding: 0.45rem 0.6rem;
+    }
+    
+    .month-year-selects {
+        flex: 1;
+        justify-content: center;
+        gap: 0.25rem;
+    }
+    
+    .month-select, .year-select {
+        flex: 1;
+        min-width: 0;
+        padding-right: 1.4rem;
+    }
+    
+    .attendance-period-summary,
+    .monthly-summary-bar {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.4rem;
+        padding: 0.75rem;
+    }
 
     .attendance-stats {
         grid-template-columns: 1fr;

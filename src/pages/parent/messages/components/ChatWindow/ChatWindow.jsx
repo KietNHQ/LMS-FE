@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from "react";
 import "./ChatWindow.css";
-import { FiTrash2, FiUsers, FiSend } from "react-icons/fi";
+import { FiTrash2, FiUsers, FiSend, FiChevronLeft } from "react-icons/fi";
 
 // Group messages by date
 const groupMessagesByDate = (messages) => {
@@ -38,7 +38,8 @@ export default function ChatWindow({
     onSend,
     onDeleteMessage,
     isSending = false,
-    currentUserId = null
+    currentUserId = null,
+    onBack = null
 }) {
     const messagesEndRef = useRef(null);
     const hasText = inputValue.trim().length > 0;
@@ -67,11 +68,18 @@ export default function ChatWindow({
     return (
         <div className="parent-chat-window">
             <div className="parent-chat-header">
-                <div className="parent-chat-header-info">
-                    <span className="parent-chat-header-name">{teacher.name}</span>
-                    {teacher.className && (
-                        <span className="parent-chat-header-class">GVCN lớp {teacher.className}</span>
+                <div className="parent-chat-header-left">
+                    {onBack && (
+                        <button type="button" className="chat-back-btn" onClick={onBack} aria-label="Quay lại">
+                            <FiChevronLeft />
+                        </button>
                     )}
+                    <div className="parent-chat-header-info">
+                        <span className="parent-chat-header-name">{teacher.name}</span>
+                        {teacher.className && (
+                            <span className="parent-chat-header-class">GVCN lớp {teacher.className}</span>
+                        )}
+                    </div>
                 </div>
                 {childText && (
                     <span className="parent-chat-header-sub">{childText}</span>

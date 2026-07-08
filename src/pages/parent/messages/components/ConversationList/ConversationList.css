@@ -263,3 +263,12 @@
 .conversation-list::-webkit-scrollbar-thumb:hover {
     background: var(--admin-border-strong, #ddd6fe);
 }
+
+@media (max-width: 768px) {
+    .conversation-wrapper {
+        width: 100% !important;
+        min-width: 0 !important;
+        max-width: 100% !important;
+        box-shadow: none !important;
+    }
+}

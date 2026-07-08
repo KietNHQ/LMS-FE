@@ -1,4 +1,5 @@
-import React from "react";
+import React, { useState } from "react";
+import { FiMenu, FiX } from "react-icons/fi";
 import "./AuthLayout.css";
 
 function formatStatNumber(value) {
@@ -21,60 +22,70 @@ function formatStatNumber(value) {
     return `${num}`;
 }
 
+function WelcomeContent() {
+    return (
+        <>
+            <div className="auth-brand">
+                <div className="auth-brand-badge">Nền tảng học tập thông minh</div>
+
+                <h1>Chào mừng đến với hệ thống LMS THPT</h1>
+
+                <p>
+                    Nền tảng quản lý học tập hiện đại giúp học sinh, giáo viên,
+                    phụ huynh và quản trị viên kết nối, quản lý và phát triển
+                    cùng nhau.
+                </p>
+            </div>
+
+            <div className="auth-stats">
+                <div className="auth-stat-card auth-stat-card-admin">
+                    <span className="auth-stat-value auth-stat-value-admin">
+                        {formatStatNumber(1200000000)}
+                    </span>
+                    <span className="auth-stat-label">Lớp học</span>
+                </div>
+
+                <div className="auth-stat-card auth-stat-card-parent">
+                    <span className="auth-stat-value auth-stat-value-parent">
+                        {formatStatNumber(45)}
+                    </span>
+                    <span className="auth-stat-label">Môn học</span>
+                </div>
+
+                <div className="auth-stat-card auth-stat-card-teacher">
+                    <span className="auth-stat-value auth-stat-value-teacher">
+                        {formatStatNumber(80)}
+                    </span>
+                    <span className="auth-stat-label">Giáo viên</span>
+                </div>
+
+                <div className="auth-stat-card auth-stat-card-student">
+                    <span className="auth-stat-value auth-stat-value-student">
+                        {formatStatNumber(1200000)}
+                    </span>
+                    <span className="auth-stat-label">Học sinh</span>
+                </div>
+            </div>
+
+            <div className="auth-illustration-box">
+                <h3>Hành trình học tập tốt hơn bắt đầu từ đây</h3>
+                <p>
+                    Theo dõi lớp học, quản lý bài giảng, giám sát tiến độ và tạo
+                    trải nghiệm giáo dục hấp dẫn hơn trong một hệ thống thống nhất.
+                </p>
+            </div>
+        </>
+    );
+}
+
 function AuthLayout({ title, subtitle, children }) {
+    const [isWelcomeOpen, setIsWelcomeOpen] = useState(false);
+
     return (
         <div className="auth-page">
             <div className="auth-container">
                 <div className="auth-left">
-                    <div className="auth-brand">
-                        <div className="auth-brand-badge">Nền tảng học tập thông minh</div>
-
-                        <h1>Chào mừng đến với hệ thống LMS THPT</h1>
-
-                        <p>
-                            Nền tảng quản lý học tập hiện đại giúp học sinh, giáo viên,
-                            phụ huynh và quản trị viên kết nối, quản lý và phát triển
-                            cùng nhau.
-                        </p>
-                    </div>
-
-                    <div className="auth-stats">
-                        <div className="auth-stat-card auth-stat-card-admin">
-              <span className="auth-stat-value auth-stat-value-admin">
-                {formatStatNumber(1200000000)}
-              </span>
-                            <span className="auth-stat-label">Lớp học</span>
-                        </div>
-
-                        <div className="auth-stat-card auth-stat-card-parent">
-              <span className="auth-stat-value auth-stat-value-parent">
-                {formatStatNumber(45)}
-              </span>
-                            <span className="auth-stat-label">Môn học</span>
-                        </div>
-
-                        <div className="auth-stat-card auth-stat-card-teacher">
-              <span className="auth-stat-value auth-stat-value-teacher">
-                {formatStatNumber(80)}
-              </span>
-                            <span className="auth-stat-label">Giáo viên</span>
-                        </div>
-
-                        <div className="auth-stat-card auth-stat-card-student">
-              <span className="auth-stat-value auth-stat-value-student">
-                {formatStatNumber(1200000)}
-              </span>
-                            <span className="auth-stat-label">Học sinh</span>
-                        </div>
-                    </div>
-
-                    <div className="auth-illustration-box">
-                        <h3>Hành trình học tập tốt hơn bắt đầu từ đây</h3>
-                        <p>
-                            Theo dõi lớp học, quản lý bài giảng, giám sát tiến độ và tạo
-                            trải nghiệm giáo dục hấp dẫn hơn trong một hệ thống thống nhất.
-                        </p>
-                    </div>
+                    <WelcomeContent />
                 </div>
 
                 <div className="auth-right">
@@ -85,11 +96,39 @@ function AuthLayout({ title, subtitle, children }) {
                         </div>
 
                         {children}
+
+                        <button
+                            type="button"
+                            className="auth-mobile-info-btn"
+                            onClick={() => setIsWelcomeOpen(true)}
+                            aria-label="Xem giới thiệu hệ thống"
+                        >
+                            <FiMenu size={20} />
+                            <span>Giới thiệu hệ thống</span>
+                        </button>
                     </div>
                 </div>
             </div>
+
+            {isWelcomeOpen && (
+                <div className="auth-modal-overlay" onClick={() => setIsWelcomeOpen(false)}>
+                    <div className="auth-modal-content" onClick={(e) => e.stopPropagation()}>
+                        <button
+                            type="button"
+                            className="auth-modal-close-btn"
+                            onClick={() => setIsWelcomeOpen(false)}
+                            aria-label="Đóng"
+                        >
+                            <FiX size={24} />
+                        </button>
+                        <div className="auth-modal-body">
+                            <WelcomeContent />
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
 
-export default AuthLayout
+export default AuthLayout;

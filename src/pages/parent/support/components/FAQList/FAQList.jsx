@@ -1,16 +1,28 @@
-import { FaQuestionCircle } from "react-icons/fa";
+import { FaQuestionCircle, FaRobot } from "react-icons/fa";
 import FAQItem from "../FAQItem/FAQItem";
 import "./FAQList.css";
 
-export default function FAQList({ groupedFaqs, keyword, onKeywordChange }) {
+export default function FAQList({ groupedFaqs, keyword, onKeywordChange, onOpenChat }) {
   const categories = Object.keys(groupedFaqs);
 
   return (
     <div className="parent-support-faq">
       <div className="parent-faq-header">
         <div className="parent-faq-title">
-          <FaQuestionCircle className="parent-faq-icon" />
-          <h3>Câu hỏi thường gặp</h3>
+          <div className="parent-faq-title-left">
+            <FaQuestionCircle className="parent-faq-icon" />
+            <h3>Câu hỏi thường gặp</h3>
+          </div>
+          <button
+            type="button"
+            className="faq-chat-trigger-btn"
+            onClick={onOpenChat}
+            title="Hỏi trợ lý ảo LMS"
+            aria-label="Hỏi trợ lý ảo LMS"
+          >
+            <FaRobot />
+            <span>Hỏi trợ lý ảo</span>
+          </button>
         </div>
 
         <label className="parent-faq-search" htmlFor="parent-faq-search-input">
