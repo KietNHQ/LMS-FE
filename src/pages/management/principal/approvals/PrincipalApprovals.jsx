@@ -35,9 +35,10 @@ const STATUS_OPTIONS = [
 const SECTION_OPTIONS = [
   { value: "all", label: "Tất cả luồng" },
   { value: "grades", label: "Chuyên môn" },
+  { value: "conduct", label: "Hạnh kiểm" },
   { value: "activities", label: "Kế hoạch & ngân sách" },
   { value: "leave", label: "Đơn xin phép" },
-  { value: "unlock", label: "Mở khóa điểm" },
+  { value: "unlock", label: "Mở khóa" },
 ];
 
 function StatusBadge({ status }) {
@@ -108,11 +109,13 @@ function ItemModal({ item, isOpen, onClose, onAction, isProcessing = false }) {
         <div className="modal-footer">
           {item.status === "pending" ? (
             <div className="modal-actions">
-              <button className="btn-modal-reject" onClick={() => onAction(item.id, "rejected")} disabled={isProcessing}>
-                <FiX /> Từ chối yêu cầu
-              </button>
+              {item.section !== "conduct" ? (
+                <button className="btn-modal-reject" onClick={() => onAction(item.id, "rejected")} disabled={isProcessing}>
+                  <FiX /> Từ chối yêu cầu
+                </button>
+              ) : null}
               <button className="btn-modal-approve" onClick={() => onAction(item.id, "approved")} disabled={isProcessing}>
-                <FiCheck /> Phê duyệt ngay
+                <FiCheck /> {item.section === "conduct" ? "Phê duyệt hạnh kiểm" : "Phê duyệt ngay"}
               </button>
             </div>
           ) : (
@@ -144,6 +147,7 @@ export default function PrincipalApprovals() {
 
   const itemsPerPage = 6;
   const sectionLabel = selectedTerm === "hk1" ? "Học kỳ 1" : "Học kỳ 2";
+  const selectedSemesterId = selectedTerm === "hk1" ? 1 : 2;
 
   const { data: leaveResponse, isLoading } = useQuery({
     queryKey: ["management-leave-requests", activeStatus],
@@ -154,7 +158,7 @@ export default function PrincipalApprovals() {
     queryKey: ["principal-grade-approvals", activeSection, selectedTerm, gradeApprovalGradeLevel, activeStatus],
     queryFn: () => teacherService.getPendingGradeApprovals({
       params: {
-        semesterId: selectedTerm === "hk1" ? 1 : 2,
+        semesterId: selectedSemesterId,
         gradeLevelId: gradeApprovalGradeLevel || undefined,
         status: activeStatus === "all" ? undefined : activeStatus,
       },
@@ -169,6 +173,25 @@ export default function PrincipalApprovals() {
     }
     return [];
   }, [gradeApprovalsResponse]);
+
+  const { data: conductApprovalsResponse, isFetching: conductApprovalsLoading } = useQuery({
+    queryKey: ["principal-conduct-approvals", activeSection, selectedTerm, activeStatus],
+    queryFn: () => teacherService.getPendingConductApprovals({
+      params: {
+        semesterId: selectedSemesterId,
+        status: activeStatus === "all" ? undefined : activeStatus,
+      },
+      mock: false,
+    }),
+    enabled: activeSection === "conduct" || activeSection === "all",
+  });
+
+  const conductApprovals = useMemo(() => {
+    if (conductApprovalsResponse?.success && Array.isArray(conductApprovalsResponse?.data?.items)) {
+      return conductApprovalsResponse.data.items;
+    }
+    return [];
+  }, [conductApprovalsResponse]);
 
   const items = useMemo(() => {
     const leaveRequests = Array.isArray(leaveResponse?.data) ? leaveResponse.data : [];
@@ -206,8 +229,34 @@ export default function PrincipalApprovals() {
       }))
     );
 
-    return [...mappedLeaves, ...mappedGrades];
-  }, [leaveResponse, gradeApprovals]);
+    const mappedConduct = conductApprovals.map((item) => ({
+      id: `CD-${item.classId}-${item.semesterId}-${item.status}`,
+      section: "conduct",
+      sectionLabel: "Hạnh kiểm",
+      title: `Duyệt hạnh kiểm: ${item.className || `Lớp ${item.classId}`}`,
+      reference: `#CD-${item.classId}-${item.semesterId}`,
+      requester: `GVCN ${item.homeroomTeacherName || item.submittedByName || ""}`.trim(),
+      summary: `${item.className || ""} - ${sectionLabel} - ${item.evaluatedCount || 0}/${item.studentCount || 0} học sinh`,
+      description: [
+        `Lớp: ${item.className || ""}`,
+        `Khối: ${item.gradeLevelName || "Chưa cập nhật"}`,
+        `Học kỳ: ${sectionLabel}`,
+        `Số học sinh đã đánh giá: ${item.evaluatedCount || 0}/${item.studentCount || 0}`,
+        `Người nộp: ${item.submittedByName || item.homeroomTeacherName || "GVCN"}`,
+        `Thời gian nộp: ${formatDateTimeVi(item.submittedAt, "Chưa có")}`,
+        item.finalizedAt ? `Đã duyệt lúc: ${formatDateTimeVi(item.finalizedAt, "")}` : "",
+        item.finalizedByName ? `Người duyệt: ${item.finalizedByName}` : "",
+      ].filter(Boolean).join("\n"),
+      time: item.submittedAt ? formatDateVi(item.submittedAt) : "Hôm nay",
+      dueAt: "Sớm nhất",
+      priority: item.status === "pending" ? "Cao" : "Trung bình",
+      status: item.status === "finalized" ? "approved" : item.status,
+      classId: item.classId,
+      semesterId: item.semesterId,
+    }));
+
+    return [...mappedLeaves, ...mappedGrades, ...mappedConduct];
+  }, [conductApprovals, gradeApprovals, leaveResponse, sectionLabel]);
 
   // ---- Socket.IO: listen for new unlock requests from teachers ----
   useEffect(() => {
@@ -226,7 +275,7 @@ export default function PrincipalApprovals() {
     });
 
     // A teacher created a new unlock request → refresh the list
-    socket.on("unlock_request:created", ({ request }) => {
+    socket.on("unlock_request:created", () => {
       toast.info(`Có yêu cầu mở khóa mới từ giáo viên!`);
       // Force refetch the unlock-requests query so the list updates
       queryClient.invalidateQueries({ queryKey: ["unlock-requests"] });
@@ -264,6 +313,7 @@ export default function PrincipalApprovals() {
   }, [activeSection, activeStatus, items, searchTerm]);
 
   const totalPages = Math.ceil(filteredItems.length / itemsPerPage);
+  const approvalsLoading = isLoading || gradeApprovalsLoading || conductApprovalsLoading;
   const visibleItems = useMemo(() => {
     const start = (currentPage - 1) * itemsPerPage;
     return filteredItems.slice(start, start + itemsPerPage);
@@ -287,6 +337,23 @@ export default function PrincipalApprovals() {
     },
   });
 
+  const conductApproveMutation = useMutation({
+    mutationFn: ({ classId, semesterId, notes }) =>
+      teacherService.finalizeConductClass({
+        pathParams: { classId },
+        body: { semesterId, notes },
+        mock: false,
+      }),
+    onSuccess: (response) => {
+      queryClient.invalidateQueries({ queryKey: ["principal-conduct-approvals"] });
+      setIsModalOpen(false);
+      toast.success(response?.message || "Đã phê duyệt hạnh kiểm");
+    },
+    onError: () => {
+      toast.error("Phê duyệt hạnh kiểm thất bại. Vui lòng thử lại.");
+    },
+  });
+
   const bulkMutation = useMutation({
     mutationFn: (ids) => {
       const promises = ids.map(id =>
@@ -304,6 +371,20 @@ export default function PrincipalApprovals() {
   });
 
   const updateItemStatus = (id, status, adminNotes = "") => {
+    const item = items.find((entry) => entry.id === id);
+    if (item?.section === "conduct") {
+      if (status !== "approved") {
+        toast.info("Luồng hạnh kiểm hiện chỉ hỗ trợ phê duyệt.");
+        return;
+      }
+      conductApproveMutation.mutate({
+        classId: item.classId,
+        semesterId: item.semesterId,
+        notes: adminNotes || "Phê duyệt hạnh kiểm",
+      });
+      return;
+    }
+
     processMutation.mutate({ id, status, adminNotes });
   };
 
@@ -331,7 +412,7 @@ export default function PrincipalApprovals() {
       } else {
         toast.error(res?.error || "Lỗi khi duyệt điểm");
       }
-    } catch (e) {
+    } catch {
       toast.error("Lỗi khi duyệt điểm");
     }
   };
@@ -342,7 +423,7 @@ export default function PrincipalApprovals() {
     );
   };
 
-  const { data: unlockResponse, isLoading: unlockLoading, refetch: refetchUnlock } = useQuery({
+  const { data: unlockResponse, isLoading: unlockLoading } = useQuery({
     queryKey: ["unlock-requests", unlockStatusParam, unlockPage, unlockPageSize, unlockGradeLevel],
     queryFn: async () => {
       const result = await unlockRequestService.listRequests({
@@ -389,14 +470,14 @@ export default function PrincipalApprovals() {
     const pending = unlockResponse?.requests?.filter(r => r.status === "pending") || [];
     if (pending.length === 0) { toast.info("Không có yêu cầu nào chờ duyệt."); return; }
     // Use default 1 hour for bulk approve
-    pending.forEach(req => unlockApproveMutation.mutate({ id: req.id, hours: 0.1, notes: "Duyệt mở khóa điểm" }));
+    pending.forEach(req => unlockApproveMutation.mutate({ id: req.id, hours: 0.1, notes: "Duyệt mở khóa dữ liệu" }));
   };
 
   const confirmApproveUnlock = () => {
     unlockApproveMutation.mutate({
       id: unlockApproveModal.request.id,
       hours: unlockApproveModal.hours,
-      notes: unlockApproveModal.notes || "Duyệt mở khóa điểm"
+      notes: unlockApproveModal.notes || "Duyệt mở khóa dữ liệu"
     });
     setUnlockApproveModal({ open: false, request: null, hours: 1, notes: "" });
   };
@@ -419,8 +500,25 @@ export default function PrincipalApprovals() {
       toast.info("Không có yêu cầu chờ duyệt.");
       return;
     }
-    const ids = pendingVisible.map((item) => item.id);
-    bulkMutation.mutate(ids);
+    const leaveIds = pendingVisible.filter((item) => item.section === "leave").map((item) => item.id);
+    const conductItems = pendingVisible.filter((item) => item.section === "conduct");
+    const unsupportedCount = pendingVisible.length - leaveIds.length - conductItems.length;
+
+    if (leaveIds.length > 0) {
+      bulkMutation.mutate(leaveIds);
+    }
+
+    conductItems.forEach((item) => {
+      conductApproveMutation.mutate({
+        classId: item.classId,
+        semesterId: item.semesterId,
+        notes: "Duyệt nhanh hạnh kiểm",
+      });
+    });
+
+    if (unsupportedCount > 0 && leaveIds.length === 0 && conductItems.length === 0) {
+      toast.info("Luồng này cần duyệt trong bảng chi tiết tương ứng.");
+    }
   };
 
   const openItemDetail = (item) => {
@@ -535,7 +633,7 @@ export default function PrincipalApprovals() {
         </div>
 
         <div className="table-wrapper">
-          {isLoading ? (
+          {approvalsLoading ? (
             <div className="empty-state">
               <div className="loading-spinner" />
               <p>Đang tải yêu cầu...</p>
@@ -719,11 +817,11 @@ export default function PrincipalApprovals() {
         </div>
       )}
 
-      {/* ─── Mở khóa điểm ───────────────────────────────────────────────────── */}
+      {/* ─── Mở khóa dữ liệu ───────────────────────────────────────────────────── */}
       {activeSection === "unlock" && (
         <div className="approvals-table-container unlock-section">
           <div className="table-header-context">
-            <h3>Yêu cầu mở khóa điểm</h3>
+            <h3>Yêu cầu mở khóa điểm/HK</h3>
             <div style={{ display: 'flex', gap: '12px', alignItems: 'center', marginBottom: '12px' }}>
               <select
                 className="filter-dropdown"
@@ -929,7 +1027,7 @@ export default function PrincipalApprovals() {
         <div className="modal-overlay" onClick={() => setUnlockApproveModal({ open: false, request: null, hours: 1, notes: "" })}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 450 }}>
             <div className="modal-header">
-              <h2>Phê duyệt mở khóa điểm</h2>
+              <h2>Phê duyệt mở khóa</h2>
               <button className="modal-close" onClick={() => setUnlockApproveModal({ open: false, request: null, hours: 1, notes: "" })}>
                 <FiX />
               </button>
@@ -1020,7 +1118,7 @@ export default function PrincipalApprovals() {
         isOpen={isModalOpen} 
         onClose={() => setIsModalOpen(false)}
         onAction={updateItemStatus}
-        isProcessing={processMutation.isPending}
+        isProcessing={processMutation.isPending || conductApproveMutation.isPending}
       />
     </div>
   );

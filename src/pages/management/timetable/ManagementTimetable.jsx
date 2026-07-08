@@ -90,48 +90,55 @@ function LessonModal({ mode, formData, onChange, onClose, onSubmit, allSessions,
 
     const [filteredTeachers, setFilteredTeachers] = useState([]);
     const [isLoadingTeachers, setIsLoadingTeachers] = useState(false);
+    const emit = useCallback(
+        (name, value) => onChange({ target: { name, value } }),
+        [onChange],
+    );
 
     // Teacher list to display: use filtered by subject, fallback to all ONLY if no subject is selected
     const displayedTeacherNames = useMemo(() => {
+        if (!formData.subject) return allTeacherNames;
         if (isLoadingTeachers) return [];
-        if (formData.subject) {
-            return filteredTeachers.map((t) => t.label || t.value);
-        }
-        return allTeacherNames;
+        return filteredTeachers.map((t) => t.label || t.value);
     }, [filteredTeachers, isLoadingTeachers, allTeacherNames, formData.subject]);
 
     // Fetch teachers filtered by selected subject
     useEffect(() => {
         if (!formData.subject) {
-            setFilteredTeachers([]);
             return;
         }
 
         let cancelled = false;
-        setIsLoadingTeachers(true);
-
-        const subjectCode = subjectDisplayToCode[formData.subject] || formData.subject;
-
-        timetableService.getTeachersBySubject({
-            subjectCode,
-            classId: selectedClassRecord?.id || undefined,
-            semesterId: periodIds?.semesterId || undefined,
-            schoolYearId: periodIds?.schoolYearId || undefined,
-        }).then((teachers) => {
+        const timer = setTimeout(() => {
             if (cancelled) return;
-            const mapped = (teachers || []).map((t) => ({
-                value: t.teacher_name,
-                label: t.teacher_name,
-                id: t.teacher_id,
-            }));
-            setFilteredTeachers(mapped);
-        }).catch(() => {
-            if (!cancelled) setFilteredTeachers([]);
-        }).finally(() => {
-            if (!cancelled) setIsLoadingTeachers(false);
-        });
+            setIsLoadingTeachers(true);
 
-        return () => { cancelled = true; };
+            const subjectCode = subjectDisplayToCode[formData.subject] || formData.subject;
+
+            timetableService.getTeachersBySubject({
+                subjectCode,
+                classId: selectedClassRecord?.id || undefined,
+                semesterId: periodIds?.semesterId || undefined,
+                schoolYearId: periodIds?.schoolYearId || undefined,
+            }).then((teachers) => {
+                if (cancelled) return;
+                const mapped = (teachers || []).map((t) => ({
+                    value: t.teacher_name,
+                    label: t.teacher_name,
+                    id: t.teacher_id,
+                }));
+                setFilteredTeachers(mapped);
+            }).catch(() => {
+                if (!cancelled) setFilteredTeachers([]);
+            }).finally(() => {
+                if (!cancelled) setIsLoadingTeachers(false);
+            });
+        }, 0);
+
+        return () => {
+            cancelled = true;
+            clearTimeout(timer);
+        };
     }, [formData.subject, selectedClassRecord?.id, periodIds?.semesterId, periodIds?.schoolYearId, subjectDisplayToCode]);
 
     // Reset selected teacher if they do not teach the newly selected subject
@@ -146,7 +153,7 @@ function LessonModal({ mode, formData, onChange, onClose, onSubmit, allSessions,
                 emit("teacher", "");
             }
         }
-    }, [filteredTeachers, isLoadingTeachers, formData.subject, formData.teacher]);
+    }, [emit, filteredTeachers, isLoadingTeachers, formData.subject, formData.teacher]);
 
     // [NEW] Kiểm tra xem giáo viên có bận ở lớp khác không
     const getTeacherStatus = (teacherName) => {
@@ -187,8 +194,6 @@ function LessonModal({ mode, formData, onChange, onClose, onSubmit, allSessions,
     
     const quota = GDPT_2018_CONFIG.QUOTAS[currentSubjectCode] || 3;
     const isOverQuota = totalSubjectPeriods > quota;
-
-    const emit = (name, value) => onChange({ target: { name, value } });
 
     if (!formData) {
         return <div className="admin-timetable-modal-overlay"><div className="admin-timetable-modal exp-modal-card lesson-modal-wide"><div className="modal-body">Đang tải...</div></div></div>;
@@ -539,12 +544,6 @@ export default function ManagementTimetable() {
     const subjectDisplayToCode = useMemo(() => {
         const m = {};
         (realSubjects || []).forEach(s => { if (s.code) m[s.label] = s.code; });
-        return m;
-    }, [realSubjects]);
-
-    const subjectCodeToDisplay = useMemo(() => {
-        const m = {};
-        (realSubjects || []).forEach(s => { if (s.code) m[s.code] = s.label; });
         return m;
     }, [realSubjects]);
 
@@ -1038,6 +1037,7 @@ export default function ManagementTimetable() {
                         onReset={handleResetTimetable}
                         currentPeriods={sessionsInTermByClass.reduce((sum, s) => sum + ((s.periodEnd || s.period) - s.period + 1), 0)}
                         maxPeriods={GDPT_2018_CONFIG.MAX_WEEKLY_PERIODS}
+                        canManage
                     />
                 )}
             </div>
@@ -1072,4 +1072,3 @@ export default function ManagementTimetable() {
         </div>
     );
 }
-

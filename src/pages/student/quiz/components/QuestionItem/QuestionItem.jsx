@@ -63,7 +63,10 @@ export default function QuestionItem({
     return (
         <div className="question-item">
             <div className="question-item-header">
-                <span className="question-item-number">Câu {index + 1}</span>
+                <span className="question-item-number">
+                    Câu {index + 1}
+                    {question.points > 0 && <span style={{ marginLeft: "8px", fontWeight: "normal", fontSize: "0.9em", color: "#666" }}>({question.points} điểm)</span>}
+                </span>
                 <h3>{questionText}</h3>
             </div>
 

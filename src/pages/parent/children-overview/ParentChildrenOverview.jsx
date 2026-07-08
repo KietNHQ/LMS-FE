@@ -475,7 +475,6 @@ export default function ParentChildrenOverview() {
         fetchConductData()
     }, [selectedChildId, selectedSchoolYear])
 
-
     const buildAttendanceSummary = (records) => {
         const base = { present: 0, absent: 0, late: 0, excused: 0 }
         const summary = Array.isArray(records)

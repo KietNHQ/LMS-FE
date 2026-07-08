@@ -1,13 +1,20 @@
 .attendance-card {
+    --attendance-ink: #1f2937;
+    --attendance-muted: #667085;
+    --attendance-border: #e5e7eb;
+    --attendance-panel: #f8fafc;
+    --attendance-accent: #2563eb;
     background: #ffffff;
-    border-radius: 1.25rem;
-    padding: 1.1rem;
-    box-shadow: 0 0.25rem 1.125rem rgba(20, 28, 45, 0.06);
-    border: 0.0625rem solid #ececf3;
+    border-radius: 0.5rem;
+    padding: 1rem;
+    box-shadow: 0 0.25rem 1rem rgba(20, 28, 45, 0.05);
+    border: 0.0625rem solid var(--attendance-border);
     display: flex;
     flex-direction: column;
     gap: 0.9rem;
     height: fit-content;
+    min-width: 0;
+    container-type: inline-size;
 }
 
 .attendance-card.compact {
@@ -31,25 +38,25 @@
 
 .attendance-heading h3 {
     margin: 0;
-    color: #182033;
-    font-size: 1.2rem;
+    color: var(--attendance-ink);
+    font-size: 1.1rem;
     font-weight: 800;
     line-height: 1.3;
 }
 
 .attendance-heading p {
     margin: 0;
-    color: #5f6b7f;
-    font-size: 0.95rem;
+    color: var(--attendance-muted);
+    font-size: 0.88rem;
     font-weight: 500;
     line-height: 1.45;
 }
 
 .attendance-period-switch {
     display: inline-flex;
-    background: #f2ebff;
-    border: 0.0625rem solid #decdfd;
-    border-radius: 0.85rem;
+    background: var(--attendance-panel);
+    border: 0.0625rem solid var(--attendance-border);
+    border-radius: 0.5rem;
     padding: 0.25rem;
     gap: 0.25rem;
     width: fit-content;
@@ -58,26 +65,26 @@
 .attendance-switch-btn {
     border: none;
     background: transparent;
-    color: #4b5a72;
+    color: #475569;
     font-size: 0.9rem;
     font-weight: 700;
     padding: 0.42rem 0.9rem;
-    border-radius: 0.65rem;
+    border-radius: 0.375rem;
     cursor: pointer;
     transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease, color 0.18s ease;
 }
 
 .attendance-switch-btn:hover {
-    color: #7d57d8;
-    background: #ece2ff;
+    color: var(--attendance-accent);
+    background: #eff6ff;
     transform: translateY(-0.125rem);
-    box-shadow: 0 0.2rem 0.6rem rgba(136, 93, 239, 0.18);
+    box-shadow: 0 0.2rem 0.6rem rgba(37, 99, 235, 0.12);
 }
 
 .attendance-switch-btn.active {
     color: #ffffff;
-    background: linear-gradient(135deg, #b68af8 0%, #885def 100%);
-    box-shadow: 0 0.25rem 0.75rem rgba(136, 93, 239, 0.32);
+    background: var(--attendance-accent);
+    box-shadow: 0 0.25rem 0.75rem rgba(37, 99, 235, 0.22);
 }
 
 .attendance-switch-btn.active:hover {
@@ -118,8 +125,9 @@
 }
 
 .attendance-stat {
-    background: #f7f8fc;
-    border-radius: 1rem;
+    background: var(--attendance-panel);
+    border: 0.0625rem solid var(--attendance-border);
+    border-radius: 0.5rem;
     padding: 0.9rem 0.75rem;
     text-align: center;
     display: flex;
@@ -130,7 +138,7 @@
 }
 
 .attendance-stat span {
-    color: #5f6b7f;
+    color: var(--attendance-muted);
     font-size: 0.9rem;
     font-weight: 600;
     line-height: 1.4;
@@ -157,47 +165,114 @@
 .attendance-record-list {
     display: flex;
     flex-direction: column;
-    gap: 0.65rem;
-    max-height: 20rem;
+    gap: 0.6rem;
+    max-height: 24rem;
     overflow-y: auto;
     padding-right: 0.25rem;
 }
 
 .attendance-record-item {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     justify-content: space-between;
-    padding: 0.9rem 1rem;
-    background: #fafbff;
-    border-radius: 0.9rem;
+    gap: 0.75rem;
+    padding: 0.85rem 0.95rem;
+    background: linear-gradient(180deg, #ffffff 0%, #fbfcff 100%);
+    border: 0.0625rem solid var(--attendance-border);
+    border-left-width: 0.25rem;
+    border-radius: 0.5rem;
+    min-width: 0;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
 }
 
-.attendance-record-item span {
-    color: #202636;
-    font-size: 1rem;
-    font-weight: 600;
-    line-height: 1.4;
+.attendance-record-item:hover {
+    transform: translateY(-0.0625rem);
+    box-shadow: 0 0.35rem 1rem rgba(15, 23, 42, 0.07);
 }
 
-.attendance-record-item strong {
-    font-size: 0.92rem;
+.attendance-record-item.present { border-left-color: #10b981; }
+.attendance-record-item.absent { border-left-color: #ef4444; }
+.attendance-record-item.late { border-left-color: #f59e0b; }
+.attendance-record-item.excused { border-left-color: #3b82f6; }
+.attendance-record-item.unknown { border-left-color: #94a3b8; }
+
+.attendance-record-main {
+    display: grid;
+    gap: 0.3rem;
+    min-width: 0;
+}
+
+.attendance-record-date {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    color: var(--attendance-ink);
+    font-size: 0.94rem;
     font-weight: 700;
     line-height: 1.4;
+    overflow-wrap: anywhere;
 }
 
-.attendance-record-item strong.present,
-.attendance-record-item strong.có-mặt {
-    color: #16a34a;
+.attendance-record-main small {
+    color: var(--attendance-muted);
+    font-size: 0.82rem;
+    line-height: 1.35;
 }
 
-.attendance-record-item strong.absent,
-.attendance-record-item strong.vắng-mặt {
-    color: #ef4444;
+.attendance-status-pill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.35rem;
+    flex: 0 0 auto;
+    border: 0.0625rem solid transparent;
+    border-radius: 999rem;
+    padding: 0.32rem 0.62rem;
+    font-size: 0.8rem;
+    font-weight: 700;
+    line-height: 1.2;
+    white-space: nowrap;
 }
 
-.attendance-record-item strong.late,
-.attendance-record-item strong.đi-muộn {
-    color: #d97706;
+.attendance-status-pill.present {
+    background: #ecfdf5;
+    border-color: #a7f3d0;
+    color: #047857;
+}
+
+.attendance-status-pill.absent {
+    background: #fef2f2;
+    border-color: #fecaca;
+    color: #b91c1c;
+}
+
+.attendance-status-pill.late {
+    background: #fffbeb;
+    border-color: #fde68a;
+    color: #b45309;
+}
+
+.attendance-status-pill.excused {
+    background: #eff6ff;
+    border-color: #bfdbfe;
+    color: #1d4ed8;
+}
+
+.attendance-status-pill.unknown {
+    background: #f8fafc;
+    border-color: #cbd5e1;
+    color: #475569;
+}
+
+.attendance-empty {
+    border: 0.0625rem dashed #cbd5e1;
+    border-radius: 0.5rem;
+    background: var(--attendance-panel);
+    color: var(--attendance-muted);
+    font-size: 0.9rem;
+    margin: 0;
+    padding: 1.25rem 1rem;
+    text-align: center;
 }
 
 .attendance-note {
@@ -212,9 +287,9 @@
     align-items: center;
     justify-content: flex-start;
     gap: 0.5rem;
-    background: #f8faff;
-    border: 0.0625rem solid #e7ecff;
-    border-radius: 0.95rem;
+    background: var(--attendance-panel);
+    border: 0.0625rem solid var(--attendance-border);
+    border-radius: 0.5rem;
     padding: 0.55rem 0.75rem;
 }
 
@@ -224,11 +299,11 @@
     justify-content: center;
     width: 2rem;
     height: 2rem;
-    border: 0.0625rem solid #ddd0fb;
-    border-radius: 0.55rem;
+    border: 0.0625rem solid #cbd5e1;
+    border-radius: 0.5rem;
     background: #ffffff;
-    color: #885def;
-    font-size: 1.3rem;
+    color: var(--attendance-accent);
+    font-size: 1rem;
     font-weight: 700;
     line-height: 1;
     cursor: pointer;
@@ -237,8 +312,8 @@
 }
 
 .month-nav-btn:hover {
-    background: #f3eeff;
-    border-color: #885def;
+    background: #eff6ff;
+    border-color: var(--attendance-accent);
 }
 
 .month-year-selects {
@@ -251,11 +326,11 @@
 .year-select {
     appearance: none;
     -webkit-appearance: none;
-    border: 0.0625rem solid #ddd0fb;
-    border-radius: 0.6rem;
-    background: #ffffff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23885def' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E") no-repeat right 0.55rem center;
+    border: 0.0625rem solid #cbd5e1;
+    border-radius: 0.5rem;
+    background: #ffffff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%232563eb' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E") no-repeat right 0.55rem center;
     background-size: 0.75rem;
-    color: #2d1f5e;
+    color: var(--attendance-ink);
     font-size: 0.88rem;
     font-weight: 700;
     padding: 0.38rem 1.8rem 0.38rem 0.65rem;
@@ -266,15 +341,15 @@
 
 .month-select:hover,
 .year-select:hover {
-    border-color: #b68af8;
-    background-color: #fdf9ff;
+    border-color: var(--attendance-accent);
+    background-color: #eff6ff;
 }
 
 .month-select:focus,
 .year-select:focus {
-    border-color: #885def;
-    box-shadow: 0 0 0 0.2rem rgba(136, 93, 239, 0.15);
-    background-color: #fdf9ff;
+    border-color: var(--attendance-accent);
+    box-shadow: 0 0 0 0.1875rem rgba(37, 99, 235, 0.12);
+    background-color: #ffffff;
 }
 
 .month-select { min-width: 6.5rem; }
@@ -289,9 +364,12 @@
 /* No-data state */
 .monthly-no-data {
     text-align: center;
-    color: #9ba7bb;
+    color: var(--attendance-muted);
     font-size: 0.9rem;
-    padding: 1.5rem 0;
+    border: 0.0625rem dashed #cbd5e1;
+    border-radius: 0.5rem;
+    background: var(--attendance-panel);
+    padding: 1.25rem 1rem;
     margin: 0;
 }
 
@@ -300,20 +378,20 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    background: #f8faff;
-    border: 0.0625rem solid #e7ecff;
-    border-radius: 0.95rem;
+    background: var(--attendance-panel);
+    border: 0.0625rem solid var(--attendance-border);
+    border-radius: 0.5rem;
     padding: 0.75rem 1rem;
 }
 
 .monthly-summary-label {
-    color: #5f6b7f;
+    color: var(--attendance-muted);
     font-size: 0.92rem;
     font-weight: 600;
 }
 
 .monthly-summary-total {
-    color: #3b5bdb;
+    color: var(--attendance-accent);
     font-size: 1.15rem;
     font-weight: 800;
 }
@@ -329,9 +407,9 @@
 }
 
 .monthly-group-card {
-    border-radius: 1rem;
+    border-radius: 0.5rem;
     overflow: hidden;
-    border: 0.0625rem solid #ececf3;
+    border: 0.0625rem solid var(--attendance-border);
     background: #ffffff;
     transition: box-shadow 0.18s ease;
 }
@@ -343,6 +421,7 @@
 .monthly-group-card.present { border-left: 0.25rem solid #16a34a; }
 .monthly-group-card.absent  { border-left: 0.25rem solid #ef4444; }
 .monthly-group-card.late    { border-left: 0.25rem solid #d97706; }
+.monthly-group-card.excused { border-left: 0.25rem solid #3b82f6; }
 
 .monthly-group-header {
     width: 100%;
@@ -358,7 +437,7 @@
 }
 
 .monthly-group-header:hover {
-    background: #fafbff;
+    background: #f8fafc;
 }
 
 .monthly-group-left {
@@ -379,7 +458,7 @@
     justify-content: center;
     width: 2rem;
     height: 2rem;
-    border-radius: 0.6rem;
+    border-radius: 0.5rem;
     font-size: 0.9rem;
     font-weight: 700;
     flex-shrink: 0;
@@ -388,9 +467,10 @@
 .monthly-group-icon.present { background: #dcfce7; color: #16a34a; }
 .monthly-group-icon.absent  { background: #fee2e2; color: #ef4444; }
 .monthly-group-icon.late    { background: #fef3c7; color: #d97706; }
+.monthly-group-icon.excused { background: #dbeafe; color: #2563eb; }
 
 .monthly-group-label {
-    color: #202636;
+    color: var(--attendance-ink);
     font-size: 0.95rem;
     font-weight: 700;
 }
@@ -405,6 +485,7 @@
 .monthly-group-count.present { background: #dcfce7; color: #16a34a; }
 .monthly-group-count.absent  { background: #fee2e2; color: #ef4444; }
 .monthly-group-count.late    { background: #fef3c7; color: #d97706; }
+.monthly-group-count.excused { background: #dbeafe; color: #2563eb; }
 
 /* Chevron icon */
 .chevron-icon {
@@ -415,14 +496,14 @@
 
 .chevron-icon.open {
     transform: rotate(180deg);
-    color: #885def;
+    color: var(--attendance-accent);
 }
 
 /* Expanded body */
 .monthly-group-body {
     border-top: 0.0625rem solid #f0f1f6;
     padding: 0.8rem 1rem 1rem;
-    background: #fafbff;
+    background: #f8fafc;
 }
 
 .monthly-group-empty {
@@ -443,7 +524,7 @@
     display: inline-flex;
     align-items: center;
     padding: 0.3rem 0.65rem;
-    border-radius: 0.55rem;
+    border-radius: 0.5rem;
     font-size: 0.82rem;
     font-weight: 700;
 }
@@ -451,6 +532,7 @@
 .monthly-date-chip.present { background: #dcfce7; color: #15803d; }
 .monthly-date-chip.absent  { background: #fee2e2; color: #dc2626; }
 .monthly-date-chip.late    { background: #fef3c7; color: #b45309; }
+.monthly-date-chip.excused { background: #dbeafe; color: #1d4ed8; }
 
 /* ── Responsive ── */
 @media (max-width: 48rem) {
@@ -508,5 +590,61 @@
 
     .attendance-record-item {
         padding: 0.8rem 0.9rem;
+    }
+}
+
+@container (max-width: 16rem) {
+    .attendance-heading h3 {
+        font-size: 1rem;
+    }
+
+    .attendance-heading p,
+    .attendance-record-main small,
+    .monthly-summary-label {
+        font-size: 0.78rem;
+    }
+
+    .attendance-period-switch,
+    .month-year-picker,
+    .month-year-selects {
+        width: 100%;
+    }
+
+    .attendance-period-switch {
+        flex-direction: column;
+    }
+
+    .attendance-switch-btn {
+        width: 100%;
+        padding-inline: 0.45rem;
+    }
+
+    .attendance-stats {
+        grid-template-columns: 1fr;
+    }
+
+    .attendance-record-item,
+    .monthly-group-header,
+    .monthly-summary-bar {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .attendance-status-pill {
+        white-space: normal;
+        text-align: center;
+    }
+
+    .month-year-picker {
+        align-items: stretch;
+    }
+
+    .month-year-selects {
+        flex-wrap: wrap;
+    }
+
+    .month-select,
+    .year-select {
+        min-width: 100%;
     }
 }

@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import axios from "axios";
 import { FiMenu, FiX } from "react-icons/fi";
 import "./AuthLayout.css";
 
@@ -22,7 +23,7 @@ function formatStatNumber(value) {
     return `${num}`;
 }
 
-function WelcomeContent() {
+function WelcomeContent({ stats }) {
     return (
         <>
             <div className="auth-brand">
@@ -40,28 +41,28 @@ function WelcomeContent() {
             <div className="auth-stats">
                 <div className="auth-stat-card auth-stat-card-admin">
                     <span className="auth-stat-value auth-stat-value-admin">
-                        {formatStatNumber(1200000000)}
+                        {formatStatNumber(stats.totalClasses)}
                     </span>
                     <span className="auth-stat-label">Lớp học</span>
                 </div>
 
                 <div className="auth-stat-card auth-stat-card-parent">
                     <span className="auth-stat-value auth-stat-value-parent">
-                        {formatStatNumber(45)}
+                        {formatStatNumber(stats.totalSubjects)}
                     </span>
                     <span className="auth-stat-label">Môn học</span>
                 </div>
 
                 <div className="auth-stat-card auth-stat-card-teacher">
                     <span className="auth-stat-value auth-stat-value-teacher">
-                        {formatStatNumber(80)}
+                        {formatStatNumber(stats.totalTeachers)}
                     </span>
                     <span className="auth-stat-label">Giáo viên</span>
                 </div>
 
                 <div className="auth-stat-card auth-stat-card-student">
                     <span className="auth-stat-value auth-stat-value-student">
-                        {formatStatNumber(1200000)}
+                        {formatStatNumber(stats.totalStudents)}
                     </span>
                     <span className="auth-stat-label">Học sinh</span>
                 </div>
@@ -80,12 +81,34 @@ function WelcomeContent() {
 
 function AuthLayout({ title, subtitle, children }) {
     const [isWelcomeOpen, setIsWelcomeOpen] = useState(false);
+    const [stats, setStats] = useState({
+        totalClasses: 1200000000,
+        totalSubjects: 45,
+        totalTeachers: 80,
+        totalStudents: 1200000
+    });
+
+    useEffect(() => {
+        const fetchStats = async () => {
+            try {
+                // Determine API URL based on env or default
+                const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:3000/api/v1";
+                const response = await axios.get(`${apiUrl}/dashboard/public-stats`);
+                if (response.data?.success) {
+                    setStats(response.data.data);
+                }
+            } catch (error) {
+                console.error("Failed to fetch public stats:", error);
+            }
+        };
+        fetchStats();
+    }, []);
 
     return (
         <div className="auth-page">
             <div className="auth-container">
                 <div className="auth-left">
-                    <WelcomeContent />
+                    <WelcomeContent stats={stats} />
                 </div>
 
                 <div className="auth-right">
@@ -122,7 +145,7 @@ function AuthLayout({ title, subtitle, children }) {
                             <FiX size={24} />
                         </button>
                         <div className="auth-modal-body">
-                            <WelcomeContent />
+                            <WelcomeContent stats={stats} />
                         </div>
                     </div>
                 </div>
